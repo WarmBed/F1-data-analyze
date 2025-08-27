@@ -1,0 +1,478 @@
+{
+  "analysis_info": {
+    "function_id": "14.2",
+    "analysis_type": "driver_telemetry_statistics",
+    "timestamp": "20250806_182121",
+    "total_drivers": 20
+  },
+  "telemetry_statistics": {
+    "VER": {
+      "driver_info": {
+        "name": "Max Verstappen",
+        "number": "1",
+        "team": "Red Bull Racing",
+        "abbreviation": "VER"
+      },
+      "telemetry_summary": {
+        "max_speed": "324",
+        "avg_speed": "128",
+        "max_rpm": "12368",
+        "avg_throttle": "40.8",
+        "avg_brake": "14.3"
+      },
+      "performance_metrics": {
+        "avg_throttle": "40.8",
+        "avg_brake": "14.3",
+        "max_speed": "324",
+        "avg_speed": "128",
+        "max_rpm": "12368"
+      }
+    },
+    "PER": {
+      "driver_info": {
+        "name": "Sergio Perez",
+        "number": "11",
+        "team": "Red Bull Racing",
+        "abbreviation": "PER"
+      },
+      "telemetry_summary": {
+        "max_speed": "331",
+        "avg_speed": "128",
+        "max_rpm": "12295",
+        "avg_throttle": "41.5",
+        "avg_brake": "14.7"
+      },
+      "performance_metrics": {
+        "avg_throttle": "41.5",
+        "avg_brake": "14.7",
+        "max_speed": "331",
+        "avg_speed": "128",
+        "max_rpm": "12295"
+      }
+    },
+    "SAI": {
+      "driver_info": {
+        "name": "Carlos Sainz",
+        "number": "55",
+        "team": "Ferrari",
+        "abbreviation": "SAI"
+      },
+      "telemetry_summary": {
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12569",
+        "avg_throttle": "54.7",
+        "avg_brake": "26.5"
+      },
+      "performance_metrics": {
+        "avg_throttle": "54.7",
+        "avg_brake": "26.5",
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12569"
+      }
+    },
+    "LEC": {
+      "driver_info": {
+        "name": "Charles Leclerc",
+        "number": "16",
+        "team": "Ferrari",
+        "abbreviation": "LEC"
+      },
+      "telemetry_summary": {
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12625",
+        "avg_throttle": "54.9",
+        "avg_brake": "27.2"
+      },
+      "performance_metrics": {
+        "avg_throttle": "54.9",
+        "avg_brake": "27.2",
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12625"
+      }
+    },
+    "RUS": {
+      "driver_info": {
+        "name": "George Russell",
+        "number": "63",
+        "team": "Mercedes",
+        "abbreviation": "RUS"
+      },
+      "telemetry_summary": {
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12810",
+        "avg_throttle": "50.8",
+        "avg_brake": "23.2"
+      },
+      "performance_metrics": {
+        "avg_throttle": "50.8",
+        "avg_brake": "23.2",
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12810"
+      }
+    },
+    "NOR": {
+      "driver_info": {
+        "name": "Lando Norris",
+        "number": "4",
+        "team": "McLaren",
+        "abbreviation": "NOR"
+      },
+      "telemetry_summary": {
+        "max_speed": "323",
+        "avg_speed": "128",
+        "max_rpm": "12751",
+        "avg_throttle": "52.3",
+        "avg_brake": "26.1"
+      },
+      "performance_metrics": {
+        "avg_throttle": "52.3",
+        "avg_brake": "26.1",
+        "max_speed": "323",
+        "avg_speed": "128",
+        "max_rpm": "12751"
+      }
+    },
+    "HAM": {
+      "driver_info": {
+        "name": "Lewis Hamilton",
+        "number": "44",
+        "team": "Mercedes",
+        "abbreviation": "HAM"
+      },
+      "telemetry_summary": {
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "13060",
+        "avg_throttle": "49.5",
+        "avg_brake": "24.1"
+      },
+      "performance_metrics": {
+        "avg_throttle": "49.5",
+        "avg_brake": "24.1",
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "13060"
+      }
+    },
+    "PIA": {
+      "driver_info": {
+        "name": "Oscar Piastri",
+        "number": "81",
+        "team": "McLaren",
+        "abbreviation": "PIA"
+      },
+      "telemetry_summary": {
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12782",
+        "avg_throttle": "50.7",
+        "avg_brake": "24.2"
+      },
+      "performance_metrics": {
+        "avg_throttle": "50.7",
+        "avg_brake": "24.2",
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12782"
+      }
+    },
+    "ALO": {
+      "driver_info": {
+        "name": "Fernando Alonso",
+        "number": "14",
+        "team": "Aston Martin",
+        "abbreviation": "ALO"
+      },
+      "telemetry_summary": {
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12984",
+        "avg_throttle": "51.2",
+        "avg_brake": "24.4"
+      },
+      "performance_metrics": {
+        "avg_throttle": "51.2",
+        "avg_brake": "24.4",
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12984"
+      }
+    },
+    "STR": {
+      "driver_info": {
+        "name": "Lance Stroll",
+        "number": "18",
+        "team": "Aston Martin",
+        "abbreviation": "STR"
+      },
+      "telemetry_summary": {
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12909",
+        "avg_throttle": "50.3",
+        "avg_brake": "24.8"
+      },
+      "performance_metrics": {
+        "avg_throttle": "50.3",
+        "avg_brake": "24.8",
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12909"
+      }
+    },
+    "ZHO": {
+      "driver_info": {
+        "name": "Guanyu Zhou",
+        "number": "24",
+        "team": "Kick Sauber",
+        "abbreviation": "ZHO"
+      },
+      "telemetry_summary": {
+        "max_speed": "331",
+        "avg_speed": "126",
+        "max_rpm": "12709",
+        "avg_throttle": "48.5",
+        "avg_brake": "22.6"
+      },
+      "performance_metrics": {
+        "avg_throttle": "48.5",
+        "avg_brake": "22.6",
+        "max_speed": "331",
+        "avg_speed": "126",
+        "max_rpm": "12709"
+      }
+    },
+    "MAG": {
+      "driver_info": {
+        "name": "Kevin Magnussen",
+        "number": "20",
+        "team": "Haas F1 Team",
+        "abbreviation": "MAG"
+      },
+      "telemetry_summary": {
+        "max_speed": "333",
+        "avg_speed": "126",
+        "max_rpm": "12583",
+        "avg_throttle": "53.0",
+        "avg_brake": "27.0"
+      },
+      "performance_metrics": {
+        "avg_throttle": "53.0",
+        "avg_brake": "27.0",
+        "max_speed": "333",
+        "avg_speed": "126",
+        "max_rpm": "12583"
+      }
+    },
+    "RIC": {
+      "driver_info": {
+        "name": "Daniel Ricciardo",
+        "number": "3",
+        "team": "RB",
+        "abbreviation": "RIC"
+      },
+      "telemetry_summary": {
+        "max_speed": "329",
+        "avg_speed": "126",
+        "max_rpm": "12472",
+        "avg_throttle": "40.2",
+        "avg_brake": "14.5"
+      },
+      "performance_metrics": {
+        "avg_throttle": "40.2",
+        "avg_brake": "14.5",
+        "max_speed": "329",
+        "avg_speed": "126",
+        "max_rpm": "12472"
+      }
+    },
+    "TSU": {
+      "driver_info": {
+        "name": "Yuki Tsunoda",
+        "number": "22",
+        "team": "RB",
+        "abbreviation": "TSU"
+      },
+      "telemetry_summary": {
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "12838",
+        "avg_throttle": "41.8",
+        "avg_brake": "15.2"
+      },
+      "performance_metrics": {
+        "avg_throttle": "41.8",
+        "avg_brake": "15.2",
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "12838"
+      }
+    },
+    "ALB": {
+      "driver_info": {
+        "name": "Alexander Albon",
+        "number": "23",
+        "team": "Williams",
+        "abbreviation": "ALB"
+      },
+      "telemetry_summary": {
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12966",
+        "avg_throttle": "50.6",
+        "avg_brake": "27.2"
+      },
+      "performance_metrics": {
+        "avg_throttle": "50.6",
+        "avg_brake": "27.2",
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12966"
+      }
+    },
+    "HUL": {
+      "driver_info": {
+        "name": "Nico Hulkenberg",
+        "number": "27",
+        "team": "Haas F1 Team",
+        "abbreviation": "HUL"
+      },
+      "telemetry_summary": {
+        "max_speed": "335",
+        "avg_speed": "126",
+        "max_rpm": "12531",
+        "avg_throttle": "49.1",
+        "avg_brake": "23.8"
+      },
+      "performance_metrics": {
+        "avg_throttle": "49.1",
+        "avg_brake": "23.8",
+        "max_speed": "335",
+        "avg_speed": "126",
+        "max_rpm": "12531"
+      }
+    },
+    "OCO": {
+      "driver_info": {
+        "name": "Esteban Ocon",
+        "number": "31",
+        "team": "Alpine",
+        "abbreviation": "OCO"
+      },
+      "telemetry_summary": {
+        "max_speed": "325",
+        "avg_speed": "124",
+        "max_rpm": "12209",
+        "avg_throttle": "50.2",
+        "avg_brake": "24.0"
+      },
+      "performance_metrics": {
+        "avg_throttle": "50.2",
+        "avg_brake": "24.0",
+        "max_speed": "325",
+        "avg_speed": "124",
+        "max_rpm": "12209"
+      }
+    },
+    "GAS": {
+      "driver_info": {
+        "name": "Pierre Gasly",
+        "number": "10",
+        "team": "Alpine",
+        "abbreviation": "GAS"
+      },
+      "telemetry_summary": {
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "12500",
+        "avg_throttle": "40.8",
+        "avg_brake": "14.1"
+      },
+      "performance_metrics": {
+        "avg_throttle": "40.8",
+        "avg_brake": "14.1",
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "12500"
+      }
+    },
+    "BOT": {
+      "driver_info": {
+        "name": "Valtteri Bottas",
+        "number": "77",
+        "team": "Kick Sauber",
+        "abbreviation": "BOT"
+      },
+      "telemetry_summary": {
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12603",
+        "avg_throttle": "45.3",
+        "avg_brake": "19.8"
+      },
+      "performance_metrics": {
+        "avg_throttle": "45.3",
+        "avg_brake": "19.8",
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12603"
+      }
+    },
+    "SAR": {
+      "driver_info": {
+        "name": "Logan Sargeant",
+        "number": "2",
+        "team": "Williams",
+        "abbreviation": "SAR"
+      },
+      "telemetry_summary": {
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "13282",
+        "avg_throttle": "52.4",
+        "avg_brake": "27.3"
+      },
+      "performance_metrics": {
+        "avg_throttle": "52.4",
+        "avg_brake": "27.3",
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "13282"
+      }
+    }
+  },
+  "sorted_drivers": [
+    "VER",
+    "PER",
+    "SAI",
+    "LEC",
+    "RUS",
+    "NOR",
+    "HAM",
+    "PIA",
+    "ALO",
+    "STR",
+    "ZHO",
+    "MAG",
+    "RIC",
+    "TSU",
+    "ALB",
+    "HUL",
+    "OCO",
+    "GAS",
+    "BOT",
+    "SAR"
+  ],
+  "analysis_notes": {
+    "throttle_range": "0-100% (100=全油門)",
+    "brake_range": "0-100% (100=全力煞車)",
+    "speed_unit": "km/h",
+    "rpm_unit": "轉/分鐘"
+  }
+}

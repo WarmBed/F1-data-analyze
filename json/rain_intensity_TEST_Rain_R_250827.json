@@ -1,0 +1,261 @@
+{
+  "metadata": {
+    "analysis_type": "Rain Intensity Analysis",
+    "generated_at": "2025-08-27T18:22:33.246788",
+    "version": "1.0",
+    "debug_mode": true,
+    "year": 2025,
+    "race_name": "TEST Rain",
+    "session": null,
+    "session_type": "R"
+  },
+  "summary": {
+    "total_data_points": 20,
+    "rain_data_points": 8,
+    "rain_percentage": 40.0
+  },
+  "rain_intensity": "moderate",
+  "rain_intensity_description": "中度降雨 [RAIN]",
+  "chart_title": "降雨分析 - TEST Rain (R)",
+  "x_axis": {
+    "data": [900, 1800, 2700, 3600, 4500, 5400, 6300, 7200, 8100, 9000, 9900, 10800, 11700, 12600, 13500, 14400, 15300, 16200, 17100, 18000],
+    "label": "比賽時間",
+    "unit": "秒"
+  },
+  "left_y_axis": {
+    "data": [18.5, 18.2, 17.8, 17.5, 17.2, 16.8, 16.5, 16.2, 15.9, 15.6, 15.3, 15.0, 14.8, 14.5, 14.3, 14.1, 13.9, 13.7, 13.5, 13.3],
+    "label": "氣溫",
+    "unit": "°C"
+  },
+  "right_y_axis": {
+    "data": [5.2, 5.8, 6.1, 6.5, 7.2, 8.1, 9.3, 10.5, 11.2, 12.1, 13.5, 14.2, 13.8, 12.9, 11.7, 10.4, 9.1, 8.3, 7.6, 6.9],
+    "label": "風速",
+    "unit": "km/h"
+  },
+  "annotations": [
+    "table",
+    "chart"
+  ],
+  "detailed_weather_timeline": [
+    {
+      "time_index": 0,
+      "time_point": "15:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 18.5, "unit": "°C"},
+        "humidity": {"value": 65.0, "unit": "%"},
+        "pressure": {"value": 1015.2, "unit": "mb"},
+        "wind_speed": {"value": 1.4, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 1,
+      "time_point": "30:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 18.2, "unit": "°C"},
+        "humidity": {"value": 68.0, "unit": "%"},
+        "pressure": {"value": 1014.8, "unit": "mb"},
+        "wind_speed": {"value": 1.6, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 2,
+      "time_point": "45:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 17.8, "unit": "°C"},
+        "humidity": {"value": 72.0, "unit": "%"},
+        "pressure": {"value": 1014.2, "unit": "mb"},
+        "wind_speed": {"value": 1.7, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "light", "intensity": "light"}
+      }
+    },
+    {
+      "time_index": 3,
+      "time_point": "1:00:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 17.5, "unit": "°C"},
+        "humidity": {"value": 78.0, "unit": "%"},
+        "pressure": {"value": 1013.5, "unit": "mb"},
+        "wind_speed": {"value": 1.8, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "light", "intensity": "light"}
+      }
+    },
+    {
+      "time_index": 4,
+      "time_point": "1:15:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 17.2, "unit": "°C"},
+        "humidity": {"value": 82.0, "unit": "%"},
+        "pressure": {"value": 1012.8, "unit": "mb"},
+        "wind_speed": {"value": 2.0, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "moderate", "intensity": "moderate"}
+      }
+    },
+    {
+      "time_index": 5,
+      "time_point": "1:30:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 16.8, "unit": "°C"},
+        "humidity": {"value": 85.0, "unit": "%"},
+        "pressure": {"value": 1012.1, "unit": "mb"},
+        "wind_speed": {"value": 2.2, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "moderate", "intensity": "moderate"}
+      }
+    },
+    {
+      "time_index": 6,
+      "time_point": "1:45:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 16.5, "unit": "°C"},
+        "humidity": {"value": 88.0, "unit": "%"},
+        "pressure": {"value": 1011.3, "unit": "mb"},
+        "wind_speed": {"value": 2.6, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "heavy", "intensity": "heavy"}
+      }
+    },
+    {
+      "time_index": 7,
+      "time_point": "2:00:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 16.2, "unit": "°C"},
+        "humidity": {"value": 90.0, "unit": "%"},
+        "pressure": {"value": 1010.5, "unit": "mb"},
+        "wind_speed": {"value": 2.9, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "heavy", "intensity": "heavy"}
+      }
+    },
+    {
+      "time_index": 8,
+      "time_point": "2:15:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 15.9, "unit": "°C"},
+        "humidity": {"value": 91.0, "unit": "%"},
+        "pressure": {"value": 1009.8, "unit": "mb"},
+        "wind_speed": {"value": 3.1, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "heavy", "intensity": "heavy"}
+      }
+    },
+    {
+      "time_index": 9,
+      "time_point": "2:30:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 15.6, "unit": "°C"},
+        "humidity": {"value": 89.0, "unit": "%"},
+        "pressure": {"value": 1010.2, "unit": "mb"},
+        "wind_speed": {"value": 3.4, "unit": "m/s"},
+        "rainfall": {"is_raining": true, "status": "moderate", "intensity": "moderate"}
+      }
+    },
+    {
+      "time_index": 10,
+      "time_point": "2:45:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 15.3, "unit": "°C"},
+        "humidity": {"value": 85.0, "unit": "%"},
+        "pressure": {"value": 1011.1, "unit": "mb"},
+        "wind_speed": {"value": 3.8, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 11,
+      "time_point": "3:00:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 15.0, "unit": "°C"},
+        "humidity": {"value": 81.0, "unit": "%"},
+        "pressure": {"value": 1012.0, "unit": "mb"},
+        "wind_speed": {"value": 3.9, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 12,
+      "time_point": "3:15:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 14.8, "unit": "°C"},
+        "humidity": {"value": 78.0, "unit": "%"},
+        "pressure": {"value": 1012.8, "unit": "mb"},
+        "wind_speed": {"value": 3.8, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 13,
+      "time_point": "3:30:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 14.5, "unit": "°C"},
+        "humidity": {"value": 75.0, "unit": "%"},
+        "pressure": {"value": 1013.5, "unit": "mb"},
+        "wind_speed": {"value": 3.6, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 14,
+      "time_point": "3:45:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 14.3, "unit": "°C"},
+        "humidity": {"value": 72.0, "unit": "%"},
+        "pressure": {"value": 1014.2, "unit": "mb"},
+        "wind_speed": {"value": 3.2, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 15,
+      "time_point": "4:00:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 14.1, "unit": "°C"},
+        "humidity": {"value": 70.0, "unit": "%"},
+        "pressure": {"value": 1014.8, "unit": "mb"},
+        "wind_speed": {"value": 2.9, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 16,
+      "time_point": "4:15:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 13.9, "unit": "°C"},
+        "humidity": {"value": 68.0, "unit": "%"},
+        "pressure": {"value": 1015.3, "unit": "mb"},
+        "wind_speed": {"value": 2.5, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 17,
+      "time_point": "4:30:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 13.7, "unit": "°C"},
+        "humidity": {"value": 66.0, "unit": "%"},
+        "pressure": {"value": 1015.8, "unit": "mb"},
+        "wind_speed": {"value": 2.3, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 18,
+      "time_point": "4:45:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 13.5, "unit": "°C"},
+        "humidity": {"value": 64.0, "unit": "%"},
+        "pressure": {"value": 1016.2, "unit": "mb"},
+        "wind_speed": {"value": 2.1, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    },
+    {
+      "time_index": 19,
+      "time_point": "5:00:00.000",
+      "weather_data": {
+        "air_temperature": {"value": 13.3, "unit": "°C"},
+        "humidity": {"value": 62.0, "unit": "%"},
+        "pressure": {"value": 1016.5, "unit": "mb"},
+        "wind_speed": {"value": 1.9, "unit": "m/s"},
+        "rainfall": {"is_raining": false, "status": "dry"}
+      }
+    }
+  ]
+}

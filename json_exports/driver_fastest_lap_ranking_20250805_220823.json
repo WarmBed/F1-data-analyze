@@ -1,0 +1,369 @@
+{
+  "analysis_info": {
+    "function_id": "14.4",
+    "analysis_type": "driver_fastest_lap_ranking",
+    "timestamp": "20250805_220823",
+    "total_drivers": 20
+  },
+  "fastest_lap_ranking": [
+    {
+      "abbr": "ANT",
+      "driver_info": {
+        "name": "Kimi Antonelli",
+        "number": "12",
+        "team": "Mercedes",
+        "abbreviation": "ANT"
+      },
+      "fastest_lap_time": "1:30.965",
+      "fastest_lap_num": 50,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "19.0",
+      "sector_1": "31.545s",
+      "sector_2": "41.576s",
+      "sector_3": "17.844s",
+      "raw_time": "0 days 00:01:30.965000"
+    },
+    {
+      "abbr": "PIA",
+      "driver_info": {
+        "name": "Oscar Piastri",
+        "number": "81",
+        "team": "McLaren",
+        "abbreviation": "PIA"
+      },
+      "fastest_lap_time": "1:31.039",
+      "fastest_lap_num": 53,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "33.0",
+      "sector_1": "31.335s",
+      "sector_2": "41.643s",
+      "sector_3": "18.061s",
+      "raw_time": "0 days 00:01:31.039000"
+    },
+    {
+      "abbr": "VER",
+      "driver_info": {
+        "name": "Max Verstappen",
+        "number": "1",
+        "team": "Red Bull Racing",
+        "abbreviation": "VER"
+      },
+      "fastest_lap_time": "1:31.041",
+      "fastest_lap_num": 52,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "31.0",
+      "sector_1": "31.286s",
+      "sector_2": "41.708s",
+      "sector_3": "18.047s",
+      "raw_time": "0 days 00:01:31.041000"
+    },
+    {
+      "abbr": "SAI",
+      "driver_info": {
+        "name": "Carlos Sainz",
+        "number": "55",
+        "team": "Williams",
+        "abbreviation": "SAI"
+      },
+      "fastest_lap_time": "1:31.106",
+      "fastest_lap_num": 36,
+      "fastest_lap_compound": "SOFT",
+      "fastest_lap_tyre_life": "3.0",
+      "sector_1": "31.765s",
+      "sector_2": "41.484s",
+      "sector_3": "17.857s",
+      "raw_time": "0 days 00:01:31.106000"
+    },
+    {
+      "abbr": "NOR",
+      "driver_info": {
+        "name": "Lando Norris",
+        "number": "4",
+        "team": "McLaren",
+        "abbreviation": "NOR"
+      },
+      "fastest_lap_time": "1:31.116",
+      "fastest_lap_num": 51,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "30.0",
+      "sector_1": "31.464s",
+      "sector_2": "41.728s",
+      "sector_3": "17.924s",
+      "raw_time": "0 days 00:01:31.116000"
+    },
+    {
+      "abbr": "ALB",
+      "driver_info": {
+        "name": "Alexander Albon",
+        "number": "23",
+        "team": "Williams",
+        "abbreviation": "ALB"
+      },
+      "fastest_lap_time": "1:31.125",
+      "fastest_lap_num": 52,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "28.0",
+      "sector_1": "31.466s",
+      "sector_2": "41.804s",
+      "sector_3": "17.855s",
+      "raw_time": "0 days 00:01:31.125000"
+    },
+    {
+      "abbr": "HAD",
+      "driver_info": {
+        "name": "Isack Hadjar",
+        "number": "6",
+        "team": "Racing Bulls",
+        "abbreviation": "HAD"
+      },
+      "fastest_lap_time": "1:31.317",
+      "fastest_lap_num": 52,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "27.0",
+      "sector_1": "31.576s",
+      "sector_2": "41.750s",
+      "sector_3": "17.991s",
+      "raw_time": "0 days 00:01:31.317000"
+    },
+    {
+      "abbr": "RUS",
+      "driver_info": {
+        "name": "George Russell",
+        "number": "63",
+        "team": "Mercedes",
+        "abbreviation": "RUS"
+      },
+      "fastest_lap_time": "1:31.357",
+      "fastest_lap_num": 51,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "32.0",
+      "sector_1": "31.474s",
+      "sector_2": "41.914s",
+      "sector_3": "17.969s",
+      "raw_time": "0 days 00:01:31.357000"
+    },
+    {
+      "abbr": "HAM",
+      "driver_info": {
+        "name": "Lewis Hamilton",
+        "number": "44",
+        "team": "Ferrari",
+        "abbreviation": "HAM"
+      },
+      "fastest_lap_time": "1:31.406",
+      "fastest_lap_num": 51,
+      "fastest_lap_compound": "MEDIUM",
+      "fastest_lap_tyre_life": "21.0",
+      "sector_1": "31.819s",
+      "sector_2": "41.674s",
+      "sector_3": "17.913s",
+      "raw_time": "0 days 00:01:31.406000"
+    },
+    {
+      "abbr": "LEC",
+      "driver_info": {
+        "name": "Charles Leclerc",
+        "number": "16",
+        "team": "Ferrari",
+        "abbreviation": "LEC"
+      },
+      "fastest_lap_time": "1:31.469",
+      "fastest_lap_num": 47,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "26.0",
+      "sector_1": "31.817s",
+      "sector_2": "41.732s",
+      "sector_3": "17.920s",
+      "raw_time": "0 days 00:01:31.469000"
+    },
+    {
+      "abbr": "ALO",
+      "driver_info": {
+        "name": "Fernando Alonso",
+        "number": "14",
+        "team": "Aston Martin",
+        "abbreviation": "ALO"
+      },
+      "fastest_lap_time": "1:31.770",
+      "fastest_lap_num": 51,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "28.0",
+      "sector_1": "31.691s",
+      "sector_2": "41.860s",
+      "sector_3": "18.219s",
+      "raw_time": "0 days 00:01:31.770000"
+    },
+    {
+      "abbr": "GAS",
+      "driver_info": {
+        "name": "Pierre Gasly",
+        "number": "10",
+        "team": "Alpine",
+        "abbreviation": "GAS"
+      },
+      "fastest_lap_time": "1:31.820",
+      "fastest_lap_num": 52,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "28.0",
+      "sector_1": "31.520s",
+      "sector_2": "42.165s",
+      "sector_3": "18.135s",
+      "raw_time": "0 days 00:01:31.820000"
+    },
+    {
+      "abbr": "TSU",
+      "driver_info": {
+        "name": "Yuki Tsunoda",
+        "number": "22",
+        "team": "Red Bull Racing",
+        "abbreviation": "TSU"
+      },
+      "fastest_lap_time": "1:31.871",
+      "fastest_lap_num": 51,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "28.0",
+      "sector_1": "31.913s",
+      "sector_2": "41.911s",
+      "sector_3": "18.047s",
+      "raw_time": "0 days 00:01:31.871000"
+    },
+    {
+      "abbr": "OCO",
+      "driver_info": {
+        "name": "Esteban Ocon",
+        "number": "31",
+        "team": "Haas F1 Team",
+        "abbreviation": "OCO"
+      },
+      "fastest_lap_time": "1:31.967",
+      "fastest_lap_num": 48,
+      "fastest_lap_compound": "MEDIUM",
+      "fastest_lap_tyre_life": "16.0",
+      "sector_1": "32.022s",
+      "sector_2": "41.883s",
+      "sector_3": "18.062s",
+      "raw_time": "0 days 00:01:31.967000"
+    },
+    {
+      "abbr": "BEA",
+      "driver_info": {
+        "name": "Oliver Bearman",
+        "number": "87",
+        "team": "Haas F1 Team",
+        "abbreviation": "BEA"
+      },
+      "fastest_lap_time": "1:32.006",
+      "fastest_lap_num": 49,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "27.0",
+      "sector_1": "31.782s",
+      "sector_2": "41.995s",
+      "sector_3": "18.229s",
+      "raw_time": "0 days 00:01:32.006000"
+    },
+    {
+      "abbr": "BOR",
+      "driver_info": {
+        "name": "Gabriel Bortoleto",
+        "number": "5",
+        "team": "Kick Sauber",
+        "abbreviation": "BOR"
+      },
+      "fastest_lap_time": "1:32.034",
+      "fastest_lap_num": 45,
+      "fastest_lap_compound": "MEDIUM",
+      "fastest_lap_tyre_life": "14.0",
+      "sector_1": "32.004s",
+      "sector_2": "41.982s",
+      "sector_3": "18.048s",
+      "raw_time": "0 days 00:01:32.034000"
+    },
+    {
+      "abbr": "LAW",
+      "driver_info": {
+        "name": "Liam Lawson",
+        "number": "30",
+        "team": "Racing Bulls",
+        "abbreviation": "LAW"
+      },
+      "fastest_lap_time": "1:32.043",
+      "fastest_lap_num": 39,
+      "fastest_lap_compound": "SOFT",
+      "fastest_lap_tyre_life": "6.0",
+      "sector_1": "32.360s",
+      "sector_2": "41.687s",
+      "sector_3": "17.996s",
+      "raw_time": "0 days 00:01:32.043000"
+    },
+    {
+      "abbr": "STR",
+      "driver_info": {
+        "name": "Lance Stroll",
+        "number": "18",
+        "team": "Aston Martin",
+        "abbreviation": "STR"
+      },
+      "fastest_lap_time": "1:32.052",
+      "fastest_lap_num": 52,
+      "fastest_lap_compound": "MEDIUM",
+      "fastest_lap_tyre_life": "23.0",
+      "sector_1": "31.792s",
+      "sector_2": "42.030s",
+      "sector_3": "18.230s",
+      "raw_time": "0 days 00:01:32.052000"
+    },
+    {
+      "abbr": "HUL",
+      "driver_info": {
+        "name": "Nico Hulkenberg",
+        "number": "27",
+        "team": "Kick Sauber",
+        "abbreviation": "HUL"
+      },
+      "fastest_lap_time": "1:32.572",
+      "fastest_lap_num": 31,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "9.0",
+      "sector_1": "32.460s",
+      "sector_2": "42.114s",
+      "sector_3": "17.998s",
+      "raw_time": "0 days 00:01:32.572000"
+    },
+    {
+      "abbr": "DOO",
+      "driver_info": {
+        "name": "Jack Doohan",
+        "number": "7",
+        "team": "Alpine",
+        "abbreviation": "DOO"
+      },
+      "fastest_lap_time": "1:32.685",
+      "fastest_lap_num": 47,
+      "fastest_lap_compound": "HARD",
+      "fastest_lap_tyre_life": "32.0",
+      "sector_1": "32.296s",
+      "sector_2": "42.212s",
+      "sector_3": "18.177s",
+      "raw_time": "0 days 00:01:32.685000"
+    }
+  ],
+  "tire_statistics": {
+    "HARD": {
+      "count": 14,
+      "fastest": "0 days 00:01:30.965000"
+    },
+    "SOFT": {
+      "count": 2,
+      "fastest": "0 days 00:01:31.106000"
+    },
+    "MEDIUM": {
+      "count": 4,
+      "fastest": "0 days 00:01:31.406000"
+    }
+  },
+  "analysis_notes": {
+    "ranking_basis": "最快圈速 (從快到慢)",
+    "sector_times": "各區間時間以秒為單位",
+    "tire_info": "輪胎類型與胎齡來自最快圈"
+  }
+}

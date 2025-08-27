@@ -1,0 +1,1821 @@
+2025-08-11 18:45:06,975 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-11 18:45:06,975 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-11 18:45:06,975 - __main__ - INFO - 🔧 調試模式: True
+2025-08-11 18:45:06,976 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-11 18:45:21,054 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-11 18:45:21,054 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-11 18:45:21,054 - __main__ - INFO - 🔧 調試模式: True
+2025-08-11 18:45:21,055 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-11 18:48:25,160 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 18:48:25,160 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:25,581 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 18:48:28,894 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:29,785 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:29,786 - APIserver - INFO - 執行功能: 1
+2025-08-11 18:48:29,796 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 18:48:29,800 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 18:48:29,800 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:29,800 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:29,885 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:29,886 - APIserver - INFO - 執行功能: 2
+2025-08-11 18:48:29,909 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 18:48:29,911 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 18:48:29,911 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:29,911 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:29,981 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:29,981 - APIserver - INFO - 執行功能: 3
+2025-08-11 18:48:29,996 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 18:48:29,999 - APIserver - INFO - 收到分析請求: 功能4, 2025 Japan R
+2025-08-11 18:48:29,999 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:29,999 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,083 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,084 - APIserver - INFO - 執行功能: 4
+2025-08-11 18:48:30,100 - APIserver - INFO - 功能 4 執行成功
+2025-08-11 18:48:30,102 - APIserver - INFO - 收到分析請求: 功能4.1, 2025 Japan R
+2025-08-11 18:48:30,103 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,103 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,174 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,174 - APIserver - INFO - 執行功能: 4.1
+2025-08-11 18:48:30,177 - APIserver - ERROR - 功能 4.1 執行失敗: 關鍵事件摘要分析失敗: run_key_events_summary_analysis() got an unexpected keyword argument 'show_detailed_output'
+2025-08-11 18:48:30,180 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 18:48:30,180 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,180 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,255 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,256 - APIserver - INFO - 執行功能: 5
+2025-08-11 18:48:30,270 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 18:48:30,273 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 18:48:30,273 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,273 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,340 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,340 - APIserver - INFO - 執行功能: 6
+2025-08-11 18:48:30,355 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 18:48:30,357 - APIserver - INFO - 收到分析請求: 功能6.1, 2025 Japan R
+2025-08-11 18:48:30,357 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,357 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,432 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,433 - APIserver - INFO - 執行功能: 6.1
+2025-08-11 18:48:30,433 - APIserver - INFO - 功能 6.1 執行成功
+2025-08-11 18:48:30,435 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 18:48:30,435 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,435 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,508 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,509 - APIserver - INFO - 執行功能: 7
+2025-08-11 18:48:30,525 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 18:48:30,527 - APIserver - INFO - 收到分析請求: 功能7.1, 2025 Japan R
+2025-08-11 18:48:30,528 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,528 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,653 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,653 - APIserver - INFO - 執行功能: 7.1
+2025-08-11 18:48:30,662 - APIserver - ERROR - 功能 7.1 執行失敗: 速度差距分析失敗: run_speed_gap_analysis() got an unexpected keyword argument 'auto_driver1'
+2025-08-11 18:48:30,665 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 18:48:30,665 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,666 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,746 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,747 - APIserver - INFO - 執行功能: 14
+2025-08-11 18:48:30,748 - APIserver - ERROR - 功能 14 執行失敗: Function 14 已廢棄 - 請使用 Function 15/21/25 等替代功能
+2025-08-11 18:48:30,750 - APIserver - INFO - 收到分析請求: 功能14.1, 2025 Japan R
+2025-08-11 18:48:30,751 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,751 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,830 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,830 - APIserver - INFO - 執行功能: 14.1
+2025-08-11 18:48:30,838 - APIserver - INFO - 功能 14.1 執行成功
+2025-08-11 18:48:30,841 - APIserver - INFO - 收到分析請求: 功能16.1, 2025 Japan R
+2025-08-11 18:48:30,841 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,841 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:30,921 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:30,921 - APIserver - INFO - 執行功能: 16.1
+2025-08-11 18:48:30,924 - APIserver - INFO - 功能 16.1 執行成功
+2025-08-11 18:48:30,926 - APIserver - INFO - 收到分析請求: 功能16.2, 2025 Japan R
+2025-08-11 18:48:30,926 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:30,927 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:31,021 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:31,021 - APIserver - INFO - 執行功能: 16.2
+2025-08-11 18:48:31,130 - APIserver - INFO - 功能 16.2 執行成功
+2025-08-11 18:48:31,132 - APIserver - INFO - 收到分析請求: 功能16.4, 2025 Japan R
+2025-08-11 18:48:31,133 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:31,133 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:31,226 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:31,226 - APIserver - INFO - 執行功能: 16.4
+2025-08-11 18:48:31,242 - APIserver - INFO - 功能 16.4 執行成功
+2025-08-11 18:48:31,245 - APIserver - INFO - 收到分析請求: 功能12.1, 2025 Japan R
+2025-08-11 18:48:31,245 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:31,245 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:31,316 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:31,316 - APIserver - INFO - 執行功能: 12.1
+2025-08-11 18:48:31,318 - APIserver - ERROR - 功能 12.1 執行失敗: 單車手彎道整合分析失敗: No module named 'modules.race_pitstop_statistics_enhanced'
+2025-08-11 18:48:31,320 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 18:48:31,321 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:48:31,321 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:48:31,391 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:48:31,391 - APIserver - INFO - 執行功能: 15
+2025-08-11 18:48:31,393 - APIserver - ERROR - 功能 15 執行失敗: 超車統計分析執行失敗
+2025-08-11 18:51:23,900 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-11 18:51:23,901 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-11 18:51:23,901 - __main__ - INFO - 🔧 調試模式: True
+2025-08-11 18:51:23,902 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-11 18:53:15,618 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 18:53:15,619 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:16,100 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 18:53:16,932 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:17,008 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:17,009 - APIserver - INFO - 執行功能: 1
+2025-08-11 18:53:17,024 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 18:53:17,029 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 18:53:17,034 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 18:53:17,034 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 18:53:18,049 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 18:53:18,050 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:18,053 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:18,129 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:18,129 - APIserver - INFO - 執行功能: 2
+2025-08-11 18:53:18,138 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 18:53:18,139 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 18:53:18,140 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 18:53:18,140 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 18:53:19,154 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 18:53:19,155 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:19,155 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:19,227 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:19,227 - APIserver - INFO - 執行功能: 3
+2025-08-11 18:53:19,241 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 18:53:19,247 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 18:53:19,256 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 18:53:19,256 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 18:53:20,271 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 18:53:20,272 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:20,272 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:20,373 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:20,374 - APIserver - INFO - 執行功能: 5
+2025-08-11 18:53:20,379 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 18:53:20,380 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 18:53:20,381 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 18:53:20,381 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 18:53:21,385 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 18:53:21,386 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:21,386 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:21,484 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:21,485 - APIserver - INFO - 執行功能: 6
+2025-08-11 18:53:21,501 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 18:53:21,509 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 18:53:21,510 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 18:53:21,510 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 18:53:22,524 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 18:53:22,524 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:22,524 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:22,602 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:22,602 - APIserver - INFO - 執行功能: 7
+2025-08-11 18:53:22,614 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 18:53:22,620 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 18:53:22,626 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 18:53:22,626 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 18:53:23,631 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 18:53:23,631 - APIserver - INFO - 載入核心模組...
+2025-08-11 18:53:23,631 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 18:53:23,713 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 18:53:23,713 - APIserver - INFO - 執行功能: 15
+2025-08-11 18:53:23,716 - APIserver - ERROR - 功能 15 執行失敗: 超車統計分析執行失敗
+2025-08-11 19:08:33,762 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 19:08:33,763 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:34,152 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 19:08:35,014 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:35,102 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:35,103 - APIserver - INFO - 執行功能: 1
+2025-08-11 19:08:35,106 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:35,107 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:35,107 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:35,108 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 19:08:36,124 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 19:08:36,124 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:36,125 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:36,224 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:36,225 - APIserver - INFO - 執行功能: 2
+2025-08-11 19:08:36,240 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:36,240 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:36,241 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:36,241 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 19:08:37,255 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 19:08:37,256 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:37,256 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:37,336 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:37,336 - APIserver - INFO - 執行功能: 3
+2025-08-11 19:08:37,341 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:08:37,342 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:08:37,342 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:08:37,342 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 19:08:38,356 - APIserver - INFO - 收到分析請求: 功能4, 2025 Japan R
+2025-08-11 19:08:38,356 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:38,357 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:38,442 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:38,442 - APIserver - INFO - 執行功能: 4
+2025-08-11 19:08:38,448 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:38,449 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:38,449 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:38,449 - APIserver - INFO - 功能 4 執行成功
+2025-08-11 19:08:39,453 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 19:08:39,453 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:39,453 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:39,537 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:39,537 - APIserver - INFO - 執行功能: 5
+2025-08-11 19:08:39,542 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:39,543 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:39,543 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:39,543 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 19:08:40,557 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 19:08:40,558 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:40,558 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:40,631 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:40,631 - APIserver - INFO - 執行功能: 6
+2025-08-11 19:08:40,635 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:08:40,636 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:08:40,636 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:08:40,637 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 19:08:41,642 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 19:08:41,642 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:41,642 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:41,740 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:41,741 - APIserver - INFO - 執行功能: 7
+2025-08-11 19:08:41,745 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 19:08:41,746 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 19:08:41,746 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 19:08:41,746 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 19:08:42,752 - APIserver - INFO - 收到分析請求: 功能8, 2025 Japan R
+2025-08-11 19:08:42,752 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:42,752 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:42,829 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:42,829 - APIserver - INFO - 執行功能: 8
+2025-08-11 19:08:42,851 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:42,851 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:42,851 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:42,852 - APIserver - INFO - 功能 8 執行成功
+2025-08-11 19:08:43,865 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-11 19:08:43,865 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:43,866 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:43,988 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:43,988 - APIserver - INFO - 執行功能: 9
+2025-08-11 19:08:44,013 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:44,014 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:08:44,020 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-11 19:08:44,020 - APIserver - INFO - 功能 9 執行成功
+2025-08-11 19:08:45,034 - APIserver - INFO - 收到分析請求: 功能10, 2025 Japan R
+2025-08-11 19:08:45,034 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:45,035 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:45,112 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:45,112 - APIserver - INFO - 執行功能: 10
+2025-08-11 19:08:45,142 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 19:08:45,151 - APIserver - INFO - 成功載入 JSON 文件: single_driver_telemetry_analysis_20250808_185105.json
+2025-08-11 19:08:45,152 - APIserver - INFO - 功能 10 執行成功
+2025-08-11 19:08:46,166 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 19:08:46,166 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:46,166 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:46,242 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:46,243 - APIserver - INFO - 執行功能: 11
+2025-08-11 19:08:46,244 - APIserver - ERROR - 功能 11 執行失敗: Function 11 已廢棄 - 請使用 Function 12/16/25/26 等替代功能
+2025-08-11 19:08:47,258 - APIserver - INFO - 收到分析請求: 功能12, 2025 Japan R
+2025-08-11 19:08:47,258 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:47,258 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:47,337 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:47,337 - APIserver - INFO - 執行功能: 12
+2025-08-11 19:08:47,352 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:08:47,352 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:08:47,353 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:08:47,353 - APIserver - INFO - 功能 12 執行成功
+2025-08-11 19:08:48,366 - APIserver - INFO - 收到分析請求: 功能13, 2025 Japan R
+2025-08-11 19:08:48,367 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:48,367 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:48,453 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:48,453 - APIserver - INFO - 執行功能: 13
+2025-08-11 19:08:48,465 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:08:48,466 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:08:48,466 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:08:48,466 - APIserver - INFO - 功能 13 執行成功
+2025-08-11 19:08:48,467 - APIserver - ERROR - 分析執行異常: 'message'
+2025-08-11 19:08:49,482 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 19:08:49,482 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:49,483 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:49,557 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:49,557 - APIserver - INFO - 執行功能: 14
+2025-08-11 19:08:49,558 - APIserver - ERROR - 功能 14 執行失敗: Function 14 已廢棄 - 請使用 Function 15/21/25 等替代功能
+2025-08-11 19:08:50,570 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 19:08:50,571 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:50,571 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:50,714 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:50,715 - APIserver - INFO - 執行功能: 15
+2025-08-11 19:08:50,718 - APIserver - ERROR - 功能 15 執行失敗: 超車統計分析執行失敗
+2025-08-11 19:08:51,731 - APIserver - INFO - 收到分析請求: 功能16, 2025 Japan R
+2025-08-11 19:08:51,731 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:51,731 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:51,811 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:51,811 - APIserver - INFO - 執行功能: 16
+2025-08-11 19:08:51,841 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_125916.json
+2025-08-11 19:08:51,849 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031611.json
+2025-08-11 19:08:51,855 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_LEC_2025_20250809_151616.json
+2025-08-11 19:08:51,856 - APIserver - INFO - 功能 16 執行成功
+2025-08-11 19:08:52,862 - APIserver - INFO - 收到分析請求: 功能17, 2025 Japan R
+2025-08-11 19:08:52,862 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:52,862 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:52,932 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:52,932 - APIserver - INFO - 執行功能: 17
+2025-08-11 19:08:52,962 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:08:52,971 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_025417.json
+2025-08-11 19:08:52,980 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030817.json
+2025-08-11 19:08:52,981 - APIserver - INFO - 功能 17 執行成功
+2025-08-11 19:08:53,997 - APIserver - INFO - 收到分析請求: 功能18, 2025 Japan R
+2025-08-11 19:08:53,997 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:08:53,997 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:08:54,079 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:08:54,080 - APIserver - INFO - 執行功能: 18
+2025-08-11 19:09:21,828 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:09:21,836 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:09:21,846 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:09:21,847 - APIserver - INFO - 功能 18 執行成功
+2025-08-11 19:09:22,852 - APIserver - INFO - 收到分析請求: 功能19, 2025 Japan R
+2025-08-11 19:09:22,852 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:09:22,852 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:09:22,923 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:09:22,923 - APIserver - INFO - 執行功能: 19
+2025-08-11 19:09:22,931 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:09:22,939 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030619.json
+2025-08-11 19:09:22,946 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_190848.json
+2025-08-11 19:09:22,946 - APIserver - INFO - 功能 19 執行成功
+2025-08-11 19:09:22,947 - APIserver - ERROR - 分析執行異常: 'message'
+2025-08-11 19:09:23,960 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 19:09:23,961 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:09:23,961 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:09:24,027 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:09:24,028 - APIserver - INFO - 執行功能: 20
+2025-08-11 19:16:05,168 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-11 19:16:05,169 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-11 19:16:05,169 - __main__ - INFO - 🔧 調試模式: True
+2025-08-11 19:16:05,169 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-11 19:18:42,932 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 19:18:42,932 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:43,341 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 19:18:44,168 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:44,268 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:44,269 - APIserver - INFO - 執行功能: 1
+2025-08-11 19:18:44,272 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:44,273 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:44,273 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:44,273 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 19:18:45,290 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 19:18:45,291 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:45,291 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:45,374 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:45,375 - APIserver - INFO - 執行功能: 2
+2025-08-11 19:18:45,386 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:45,386 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:45,387 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:45,387 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 19:18:46,401 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 19:18:46,401 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:46,402 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:46,512 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:46,512 - APIserver - INFO - 執行功能: 3
+2025-08-11 19:18:46,518 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:18:46,519 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:18:46,519 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:18:46,519 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 19:18:47,532 - APIserver - INFO - 收到分析請求: 功能4, 2025 Japan R
+2025-08-11 19:18:47,532 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:47,533 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:47,643 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:47,643 - APIserver - INFO - 執行功能: 4
+2025-08-11 19:18:47,649 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:47,650 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:47,650 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:47,651 - APIserver - INFO - 功能 4 執行成功
+2025-08-11 19:18:48,654 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 19:18:48,655 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:48,655 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:48,755 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:48,755 - APIserver - INFO - 執行功能: 5
+2025-08-11 19:18:48,760 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:48,761 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:48,761 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:48,761 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 19:18:49,766 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 19:18:49,766 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:49,766 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:49,865 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:49,865 - APIserver - INFO - 執行功能: 6
+2025-08-11 19:18:49,871 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:18:49,872 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:18:49,873 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:18:49,873 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 19:18:50,877 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 19:18:50,877 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:50,878 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:50,958 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:50,959 - APIserver - INFO - 執行功能: 7
+2025-08-11 19:18:50,964 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 19:18:50,965 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 19:18:50,965 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 19:18:50,966 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 19:18:51,983 - APIserver - INFO - 收到分析請求: 功能8, 2025 Japan R
+2025-08-11 19:18:51,983 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:51,984 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:52,063 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:52,063 - APIserver - INFO - 執行功能: 8
+2025-08-11 19:18:52,067 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:52,067 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:52,068 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:52,068 - APIserver - INFO - 功能 8 執行成功
+2025-08-11 19:18:53,082 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-11 19:18:53,082 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:53,083 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:53,231 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:53,232 - APIserver - INFO - 執行功能: 9
+2025-08-11 19:18:53,236 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:53,236 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:18:53,237 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-11 19:18:53,237 - APIserver - INFO - 功能 9 執行成功
+2025-08-11 19:18:54,241 - APIserver - INFO - 收到分析請求: 功能10, 2025 Japan R
+2025-08-11 19:18:54,242 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:54,242 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:54,320 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:54,320 - APIserver - INFO - 執行功能: 10
+2025-08-11 19:18:54,324 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 19:18:54,325 - APIserver - INFO - 成功載入 JSON 文件: single_driver_telemetry_analysis_20250808_185105.json
+2025-08-11 19:18:54,325 - APIserver - INFO - 功能 10 執行成功
+2025-08-11 19:18:55,336 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 19:18:55,338 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:55,345 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:55,453 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:55,453 - APIserver - INFO - 執行功能: 11
+2025-08-11 19:18:55,454 - APIserver - ERROR - 功能 11 執行失敗: Function 11 已廢棄 - 請使用 Function 12/16/25/26 等替代功能
+2025-08-11 19:18:56,457 - APIserver - INFO - 收到分析請求: 功能12, 2025 Japan R
+2025-08-11 19:18:56,458 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:56,458 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:56,548 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:56,548 - APIserver - INFO - 執行功能: 12
+2025-08-11 19:18:56,560 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:18:56,561 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:18:56,561 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:18:56,562 - APIserver - INFO - 功能 12 執行成功
+2025-08-11 19:18:57,565 - APIserver - INFO - 收到分析請求: 功能13, 2025 Japan R
+2025-08-11 19:18:57,566 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:57,566 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:57,656 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:57,656 - APIserver - INFO - 執行功能: 13
+2025-08-11 19:18:57,662 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:18:57,663 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:18:57,663 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:18:57,663 - APIserver - INFO - 功能 13 執行成功
+2025-08-11 19:18:58,668 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 19:18:58,668 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:58,668 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:58,755 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:58,755 - APIserver - INFO - 執行功能: 14
+2025-08-11 19:18:58,756 - APIserver - ERROR - 功能 14 執行失敗: Function 14 已廢棄 - 請使用 Function 15/21/25 等替代功能
+2025-08-11 19:18:59,761 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 19:18:59,762 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:18:59,762 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:18:59,968 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:18:59,969 - APIserver - INFO - 執行功能: 15
+2025-08-11 19:18:59,974 - APIserver - ERROR - 功能 15 執行失敗: 超車統計分析執行失敗
+2025-08-11 19:19:00,989 - APIserver - INFO - 收到分析請求: 功能16, 2025 Japan R
+2025-08-11 19:19:00,989 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:00,989 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:01,070 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:01,070 - APIserver - INFO - 執行功能: 16
+2025-08-11 19:19:01,085 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_125916.json
+2025-08-11 19:19:01,086 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031611.json
+2025-08-11 19:19:01,087 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_LEC_2025_20250809_151616.json
+2025-08-11 19:19:01,087 - APIserver - INFO - 功能 16 執行成功
+2025-08-11 19:19:02,094 - APIserver - INFO - 收到分析請求: 功能17, 2025 Japan R
+2025-08-11 19:19:02,094 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:02,094 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:02,184 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:02,185 - APIserver - INFO - 執行功能: 17
+2025-08-11 19:19:02,193 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:19:02,194 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_025417.json
+2025-08-11 19:19:02,194 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030817.json
+2025-08-11 19:19:02,194 - APIserver - INFO - 功能 17 執行成功
+2025-08-11 19:19:03,210 - APIserver - INFO - 收到分析請求: 功能18, 2025 Japan R
+2025-08-11 19:19:03,210 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:03,211 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:03,290 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:03,291 - APIserver - INFO - 執行功能: 18
+2025-08-11 19:19:56,341 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:19:56,342 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:19:56,342 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:19:56,342 - APIserver - INFO - 功能 18 執行成功
+2025-08-11 19:19:57,357 - APIserver - INFO - 收到分析請求: 功能19, 2025 Japan R
+2025-08-11 19:19:57,358 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:57,358 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:57,437 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:57,438 - APIserver - INFO - 執行功能: 19
+2025-08-11 19:19:57,442 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:19:57,443 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030619.json
+2025-08-11 19:19:57,451 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250811_191956.json
+2025-08-11 19:19:57,452 - APIserver - INFO - 功能 19 執行成功
+2025-08-11 19:19:58,456 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 19:19:58,456 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:58,457 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:58,553 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:58,554 - APIserver - INFO - 執行功能: 20
+2025-08-11 19:19:58,556 - APIserver - ERROR - 功能 20 執行失敗: 單一車手全部彎道分析失敗: run_single_driver_all_corners_detailed_analysis() got an unexpected keyword argument 'auto_select_driver'
+2025-08-11 19:19:59,570 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 19:19:59,571 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:19:59,571 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:19:59,642 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:19:59,642 - APIserver - INFO - 執行功能: 21
+2025-08-11 19:19:59,652 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: cannot import name 'run_driver_comprehensive_full' from 'modules.driver_comprehensive_full' (C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\modules\driver_comprehensive_full.py)
+2025-08-11 19:20:00,655 - APIserver - INFO - 收到分析請求: 功能22, 2025 Japan R
+2025-08-11 19:20:00,656 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:00,656 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:00,728 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:00,728 - APIserver - INFO - 執行功能: 22
+2025-08-11 19:20:00,729 - APIserver - ERROR - 功能 22 執行失敗: Function 22 已廢棄 - 請使用 Function 17/18/20 等替代功能
+2025-08-11 19:20:01,743 - APIserver - INFO - 收到分析請求: 功能23, 2025 Japan R
+2025-08-11 19:20:01,743 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:01,743 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:01,820 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:01,820 - APIserver - INFO - 執行功能: 23
+2025-08-11 19:20:01,821 - APIserver - ERROR - 功能 23 執行失敗: 全部車手超車分析失敗: run_all_drivers_annual_overtaking_statistics() got an unexpected keyword argument 'show_detailed_output'
+2025-08-11 19:20:02,834 - APIserver - INFO - 收到分析請求: 功能24, 2025 Japan R
+2025-08-11 19:20:02,834 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:02,835 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:02,914 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:02,914 - APIserver - INFO - 執行功能: 24
+2025-08-11 19:20:02,914 - APIserver - ERROR - 功能 24 執行失敗: 功能 24 需要 year, race, session, driver 參數
+2025-08-11 19:20:03,918 - APIserver - INFO - 收到分析請求: 功能25, 2025 Japan R
+2025-08-11 19:20:03,918 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:03,918 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:04,044 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:04,044 - APIserver - INFO - 執行功能: 25
+2025-08-11 19:20:04,044 - APIserver - ERROR - 功能 25 執行失敗: 功能 25 需要 year, race, session, driver 參數
+2025-08-11 19:20:05,048 - APIserver - INFO - 收到分析請求: 功能26, 2025 Japan R
+2025-08-11 19:20:05,048 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:05,048 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:05,120 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:05,121 - APIserver - INFO - 執行功能: 26
+2025-08-11 19:20:05,121 - APIserver - ERROR - 功能 26 執行失敗: 功能 26 需要 year, race, session, driver 參數
+2025-08-11 19:20:06,134 - APIserver - INFO - 收到分析請求: 功能27, 2025 Japan R
+2025-08-11 19:20:06,134 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:06,135 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:06,208 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:06,208 - APIserver - INFO - 執行功能: 27
+2025-08-11 19:20:06,209 - APIserver - ERROR - 功能 27 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_fastest_lap_analysis() missing 1 required positional argument: 'driver'執行失敗：無結果數據
+2025-08-11 19:20:07,228 - APIserver - INFO - 收到分析請求: 功能28, 2025 Japan R
+2025-08-11 19:20:07,229 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:07,230 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:07,336 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:07,336 - APIserver - INFO - 執行功能: 28
+2025-08-11 19:20:07,337 - APIserver - ERROR - 功能 28 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_lap_time_analysis() missing 1 required positional argument: 'driver'執行失敗：無結果數據
+2025-08-11 19:20:08,340 - APIserver - INFO - 收到分析請求: 功能29, 2025 Japan R
+2025-08-11 19:20:08,341 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:08,341 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:08,441 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:08,441 - APIserver - INFO - 執行功能: 29
+2025-08-11 19:20:08,450 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_152923.json
+2025-08-11 19:20:08,458 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 19:20:08,464 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_184829.json
+2025-08-11 19:20:08,464 - APIserver - INFO - 功能 29 執行成功
+2025-08-11 19:20:09,479 - APIserver - INFO - 收到分析請求: 功能30, 2025 Japan R
+2025-08-11 19:20:09,479 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:09,479 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:09,559 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:09,560 - APIserver - INFO - 執行功能: 30
+2025-08-11 19:20:09,561 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:20:09,561 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 19:20:09,571 - APIserver - INFO - 成功載入 JSON 文件: annual_dnf_statistics_2025_20250808_133028.json
+2025-08-11 19:20:09,571 - APIserver - INFO - 功能 30 執行成功
+2025-08-11 19:20:10,585 - APIserver - INFO - 收到分析請求: 功能31, 2025 Japan R
+2025-08-11 19:20:10,586 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:10,586 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:10,721 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:10,722 - APIserver - INFO - 執行功能: 31
+2025-08-11 19:20:10,723 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:20:10,723 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:20:10,724 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:20:10,724 - APIserver - INFO - 功能 31 執行成功
+2025-08-11 19:20:11,739 - APIserver - INFO - 收到分析請求: 功能32, 2025 Japan R
+2025-08-11 19:20:11,740 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:11,740 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:11,807 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:11,808 - APIserver - INFO - 執行功能: 32
+2025-08-11 19:20:11,820 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:20:11,826 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T3_2025_Japan_20250809_021321.json
+2025-08-11 19:20:11,826 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 19:20:11,827 - APIserver - INFO - 功能 32 執行成功
+2025-08-11 19:20:12,839 - APIserver - INFO - 收到分析請求: 功能33, 2025 Japan R
+2025-08-11 19:20:12,840 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:12,840 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:12,909 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:12,909 - APIserver - INFO - 執行功能: 33
+2025-08-11 19:20:12,910 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:20:12,921 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_152533.json
+2025-08-11 19:20:12,928 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 19:20:12,928 - APIserver - INFO - 功能 33 執行成功
+2025-08-11 19:20:13,934 - APIserver - INFO - 收到分析請求: 功能34, 2025 Japan R
+2025-08-11 19:20:13,935 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:13,935 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:14,019 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:14,020 - APIserver - INFO - 執行功能: 34
+2025-08-11 19:20:14,021 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:20:14,032 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_153341.json
+2025-08-11 19:20:14,040 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:20:14,041 - APIserver - INFO - 功能 34 執行成功
+2025-08-11 19:20:15,045 - APIserver - INFO - 收到分析請求: 功能35, 2025 Japan R
+2025-08-11 19:20:15,045 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:15,045 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:15,136 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:15,137 - APIserver - INFO - 執行功能: 35
+2025-08-11 19:20:15,154 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 19:20:15,165 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 19:20:15,179 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_pitstop_records_2024_Japanese_Grand_Prix_20250808_233355.json
+2025-08-11 19:20:15,179 - APIserver - INFO - 功能 35 執行成功
+2025-08-11 19:20:16,184 - APIserver - INFO - 收到分析請求: 功能36, 2025 Japan R
+2025-08-11 19:20:16,185 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:16,185 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:16,303 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:16,303 - APIserver - INFO - 執行功能: 36
+2025-08-11 19:20:16,317 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_003628.json
+2025-08-11 19:20:16,331 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_011336.json
+2025-08-11 19:20:16,345 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_231636.json
+2025-08-11 19:20:16,346 - APIserver - INFO - 功能 36 執行成功
+2025-08-11 19:20:17,351 - APIserver - INFO - 收到分析請求: 功能37, 2025 Japan R
+2025-08-11 19:20:17,351 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:17,352 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:17,534 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:17,534 - APIserver - INFO - 執行功能: 37
+2025-08-11 19:20:17,549 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_190837.json
+2025-08-11 19:20:17,559 - APIserver - INFO - 成功載入 JSON 文件: key_events_summary_2024_British_Grand_Prix_20250808_125937.json
+2025-08-11 19:20:17,571 - APIserver - INFO - 成功載入 JSON 文件: lap_telemetry_VER_2025_Japan_lap6_20250808_191637.json
+2025-08-11 19:20:17,571 - APIserver - INFO - 功能 37 執行成功
+2025-08-11 19:20:18,582 - APIserver - INFO - 收到分析請求: 功能38, 2025 Japan R
+2025-08-11 19:20:18,582 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:18,582 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:18,658 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:18,659 - APIserver - INFO - 執行功能: 38
+2025-08-11 19:20:18,660 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 19:20:18,668 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_LEC_2024_Japanese_Grand_Prix_20250809_153856.json
+2025-08-11 19:20:18,675 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_VER_2024_Japanese_Grand_Prix_20250809_153823.json
+2025-08-11 19:20:18,676 - APIserver - INFO - 功能 38 執行成功
+2025-08-11 19:20:19,690 - APIserver - INFO - 收到分析請求: 功能39, 2025 Japan R
+2025-08-11 19:20:19,690 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:19,690 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:19,765 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:19,766 - APIserver - INFO - 執行功能: 39
+2025-08-11 19:20:19,767 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:20:19,767 - APIserver - INFO - 功能 39 執行成功
+2025-08-11 19:20:20,771 - APIserver - INFO - 收到分析請求: 功能40, 2025 Japan R
+2025-08-11 19:20:20,771 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:20,771 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:20,842 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:20,842 - APIserver - INFO - 執行功能: 40
+2025-08-11 19:20:20,843 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:20:20,854 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_None_T1_2025_Japan_20250809_020408.json
+2025-08-11 19:20:20,861 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2024_Japanese Grand Prix_20250809_040806.json
+2025-08-11 19:20:20,861 - APIserver - INFO - 功能 40 執行成功
+2025-08-11 19:20:21,876 - APIserver - INFO - 收到分析請求: 功能41, 2025 Japan R
+2025-08-11 19:20:21,876 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:21,876 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:21,956 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:21,956 - APIserver - INFO - 執行功能: 41
+2025-08-11 19:20:21,958 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:20:21,958 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:20:21,967 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 19:20:21,967 - APIserver - INFO - 功能 41 執行成功
+2025-08-11 19:20:22,982 - APIserver - INFO - 收到分析請求: 功能42, 2025 Japan R
+2025-08-11 19:20:22,982 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:22,983 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:23,106 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:23,106 - APIserver - INFO - 執行功能: 42
+2025-08-11 19:20:23,116 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_142601.json
+2025-08-11 19:20:23,126 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250809_145942.json
+2025-08-11 19:20:23,127 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:20:23,127 - APIserver - INFO - 功能 42 執行成功
+2025-08-11 19:20:24,132 - APIserver - INFO - 收到分析請求: 功能43, 2025 Japan R
+2025-08-11 19:20:24,132 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:24,132 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:24,268 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:24,269 - APIserver - INFO - 執行功能: 43
+2025-08-11 19:20:24,270 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:20:24,278 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_Driver2_20250809_143043.json
+2025-08-11 19:20:24,284 - APIserver - INFO - 成功載入 JSON 文件: single_driver_comprehensive_VER_2025_20250808_143502.json
+2025-08-11 19:20:24,284 - APIserver - INFO - 功能 43 執行成功
+2025-08-11 19:20:25,298 - APIserver - INFO - 收到分析請求: 功能44, 2025 Japan R
+2025-08-11 19:20:25,299 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:25,299 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:25,376 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:25,376 - APIserver - INFO - 執行功能: 44
+2025-08-11 19:20:25,389 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031440.json
+2025-08-11 19:20:25,389 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:20:25,398 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_230144.json
+2025-08-11 19:20:25,398 - APIserver - INFO - 功能 44 執行成功
+2025-08-11 19:20:26,404 - APIserver - INFO - 收到分析請求: 功能45, 2025 Japan R
+2025-08-11 19:20:26,404 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:26,404 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:26,491 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:26,491 - APIserver - INFO - 執行功能: 45
+2025-08-11 19:20:26,505 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_124518.json
+2025-08-11 19:20:26,520 - APIserver - INFO - 成功載入 JSON 文件: comparison_telemetry_VER_LEC_2025_Japan_lap1_20250809_145728.json
+2025-08-11 19:20:26,528 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_LEC_T1_2025_Japan_20250809_021453.json
+2025-08-11 19:20:26,528 - APIserver - INFO - 功能 45 執行成功
+2025-08-11 19:20:27,551 - APIserver - INFO - 收到分析請求: 功能46, 2025 Japan R
+2025-08-11 19:20:27,552 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:27,552 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:27,635 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:27,635 - APIserver - INFO - 執行功能: 46
+2025-08-11 19:20:27,637 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:20:27,645 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_191846.json
+2025-08-11 19:20:27,645 - APIserver - INFO - 功能 46 執行成功
+2025-08-11 19:20:28,660 - APIserver - INFO - 收到分析請求: 功能47, 2025 Japan R
+2025-08-11 19:20:28,660 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:28,661 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:28,753 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:28,753 - APIserver - INFO - 執行功能: 47
+2025-08-11 19:20:28,754 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 19:20:28,763 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134718.json
+2025-08-11 19:20:28,770 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_224735.json
+2025-08-11 19:20:28,770 - APIserver - INFO - 功能 47 執行成功
+2025-08-11 19:20:29,784 - APIserver - INFO - 收到分析請求: 功能48, 2025 Japan R
+2025-08-11 19:20:29,784 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:20:29,785 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:20:29,872 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:20:29,872 - APIserver - INFO - 執行功能: 48
+2025-08-11 19:20:29,873 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:20:29,874 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:20:29,875 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_190848.json
+2025-08-11 19:20:29,875 - APIserver - INFO - 功能 48 執行成功
+2025-08-11 19:29:21,522 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 19:29:21,522 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:21,952 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 19:29:22,906 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:23,007 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:23,008 - APIserver - INFO - 執行功能: 1
+2025-08-11 19:29:23,011 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:23,012 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:23,012 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:23,013 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 19:29:24,029 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 19:29:24,029 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:24,030 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:24,113 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:24,114 - APIserver - INFO - 執行功能: 2
+2025-08-11 19:29:24,124 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:24,125 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:24,126 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:24,126 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 19:29:25,130 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 19:29:25,131 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:25,131 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:25,217 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:25,217 - APIserver - INFO - 執行功能: 3
+2025-08-11 19:29:25,223 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:29:25,223 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:29:25,224 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:29:25,224 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 19:29:26,237 - APIserver - INFO - 收到分析請求: 功能4, 2025 Japan R
+2025-08-11 19:29:26,237 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:26,238 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:26,378 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:26,379 - APIserver - INFO - 執行功能: 4
+2025-08-11 19:29:26,409 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:26,410 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:26,411 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:26,411 - APIserver - INFO - 功能 4 執行成功
+2025-08-11 19:29:27,418 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 19:29:27,418 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:27,419 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:27,561 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:27,562 - APIserver - INFO - 執行功能: 5
+2025-08-11 19:29:27,571 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:27,571 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:27,572 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:27,572 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 19:29:28,578 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 19:29:28,579 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:28,579 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:28,703 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:28,704 - APIserver - INFO - 執行功能: 6
+2025-08-11 19:29:28,710 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:29:28,710 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:29:28,711 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:29:28,711 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 19:29:29,715 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 19:29:29,716 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:29,716 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:29,807 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:29,807 - APIserver - INFO - 執行功能: 7
+2025-08-11 19:29:29,813 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 19:29:29,814 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 19:29:29,815 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 19:29:29,815 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 19:29:30,826 - APIserver - INFO - 收到分析請求: 功能8, 2025 Japan R
+2025-08-11 19:29:30,828 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:30,833 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:30,962 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:30,962 - APIserver - INFO - 執行功能: 8
+2025-08-11 19:29:30,969 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:30,969 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:30,970 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:30,970 - APIserver - INFO - 功能 8 執行成功
+2025-08-11 19:29:31,975 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-11 19:29:31,975 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:31,975 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:32,118 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:32,119 - APIserver - INFO - 執行功能: 9
+2025-08-11 19:29:32,123 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:32,124 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:29:32,124 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-11 19:29:32,125 - APIserver - INFO - 功能 9 執行成功
+2025-08-11 19:29:33,129 - APIserver - INFO - 收到分析請求: 功能10, 2025 Japan R
+2025-08-11 19:29:33,129 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:33,129 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:33,218 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:33,218 - APIserver - INFO - 執行功能: 10
+2025-08-11 19:29:33,223 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 19:29:33,223 - APIserver - INFO - 成功載入 JSON 文件: single_driver_telemetry_analysis_20250808_185105.json
+2025-08-11 19:29:33,224 - APIserver - INFO - 功能 10 執行成功
+2025-08-11 19:29:34,237 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 19:29:34,238 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:34,238 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:34,321 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:34,321 - APIserver - INFO - 執行功能: 11
+2025-08-11 19:29:34,322 - APIserver - ERROR - 功能 11 執行失敗: Function 11 已廢棄 - 請使用 Function 12/16/25/26 等替代功能
+2025-08-11 19:29:35,326 - APIserver - INFO - 收到分析請求: 功能12, 2025 Japan R
+2025-08-11 19:29:35,326 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:35,326 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:35,419 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:35,419 - APIserver - INFO - 執行功能: 12
+2025-08-11 19:29:35,432 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:35,433 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:35,433 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:35,433 - APIserver - INFO - 功能 12 執行成功
+2025-08-11 19:29:36,440 - APIserver - INFO - 收到分析請求: 功能13, 2025 Japan R
+2025-08-11 19:29:36,441 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:36,442 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:36,567 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:36,568 - APIserver - INFO - 執行功能: 13
+2025-08-11 19:29:36,575 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:29:36,576 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:29:36,577 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:29:36,577 - APIserver - INFO - 功能 13 執行成功
+2025-08-11 19:29:37,584 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 19:29:37,584 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:37,585 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:37,690 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:37,691 - APIserver - INFO - 執行功能: 14
+2025-08-11 19:29:37,692 - APIserver - ERROR - 功能 14 執行失敗: Function 14 已廢棄 - 請使用 Function 15/21/25 等替代功能
+2025-08-11 19:29:38,696 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 19:29:38,696 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:38,697 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:38,860 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:38,860 - APIserver - INFO - 執行功能: 15
+2025-08-11 19:29:38,863 - APIserver - ERROR - 功能 15 執行失敗: 超車統計分析執行失敗
+2025-08-11 19:29:39,867 - APIserver - INFO - 收到分析請求: 功能16, 2025 Japan R
+2025-08-11 19:29:39,867 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:39,868 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:39,953 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:39,953 - APIserver - INFO - 執行功能: 16
+2025-08-11 19:29:40,002 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_125916.json
+2025-08-11 19:29:40,003 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031611.json
+2025-08-11 19:29:40,004 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_LEC_2025_20250809_151616.json
+2025-08-11 19:29:40,005 - APIserver - INFO - 功能 16 執行成功
+2025-08-11 19:29:41,013 - APIserver - INFO - 收到分析請求: 功能17, 2025 Japan R
+2025-08-11 19:29:41,013 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:41,013 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:41,087 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:41,087 - APIserver - INFO - 執行功能: 17
+2025-08-11 19:29:41,095 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:29:41,095 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_025417.json
+2025-08-11 19:29:41,096 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030817.json
+2025-08-11 19:29:41,096 - APIserver - INFO - 功能 17 執行成功
+2025-08-11 19:29:42,101 - APIserver - INFO - 收到分析請求: 功能18, 2025 Japan R
+2025-08-11 19:29:42,102 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:42,102 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:42,190 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:42,190 - APIserver - INFO - 執行功能: 18
+2025-08-11 19:29:42,209 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 19:29:42,210 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:29:42,211 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:29:42,211 - APIserver - INFO - 功能 18 執行成功
+2025-08-11 19:29:43,217 - APIserver - INFO - 收到分析請求: 功能19, 2025 Japan R
+2025-08-11 19:29:43,217 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:43,217 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:43,311 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:43,311 - APIserver - INFO - 執行功能: 19
+2025-08-11 19:29:43,316 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:43,316 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030619.json
+2025-08-11 19:29:43,317 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250811_191956.json
+2025-08-11 19:29:43,317 - APIserver - INFO - 功能 19 執行成功
+2025-08-11 19:29:44,332 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 19:29:44,332 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:44,332 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:44,443 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:44,443 - APIserver - INFO - 執行功能: 20
+2025-08-11 19:29:44,445 - APIserver - ERROR - 功能 20 執行失敗: 單一車手全部彎道分析失敗: run_single_driver_all_corners_detailed_analysis() got an unexpected keyword argument 'auto_select_driver'
+2025-08-11 19:29:45,450 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 19:29:45,450 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:45,450 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:45,605 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:45,605 - APIserver - INFO - 執行功能: 21
+2025-08-11 19:29:45,607 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: cannot import name 'run_driver_comprehensive_full' from 'modules.driver_comprehensive_full' (C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\modules\driver_comprehensive_full.py)
+2025-08-11 19:29:46,621 - APIserver - INFO - 收到分析請求: 功能22, 2025 Japan R
+2025-08-11 19:29:46,621 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:46,621 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:46,701 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:46,702 - APIserver - INFO - 執行功能: 22
+2025-08-11 19:29:46,706 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:46,707 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:46,708 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 19:29:46,708 - APIserver - INFO - 功能 22 執行成功
+2025-08-11 19:29:47,722 - APIserver - INFO - 收到分析請求: 功能23, 2025 Japan R
+2025-08-11 19:29:47,722 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:47,723 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:47,815 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:47,815 - APIserver - INFO - 執行功能: 23
+2025-08-11 19:29:47,818 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 19:29:47,819 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 19:29:47,819 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:29:47,819 - APIserver - INFO - 功能 23 執行成功
+2025-08-11 19:29:48,825 - APIserver - INFO - 收到分析請求: 功能24, 2025 Japan R
+2025-08-11 19:29:48,826 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:48,826 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:48,908 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:48,908 - APIserver - INFO - 執行功能: 24
+2025-08-11 19:29:48,922 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 19:29:48,923 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 19:29:48,923 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 19:29:48,923 - APIserver - INFO - 功能 24 執行成功
+2025-08-11 19:29:49,928 - APIserver - INFO - 收到分析請求: 功能25, 2025 Japan R
+2025-08-11 19:29:49,928 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:49,928 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:50,014 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:50,014 - APIserver - INFO - 執行功能: 25
+2025-08-11 19:29:50,015 - APIserver - ERROR - 功能 25 執行失敗: 功能 25 需要 year, race, session, driver 參數
+2025-08-11 19:29:51,018 - APIserver - INFO - 收到分析請求: 功能26, 2025 Japan R
+2025-08-11 19:29:51,019 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:51,019 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:51,105 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:51,105 - APIserver - INFO - 執行功能: 26
+2025-08-11 19:29:51,105 - APIserver - ERROR - 功能 26 執行失敗: 功能 26 需要 year, race, session, driver 參數
+2025-08-11 19:29:52,119 - APIserver - INFO - 收到分析請求: 功能27, 2025 Japan R
+2025-08-11 19:29:52,120 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:52,120 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:52,268 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:52,268 - APIserver - INFO - 執行功能: 27
+2025-08-11 19:29:52,269 - APIserver - ERROR - 功能 27 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_fastest_lap_analysis() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 19:29:53,282 - APIserver - INFO - 收到分析請求: 功能28, 2025 Japan R
+2025-08-11 19:29:53,282 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:53,283 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:53,371 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:53,372 - APIserver - INFO - 執行功能: 28
+2025-08-11 19:29:53,372 - APIserver - ERROR - 功能 28 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_lap_time_analysis() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 19:29:54,376 - APIserver - INFO - 收到分析請求: 功能29, 2025 Japan R
+2025-08-11 19:29:54,376 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:54,377 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:54,461 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:54,462 - APIserver - INFO - 執行功能: 29
+2025-08-11 19:29:54,464 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_152923.json
+2025-08-11 19:29:54,475 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_192936.json
+2025-08-11 19:29:54,475 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 19:29:54,476 - APIserver - INFO - 功能 29 執行成功
+2025-08-11 19:29:55,481 - APIserver - INFO - 收到分析請求: 功能30, 2025 Japan R
+2025-08-11 19:29:55,481 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:55,482 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:55,621 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:55,621 - APIserver - INFO - 執行功能: 30
+2025-08-11 19:29:55,623 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 19:29:55,627 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 19:29:55,627 - APIserver - INFO - 成功載入 JSON 文件: annual_dnf_statistics_2025_20250808_133028.json
+2025-08-11 19:29:55,628 - APIserver - INFO - 功能 30 執行成功
+2025-08-11 19:29:56,636 - APIserver - INFO - 收到分析請求: 功能31, 2025 Japan R
+2025-08-11 19:29:56,636 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:56,637 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:56,733 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:56,733 - APIserver - INFO - 執行功能: 31
+2025-08-11 19:29:56,734 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:29:56,735 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:29:56,736 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:29:56,736 - APIserver - INFO - 功能 31 執行成功
+2025-08-11 19:29:57,742 - APIserver - INFO - 收到分析請求: 功能32, 2025 Japan R
+2025-08-11 19:29:57,742 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:57,742 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:57,829 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:57,829 - APIserver - INFO - 執行功能: 32
+2025-08-11 19:29:57,830 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:29:57,831 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T3_2025_Japan_20250809_021321.json
+2025-08-11 19:29:57,831 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 19:29:57,832 - APIserver - INFO - 功能 32 執行成功
+2025-08-11 19:29:58,836 - APIserver - INFO - 收到分析請求: 功能33, 2025 Japan R
+2025-08-11 19:29:58,836 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:29:58,836 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:29:58,998 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:29:58,998 - APIserver - INFO - 執行功能: 33
+2025-08-11 19:29:58,999 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 19:29:59,000 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_152533.json
+2025-08-11 19:29:59,000 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 19:29:59,001 - APIserver - INFO - 功能 33 執行成功
+2025-08-11 19:30:00,005 - APIserver - INFO - 收到分析請求: 功能34, 2025 Japan R
+2025-08-11 19:30:00,006 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:00,006 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:00,099 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:00,099 - APIserver - INFO - 執行功能: 34
+2025-08-11 19:30:00,100 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:30:00,101 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_153341.json
+2025-08-11 19:30:00,101 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:30:00,102 - APIserver - INFO - 功能 34 執行成功
+2025-08-11 19:30:01,106 - APIserver - INFO - 收到分析請求: 功能35, 2025 Japan R
+2025-08-11 19:30:01,107 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:01,107 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:01,184 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:01,184 - APIserver - INFO - 執行功能: 35
+2025-08-11 19:30:01,185 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 19:30:01,185 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 19:30:01,186 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_pitstop_records_2024_Japanese_Grand_Prix_20250808_233355.json
+2025-08-11 19:30:01,186 - APIserver - INFO - 功能 35 執行成功
+2025-08-11 19:30:02,190 - APIserver - INFO - 收到分析請求: 功能36, 2025 Japan R
+2025-08-11 19:30:02,190 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:02,190 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:02,278 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:02,278 - APIserver - INFO - 執行功能: 36
+2025-08-11 19:30:02,280 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_003628.json
+2025-08-11 19:30:02,280 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_011336.json
+2025-08-11 19:30:02,281 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_192936.json
+2025-08-11 19:30:02,281 - APIserver - INFO - 功能 36 執行成功
+2025-08-11 19:30:03,285 - APIserver - INFO - 收到分析請求: 功能37, 2025 Japan R
+2025-08-11 19:30:03,285 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:03,285 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:03,362 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:03,362 - APIserver - INFO - 執行功能: 37
+2025-08-11 19:30:03,363 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_190837.json
+2025-08-11 19:30:03,365 - APIserver - INFO - 成功載入 JSON 文件: key_events_summary_2024_British_Grand_Prix_20250808_125937.json
+2025-08-11 19:30:03,367 - APIserver - INFO - 成功載入 JSON 文件: lap_telemetry_VER_2025_Japan_lap6_20250808_191637.json
+2025-08-11 19:30:03,367 - APIserver - INFO - 功能 37 執行成功
+2025-08-11 19:30:04,389 - APIserver - INFO - 收到分析請求: 功能38, 2025 Japan R
+2025-08-11 19:30:04,389 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:04,390 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:04,538 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:04,554 - APIserver - INFO - 執行功能: 38
+2025-08-11 19:30:04,562 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 19:30:04,565 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_LEC_2024_Japanese_Grand_Prix_20250809_153856.json
+2025-08-11 19:30:04,566 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_VER_2024_Japanese_Grand_Prix_20250809_153823.json
+2025-08-11 19:30:04,567 - APIserver - INFO - 功能 38 執行成功
+2025-08-11 19:30:05,634 - APIserver - INFO - 收到分析請求: 功能39, 2025 Japan R
+2025-08-11 19:30:05,634 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:05,634 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:05,778 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:05,778 - APIserver - INFO - 執行功能: 39
+2025-08-11 19:30:05,780 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 19:30:05,780 - APIserver - INFO - 功能 39 執行成功
+2025-08-11 19:30:06,784 - APIserver - INFO - 收到分析請求: 功能40, 2025 Japan R
+2025-08-11 19:30:06,785 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:06,786 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:06,866 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:06,866 - APIserver - INFO - 執行功能: 40
+2025-08-11 19:30:06,867 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:30:06,868 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_None_T1_2025_Japan_20250809_020408.json
+2025-08-11 19:30:06,869 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2024_Japanese Grand Prix_20250809_040806.json
+2025-08-11 19:30:06,869 - APIserver - INFO - 功能 40 執行成功
+2025-08-11 19:30:07,883 - APIserver - INFO - 收到分析請求: 功能41, 2025 Japan R
+2025-08-11 19:30:07,883 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:07,883 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:07,956 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:07,956 - APIserver - INFO - 執行功能: 41
+2025-08-11 19:30:07,958 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:30:07,958 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 19:30:07,959 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 19:30:07,959 - APIserver - INFO - 功能 41 執行成功
+2025-08-11 19:30:08,964 - APIserver - INFO - 收到分析請求: 功能42, 2025 Japan R
+2025-08-11 19:30:08,964 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:08,964 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:09,042 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:09,042 - APIserver - INFO - 執行功能: 42
+2025-08-11 19:30:09,043 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_142601.json
+2025-08-11 19:30:09,044 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250809_145942.json
+2025-08-11 19:30:09,044 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:30:09,044 - APIserver - INFO - 功能 42 執行成功
+2025-08-11 19:30:10,058 - APIserver - INFO - 收到分析請求: 功能43, 2025 Japan R
+2025-08-11 19:30:10,058 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:10,058 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:10,133 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:10,133 - APIserver - INFO - 執行功能: 43
+2025-08-11 19:30:10,134 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 19:30:10,135 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_Driver2_20250809_143043.json
+2025-08-11 19:30:10,135 - APIserver - INFO - 成功載入 JSON 文件: single_driver_comprehensive_VER_2025_20250808_143502.json
+2025-08-11 19:30:10,135 - APIserver - INFO - 功能 43 執行成功
+2025-08-11 19:30:11,140 - APIserver - INFO - 收到分析請求: 功能44, 2025 Japan R
+2025-08-11 19:30:11,140 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:11,140 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:11,235 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:11,236 - APIserver - INFO - 執行功能: 44
+2025-08-11 19:30:11,238 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031440.json
+2025-08-11 19:30:11,238 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 19:30:11,239 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_230144.json
+2025-08-11 19:30:11,239 - APIserver - INFO - 功能 44 執行成功
+2025-08-11 19:30:12,254 - APIserver - INFO - 收到分析請求: 功能45, 2025 Japan R
+2025-08-11 19:30:12,254 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:12,254 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:12,400 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:12,401 - APIserver - INFO - 執行功能: 45
+2025-08-11 19:30:12,402 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_124518.json
+2025-08-11 19:30:12,406 - APIserver - INFO - 成功載入 JSON 文件: comparison_telemetry_VER_LEC_2025_Japan_lap1_20250809_145728.json
+2025-08-11 19:30:12,406 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_LEC_T1_2025_Japan_20250809_021453.json
+2025-08-11 19:30:12,406 - APIserver - INFO - 功能 45 執行成功
+2025-08-11 19:30:13,429 - APIserver - INFO - 收到分析請求: 功能46, 2025 Japan R
+2025-08-11 19:30:13,429 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:13,429 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:13,503 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:13,503 - APIserver - INFO - 執行功能: 46
+2025-08-11 19:30:13,504 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 19:30:13,504 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_191846.json
+2025-08-11 19:30:13,505 - APIserver - INFO - 功能 46 執行成功
+2025-08-11 19:30:14,519 - APIserver - INFO - 收到分析請求: 功能47, 2025 Japan R
+2025-08-11 19:30:14,519 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:14,519 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:14,592 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:14,592 - APIserver - INFO - 執行功能: 47
+2025-08-11 19:30:14,593 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 19:30:14,593 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134718.json
+2025-08-11 19:30:14,594 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_224735.json
+2025-08-11 19:30:14,594 - APIserver - INFO - 功能 47 執行成功
+2025-08-11 19:30:15,598 - APIserver - INFO - 收到分析請求: 功能48, 2025 Japan R
+2025-08-11 19:30:15,599 - APIserver - INFO - 載入核心模組...
+2025-08-11 19:30:15,599 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 19:30:15,676 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 19:30:15,676 - APIserver - INFO - 執行功能: 48
+2025-08-11 19:30:15,677 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 19:30:15,678 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 19:30:15,678 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_190848.json
+2025-08-11 19:30:15,678 - APIserver - INFO - 功能 48 執行成功
+2025-08-11 20:17:01,745 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 20:17:01,746 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:02,294 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:17:04,007 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,117 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,118 - APIserver - INFO - 執行功能: 11
+2025-08-11 20:17:04,152 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 20:17:04,153 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:17:04,154 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:17:04,155 - APIserver - INFO - 功能 11 執行成功
+2025-08-11 20:17:04,174 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 20:17:04,174 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,174 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,263 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,264 - APIserver - INFO - 執行功能: 14
+2025-08-11 20:17:04,268 - APIserver - ERROR - 功能 14 執行失敗: 賽事位置變化分析失敗：無法獲取超車數據
+2025-08-11 20:17:04,281 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 20:17:04,282 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,282 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,372 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,372 - APIserver - INFO - 執行功能: 15
+2025-08-11 20:17:04,375 - APIserver - ERROR - 功能 15 執行失敗: 賽事超車統計分析失敗: 模組返回None結果 (兼容性載入也失敗: cannot import name 'load_compatible_data' from 'modules.compatible_data_loader' (C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\modules\compatible_data_loader.py))
+2025-08-11 20:17:04,379 - APIserver - INFO - 收到分析請求: 功能25, 2025 Japan R
+2025-08-11 20:17:04,379 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,380 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,567 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,569 - APIserver - INFO - 執行功能: 25
+2025-08-11 20:17:04,573 - APIserver - ERROR - 功能 25 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_race_position() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 20:17:04,579 - APIserver - INFO - 收到分析請求: 功能26, 2025 Japan R
+2025-08-11 20:17:04,579 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,580 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,683 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,683 - APIserver - INFO - 執行功能: 26
+2025-08-11 20:17:04,683 - APIserver - ERROR - 功能 26 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_tire_strategy() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 20:17:04,686 - APIserver - INFO - 收到分析請求: 功能27, 2025 Japan R
+2025-08-11 20:17:04,686 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,687 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,847 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,848 - APIserver - INFO - 執行功能: 27
+2025-08-11 20:17:04,848 - APIserver - ERROR - 功能 27 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_fastest_lap_analysis() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 20:17:04,855 - APIserver - INFO - 收到分析請求: 功能28, 2025 Japan R
+2025-08-11 20:17:04,856 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:17:04,856 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:17:04,947 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:17:04,947 - APIserver - INFO - 執行功能: 28
+2025-08-11 20:17:04,947 - APIserver - ERROR - 功能 28 執行失敗: 執行異常: F1AnalysisFunctionMapper._execute_driver_lap_time_analysis() got multiple values for argument 'year'執行失敗：無結果數據
+2025-08-11 20:19:05,195 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 20:19:05,196 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:05,763 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:19:07,197 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:07,308 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:07,308 - APIserver - INFO - 執行功能: 11
+2025-08-11 20:19:07,332 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 20:19:07,333 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:19:07,335 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:19:07,335 - APIserver - INFO - 功能 11 執行成功
+2025-08-11 20:19:07,352 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 20:19:07,352 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:07,353 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:07,458 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:07,459 - APIserver - INFO - 執行功能: 14
+2025-08-11 20:19:07,465 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:19:07,466 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 20:19:07,476 - APIserver - WARNING - 載入 JSON 文件失敗 C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\json\all_incidents_summary_2025_Japanese_Grand_Prix_20250809_001418.json: Expecting value: line 19 column 27 (char 481)
+2025-08-11 20:19:07,477 - APIserver - INFO - 功能 14 執行成功
+2025-08-11 20:19:07,492 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 20:19:07,493 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:07,493 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:07,596 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:07,597 - APIserver - INFO - 執行功能: 15
+2025-08-11 20:19:07,600 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 20:19:07,601 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_152533.json
+2025-08-11 20:19:07,602 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 20:19:07,603 - APIserver - INFO - 功能 15 執行成功
+2025-08-11 20:19:07,616 - APIserver - INFO - 收到分析請求: 功能25, 2025 Japan R
+2025-08-11 20:19:07,617 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:07,617 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:07,814 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:07,814 - APIserver - INFO - 執行功能: 25
+2025-08-11 20:19:07,820 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:19:07,821 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:19:07,821 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:19:07,822 - APIserver - INFO - 功能 25 執行成功
+2025-08-11 20:19:07,835 - APIserver - INFO - 收到分析請求: 功能26, 2025 Japan R
+2025-08-11 20:19:07,836 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:07,836 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:07,940 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:07,941 - APIserver - INFO - 執行功能: 26
+2025-08-11 20:19:07,956 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 20:19:07,965 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250808_182607.json
+2025-08-11 20:19:07,966 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_142601.json
+2025-08-11 20:19:07,966 - APIserver - INFO - 功能 26 執行成功
+2025-08-11 20:19:07,980 - APIserver - INFO - 收到分析請求: 功能27, 2025 Japan R
+2025-08-11 20:19:07,980 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:07,980 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:08,083 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:08,084 - APIserver - INFO - 執行功能: 27
+2025-08-11 20:19:08,100 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 20:19:08,101 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 20:19:08,111 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250808_232700.json
+2025-08-11 20:19:08,112 - APIserver - INFO - 功能 27 執行成功
+2025-08-11 20:19:08,127 - APIserver - INFO - 收到分析請求: 功能28, 2025 Japan R
+2025-08-11 20:19:08,127 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:19:08,127 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:19:08,223 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:19:08,224 - APIserver - INFO - 執行功能: 28
+2025-08-11 20:19:08,245 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 20:19:08,245 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_003628.json
+2025-08-11 20:19:08,246 - APIserver - INFO - 成功載入 JSON 文件: annual_dnf_statistics_2025_20250808_133028.json
+2025-08-11 20:19:08,247 - APIserver - INFO - 功能 28 執行成功
+2025-08-11 20:22:17,345 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-11 20:22:17,345 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:18,080 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:22:19,732 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:19,870 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:19,871 - APIserver - INFO - 執行功能: 1
+2025-08-11 20:22:19,879 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:19,880 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:19,881 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:19,881 - APIserver - INFO - 功能 1 執行成功
+2025-08-11 20:22:19,888 - APIserver - INFO - 收到分析請求: 功能2, 2025 Japan R
+2025-08-11 20:22:19,889 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:19,889 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,080 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,081 - APIserver - INFO - 執行功能: 2
+2025-08-11 20:22:20,101 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:20,102 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:20,102 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:20,103 - APIserver - INFO - 功能 2 執行成功
+2025-08-11 20:22:20,107 - APIserver - INFO - 收到分析請求: 功能3, 2025 Japan R
+2025-08-11 20:22:20,108 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,109 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,240 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,241 - APIserver - INFO - 執行功能: 3
+2025-08-11 20:22:20,251 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:20,253 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 20:22:20,254 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 20:22:20,254 - APIserver - INFO - 功能 3 執行成功
+2025-08-11 20:22:20,268 - APIserver - INFO - 收到分析請求: 功能4, 2025 Japan R
+2025-08-11 20:22:20,268 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,269 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,423 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,423 - APIserver - INFO - 執行功能: 4
+2025-08-11 20:22:20,435 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:20,435 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:20,437 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:20,437 - APIserver - INFO - 功能 4 執行成功
+2025-08-11 20:22:20,442 - APIserver - INFO - 收到分析請求: 功能5, 2025 Japan R
+2025-08-11 20:22:20,443 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,443 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,574 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,574 - APIserver - INFO - 執行功能: 5
+2025-08-11 20:22:20,582 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:20,583 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:20,584 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:20,584 - APIserver - INFO - 功能 5 執行成功
+2025-08-11 20:22:20,588 - APIserver - INFO - 收到分析請求: 功能6, 2025 Japan R
+2025-08-11 20:22:20,588 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,588 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,696 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,697 - APIserver - INFO - 執行功能: 6
+2025-08-11 20:22:20,706 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 20:22:20,707 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 20:22:20,707 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 20:22:20,707 - APIserver - INFO - 功能 6 執行成功
+2025-08-11 20:22:20,722 - APIserver - INFO - 收到分析請求: 功能7, 2025 Japan R
+2025-08-11 20:22:20,723 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,723 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:20,941 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:20,942 - APIserver - INFO - 執行功能: 7
+2025-08-11 20:22:20,952 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 20:22:20,955 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 20:22:20,956 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 20:22:20,956 - APIserver - INFO - 功能 7 執行成功
+2025-08-11 20:22:20,965 - APIserver - INFO - 收到分析請求: 功能8, 2025 Japan R
+2025-08-11 20:22:20,965 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:20,965 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,089 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,089 - APIserver - INFO - 執行功能: 8
+2025-08-11 20:22:21,106 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:21,107 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:21,108 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:21,108 - APIserver - INFO - 功能 8 執行成功
+2025-08-11 20:22:21,115 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-11 20:22:21,116 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,116 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,343 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,344 - APIserver - INFO - 執行功能: 9
+2025-08-11 20:22:21,350 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:21,350 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:21,351 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-11 20:22:21,351 - APIserver - INFO - 功能 9 執行成功
+2025-08-11 20:22:21,355 - APIserver - INFO - 收到分析請求: 功能10, 2025 Japan R
+2025-08-11 20:22:21,355 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,355 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,445 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,446 - APIserver - INFO - 執行功能: 10
+2025-08-11 20:22:21,452 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 20:22:21,452 - APIserver - INFO - 成功載入 JSON 文件: single_driver_telemetry_analysis_20250808_185105.json
+2025-08-11 20:22:21,453 - APIserver - INFO - 功能 10 執行成功
+2025-08-11 20:22:21,456 - APIserver - INFO - 收到分析請求: 功能11, 2025 Japan R
+2025-08-11 20:22:21,456 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,457 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,571 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,572 - APIserver - INFO - 執行功能: 11
+2025-08-11 20:22:21,589 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 20:22:21,590 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:22:21,591 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:22:21,591 - APIserver - INFO - 功能 11 執行成功
+2025-08-11 20:22:21,596 - APIserver - INFO - 收到分析請求: 功能12, 2025 Japan R
+2025-08-11 20:22:21,596 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,596 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,696 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,696 - APIserver - INFO - 執行功能: 12
+2025-08-11 20:22:21,708 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:21,709 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:21,709 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:21,709 - APIserver - INFO - 功能 12 執行成功
+2025-08-11 20:22:21,713 - APIserver - INFO - 收到分析請求: 功能13, 2025 Japan R
+2025-08-11 20:22:21,713 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,714 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,809 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,809 - APIserver - INFO - 執行功能: 13
+2025-08-11 20:22:21,818 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:21,819 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 20:22:21,820 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 20:22:21,820 - APIserver - INFO - 功能 13 執行成功
+2025-08-11 20:22:21,824 - APIserver - INFO - 收到分析請求: 功能14, 2025 Japan R
+2025-08-11 20:22:21,824 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,824 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:21,926 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:21,926 - APIserver - INFO - 執行功能: 14
+2025-08-11 20:22:21,932 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:21,933 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 20:22:21,934 - APIserver - WARNING - 載入 JSON 文件失敗 C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\json\all_incidents_summary_2025_Japanese_Grand_Prix_20250809_001418.json: Expecting value: line 19 column 27 (char 481)
+2025-08-11 20:22:21,934 - APIserver - INFO - 功能 14 執行成功
+2025-08-11 20:22:21,949 - APIserver - INFO - 收到分析請求: 功能15, 2025 Japan R
+2025-08-11 20:22:21,950 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:21,951 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,111 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,112 - APIserver - INFO - 執行功能: 15
+2025-08-11 20:22:22,117 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_151054.json
+2025-08-11 20:22:22,118 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_152533.json
+2025-08-11 20:22:22,119 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 20:22:22,119 - APIserver - INFO - 功能 15 執行成功
+2025-08-11 20:22:22,122 - APIserver - INFO - 收到分析請求: 功能16, 2025 Japan R
+2025-08-11 20:22:22,123 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,123 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,208 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,208 - APIserver - INFO - 執行功能: 16
+2025-08-11 20:22:22,218 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_125916.json
+2025-08-11 20:22:22,219 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031611.json
+2025-08-11 20:22:22,220 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_LEC_2025_20250809_151616.json
+2025-08-11 20:22:22,221 - APIserver - INFO - 功能 16 執行成功
+2025-08-11 20:22:22,227 - APIserver - INFO - 收到分析請求: 功能17, 2025 Japan R
+2025-08-11 20:22:22,227 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,228 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,378 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,380 - APIserver - INFO - 執行功能: 17
+2025-08-11 20:22:22,402 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 20:22:22,404 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_025417.json
+2025-08-11 20:22:22,407 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030817.json
+2025-08-11 20:22:22,407 - APIserver - INFO - 功能 17 執行成功
+2025-08-11 20:22:22,417 - APIserver - INFO - 收到分析請求: 功能18, 2025 Japan R
+2025-08-11 20:22:22,417 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,418 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,521 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,521 - APIserver - INFO - 執行功能: 18
+2025-08-11 20:22:22,567 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 20:22:22,568 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:22:22,568 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:22:22,568 - APIserver - INFO - 功能 18 執行成功
+2025-08-11 20:22:22,574 - APIserver - INFO - 收到分析請求: 功能19, 2025 Japan R
+2025-08-11 20:22:22,574 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,575 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,686 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,687 - APIserver - INFO - 執行功能: 19
+2025-08-11 20:22:22,692 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:22,693 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_030619.json
+2025-08-11 20:22:22,694 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250811_191956.json
+2025-08-11 20:22:22,694 - APIserver - INFO - 功能 19 執行成功
+2025-08-11 20:22:22,700 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 20:22:22,700 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,700 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:22,837 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:22,837 - APIserver - INFO - 執行功能: 20
+2025-08-11 20:22:22,841 - APIserver - ERROR - 功能 20 執行失敗: 單一車手全部彎道分析失敗: run_single_driver_all_corners_detailed_analysis() got an unexpected keyword argument 'auto_select_driver'
+2025-08-11 20:22:22,855 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 20:22:22,855 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:22,855 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,029 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,030 - APIserver - INFO - 執行功能: 21
+2025-08-11 20:22:23,033 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: cannot import name 'run_driver_comprehensive_full' from 'modules.driver_comprehensive_full' (C:\Users\mike2\OneDrive\Code\F1T-LOCAL-V13 - 嘗試GUI\modules\driver_comprehensive_full.py)
+2025-08-11 20:22:23,036 - APIserver - INFO - 收到分析請求: 功能22, 2025 Japan R
+2025-08-11 20:22:23,037 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,037 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,149 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,150 - APIserver - INFO - 執行功能: 22
+2025-08-11 20:22:23,159 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:23,160 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:23,161 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 20:22:23,161 - APIserver - INFO - 功能 22 執行成功
+2025-08-11 20:22:23,170 - APIserver - INFO - 收到分析請求: 功能23, 2025 Japan R
+2025-08-11 20:22:23,170 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,170 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,340 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,340 - APIserver - INFO - 執行功能: 23
+2025-08-11 20:22:23,346 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 20:22:23,349 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 20:22:23,350 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 20:22:23,351 - APIserver - INFO - 功能 23 執行成功
+2025-08-11 20:22:23,361 - APIserver - INFO - 收到分析請求: 功能24, 2025 Japan R
+2025-08-11 20:22:23,363 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,366 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,520 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,521 - APIserver - INFO - 執行功能: 24
+2025-08-11 20:22:23,531 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:23,532 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:23,533 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:23,533 - APIserver - INFO - 功能 24 執行成功
+2025-08-11 20:22:23,539 - APIserver - INFO - 收到分析請求: 功能25, 2025 Japan R
+2025-08-11 20:22:23,540 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,540 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,744 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,745 - APIserver - INFO - 執行功能: 25
+2025-08-11 20:22:23,765 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:22:23,766 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:22:23,767 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:22:23,768 - APIserver - INFO - 功能 25 執行成功
+2025-08-11 20:22:23,776 - APIserver - INFO - 收到分析請求: 功能26, 2025 Japan R
+2025-08-11 20:22:23,777 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,779 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:23,950 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:23,952 - APIserver - INFO - 執行功能: 26
+2025-08-11 20:22:23,967 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 20:22:23,969 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250808_182607.json
+2025-08-11 20:22:23,970 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_142601.json
+2025-08-11 20:22:23,970 - APIserver - INFO - 功能 26 執行成功
+2025-08-11 20:22:23,977 - APIserver - INFO - 收到分析請求: 功能27, 2025 Japan R
+2025-08-11 20:22:23,977 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:23,977 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:24,234 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:24,234 - APIserver - INFO - 執行功能: 27
+2025-08-11 20:22:24,240 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 20:22:24,241 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122706.json
+2025-08-11 20:22:24,242 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250808_232700.json
+2025-08-11 20:22:24,242 - APIserver - INFO - 功能 27 執行成功
+2025-08-11 20:22:24,260 - APIserver - INFO - 收到分析請求: 功能28, 2025 Japan R
+2025-08-11 20:22:24,260 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:24,260 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:24,362 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:24,362 - APIserver - INFO - 執行功能: 28
+2025-08-11 20:22:24,368 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_180628.json
+2025-08-11 20:22:24,369 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_003628.json
+2025-08-11 20:22:24,369 - APIserver - INFO - 成功載入 JSON 文件: annual_dnf_statistics_2025_20250808_133028.json
+2025-08-11 20:22:24,370 - APIserver - INFO - 功能 28 執行成功
+2025-08-11 20:22:24,375 - APIserver - INFO - 收到分析請求: 功能29, 2025 Japan R
+2025-08-11 20:22:24,375 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:24,375 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:24,509 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:24,510 - APIserver - INFO - 執行功能: 29
+2025-08-11 20:22:24,513 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_152923.json
+2025-08-11 20:22:24,514 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_192936.json
+2025-08-11 20:22:24,516 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 20:22:24,516 - APIserver - INFO - 功能 29 執行成功
+2025-08-11 20:22:24,532 - APIserver - INFO - 收到分析請求: 功能30, 2025 Japan R
+2025-08-11 20:22:24,533 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:24,533 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:24,660 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:24,661 - APIserver - INFO - 執行功能: 30
+2025-08-11 20:22:24,662 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213006.json
+2025-08-11 20:22:24,663 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_British_Grand_Prix_20250808_130527.json
+2025-08-11 20:22:24,664 - APIserver - INFO - 成功載入 JSON 文件: annual_dnf_statistics_2025_20250808_133028.json
+2025-08-11 20:22:24,665 - APIserver - INFO - 功能 30 執行成功
+2025-08-11 20:22:24,680 - APIserver - INFO - 收到分析請求: 功能31, 2025 Japan R
+2025-08-11 20:22:24,681 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:24,682 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:24,798 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:24,799 - APIserver - INFO - 執行功能: 31
+2025-08-11 20:22:24,800 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 20:22:24,801 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:22:24,803 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:22:24,803 - APIserver - INFO - 功能 31 執行成功
+2025-08-11 20:22:24,810 - APIserver - INFO - 收到分析請求: 功能32, 2025 Japan R
+2025-08-11 20:22:24,810 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:24,811 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,110 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,111 - APIserver - INFO - 執行功能: 32
+2025-08-11 20:22:25,113 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 20:22:25,116 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T3_2025_Japan_20250809_021321.json
+2025-08-11 20:22:25,118 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_dnf_VER_2025_20250808_132953.json
+2025-08-11 20:22:25,118 - APIserver - INFO - 功能 32 執行成功
+2025-08-11 20:22:25,123 - APIserver - INFO - 收到分析請求: 功能33, 2025 Japan R
+2025-08-11 20:22:25,123 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,123 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,236 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,237 - APIserver - INFO - 執行功能: 33
+2025-08-11 20:22:25,238 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_213312.json
+2025-08-11 20:22:25,239 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_152533.json
+2025-08-11 20:22:25,239 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 20:22:25,239 - APIserver - INFO - 功能 33 執行成功
+2025-08-11 20:22:25,244 - APIserver - INFO - 收到分析請求: 功能34, 2025 Japan R
+2025-08-11 20:22:25,244 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,244 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,363 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,364 - APIserver - INFO - 執行功能: 34
+2025-08-11 20:22:25,366 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 20:22:25,368 - APIserver - INFO - 成功載入 JSON 文件: detailed_laptime_analysis_VER_2025_20250809_153341.json
+2025-08-11 20:22:25,369 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 20:22:25,370 - APIserver - INFO - 功能 34 執行成功
+2025-08-11 20:22:25,375 - APIserver - INFO - 收到分析請求: 功能35, 2025 Japan R
+2025-08-11 20:22:25,376 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,377 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,535 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,535 - APIserver - INFO - 執行功能: 35
+2025-08-11 20:22:25,539 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_011355.json
+2025-08-11 20:22:25,540 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_153523.json
+2025-08-11 20:22:25,541 - APIserver - INFO - 成功載入 JSON 文件: driver_detailed_pitstop_records_2024_Japanese_Grand_Prix_20250808_233355.json
+2025-08-11 20:22:25,541 - APIserver - INFO - 功能 35 執行成功
+2025-08-11 20:22:25,547 - APIserver - INFO - 收到分析請求: 功能36, 2025 Japan R
+2025-08-11 20:22:25,548 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,548 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,709 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,711 - APIserver - INFO - 執行功能: 36
+2025-08-11 20:22:25,718 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_003628.json
+2025-08-11 20:22:25,724 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_011336.json
+2025-08-11 20:22:25,725 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_192936.json
+2025-08-11 20:22:25,726 - APIserver - INFO - 功能 36 執行成功
+2025-08-11 20:22:25,745 - APIserver - INFO - 收到分析請求: 功能37, 2025 Japan R
+2025-08-11 20:22:25,746 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,758 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:25,921 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:25,922 - APIserver - INFO - 執行功能: 37
+2025-08-11 20:22:25,923 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_190837.json
+2025-08-11 20:22:25,924 - APIserver - INFO - 成功載入 JSON 文件: key_events_summary_2024_British_Grand_Prix_20250808_125937.json
+2025-08-11 20:22:25,927 - APIserver - INFO - 成功載入 JSON 文件: lap_telemetry_VER_2025_Japan_lap6_20250808_191637.json
+2025-08-11 20:22:25,928 - APIserver - INFO - 功能 37 執行成功
+2025-08-11 20:22:25,950 - APIserver - INFO - 收到分析請求: 功能38, 2025 Japan R
+2025-08-11 20:22:25,951 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:25,951 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:26,283 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:26,283 - APIserver - INFO - 執行功能: 38
+2025-08-11 20:22:26,285 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122338.json
+2025-08-11 20:22:26,286 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_LEC_2024_Japanese_Grand_Prix_20250809_153856.json
+2025-08-11 20:22:26,287 - APIserver - INFO - 成功載入 JSON 文件: single_driver_overtaking_analysis_VER_2024_Japanese_Grand_Prix_20250809_153823.json
+2025-08-11 20:22:26,288 - APIserver - INFO - 功能 38 執行成功
+2025-08-11 20:22:26,293 - APIserver - INFO - 收到分析請求: 功能39, 2025 Japan R
+2025-08-11 20:22:26,293 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:26,294 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:26,426 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:26,426 - APIserver - INFO - 執行功能: 39
+2025-08-11 20:22:26,428 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_023917.json
+2025-08-11 20:22:26,428 - APIserver - INFO - 功能 39 執行成功
+2025-08-11 20:22:26,433 - APIserver - INFO - 收到分析請求: 功能40, 2025 Japan R
+2025-08-11 20:22:26,433 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:26,434 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:26,577 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:26,578 - APIserver - INFO - 執行功能: 40
+2025-08-11 20:22:26,580 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:26,581 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_None_T1_2025_Japan_20250809_020408.json
+2025-08-11 20:22:26,583 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2024_Japanese Grand Prix_20250809_040806.json
+2025-08-11 20:22:26,583 - APIserver - INFO - 功能 40 執行成功
+2025-08-11 20:22:26,593 - APIserver - INFO - 收到分析請求: 功能41, 2025 Japan R
+2025-08-11 20:22:26,594 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:26,594 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:26,742 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:26,743 - APIserver - INFO - 執行功能: 41
+2025-08-11 20:22:26,745 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 20:22:26,746 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-11 20:22:26,747 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_122141.json
+2025-08-11 20:22:26,748 - APIserver - INFO - 功能 41 執行成功
+2025-08-11 20:22:26,759 - APIserver - INFO - 收到分析請求: 功能42, 2025 Japan R
+2025-08-11 20:22:26,759 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:26,761 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:26,894 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:26,894 - APIserver - INFO - 執行功能: 42
+2025-08-11 20:22:26,897 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_ALB_vs_ALO_20250809_142601.json
+2025-08-11 20:22:26,899 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250809_145942.json
+2025-08-11 20:22:26,900 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 20:22:26,900 - APIserver - INFO - 功能 42 執行成功
+2025-08-11 20:22:26,905 - APIserver - INFO - 收到分析請求: 功能43, 2025 Japan R
+2025-08-11 20:22:26,905 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:26,906 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,107 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,108 - APIserver - INFO - 執行功能: 43
+2025-08-11 20:22:27,111 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_134326.json
+2025-08-11 20:22:27,112 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_Driver2_20250809_143043.json
+2025-08-11 20:22:27,113 - APIserver - INFO - 成功載入 JSON 文件: single_driver_comprehensive_VER_2025_20250808_143502.json
+2025-08-11 20:22:27,113 - APIserver - INFO - 功能 43 執行成功
+2025-08-11 20:22:27,128 - APIserver - INFO - 收到分析請求: 功能44, 2025 Japan R
+2025-08-11 20:22:27,129 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:27,129 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,460 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,461 - APIserver - INFO - 執行功能: 44
+2025-08-11 20:22:27,462 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_VER_T1_2025_Japan_20250809_031440.json
+2025-08-11 20:22:27,463 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134421.json
+2025-08-11 20:22:27,463 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_230144.json
+2025-08-11 20:22:27,464 - APIserver - INFO - 功能 44 執行成功
+2025-08-11 20:22:27,469 - APIserver - INFO - 收到分析請求: 功能45, 2025 Japan R
+2025-08-11 20:22:27,470 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:27,472 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,582 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,582 - APIserver - INFO - 執行功能: 45
+2025-08-11 20:22:27,584 - APIserver - INFO - 成功載入 JSON 文件: all_incidents_summary_2024_Japanese_Grand_Prix_20250808_124518.json
+2025-08-11 20:22:27,588 - APIserver - INFO - 成功載入 JSON 文件: comparison_telemetry_VER_LEC_2025_Japan_lap1_20250809_145728.json
+2025-08-11 20:22:27,589 - APIserver - INFO - 成功載入 JSON 文件: corner_detailed_analysis_LEC_T1_2025_Japan_20250809_021453.json
+2025-08-11 20:22:27,590 - APIserver - INFO - 功能 45 執行成功
+2025-08-11 20:22:27,603 - APIserver - INFO - 收到分析請求: 功能46, 2025 Japan R
+2025-08-11 20:22:27,603 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:27,603 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,721 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,721 - APIserver - INFO - 執行功能: 46
+2025-08-11 20:22:27,723 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_124641.json
+2025-08-11 20:22:27,724 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_Japanese_Grand_Prix_20250811_191846.json
+2025-08-11 20:22:27,724 - APIserver - INFO - 功能 46 執行成功
+2025-08-11 20:22:27,728 - APIserver - INFO - 收到分析請求: 功能47, 2025 Japan R
+2025-08-11 20:22:27,728 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:27,729 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,831 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,831 - APIserver - INFO - 執行功能: 47
+2025-08-11 20:22:27,832 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 20:22:27,833 - APIserver - INFO - 成功載入 JSON 文件: driver_fastest_pitstop_ranking_2024_British_Grand_Prix_20250808_134718.json
+2025-08-11 20:22:27,834 - APIserver - INFO - 成功載入 JSON 文件: raw_data_track_position_2025_Unknown_20250808_224735.json
+2025-08-11 20:22:27,834 - APIserver - INFO - 功能 47 執行成功
+2025-08-11 20:22:27,848 - APIserver - INFO - 收到分析請求: 功能48, 2025 Japan R
+2025-08-11 20:22:27,849 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:22:27,849 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:22:27,951 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:22:27,951 - APIserver - INFO - 執行功能: 48
+2025-08-11 20:22:27,954 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_performance_comparison_20250811_184831.json
+2025-08-11 20:22:27,955 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_overtaking_trends_analysis_20250811_184831.json
+2025-08-11 20:22:27,956 - APIserver - INFO - 成功載入 JSON 文件: driver_comparison_VER_vs_LEC_20250811_190848.json
+2025-08-11 20:22:27,957 - APIserver - INFO - 功能 48 執行成功
+2025-08-11 20:24:55,767 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 20:24:55,768 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:24:56,411 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:24:58,385 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:24:58,524 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:24:58,525 - APIserver - INFO - 執行功能: 20
+2025-08-11 20:26:59,132 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:26:59,134 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:26:59,136 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:26:59,138 - APIserver - INFO - 功能 20 執行成功
+2025-08-11 20:26:59,144 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 20:26:59,148 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:26:59,149 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:26:59,289 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:26:59,289 - APIserver - INFO - 執行功能: 21
+2025-08-11 20:26:59,292 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: 'F1AnalysisFunctionMapper' object has no attribute 'open_analyzer'
+2025-08-11 20:37:09,955 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 20:37:09,955 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:37:10,485 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:37:11,812 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:37:11,940 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:37:11,941 - APIserver - INFO - 執行功能: 20
+2025-08-11 20:37:12,370 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 20:37:12,370 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 20:37:12,371 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 20:37:12,371 - APIserver - INFO - 功能 20 執行成功
+2025-08-11 20:37:12,376 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 20:37:12,376 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:37:12,377 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:37:12,545 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:37:12,550 - APIserver - INFO - 執行功能: 21
+2025-08-11 20:37:12,561 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: 'F1AnalysisFunctionMapper' object has no attribute 'open_analyzer'
+2025-08-11 20:48:18,673 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 20:48:18,674 - APIserver - INFO - 載入核心模組...
+2025-08-11 20:48:19,152 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 20:48:20,201 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 20:48:20,303 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 20:48:20,304 - APIserver - INFO - 執行功能: 21
+2025-08-11 21:18:04,550 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 21:18:04,551 - APIserver - INFO - 載入核心模組...
+2025-08-11 21:18:05,065 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 21:18:06,165 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 21:18:06,278 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 21:18:06,279 - APIserver - INFO - 執行功能: 21
+2025-08-11 21:18:06,280 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: 'F1AnalysisFunctionMapper' object has no attribute '_execute_single_driver_detailed_telemetry'
+2025-08-11 21:22:08,543 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 21:22:08,544 - APIserver - INFO - 載入核心模組...
+2025-08-11 21:22:09,147 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 21:22:10,431 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 21:22:10,570 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 21:22:10,571 - APIserver - INFO - 執行功能: 21
+2025-08-11 21:22:10,572 - APIserver - ERROR - 功能 21 執行失敗: 所有車手綜合分析失敗: modules.function_mapper.F1AnalysisFunctionMapper._execute_single_driver_telemetry() got multiple values for keyword argument 'show_detailed_output'
+2025-08-11 21:23:32,712 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 21:23:32,713 - APIserver - INFO - 載入核心模組...
+2025-08-11 21:23:33,325 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-11 21:23:34,838 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 21:23:34,952 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 21:23:34,953 - APIserver - INFO - 執行功能: 21
+2025-08-11 21:23:34,972 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 21:23:34,973 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 21:23:34,974 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 21:23:34,975 - APIserver - INFO - 功能 21 執行成功
+2025-08-11 21:24:25,106 - APIserver - INFO - 收到分析請求: 功能20, 2025 Japan R
+2025-08-11 21:24:25,107 - APIserver - INFO - 載入核心模組...
+2025-08-11 21:24:25,107 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 21:24:25,207 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 21:24:25,208 - APIserver - INFO - 執行功能: 20
+2025-08-11 21:24:25,532 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-11 21:24:25,533 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 21:24:25,533 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 21:24:25,533 - APIserver - INFO - 功能 20 執行成功
+2025-08-11 21:24:25,548 - APIserver - INFO - 收到分析請求: 功能21, 2025 Japan R
+2025-08-11 21:24:25,548 - APIserver - INFO - 載入核心模組...
+2025-08-11 21:24:25,549 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-11 21:24:25,649 - APIserver - INFO - 初始化功能映射器...
+2025-08-11 21:24:25,649 - APIserver - INFO - 執行功能: 21
+2025-08-11 21:24:25,662 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-11 21:24:25,663 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-11 21:24:25,663 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250808_212047.json
+2025-08-11 21:24:25,664 - APIserver - INFO - 功能 21 執行成功
+2025-08-13 00:27:49,969 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 00:27:49,970 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 00:27:49,970 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 00:27:49,970 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 00:28:53,810 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 00:28:53,811 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 00:28:53,811 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 00:28:53,811 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:28:37,801 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:28:37,802 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:28:37,802 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:28:37,802 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:28:52,075 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:28:52,075 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:28:52,075 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:28:52,075 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:28:58,646 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:28:58,646 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:28:58,647 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:28:58,647 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:29:18,817 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:29:18,818 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:29:18,818 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:29:18,818 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:29:26,429 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:29:26,429 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:29:26,429 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:29:26,430 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 01:30:50,605 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-13 01:30:50,606 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-13 01:30:50,606 - __main__ - INFO - 🔧 調試模式: True
+2025-08-13 01:30:50,606 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫
+2025-08-13 06:42:58,980 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-13 06:42:58,981 - APIserver - INFO - 載入核心模組...
+2025-08-13 06:43:00,534 - numexpr.utils - INFO - NumExpr defaulting to 16 threads.
+2025-08-13 06:43:04,271 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-13 06:43:05,247 - APIserver - INFO - 初始化功能映射器...
+2025-08-13 06:43:05,247 - APIserver - INFO - 執行功能: 9
+2025-08-13 06:43:05,267 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-13 06:43:05,276 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-13 06:43:05,284 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-13 06:43:05,284 - APIserver - INFO - 功能 9 執行成功
+2025-08-13 06:43:10,662 - APIserver - INFO - 收到分析請求: 功能9, 2025 Japan R
+2025-08-13 06:43:10,663 - APIserver - INFO - 載入核心模組...
+2025-08-13 06:43:10,663 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-13 06:43:10,746 - APIserver - INFO - 初始化功能映射器...
+2025-08-13 06:43:10,747 - APIserver - INFO - 執行功能: 9
+2025-08-13 06:43:10,750 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-13 06:43:10,750 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_dnf_analysis_2025_20250809_140413.json
+2025-08-13 06:43:10,750 - APIserver - INFO - 成功載入 JSON 文件: all_drivers_annual_overtaking_statistics_20250809_002503.json
+2025-08-13 06:43:10,751 - APIserver - INFO - 功能 9 執行成功
+2025-08-13 06:43:37,683 - APIserver - INFO - 收到分析請求: 功能1, 2025 Japan R
+2025-08-13 06:43:37,684 - APIserver - INFO - 載入核心模組...
+2025-08-13 06:43:37,684 - APIserver - INFO - 載入數據: 2025 Japan R
+2025-08-13 06:43:37,762 - APIserver - INFO - 初始化功能映射器...
+2025-08-13 06:43:37,763 - APIserver - INFO - 執行功能: 1
+2025-08-13 06:43:37,780 - APIserver - INFO - 成功載入 JSON 文件: accident_analysis_2024_Japanese_Grand_Prix_20250808_120058.json
+2025-08-13 06:43:37,786 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122120.json
+2025-08-13 06:43:37,786 - APIserver - INFO - 成功載入 JSON 文件: accident_statistics_summary_2024_Japanese_Grand_Prix_20250808_122219.json
+2025-08-13 06:43:37,787 - APIserver - INFO - 功能 1 執行成功
+2025-08-24 02:39:21,103 - __main__ - INFO - 🚀 啟動 F1 Analysis API 服務器...
+2025-08-24 02:39:21,104 - __main__ - INFO - 📋 API 版本: 2.0.0
+2025-08-24 02:39:21,104 - __main__ - INFO - 🔧 調試模式: True
+2025-08-24 02:39:21,105 - __main__ - INFO - 🎯 核心開發原則: API完全可呼叫

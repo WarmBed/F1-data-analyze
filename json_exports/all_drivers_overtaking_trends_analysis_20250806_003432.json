@@ -1,0 +1,2811 @@
+{
+  "analysis_info": {
+    "function_id": "16.4",
+    "analysis_type": "all_drivers_overtaking_trends_analysis",
+    "timestamp": "20250806_003432",
+    "race_info": "2025 Japan",
+    "analysis_period": "2023-2025"
+  },
+  "trends_data": [
+    {
+      "year": "2023",
+      "drivers": [
+        {
+          "year": "2023",
+          "abbreviation": "VER",
+          "driver_name": "Max Verstappen",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "12",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.6",
+          "successful_overtake_rate": "0.7832355220642516",
+          "defensive_success_rate": "0.7665022242006908",
+          "consistency_score": "0.7393344292086883",
+          "improvement_rate": "0.09688471456319009",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.070619533182141",
+              "success_rate": "0.7824441062341474",
+              "improvement": "0.006253039860556087"
+            },
+            "permanent": {
+              "avg_overtakes": "3.187976510165386",
+              "success_rate": "0.6466960445527081",
+              "improvement": "-0.10953823033202542"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.7952007886442622",
+              "success_rate": "0.8537884642398295",
+              "improvement": "-0.18093929222784194"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "NOR",
+          "driver_name": "Lando Norris",
+          "team_name": "McLaren",
+          "total_overtakes": "13",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.6190476190476191",
+          "successful_overtake_rate": "0.7261272287778211",
+          "defensive_success_rate": "0.6835001495829858",
+          "consistency_score": "0.8923562323369554",
+          "improvement_rate": "0.07491916566775991",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.2508878973050637",
+              "success_rate": "0.826957750595377",
+              "improvement": "-0.15876930517610127"
+            },
+            "permanent": {
+              "avg_overtakes": "3.043706815251019",
+              "success_rate": "0.596298142439672",
+              "improvement": "-0.008139150863473443"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.5700632545708737",
+              "success_rate": "0.522819175963581",
+              "improvement": "0.1968120847801198"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team_name": "McLaren",
+          "total_overtakes": "17",
+          "total_races": "18",
+          "avg_overtakes_per_race": "0.9444444444444444",
+          "successful_overtake_rate": "0.8916455950308014",
+          "defensive_success_rate": "0.70374513995805",
+          "consistency_score": "0.5825012880017639",
+          "improvement_rate": "0.12775287444327343",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.762049294720114",
+              "success_rate": "0.7764570690953687",
+              "improvement": "-0.18747355044988429"
+            },
+            "permanent": {
+              "avg_overtakes": "3.441165600430612",
+              "success_rate": "0.7445683834364547",
+              "improvement": "-0.16602031151336705"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.4987003560857395",
+              "success_rate": "0.8876763075293883",
+              "improvement": "0.049520843338428544"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team_name": "Ferrari",
+          "total_overtakes": "19",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.95",
+          "successful_overtake_rate": "0.7802041709598612",
+          "defensive_success_rate": "0.5719325129843202",
+          "consistency_score": "0.8778125405220389",
+          "improvement_rate": "0.20772015621305073",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.3985701268594863",
+              "success_rate": "0.7150377678096802",
+              "improvement": "-0.0939835104704998"
+            },
+            "permanent": {
+              "avg_overtakes": "2.2830588501250935",
+              "success_rate": "0.5822530667622158",
+              "improvement": "-0.1680508693843627"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.4670110803826595",
+              "success_rate": "0.7465931097830714",
+              "improvement": "-0.19545267974376296"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "RUS",
+          "driver_name": "George Russell",
+          "team_name": "Mercedes",
+          "total_overtakes": "7",
+          "total_races": "19",
+          "avg_overtakes_per_race": "0.3684210526315789",
+          "successful_overtake_rate": "0.8902816737647223",
+          "defensive_success_rate": "0.6964544528041536",
+          "consistency_score": "0.464184561386934",
+          "improvement_rate": "0.1694049443282878",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.4420680654345146",
+              "success_rate": "0.6582775890622707",
+              "improvement": "0.28536532017770133"
+            },
+            "permanent": {
+              "avg_overtakes": "3.539647739046922",
+              "success_rate": "0.5838840545579684",
+              "improvement": "0.09494010119942431"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.9025650241506415",
+              "success_rate": "0.8614772534526383",
+              "improvement": "0.08397781808267901"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team_name": "Mercedes",
+          "total_overtakes": "23",
+          "total_races": "20",
+          "avg_overtakes_per_race": "1.15",
+          "successful_overtake_rate": "0.8380383857035147",
+          "defensive_success_rate": "0.6905251864131965",
+          "consistency_score": "0.7384644958956097",
+          "improvement_rate": "0.06767986887970434",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.1870673224583643",
+              "success_rate": "0.5992169895559525",
+              "improvement": "-0.07891524839650388"
+            },
+            "permanent": {
+              "avg_overtakes": "3.9202030516534023",
+              "success_rate": "0.8100265464497043",
+              "improvement": "0.285071352238528"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.570356902481321",
+              "success_rate": "0.8344178924376469",
+              "improvement": "0.28356893989822796"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team_name": "Ferrari",
+          "total_overtakes": "19",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.9047619047619048",
+          "successful_overtake_rate": "0.8415482470057571",
+          "defensive_success_rate": "0.6312868606032773",
+          "consistency_score": "0.525569101063571",
+          "improvement_rate": "0.14685537374449498",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.1181663122847247",
+              "success_rate": "0.81792394142599",
+              "improvement": "0.06208930037584359"
+            },
+            "permanent": {
+              "avg_overtakes": "2.144661852537395",
+              "success_rate": "0.6454117821174027",
+              "improvement": "-0.03364565601253616"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.5609907409362274",
+              "success_rate": "0.5635485662082631",
+              "improvement": "-0.15305525730323982"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "HAD",
+          "driver_name": "Isack Hadjar",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "20",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.9090909090909091",
+          "successful_overtake_rate": "0.8901791453689096",
+          "defensive_success_rate": "0.5816496950861452",
+          "consistency_score": "0.8011967729773413",
+          "improvement_rate": "0.15112232450233754",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.4374812489722146",
+              "success_rate": "0.5280809300114551",
+              "improvement": "0.03548355320420399"
+            },
+            "permanent": {
+              "avg_overtakes": "3.171067228816333",
+              "success_rate": "0.708159534427723",
+              "improvement": "-0.10890211447739118"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.241025390733528",
+              "success_rate": "0.6686907518723957",
+              "improvement": "-0.1178065470341107"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "ALB",
+          "driver_name": "Alexander Albon",
+          "team_name": "Williams",
+          "total_overtakes": "15",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.75",
+          "successful_overtake_rate": "0.617426731051682",
+          "defensive_success_rate": "0.6409272606489015",
+          "consistency_score": "0.8777452535377591",
+          "improvement_rate": "0.025617156953086306",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.697614706288339",
+              "success_rate": "0.5232416082513383",
+              "improvement": "0.2992316345722049"
+            },
+            "permanent": {
+              "avg_overtakes": "1.8949885480875144",
+              "success_rate": "0.7169871212712805",
+              "improvement": "0.019770462755007767"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.5033536487812",
+              "success_rate": "0.5578052740921924",
+              "improvement": "-0.04620336026422578"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "BEA",
+          "driver_name": "Oliver Bearman",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "23",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.2777777777777777",
+          "successful_overtake_rate": "0.7734197822030552",
+          "defensive_success_rate": "0.7132857606988465",
+          "consistency_score": "0.6892870493285947",
+          "improvement_rate": "-0.07746096674508257",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.0072106472449949",
+              "success_rate": "0.7151556464293907",
+              "improvement": "0.0684872504476266"
+            },
+            "permanent": {
+              "avg_overtakes": "3.928082868015161",
+              "success_rate": "0.8170809740965583",
+              "improvement": "-0.17206639344888974"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.41339886595321",
+              "success_rate": "0.8146096483776395",
+              "improvement": "-0.0797666933558901"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "ALO",
+          "driver_name": "Fernando Alonso",
+          "team_name": "Aston Martin",
+          "total_overtakes": "12",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.5454545454545454",
+          "successful_overtake_rate": "0.7407781435418275",
+          "defensive_success_rate": "0.7931475111159065",
+          "consistency_score": "0.7934617417566212",
+          "improvement_rate": "0.055497152287108664",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.476454108320644",
+              "success_rate": "0.644764696447776",
+              "improvement": "-0.1629995977779809"
+            },
+            "permanent": {
+              "avg_overtakes": "3.7828895599983974",
+              "success_rate": "0.6461468502034993",
+              "improvement": "0.1963171823621218"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.1634417703483226",
+              "success_rate": "0.524297185262134",
+              "improvement": "0.049699215061497104"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "TSU",
+          "driver_name": "Yuki Tsunoda",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "19",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.95",
+          "successful_overtake_rate": "0.7497883767155038",
+          "defensive_success_rate": "0.6390148634632675",
+          "consistency_score": "0.5265098549430272",
+          "improvement_rate": "0.11791125075081571",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.6411043467066353",
+              "success_rate": "0.877757658136475",
+              "improvement": "-0.18183793415389904"
+            },
+            "permanent": {
+              "avg_overtakes": "2.6499599421979934",
+              "success_rate": "0.8918007828248757",
+              "improvement": "-0.19920564730380075"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.5861394304170124",
+              "success_rate": "0.7487666223551734",
+              "improvement": "-0.09540654305044999"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "GAS",
+          "driver_name": "Pierre Gasly",
+          "team_name": "Alpine",
+          "total_overtakes": "12",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.5714285714285714",
+          "successful_overtake_rate": "0.6515006483635355",
+          "defensive_success_rate": "0.6235594308823275",
+          "consistency_score": "0.42227946984055814",
+          "improvement_rate": "-0.018215023146905374",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.3505896970084375",
+              "success_rate": "0.8014321913760744",
+              "improvement": "0.03753266281448525"
+            },
+            "permanent": {
+              "avg_overtakes": "3.5210509015787324",
+              "success_rate": "0.8810797365472067",
+              "improvement": "-0.13907397432074864"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.7449930905261475",
+              "success_rate": "0.6609995368582331",
+              "improvement": "0.02725450207245067"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "SAI",
+          "driver_name": "Carlos Sainz",
+          "team_name": "Williams",
+          "total_overtakes": "14",
+          "total_races": "18",
+          "avg_overtakes_per_race": "0.7777777777777778",
+          "successful_overtake_rate": "0.8480773718036791",
+          "defensive_success_rate": "0.7883124391992584",
+          "consistency_score": "0.47914623286402924",
+          "improvement_rate": "0.21216173038333153",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.4417017158512255",
+              "success_rate": "0.7171602639655147",
+              "improvement": "-0.11451869296298989"
+            },
+            "permanent": {
+              "avg_overtakes": "2.4148755483690416",
+              "success_rate": "0.5065837563069147",
+              "improvement": "-0.056542493190367527"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.486052457757425",
+              "success_rate": "0.6631906857843102",
+              "improvement": "-0.07564696601442022"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "DOO",
+          "driver_name": "Jack Doohan",
+          "team_name": "Alpine",
+          "total_overtakes": "4",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.18181818181818182",
+          "successful_overtake_rate": "0.6472011583825981",
+          "defensive_success_rate": "0.7121787030860169",
+          "consistency_score": "0.7570639448478995",
+          "improvement_rate": "-0.0070533840756540345",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.823013454121632",
+              "success_rate": "0.7927513908337553",
+              "improvement": "0.23385257614068028"
+            },
+            "permanent": {
+              "avg_overtakes": "1.18969616150659",
+              "success_rate": "0.5555440373598727",
+              "improvement": "0.2234504331624777"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.7833623846768347",
+              "success_rate": "0.72315726700496",
+              "improvement": "0.2535095450513653"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "HUL",
+          "driver_name": "Nico Hulkenberg",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "10",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.45454545454545453",
+          "successful_overtake_rate": "0.8587414107346191",
+          "defensive_success_rate": "0.6611543434188174",
+          "consistency_score": "0.7866826051774145",
+          "improvement_rate": "0.08783399087029314",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.958685004151176",
+              "success_rate": "0.5160722716447038",
+              "improvement": "0.2595977719158926"
+            },
+            "permanent": {
+              "avg_overtakes": "3.2222839333200515",
+              "success_rate": "0.8760256039050788",
+              "improvement": "0.03511792782451295"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.9746124075264215",
+              "success_rate": "0.7070128430478133",
+              "improvement": "0.2064013386383256"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "LAW",
+          "driver_name": "Liam Lawson",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "24",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.3333333333333333",
+          "successful_overtake_rate": "0.7299161750672616",
+          "defensive_success_rate": "0.511272668681508",
+          "consistency_score": "0.8619169541006406",
+          "improvement_rate": "0.2670634252988058",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.2029899282298118",
+              "success_rate": "0.552638006842778",
+              "improvement": "-0.08340166920836173"
+            },
+            "permanent": {
+              "avg_overtakes": "2.414848510325852",
+              "success_rate": "0.7205235550515732",
+              "improvement": "-0.09734266958678"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.0515074313816575",
+              "success_rate": "0.8319390699946037",
+              "improvement": "0.28248180887783186"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "OCO",
+          "driver_name": "Esteban Ocon",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "9",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.45",
+          "successful_overtake_rate": "0.7845589296924981",
+          "defensive_success_rate": "0.5690527633382763",
+          "consistency_score": "0.7368718914743371",
+          "improvement_rate": "-0.12867542349355643",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.142781898228419",
+              "success_rate": "0.8209365067674053",
+              "improvement": "0.1353118233138516"
+            },
+            "permanent": {
+              "avg_overtakes": "2.0959239581189557",
+              "success_rate": "0.5986365012768998",
+              "improvement": "-0.04418673985201804"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.050138210940371",
+              "success_rate": "0.7854394489754908",
+              "improvement": "0.06813487654463746"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "BOR",
+          "driver_name": "Gabriel Bortoleto",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "21",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.1666666666666667",
+          "successful_overtake_rate": "0.893213097444764",
+          "defensive_success_rate": "0.637509825675125",
+          "consistency_score": "0.8542009788683909",
+          "improvement_rate": "0.016494553935140877",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.115413457226396",
+              "success_rate": "0.7490401431209717",
+              "improvement": "0.07622876856775906"
+            },
+            "permanent": {
+              "avg_overtakes": "1.6107356365498893",
+              "success_rate": "0.6477738506962099",
+              "improvement": "-0.10540171226771022"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.1022429633565634",
+              "success_rate": "0.8898811480133502",
+              "improvement": "0.12841026906424008"
+            }
+          }
+        },
+        {
+          "year": "2023",
+          "abbreviation": "STR",
+          "driver_name": "Lance Stroll",
+          "team_name": "Aston Martin",
+          "total_overtakes": "18",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.8571428571428571",
+          "successful_overtake_rate": "0.7515882653506326",
+          "defensive_success_rate": "0.7495774586968533",
+          "consistency_score": "0.7450442122487184",
+          "improvement_rate": "0.22590359707835067",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.3959768331597044",
+              "success_rate": "0.7106985330686066",
+              "improvement": "0.05247132381442832"
+            },
+            "permanent": {
+              "avg_overtakes": "1.2117955701880403",
+              "success_rate": "0.8961587591846689",
+              "improvement": "0.17121095516682233"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.7988859525642606",
+              "success_rate": "0.7977234921589336",
+              "improvement": "0.2787824274863539"
+            }
+          }
+        }
+      ],
+      "season_stats": {
+        "total_season_overtakes": "311",
+        "avg_success_rate": "0.7843735029513648",
+        "avg_defensive_rate": "0.6682294625268963",
+        "top_overtaker": "LAW",
+        "most_consistent": "NOR"
+      },
+      "regulation_changes": {
+        "impact": "medium",
+        "description": "規則微調和車隊適應期"
+      }
+    },
+    {
+      "year": "2024",
+      "drivers": [
+        {
+          "year": "2024",
+          "abbreviation": "VER",
+          "driver_name": "Max Verstappen",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "12",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.6",
+          "successful_overtake_rate": "0.8030135864019501",
+          "defensive_success_rate": "0.6151359405956112",
+          "consistency_score": "0.42311960148356875",
+          "improvement_rate": "0.5361336580415905",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.5967873574730165",
+              "success_rate": "0.8238313554330668",
+              "improvement": "0.08785558336814225"
+            },
+            "permanent": {
+              "avg_overtakes": "3.2350456740708933",
+              "success_rate": "0.8208550090710207",
+              "improvement": "0.13745335585593776"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.6641841636027515",
+              "success_rate": "0.6345729168568136",
+              "improvement": "0.2561808877003513"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "NOR",
+          "driver_name": "Lando Norris",
+          "team_name": "McLaren",
+          "total_overtakes": "22",
+          "total_races": "20",
+          "avg_overtakes_per_race": "1.1",
+          "successful_overtake_rate": "0.8232127711652497",
+          "defensive_success_rate": "0.6491002986486136",
+          "consistency_score": "0.5984433654970678",
+          "improvement_rate": "-0.06490927588742379",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.1784585128472287",
+              "success_rate": "0.8948922522971746",
+              "improvement": "0.1304827097741656"
+            },
+            "permanent": {
+              "avg_overtakes": "1.8470841602201746",
+              "success_rate": "0.8065376737604765",
+              "improvement": "0.23611569782916908"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.790033625861948",
+              "success_rate": "0.6329668180513195",
+              "improvement": "-0.040761234283380576"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team_name": "McLaren",
+          "total_overtakes": "17",
+          "total_races": "19",
+          "avg_overtakes_per_race": "0.8947368421052632",
+          "successful_overtake_rate": "0.6337753567744346",
+          "defensive_success_rate": "0.7490217992638208",
+          "consistency_score": "0.8732909810802416",
+          "improvement_rate": "-0.32535409805030213",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.5966193048308828",
+              "success_rate": "0.6264076396950226",
+              "improvement": "-0.038590035883477425"
+            },
+            "permanent": {
+              "avg_overtakes": "1.6827784863900912",
+              "success_rate": "0.5331440112922923",
+              "improvement": "0.04344956833505498"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.568955138814168",
+              "success_rate": "0.6595824621840225",
+              "improvement": "0.28403497038241865"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team_name": "Ferrari",
+          "total_overtakes": "19",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.8636363636363636",
+          "successful_overtake_rate": "0.6856934697220791",
+          "defensive_success_rate": "0.6769340603513037",
+          "consistency_score": "0.7495177399081254",
+          "improvement_rate": "-0.01767266397686129",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.854506749373926",
+              "success_rate": "0.6668438226354141",
+              "improvement": "0.2625823871618638"
+            },
+            "permanent": {
+              "avg_overtakes": "1.7621331126032915",
+              "success_rate": "0.8189710177350225",
+              "improvement": "0.09759010413161401"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.469745877921562",
+              "success_rate": "0.5422152392224331",
+              "improvement": "-0.025063603520942"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "RUS",
+          "driver_name": "George Russell",
+          "team_name": "Mercedes",
+          "total_overtakes": "7",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.3181818181818182",
+          "successful_overtake_rate": "0.7681578444628642",
+          "defensive_success_rate": "0.5740865836968427",
+          "consistency_score": "0.5038139627214824",
+          "improvement_rate": "0.09281278298925533",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.978037760408943",
+              "success_rate": "0.5077741499184569",
+              "improvement": "0.08886203973088619"
+            },
+            "permanent": {
+              "avg_overtakes": "3.4943524820941096",
+              "success_rate": "0.714127361507976",
+              "improvement": "0.2364371424249283"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.1602966221518223",
+              "success_rate": "0.7840289713692612",
+              "improvement": "0.05572026795315016"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team_name": "Mercedes",
+          "total_overtakes": "3",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.15",
+          "successful_overtake_rate": "0.8934305815450372",
+          "defensive_success_rate": "0.5146856823661581",
+          "consistency_score": "0.7887166467247946",
+          "improvement_rate": "-0.13693221588260696",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.2674394070301074",
+              "success_rate": "0.7844212043796202",
+              "improvement": "0.23158269947632176"
+            },
+            "permanent": {
+              "avg_overtakes": "2.610676593829622",
+              "success_rate": "0.8709798713984056",
+              "improvement": "0.18166496569162938"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.2399903363909743",
+              "success_rate": "0.6850690100105549",
+              "improvement": "0.10903270883829563"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team_name": "Ferrari",
+          "total_overtakes": "26",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.4444444444444444",
+          "successful_overtake_rate": "0.743165397598858",
+          "defensive_success_rate": "0.5986052243860119",
+          "consistency_score": "0.7442890237362125",
+          "improvement_rate": "0.5146714110898978",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.4609314410965317",
+              "success_rate": "0.7903444903200672",
+              "improvement": "0.0017532476389695573"
+            },
+            "permanent": {
+              "avg_overtakes": "1.016411624455884",
+              "success_rate": "0.5802746643778903",
+              "improvement": "0.13115234216780486"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.5614941577065284",
+              "success_rate": "0.5922554187412339",
+              "improvement": "0.2923638249826097"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "HAD",
+          "driver_name": "Isack Hadjar",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "16",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.8",
+          "successful_overtake_rate": "0.6921335096718702",
+          "defensive_success_rate": "0.5100631578059183",
+          "consistency_score": "0.5517680731884167",
+          "improvement_rate": "0.08895518472759045",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.415350632061518",
+              "success_rate": "0.6198231074021688",
+              "improvement": "0.02356181398329843"
+            },
+            "permanent": {
+              "avg_overtakes": "3.9759429222229183",
+              "success_rate": "0.681057495776795",
+              "improvement": "-0.18648510823651993"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.8275130549372474",
+              "success_rate": "0.7903368633901222",
+              "improvement": "-0.13474154510979913"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "ALB",
+          "driver_name": "Alexander Albon",
+          "team_name": "Williams",
+          "total_overtakes": "15",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.7142857142857143",
+          "successful_overtake_rate": "0.8287037712049166",
+          "defensive_success_rate": "0.7217651170759739",
+          "consistency_score": "0.5078990538171381",
+          "improvement_rate": "0.3737871458449846",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.4385484580030532",
+              "success_rate": "0.5044671224414605",
+              "improvement": "0.004315934044209269"
+            },
+            "permanent": {
+              "avg_overtakes": "3.458314240131681",
+              "success_rate": "0.7492116258732144",
+              "improvement": "0.060067384163181026"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.8659440167130206",
+              "success_rate": "0.7963813628201105",
+              "improvement": "-0.04371380003162417"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "BEA",
+          "driver_name": "Oliver Bearman",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "25",
+          "total_races": "22",
+          "avg_overtakes_per_race": "1.1363636363636365",
+          "successful_overtake_rate": "0.8385228798791655",
+          "defensive_success_rate": "0.5267684382046298",
+          "consistency_score": "0.8228126490509804",
+          "improvement_rate": "0.4262131444152256",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.9989901603256806",
+              "success_rate": "0.7122140820768814",
+              "improvement": "-0.18018234509414044"
+            },
+            "permanent": {
+              "avg_overtakes": "3.622691252427906",
+              "success_rate": "0.555619916119763",
+              "improvement": "-0.10523785425308707"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.8543999650885707",
+              "success_rate": "0.8946983620289737",
+              "improvement": "0.009519245724021463"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "ALO",
+          "driver_name": "Fernando Alonso",
+          "team_name": "Aston Martin",
+          "total_overtakes": "8",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.36363636363636365",
+          "successful_overtake_rate": "0.8361887114383971",
+          "defensive_success_rate": "0.7920418947475519",
+          "consistency_score": "0.781219598522473",
+          "improvement_rate": "-0.04886533520379899",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.0505191757959413",
+              "success_rate": "0.8517891366721297",
+              "improvement": "0.05112612268952771"
+            },
+            "permanent": {
+              "avg_overtakes": "3.4984812809956383",
+              "success_rate": "0.5060060458565132",
+              "improvement": "-0.16464043491241948"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.1833135864416076",
+              "success_rate": "0.8877866849240678",
+              "improvement": "0.17340228752891335"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "TSU",
+          "driver_name": "Yuki Tsunoda",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "5",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.25",
+          "successful_overtake_rate": "0.8943611054279884",
+          "defensive_success_rate": "0.5841381054376521",
+          "consistency_score": "0.887221218925613",
+          "improvement_rate": "-0.3354099676039226",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.9382189547285353",
+              "success_rate": "0.5727742302719863",
+              "improvement": "0.13670765200355367"
+            },
+            "permanent": {
+              "avg_overtakes": "1.186210154072493",
+              "success_rate": "0.561965548521745",
+              "improvement": "0.1759538168683195"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.248074373112297",
+              "success_rate": "0.5740784847998589",
+              "improvement": "0.12291501894383072"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "GAS",
+          "driver_name": "Pierre Gasly",
+          "team_name": "Alpine",
+          "total_overtakes": "11",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.5",
+          "successful_overtake_rate": "0.8008956968483645",
+          "defensive_success_rate": "0.6496087677059099",
+          "consistency_score": "0.43397673225241484",
+          "improvement_rate": "0.2405992710885404",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.920162895852409",
+              "success_rate": "0.6485758047264752",
+              "improvement": "0.18501466742288475"
+            },
+            "permanent": {
+              "avg_overtakes": "1.2877989348504078",
+              "success_rate": "0.6152736991689873",
+              "improvement": "0.17461581807710075"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.4431036266496533",
+              "success_rate": "0.823608110485097",
+              "improvement": "-0.13283361873446387"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "SAI",
+          "driver_name": "Carlos Sainz",
+          "team_name": "Williams",
+          "total_overtakes": "18",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.0",
+          "successful_overtake_rate": "0.6375019909473435",
+          "defensive_success_rate": "0.6225659984278985",
+          "consistency_score": "0.8549120585937011",
+          "improvement_rate": "0.23697415460584448",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.4570166637372204",
+              "success_rate": "0.6232160832650979",
+              "improvement": "0.1394801906749063"
+            },
+            "permanent": {
+              "avg_overtakes": "3.32335646349303",
+              "success_rate": "0.6886988013922601",
+              "improvement": "0.07070634444544566"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.066372023809414",
+              "success_rate": "0.577663097274159",
+              "improvement": "0.21311895854857216"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "DOO",
+          "driver_name": "Jack Doohan",
+          "team_name": "Alpine",
+          "total_overtakes": "19",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.95",
+          "successful_overtake_rate": "0.6738306813497559",
+          "defensive_success_rate": "0.7676538834062894",
+          "consistency_score": "0.5356727446013014",
+          "improvement_rate": "-0.2226167055995284",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.189716458896487",
+              "success_rate": "0.5083452605680927",
+              "improvement": "-0.07408479340491136"
+            },
+            "permanent": {
+              "avg_overtakes": "3.9039169993667557",
+              "success_rate": "0.5936254666054371",
+              "improvement": "-0.10094496717622836"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.6269513904062547",
+              "success_rate": "0.6681794293328747",
+              "improvement": "-0.12216371857990332"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "HUL",
+          "driver_name": "Nico Hulkenberg",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "8",
+          "total_races": "18",
+          "avg_overtakes_per_race": "0.4444444444444444",
+          "successful_overtake_rate": "0.6784125962692296",
+          "defensive_success_rate": "0.6678342178854206",
+          "consistency_score": "0.8219134754021268",
+          "improvement_rate": "0.07061730367037722",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.7617359803670074",
+              "success_rate": "0.7942115173815398",
+              "improvement": "-0.0812900857777239"
+            },
+            "permanent": {
+              "avg_overtakes": "3.811625438960558",
+              "success_rate": "0.6458806649480643",
+              "improvement": "0.2213650138784211"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.402698906159091",
+              "success_rate": "0.6203967021024523",
+              "improvement": "-0.16343013048699245"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "LAW",
+          "driver_name": "Liam Lawson",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "28",
+          "total_races": "18",
+          "avg_overtakes_per_race": "1.5555555555555556",
+          "successful_overtake_rate": "0.7342936143003816",
+          "defensive_success_rate": "0.5080990312605398",
+          "consistency_score": "0.6523182160747005",
+          "improvement_rate": "0.4013129432889072",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.7911653855678544",
+              "success_rate": "0.8551908553415742",
+              "improvement": "0.2369495950948719"
+            },
+            "permanent": {
+              "avg_overtakes": "1.1468774045203194",
+              "success_rate": "0.6530632188184582",
+              "improvement": "-0.07855575890579913"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.462573346812629",
+              "success_rate": "0.7546230396941471",
+              "improvement": "0.16977359958225258"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "OCO",
+          "driver_name": "Esteban Ocon",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "23",
+          "total_races": "19",
+          "avg_overtakes_per_race": "1.2105263157894737",
+          "successful_overtake_rate": "0.654669928526836",
+          "defensive_success_rate": "0.7292945066327216",
+          "consistency_score": "0.716961880335603",
+          "improvement_rate": "0.17716770061200438",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.325384780806338",
+              "success_rate": "0.6474887631757105",
+              "improvement": "-0.02972111482585954"
+            },
+            "permanent": {
+              "avg_overtakes": "1.4245773287051633",
+              "success_rate": "0.5809121488502516",
+              "improvement": "0.06882617660236673"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.9051453602488557",
+              "success_rate": "0.5847302253415969",
+              "improvement": "-0.04630004206114918"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "BOR",
+          "driver_name": "Gabriel Bortoleto",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "18",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.8181818181818182",
+          "successful_overtake_rate": "0.6053871332152106",
+          "defensive_success_rate": "0.637568742779823",
+          "consistency_score": "0.6773756689584134",
+          "improvement_rate": "0.16192779652541556",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.6765403940512094",
+              "success_rate": "0.882862034102711",
+              "improvement": "0.22509288793650778"
+            },
+            "permanent": {
+              "avg_overtakes": "3.3150606633946573",
+              "success_rate": "0.5257247555962583",
+              "improvement": "-0.05197321483852663"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.8488985204361943",
+              "success_rate": "0.6701973256396206",
+              "improvement": "0.10991009626996073"
+            }
+          }
+        },
+        {
+          "year": "2024",
+          "abbreviation": "STR",
+          "driver_name": "Lance Stroll",
+          "team_name": "Aston Martin",
+          "total_overtakes": "25",
+          "total_races": "20",
+          "avg_overtakes_per_race": "1.25",
+          "successful_overtake_rate": "0.6876152980661874",
+          "defensive_success_rate": "0.5209517671234069",
+          "consistency_score": "0.8748077243078269",
+          "improvement_rate": "0.24722849307577655",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.6111759435308874",
+              "success_rate": "0.8752569674083581",
+              "improvement": "-0.12574694768070144"
+            },
+            "permanent": {
+              "avg_overtakes": "1.8384509198087184",
+              "success_rate": "0.5094186387994561",
+              "improvement": "0.0652819100312127"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.470093158658651",
+              "success_rate": "0.5793240070694989",
+              "improvement": "0.08316504395318697"
+            }
+          }
+        }
+      ],
+      "season_stats": {
+        "total_season_overtakes": "325",
+        "avg_success_rate": "0.745648296240806",
+        "avg_defensive_rate": "0.6307961608901049",
+        "top_overtaker": "LAW",
+        "most_consistent": "TSU"
+      },
+      "regulation_changes": {
+        "impact": "low",
+        "description": "規則穩定，車隊技術成熟"
+      }
+    },
+    {
+      "year": "2025",
+      "drivers": [
+        {
+          "year": "2025",
+          "abbreviation": "VER",
+          "driver_name": "Max Verstappen",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "5",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.22727272727272727",
+          "successful_overtake_rate": "0.8102135775417584",
+          "defensive_success_rate": "0.6867528487659403",
+          "consistency_score": "0.7159315104349495",
+          "improvement_rate": "0.06415339962290262",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.308917709317364",
+              "success_rate": "0.6919632207540914",
+              "improvement": "-0.05756454851712611"
+            },
+            "permanent": {
+              "avg_overtakes": "1.3277487656925766",
+              "success_rate": "0.5304703478405651",
+              "improvement": "-0.07307132357338753"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.3080016180027165",
+              "success_rate": "0.6751753980260546",
+              "improvement": "0.0024559561243108208"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "NOR",
+          "driver_name": "Lando Norris",
+          "team_name": "McLaren",
+          "total_overtakes": "7",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.3181818181818182",
+          "successful_overtake_rate": "0.7057946584915284",
+          "defensive_success_rate": "0.5655660792660994",
+          "consistency_score": "0.7229727456738515",
+          "improvement_rate": "0.07546085702625205",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.795000511538522",
+              "success_rate": "0.5329257255588947",
+              "improvement": "-0.05925474298445854"
+            },
+            "permanent": {
+              "avg_overtakes": "2.3887716928774236",
+              "success_rate": "0.7010314380755021",
+              "improvement": "0.1722131978756825"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.0651215795063913",
+              "success_rate": "0.8335481865199426",
+              "improvement": "-0.08248122779239586"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "PIA",
+          "driver_name": "Oscar Piastri",
+          "team_name": "McLaren",
+          "total_overtakes": "18",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.8181818181818182",
+          "successful_overtake_rate": "0.8788543559516605",
+          "defensive_success_rate": "0.6411439832893001",
+          "consistency_score": "0.4028949513834194",
+          "improvement_rate": "0.5605933309847808",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.2938117621585628",
+              "success_rate": "0.8741274497215106",
+              "improvement": "0.12635142537349348"
+            },
+            "permanent": {
+              "avg_overtakes": "2.142973212607962",
+              "success_rate": "0.5829313273093643",
+              "improvement": "0.2400939927907934"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.9277459353997735",
+              "success_rate": "0.7459827148824623",
+              "improvement": "0.1680092672990366"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "LEC",
+          "driver_name": "Charles Leclerc",
+          "team_name": "Ferrari",
+          "total_overtakes": "3",
+          "total_races": "18",
+          "avg_overtakes_per_race": "0.16666666666666666",
+          "successful_overtake_rate": "0.7836289445502744",
+          "defensive_success_rate": "0.6777828902568617",
+          "consistency_score": "0.8427095553924",
+          "improvement_rate": "-0.17225480557214656",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.516187899520371",
+              "success_rate": "0.7853043239283183",
+              "improvement": "0.03411002702824811"
+            },
+            "permanent": {
+              "avg_overtakes": "3.6141956233865145",
+              "success_rate": "0.5287968888551883",
+              "improvement": "0.1442677130697591"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.0368416588792155",
+              "success_rate": "0.5967983687960975",
+              "improvement": "-0.03500346700460416"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "RUS",
+          "driver_name": "George Russell",
+          "team_name": "Mercedes",
+          "total_overtakes": "12",
+          "total_races": "19",
+          "avg_overtakes_per_race": "0.631578947368421",
+          "successful_overtake_rate": "0.6893199681842501",
+          "defensive_success_rate": "0.6859792455582175",
+          "consistency_score": "0.5750331437234099",
+          "improvement_rate": "0.37187111684653573",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.3275328018444434",
+              "success_rate": "0.7117144209694491",
+              "improvement": "0.15208859229788474"
+            },
+            "permanent": {
+              "avg_overtakes": "2.9403907780870524",
+              "success_rate": "0.8192522268944553",
+              "improvement": "0.06893497019736583"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.5946076903487523",
+              "success_rate": "0.6236818054040056",
+              "improvement": "0.24759319617073478"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "ANT",
+          "driver_name": "Kimi Antonelli",
+          "team_name": "Mercedes",
+          "total_overtakes": "26",
+          "total_races": "20",
+          "avg_overtakes_per_race": "1.3",
+          "successful_overtake_rate": "0.8208825142128574",
+          "defensive_success_rate": "0.79788608022925",
+          "consistency_score": "0.4130506483636091",
+          "improvement_rate": "0.8544676448833093",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.4470312214886354",
+              "success_rate": "0.6578512093367085",
+              "improvement": "0.17866701220115994"
+            },
+            "permanent": {
+              "avg_overtakes": "1.62125067308792",
+              "success_rate": "0.5277153627068514",
+              "improvement": "-0.11051133149348102"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.8709223881958543",
+              "success_rate": "0.8015403841003944",
+              "improvement": "-0.18660904135507422"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "HAM",
+          "driver_name": "Lewis Hamilton",
+          "team_name": "Ferrari",
+          "total_overtakes": "4",
+          "total_races": "19",
+          "avg_overtakes_per_race": "0.21052631578947367",
+          "successful_overtake_rate": "0.7317637778693799",
+          "defensive_success_rate": "0.7608840870631413",
+          "consistency_score": "0.6704113567794099",
+          "improvement_rate": "-0.06960896386857907",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.4620168454622635",
+              "success_rate": "0.6859384469412964",
+              "improvement": "0.0549878221471104"
+            },
+            "permanent": {
+              "avg_overtakes": "1.6133312787430816",
+              "success_rate": "0.8228072822132746",
+              "improvement": "0.26884932828820823"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.556183106570602",
+              "success_rate": "0.7848353507204875",
+              "improvement": "0.18752855291053144"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "HAD",
+          "driver_name": "Isack Hadjar",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "28",
+          "total_races": "21",
+          "avg_overtakes_per_race": "1.3333333333333333",
+          "successful_overtake_rate": "0.7618538443950906",
+          "defensive_success_rate": "0.5515467616204393",
+          "consistency_score": "0.46961757471882865",
+          "improvement_rate": "0.8268592934466601",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.5784567223410986",
+              "success_rate": "0.6519781472461098",
+              "improvement": "0.13061950056222688"
+            },
+            "permanent": {
+              "avg_overtakes": "2.053847231559652",
+              "success_rate": "0.7377643989838214",
+              "improvement": "0.08228500619190265"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.5370722349789399",
+              "success_rate": "0.8005230793505784",
+              "improvement": "-0.18514200409628506"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "ALB",
+          "driver_name": "Alexander Albon",
+          "team_name": "Williams",
+          "total_overtakes": "30",
+          "total_races": "22",
+          "avg_overtakes_per_race": "1.3636363636363635",
+          "successful_overtake_rate": "0.6040266244181068",
+          "defensive_success_rate": "0.7261761886231538",
+          "consistency_score": "0.7212367935192328",
+          "improvement_rate": "0.8720285137764581",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.5519696396318743",
+              "success_rate": "0.7952119980168793",
+              "improvement": "0.09994514997030851"
+            },
+            "permanent": {
+              "avg_overtakes": "1.8467138712737663",
+              "success_rate": "0.7981961538509192",
+              "improvement": "0.058240545706719105"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.8142595692817225",
+              "success_rate": "0.7245597249154416",
+              "improvement": "-0.10378854313923397"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "BEA",
+          "driver_name": "Oliver Bearman",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "25",
+          "total_races": "21",
+          "avg_overtakes_per_race": "1.1904761904761905",
+          "successful_overtake_rate": "0.6272982495072837",
+          "defensive_success_rate": "0.6500814866822215",
+          "consistency_score": "0.8958978300404272",
+          "improvement_rate": "0.6490411550985492",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.5850978695860416",
+              "success_rate": "0.7966338867279956",
+              "improvement": "0.13715190536791588"
+            },
+            "permanent": {
+              "avg_overtakes": "3.783067551264469",
+              "success_rate": "0.6019879708189332",
+              "improvement": "0.1849642200748967"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.404297118168773",
+              "success_rate": "0.5406744333275381",
+              "improvement": "0.0878957460082157"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "ALO",
+          "driver_name": "Fernando Alonso",
+          "team_name": "Aston Martin",
+          "total_overtakes": "17",
+          "total_races": "18",
+          "avg_overtakes_per_race": "0.9444444444444444",
+          "successful_overtake_rate": "0.6990609161077592",
+          "defensive_success_rate": "0.6780482999598573",
+          "consistency_score": "0.5097017168359868",
+          "improvement_rate": "-0.24975970454154683",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.610458791429377",
+              "success_rate": "0.6376194153815831",
+              "improvement": "0.0505273656563181"
+            },
+            "permanent": {
+              "avg_overtakes": "1.5522430905056934",
+              "success_rate": "0.704521246572983",
+              "improvement": "-0.13814935763095743"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.3012064760175863",
+              "success_rate": "0.8846169097987726",
+              "improvement": "0.23296529552594253"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "TSU",
+          "driver_name": "Yuki Tsunoda",
+          "team_name": "Red Bull Racing",
+          "total_overtakes": "26",
+          "total_races": "20",
+          "avg_overtakes_per_race": "1.3",
+          "successful_overtake_rate": "0.7775840171443311",
+          "defensive_success_rate": "0.5440193977119182",
+          "consistency_score": "0.6203314056316473",
+          "improvement_rate": "0.6168823040360643",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.0955612251267222",
+              "success_rate": "0.5252346296830964",
+              "improvement": "-0.05894936647731558"
+            },
+            "permanent": {
+              "avg_overtakes": "1.5808774387493325",
+              "success_rate": "0.8793908832589039",
+              "improvement": "0.26573405483354"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.3480157620673483",
+              "success_rate": "0.769057439517988",
+              "improvement": "0.028971453932384317"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "GAS",
+          "driver_name": "Pierre Gasly",
+          "team_name": "Alpine",
+          "total_overtakes": "15",
+          "total_races": "19",
+          "avg_overtakes_per_race": "0.7894736842105263",
+          "successful_overtake_rate": "0.6168637197184137",
+          "defensive_success_rate": "0.6840885759087548",
+          "consistency_score": "0.7401914781035256",
+          "improvement_rate": "0.13845393432342845",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "3.109302274863915",
+              "success_rate": "0.5425795806722088",
+              "improvement": "-0.1101188503757754"
+            },
+            "permanent": {
+              "avg_overtakes": "1.629494678559181",
+              "success_rate": "0.781696736414983",
+              "improvement": "0.03540214425486532"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.4013431839537698",
+              "success_rate": "0.5587068478343402",
+              "improvement": "0.01422457811198452"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "SAI",
+          "driver_name": "Carlos Sainz",
+          "team_name": "Williams",
+          "total_overtakes": "14",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.7",
+          "successful_overtake_rate": "0.6314441683967934",
+          "defensive_success_rate": "0.6470080591025227",
+          "consistency_score": "0.46216850650785124",
+          "improvement_rate": "0.015318131293144854",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.5505375859957917",
+              "success_rate": "0.7493091283556765",
+              "improvement": "-0.11684821982207416"
+            },
+            "permanent": {
+              "avg_overtakes": "3.7303270969615854",
+              "success_rate": "0.6453450399005098",
+              "improvement": "0.13813136860665504"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.204774519832527",
+              "success_rate": "0.689887754321685",
+              "improvement": "0.008183148273741059"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "DOO",
+          "driver_name": "Jack Doohan",
+          "team_name": "Alpine",
+          "total_overtakes": "15",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.6818181818181818",
+          "successful_overtake_rate": "0.7510860738669959",
+          "defensive_success_rate": "0.6031884759308402",
+          "consistency_score": "0.48362559991979",
+          "improvement_rate": "0.5924586896988044",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.539345995787671",
+              "success_rate": "0.5727434715081864",
+              "improvement": "0.06448425444979172"
+            },
+            "permanent": {
+              "avg_overtakes": "2.5419934098063353",
+              "success_rate": "0.8662091867955956",
+              "improvement": "-0.1265675287984815"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "2.6761279719109066",
+              "success_rate": "0.7360379109667889",
+              "improvement": "0.16493759779007167"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "HUL",
+          "driver_name": "Nico Hulkenberg",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "14",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.6666666666666666",
+          "successful_overtake_rate": "0.6725679743490278",
+          "defensive_success_rate": "0.5202807835259147",
+          "consistency_score": "0.6738703826915673",
+          "improvement_rate": "-0.5898780235771266",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "1.3450677694240125",
+              "success_rate": "0.539255314103732",
+              "improvement": "0.04691344033833711"
+            },
+            "permanent": {
+              "avg_overtakes": "2.0841417682031693",
+              "success_rate": "0.8245389988941401",
+              "improvement": "-0.16888665553660903"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.1473204711316085",
+              "success_rate": "0.6018524929871729",
+              "improvement": "0.17233470661694422"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "LAW",
+          "driver_name": "Liam Lawson",
+          "team_name": "Racing Bulls",
+          "total_overtakes": "17",
+          "total_races": "20",
+          "avg_overtakes_per_race": "0.85",
+          "successful_overtake_rate": "0.6684436184992092",
+          "defensive_success_rate": "0.5192142416885013",
+          "consistency_score": "0.7317336704488917",
+          "improvement_rate": "0.09163733425772358",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.018547674803888",
+              "success_rate": "0.8470596159062949",
+              "improvement": "0.22656301671263285"
+            },
+            "permanent": {
+              "avg_overtakes": "3.2505217349019144",
+              "success_rate": "0.5455984297836222",
+              "improvement": "-0.07218244315972783"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.0014691176234893",
+              "success_rate": "0.7584290377699683",
+              "improvement": "0.0025093434639861245"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "OCO",
+          "driver_name": "Esteban Ocon",
+          "team_name": "Haas F1 Team",
+          "total_overtakes": "16",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.7619047619047619",
+          "successful_overtake_rate": "0.8520445459882067",
+          "defensive_success_rate": "0.594435403121638",
+          "consistency_score": "0.6638986108388312",
+          "improvement_rate": "-0.4502450114948792",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.0476106939768663",
+              "success_rate": "0.8767026444443478",
+              "improvement": "0.21272031876395053"
+            },
+            "permanent": {
+              "avg_overtakes": "1.0630360917170607",
+              "success_rate": "0.5206739636701029",
+              "improvement": "0.19439484912179644"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.8671839454723749",
+              "success_rate": "0.6416556701151223",
+              "improvement": "0.004758585128086135"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "BOR",
+          "driver_name": "Gabriel Bortoleto",
+          "team_name": "Kick Sauber",
+          "total_overtakes": "18",
+          "total_races": "22",
+          "avg_overtakes_per_race": "0.8181818181818182",
+          "successful_overtake_rate": "0.8394345710258875",
+          "defensive_success_rate": "0.5128044816040407",
+          "consistency_score": "0.7678530215895638",
+          "improvement_rate": "-0.06580145173005908",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.3217967594731945",
+              "success_rate": "0.8640838842524806",
+              "improvement": "0.13069587776014802"
+            },
+            "permanent": {
+              "avg_overtakes": "2.707975439323187",
+              "success_rate": "0.8746443448965655",
+              "improvement": "-0.10908570217193381"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "3.104309859092533",
+              "success_rate": "0.5667950848289504",
+              "improvement": "0.08348175970208843"
+            }
+          }
+        },
+        {
+          "year": "2025",
+          "abbreviation": "STR",
+          "driver_name": "Lance Stroll",
+          "team_name": "Aston Martin",
+          "total_overtakes": "16",
+          "total_races": "21",
+          "avg_overtakes_per_race": "0.7619047619047619",
+          "successful_overtake_rate": "0.7496510894307533",
+          "defensive_success_rate": "0.7680733556312005",
+          "consistency_score": "0.44895616384265963",
+          "improvement_rate": "0.7940975349239868",
+          "track_performance": {
+            "street": {
+              "avg_overtakes": "2.504535181005228",
+              "success_rate": "0.5252585906421929",
+              "improvement": "0.1605450610108664"
+            },
+            "permanent": {
+              "avg_overtakes": "2.594530876608905",
+              "success_rate": "0.6523205526002522",
+              "improvement": "0.1782831472608291"
+            },
+            "semi_permanent": {
+              "avg_overtakes": "1.9758419422259443",
+              "success_rate": "0.5507703323415016",
+              "improvement": "-0.14443640146231806"
+            }
+          }
+        }
+      ],
+      "season_stats": {
+        "total_season_overtakes": "326",
+        "avg_success_rate": "0.7335908604824783",
+        "avg_defensive_rate": "0.6407480362769906",
+        "top_overtaker": "ALB",
+        "most_consistent": "BEA"
+      },
+      "regulation_changes": {
+        "impact": "medium",
+        "description": "預計技術規則調整"
+      }
+    }
+  ],
+  "driver_trends": {
+    "VER": {
+      "driver_name": "Max Verstappen",
+      "team_name": "Red Bull Racing",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "12",
+          "success_rate": "0.7832355220642516",
+          "consistency": "0.7393344292086883"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "12",
+          "success_rate": "0.8030135864019501",
+          "consistency": "0.42311960148356875"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "5",
+          "success_rate": "0.8102135775417584",
+          "consistency": "0.7159315104349495"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-58.333333333333336",
+        "success_rate_growth": "3.444437173432189",
+        "consistency_trend": "-0.02340291877373879",
+        "overall_trend": "declining"
+      }
+    },
+    "NOR": {
+      "driver_name": "Lando Norris",
+      "team_name": "McLaren",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "13",
+          "success_rate": "0.7261272287778211",
+          "consistency": "0.8923562323369554"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "22",
+          "success_rate": "0.8232127711652497",
+          "consistency": "0.5984433654970678"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "7",
+          "success_rate": "0.7057946584915284",
+          "consistency": "0.7229727456738515"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-46.15384615384615",
+        "success_rate_growth": "-2.8001388021924694",
+        "consistency_trend": "-0.16938348666310388",
+        "overall_trend": "declining"
+      }
+    },
+    "PIA": {
+      "driver_name": "Oscar Piastri",
+      "team_name": "McLaren",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "17",
+          "success_rate": "0.8916455950308014",
+          "consistency": "0.5825012880017639"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "17",
+          "success_rate": "0.6337753567744346",
+          "consistency": "0.8732909810802416"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "18",
+          "success_rate": "0.8788543559516605",
+          "consistency": "0.4028949513834194"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "5.88235294117647",
+        "success_rate_growth": "-1.4345653867890256",
+        "consistency_trend": "-0.17960633661834452",
+        "overall_trend": "improving"
+      }
+    },
+    "LEC": {
+      "driver_name": "Charles Leclerc",
+      "team_name": "Ferrari",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "19",
+          "success_rate": "0.7802041709598612",
+          "consistency": "0.8778125405220389"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "19",
+          "success_rate": "0.6856934697220791",
+          "consistency": "0.7495177399081254"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "3",
+          "success_rate": "0.7836289445502744",
+          "consistency": "0.8427095553924"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-84.21052631578947",
+        "success_rate_growth": "0.4389586364553617",
+        "consistency_trend": "-0.03510298512963894",
+        "overall_trend": "declining"
+      }
+    },
+    "RUS": {
+      "driver_name": "George Russell",
+      "team_name": "Mercedes",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "7",
+          "success_rate": "0.8902816737647223",
+          "consistency": "0.464184561386934"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "7",
+          "success_rate": "0.7681578444628642",
+          "consistency": "0.5038139627214824"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "12",
+          "success_rate": "0.6893199681842501",
+          "consistency": "0.5750331437234099"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "71.42857142857143",
+        "success_rate_growth": "-22.57282290566177",
+        "consistency_trend": "0.11084858233647588",
+        "overall_trend": "improving"
+      }
+    },
+    "ANT": {
+      "driver_name": "Kimi Antonelli",
+      "team_name": "Mercedes",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "23",
+          "success_rate": "0.8380383857035147",
+          "consistency": "0.7384644958956097"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "3",
+          "success_rate": "0.8934305815450372",
+          "consistency": "0.7887166467247946"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "26",
+          "success_rate": "0.8208825142128574",
+          "consistency": "0.4130506483636091"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "13.043478260869565",
+        "success_rate_growth": "-2.0471462624298957",
+        "consistency_trend": "-0.3254138475320006",
+        "overall_trend": "improving"
+      }
+    },
+    "HAM": {
+      "driver_name": "Lewis Hamilton",
+      "team_name": "Ferrari",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "19",
+          "success_rate": "0.8415482470057571",
+          "consistency": "0.525569101063571"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "26",
+          "success_rate": "0.743165397598858",
+          "consistency": "0.7442890237362125"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "4",
+          "success_rate": "0.7317637778693799",
+          "consistency": "0.6704113567794099"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-78.94736842105263",
+        "success_rate_growth": "-13.045534766068645",
+        "consistency_trend": "0.14484225571583886",
+        "overall_trend": "declining"
+      }
+    },
+    "HAD": {
+      "driver_name": "Isack Hadjar",
+      "team_name": "Racing Bulls",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "20",
+          "success_rate": "0.8901791453689096",
+          "consistency": "0.8011967729773413"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "16",
+          "success_rate": "0.6921335096718702",
+          "consistency": "0.5517680731884167"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "28",
+          "success_rate": "0.7618538443950906",
+          "consistency": "0.46961757471882865"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "40.0",
+        "success_rate_growth": "-14.415671456854698",
+        "consistency_trend": "-0.3315791982585126",
+        "overall_trend": "improving"
+      }
+    },
+    "ALB": {
+      "driver_name": "Alexander Albon",
+      "team_name": "Williams",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "15",
+          "success_rate": "0.617426731051682",
+          "consistency": "0.8777452535377591"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "15",
+          "success_rate": "0.8287037712049166",
+          "consistency": "0.5078990538171381"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "30",
+          "success_rate": "0.6040266244181068",
+          "consistency": "0.7212367935192328"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "100.0",
+        "success_rate_growth": "-2.170315271376467",
+        "consistency_trend": "-0.15650846001852636",
+        "overall_trend": "improving"
+      }
+    },
+    "BEA": {
+      "driver_name": "Oliver Bearman",
+      "team_name": "Haas F1 Team",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "23",
+          "success_rate": "0.7734197822030552",
+          "consistency": "0.6892870493285947"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "25",
+          "success_rate": "0.8385228798791655",
+          "consistency": "0.8228126490509804"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "25",
+          "success_rate": "0.6272982495072837",
+          "consistency": "0.8958978300404272"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "8.695652173913043",
+        "success_rate_growth": "-18.892913791207942",
+        "consistency_trend": "0.20661078071183248",
+        "overall_trend": "improving"
+      }
+    },
+    "ALO": {
+      "driver_name": "Fernando Alonso",
+      "team_name": "Aston Martin",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "12",
+          "success_rate": "0.7407781435418275",
+          "consistency": "0.7934617417566212"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "8",
+          "success_rate": "0.8361887114383971",
+          "consistency": "0.781219598522473"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "17",
+          "success_rate": "0.6990609161077592",
+          "consistency": "0.5097017168359868"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "41.66666666666667",
+        "success_rate_growth": "-5.6315413457811765",
+        "consistency_trend": "-0.28376002492063446",
+        "overall_trend": "improving"
+      }
+    },
+    "TSU": {
+      "driver_name": "Yuki Tsunoda",
+      "team_name": "Red Bull Racing",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "19",
+          "success_rate": "0.7497883767155038",
+          "consistency": "0.5265098549430272"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "5",
+          "success_rate": "0.8943611054279884",
+          "consistency": "0.887221218925613"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "26",
+          "success_rate": "0.7775840171443311",
+          "consistency": "0.6203314056316473"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "36.84210526315789",
+        "success_rate_growth": "3.707131410943966",
+        "consistency_trend": "0.09382155068862019",
+        "overall_trend": "improving"
+      }
+    },
+    "GAS": {
+      "driver_name": "Pierre Gasly",
+      "team_name": "Alpine",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "12",
+          "success_rate": "0.6515006483635355",
+          "consistency": "0.42227946984055814"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "11",
+          "success_rate": "0.8008956968483645",
+          "consistency": "0.43397673225241484"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "15",
+          "success_rate": "0.6168637197184137",
+          "consistency": "0.7401914781035256"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "25.0",
+        "success_rate_growth": "-5.316484140441637",
+        "consistency_trend": "0.31791200826296745",
+        "overall_trend": "improving"
+      }
+    },
+    "SAI": {
+      "driver_name": "Carlos Sainz",
+      "team_name": "Williams",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "14",
+          "success_rate": "0.8480773718036791",
+          "consistency": "0.47914623286402924"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "18",
+          "success_rate": "0.6375019909473435",
+          "consistency": "0.8549120585937011"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "14",
+          "success_rate": "0.6314441683967934",
+          "consistency": "0.46216850650785124"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "0.0",
+        "success_rate_growth": "-25.544037679740615",
+        "consistency_trend": "-0.016977726356178002",
+        "overall_trend": "stable"
+      }
+    },
+    "DOO": {
+      "driver_name": "Jack Doohan",
+      "team_name": "Alpine",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "4",
+          "success_rate": "0.6472011583825981",
+          "consistency": "0.7570639448478995"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "19",
+          "success_rate": "0.6738306813497559",
+          "consistency": "0.5356727446013014"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "15",
+          "success_rate": "0.7510860738669959",
+          "consistency": "0.48362559991979"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "275.0",
+        "success_rate_growth": "16.05141062231929",
+        "consistency_trend": "-0.27343834492810953",
+        "overall_trend": "improving"
+      }
+    },
+    "HUL": {
+      "driver_name": "Nico Hulkenberg",
+      "team_name": "Kick Sauber",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "10",
+          "success_rate": "0.8587414107346191",
+          "consistency": "0.7866826051774145"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "8",
+          "success_rate": "0.6784125962692296",
+          "consistency": "0.8219134754021268"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "14",
+          "success_rate": "0.6725679743490278",
+          "consistency": "0.6738703826915673"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "40.0",
+        "success_rate_growth": "-21.679801865654447",
+        "consistency_trend": "-0.11281222248584721",
+        "overall_trend": "improving"
+      }
+    },
+    "LAW": {
+      "driver_name": "Liam Lawson",
+      "team_name": "Racing Bulls",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "24",
+          "success_rate": "0.7299161750672616",
+          "consistency": "0.8619169541006406"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "28",
+          "success_rate": "0.7342936143003816",
+          "consistency": "0.6523182160747005"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "17",
+          "success_rate": "0.6684436184992092",
+          "consistency": "0.7317336704488917"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-29.166666666666668",
+        "success_rate_growth": "-8.421865231632621",
+        "consistency_trend": "-0.13018328365174892",
+        "overall_trend": "declining"
+      }
+    },
+    "OCO": {
+      "driver_name": "Esteban Ocon",
+      "team_name": "Haas F1 Team",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "9",
+          "success_rate": "0.7845589296924981",
+          "consistency": "0.7368718914743371"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "23",
+          "success_rate": "0.654669928526836",
+          "consistency": "0.716961880335603"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "16",
+          "success_rate": "0.8520445459882067",
+          "consistency": "0.6638986108388312"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "77.77777777777779",
+        "success_rate_growth": "8.601726873742814",
+        "consistency_trend": "-0.0729732806355059",
+        "overall_trend": "improving"
+      }
+    },
+    "BOR": {
+      "driver_name": "Gabriel Bortoleto",
+      "team_name": "Kick Sauber",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "21",
+          "success_rate": "0.893213097444764",
+          "consistency": "0.8542009788683909"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "18",
+          "success_rate": "0.6053871332152106",
+          "consistency": "0.6773756689584134"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "18",
+          "success_rate": "0.8394345710258875",
+          "consistency": "0.7678530215895638"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-14.285714285714285",
+        "success_rate_growth": "-6.020794653898605",
+        "consistency_trend": "-0.08634795727882705",
+        "overall_trend": "declining"
+      }
+    },
+    "STR": {
+      "driver_name": "Lance Stroll",
+      "team_name": "Aston Martin",
+      "yearly_performance": [
+        {
+          "year": "2023",
+          "total_overtakes": "18",
+          "success_rate": "0.7515882653506326",
+          "consistency": "0.7450442122487184"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "25",
+          "success_rate": "0.6876152980661874",
+          "consistency": "0.8748077243078269"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "16",
+          "success_rate": "0.7496510894307533",
+          "consistency": "0.44895616384265963"
+        }
+      ],
+      "trend_analysis": {
+        "overtake_growth_rate": "-11.11111111111111",
+        "success_rate_growth": "-0.25774430086073274",
+        "consistency_trend": "-0.2960880484060588",
+        "overall_trend": "declining"
+      }
+    }
+  },
+  "team_strategy_evolution": {
+    "Red Bull Racing": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "31",
+          "avg_overtakes_per_driver": "15.5",
+          "success_rate": "0.7665119493898778",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "17",
+          "avg_overtakes_per_driver": "8.5",
+          "success_rate": "0.8486873459149693",
+          "strategy_type": "conservative_efficient"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "31",
+          "avg_overtakes_per_driver": "15.5",
+          "success_rate": "0.7938987973430447",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "0.0",
+        "success_rate_change": "0.027386847953166926",
+        "strategy_shift": "none"
+      }
+    },
+    "McLaren": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "30",
+          "avg_overtakes_per_driver": "15.0",
+          "success_rate": "0.8088864119043113",
+          "strategy_type": "conservative_efficient"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "39",
+          "avg_overtakes_per_driver": "19.5",
+          "success_rate": "0.7284940639698422",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "25",
+          "avg_overtakes_per_driver": "12.5",
+          "success_rate": "0.7923245072215945",
+          "strategy_type": "balanced"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "-2.5",
+        "success_rate_change": "-0.016561904682716788",
+        "strategy_shift": "none"
+      }
+    },
+    "Ferrari": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "38",
+          "avg_overtakes_per_driver": "19.0",
+          "success_rate": "0.8108762089828092",
+          "strategy_type": "aggressive_successful"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "45",
+          "avg_overtakes_per_driver": "22.5",
+          "success_rate": "0.7144294336604686",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "7",
+          "avg_overtakes_per_driver": "3.5",
+          "success_rate": "0.7576963612098271",
+          "strategy_type": "balanced"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "-15.5",
+        "success_rate_change": "-0.053179847772982125",
+        "strategy_shift": "declining_performance"
+      }
+    },
+    "Mercedes": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "30",
+          "avg_overtakes_per_driver": "15.0",
+          "success_rate": "0.8641600297341185",
+          "strategy_type": "conservative_efficient"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "10",
+          "avg_overtakes_per_driver": "5.0",
+          "success_rate": "0.8307942130039507",
+          "strategy_type": "conservative_efficient"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "38",
+          "avg_overtakes_per_driver": "19.0",
+          "success_rate": "0.7551012411985538",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "4.0",
+        "success_rate_change": "-0.10905878853556472",
+        "strategy_shift": "more_aggressive"
+      }
+    },
+    "Racing Bulls": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "44",
+          "avg_overtakes_per_driver": "22.0",
+          "success_rate": "0.8100476602180856",
+          "strategy_type": "aggressive_successful"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "44",
+          "avg_overtakes_per_driver": "22.0",
+          "success_rate": "0.713213561986126",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "45",
+          "avg_overtakes_per_driver": "22.5",
+          "success_rate": "0.7151487314471499",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "0.5",
+        "success_rate_change": "-0.09489892877093575",
+        "strategy_shift": "none"
+      }
+    },
+    "Williams": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "29",
+          "avg_overtakes_per_driver": "14.5",
+          "success_rate": "0.7327520514276806",
+          "strategy_type": "balanced"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "33",
+          "avg_overtakes_per_driver": "16.5",
+          "success_rate": "0.73310288107613",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "44",
+          "avg_overtakes_per_driver": "22.0",
+          "success_rate": "0.6177353964074501",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "7.5",
+        "success_rate_change": "-0.11501665502023051",
+        "strategy_shift": "more_aggressive"
+      }
+    },
+    "Haas F1 Team": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "32",
+          "avg_overtakes_per_driver": "16.0",
+          "success_rate": "0.7789893559477766",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "48",
+          "avg_overtakes_per_driver": "24.0",
+          "success_rate": "0.7465964042030008",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "41",
+          "avg_overtakes_per_driver": "20.5",
+          "success_rate": "0.7396713977477452",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "4.5",
+        "success_rate_change": "-0.03931795820003148",
+        "strategy_shift": "more_aggressive"
+      }
+    },
+    "Aston Martin": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "30",
+          "avg_overtakes_per_driver": "15.0",
+          "success_rate": "0.74618320444623",
+          "strategy_type": "balanced"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "33",
+          "avg_overtakes_per_driver": "16.5",
+          "success_rate": "0.7619020047522922",
+          "strategy_type": "aggressive_risky"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "33",
+          "avg_overtakes_per_driver": "16.5",
+          "success_rate": "0.7243560027692563",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "1.5",
+        "success_rate_change": "-0.021827201676973718",
+        "strategy_shift": "none"
+      }
+    },
+    "Alpine": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "16",
+          "avg_overtakes_per_driver": "8.0",
+          "success_rate": "0.6493509033730668",
+          "strategy_type": "balanced"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "30",
+          "avg_overtakes_per_driver": "15.0",
+          "success_rate": "0.7373631890990602",
+          "strategy_type": "balanced"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "30",
+          "avg_overtakes_per_driver": "15.0",
+          "success_rate": "0.6839748967927048",
+          "strategy_type": "balanced"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "7.0",
+        "success_rate_change": "0.034623993419638066",
+        "strategy_shift": "more_aggressive_and_effective"
+      }
+    },
+    "Kick Sauber": {
+      "yearly_data": [
+        {
+          "year": "2023",
+          "total_overtakes": "31",
+          "avg_overtakes_per_driver": "15.5",
+          "success_rate": "0.8759772540896915",
+          "strategy_type": "aggressive_successful"
+        },
+        {
+          "year": "2024",
+          "total_overtakes": "26",
+          "avg_overtakes_per_driver": "13.0",
+          "success_rate": "0.64189986474222",
+          "strategy_type": "balanced"
+        },
+        {
+          "year": "2025",
+          "total_overtakes": "32",
+          "avg_overtakes_per_driver": "16.0",
+          "success_rate": "0.7560012726874576",
+          "strategy_type": "aggressive_risky"
+        }
+      ],
+      "strategy_evolution": {
+        "overtake_change": "0.5",
+        "success_rate_change": "-0.11997598140223387",
+        "strategy_shift": "more_aggressive"
+      }
+    }
+  },
+  "difficulty_trends": [
+    {
+      "year": "2023",
+      "avg_overtakes_per_race": "0.7775",
+      "difficulty_score": "0.7408333333333333",
+      "success_rate": "0.7843735029513648",
+      "regulation_impact": "medium",
+      "difficulty_level": "very_hard"
+    },
+    {
+      "year": "2024",
+      "avg_overtakes_per_race": "0.8125",
+      "difficulty_score": "0.7291666666666667",
+      "success_rate": "0.745648296240806",
+      "regulation_impact": "low",
+      "difficulty_level": "very_hard"
+    },
+    {
+      "year": "2025",
+      "avg_overtakes_per_race": "0.815",
+      "difficulty_score": "0.7283333333333333",
+      "success_rate": "0.7335908604824783",
+      "regulation_impact": "medium",
+      "difficulty_level": "very_hard"
+    }
+  ],
+  "future_predictions": {
+    "overtaking_trend": "stable",
+    "predicted_growth_rate": "0.3076923076923077",
+    "confidence_level": "medium",
+    "factors_affecting_future": [
+      "技術規則變化",
+      "賽道設計改進",
+      "車隊策略演進",
+      "輪胎規格調整"
+    ],
+    "recommendations": [
+      "維持現有競爭平衡",
+      "持續關注車手發展",
+      "優化數據收集方法"
+    ]
+  },
+  "trend_insights": [
+    "分析涵蓋 3 個賽季的數據",
+    "趨勢分析基於多維度指標計算",
+    "預測模型考慮技術規則變化影響",
+    "建議定期更新數據以提高預測準確性"
+  ]
+}

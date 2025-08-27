@@ -1,0 +1,285 @@
+{
+  "analysis_info": {
+    "function_id": "14.3",
+    "analysis_type": "driver_overtaking_analysis",
+    "timestamp": "20250806_182124",
+    "total_drivers": 20
+  },
+  "overtaking_statistics": {
+    "VER": {
+      "driver_info": {
+        "name": "Max Verstappen",
+        "number": "1",
+        "team": "Red Bull Racing",
+        "abbreviation": "VER"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "PER": {
+      "driver_info": {
+        "name": "Sergio Perez",
+        "number": "11",
+        "team": "Red Bull Racing",
+        "abbreviation": "PER"
+      },
+      "overtakes": 3,
+      "position_gain": 3,
+      "overtaken": 0,
+      "net_overtakes": 3
+    },
+    "SAI": {
+      "driver_info": {
+        "name": "Carlos Sainz",
+        "number": "55",
+        "team": "Ferrari",
+        "abbreviation": "SAI"
+      },
+      "overtakes": 1,
+      "position_gain": 1,
+      "overtaken": 0,
+      "net_overtakes": 1
+    },
+    "LEC": {
+      "driver_info": {
+        "name": "Charles Leclerc",
+        "number": "16",
+        "team": "Ferrari",
+        "abbreviation": "LEC"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "RUS": {
+      "driver_info": {
+        "name": "George Russell",
+        "number": "63",
+        "team": "Mercedes",
+        "abbreviation": "RUS"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "NOR": {
+      "driver_info": {
+        "name": "Lando Norris",
+        "number": "4",
+        "team": "McLaren",
+        "abbreviation": "NOR"
+      },
+      "overtakes": 1,
+      "position_gain": 1,
+      "overtaken": 0,
+      "net_overtakes": 1
+    },
+    "HAM": {
+      "driver_info": {
+        "name": "Lewis Hamilton",
+        "number": "44",
+        "team": "Mercedes",
+        "abbreviation": "HAM"
+      },
+      "overtakes": 2,
+      "position_gain": 2,
+      "overtaken": 0,
+      "net_overtakes": 2
+    },
+    "PIA": {
+      "driver_info": {
+        "name": "Oscar Piastri",
+        "number": "81",
+        "team": "McLaren",
+        "abbreviation": "PIA"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "ALO": {
+      "driver_info": {
+        "name": "Fernando Alonso",
+        "number": "14",
+        "team": "Aston Martin",
+        "abbreviation": "ALO"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "STR": {
+      "driver_info": {
+        "name": "Lance Stroll",
+        "number": "18",
+        "team": "Aston Martin",
+        "abbreviation": "STR"
+      },
+      "overtakes": 2,
+      "position_gain": 2,
+      "overtaken": 0,
+      "net_overtakes": 2
+    },
+    "ZHO": {
+      "driver_info": {
+        "name": "Guanyu Zhou",
+        "number": "24",
+        "team": "Kick Sauber",
+        "abbreviation": "ZHO"
+      },
+      "overtakes": 6,
+      "position_gain": 6,
+      "overtaken": 0,
+      "net_overtakes": 6
+    },
+    "MAG": {
+      "driver_info": {
+        "name": "Kevin Magnussen",
+        "number": "20",
+        "team": "Haas F1 Team",
+        "abbreviation": "MAG"
+      },
+      "overtakes": 3,
+      "position_gain": 3,
+      "overtaken": 0,
+      "net_overtakes": 3
+    },
+    "RIC": {
+      "driver_info": {
+        "name": "Daniel Ricciardo",
+        "number": "3",
+        "team": "RB",
+        "abbreviation": "RIC"
+      },
+      "overtakes": 1,
+      "position_gain": 1,
+      "overtaken": 0,
+      "net_overtakes": 1
+    },
+    "TSU": {
+      "driver_info": {
+        "name": "Yuki Tsunoda",
+        "number": "22",
+        "team": "RB",
+        "abbreviation": "TSU"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "ALB": {
+      "driver_info": {
+        "name": "Alexander Albon",
+        "number": "23",
+        "team": "Williams",
+        "abbreviation": "ALB"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "HUL": {
+      "driver_info": {
+        "name": "Nico Hulkenberg",
+        "number": "27",
+        "team": "Haas F1 Team",
+        "abbreviation": "HUL"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "OCO": {
+      "driver_info": {
+        "name": "Esteban Ocon",
+        "number": "31",
+        "team": "Alpine",
+        "abbreviation": "OCO"
+      },
+      "overtakes": 2,
+      "position_gain": 2,
+      "overtaken": 0,
+      "net_overtakes": 2
+    },
+    "GAS": {
+      "driver_info": {
+        "name": "Pierre Gasly",
+        "number": "10",
+        "team": "Alpine",
+        "abbreviation": "GAS"
+      },
+      "overtakes": 2,
+      "position_gain": 2,
+      "overtaken": 0,
+      "net_overtakes": 2
+    },
+    "BOT": {
+      "driver_info": {
+        "name": "Valtteri Bottas",
+        "number": "77",
+        "team": "Kick Sauber",
+        "abbreviation": "BOT"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    },
+    "SAR": {
+      "driver_info": {
+        "name": "Logan Sargeant",
+        "number": "2",
+        "team": "Williams",
+        "abbreviation": "SAR"
+      },
+      "overtakes": 0,
+      "position_gain": 0,
+      "overtaken": 0,
+      "net_overtakes": 0
+    }
+  },
+  "race_summary": {
+    "total_overtakes": 23,
+    "average_overtakes_per_driver": 1.1,
+    "best_overtaker": "ZHO",
+    "most_overtakes": 6,
+    "best_gainer": "ZHO",
+    "most_position_gain": 6
+  },
+  "sorted_drivers": [
+    "VER",
+    "PER",
+    "SAI",
+    "LEC",
+    "RUS",
+    "NOR",
+    "HAM",
+    "PIA",
+    "ALO",
+    "STR",
+    "ZHO",
+    "MAG",
+    "RIC",
+    "TSU",
+    "ALB",
+    "HUL",
+    "OCO",
+    "GAS",
+    "BOT",
+    "SAR"
+  ],
+  "analysis_notes": {
+    "position_change": "正數表示進步，負數表示退步",
+    "net_overtakes": "超車次數 - 被超次數",
+    "data_source": "當前比賽數據"
+  }
+}

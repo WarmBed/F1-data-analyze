@@ -1,0 +1,1035 @@
+{
+  "analysis_info": {
+    "function_id": "14.1",
+    "analysis_type": "driver_statistics_overview",
+    "timestamp": "20250806_114906",
+    "total_drivers": 20
+  },
+  "driver_statistics": {
+    "VER": {
+      "driver_info": {
+        "name": "Max Verstappen",
+        "number": "1",
+        "team": "Red Bull Racing",
+        "abbreviation": "VER"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:32.608",
+      "fastest_lap_num": 39,
+      "avg_lap_time": "1:36.574",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "270",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "SOFT": 37,
+        "HARD": 20
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 37,
+          "first_lap": 1.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:36.411216216"
+        },
+        "HARD": {
+          "laps_used": 20,
+          "first_lap": 18.0,
+          "last_lap": 37.0,
+          "avg_lap_time": "0 days 00:01:36.876350"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          17.0,
+          37.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "324",
+        "avg_speed": "128",
+        "max_rpm": "12368",
+        "avg_throttle": "40.8",
+        "avg_brake": "14.3"
+      }
+    },
+    "PER": {
+      "driver_info": {
+        "name": "Sergio Perez",
+        "number": "11",
+        "team": "Red Bull Racing",
+        "abbreviation": "PER"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.364",
+      "fastest_lap_num": 40,
+      "avg_lap_time": "1:36.968",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "267",
+        "SpeedFL": "288"
+      },
+      "tyre_usage": {
+        "SOFT": 33,
+        "HARD": 24
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 33,
+          "first_lap": 1.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:36.728181818"
+        },
+        "HARD": {
+          "laps_used": 24,
+          "first_lap": 13.0,
+          "last_lap": 36.0,
+          "avg_lap_time": "0 days 00:01:37.298708333"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          12.0,
+          36.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "331",
+        "avg_speed": "128",
+        "max_rpm": "12295",
+        "avg_throttle": "41.5",
+        "avg_brake": "14.7"
+      }
+    },
+    "SAI": {
+      "driver_info": {
+        "name": "Carlos Sainz",
+        "number": "55",
+        "team": "Ferrari",
+        "abbreviation": "SAI"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.507",
+      "fastest_lap_num": 44,
+      "avg_lap_time": "1:37.015",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "269",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "HARD": 43,
+        "SOFT": 14
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 14,
+          "first_lap": 1.0,
+          "last_lap": 14.0,
+          "avg_lap_time": "0 days 00:01:38.025428571"
+        },
+        "HARD": {
+          "laps_used": 43,
+          "first_lap": 15.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:36.685953488"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          14.0,
+          35.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12569",
+        "avg_throttle": "54.7",
+        "avg_brake": "26.5"
+      }
+    },
+    "LEC": {
+      "driver_info": {
+        "name": "Charles Leclerc",
+        "number": "16",
+        "team": "Ferrari",
+        "abbreviation": "LEC"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.090",
+      "fastest_lap_num": 36,
+      "avg_lap_time": "1:37.270",
+      "max_speeds": {
+        "SpeedI1": "240",
+        "SpeedI2": "267",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "HARD": 46,
+        "SOFT": 11
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 11,
+          "first_lap": 1.0,
+          "last_lap": 11.0,
+          "avg_lap_time": "0 days 00:01:38.310727272"
+        },
+        "HARD": {
+          "laps_used": 46,
+          "first_lap": 12.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.021586956"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          11.0,
+          34.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12625",
+        "avg_throttle": "54.9",
+        "avg_brake": "27.2"
+      }
+    },
+    "RUS": {
+      "driver_info": {
+        "name": "George Russell",
+        "number": "63",
+        "team": "Mercedes",
+        "abbreviation": "RUS"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:35.065",
+      "fastest_lap_num": 40,
+      "avg_lap_time": "1:37.395",
+      "max_speeds": {
+        "SpeedI1": "237",
+        "SpeedI2": "267",
+        "SpeedFL": "293"
+      },
+      "tyre_usage": {
+        "HARD": 46,
+        "SOFT": 11
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 11,
+          "first_lap": 1.0,
+          "last_lap": 11.0,
+          "avg_lap_time": "0 days 00:01:37.988909090"
+        },
+        "HARD": {
+          "laps_used": 46,
+          "first_lap": 12.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.253304347"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          11.0,
+          31.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "325",
+        "avg_speed": "128",
+        "max_rpm": "12810",
+        "avg_throttle": "50.8",
+        "avg_brake": "23.2"
+      }
+    },
+    "NOR": {
+      "driver_info": {
+        "name": "Lando Norris",
+        "number": "4",
+        "team": "McLaren",
+        "abbreviation": "NOR"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.476",
+      "fastest_lap_num": 35,
+      "avg_lap_time": "1:37.425",
+      "max_speeds": {
+        "SpeedI1": "238",
+        "SpeedI2": "270",
+        "SpeedFL": "287"
+      },
+      "tyre_usage": {
+        "HARD": 44,
+        "SOFT": 13
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 13,
+          "first_lap": 1.0,
+          "last_lap": 13.0,
+          "avg_lap_time": "0 days 00:01:38.460615384"
+        },
+        "HARD": {
+          "laps_used": 44,
+          "first_lap": 14.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.118454545"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          13.0,
+          33.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "323",
+        "avg_speed": "128",
+        "max_rpm": "12751",
+        "avg_throttle": "52.3",
+        "avg_brake": "26.1"
+      }
+    },
+    "HAM": {
+      "driver_info": {
+        "name": "Lewis Hamilton",
+        "number": "44",
+        "team": "Mercedes",
+        "abbreviation": "HAM"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.722",
+      "fastest_lap_num": 39,
+      "avg_lap_time": "1:37.457",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "267",
+        "SpeedFL": "290"
+      },
+      "tyre_usage": {
+        "HARD": 45,
+        "SOFT": 12
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 12,
+          "first_lap": 1.0,
+          "last_lap": 12.0,
+          "avg_lap_time": "0 days 00:01:38.865416666"
+        },
+        "HARD": {
+          "laps_used": 45,
+          "first_lap": 13.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.081800"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          12.0,
+          33.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "13060",
+        "avg_throttle": "49.5",
+        "avg_brake": "24.1"
+      }
+    },
+    "PIA": {
+      "driver_info": {
+        "name": "Oscar Piastri",
+        "number": "81",
+        "team": "McLaren",
+        "abbreviation": "PIA"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.774",
+      "fastest_lap_num": 37,
+      "avg_lap_time": "1:37.558",
+      "max_speeds": {
+        "SpeedI1": "238",
+        "SpeedI2": "272",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "HARD": 45,
+        "SOFT": 12
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 12,
+          "first_lap": 1.0,
+          "last_lap": 12.0,
+          "avg_lap_time": "0 days 00:01:38.676583333"
+        },
+        "HARD": {
+          "laps_used": 45,
+          "first_lap": 13.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.260111111"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          12.0,
+          34.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12782",
+        "avg_throttle": "50.7",
+        "avg_brake": "24.2"
+      }
+    },
+    "ALO": {
+      "driver_info": {
+        "name": "Fernando Alonso",
+        "number": "14",
+        "team": "Aston Martin",
+        "abbreviation": "ALO"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:34.199",
+      "fastest_lap_num": 48,
+      "avg_lap_time": "1:37.888",
+      "max_speeds": {
+        "SpeedI1": "241",
+        "SpeedI2": "264",
+        "SpeedFL": "288"
+      },
+      "tyre_usage": {
+        "HARD": 42,
+        "SOFT": 15
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 15,
+          "first_lap": 1.0,
+          "last_lap": 15.0,
+          "avg_lap_time": "0 days 00:01:38.906333333"
+        },
+        "HARD": {
+          "laps_used": 42,
+          "first_lap": 16.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.524619047"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          15.0,
+          41.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "326",
+        "avg_speed": "128",
+        "max_rpm": "12984",
+        "avg_throttle": "51.2",
+        "avg_brake": "24.4"
+      }
+    },
+    "STR": {
+      "driver_info": {
+        "name": "Lance Stroll",
+        "number": "18",
+        "team": "Aston Martin",
+        "abbreviation": "STR"
+      },
+      "total_laps": 57,
+      "fastest_lap_time": "1:35.632",
+      "fastest_lap_num": 30,
+      "avg_lap_time": "1:38.210",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "260",
+        "SpeedFL": "288"
+      },
+      "tyre_usage": {
+        "HARD": 48,
+        "SOFT": 9
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 9,
+          "first_lap": 1.0,
+          "last_lap": 9.0,
+          "avg_lap_time": "0 days 00:01:40.248000"
+        },
+        "HARD": {
+          "laps_used": 48,
+          "first_lap": 10.0,
+          "last_lap": 57.0,
+          "avg_lap_time": "0 days 00:01:37.827625"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          9.0,
+          27.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "332",
+        "avg_speed": "128",
+        "max_rpm": "12909",
+        "avg_throttle": "50.3",
+        "avg_brake": "24.8"
+      }
+    },
+    "ZHO": {
+      "driver_info": {
+        "name": "Guanyu Zhou",
+        "number": "24",
+        "team": "Kick Sauber",
+        "abbreviation": "ZHO"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:35.458",
+      "fastest_lap_num": 30,
+      "avg_lap_time": "1:38.420",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "261",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "HARD": 47,
+        "SOFT": 9
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 9,
+          "first_lap": 1.0,
+          "last_lap": 9.0,
+          "avg_lap_time": "0 days 00:01:39.892111111"
+        },
+        "HARD": {
+          "laps_used": 47,
+          "first_lap": 10.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.137702127"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          9.0,
+          28.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "331",
+        "avg_speed": "126",
+        "max_rpm": "12709",
+        "avg_throttle": "48.5",
+        "avg_brake": "22.6"
+      }
+    },
+    "MAG": {
+      "driver_info": {
+        "name": "Kevin Magnussen",
+        "number": "20",
+        "team": "Haas F1 Team",
+        "abbreviation": "MAG"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:35.570",
+      "fastest_lap_num": 34,
+      "avg_lap_time": "1:38.447",
+      "max_speeds": {
+        "SpeedI1": "238",
+        "SpeedI2": "265",
+        "SpeedFL": "291"
+      },
+      "tyre_usage": {
+        "HARD": 45,
+        "SOFT": 11
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 11,
+          "first_lap": 1.0,
+          "last_lap": 11.0,
+          "avg_lap_time": "0 days 00:01:39.562454545"
+        },
+        "HARD": {
+          "laps_used": 45,
+          "first_lap": 12.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.174911111"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          11.0,
+          32.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "333",
+        "avg_speed": "126",
+        "max_rpm": "12583",
+        "avg_throttle": "53.0",
+        "avg_brake": "27.0"
+      }
+    },
+    "RIC": {
+      "driver_info": {
+        "name": "Daniel Ricciardo",
+        "number": "3",
+        "team": "RB",
+        "abbreviation": "RIC"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:35.163",
+      "fastest_lap_num": 37,
+      "avg_lap_time": "1:38.459",
+      "max_speeds": {
+        "SpeedI1": "240",
+        "SpeedI2": "263",
+        "SpeedFL": "289"
+      },
+      "tyre_usage": {
+        "SOFT": 34,
+        "HARD": 22
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 34,
+          "first_lap": 1.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.142764705"
+        },
+        "HARD": {
+          "laps_used": 22,
+          "first_lap": 14.0,
+          "last_lap": 35.0,
+          "avg_lap_time": "0 days 00:01:38.947545454"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          13.0,
+          35.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "329",
+        "avg_speed": "126",
+        "max_rpm": "12472",
+        "avg_throttle": "40.2",
+        "avg_brake": "14.5"
+      }
+    },
+    "TSU": {
+      "driver_info": {
+        "name": "Yuki Tsunoda",
+        "number": "22",
+        "team": "RB",
+        "abbreviation": "TSU"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:35.833",
+      "fastest_lap_num": 37,
+      "avg_lap_time": "1:38.468",
+      "max_speeds": {
+        "SpeedI1": "237",
+        "SpeedI2": "265",
+        "SpeedFL": "290"
+      },
+      "tyre_usage": {
+        "HARD": 42,
+        "SOFT": 14
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 14,
+          "first_lap": 1.0,
+          "last_lap": 14.0,
+          "avg_lap_time": "0 days 00:01:39.107571428"
+        },
+        "HARD": {
+          "laps_used": 42,
+          "first_lap": 15.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.255190476"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          14.0,
+          34.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "330",
+        "avg_speed": "128",
+        "max_rpm": "12838",
+        "avg_throttle": "41.8",
+        "avg_brake": "15.2"
+      }
+    },
+    "ALB": {
+      "driver_info": {
+        "name": "Alexander Albon",
+        "number": "23",
+        "team": "Williams",
+        "abbreviation": "ALB"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:35.723",
+      "fastest_lap_num": 40,
+      "avg_lap_time": "1:38.511",
+      "max_speeds": {
+        "SpeedI1": "238",
+        "SpeedI2": "266",
+        "SpeedFL": "288"
+      },
+      "tyre_usage": {
+        "HARD": 41,
+        "SOFT": 15
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 15,
+          "first_lap": 1.0,
+          "last_lap": 15.0,
+          "avg_lap_time": "0 days 00:01:39.246800"
+        },
+        "HARD": {
+          "laps_used": 41,
+          "first_lap": 16.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.242097560"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          15.0,
+          36.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12966",
+        "avg_throttle": "50.6",
+        "avg_brake": "27.2"
+      }
+    },
+    "HUL": {
+      "driver_info": {
+        "name": "Nico Hulkenberg",
+        "number": "27",
+        "team": "Haas F1 Team",
+        "abbreviation": "HUL"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:34.834",
+      "fastest_lap_num": 46,
+      "avg_lap_time": "1:38.614",
+      "max_speeds": {
+        "SpeedI1": "239",
+        "SpeedI2": "269",
+        "SpeedFL": "292"
+      },
+      "tyre_usage": {
+        "HARD": 40,
+        "SOFT": 16
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 16,
+          "first_lap": 1.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:37.910437500"
+        },
+        "HARD": {
+          "laps_used": 40,
+          "first_lap": 2.0,
+          "last_lap": 41.0,
+          "avg_lap_time": "0 days 00:01:38.895175"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 3,
+        "pitstop_laps": [
+          1.0,
+          20.0,
+          41.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "335",
+        "avg_speed": "126",
+        "max_rpm": "12531",
+        "avg_throttle": "49.1",
+        "avg_brake": "23.8"
+      }
+    },
+    "OCO": {
+      "driver_info": {
+        "name": "Esteban Ocon",
+        "number": "31",
+        "team": "Alpine",
+        "abbreviation": "OCO"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:36.226",
+      "fastest_lap_num": 34,
+      "avg_lap_time": "1:38.861",
+      "max_speeds": {
+        "SpeedI1": "237",
+        "SpeedI2": "258",
+        "SpeedFL": "285"
+      },
+      "tyre_usage": {
+        "HARD": 46,
+        "SOFT": 10
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 10,
+          "first_lap": 1.0,
+          "last_lap": 10.0,
+          "avg_lap_time": "0 days 00:01:40.018900"
+        },
+        "HARD": {
+          "laps_used": 46,
+          "first_lap": 11.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.608760869"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          10.0,
+          30.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "325",
+        "avg_speed": "124",
+        "max_rpm": "12209",
+        "avg_throttle": "50.2",
+        "avg_brake": "24.0"
+      }
+    },
+    "GAS": {
+      "driver_info": {
+        "name": "Pierre Gasly",
+        "number": "10",
+        "team": "Alpine",
+        "abbreviation": "GAS"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:34.805",
+      "fastest_lap_num": 45,
+      "avg_lap_time": "1:38.878",
+      "max_speeds": {
+        "SpeedI1": "237",
+        "SpeedI2": "263",
+        "SpeedFL": "285"
+      },
+      "tyre_usage": {
+        "HARD": 31,
+        "SOFT": 25
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 25,
+          "first_lap": 1.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.412720"
+        },
+        "HARD": {
+          "laps_used": 31,
+          "first_lap": 13.0,
+          "last_lap": 43.0,
+          "avg_lap_time": "0 days 00:01:39.252935483"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 3,
+        "pitstop_laps": [
+          12.0,
+          31.0,
+          43.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "12500",
+        "avg_throttle": "40.8",
+        "avg_brake": "14.1"
+      }
+    },
+    "BOT": {
+      "driver_info": {
+        "name": "Valtteri Bottas",
+        "number": "77",
+        "team": "Kick Sauber",
+        "abbreviation": "BOT"
+      },
+      "total_laps": 56,
+      "fastest_lap_time": "1:36.202",
+      "fastest_lap_num": 33,
+      "avg_lap_time": "1:38.504",
+      "max_speeds": {
+        "SpeedI1": "238",
+        "SpeedI2": "261",
+        "SpeedFL": "287"
+      },
+      "tyre_usage": {
+        "HARD": 44,
+        "SOFT": 12
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 12,
+          "first_lap": 1.0,
+          "last_lap": 12.0,
+          "avg_lap_time": "0 days 00:01:40.171583333"
+        },
+        "HARD": {
+          "laps_used": 44,
+          "first_lap": 13.0,
+          "last_lap": 56.0,
+          "avg_lap_time": "0 days 00:01:38.038302325"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 2,
+        "pitstop_laps": [
+          12.0,
+          30.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "330",
+        "avg_speed": "126",
+        "max_rpm": "12603",
+        "avg_throttle": "45.3",
+        "avg_brake": "19.8"
+      }
+    },
+    "SAR": {
+      "driver_info": {
+        "name": "Logan Sargeant",
+        "number": "2",
+        "team": "Williams",
+        "abbreviation": "SAR"
+      },
+      "total_laps": 55,
+      "fastest_lap_time": "1:34.735",
+      "fastest_lap_num": 42,
+      "avg_lap_time": "1:39.327",
+      "max_speeds": {
+        "SpeedI1": "236",
+        "SpeedI2": "263",
+        "SpeedFL": "288"
+      },
+      "tyre_usage": {
+        "HARD": 30,
+        "SOFT": 25
+      },
+      "tyre_strategy": {
+        "SOFT": {
+          "laps_used": 25,
+          "first_lap": 1.0,
+          "last_lap": 55.0,
+          "avg_lap_time": "0 days 00:01:38.383541666"
+        },
+        "HARD": {
+          "laps_used": 30,
+          "first_lap": 11.0,
+          "last_lap": 40.0,
+          "avg_lap_time": "0 days 00:01:40.082400"
+        }
+      },
+      "pitstop_records": {
+        "total_pitstops": 3,
+        "pitstop_laps": [
+          10.0,
+          28.0,
+          40.0
+        ],
+        "avg_pitstop_time": "N/A"
+      },
+      "telemetry": {
+        "max_speed": "326",
+        "avg_speed": "124",
+        "max_rpm": "13282",
+        "avg_throttle": "52.4",
+        "avg_brake": "27.3"
+      }
+    }
+  },
+  "sorted_drivers": [
+    "VER",
+    "PER",
+    "SAI",
+    "LEC",
+    "RUS",
+    "NOR",
+    "HAM",
+    "PIA",
+    "ALO",
+    "STR",
+    "ZHO",
+    "MAG",
+    "RIC",
+    "TSU",
+    "ALB",
+    "HUL",
+    "OCO",
+    "GAS",
+    "BOT",
+    "SAR"
+  ]
+}

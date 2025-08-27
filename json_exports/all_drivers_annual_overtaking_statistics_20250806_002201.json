@@ -1,0 +1,270 @@
+{
+  "analysis_info": {
+    "function_id": "16.1",
+    "analysis_type": "all_drivers_annual_overtaking_statistics",
+    "timestamp": "20250806_002201",
+    "race_info": "2025 Japan",
+    "total_drivers": 20
+  },
+  "annual_overtaking_statistics": [
+    {
+      "abbreviation": "VER",
+      "driver_name": "Max Verstappen",
+      "team_name": "Red Bull Racing",
+      "car_number": "1",
+      "race_position": "1",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "NOR",
+      "driver_name": "Lando Norris",
+      "team_name": "McLaren",
+      "car_number": "4",
+      "race_position": "2",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "PIA",
+      "driver_name": "Oscar Piastri",
+      "team_name": "McLaren",
+      "car_number": "81",
+      "race_position": "3",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "LEC",
+      "driver_name": "Charles Leclerc",
+      "team_name": "Ferrari",
+      "car_number": "16",
+      "race_position": "4",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "RUS",
+      "driver_name": "George Russell",
+      "team_name": "Mercedes",
+      "car_number": "63",
+      "race_position": "5",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "ANT",
+      "driver_name": "Kimi Antonelli",
+      "team_name": "Mercedes",
+      "car_number": "12",
+      "race_position": "6",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "HAM",
+      "driver_name": "Lewis Hamilton",
+      "team_name": "Ferrari",
+      "car_number": "44",
+      "race_position": "7",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "HAD",
+      "driver_name": "Isack Hadjar",
+      "team_name": "Racing Bulls",
+      "car_number": "6",
+      "race_position": "8",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "ALB",
+      "driver_name": "Alexander Albon",
+      "team_name": "Williams",
+      "car_number": "23",
+      "race_position": "9",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "BEA",
+      "driver_name": "Oliver Bearman",
+      "team_name": "Haas F1 Team",
+      "car_number": "87",
+      "race_position": "10",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "ALO",
+      "driver_name": "Fernando Alonso",
+      "team_name": "Aston Martin",
+      "car_number": "14",
+      "race_position": "11",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "TSU",
+      "driver_name": "Yuki Tsunoda",
+      "team_name": "Red Bull Racing",
+      "car_number": "22",
+      "race_position": "12",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "GAS",
+      "driver_name": "Pierre Gasly",
+      "team_name": "Alpine",
+      "car_number": "10",
+      "race_position": "13",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "SAI",
+      "driver_name": "Carlos Sainz",
+      "team_name": "Williams",
+      "car_number": "55",
+      "race_position": "14",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "DOO",
+      "driver_name": "Jack Doohan",
+      "team_name": "Alpine",
+      "car_number": "7",
+      "race_position": "15",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "HUL",
+      "driver_name": "Nico Hulkenberg",
+      "team_name": "Kick Sauber",
+      "car_number": "27",
+      "race_position": "16",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "LAW",
+      "driver_name": "Liam Lawson",
+      "team_name": "Racing Bulls",
+      "car_number": "30",
+      "race_position": "17",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "OCO",
+      "driver_name": "Esteban Ocon",
+      "team_name": "Haas F1 Team",
+      "car_number": "31",
+      "race_position": "18",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "BOR",
+      "driver_name": "Gabriel Bortoleto",
+      "team_name": "Kick Sauber",
+      "car_number": "5",
+      "race_position": "19",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    },
+    {
+      "abbreviation": "STR",
+      "driver_name": "Lance Stroll",
+      "team_name": "Aston Martin",
+      "car_number": "18",
+      "race_position": "20",
+      "overtakes_made": "0",
+      "overtaken_by": "0",
+      "net_overtaking": "0",
+      "overtaking_success_rate": "0.0",
+      "avg_overtaking_position": "0.0"
+    }
+  ],
+  "summary": {
+    "total_drivers": 20,
+    "total_overtakes": 0,
+    "total_overtaken": 0,
+    "average_overtakes_per_driver": 0.0,
+    "average_overtaken_per_driver": 0.0,
+    "best_performer": {
+      "driver": "Max Verstappen",
+      "net_overtaking": 0
+    },
+    "worst_performer": {
+      "driver": "Max Verstappen",
+      "net_overtaking": 0
+    },
+    "most_active": {
+      "driver": "Max Verstappen",
+      "total_actions": 0
+    }
+  }
+}

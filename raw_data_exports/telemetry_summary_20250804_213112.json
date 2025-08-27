@@ -1,0 +1,53 @@
+{
+  "timestamp": "20250804_213112",
+  "drivers": {
+    "VER": {
+      "data_points": 684,
+      "columns": [
+        "Date",
+        "SessionTime",
+        "DriverAhead",
+        "DistanceToDriverAhead",
+        "Time",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Distance",
+        "RelativeDistance",
+        "Status",
+        "X",
+        "Y",
+        "Z"
+      ],
+      "file": "raw_data_exports\\telemetry_raw_VER_20250804_213112.csv"
+    },
+    "NOR": {
+      "data_points": 683,
+      "columns": [
+        "Date",
+        "SessionTime",
+        "DriverAhead",
+        "DistanceToDriverAhead",
+        "Time",
+        "RPM",
+        "Speed",
+        "nGear",
+        "Throttle",
+        "Brake",
+        "DRS",
+        "Source",
+        "Distance",
+        "RelativeDistance",
+        "Status",
+        "X",
+        "Y",
+        "Z"
+      ],
+      "file": "raw_data_exports\\telemetry_raw_NOR_20250804_213112.csv"
+    }
+  }
+}

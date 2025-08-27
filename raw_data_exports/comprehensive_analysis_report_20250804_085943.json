@@ -1,0 +1,93 @@
+{
+  "timestamp": "2025-08-04T08:59:43.420806",
+  "summary": {
+    "total_files": 16,
+    "file_types": {
+      "speed_gap": 2,
+      "distance_gap": 2,
+      "telemetry_raw": 8,
+      "telemetry_summary": 4
+    }
+  },
+  "analyses": {
+    "speed_gap": {
+      "file": "speed_gap_analysis_VER_vs_NOR_20250804_085605.csv",
+      "timestamp": "2025-08-04T08:59:43.423806",
+      "total_points": 683,
+      "analysis_type": "Speed Gap Analysis",
+      "drivers": [
+        "VER",
+        "NOR"
+      ],
+      "statistics": {
+        "speed_gap": {
+          "max_gap": 37.171884000000006,
+          "min_gap": -36.653580799999986,
+          "mean_gap": 0.13047469371325138,
+          "std_gap": 12.047560260780676,
+          "median_gap": -0.22488716108216522
+        },
+        "driver1_speed": {
+          "max": 313.0,
+          "min": 66.0,
+          "mean": 228.15030193129405,
+          "std": 65.4396724119712
+        },
+        "driver2_speed": {
+          "max": 312.0,
+          "min": 65.0,
+          "mean": 228.01982723758084,
+          "std": 64.69748012026575
+        }
+      },
+      "key_points": {
+        "max_speed_advantage": {
+          "index": 444,
+          "gap": 37.171884000000006,
+          "driver1_speed": 284.0,
+          "driver2_speed": 246.828116
+        },
+        "min_speed_advantage": {
+          "index": 327,
+          "gap": -36.653580799999986,
+          "driver1_speed": 132.0,
+          "driver2_speed": 168.6535808
+        }
+      }
+    },
+    "distance_gap": {
+      "file": "distance_gap_analysis_VER_vs_NOR_20250804_085608.csv",
+      "timestamp": "2025-08-04T08:59:43.426312",
+      "total_points": 683,
+      "analysis_type": "Distance Gap Analysis",
+      "drivers": [
+        "VER",
+        "NOR"
+      ],
+      "statistics": {
+        "euclidean_distance": {
+          "max": 1055.3631126268376,
+          "min": 0.7413845320847123,
+          "mean": 261.2868336603967,
+          "std": 233.56578430712602,
+          "median": 181.0971280379457
+        },
+        "track_distance_gap": {
+          "max": 104.57908743210692,
+          "min": 0.0036647632473432,
+          "mean": 23.00937869476882,
+          "std": 22.809203710224875,
+          "median": 14.727325749321608
+        },
+        "leadership": {
+          "VER": 412,
+          "NOR": 271
+        },
+        "leadership_percentage": {
+          "VER": 60.32,
+          "NOR": 39.68
+        }
+      }
+    }
+  }
+}
