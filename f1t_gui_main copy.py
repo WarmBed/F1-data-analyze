@@ -1795,7 +1795,7 @@ class PopoutSubWindow(QMdiSubWindow):
         self.sync_windows_checkbox = QCheckBox("🔗 連動")
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
         self.sync_windows_checkbox.setChecked(True)
-        self.sync_windows_checkbox.setToolTip("連動其他視窗 (賽事/賽段/年份同步)")
+        self.sync_windows_checkbox.setToolTip("同步其他視窗 (賽事/賽段/年份同步)")
         self.sync_windows_checkbox.toggled.connect(self.on_sync_windows_toggled)
         control_layout.addWidget(self.sync_windows_checkbox)
         
@@ -2343,12 +2343,12 @@ class WindowSettingsDialog(QDialog):
         layout.addWidget(title_label)
         
         # 連動控制區域
-        sync_group = QGroupBox("視窗連動控制")
+        sync_group = QGroupBox("視窗同步控制")
         sync_group.setObjectName("SettingsGroup")
         sync_layout = QVBoxLayout(sync_group)
         
         # 連動控制勾選框
-        self.sync_windows_checkbox = QCheckBox("🔗 連動其他視窗 (賽事/賽段/年份同步)")
+        self.sync_windows_checkbox = QCheckBox("🔗 同步其他視窗 (賽事/賽段/年份同步)")
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
         self.sync_windows_checkbox.setChecked(True)
         sync_layout.addWidget(self.sync_windows_checkbox)

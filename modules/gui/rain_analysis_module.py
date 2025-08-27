@@ -532,7 +532,6 @@ class RainAnalysisModule(QWidget):
     def force_chart_refresh(self):
         """強制刷新圖表 - 用於MDI視窗大小變化時"""
         if self.chart_widget and self.current_json_data:
-            print("[DEBUG] 強制刷新降雨分析圖表")
             # 重新載入數據到圖表
             self.load_data_to_chart(self.current_json_data)
             # 重置視圖
@@ -570,57 +569,32 @@ class RainAnalysisModule(QWidget):
     def process_json_rain_markers(self, json_data, chart_data):
         """處理JSON降雨標記視覺化 - 符合架構文檔規範"""
         try:
-            print(f"[DEBUG] 開始處理JSON降雨標記...")
-            
             # 從JSON提取降雨標記數據
             rain_markers_data = self.extract_rain_markers_from_json(json_data)
-            print(f"[DEBUG] 提取到降雨數據: {rain_markers_data['total_rain_periods']} 個降雨期間")
             
             if rain_markers_data["total_rain_periods"] > 0:
-                print(f"[DEBUG] 背景區間數量: {len(rain_markers_data['background_regions'])}")
-                print(f"[DEBUG] 標記數量: {len(rain_markers_data['rain_markers'])}")
-                
-                # 檢查 chart_widget 物件類型和方法
-                print(f"[DEBUG] chart_widget 類型: {type(self.chart_widget)}")
-                print(f"[DEBUG] chart_widget 類別名稱: {self.chart_widget.__class__.__name__}")
-                print(f"[DEBUG] chart_widget 可用方法: {[method for method in dir(self.chart_widget) if 'render_rain' in method]}")
-                print(f"[DEBUG] chart_widget 所有方法數量: {len(dir(self.chart_widget))}")
-                
-                # 檢查具體方法的存在性
-                print(f"[DEBUG] hasattr render_rain_background_regions: {hasattr(self.chart_widget, 'render_rain_background_regions')}")
-                print(f"[DEBUG] hasattr render_rain_text_markers: {hasattr(self.chart_widget, 'render_rain_text_markers')}")
-                
                 # 渲染降雨背景區間 
                 try:
                     method = getattr(self.chart_widget, 'render_rain_background_regions', None)
-                    print(f"[DEBUG] getattr 結果: {method}")
                     if method:
-                        print(f"[DEBUG] 呼叫 render_rain_background_regions")
                         method(rain_markers_data["background_regions"])
                         print(f"🎨 已渲染 {len(rain_markers_data['background_regions'])} 個降雨背景區間")
-                    else:
-                        print(f"[DEBUG] ❌ getattr 返回 None")
                 except Exception as e:
-                    print(f"[DEBUG] ❌ 呼叫方法時發生錯誤: {e}")
+                    print(f"❌ 呼叫方法時發生錯誤: {e}")
                 
                 # 不再渲染降雨標記文字 - 只保留顏色區塊
-                print(f"[INFO] 略過降雨標記文字渲染 - 只顯示背景顏色區塊")
                 
                 # 連接降雨區間懸停信號
                 if hasattr(self.chart_widget, 'rain_region_hovered'):
                     self.chart_widget.rain_region_hovered.connect(self.on_rain_region_hovered)
             else:
-                print(f"[DEBUG] ❌ 沒有檢測到降雨期間")
                 print("📝 未檢測到降雨數據，跳過標記渲染")
                 
         except Exception as e:
             print(f"[WARNING] JSON降雨標記處理失敗: {e}")
-            print(f"[DEBUG] 錯誤詳情: {str(e)}")
     
     def extract_rain_markers_from_json(self, json_data):
         """從JSON數據中提取降雨標記 - 符合架構文檔規範"""
-        
-        print(f"[DEBUG] 開始從JSON提取降雨標記...")
         
         rain_markers = []
         background_regions = []
@@ -631,8 +605,6 @@ class RainAnalysisModule(QWidget):
             timeline = json_data["detailed_weather_timeline"]
             current_rain_region = None
             
-            print(f"[DEBUG] 時間軸數據長度: {len(timeline)}")
-            
             for i, entry in enumerate(timeline):
                 total_points += 1
                 time_point = entry["time_point"]
@@ -641,10 +613,6 @@ class RainAnalysisModule(QWidget):
                 is_raining = rainfall_data["is_raining"]
                 if is_raining:
                     rain_count += 1
-                
-                # 每100個點輸出一次統計
-                if i % 100 == 0:
-                    print(f"[DEBUG] 處理到第 {i} 個時間點，累計降雨點: {rain_count}")
                 
                 if is_raining:
                     # 降雨開始或持續
@@ -657,7 +625,6 @@ class RainAnalysisModule(QWidget):
                             "intensity": intensity,
                             "data_points": [entry]
                         }
-                        print(f"[DEBUG] 新降雨區間開始: {time_point}, 強度: {intensity}")
                     else:
                         # 降雨持續，添加數據點
                         current_rain_region["data_points"].append(entry)
@@ -666,9 +633,6 @@ class RainAnalysisModule(QWidget):
                     if current_rain_region is not None:
                         current_rain_region["end_time"] = timeline[i-1]["time_point"] if i > 0 else time_point
                         current_rain_region["end_index"] = i-1
-                        
-                        print(f"[DEBUG] 降雨區間結束: {current_rain_region['start_time']} -> {current_rain_region['end_time']}")
-                        print(f"[DEBUG] 數據點數量: {len(current_rain_region['data_points'])}")
                         
                         # 生成背景區間和標記
                         background_region = self.create_background_region(current_rain_region)
@@ -684,21 +648,10 @@ class RainAnalysisModule(QWidget):
                 current_rain_region["end_time"] = timeline[-1]["time_point"]
                 current_rain_region["end_index"] = len(timeline) - 1
                 
-                print(f"[DEBUG] 最終降雨區間: {current_rain_region['start_time']} -> {current_rain_region['end_time']}")
-                
                 background_region = self.create_background_region(current_rain_region)
                 background_regions.append(background_region)
                 marker = self.create_rain_marker(current_rain_region)
                 rain_markers.append(marker)
-        else:
-            print(f"[DEBUG] ❌ JSON中沒有找到 detailed_weather_timeline")
-        
-        print(f"[DEBUG] 統計結果:")
-        print(f"[DEBUG] - 總時間點: {total_points}")
-        print(f"[DEBUG] - 降雨時間點: {rain_count}")
-        print(f"[DEBUG] - 降雨比例: {rain_count/total_points*100:.1f}%")
-        print(f"[DEBUG] - 背景區間數: {len(background_regions)}")
-        print(f"[DEBUG] - 標記數量: {len(rain_markers)}")
         
         return {
             "rain_markers": rain_markers,
@@ -709,8 +662,6 @@ class RainAnalysisModule(QWidget):
     def create_background_region(self, rain_region):
         """創建圖表背景顏色區間 - 符合架構文檔規範"""
         intensity = rain_region["intensity"]
-        
-        print(f"[DEBUG] 創建背景區間: 強度={intensity}, 時間={rain_region['start_time']}->{rain_region['end_time']}")
         
         # 降雨強度背景顏色映射 - 新配色方案
         intensity_colors = {
@@ -723,7 +674,6 @@ class RainAnalysisModule(QWidget):
         }
         
         selected_color = intensity_colors.get(intensity, intensity_colors["light"])
-        print(f"[DEBUG] 選擇顏色: {selected_color}")
         
         background_region = {
             "type": "background_region",
@@ -736,7 +686,6 @@ class RainAnalysisModule(QWidget):
             "description": f"降雨強度: {intensity} ({len(rain_region['data_points'])} 數據點)"
         }
         
-        print(f"[DEBUG] 背景區間創建完成: {background_region}")
         return background_region
     
     def create_rain_marker(self, rain_region):
@@ -784,18 +733,6 @@ class RainAnalysisModule(QWidget):
             
             print(f"處理 {len(timeline_data)} 個天氣數據點")
             
-            # [DEBUG] 顯示JSON前10筆原始數據
-            print(f"[DEBUG] JSON原始數據 (前10筆):")
-            for i, entry in enumerate(timeline_data[:10]):
-                time_str = entry.get('time_point', 'N/A')
-                weather_data = entry.get('weather_data', {})
-                temp = weather_data.get('air_temperature', {}).get('value', 'N/A')
-                wind = weather_data.get('wind_speed', {}).get('value', 'N/A')
-                rainfall = weather_data.get('rainfall', {})
-                is_raining = rainfall.get('is_raining', False)
-                rain_status = rainfall.get('status', 'unknown')
-                print(f"   [{i}] time: {time_str}, temp: {temp}°C, wind: {wind}m/s, rain: {is_raining} ({rain_status})")
-            
             # 數據提取和處理
             x_data, temp_data, wind_speed_data, rain_periods = self.extract_weather_data(timeline_data)
             
@@ -828,17 +765,6 @@ class RainAnalysisModule(QWidget):
                 },
                 "annotations": self.create_rain_annotations(rain_periods)
             }
-            
-            print(f"[OK] 數據轉換完成:")
-            print(f"   [CHART] 時間範圍: {min(x_data):.1f}s - {max(x_data):.1f}s")
-            print(f"   [TEMP] 溫度範圍: {min(temp_data):.1f}°C - {max(temp_data):.1f}°C")
-            print(f"   [WIND] 風速範圍: {min(wind_speed_data):.1f}km/h - {max(wind_speed_data):.1f}km/h")
-            print(f"   [RAIN] 降雨期間: {len(rain_periods)} 個")
-            
-            # [DEBUG] 顯示前10筆數據
-            print(f"\n[DEBUG] 前10筆轉換數據:")
-            for i in range(min(10, len(x_data))):
-                print(f"   [{i}] 時間: {x_data[i]:.2f}s, 溫度: {temp_data[i]:.1f}°C, 風速: {wind_speed_data[i]:.1f}km/h")
             
             return chart_data
             
@@ -984,7 +910,6 @@ class RainAnalysisModule(QWidget):
                 sampled_temp.append(temp_data[closest_index])
                 sampled_wind.append(wind_speed_data[closest_index])
         
-        print(f"[SAMPLE] 原始數據點: {len(x_data)} → 抽樣後: {len(sampled_x)} (間距: {interval_minutes}分鐘)")
         return sampled_x, sampled_temp, sampled_wind
     
     def process_rain_detection(self, is_raining, total_seconds, current_rain_start, rain_periods):
@@ -1005,8 +930,6 @@ class RainAnalysisModule(QWidget):
         description = rainfall_data.get("description", "").lower()
         status = rainfall_data.get("status", "").lower()
         
-        print(f"[DEBUG] 判斷降雨強度: description='{description}', status='{status}'")
-        
         # 強度判斷邏輯 - 擴展版本
         if any(keyword in description for keyword in ["heavy", "暴雨", "大雨"]):
             intensity = "heavy"
@@ -1025,7 +948,6 @@ class RainAnalysisModule(QWidget):
         else:
             intensity = "light"  # 默認強度
         
-        print(f"[DEBUG] 強度判斷結果: {intensity}")
         return intensity
     
     def create_rain_annotations(self, rain_periods):
@@ -1072,7 +994,6 @@ class RainAnalysisModule(QWidget):
             }
             annotations.append(marker_annotation)
         
-        print(f"[RAIN_ANNOTATIONS] 已創建 {len(rain_periods)} 個降雨背景區間和 {len(rain_periods)} 個標記符號")
         return annotations
     
     def get_rain_intensity_config(self, intensity, duration):
@@ -1227,6 +1148,215 @@ class RainAnalysisModule(QWidget):
             print(f"[WARNING] 記憶體優化失敗: {e}")
 
 
+# ========================================
+# 新架構適配器 - Modern Modular Interface
+# ========================================
+
+from .base_analysis_module import BaseAnalysisModule, IParameterProvider, ModuleFactory, ModuleTypes
+from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpinBox, QComboBox, QCheckBox
+
+
+class RainAnalysisParameterWidget(QWidget):
+    """降雨分析參數設定介面"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.init_ui()
+    
+    def init_ui(self):
+        """初始化參數設定界面"""
+        layout = QVBoxLayout(self)
+        
+        # 年份設定
+        year_layout = QHBoxLayout()
+        year_layout.addWidget(QLabel("年份:"))
+        self.year_spin = QSpinBox()
+        self.year_spin.setRange(2018, 2030)
+        self.year_spin.setValue(2025)
+        year_layout.addWidget(self.year_spin)
+        layout.addLayout(year_layout)
+        
+        # 賽事設定
+        race_layout = QHBoxLayout()
+        race_layout.addWidget(QLabel("賽事:"))
+        self.race_combo = QComboBox()
+        self.race_combo.addItems([
+            "Australia", "Bahrain", "China", "Japan", "Miami", "Emilia Romagna",
+            "Monaco", "Canada", "Spain", "Austria", "Great Britain", "Hungary",
+            "Belgium", "Netherlands", "Italy", "Azerbaijan", "Singapore",
+            "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
+        ])
+        self.race_combo.setCurrentText("Japan")
+        race_layout.addWidget(self.race_combo)
+        layout.addLayout(race_layout)
+        
+        # 賽段設定
+        session_layout = QHBoxLayout()
+        session_layout.addWidget(QLabel("賽段:"))
+        self.session_combo = QComboBox()
+        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "R"])
+        self.session_combo.setCurrentText("R")
+        session_layout.addWidget(self.session_combo)
+        layout.addLayout(session_layout)
+        
+        # 分析選項
+        options_layout = QVBoxLayout()
+        self.show_markers_check = QCheckBox("顯示降雨標記")
+        self.show_markers_check.setChecked(True)
+        self.auto_refresh_check = QCheckBox("自動重新整理")
+        self.auto_refresh_check.setChecked(False)
+        options_layout.addWidget(self.show_markers_check)
+        options_layout.addWidget(self.auto_refresh_check)
+        layout.addLayout(options_layout)
+    
+    def get_parameters(self) -> dict:
+        """獲取當前參數設定"""
+        return {
+            'year': self.year_spin.value(),
+            'race': self.race_combo.currentText(),
+            'session': self.session_combo.currentText(),
+            'show_markers': self.show_markers_check.isChecked(),
+            'auto_refresh': self.auto_refresh_check.isChecked()
+        }
+    
+    def set_parameters(self, params: dict):
+        """設定參數值"""
+        if 'year' in params:
+            self.year_spin.setValue(params['year'])
+        if 'race' in params:
+            self.race_combo.setCurrentText(params['race'])
+        if 'session' in params:
+            self.session_combo.setCurrentText(params['session'])
+        if 'show_markers' in params:
+            self.show_markers_check.setChecked(params['show_markers'])
+        if 'auto_refresh' in params:
+            self.auto_refresh_check.setChecked(params['auto_refresh'])
+
+
+class RainAnalysisModuleAdapter(BaseAnalysisModule):
+    """降雨分析模組適配器 - 新架構實現"""
+    
+    def __init__(self, parameter_provider: IParameterProvider = None, **kwargs):
+        super().__init__("降雨分析", parameter_provider)
+        
+        # 從參數提供者或kwargs獲取初始參數
+        if parameter_provider:
+            self.year = int(parameter_provider.get_current_year())
+            self.race = parameter_provider.get_current_race()
+            self.session = parameter_provider.get_current_session()
+        else:
+            self.year = kwargs.get('year', 2025)
+            self.race = kwargs.get('race', 'Japan')
+            self.session = kwargs.get('session', 'R')
+        
+        # 創建核心降雨分析模組實例
+        self._rain_module = None
+        self._parameter_widget = None
+        
+        # 初始化降雨分析模組
+        self._create_rain_module()
+    
+    def _create_rain_module(self):
+        """創建降雨分析模組實例"""
+        try:
+            self._rain_module = RainAnalysisModule(
+                year=self.year,
+                race=self.race,
+                session=self.session
+            )
+            self.signals.module_ready.emit()
+        except Exception as e:
+            self.signals.module_error.emit(f"降雨分析模組創建失敗: {e}")
+    
+    def get_widget(self) -> QWidget:
+        """返回降雨分析主要界面"""
+        return self._rain_module
+    
+    def get_title(self) -> str:
+        """返回動態標題"""
+        return f"降雨分析 - {self.year} {self.race} ({self.session})"
+    
+    def update_parameters(self, **params) -> bool:
+        """更新分析參數並重新載入資料 - 統一使用 auto_start_analysis"""
+        try:
+            # 更新內部參數
+            old_year, old_race, old_session = self.year, self.race, self.session
+            
+            if 'year' in params:
+                self.year = int(params['year'])
+            if 'race' in params:
+                self.race = params['race']
+            if 'session' in params:
+                self.session = params['session']
+            
+            print(f"🔄 [RainAnalysisAdapter] 參數更新: {old_year}/{old_race}/{old_session} → {self.year}/{self.race}/{self.session}")
+            
+            # 檢查是否有實質改變
+            if (old_year == self.year and old_race == self.race and old_session == self.session):
+                print(f"📋 [RainAnalysisAdapter] 參數無變化，跳過更新")
+                return True
+            
+            # 🔧 重用現有模組的分析流程，而非重新創建
+            if self._rain_module:
+                # 更新模組的參數
+                self._rain_module.year = self.year
+                self._rain_module.race = self.race  # 🔧 修正：使用 race 而非 race_name
+                self._rain_module.session = self.session
+                
+                # 重新執行分析流程（與初始化使用相同邏輯）
+                print(f"🔄 [RainAnalysisAdapter] 重新執行分析流程...")
+                self._rain_module.auto_start_analysis()
+                
+                # 調用基類更新
+                return super().update_parameters(**params)
+            else:
+                # 如果模組不存在，重新創建
+                print(f"⚠️ [RainAnalysisAdapter] 模組不存在，重新創建...")
+                self._create_rain_module()
+                return super().update_parameters(**params)
+            
+        except Exception as e:
+            print(f"❌ [RainAnalysisAdapter] 參數更新失敗: {e}")
+            self.signals.module_error.emit(f"參數更新失敗: {e}")
+            return False
+    
+    def get_parameter_interface(self) -> QWidget:
+        """返回參數設定介面"""
+        if not self._parameter_widget:
+            self._parameter_widget = RainAnalysisParameterWidget()
+            # 設定當前參數值
+            self._parameter_widget.set_parameters({
+                'year': self.year,
+                'race': self.race,
+                'session': self.session,
+                'show_markers': True,
+                'auto_refresh': False
+            })
+        return self._parameter_widget
+    
+    def get_default_size(self) -> tuple:
+        """返回降雨分析適合的視窗大小"""
+        return (800, 600)  # 較大的預設大小適合圖表顯示
+    
+    def supports_sync(self) -> bool:
+        """降雨分析支援主程式同步"""
+        return True
+    
+    def cleanup(self):
+        """清理資源"""
+        if self._rain_module:
+            self._rain_module.deleteLater()
+            self._rain_module = None
+        if self._parameter_widget:
+            self._parameter_widget.deleteLater()
+            self._parameter_widget = None
+        super().cleanup()
+
+
+# 註冊降雨分析模組到工廠
+ModuleFactory.register_module(ModuleTypes.RAIN_ANALYSIS, RainAnalysisModuleAdapter)
+
+
 if __name__ == "__main__":
     # 測試代碼 - 2025 Japan Race 案例
     from PyQt5.QtWidgets import QApplication
@@ -1234,15 +1364,23 @@ if __name__ == "__main__":
     
     app = QApplication(sys.argv)
     
-    # 創建降雨分析模組 - 使用指定的測試案例
-    rain_module = RainAnalysisModule(year=2025, race="Japan", session="R")
-    rain_module.show()
-    rain_module.resize(1200, 800)
+    # 測試舊架構
+    print("[TEST] 測試舊架構...")
+    rain_module_old = RainAnalysisModule(year=2025, race="Japan", session="R")
+    rain_module_old.show()
+    rain_module_old.resize(800, 600)
     
-    print("[RAIN] 降雨分析模組測試 - 2025 Japan Race")
-    print("   - 完全符合架構文檔規範")
-    print("   - 智能緩存管理")
-    print("   - 完整錯誤處理")
-    print("   - 性能優化")
+    # 測試新架構
+    print("[TEST] 測試新架構...")
+    rain_module_new = RainAnalysisModuleAdapter(year=2025, race="Japan", session="R")
+    widget = rain_module_new.get_widget()
+    widget.show()
+    widget.resize(800, 600)
+    
+    print("[RAIN] 降雨分析模組測試完成")
+    print("   ✅ 舊架構: RainAnalysisModule")
+    print("   ✅ 新架構: RainAnalysisModuleAdapter")
+    print("   ✅ 已註冊到 ModuleFactory")
+    print("   ✅ 支援參數同步和設定對話框")
     
     sys.exit(app.exec_())

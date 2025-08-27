@@ -257,23 +257,18 @@ class UniversalChartWidget(QWidget):
     
     def reset_view(self):
         """重置視圖到初始狀態 - 優化版本"""
-        print("[DEBUG] 重置圖表視圖")
         
         # 強制重新調整到視窗大小
         self.auto_fit_to_window()
         
         # 只調用一次更新
         self.update()
-        
-        print("[DEBUG] 圖表視圖重置完成")
     
     def force_refresh(self):
         """強制刷新圖表 - 優化版本"""
-        print("[DEBUG] 強制刷新圖表")
         
         # 獲取當前尺寸
         current_size = self.size()
-        print(f"[DEBUG] 當前圖表尺寸: {current_size.width()}x{current_size.height()}")
         
         # 重新計算邊距和縮放
         self.auto_fit_to_window()
@@ -283,12 +278,6 @@ class UniversalChartWidget(QWidget):
         
         # 只調用一次更新
         self.update()
-        
-        # 確保正確設置字體大小
-        if hasattr(self, 'axis_font_size'):
-            print(f"[DEBUG] 當前軸字體大小: {self.axis_font_size}")
-        
-        print("[DEBUG] 圖表強制刷新完成")
     
     def add_data_series(self, series):
         """添加數據系列"""
@@ -336,16 +325,12 @@ class UniversalChartWidget(QWidget):
         if not self.data_series:
             return
         
-        print(f"[DEBUG] 重新計算數據範圍，數據系列數量: {len(self.data_series)}")
-        
         # 重新計算所有數據範圍
         try:
             # 獲取整體X軸範圍
             x_range = self.get_overall_x_range()
             left_y_range = self.get_overall_left_y_range()
             right_y_range = self.get_overall_right_y_range() if self.show_right_y_axis else (0, 1)
-            
-            #print(f"[DEBUG] X範圍: {x_range}, 左Y範圍: {left_y_range}, 右Y範圍: {right_y_range}")
             
             # 確保範圍有效
             if x_range[1] <= x_range[0]:
@@ -362,8 +347,6 @@ class UniversalChartWidget(QWidget):
             self._cached_x_range = x_range
             self._cached_left_y_range = left_y_range
             self._cached_right_y_range = right_y_range
-            
-            print(f"[DEBUG] 數據範圍重新計算完成")
             
         except Exception as e:
             print(f"[ERROR] 重新計算數據範圍失敗: {e}")
@@ -397,22 +380,15 @@ class UniversalChartWidget(QWidget):
             ]
         }
         """
-        print(f"[DEBUG] load_from_json 開始")
-        print(f"[DEBUG] JSON數據鍵值: {list(json_data.keys())}")
-        
         self.clear_data()
         
         if "chart_title" in json_data:
             self.title = json_data["chart_title"]
-            print(f"[DEBUG] 設定圖表標題: {self.title}")
         
         # 處理X軸數據
         x_data = json_data.get("x_axis", {}).get("data", [])
         x_label = json_data.get("x_axis", {}).get("label", "X軸")
         x_unit = json_data.get("x_axis", {}).get("unit", "")
-        print(f"[DEBUG] X軸數據: 長度={len(x_data)}, 標籤={x_label}, 單位={x_unit}")
-        if x_data:
-            print(f"[DEBUG] X軸範圍: {min(x_data):.2f} - {max(x_data):.2f}")
         
         # 處理左Y軸數據
         if "left_y_axis" in json_data:
@@ -456,7 +432,6 @@ class UniversalChartWidget(QWidget):
             json_data.get("left_y_axis", {}).get("unit", ""),
             json_data.get("right_y_axis", {}).get("unit", "")
         )
-        print(f"[DEBUG] 軸標籤設置完成")
         
         # 處理標註
         annotations_count = 0
@@ -471,9 +446,6 @@ class UniversalChartWidget(QWidget):
                 )
                 self.add_annotation(annotation)
                 annotations_count += 1
-            print(f"[DEBUG] 處理了 {annotations_count} 個標註")
-        else:
-            print(f"[DEBUG] 未找到annotations數據")
         
         print(f"[OK] 通用圖表載入完成: {len(self.data_series)} 個數據系列, {len(self.annotations)} 個標註")
         self.auto_fit_to_window()  # 自動調整圖表以適配視窗大小
@@ -970,9 +942,6 @@ class UniversalChartWidget(QWidget):
             return
         
         # 先繪製降雨背景區間
-        print(f"[DRAW_DEBUG] 準備繪製降雨背景, hasattr: {hasattr(self, 'background_regions')}")
-        if hasattr(self, 'background_regions'):
-            print(f"[DRAW_DEBUG] background_regions 長度: {len(self.background_regions) if self.background_regions else 0}")
         self.draw_rain_backgrounds(painter, chart_area, x_min, x_max)
         
         for i, series in enumerate(self.data_series):
@@ -994,8 +963,6 @@ class UniversalChartWidget(QWidget):
             end_time = region['end_time']
             color_str = region['color']
             
-            print(f"[RAIN_DRAW] 繪製降雨區間: {start_time}-{end_time}, 顏色: {color_str}")
-            
             # 轉換時間字串為秒數 (不是座標)
             start_seconds = self.time_to_seconds(start_time)
             end_seconds = self.time_to_seconds(end_time)
@@ -1011,9 +978,6 @@ class UniversalChartWidget(QWidget):
             x1 = chart_area.left() + start_progress * chart_area.width()
             x2 = chart_area.left() + end_progress * chart_area.width()
             
-            print(f"[RAIN_DRAW] 時間轉秒: {start_time}→{start_seconds}s, {end_time}→{end_seconds}s")
-            print(f"[RAIN_DRAW] 螢幕座標: {x1} - {x2}")
-            
             # 解析顏色
             if color_str.startswith('rgba('):
                 # 提取 rgba 數值
@@ -1021,9 +985,8 @@ class UniversalChartWidget(QWidget):
                 rgba_values = [float(x.strip()) for x in rgba_str.split(',')]
                 if len(rgba_values) == 4:
                     r, g, b, a = rgba_values
-                    # 轉換透明度 (0.9 -> 230)
+                    # 轉換透明度 (0.3 -> 76)
                     alpha_255 = int(a * 255)
-                    print(f"[ALPHA_DEBUG] 原始透明度: {a}, 轉換後: {alpha_255}")
                     a = alpha_255
                 else:
                     r, g, b, a = 128, 128, 128, 128  # 預設灰色
@@ -1034,8 +997,6 @@ class UniversalChartWidget(QWidget):
             color = QColor(int(r), int(g), int(b), int(a))
             brush = QBrush(color)
             painter.fillRect(int(x1), chart_area.top(), int(x2 - x1), chart_area.height(), brush)
-            
-            print(f"[RAIN_DRAW] 已繪製背景: x={int(x1)}, width={int(x2-x1)}, 顏色=RGBA({int(r)},{int(g)},{int(b)},{int(a)})")
         
         painter.restore()
     
@@ -1575,10 +1536,8 @@ class UniversalChartWidget(QWidget):
     def time_to_seconds(self, time_str):
         """將時間字符串轉換為秒數 (不進行座標轉換)"""
         try:
-            print(f"[TIME_DEBUG] 原始時間字符串: '{time_str}'")
             # 解析時間字符串 (例如: "0:42:19.732")
             parts = time_str.split(":")
-            print(f"[TIME_DEBUG] 分割後部分: {parts}")
             
             if len(parts) == 2:
                 # 格式: "MM:SS.mmm"
@@ -1587,7 +1546,6 @@ class UniversalChartWidget(QWidget):
                 seconds = int(seconds_parts[0])
                 milliseconds = int(seconds_parts[1]) if len(seconds_parts) > 1 else 0
                 total_seconds = minutes * 60 + seconds + milliseconds / 1000.0
-                print(f"[TIME_DEBUG] MM:SS格式 - 分鐘:{minutes}, 秒:{seconds}, 毫秒:{milliseconds}, 總秒數:{total_seconds}")
             elif len(parts) == 3:
                 # 格式: "H:MM:SS.mmm"
                 hours = int(parts[0])
@@ -1596,9 +1554,7 @@ class UniversalChartWidget(QWidget):
                 seconds = int(seconds_parts[0])
                 milliseconds = int(seconds_parts[1]) if len(seconds_parts) > 1 else 0
                 total_seconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
-                print(f"[TIME_DEBUG] H:MM:SS格式 - 小時:{hours}, 分鐘:{minutes}, 秒:{seconds}, 毫秒:{milliseconds}, 總秒數:{total_seconds}")
             else:
-                print(f"[TIME_DEBUG] ❌ 未知時間格式，parts數量: {len(parts)}")
                 return 0
             
             return total_seconds
@@ -1610,10 +1566,8 @@ class UniversalChartWidget(QWidget):
     def time_to_chart_x(self, time_str):
         """將時間字符串轉換為圖表X座標"""
         try:
-            print(f"[TIME_DEBUG] 原始時間字符串: '{time_str}'")
             # 解析時間字符串 (例如: "0:42:19.732")
             parts = time_str.split(":")
-            print(f"[TIME_DEBUG] 分割後部分: {parts}")
             
             if len(parts) == 2:
                 # 格式: "MM:SS.mmm"
@@ -1622,7 +1576,6 @@ class UniversalChartWidget(QWidget):
                 seconds = int(seconds_parts[0])
                 milliseconds = int(seconds_parts[1]) if len(seconds_parts) > 1 else 0
                 total_seconds = minutes * 60 + seconds + milliseconds / 1000.0
-                print(f"[TIME_DEBUG] MM:SS格式 - 分鐘:{minutes}, 秒:{seconds}, 毫秒:{milliseconds}, 總秒數:{total_seconds}")
             elif len(parts) == 3:
                 # 格式: "H:MM:SS.mmm"
                 hours = int(parts[0])
@@ -1631,14 +1584,11 @@ class UniversalChartWidget(QWidget):
                 seconds = int(seconds_parts[0])
                 milliseconds = int(seconds_parts[1]) if len(seconds_parts) > 1 else 0
                 total_seconds = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000.0
-                print(f"[TIME_DEBUG] H:MM:SS格式 - 小時:{hours}, 分鐘:{minutes}, 秒:{seconds}, 毫秒:{milliseconds}, 總秒數:{total_seconds}")
             else:
-                print(f"[TIME_DEBUG] ❌ 未知時間格式，parts數量: {len(parts)}")
                 return 0
             
             # 轉換為圖表X座標
             screen_x = self.data_to_screen_x(total_seconds)
-            print(f"[TIME_DEBUG] 轉換為螢幕座標: {screen_x}")
             return screen_x
             
         except Exception as e:
@@ -1652,13 +1602,11 @@ class UniversalChartWidget(QWidget):
     def data_to_screen_x(self, x_value):
         """將數據X值轉換為螢幕座標"""
         if not self.data_series:
-            print(f"[COORD_DEBUG] ❌ 沒有數據系列，返回 margin_left: {self.margin_left}")
             return self.margin_left
         
         # 從第一個數據系列獲取X軸數據範圍
         x_data = self.data_series[0].x_data
         if not x_data:
-            print(f"[COORD_DEBUG] ❌ X軸數據為空，返回 margin_left: {self.margin_left}")
             return self.margin_left
         
         # 計算X軸的數據範圍
@@ -1669,16 +1617,9 @@ class UniversalChartWidget(QWidget):
         # 計算圖表區域寬度
         chart_width = self.width() - self.margin_left - self.margin_right
         
-        print(f"[COORD_DEBUG] 輸入值: {x_value}")
-        print(f"[COORD_DEBUG] X軸範圍: {x_min} - {x_max} (範圍: {x_range})")
-        print(f"[COORD_DEBUG] 圖表寬度: {chart_width} (總寬度: {self.width()}, 左邊距: {self.margin_left}, 右邊距: {self.margin_right})")
-        
         # 轉換為螢幕座標
         normalized_x = (x_value - x_min) / x_range
         screen_x = self.margin_left + normalized_x * chart_width
-        
-        print(f"[COORD_DEBUG] 正規化X: {normalized_x}")
-        print(f"[COORD_DEBUG] 螢幕座標: {screen_x}")
         
         return screen_x
 
