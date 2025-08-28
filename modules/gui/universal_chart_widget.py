@@ -201,25 +201,14 @@ class UniversalChartWidget(QWidget):
         if width <= 0 or height <= 0:
             return  # 防止無效尺寸
         
-        # 動態邊距計算 - 針對MDI視窗優化（移除極小和小視窗模式）
-        if width < 800 or height < 600:
-            # 中等視窗：標準邊距
-            self.margin_left = 60
-            self.margin_right = 40
-            self.margin_top = 25
-            self.margin_bottom = 40
-            self.axis_font_size = 8
-            self.label_font_size = 9
-            self.legend_font_size = 7
-        else:
-            # 大視窗：按比例調整，並確保為整數
-            self.margin_left = int(max(60, width * 0.08))
-            self.margin_right = int(max(40, width * 0.06))
-            self.margin_top = int(max(25, height * 0.05))
-            self.margin_bottom = int(max(40, height * 0.08))
-            self.axis_font_size = 9
-            self.label_font_size = 10
-            self.legend_font_size = 8
+        # 固定邊距 - 不使用比例調整，保持一致的佈局
+        self.margin_left = 60
+        self.margin_right = 40
+        self.margin_top = 25
+        self.margin_bottom = 40
+        self.axis_font_size = 9
+        self.label_font_size = 10
+        self.legend_font_size = 8
         
         # 確保右軸邊距正確設置
         if self.show_right_y_axis:
@@ -764,10 +753,10 @@ class UniversalChartWidget(QWidget):
             # 繪製刻度線
             painter.drawLine(chart_area.right(), screen_y, chart_area.right() + 5, screen_y)
             
-            # 繪製標籤 - 顯示實際數值，動態調整位置
+            # 繪製標籤 - 顯示實際數值，動態調整位置，增加與軸線的距離
             label = f"{y_value:.1f}"
-            # 根據右側邊距動態調整標籤位置，確保在小視窗中也能顯示
-            label_x = min(chart_area.right() + 10, self.width() - 50)
+            # 增加標籤與右Y軸的距離，右邊間距保持5像素
+            label_x = min(chart_area.right() + 15, self.width() - 5)
             painter.drawText(label_x, screen_y + 5, label)
     
     def draw_grid(self, painter, chart_area):

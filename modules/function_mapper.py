@@ -820,7 +820,7 @@ class F1AnalysisFunctionMapper:
         """執行單一車手綜合分析 - 使用功能12替代實現"""
         try:
             print("[START] 開始執行單一車手綜合分析...")
-            print("� 此功能使用單一車手詳細遙測分析 (功能12) 作為替代實現")
+            print("[TEST] 此功能使用單一車手詳細遙測分析 (功能12) 作為替代實現")
             
             # 調用功能12作為替代實現
             result = self._execute_single_driver_telemetry(**kwargs)
@@ -1092,7 +1092,7 @@ class F1AnalysisFunctionMapper:
         from datetime import datetime
         
         try:
-            print("� 開始執行賽事超車統計分析...")
+            print("[TEST] 開始執行賽事超車統計分析...")
             
             # 1. 參數處理 - 符合統一測試參數標準
             year = kwargs.get('year') or getattr(self.data_loader, 'year', 2025)
@@ -1655,7 +1655,7 @@ class F1AnalysisFunctionMapper:
         """執行彎道速度分析 - 使用功能17的結果實現"""
         try:
             print("[START] 開始執行彎道速度分析...")
-            print("� 此功能使用動態彎道檢測分析 (功能17) 的結果")
+            print("[TEST] 此功能使用動態彎道檢測分析 (功能17) 的結果")
             
             # 1. 參數處理 - 支援詳細輸出控制
             show_detailed_output = kwargs.get('show_detailed_output', True)

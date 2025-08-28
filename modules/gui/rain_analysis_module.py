@@ -578,9 +578,9 @@ class RainAnalysisModule(QWidget):
                     method = getattr(self.chart_widget, 'render_rain_background_regions', None)
                     if method:
                         method(rain_markers_data["background_regions"])
-                        print(f"🎨 已渲染 {len(rain_markers_data['background_regions'])} 個降雨背景區間")
+                        print(f"[DESIGN] 已渲染 {len(rain_markers_data['background_regions'])} 個降雨背景區間")
                 except Exception as e:
-                    print(f"❌ 呼叫方法時發生錯誤: {e}")
+                    print(f"[ERROR] 呼叫方法時發生錯誤: {e}")
                 
                 # 不再渲染降雨標記文字 - 只保留顏色區塊
                 
@@ -588,7 +588,7 @@ class RainAnalysisModule(QWidget):
                 if hasattr(self.chart_widget, 'rain_region_hovered'):
                     self.chart_widget.rain_region_hovered.connect(self.on_rain_region_hovered)
             else:
-                print("📝 未檢測到降雨數據，跳過標記渲染")
+                print("[NOTE] 未檢測到降雨數據，跳過標記渲染")
                 
         except Exception as e:
             print(f"[WARNING] JSON降雨標記處理失敗: {e}")
@@ -715,7 +715,7 @@ class RainAnalysisModule(QWidget):
         """處理降雨區間懸停事件 - 符合架構文檔規範"""
         # 顯示降雨強度詳細信息
         self.safe_update_ui('status_label', f"降雨區間: {region_info['duration']} | 強度: {region_info['intensity']}")
-        print(f"💧 懸停於降雨區間: 強度={region_info['intensity']}, 持續時間={region_info['duration']}")
+        print(f"[DROPLET] 懸停於降雨區間: 強度={region_info['intensity']}, 持續時間={region_info['duration']}")
     
     def convert_rain_data_to_chart_format(self, rain_json_data):
         """將雨量分析JSON轉換為通用圖表格式 - 符合架構規範"""
@@ -1289,34 +1289,34 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
             if 'session' in params:
                 self.session = params['session']
             
-            print(f"🔄 [RainAnalysisAdapter] 參數更新: {old_year}/{old_race}/{old_session} → {self.year}/{self.race}/{self.session}")
+            print(f"[REFRESH] [RainAnalysisAdapter] 參數更新: {old_year}/{old_race}/{old_session} → {self.year}/{self.race}/{self.session}")
             
             # 檢查是否有實質改變
             if (old_year == self.year and old_race == self.race and old_session == self.session):
-                print(f"📋 [RainAnalysisAdapter] 參數無變化，跳過更新")
+                print(f"[INFO] [RainAnalysisAdapter] 參數無變化，跳過更新")
                 return True
             
-            # 🔧 重用現有模組的分析流程，而非重新創建
+            # [TOOL] 重用現有模組的分析流程，而非重新創建
             if self._rain_module:
                 # 更新模組的參數
                 self._rain_module.year = self.year
-                self._rain_module.race = self.race  # 🔧 修正：使用 race 而非 race_name
+                self._rain_module.race = self.race  # [TOOL] 修正：使用 race 而非 race_name
                 self._rain_module.session = self.session
                 
                 # 重新執行分析流程（與初始化使用相同邏輯）
-                print(f"🔄 [RainAnalysisAdapter] 重新執行分析流程...")
+                print(f"[REFRESH] [RainAnalysisAdapter] 重新執行分析流程...")
                 self._rain_module.auto_start_analysis()
                 
                 # 調用基類更新
                 return super().update_parameters(**params)
             else:
                 # 如果模組不存在，重新創建
-                print(f"⚠️ [RainAnalysisAdapter] 模組不存在，重新創建...")
+                print(f"[WARNING] [RainAnalysisAdapter] 模組不存在，重新創建...")
                 self._create_rain_module()
                 return super().update_parameters(**params)
             
         except Exception as e:
-            print(f"❌ [RainAnalysisAdapter] 參數更新失敗: {e}")
+            print(f"[ERROR] [RainAnalysisAdapter] 參數更新失敗: {e}")
             self.signals.module_error.emit(f"參數更新失敗: {e}")
             return False
     
@@ -1378,9 +1378,9 @@ if __name__ == "__main__":
     widget.resize(800, 600)
     
     print("[RAIN] 降雨分析模組測試完成")
-    print("   ✅ 舊架構: RainAnalysisModule")
-    print("   ✅ 新架構: RainAnalysisModuleAdapter")
-    print("   ✅ 已註冊到 ModuleFactory")
-    print("   ✅ 支援參數同步和設定對話框")
+    print("   [OK] 舊架構: RainAnalysisModule")
+    print("   [OK] 新架構: RainAnalysisModuleAdapter")
+    print("   [OK] 已註冊到 ModuleFactory")
+    print("   [OK] 支援參數同步和設定對話框")
     
     sys.exit(app.exec_())

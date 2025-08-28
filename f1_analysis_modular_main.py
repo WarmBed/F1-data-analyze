@@ -16,6 +16,18 @@ import argparse
 from typing import Optional, Union, Dict, Any
 from datetime import datetime
 
+# 設置標準輸出編碼為 UTF-8，避免 Windows 編碼問題
+if sys.platform.startswith('win'):
+    import locale
+    try:
+        # 嘗試設置控制台編碼為 UTF-8
+        import codecs
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
+    except:
+        # 如果失敗，使用預設編碼
+        pass
+
 # 確保 modules 目錄在 Python 路徑中
 current_dir = os.path.dirname(os.path.abspath(__file__))
 modules_dir = os.path.join(current_dir, 'modules')
@@ -1022,7 +1034,7 @@ class F1AnalysisModularCLI:
             elif function_id == 6:
                 try:
                     from modules.single_driver_detailed_telemetry_analysis import run_single_driver_detailed_telemetry_analysis
-                    print("\n� 執行單一車手詳細遙測分析 (功能6)...")
+                    print("\n[TEST] 執行單一車手詳細遙測分析 (功能6)...")
                     
                     # 執行單一車手詳細遙測分析
                     result = run_single_driver_detailed_telemetry_analysis(self.data_loader)

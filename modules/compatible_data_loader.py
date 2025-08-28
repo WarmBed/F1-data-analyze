@@ -240,7 +240,7 @@ class CompatibleF1DataLoader:
             
             if openf1_session:
                 session_key = openf1_session.get('session_key')
-                print(f"🔗 找到 OpenF1 session_key: {session_key}")
+                print(f"[LINK] 找到 OpenF1 session_key: {session_key}")
                 
                 # 獲取 OpenF1 車手資料
                 openf1_drivers = openf1_analyzer.get_drivers(session_key)
@@ -496,7 +496,7 @@ class CompatibleF1DataLoader:
             
             openf1_session_key = metadata.get('openf1_session_key')
             if openf1_session_key:
-                print(f"   🔗 OpenF1 Session Key: {openf1_session_key}")
+                print(f"   [LINK] OpenF1 Session Key: {openf1_session_key}")
             else:
                 print(f"   [ERROR] 未找到對應的 OpenF1 session")
     

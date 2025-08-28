@@ -14,13 +14,16 @@ from PyQt5.QtWidgets import (
     QTabWidget, QMdiArea, QMdiSubWindow, QTableWidget, QTableWidgetItem,
     QSplitter, QLineEdit, QStatusBar, QLabel, QProgressBar, QGroupBox,
     QFrame, QToolBar, QAction, QMenuBar, QMenu, QGridLayout, QLCDNumber,
-    QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox
+    QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect, QThread
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPainter, QPen, QBrush, QMouseEvent
 import json
 import datetime
 import traceback
+import subprocess
+import sys
+import os
 
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
@@ -39,7 +42,7 @@ class CustomMdiArea(QMdiArea):
         # 允許拖拉視窗
         self.setOption(QMdiArea.DontMaximizeSubWindowOnActivation, True)  # 不自動最大化
         
-        #print(f"🔒 CustomMdiArea: 初始化完成，已啟用內建右鍵選單和視窗管理功能")
+        #print(f"[LOCK] CustomMdiArea: 初始化完成，已啟用內建右鍵選單和視窗管理功能")
         
     def contextMenuEvent(self, event):
         """處理右鍵選單事件"""
@@ -114,19 +117,19 @@ class CustomMdiArea(QMdiArea):
         
     def addSubWindow(self, widget, flags=None):
         """添加子視窗並強制執行最小尺寸 - 簡化版本"""
-        #print(f"🔒 CustomMdiArea: addSubWindow 被調用，widget 類型: {type(widget)}")
+        #print(f"[LOCK] CustomMdiArea: addSubWindow 被調用，widget 類型: {type(widget)}")
         
         if flags is not None:
             subwindow = super().addSubWindow(widget, flags)
         else:
             subwindow = super().addSubWindow(widget)
             
-        #print(f"🔒 CustomMdiArea: 創建的子視窗類型: {type(subwindow)}")
+        #print(f"[LOCK] CustomMdiArea: 創建的子視窗類型: {type(subwindow)}")
         
         # 移除最小尺寸限制，允許完全自由縮放
         if isinstance(subwindow, PopoutSubWindow):
             # 不設置最小尺寸限制
-            #print(f"🔒 CustomMdiArea: 子視窗無尺寸限制")
+            #print(f"[LOCK] CustomMdiArea: 子視窗無尺寸限制")
             pass
         
         # [修改] 保留邊框，使用CSS隱藏標題列
@@ -149,9 +152,128 @@ class CustomMdiArea(QMdiArea):
                     background-color: #FFFFFF;
                 }
             """)
-            #print(f"🔒 CustomMdiArea: 已隱藏標題列但保留邊框")
+            #print(f"[LOCK] CustomMdiArea: 已隱藏標題列但保留邊框")
         
         return subwindow
+
+# CLI 分析工作執行緒
+class CliAnalysisWorker(QThread):
+    """背景執行 CLI 分析的工作執行緒"""
+    
+    # 定義信號
+    progress_updated = pyqtSignal(str)  # 進度更新信號
+    analysis_completed = pyqtSignal(bool, str)  # 分析完成信號 (成功/失敗, 訊息)
+    output_received = pyqtSignal(str)  # 輸出信號
+    
+    def __init__(self, year, race, session, force_mode=1, parent=None):
+        super().__init__(parent)
+        self.year = year
+        self.race = race
+        self.session = session
+        self.force_mode = force_mode
+        self.process = None
+        self.should_stop = False
+        
+    def run(self):
+        """執行 CLI 分析"""
+        try:
+            # 構建CLI命令
+            cmd = [
+                sys.executable,
+                "f1_analysis_modular_main.py",
+                "-f", str(self.force_mode),  # 使用指定的 force_mode
+                "-y", str(self.year),
+                "-r", self.race,
+                "-s", self.session
+            ]
+            
+            print(f"[DEBUG] [CLI_WORKER] 準備執行命令: {' '.join(cmd)}")
+            print(f"[DEBUG] [CLI_WORKER] 工作目錄: {os.getcwd()}")
+            
+            self.progress_updated.emit(f"啟動 CLI 分析: {self.year} {self.race} {self.session}")
+            
+            # 設置環境變數以確保正確的編碼
+            env = os.environ.copy()
+            env['PYTHONIOENCODING'] = 'utf-8'
+            env['PYTHONLEGACYWINDOWSFS'] = '0'
+            
+            print(f"[DEBUG] [CLI_WORKER] 環境變數已設置: PYTHONIOENCODING=utf-8")
+            
+            # 啟動進程，使用 UTF-8 編碼避免編碼問題
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',
+                errors='replace',  # 遇到無法解碼的字符時替換為 ?
+                env=env,  # 使用自定義環境變數
+                cwd=os.getcwd(),
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            print(f"[DEBUG] [CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
+            self.progress_updated.emit(f"CLI 分析已啟動 (PID: {self.process.pid})")
+            
+            # 即時讀取輸出
+            while True:
+                if self.should_stop:
+                    if self.process:
+                        self.process.terminate()
+                    break
+                    
+                # 檢查進程是否完成
+                if self.process.poll() is not None:
+                    break
+                    
+                # 讀取輸出，處理編碼問題
+                try:
+                    output = self.process.stdout.readline()
+                    if output:
+                        self.output_received.emit(output.strip())
+                except UnicodeDecodeError as e:
+                    # 如果遇到編碼錯誤，記錄但不中斷
+                    self.output_received.emit(f"[編碼錯誤] 無法解碼部分輸出: {str(e)}")
+                    
+                # 短暫休息避免CPU占用過高
+                self.msleep(100)
+            
+            # 獲取最終結果
+            if not self.should_stop:
+                return_code = self.process.wait()
+                print(f"[DEBUG] [CLI_WORKER] 進程結束，返回碼: {return_code}")
+                
+                if return_code == 0:
+                    print(f"[DEBUG] [CLI_WORKER] CLI 分析成功完成")
+                    self.analysis_completed.emit(True, "CLI 分析成功完成")
+                else:
+                    print(f"[DEBUG] [CLI_WORKER] CLI 分析失敗，返回碼: {return_code}")
+                    try:
+                        stderr_output = self.process.stderr.read()
+                        print(f"[DEBUG] [CLI_WORKER] 錯誤輸出: {stderr_output}")
+                        self.analysis_completed.emit(False, f"CLI 分析失敗: {stderr_output}")
+                    except UnicodeDecodeError as e:
+                        print(f"[DEBUG] [CLI_WORKER] 錯誤輸出編碼問題: {str(e)}")
+                        self.analysis_completed.emit(False, f"CLI 分析失敗 (編碼錯誤): {str(e)}")
+            else:
+                print(f"[DEBUG] [CLI_WORKER] 分析被用戶取消")
+                self.analysis_completed.emit(False, "分析被用戶取消")
+                
+        except Exception as e:
+            self.analysis_completed.emit(False, f"CLI 分析錯誤: {str(e)}")
+    
+    def stop(self):
+        """停止分析"""
+        self.should_stop = True
+        if self.process and self.process.poll() is None:
+            try:
+                self.process.terminate()
+                # 等待進程結束，如果沒有回應則強制終止
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait()
 
 # 全域信號管理器
 class GlobalSignalManager(QObject):
@@ -165,6 +287,171 @@ class GlobalSignalManager(QObject):
 # 創建全域信號管理器實例
 global_signals = GlobalSignalManager()
 
+# CLI 分析管理器
+class CliAnalysisManager(QObject):
+    """統一的 CLI 分析管理器 - 業務服務層"""
+    
+    # 定義信號
+    analysis_started = pyqtSignal(str, str, str, str)  # (request_id, year, race, session)
+    analysis_progress = pyqtSignal(str, str)  # (request_id, message)
+    analysis_output = pyqtSignal(str, str)  # (request_id, output)
+    analysis_completed = pyqtSignal(str, bool, str)  # (request_id, success, message)
+    json_ready = pyqtSignal(str, dict)  # (request_id, json_data)
+    
+    def __init__(self):
+        super().__init__()
+        self.active_requests = {}  # 存儲活動的請求
+        self.worker_threads = {}   # 存儲工作線程
+        
+    def request_analysis(self, year, race, session, force_mode=1, requester_id=None):
+        """請求 CLI 分析"""
+        import uuid
+        request_id = str(uuid.uuid4())
+        
+        # 記錄請求者
+        self.active_requests[request_id] = {
+            'year': year,
+            'race': race, 
+            'session': session,
+            'requester_id': requester_id,
+            'status': 'starting'
+        }
+        
+        # 創建工作線程
+        worker = CliAnalysisWorker(year, race, session, force_mode)
+        worker.progress_updated.connect(lambda msg: self.analysis_progress.emit(request_id, msg))
+        worker.output_received.connect(lambda output: self.analysis_output.emit(request_id, output))
+        worker.analysis_completed.connect(lambda success, msg: self._on_analysis_completed(request_id, success, msg))
+        
+        # 存儲並啟動線程
+        self.worker_threads[request_id] = worker
+        worker.start()
+        
+        # 發送開始信號
+        self.analysis_started.emit(request_id, year, race, session)
+        
+        # 開始監控 JSON 文件
+        self._start_json_monitoring(request_id, year, race, session)
+        
+        print(f"[START] CLI分析請求已創建: {request_id} ({year} {race} {session})")
+        return request_id
+    
+    def cancel_analysis(self, request_id):
+        """取消分析"""
+        if request_id in self.worker_threads:
+            worker = self.worker_threads[request_id]
+            if worker.isRunning():
+                worker.stop()
+                worker.wait(5000)
+            del self.worker_threads[request_id]
+            
+        if request_id in self.active_requests:
+            del self.active_requests[request_id]
+            
+        print(f"[STOP] CLI分析已取消: {request_id}")
+    
+    def _on_analysis_completed(self, request_id, success, message):
+        """處理分析完成"""
+        self.analysis_completed.emit(request_id, success, message)
+        
+        # 清理線程
+        if request_id in self.worker_threads:
+            del self.worker_threads[request_id]
+            
+        print(f"[OK] CLI分析完成: {request_id}, 成功: {success}")
+    
+    def _start_json_monitoring(self, request_id, year, race, session):
+        """開始監控 JSON 文件產生"""
+        if request_id not in self.active_requests:
+            return
+            
+        # 創建計時器監控 JSON 文件
+        timer = QTimer()
+        timer.timeout.connect(lambda: self._check_json_ready(request_id, year, race, session, timer))
+        timer.start(3000)  # 每3秒檢查一次
+        
+        # 保存計時器引用
+        self.active_requests[request_id]['json_timer'] = timer
+        
+        # 設置超時 (120秒)
+        timeout_timer = QTimer()
+        timeout_timer.setSingleShot(True)
+        timeout_timer.timeout.connect(lambda: self._on_json_timeout(request_id, timer, timeout_timer))
+        timeout_timer.start(120000)
+        
+        self.active_requests[request_id]['timeout_timer'] = timeout_timer
+    
+    def _check_json_ready(self, request_id, year, race, session, timer):
+        """檢查 JSON 是否準備好"""
+        if request_id not in self.active_requests:
+            timer.stop()
+            return
+            
+        # 嘗試載入 JSON
+        json_data = self._try_load_json(year, race, session)
+        if json_data:
+            # JSON 已產生
+            timer.stop()
+            if 'timeout_timer' in self.active_requests[request_id]:
+                self.active_requests[request_id]['timeout_timer'].stop()
+            
+            self.json_ready.emit(request_id, json_data)
+            print(f"📄 JSON已準備好: {request_id}")
+            
+            # 清理請求
+            if request_id in self.active_requests:
+                del self.active_requests[request_id]
+    
+    def _on_json_timeout(self, request_id, timer, timeout_timer):
+        """JSON 等待超時"""
+        timer.stop()
+        timeout_timer.stop()
+        
+        self.analysis_completed.emit(request_id, False, "JSON等待超時")
+        
+        if request_id in self.active_requests:
+            del self.active_requests[request_id]
+        
+        print(f"[TIME] JSON等待超時: {request_id}")
+    
+    def _try_load_json(self, year, race, session):
+        """嘗試載入 JSON 檔案"""
+        import glob
+        import os
+        import json
+        
+        # 搜尋模式與原有邏輯保持一致
+        json_patterns = [
+            f"json/rain_analysis_{year}_{race}_{session}.json",
+            f"json/*{year}*{race}*{session}*.json",
+            f"json_exports/*{year}*{race}*{session}*.json", 
+            f"cache/*{year}*{race}*{session}*.json"
+        ]
+        
+        for pattern in json_patterns:
+            if '*' in pattern:
+                json_files = glob.glob(pattern)
+                if json_files:
+                    pattern = json_files[0]  # 使用第一個匹配的文件
+            
+            if os.path.exists(pattern):
+                try:
+                    with open(pattern, 'r', encoding='utf-8') as f:
+                        return json.load(f)
+                except Exception as e:
+                    print(f"[ERROR] JSON載入錯誤 {pattern}: {e}")
+        
+        return None
+    
+    def cleanup_all(self):
+        """清理所有活動的分析"""
+        for request_id in list(self.active_requests.keys()):
+            self.cancel_analysis(request_id)
+        print("🧹 CLI分析管理器已清理所有資源")
+
+# 創建全域 CLI 分析管理器實例
+cli_analysis_manager = CliAnalysisManager()
+
 class MainWindowParameterProvider:
     """主視窗參數提供者 - 實現 IParameterProvider 介面"""
     
@@ -177,7 +464,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'year_combo') and self.main_window.year_combo:
                 return self.main_window.year_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [PARAM_PROVIDER] 獲取年份失敗: {e}")
+            print(f"[WARNING] [PARAM_PROVIDER] 獲取年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race(self) -> str:
@@ -186,7 +473,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'race_combo') and self.main_window.race_combo:
                 return self.main_window.race_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [PARAM_PROVIDER] 獲取賽事失敗: {e}")
+            print(f"[WARNING] [PARAM_PROVIDER] 獲取賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session(self) -> str:
@@ -195,7 +482,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'session_combo') and self.main_window.session_combo:
                 return self.main_window.session_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [PARAM_PROVIDER] 獲取賽段失敗: {e}")
+            print(f"[WARNING] [PARAM_PROVIDER] 獲取賽段失敗: {e}")
         return "R"  # 預設值
 
 class TelemetryChartWidget(QWidget):
@@ -300,7 +587,7 @@ class TelemetryChartWidget(QWidget):
                     # 計算並保存固定位置的真實數據值
                     self._calculate_and_save_fixed_value()
                     
-                    #print(f"🔒 固定虛線位置：X = {self.fixed_line_x}")
+                    #print(f"[LOCK] 固定虛線位置：X = {self.fixed_line_x}")
                     self.update()
                 else:
                     # 普通左鍵：開始拖拉
@@ -357,7 +644,7 @@ class TelemetryChartWidget(QWidget):
                 elif self.chart_type == "steering":
                     self.fixed_unit = "°"
                 
-                #print(f"🔒 保存固定值: X={actual_x:.1f}, Y={fixed_y_value:.1f}{self.fixed_unit}")
+                #print(f"[LOCK] 保存固定值: X={actual_x:.1f}, Y={fixed_y_value:.1f}{self.fixed_unit}")
                 return
             except Exception as e:
                 #print(f"[WARNING] 固定值計算失敗: {e}")
@@ -884,7 +1171,7 @@ class TelemetryChartWidget(QWidget):
         if hasattr(self, 'fixed_y_value') and self.fixed_y_value is not None:
             y_value = self.fixed_y_value
             unit = getattr(self, 'fixed_unit', '')
-            #print(f"🔒 使用已保存的固定值: {y_value:.1f}{unit}")
+            #print(f"[LOCK] 使用已保存的固定值: {y_value:.1f}{unit}")
         else:
             #print(f"[WARNING] 沒有已保存的固定值")
             return
@@ -895,9 +1182,9 @@ class TelemetryChartWidget(QWidget):
         
         # 格式化數值顯示 (包含鎖孔圖標)
         if self.chart_type == "steering":
-            value_text = f"🔒{y_value:+.1f}{unit}"
+            value_text = f"[LOCK]{y_value:+.1f}{unit}"
         else:
-            value_text = f"🔒{y_value:.1f}{unit}"
+            value_text = f"[LOCK]{y_value:.1f}{unit}"
         
         # 計算標籤位置（固定線右側，頂部）
         label_x = self.fixed_line_x + 8
@@ -926,63 +1213,6 @@ class TelemetryChartWidget(QWidget):
         painter.drawText(label_x, label_y, value_text)
         
         #print(f"[STATS] 顯示固定值標籤: {value_text} at ({label_x}, {label_y})")  # Debug
-
-class TrackMapWidget(QWidget):
-    """賽道地圖小部件"""
-    
-    def __init__(self):
-        super().__init__()
-        # 移除最小尺寸限制，允許完全自由縮放
-        # self.setMinimumSize(300, 200) - 已移除
-        self.setObjectName("TrackMap")
-        
-    def paintEvent(self, event):
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 黑色背景
-        painter.fillRect(self.rect(), QColor(0, 0, 0))
-        
-        # 繪製賽道輪廓 (基於真實賽道數據)
-        painter.setPen(QPen(QColor(0, 255, 0), 3))  # 綠色賽道線
-        
-        # 賽道主線
-        center_x, center_y = self.width() // 2, self.height() // 2
-        
-        # 繪製基本賽道輪廓 (待整合真實賽道數據)
-        points = []
-        for i in range(360):
-            angle = math.radians(i)
-            if i < 180:
-                # 上半部分
-                x = center_x + 80 * math.cos(angle)
-                y = center_y - 60 + 30 * math.sin(angle)
-            else:
-                # 下半部分
-                x = center_x + 60 * math.cos(angle)
-                y = center_y + 20 + 40 * math.sin(angle)
-            points.append(QPointF(x, y))
-        
-        # 繪製賽道
-        for i in range(len(points)):
-            next_i = (i + 1) % len(points)
-            painter.drawLine(points[i], points[next_i])
-        
-        # 繪製起跑線
-        painter.setPen(QPen(QColor(255, 255, 255), 2))
-        start_x = center_x + 80
-        painter.drawLine(start_x, center_y - 10, start_x, center_y + 10)
-        
-        # 繪製車輛位置點
-        painter.setBrush(QBrush(QColor(255, 0, 0)))
-        painter.setPen(QPen(QColor(255, 0, 0), 1))
-        painter.drawEllipse(start_x - 3, center_y - 3, 6, 6)
-        
-        # 繪製扇區標記
-        painter.setPen(QPen(QColor(255, 255, 0), 1))
-        painter.drawText(10, 20, "Sector 1")
-        painter.drawText(10, 40, "Sector 2") 
-        painter.drawText(10, 60, "Sector 3")
 
 class SystemLogWidget(QTextEdit):
     """系統日誌小部件"""
@@ -1037,8 +1267,8 @@ class DraggableTitleBar(QWidget):
         self.title_label.setObjectName("SubWindowTitle")
         layout.addWidget(self.title_label)
         
-        # 🔗 接收同步控制按鈕
-        self.sync_btn = QPushButton("🔗")
+        # [LINK] 接收同步控制按鈕
+        self.sync_btn = QPushButton("[LINK]")
         self.sync_btn.setObjectName("SyncButton")
         self.sync_btn.setFixedSize(16, 16)
         self.sync_btn.setToolTip("接收主程式同步：啟用 (綠色) / 停用 (紅色)")
@@ -1048,7 +1278,7 @@ class DraggableTitleBar(QWidget):
         layout.addWidget(self.sync_btn)
         
         # 初始化顏色狀態 - 確保預設綠色正確顯示
-        print(f"🟢 接收同步初始化為啟動狀態")
+        print(f"[GREEN] 接收同步初始化為啟動狀態")
         
         layout.addStretch()
         
@@ -1218,12 +1448,12 @@ class DraggableTitleBar(QWidget):
         
         # 更新按鈕外觀和提示
         if is_enabled:
-            self.sync_btn.setText("🔗")
+            self.sync_btn.setText("[LINK]")
             self.sync_btn.setToolTip("接收主程式同步：啟用 (綠色)")
             # 強制更新為綠色樣式
-            print(f"🟢 接收同步已啟動 - 將接收主程式參數")
+            print(f"[GREEN] 接收同步已啟動 - 將接收主程式參數")
         else:
-            self.sync_btn.setText("🔗̸")  # 帶斜線的連結圖示
+            self.sync_btn.setText("[LINK]̸")  # 帶斜線的連結圖示
             self.sync_btn.setToolTip("接收主程式同步：停用 (紅色)")
             # 強制更新為紅色樣式
             print(f"🔴 接收同步已停用 - 獨立運作模式")
@@ -1236,9 +1466,9 @@ class DraggableTitleBar(QWidget):
         # 更新父視窗的同步狀態
         if hasattr(self.parent_window, 'sync_enabled'):
             self.parent_window.sync_enabled = is_enabled
-            print(f"🔄 視窗 '{self.parent_window.windowTitle()}' 同步接收狀態已更新: {is_enabled}")
+            print(f"[REFRESH] 視窗 '{self.parent_window.windowTitle()}' 同步接收狀態已更新: {is_enabled}")
             
-            # 🔧 新增：立即更新標題（同步狀態改變時）
+            # [TOOL] 新增：立即更新標題（同步狀態改變時）
             if hasattr(self.parent_window, 'update_window_title'):
                 self.parent_window.update_window_title()
         
@@ -1248,14 +1478,14 @@ class DraggableTitleBar(QWidget):
             # 如果內容是圖表小部件
             if hasattr(content_widget, 'set_sync_enabled'):
                 content_widget.set_sync_enabled(is_enabled)
-                #print(f"🔗 {'啟用' if is_enabled else '停用'} X軸連動 - {self.parent_window.windowTitle()}")
+                #print(f"[LINK] {'啟用' if is_enabled else '停用'} X軸連動 - {self.parent_window.windowTitle()}")
             # 如果內容是容器，查找其中的圖表小部件
             elif hasattr(content_widget, 'findChildren'):
                 charts = content_widget.findChildren(TelemetryChartWidget)
                 for chart in charts:
                     if hasattr(chart, 'set_sync_enabled'):
                         chart.set_sync_enabled(is_enabled)
-                        #print(f"🔗 {'啟用' if is_enabled else '停用'} 圖表X軸連動 - {self.parent_window.windowTitle()}")
+                        #print(f"[LINK] {'啟用' if is_enabled else '停用'} 圖表X軸連動 - {self.parent_window.windowTitle()}")
     
     def get_sync_status(self):
         """取得當前X軸連動狀態"""
@@ -1275,16 +1505,16 @@ class PopoutSubWindow(QMdiSubWindow):
         self.original_widget = None
         self.content_widget = None
         
-        # 🔧 新增：模組支援
+        # [TOOL] 新增：模組支援
         self.analysis_module = analysis_module
         self._parameter_provider = None
         
-        # 🔧 新增：本地參數存儲 (用於非同步狀態)
+        # [TOOL] 新增：本地參數存儲 (用於非同步狀態)
         self.local_year = "2025"
         self.local_race = "Japan"
         self.local_session = "R"
         
-        # 🔧 修正：正確提取模組名稱
+        # [TOOL] 修正：正確提取模組名稱
         self.module_name = self._extract_module_name_from_title(title)
         
         self.setWindowTitle(title)
@@ -1301,13 +1531,13 @@ class PopoutSubWindow(QMdiSubWindow):
             while current_parent:
                 if hasattr(current_parent, 'year_combo') and hasattr(current_parent, 'race_combo'):
                     self.main_window = current_parent
-                    # 🔧 新增：設置參數提供者
+                    # [TOOL] 新增：設置參數提供者
                     self._parameter_provider = MainWindowParameterProvider(current_parent)
-                    print(f"🔗 [INIT] {title} 已找到主視窗引用")
+                    print(f"[LINK] [INIT] {title} 已找到主視窗引用")
                     break
                 current_parent = current_parent.parent()
         
-        # 🔧 新增：如果有模組，進行初始化
+        # [TOOL] 新增：如果有模組，進行初始化
         if self.analysis_module and self._parameter_provider:
             self.analysis_module.parameter_provider = self._parameter_provider
             # 連接模組信號
@@ -1319,18 +1549,18 @@ class PopoutSubWindow(QMdiSubWindow):
         self.is_minimized = False
         self.original_geometry = None
         
-        # 🔧 [FIX] 確保調整大小相關屬性被初始化
+        # [TOOL] [FIX] 確保調整大小相關屬性被初始化
         self.resize_margin = 3  # 視覺邊框寬度 (3像素，與QSS邊框一致)
         self.resize_detection_margin = 10  # 實際可操作區域 (10像素)
         self.resizing = False
         self.resize_direction = None
         
-        # 🔧 [FIX] 強制啟用滑鼠追蹤
+        # [TOOL] [FIX] 強制啟用滑鼠追蹤
         self.setMouseTracking(True)
         self.setAttribute(Qt.WA_Hover, True)
         self.setAttribute(Qt.WA_MouseTracking, True)
         
-        print(f"✅ [INIT] PopoutSubWindow '{title}' 初始化完成 - 包含調整大小支援")
+        print(f"[OK] [INIT] PopoutSubWindow '{title}' 初始化完成 - 包含調整大小支援")
     
     def _extract_module_name_from_title(self, title):
         """從標題中提取模組名稱"""
@@ -1361,16 +1591,16 @@ class PopoutSubWindow(QMdiSubWindow):
                 return title.strip()
                 
         except Exception as e:
-            print(f"⚠️ [TITLE] 提取模組名稱失敗: {e}, 使用原標題: {title}")
+            print(f"[WARNING] [TITLE] 提取模組名稱失敗: {e}, 使用原標題: {title}")
             return title
         
     def _handle_module_error(self, error_message):
         """處理模組錯誤"""
-        print(f"❌ [MODULE] {self.windowTitle()} 模組錯誤: {error_message}")
+        print(f"[ERROR] [MODULE] {self.windowTitle()} 模組錯誤: {error_message}")
     
     def _handle_parameters_updated(self, params):
         """處理模組參數更新"""
-        print(f"🔄 [MODULE] {self.windowTitle()} 參數已更新: {params}")
+        print(f"[REFRESH] [MODULE] {self.windowTitle()} 參數已更新: {params}")
     
     def update_current_window(self):
         """更新當前視窗 - 委託給模組處理"""
@@ -1400,22 +1630,22 @@ class PopoutSubWindow(QMdiSubWindow):
                 # 更新標題
                 self.update_window_title()
                 
-                print(f"🔄 [{self.windowTitle()}] 更新視窗數據: {params['year']} {params['race']} {params['session']}")
+                print(f"[REFRESH] [{self.windowTitle()}] 更新視窗數據: {params['year']} {params['race']} {params['session']}")
                 
-                # 🔧 重新載入模組而不是委託更新
+                # [TOOL] 重新載入模組而不是委託更新
                 success = self.analysis_module.update_parameters(**params)
                 if success:
-                    print(f"✅ [MODULE] {self.windowTitle()} 模組更新成功")
+                    print(f"[OK] [MODULE] {self.windowTitle()} 模組更新成功")
                 else:
-                    print(f"⚠️ [MODULE] {self.windowTitle()} 模組更新失敗")
+                    print(f"[WARNING] [MODULE] {self.windowTitle()} 模組更新失敗")
                 return success
                 
             except Exception as e:
-                print(f"❌ [MODULE] {self.windowTitle()} 更新異常: {e}")
+                print(f"[ERROR] [MODULE] {self.windowTitle()} 更新異常: {e}")
                 return False
         else:
             # 舊版模式：直接調用原有邏輯
-            print(f"⚠️ [LEGACY] {self.windowTitle()} 使用舊版更新模式")
+            print(f"[WARNING] [LEGACY] {self.windowTitle()} 使用舊版更新模式")
             return self._legacy_update_current_window()
     
     def update_window_title(self):
@@ -1428,10 +1658,10 @@ class PopoutSubWindow(QMdiSubWindow):
             if hasattr(self, 'title_bar') and self.title_bar:
                 self.title_bar.update_title(new_title)
                 
-            print(f"🏷️ [TITLE] 標題已更新: {new_title}")
+            print(f"[LABEL] [TITLE] 標題已更新: {new_title}")
             
         except Exception as e:
-            print(f"❌ [TITLE] 標題更新失敗: {e}")
+            print(f"[ERROR] [TITLE] 標題更新失敗: {e}")
     
     def update_local_parameters(self, year=None, race=None, session=None):
         """更新本地參數（用於非同步模式）"""
@@ -1445,7 +1675,7 @@ class PopoutSubWindow(QMdiSubWindow):
         # 立即更新標題
         self.update_window_title()
         
-        print(f"🔄 [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
+        print(f"[REFRESH] [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
     
     def get_current_parameters(self):
         """獲取當前參數"""
@@ -1477,7 +1707,7 @@ class PopoutSubWindow(QMdiSubWindow):
                 race = self._parameter_provider.get_current_race()
                 session = self._parameter_provider.get_current_session()
             
-            print(f"🔄 [LEGACY] {self.windowTitle()} 舊版更新: {year} {race} {session}")
+            print(f"[REFRESH] [LEGACY] {self.windowTitle()} 舊版更新: {year} {race} {session}")
             
             # 如果內容widget有更新方法，調用它
             if self.content_widget and hasattr(self.content_widget, 'update'):
@@ -1487,12 +1717,12 @@ class PopoutSubWindow(QMdiSubWindow):
             return True
             
         except Exception as e:
-            print(f"❌ [LEGACY] 舊版更新失敗: {e}")
+            print(f"[ERROR] [LEGACY] 舊版更新失敗: {e}")
             return False
         
-        # �[HOT] 設置最小尺寸防止縮小到無法使用 - 已取消限制
+        # [TEST][HOT] 設置最小尺寸防止縮小到無法使用 - 已取消限制
         # self.setMinimumSize(250, 150)  # 移除最小尺寸限制
-        #print(f"🔒 最小尺寸限制已取消")
+        #print(f"[LOCK] 最小尺寸限制已取消")
         
         # [HOT] 隱藏所有 MDI 子窗口的標題列
         # [修改] 保留邊框，只隱藏標題列
@@ -1858,12 +2088,12 @@ class PopoutSubWindow(QMdiSubWindow):
         
         # [移除] 不再設置最小尺寸限制，允許完全自由縮放
         # self.setMinimumSize(250, 150) - 已移除
-        #print(f"🔒 移除尺寸限制，允許自由縮放")
+        #print(f"[LOCK] 移除尺寸限制，允許自由縮放")
         
         # [移除] 不再計算標題欄最小高度限制
         # title_height = self.title_bar.height() if hasattr(self, 'title_bar') else 20
         # min_height = max(150, title_height + 100) - 已移除
-        #print(f"🔒 無尺寸限制")
+        #print(f"[LOCK] 無尺寸限制")
         
     def setMinimumSize(self, *args):
         """覆寫 setMinimumSize 來追蹤誰在修改最小尺寸"""
@@ -1880,14 +2110,14 @@ class PopoutSubWindow(QMdiSubWindow):
             width = max(width, 250)
             height = max(height, 150)
             args = (width, height)
-            #print(f"🔒 強制調整最小尺寸至: {width}x{height}")
+            #print(f"[LOCK] 強制調整最小尺寸至: {width}x{height}")
         elif len(args) == 1:
             size = args[0]
             width = max(size.width(), 250)
             height = max(size.height(), 150)
             from PyQt5.QtCore import QSize
             args = (QSize(width, height),)
-            #print(f"🔒 強制調整最小尺寸至: {width}x{height}")
+            #print(f"[LOCK] 強制調整最小尺寸至: {width}x{height}")
             
         super().setMinimumSize(*args)
         
@@ -1912,8 +2142,8 @@ class PopoutSubWindow(QMdiSubWindow):
         
         current_size = self.size()
         
-        #print(f"🔒 PopoutSubWindow: 強制最小尺寸: {MIN_WIDTH}x{MIN_HEIGHT}")
-        #print(f"🔒 PopoutSubWindow: 當前尺寸: {current_size.width()}x{current_size.height()}")
+        #print(f"[LOCK] PopoutSubWindow: 強制最小尺寸: {MIN_WIDTH}x{MIN_HEIGHT}")
+        #print(f"[LOCK] PopoutSubWindow: 當前尺寸: {current_size.width()}x{current_size.height()}")
         
         needs_resize = False
         new_width = current_size.width()
@@ -1930,7 +2160,7 @@ class PopoutSubWindow(QMdiSubWindow):
             #print(f"[WARNING] 高度低於最小值，調整: {current_size.height()} -> {new_height}")
         
         if needs_resize:
-            #print(f"🔒 即將強制調整至最小尺寸: {new_width}x{new_height}")
+            #print(f"[LOCK] 即將強制調整至最小尺寸: {new_width}x{new_height}")
             # 使用 QTimer 延遲調整，避免與Qt內部的調整衝突
             QTimer.singleShot(0, lambda: self._force_resize(new_width, new_height))
         
@@ -1952,7 +2182,7 @@ class PopoutSubWindow(QMdiSubWindow):
         min_size = self.minimumSize()
         if self.size().width() < min_size.width() or self.size().height() < min_size.height():
             self.resize(min_size)
-            #print(f"🔒 showEvent 強制調整至最小尺寸: {min_size.width()}x{min_size.height()}")
+            #print(f"[LOCK] showEvent 強制調整至最小尺寸: {min_size.width()}x{min_size.height()}")
 
     def create_window_control_panel(self):
         """創建視窗控制面板"""
@@ -1964,7 +2194,7 @@ class PopoutSubWindow(QMdiSubWindow):
         control_layout.setSpacing(10)
         
         # 視窗同步名稱勾選框
-        self.sync_windows_checkbox = QCheckBox("🔗 同步其他視窗")
+        self.sync_windows_checkbox = QCheckBox("[LINK] 同步其他視窗")
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
         self.sync_windows_checkbox.setChecked(True)
         self.sync_windows_checkbox.setToolTip("同步其他視窗 (賽事/賽段/年份同步)")
@@ -1980,7 +2210,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("AnalysisComboBox")
-        self.year_combo.addItems(["2024", "2025"])  # 🔧 修復: 與主視窗一致，移除2023
+        self.year_combo.addItems(["2024", "2025"])  # [TOOL] 修復: 與主視窗一致，移除2023
         self.year_combo.setCurrentText("2025")
         self.year_combo.setFixedWidth(140)
         self.year_combo.currentTextChanged.connect(self.on_year_changed)
@@ -1993,7 +2223,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         self.race_combo = QComboBox()
         self.race_combo.setObjectName("AnalysisComboBox")
-        # 🔧 修復: 使用動態賽事列表而非硬編碼
+        # [TOOL] 修復: 使用動態賽事列表而非硬編碼
         current_year = self.year_combo.currentText()
         self.update_races_for_year(current_year)
         self.race_combo.setCurrentText("Japan")
@@ -2028,7 +2258,7 @@ class PopoutSubWindow(QMdiSubWindow):
         """處理視窗連動開關"""
         window_title = self.windowTitle()
         status = "啟用" if checked else "停用"
-        #print(f"🔗 [{window_title}] 視窗連動已{status}")
+        #print(f"[LINK] [{window_title}] 視窗連動已{status}")
         
         # 如果啟用連動，同步當前參數到其他視窗
         if checked:
@@ -2039,7 +2269,7 @@ class PopoutSubWindow(QMdiSubWindow):
         window_title = self.windowTitle()
         #print(f"[CALENDAR] [{window_title}] 年份變更為: {year}")
         
-        # 🔧 新增: 動態更新賽事列表
+        # [TOOL] 新增: 動態更新賽事列表
         self.update_races_for_year(year)
         
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox.isChecked():
@@ -2071,7 +2301,7 @@ class PopoutSubWindow(QMdiSubWindow):
         """執行重新分析 - 使用安全的參數獲取"""
         window_title = self.windowTitle()
         
-        # 🔧 使用安全的參數獲取方法
+        # [TOOL] 使用安全的參數獲取方法
         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
@@ -2091,12 +2321,12 @@ class PopoutSubWindow(QMdiSubWindow):
         """同步參數到其他視窗 - 使用安全的參數獲取"""
         window_title = self.windowTitle()
         
-        # 🔧 使用安全的參數獲取方法
+        # [TOOL] 使用安全的參數獲取方法
         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
         
-        print(f"🔄 [{window_title}] 同步參數到其他視窗: {year} {race} {session}")
+        print(f"[REFRESH] [{window_title}] 同步參數到其他視窗: {year} {race} {session}")
         
         # 同步到同一MDI區域中的其他子視窗
         synced_count = 0
@@ -2114,20 +2344,20 @@ class PopoutSubWindow(QMdiSubWindow):
                         }
                         subwindow.set_analysis_parameters(params, skip_sync=True)
                         synced_count += 1
-                        print(f"🔄 同步到子視窗: {subwindow.windowTitle()}")
+                        print(f"[REFRESH] 同步到子視窗: {subwindow.windowTitle()}")
         
-        print(f"✅ 完成子視窗同步，共更新 {synced_count} 個視窗")
+        print(f"[OK] 完成子視窗同步，共更新 {synced_count} 個視窗")
             
     def _legacy_update_current_window(self):
         """舊版更新當前視窗的分析數據 - 使用安全的參數獲取"""
         window_title = self.windowTitle()
         
-        # 🔧 使用安全的參數獲取方法
+        # [TOOL] 使用安全的參數獲取方法
         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
         
-        print(f"🔄 [{window_title}] 舊版更新視窗數據: {year} {race} {session}")
+        print(f"[REFRESH] [{window_title}] 舊版更新視窗數據: {year} {race} {session}")
         
         # 啟動資料載入流程
         self.load_race_data(year, race, session)
@@ -2139,15 +2369,13 @@ class PopoutSubWindow(QMdiSubWindow):
         
         if json_data:
             # JSON存在，直接使用
-            print(f"✅ 找到JSON檔案，直接載入資料")
+            print(f"[OK] 找到JSON檔案，直接載入資料")
             self.update_charts_and_analysis(json_data)
         else:
             # Step 2: 無JSON則進行CLI參數呼叫
-            print(f"❌ 未找到JSON檔案，啟動CLI分析...")
+            print(f"[ERROR] 未找到JSON檔案，啟動CLI分析...")
             self.call_cli_analysis(year, race, session)
-            
-            # Step 3: 等待JSON產生
-            self.wait_for_json_generation(year, race, session)
+            # 注意：JSON監控已在 call_cli_analysis 中啟動
     
     def try_load_json(self, year, race, session):
         """嘗試載入JSON檔案 - 與RainAnalysisCache保持一致"""
@@ -2160,10 +2388,10 @@ class PopoutSubWindow(QMdiSubWindow):
         if os.path.exists(rain_analysis_file):
             try:
                 with open(rain_analysis_file, 'r', encoding='utf-8') as f:
-                    print(f"📁 找到降雨分析JSON檔案: {rain_analysis_file}")
+                    print(f"[FILES] 找到降雨分析JSON檔案: {rain_analysis_file}")
                     return json.load(f)
             except Exception as e:
-                print(f"❌ 降雨分析JSON載入錯誤: {e}")
+                print(f"[ERROR] 降雨分析JSON載入錯誤: {e}")
         
         # 2. 備用搜尋 - 構建JSON檔案搜尋模式
         json_patterns = [
@@ -2179,15 +2407,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 json_files = [f for f in json_files if f.lower().endswith('.json')]
                 if json_files:
                     json_file = json_files[0]  # 取第一個符合的檔案
-                    print(f"📁 找到JSON檔案: {json_file}")
+                    print(f"[FILES] 找到JSON檔案: {json_file}")
                     try:
                         with open(json_file, 'r', encoding='utf-8') as f:
                             return json.load(f)
                     except Exception as e:
-                        print(f"❌ JSON載入錯誤: {e}")
+                        print(f"[ERROR] JSON載入錯誤: {e}")
                         continue
         
-        print(f"⚠️ 未找到適合的JSON檔案: {year}/{race}/{session}")
+        print(f"[WARNING] 未找到適合的JSON檔案: {year}/{race}/{session}")
         return None
     
     def get_races_for_year_in_subwindow(self, year):
@@ -2252,81 +2480,159 @@ class PopoutSubWindow(QMdiSubWindow):
         print(f"[SUBWINDOW] 已更新賽事列表，當前選擇: {self.race_combo.currentText()}")
     
     def call_cli_analysis(self, year, race, session):
-        """呼叫CLI參數進行分析"""
-        import subprocess
-        import sys
+        """呼叫CLI參數進行分析 - 使用背景執行緒避免GUI凍結"""
         
-        # 構建CLI命令
-        cmd = [
-            sys.executable,
-            "f1_analysis_modular_main.py",
-            "-f", "1",  # 強制模式
-            "-y", str(year),
-            "-r", race,
-            "-s", session
-        ]
+        # 如果已有分析在執行，先停止
+        if hasattr(self, 'cli_worker') and self.cli_worker and self.cli_worker.isRunning():
+            self.stop_cli_analysis()
         
-        print(f"🚀 執行CLI命令: {' '.join(cmd)}")
+        # 創建進度顯示
+        self.show_analysis_progress()
         
-        try:
-            # 非阻塞式執行
-            self.cli_process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                cwd=os.getcwd()
-            )
-            print(f"⚡ CLI分析已啟動 (PID: {self.cli_process.pid})")
-            
-        except Exception as e:
-            print(f"❌ CLI執行錯誤: {e}")
+        # 創建並啟動工作執行緒
+        self.cli_worker = CliAnalysisWorker(year, race, session, self)
+        
+        # 連接信號
+        self.cli_worker.progress_updated.connect(self.on_analysis_progress)
+        self.cli_worker.analysis_completed.connect(self.on_analysis_completed)
+        self.cli_worker.output_received.connect(self.on_analysis_output)
+        
+        # 啟動執行緒
+        self.cli_worker.start()
+        
+        # 開始等待 JSON 產生
+        self.start_json_monitoring(year, race, session)
+        
+        print(f"[START] CLI 分析執行緒已啟動: {year} {race} {session}")
     
-    def wait_for_json_generation(self, year, race, session):
-        """等待JSON產生"""
-        from PyQt5.QtCore import QTimer
+    def stop_cli_analysis(self):
+        """停止 CLI 分析"""
+        if hasattr(self, 'cli_worker') and self.cli_worker and self.cli_worker.isRunning():
+            self.cli_worker.stop()
+            self.cli_worker.wait(5000)  # 等待最多 5 秒
+            print("[TEST] CLI 分析已停止")
+        
+        # 停止 JSON 監控
+        self.stop_json_monitoring()
+        
+        # 隱藏進度顯示
+        self.hide_analysis_progress()
+    
+    def show_analysis_progress(self):
+        """顯示分析進度"""
+        if not hasattr(self, 'progress_dialog'):
+            from PyQt5.QtWidgets import QProgressDialog
+            self.progress_dialog = QProgressDialog("正在執行 F1 數據分析...", "取消", 0, 0, self)
+            self.progress_dialog.setWindowModality(Qt.WindowModal)
+            self.progress_dialog.setAutoClose(False)
+            self.progress_dialog.setAutoReset(False)
+            self.progress_dialog.canceled.connect(self.stop_cli_analysis)
+        
+        self.progress_dialog.setLabelText("正在啟動 CLI 分析...")
+        self.progress_dialog.show()
+    
+    def hide_analysis_progress(self):
+        """隱藏分析進度"""
+        if hasattr(self, 'progress_dialog') and self.progress_dialog:
+            self.progress_dialog.hide()
+    
+    def on_analysis_progress(self, message):
+        """處理分析進度更新"""
+        print(f"[STATS] {message}")
+        if hasattr(self, 'progress_dialog') and self.progress_dialog:
+            self.progress_dialog.setLabelText(message)
+    
+    def on_analysis_output(self, output):
+        """處理分析輸出"""
+        print(f"[UPLOAD] CLI 輸出: {output}")
+        # 可以在這裡處理特定的輸出訊息來更新進度
+        if "下載" in output or "Download" in output.lower():
+            if hasattr(self, 'progress_dialog') and self.progress_dialog:
+                self.progress_dialog.setLabelText(f"正在下載數據... {output[:50]}...")
+        elif "分析" in output or "Analysis" in output.lower():
+            if hasattr(self, 'progress_dialog') and self.progress_dialog:
+                self.progress_dialog.setLabelText(f"正在分析數據... {output[:50]}...")
+    
+    def on_analysis_completed(self, success, message):
+        """處理分析完成"""
+        print(f"[OK] CLI 分析完成: {success}, {message}")
+        
+        if success:
+            if hasattr(self, 'progress_dialog') and self.progress_dialog:
+                self.progress_dialog.setLabelText("分析完成，正在載入結果...")
+        else:
+            print(f"[ERROR] CLI 分析失敗: {message}")
+            QMessageBox.warning(self, "分析失敗", f"CLI 分析過程中發生錯誤:\n{message}")
+            self.hide_analysis_progress()
+            self.stop_json_monitoring()
+    
+    def start_json_monitoring(self, year, race, session):
+        """開始監控 JSON 檔案產生"""
+        # 停止任何現有的監控
+        self.stop_json_monitoring()
         
         # 設置JSON檢查計時器
         self.json_check_timer = QTimer()
         self.json_check_timer.timeout.connect(
             lambda: self.check_json_ready(year, race, session)
         )
-        self.json_check_timer.start(2000)  # 每2秒檢查一次
+        self.json_check_timer.start(3000)  # 每3秒檢查一次
         
-        # 設置最大等待時間 (60秒)
+        # 設置最大等待時間 (120秒)，給數據下載更多時間
         self.max_wait_timer = QTimer()
         self.max_wait_timer.setSingleShot(True)
         self.max_wait_timer.timeout.connect(self.on_json_wait_timeout)
-        self.max_wait_timer.start(60000)  # 60秒超時
+        self.max_wait_timer.start(120000)  # 120秒超時
         
-        print(f"⏳ 等待JSON檔案產生... (最多等待60秒)")
+        print(f"⏳ 開始監控 JSON 檔案產生... (最多等待120秒)")
+    
+    def stop_json_monitoring(self):
+        """停止 JSON 監控"""
+        if hasattr(self, 'json_check_timer') and self.json_check_timer:
+            self.json_check_timer.stop()
+        if hasattr(self, 'max_wait_timer') and self.max_wait_timer:
+            self.max_wait_timer.stop()
     
     def check_json_ready(self, year, race, session):
         """檢查JSON是否已準備好"""
-        # Step 4: 讀取JSON
+        # 檢查 JSON 檔案
         json_data = self.try_load_json(year, race, session)
         
         if json_data:
-            # JSON已產生，停止計時器
-            self.json_check_timer.stop()
-            self.max_wait_timer.stop()
+            # JSON已產生，停止監控
+            self.stop_json_monitoring()
             
-            print(f"✅ JSON檔案已產生，開始載入資料")
+            print(f"[OK] JSON檔案已產生，開始載入資料")
+            
+            # 更新進度顯示
+            if hasattr(self, 'progress_dialog') and self.progress_dialog:
+                self.progress_dialog.setLabelText("正在載入分析結果...")
+            
+            # 載入並顯示數據
             self.update_charts_and_analysis(json_data)
+            
+            # 隱藏進度顯示
+            self.hide_analysis_progress()
         else:
             print(f"⏳ 繼續等待JSON檔案產生...")
     
     def on_json_wait_timeout(self):
         """JSON等待超時處理"""
-        self.json_check_timer.stop()
-        print(f"⏰ JSON等待超時，可能分析失敗")
+        self.stop_json_monitoring()
+        self.hide_analysis_progress()
         
-        # 可以在這裡添加錯誤處理邏輯
-        # 例如：顯示錯誤訊息、重試機制等
+        print(f"[TIME] JSON等待超時，分析可能失敗或仍在進行中")
+        
+        # 顯示超時警告
+        QMessageBox.warning(
+            self, 
+            "分析超時", 
+            "數據分析超時。\n\n可能原因：\n1. 網路連線緩慢\n2. 數據量過大\n3. 伺服器回應慢\n\n請稍後再試，或檢查網路連線。"
+        )
     
     def update_charts_and_analysis(self, json_data):
         """更新圖表和分析結果"""
-        print(f"📊 開始更新圖表和分析結果...")
+        print(f"[STATS] 開始更新圖表和分析結果...")
         
         try:
             # 更新遙測圖表
@@ -2341,16 +2647,16 @@ class PopoutSubWindow(QMdiSubWindow):
             if 'analysis_results' in json_data:
                 self.update_analysis_data(json_data['analysis_results'])
                 
-            print(f"✅ 圖表和分析結果更新完成")
+            print(f"[OK] 圖表和分析結果更新完成")
             
         except Exception as e:
-            print(f"❌ 圖表更新錯誤: {e}")
+            print(f"[ERROR] 圖表更新錯誤: {e}")
             import traceback
             traceback.print_exc()
     
     def update_telemetry_chart(self, telemetry_data):
         """更新遙測圖表"""
-        print(f"📈 更新遙測圖表資料")
+        print(f"[CHART] 更新遙測圖表資料")
         # 實現具體的遙測圖表更新邏輯
         pass
     
@@ -2362,7 +2668,7 @@ class PopoutSubWindow(QMdiSubWindow):
     
     def update_analysis_data(self, analysis_data):
         """更新分析數據"""
-        print(f"📊 更新分析數據")
+        print(f"[STATS] 更新分析數據")
         # 實現具體的分析數據更新邏輯
         pass
         
@@ -2566,7 +2872,7 @@ class PopoutSubWindow(QMdiSubWindow):
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數變更通知"""
         window_title = self.windowTitle()
-        print(f"📢 [NOTIFICATION] {window_title} 收到主視窗更新通知: {param_type}={value}")
+        print(f"[ANNOUNCE] [NOTIFICATION] {window_title} 收到主視窗更新通知: {param_type}={value}")
         
         # 檢查同步狀態 - 支援多種同步狀態檢查方式
         sync_enabled = False
@@ -2574,21 +2880,21 @@ class PopoutSubWindow(QMdiSubWindow):
         # 方法1: 檢查 sync_windows_checkbox (用於有控制面板的子視窗)
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox:
             sync_enabled = self.sync_windows_checkbox.isChecked()
-            print(f"🔍 [NOTIFICATION] {window_title} 使用 checkbox 檢查同步狀態: {sync_enabled}")
+            print(f"[SEARCH] [NOTIFICATION] {window_title} 使用 checkbox 檢查同步狀態: {sync_enabled}")
         
         # 方法2: 檢查 sync_enabled 屬性 (用於 PopoutSubWindow 等)
         elif hasattr(self, 'sync_enabled'):
             sync_enabled = self.sync_enabled
-            print(f"🔍 [NOTIFICATION] {window_title} 使用屬性檢查同步狀態: {sync_enabled}")
+            print(f"[SEARCH] [NOTIFICATION] {window_title} 使用屬性檢查同步狀態: {sync_enabled}")
         
         # 如果未啟用同步，直接返回
         if not sync_enabled:
             print(f"🔴 [NOTIFICATION] {window_title} 同步已停用，忽略更新通知")
             return
         
-        print(f"🟢 [NOTIFICATION] {window_title} 同步已啟用，處理參數更新")
+        print(f"[GREEN] [NOTIFICATION] {window_title} 同步已啟用，處理參數更新")
         
-        # 🔧 更新本地參數（同步模式）
+        # [TOOL] 更新本地參數（同步模式）
         if param_type == 'year':
             self.local_year = value
         elif param_type == 'race':
@@ -2596,18 +2902,18 @@ class PopoutSubWindow(QMdiSubWindow):
         elif param_type == 'session':
             self.local_session = value
         
-        # 🔧 立即更新標題
+        # [TOOL] 立即更新標題
         self.update_window_title()
         
         # 使用統一的方法更新視窗內容
         try:
             success = self.update_current_window()
             if success:
-                print(f"✅ [NOTIFICATION] {window_title} 內容更新成功")
+                print(f"[OK] [NOTIFICATION] {window_title} 內容更新成功")
             else:
-                print(f"⚠️ [NOTIFICATION] {window_title} 內容更新完成但可能有問題")
+                print(f"[WARNING] [NOTIFICATION] {window_title} 內容更新完成但可能有問題")
         except Exception as e:
-            print(f"❌ [NOTIFICATION] {window_title} 內容更新失敗: {e}")
+            print(f"[ERROR] [NOTIFICATION] {window_title} 內容更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -2623,10 +2929,10 @@ class PopoutSubWindow(QMdiSubWindow):
                 if hasattr(self.main_window, 'year_combo') and self.main_window.year_combo:
                     return self.main_window.year_combo.currentText()
             
-            # 🔧 移除不安全的parent遍歷邏輯，避免AttributeError
+            # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"⚠️ [GET_YEAR] 獲取主視窗年份失敗: {e}")
+            print(f"[WARNING] [GET_YEAR] 獲取主視窗年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race_from_main_window(self):
@@ -2641,10 +2947,10 @@ class PopoutSubWindow(QMdiSubWindow):
                 if hasattr(self.main_window, 'race_combo') and self.main_window.race_combo:
                     return self.main_window.race_combo.currentText()
             
-            # 🔧 移除不安全的parent遍歷邏輯，避免AttributeError
+            # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"⚠️ [GET_RACE] 獲取主視窗賽事失敗: {e}")
+            print(f"[WARNING] [GET_RACE] 獲取主視窗賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session_from_main_window(self):
@@ -2659,12 +2965,30 @@ class PopoutSubWindow(QMdiSubWindow):
                 if hasattr(self.main_window, 'session_combo') and self.main_window.session_combo:
                     return self.main_window.session_combo.currentText()
             
-            # 🔧 移除不安全的parent遍歷邏輯，避免AttributeError
+            # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"⚠️ [GET_SESSION] 獲取主視窗賽段失敗: {e}")
+            print(f"[WARNING] [GET_SESSION] 獲取主視窗賽段失敗: {e}")
         return "R"  # 預設值
-        return "R"  # 預設值
+    
+    def closeEvent(self, event):
+        """子視窗關閉事件處理"""
+        try:
+            # 停止任何正在執行的 CLI 分析
+            if hasattr(self, 'stop_cli_analysis'):
+                self.stop_cli_analysis()
+            
+            # 如果內容widget有 CLI 分析功能，也要停止
+            if self.content_widget and hasattr(self.content_widget, 'stop_cli_analysis'):
+                self.content_widget.stop_cli_analysis()
+            
+            # 接受關閉事件
+            event.accept()
+            print(f"[END] 子視窗 '{self.windowTitle()}' 已關閉")
+            
+        except Exception as e:
+            print(f"[ERROR] 關閉子視窗時發生錯誤: {e}")
+            event.accept()  # 即使出錯也要關閉
 
 class ContextMenuTreeWidget(QTreeWidget):
     """支援右鍵選單的功能樹"""
@@ -2906,13 +3230,13 @@ class WindowSettingsDialog(QDialog):
         sync_layout = QVBoxLayout(sync_group)
         
         # 連動控制勾選框
-        self.sync_windows_checkbox = QCheckBox("🔗 接收主程式同步 (年份/賽事/賽段)")
+        self.sync_windows_checkbox = QCheckBox("[LINK] 接收主程式同步 (年份/賽事/賽段)")
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
-        # 🔧 修復: 從父視窗獲取當前同步狀態
+        # [TOOL] 修復: 從父視窗獲取當前同步狀態
         current_sync_state = getattr(parent_window, 'sync_enabled', True)
         self.sync_windows_checkbox.setChecked(current_sync_state)
         self.sync_windows_checkbox.setToolTip("勾選時接收主程式參數同步，下方分析參數將變為不可編輯")
-        # 🔧 新增: 當同步狀態改變時，切換分析參數的可編輯性
+        # [TOOL] 新增: 當同步狀態改變時，切換分析參數的可編輯性
         self.sync_windows_checkbox.toggled.connect(self.on_sync_checkbox_toggled)
         sync_layout.addWidget(self.sync_windows_checkbox)
         
@@ -2927,14 +3251,14 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(QLabel("年份:"), 0, 0)
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("AnalysisComboBox")
-        self.year_combo.addItems(["2024", "2025"])  # 🔧 修復: 與主視窗一致，移除2023
-        # 🔧 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
+        self.year_combo.addItems(["2024", "2025"])  # [TOOL] 修復: 與主視窗一致，移除2023
+        # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
         if hasattr(parent_window, 'local_year') and parent_window.local_year:
             current_year = parent_window.local_year
         else:
             current_year = self.get_current_year_from_main_window()
         self.year_combo.setCurrentText(current_year)
-        # 🔧 新增: 年份變更時動態更新賽事列表
+        # [TOOL] 新增: 年份變更時動態更新賽事列表
         self.year_combo.currentTextChanged.connect(self.on_year_changed_in_dialog)
         params_layout.addWidget(self.year_combo, 0, 1)
         
@@ -2942,9 +3266,9 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(QLabel("賽事:"), 1, 0)
         self.race_combo = QComboBox()
         self.race_combo.setObjectName("AnalysisComboBox")
-        # 🔧 修復: 使用動態賽事列表而非硬編碼
+        # [TOOL] 修復: 使用動態賽事列表而非硬編碼
         self.populate_races_for_year(current_year)
-        # 🔧 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
+        # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
         if hasattr(parent_window, 'local_race') and parent_window.local_race:
             current_race = parent_window.local_race
         else:
@@ -2957,7 +3281,7 @@ class WindowSettingsDialog(QDialog):
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("AnalysisComboBox")
         self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])
-        # 🔧 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
+        # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
         if hasattr(parent_window, 'local_session') and parent_window.local_session:
             current_session = parent_window.local_session
         else:
@@ -2967,7 +3291,7 @@ class WindowSettingsDialog(QDialog):
         
         layout.addWidget(params_group)
         
-        # 🔧 新增: 根據同步狀態設置分析參數的可編輯性
+        # [TOOL] 新增: 根據同步狀態設置分析參數的可編輯性
         self.update_analysis_params_editability()
         
         layout.addStretch()
@@ -2981,10 +3305,10 @@ class WindowSettingsDialog(QDialog):
     
     def on_sync_checkbox_toggled(self, checked):
         """處理同步勾選框狀態變化"""
-        print(f"🔗 [SETTING] 同步接收狀態變更為: {'啟用' if checked else '停用'}")
+        print(f"[LINK] [SETTING] 同步接收狀態變更為: {'啟用' if checked else '停用'}")
         self.update_analysis_params_editability()
         
-        # 🔧 移除錯誤的同步調用 - 不需要從主程式同步，保持當前設定
+        # [TOOL] 移除錯誤的同步調用 - 不需要從主程式同步，保持當前設定
         # if checked:
         #     self.sync_params_from_main_window()  # 這個調用會產生錯誤
     
@@ -3002,7 +3326,7 @@ class WindowSettingsDialog(QDialog):
             self.year_combo.setToolTip("已啟用同步接收，參數由主程式控制")
             self.race_combo.setToolTip("已啟用同步接收，參數由主程式控制")
             self.session_combo.setToolTip("已啟用同步接收，參數由主程式控制")
-            print(f"🔒 [SETTING] 分析參數已鎖定 - 接收主程式同步")
+            print(f"[LOCK] [SETTING] 分析參數已鎖定 - 接收主程式同步")
         else:
             self.year_combo.setToolTip("手動設定年份")
             self.race_combo.setToolTip("手動設定賽事")
@@ -3033,10 +3357,10 @@ class WindowSettingsDialog(QDialog):
             self.race_combo.blockSignals(False)
             self.session_combo.blockSignals(False)
             
-            print(f"✅ [SETTING] 參數同步完成")
+            print(f"[OK] [SETTING] 參數同步完成")
             
         except Exception as e:
-            print(f"❌ [SETTING] 從主程式同步參數失敗: {e}")
+            print(f"[ERROR] [SETTING] 從主程式同步參數失敗: {e}")
     
     def get_current_year_from_main_window(self):
         """從主視窗獲取當前年份"""
@@ -3046,11 +3370,11 @@ class WindowSettingsDialog(QDialog):
                 main_window = self.parent_window.main_window
                 if hasattr(main_window, 'year_combo') and main_window.year_combo:
                     return main_window.year_combo.currentText()
-            # 🔧 移除不安全的直接訪問，避免 AttributeError
+            # [TOOL] 移除不安全的直接訪問，避免 AttributeError
             # elif hasattr(self.parent_window, 'year_combo') and self.parent_window.year_combo:
             #     return self.parent_window.year_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [SETTING] 獲取年份失敗: {e}")
+            print(f"[WARNING] [SETTING] 獲取年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race_from_main_window(self):
@@ -3061,11 +3385,11 @@ class WindowSettingsDialog(QDialog):
                 main_window = self.parent_window.main_window
                 if hasattr(main_window, 'race_combo') and main_window.race_combo:
                     return main_window.race_combo.currentText()
-            # 🔧 移除不安全的直接訪問，避免 AttributeError
+            # [TOOL] 移除不安全的直接訪問，避免 AttributeError
             # elif hasattr(self.parent_window, 'race_combo') and self.parent_window.race_combo:
             #     return self.parent_window.race_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [SETTING] 獲取賽事失敗: {e}")
+            print(f"[WARNING] [SETTING] 獲取賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session_from_main_window(self):
@@ -3076,11 +3400,11 @@ class WindowSettingsDialog(QDialog):
                 main_window = self.parent_window.main_window
                 if hasattr(main_window, 'session_combo') and main_window.session_combo:
                     return main_window.session_combo.currentText()
-            # 🔧 移除不安全的直接訪問，避免 AttributeError
+            # [TOOL] 移除不安全的直接訪問，避免 AttributeError
             # elif hasattr(self.parent_window, 'session_combo') and self.parent_window.session_combo:
             #     return self.parent_window.session_combo.currentText()
         except Exception as e:
-            print(f"⚠️ [SETTING] 獲取賽段失敗: {e}")
+            print(f"[WARNING] [SETTING] 獲取賽段失敗: {e}")
         return "R"  # 預設值
     
     def get_races_for_year_in_dialog(self, year):
@@ -3148,21 +3472,21 @@ class WindowSettingsDialog(QDialog):
         session = self.session_combo.currentText()
         sync_windows = self.sync_windows_checkbox.isChecked()
         
-        print(f"🔧 [SETTING] [{window_title}] 設定已更新:")
+        print(f"[TOOL] [SETTING] [{window_title}] 設定已更新:")
         print(f"   參數: {year} {race} {session}")
         print(f"   同步接收狀態: {'啟用' if sync_windows else '停用'}")
         
         # 保存同步狀態到父視窗
         self.parent_window.sync_enabled = sync_windows
         
-        # 🔧 修改邏輯：根據同步狀態決定行為
+        # [TOOL] 修改邏輯：根據同步狀態決定行為
         if sync_windows:
             # 當啟用同步時，只接收不發送，確保與主程式一致
-            print(f"🔄 [SETTING] [{window_title}] 同步接收模式 - 僅更新當前視窗")
+            print(f"[REFRESH] [SETTING] [{window_title}] 同步接收模式 - 僅更新當前視窗")
             self.update_current_window_only()
         else:
             # 當停用同步時，允許手動設定並應用到當前視窗
-            print(f"🔧 [SETTING] [{window_title}] 手動設定模式 - 應用自定義參數")
+            print(f"[TOOL] [SETTING] [{window_title}] 手動設定模式 - 應用自定義參數")
             self.apply_manual_settings(year, race, session)
         
         self.accept()
@@ -3170,35 +3494,35 @@ class WindowSettingsDialog(QDialog):
     def update_current_window_only(self):
         """僅更新當前視窗（同步接收模式）"""
         window_title = self.parent_window.windowTitle()
-        print(f"🔄 [SETTING] [{window_title}] 更新視窗數據（同步模式）")
+        print(f"[REFRESH] [SETTING] [{window_title}] 更新視窗數據（同步模式）")
         
         try:
             # 如果當前視窗有update_current_window方法，調用它
             if hasattr(self.parent_window, 'update_current_window'):
                 self.parent_window.update_current_window()
-                print(f"✅ [SETTING] 當前視窗數據更新完成（同步模式）")
+                print(f"[OK] [SETTING] 當前視窗數據更新完成（同步模式）")
         except Exception as e:
-            print(f"❌ [SETTING] 更新當前視窗失敗: {e}")
+            print(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
     
     def apply_manual_settings(self, year, race, session):
         """應用手動設定（獨立模式）"""
         window_title = self.parent_window.windowTitle()
-        print(f"🔧 [SETTING] [{window_title}] 應用手動設定: {year} {race} {session}")
+        print(f"[TOOL] [SETTING] [{window_title}] 應用手動設定: {year} {race} {session}")
         
         try:
             # 更新當前視窗的內容（使用手動設定的參數）
             self.update_current_window_with_params(year, race, session)
-            print(f"✅ [SETTING] 手動設定應用完成")
+            print(f"[OK] [SETTING] 手動設定應用完成")
         except Exception as e:
-            print(f"❌ [SETTING] 應用手動設定失敗: {e}")
+            print(f"[ERROR] [SETTING] 應用手動設定失敗: {e}")
     
     def update_current_window_with_params(self, year, race, session):
         """使用指定參數更新當前視窗"""
         window_title = self.parent_window.windowTitle()
-        print(f"🔄 [SETTING] [{window_title}] 使用參數更新視窗: {year} {race} {session}")
+        print(f"[REFRESH] [SETTING] [{window_title}] 使用參數更新視窗: {year} {race} {session}")
         
         try:
-            # 🔧 新方法：直接更新子視窗的本地參數
+            # [TOOL] 新方法：直接更新子視窗的本地參數
             if hasattr(self.parent_window, 'update_local_parameters'):
                 # 更新本地參數（這會自動更新標題）
                 self.parent_window.update_local_parameters(year, race, session)
@@ -3207,38 +3531,38 @@ class WindowSettingsDialog(QDialog):
                 if hasattr(self.parent_window, 'update_current_window'):
                     self.parent_window.update_current_window()
                     
-                print(f"✅ [SETTING] 參數更新完成（新方法）: {year} {race} {session}")
+                print(f"[OK] [SETTING] 參數更新完成（新方法）: {year} {race} {session}")
                 return
             
-            # 🔧 舊方法向後兼容：直接調用更新
-            print(f"⚠️ [SETTING] 使用舊方法向後兼容模式")
+            # [TOOL] 舊方法向後兼容：直接調用更新
+            print(f"[WARNING] [SETTING] 使用舊方法向後兼容模式")
             if hasattr(self.parent_window, 'update_current_window'):
                 self.parent_window.update_current_window()
-                print(f"✅ [SETTING] 當前視窗數據更新完成（向後兼容模式）")
+                print(f"[OK] [SETTING] 當前視窗數據更新完成（向後兼容模式）")
             else:
-                print(f"⚠️ [SETTING] 視窗沒有 update_current_window 方法")
+                print(f"[WARNING] [SETTING] 視窗沒有 update_current_window 方法")
                 
         except Exception as e:
-            print(f"❌ [SETTING] 更新當前視窗失敗: {e}")
-            print(f"📋 [SETTING] 錯誤詳情: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
+            print(f"[INFO] [SETTING] 錯誤詳情: {type(e).__name__}: {str(e)}")
     
     def apply_settings(self, year, race, session, sync_windows):
         """應用設定到父視窗（已棄用，由新方法取代）"""
-        # 🔧 此方法已被 update_current_window_only 和 apply_manual_settings 取代
-        print(f"⚠️ [SETTING] apply_settings 方法已棄用")
+        # [TOOL] 此方法已被 update_current_window_only 和 apply_manual_settings 取代
+        print(f"[WARNING] [SETTING] apply_settings 方法已棄用")
         pass
         
     def sync_to_other_windows(self, year, race, session):
         """同步參數到其他視窗（已棄用，避免命令混亂）"""
-        # 🔧 移除此功能，避免MDI子視窗向主程式發送控制命令
-        print(f"⚠️ [SETTING] sync_to_other_windows 方法已停用 - 避免多視窗命令混亂")
-        print(f"� [SETTING] 子視窗應僅接收主程式同步，不應發送控制命令")
+        # [TOOL] 移除此功能，避免MDI子視窗向主程式發送控制命令
+        print(f"[WARNING] [SETTING] sync_to_other_windows 方法已停用 - 避免多視窗命令混亂")
+        print(f"[TEST] [SETTING] 子視窗應僅接收主程式同步，不應發送控制命令")
         pass
         
     def update_current_window(self, year, race, session):
         """更新當前視窗的分析數據（已棄用，由新方法取代）"""
-        # 🔧 此方法已被 update_current_window_only 取代
-        print(f"⚠️ [SETTING] update_current_window 方法已棄用")
+        # [TOOL] 此方法已被 update_current_window_only 取代
+        print(f"[WARNING] [SETTING] update_current_window 方法已棄用")
         pass
 
 class StyleHMainWindow(QMainWindow):
@@ -3313,6 +3637,7 @@ class StyleHMainWindow(QMainWindow):
         analysis_menu = menubar.addMenu('分析')
         analysis_menu.addAction('[RAIN] 降雨分析', self.rain_analysis)
         analysis_menu.addSeparator()
+        analysis_menu.addAction('[FINISH] 賽道軌跡分析', self.open_track_analysis_window)
         analysis_menu.addAction('圈速分析', self.lap_analysis)
         analysis_menu.addAction('遙測比較', self.telemetry_comparison)
         analysis_menu.addAction('車手比較', self.driver_comparison)
@@ -3366,7 +3691,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar.addWidget(QLabel("賽段:"))
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("ParameterCombo")
-        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])  # 🔧 修復: 與子視窗一致
+        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])  # [TOOL] 修復: 與子視窗一致
         self.session_combo.setCurrentText("R")
         self.session_combo.setFixedWidth(50)
         toolbar.addWidget(self.session_combo)
@@ -3524,14 +3849,14 @@ class StyleHMainWindow(QMainWindow):
     
     def on_main_race_changed(self, race):
         """主視窗賽事變更處理"""
-        print(f"🏁 [MAIN] 主視窗賽事變更為: {race}")
+        print(f"[FINISH] [MAIN] 主視窗賽事變更為: {race}")
         self.update_status_bar()
         # 同步賽事到MDI子視窗
         self.sync_to_all_mdi_subwindows('race', race)
     
     def on_main_session_changed(self, session):
         """主視窗賽段變更處理"""
-        print(f"🏎️ [MAIN] 主視窗賽段變更為: {session}")
+        print(f"[F1] [MAIN] 主視窗賽段變更為: {session}")
         self.update_status_bar()
         # 同步賽段到MDI子視窗
         self.sync_to_all_mdi_subwindows('session', session)
@@ -3593,7 +3918,7 @@ class StyleHMainWindow(QMainWindow):
         tree.setRootIsDecorated(True)
         
         # 基礎分析模組
-        basic_group = QTreeWidgetItem(tree, ["🔧 基礎分析"])
+        basic_group = QTreeWidgetItem(tree, ["[TOOL] 基礎分析"])
         basic_group.setExpanded(True)
         QTreeWidgetItem(basic_group, ["降雨分析"])
         QTreeWidgetItem(basic_group, ["賽道分析"])
@@ -3796,55 +4121,55 @@ class StyleHMainWindow(QMainWindow):
     
     def register_mdi_area(self, mdi_area):
         """註冊MDI區域到主視窗（用於同步功能）"""
-        print(f"🔗 [DEBUG] 嘗試註冊MDI區域: {mdi_area.objectName() if mdi_area else 'None'}")
-        print(f"🔗 [DEBUG] 當前已註冊的MDI區域數量: {len(self.mdi_areas)}")
-        print(f"🔗 [DEBUG] 主視窗類型: {type(self).__name__}")
+        print(f"[LINK] [DEBUG] 嘗試註冊MDI區域: {mdi_area.objectName() if mdi_area else 'None'}")
+        print(f"[LINK] [DEBUG] 當前已註冊的MDI區域數量: {len(self.mdi_areas)}")
+        print(f"[LINK] [DEBUG] 主視窗類型: {type(self).__name__}")
         
         if mdi_area not in self.mdi_areas:
             self.mdi_areas.append(mdi_area)
-            print(f"✅ [MDI] MDI區域已註冊: {mdi_area.objectName()}")
-            print(f"✅ [MDI] 註冊後MDI區域總數: {len(self.mdi_areas)}")
+            print(f"[OK] [MDI] MDI區域已註冊: {mdi_area.objectName()}")
+            print(f"[OK] [MDI] 註冊後MDI區域總數: {len(self.mdi_areas)}")
         else:
-            print(f"⚠️ [MDI] MDI區域已存在，跳過註冊: {mdi_area.objectName()}")
+            print(f"[WARNING] [MDI] MDI區域已存在，跳過註冊: {mdi_area.objectName()}")
     
     def sync_to_all_mdi_subwindows(self, param_type, value):
         """同步參數到所有MDI子視窗"""
-        print(f"🔄 [SYNC] 開始同步 {param_type} = {value} 到所有MDI子視窗")
-        print(f"🔗 [SYNC] 已註冊的MDI區域數量: {len(self.mdi_areas)}")
+        print(f"[REFRESH] [SYNC] 開始同步 {param_type} = {value} 到所有MDI子視窗")
+        print(f"[LINK] [SYNC] 已註冊的MDI區域數量: {len(self.mdi_areas)}")
         
         synced_count = 0
         for i, mdi_area in enumerate(self.mdi_areas):
-            print(f"🔍 [SYNC] 檢查MDI區域 {i+1}/{len(self.mdi_areas)}: {mdi_area.objectName()}")
+            print(f"[SEARCH] [SYNC] 檢查MDI區域 {i+1}/{len(self.mdi_areas)}: {mdi_area.objectName()}")
             synced_count += self.sync_to_mdi_area(mdi_area, param_type, value)
         
-        print(f"✅ [SYNC] 完成同步，共更新 {synced_count} 個子視窗")
+        print(f"[OK] [SYNC] 完成同步，共更新 {synced_count} 個子視窗")
     
     def sync_to_mdi_area(self, mdi_area, param_type, value):
         """通知MDI區域內所有子視窗主頁面參數變更"""
         if not mdi_area:
-            print(f"⚠️ [SYNC] MDI區域為空，跳過通知")
+            print(f"[WARNING] [SYNC] MDI區域為空，跳過通知")
             return 0
             
         notified_count = 0
         subwindow_list = mdi_area.subWindowList()
-        print(f"� [SYNC] 向MDI區域 {mdi_area.objectName()} 的 {len(subwindow_list)} 個子視窗發送參數變更通知")
+        print(f"[TEST] [SYNC] 向MDI區域 {mdi_area.objectName()} 的 {len(subwindow_list)} 個子視窗發送參數變更通知")
         
         for subwindow in subwindow_list:
             window_title = subwindow.windowTitle() if subwindow else "未知視窗"
-            print(f"� [SYNC] 發送通知到子視窗: {window_title} ({param_type}={value})")
+            print(f"[TEST] [SYNC] 發送通知到子視窗: {window_title} ({param_type}={value})")
             
             # 總是發送通知，讓子視窗自己決定是否響應
             if hasattr(subwindow, 'receive_main_window_update_notification'):
                 try:
                     subwindow.receive_main_window_update_notification(param_type, value)
                     notified_count += 1
-                    print(f"✅ [SYNC] 已發送通知到: {window_title}")
+                    print(f"[OK] [SYNC] 已發送通知到: {window_title}")
                 except Exception as e:
-                    print(f"❌ [SYNC] 發送通知失敗: {window_title}, 錯誤: {e}")
+                    print(f"[ERROR] [SYNC] 發送通知失敗: {window_title}, 錯誤: {e}")
             else:
-                print(f"⚠️ [SYNC] 子視窗 {window_title} 不支援通知機制")
+                print(f"[WARNING] [SYNC] 子視窗 {window_title} 不支援通知機制")
         
-        print(f"📊 [SYNC] MDI區域 {mdi_area.objectName()} 通知完成，共發送 {notified_count} 個通知")
+        print(f"[STATS] [SYNC] MDI區域 {mdi_area.objectName()} 通知完成，共發送 {notified_count} 個通知")
         return notified_count
     
     # ==================== 同步功能實現結束 ====================
@@ -4364,89 +4689,54 @@ class StyleHMainWindow(QMainWindow):
         return tab_container
         
     def create_track_analysis_tab(self):
-        """創建賽道分析分頁"""
-        # 創建主容器
+        """創建賽道分析分頁 - 使用新的 TrackAnalysisModule"""
+        # 直接調用新的賽道分析視窗功能
+        self.open_track_analysis_window()
+        
+        # 返回一個空的容器，以保持分頁結構的兼容性
         tab_container = QWidget()
         tab_layout = QVBoxLayout(tab_container)
-        tab_layout.setContentsMargins(0, 0, 0, 0)
-        tab_layout.setSpacing(0)
+        tab_layout.setContentsMargins(10, 10, 10, 10)
         
-        # 創建工具欄
-        toolbar = QWidget()
-        toolbar.setFixedHeight(35)
-        toolbar.setStyleSheet("""
-            QWidget {
-                background: #F0F0F0;
-                border-bottom: 1px solid #CCCCCC;
-            }
-        """)
-        toolbar_layout = QHBoxLayout(toolbar)
-        toolbar_layout.setContentsMargins(10, 5, 10, 5)
-        
-        # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
-        reset_btn.setFixedSize(120, 25)
-        reset_btn.setStyleSheet("""
-            QPushButton {
-                background: #F8F8F8;
-                color: #333333;
-                border: 1px solid #CCCCCC;
-                border-radius: 3px;
-                font-size: 11px;
-            }
-            QPushButton:hover {
-                background: #E8E8E8;
-                border-color: #999999;
-            }
-            QPushButton:pressed {
-                background: #DDDDDD;
-            }
-        """)
-        
-        # 標題標籤
-        title_label = QLabel("[TRACK] 賽道分析")
-        title_label.setStyleSheet("""
+        # 顯示提示信息
+        info_label = QLabel("[FINISH] 賽道軌跡分析已在新視窗中開啟")
+        info_label.setAlignment(Qt.AlignCenter)
+        info_label.setStyleSheet("""
             QLabel {
-                color: #333333;
-                font-size: 12px;
+                color: #666666;
+                font-size: 14px;
                 font-weight: bold;
-                background: transparent;
+                padding: 20px;
+                background: #F8F8F8;
+                border: 2px dashed #CCCCCC;
+                border-radius: 8px;
             }
         """)
+        tab_layout.addWidget(info_label)
         
-        toolbar_layout.addWidget(title_label)
-        toolbar_layout.addStretch()
-        toolbar_layout.addWidget(reset_btn)
+        # 添加說明文字
+        desc_label = QLabel("""
+        新的賽道軌跡分析功能已升級為獨立的 MDI 子視窗：
         
-        # 創建 MDI 區域
-        mdi_area = CustomMdiArea()
-        mdi_area.setObjectName("ProfessionalMDIArea")
-        mdi_area.setViewMode(QMdiArea.SubWindowView)
+        [OK] 高效能 PyQtGraph 繪圖引擎
+        [OK] 互動式賽道軌跡顯示
+        [OK] 原點標記與位置點選擇
+        [OK] 支援縮放、平移操作
+        [OK] 與主視窗參數同步
         
-        # 連接重置按鈕
-        reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
-        
-        # 賽道地圖視窗
-        track_window = PopoutSubWindow("賽道地圖 - Suzuka Circuit", mdi_area)
-        track_map = TrackMapWidget()
-        track_window.setWidget(track_map)
-        track_window.resize(400, 300)  # 改為resize
-        mdi_area.addSubWindow(track_window)
-        track_window.move(10, 10)
-        track_window.show()
-        
-        # 彎道分析視窗
-        corner_window = PopoutSubWindow("彎道分析 - 速度分布", mdi_area)
-        corner_chart = TelemetryChartWidget("brake")  # 重用遙測圖表
-        corner_window.setWidget(corner_chart)
-        corner_window.resize(400, 250)  # 改為resize
-        mdi_area.addSubWindow(corner_window)
-        corner_window.move(420, 10)
-        corner_window.show()
-        
-        # 將工具欄和MDI添加到容器
-        tab_layout.addWidget(toolbar)
-        tab_layout.addWidget(mdi_area)
+        請在獨立視窗中使用新的分析功能。
+        """)
+        desc_label.setAlignment(Qt.AlignCenter)
+        desc_label.setStyleSheet("""
+            QLabel {
+                color: #555555;
+                font-size: 11px;
+                padding: 10px;
+                background: transparent;
+                line-height: 1.4;
+            }
+        """)
+        tab_layout.addWidget(desc_label)
         
         return tab_container
         
@@ -4663,9 +4953,9 @@ class StyleHMainWindow(QMainWindow):
         mdi_area.setObjectName("AnalysisMDIArea")
         mdi_area.setViewMode(QMdiArea.SubWindowView)
         
-        # 🔧 修復: 註冊MDI區域到主視窗
+        # [TOOL] 修復: 註冊MDI區域到主視窗
         self.register_mdi_area(mdi_area)
-        print(f"✅ [MDI] 已註冊分析MDI區域: {mdi_area.objectName()}")
+        print(f"[OK] [MDI] 已註冊分析MDI區域: {mdi_area.objectName()}")
         
         # 連接重置按鈕
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -4705,7 +4995,7 @@ class StyleHMainWindow(QMainWindow):
             #print(f"[警告] 無法找到MDI區域來添加視窗: {function_name}")
             return
 
-        # 🔧 新增：嘗試使用模組化架構
+        # [TOOL] 新增：嘗試使用模組化架構
         analysis_module = self._create_analysis_module(function_name)
         
         if analysis_module:
@@ -4721,10 +5011,10 @@ class StyleHMainWindow(QMainWindow):
             width, height = analysis_module.get_default_size()
             analysis_window.resize(width, height)
             
-            print(f"✅ [MODULE] 使用模組化架構創建視窗: {window_title}")
+            print(f"[OK] [MODULE] 使用模組化架構創建視窗: {window_title}")
             
         else:
-            # 🔧 保留：舊版相容性邏輯
+            # [TOOL] 保留：舊版相容性邏輯
             window_title = self.format_window_title(self._extract_module_name(function_name))
             analysis_window = PopoutSubWindow(window_title, mdi_area)
             
@@ -4738,11 +5028,11 @@ class StyleHMainWindow(QMainWindow):
             else:
                 analysis_window.resize(450, 280)
             
-            print(f"⚠️ [LEGACY] 使用舊版架構創建視窗: {window_title}")
+            print(f"[WARNING] [LEGACY] 使用舊版架構創建視窗: {window_title}")
 
         # 通用視窗設定
         mdi_area.addSubWindow(analysis_window)
-        print(f"✅ [MDI] 已創建MDI子視窗: {analysis_window.windowTitle()}")
+        print(f"[OK] [MDI] 已創建MDI子視窗: {analysis_window.windowTitle()}")
         
         analysis_window.show()
         
@@ -4768,6 +5058,19 @@ class StyleHMainWindow(QMainWindow):
             import modules.gui.telemetry_modules  # 遙測模組
             import modules.gui.rain_analysis_module  # 降雨分析模組 - 會自動註冊適配器
             
+            # 賽道分析模組導入與註冊
+            try:
+                from modules.track_analysis import TrackAnalysisModule
+                from modules.track_analysis.track_analysis_module import register_track_analysis_module
+                
+                # 確保模組已註冊
+                register_track_analysis_module()
+                TRACK_ANALYSIS_AVAILABLE = True
+                print("[OK] [MODULE_IMPORT] TrackAnalysisModule 載入並註冊完成")
+            except ImportError as e:
+                TRACK_ANALYSIS_AVAILABLE = False
+                print(f"警告: TrackAnalysisModule 不可用: {e}")
+            
             # 根據功能名稱映射到模組類型
             module_mapping = {
                 "降雨分析": ModuleTypes.RAIN_ANALYSIS,
@@ -4781,6 +5084,8 @@ class StyleHMainWindow(QMainWindow):
                 "方向盤": ModuleTypes.TELEMETRY_STEERING,
                 "統計": ModuleTypes.STATISTICS,
                 "賽道": ModuleTypes.TRACK_MAP,
+                "賽道分析": ModuleTypes.TRACK_MAP,  # 新增賽道分析映射
+                "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
                 "圈速": ModuleTypes.LAP_ANALYSIS
             }
             
@@ -4799,18 +5104,18 @@ class StyleHMainWindow(QMainWindow):
                 module = ModuleFactory.create_module(module_type, parameter_provider=parameter_provider)
                 
                 if module:
-                    print(f"✅ [MODULE_FACTORY] 成功創建模組: {module_type} ({function_name})")
+                    print(f"[OK] [MODULE_FACTORY] 成功創建模組: {module_type} ({function_name})")
                     return module
                 else:
-                    print(f"❌ [MODULE_FACTORY] 模組創建失敗: {module_type}")
+                    print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {module_type}")
             else:
-                print(f"⚠️ [MODULE_FACTORY] 未找到模組類型: {function_name} -> {module_type}")
+                print(f"[WARNING] [MODULE_FACTORY] 未找到模組類型: {function_name} -> {module_type}")
                 print(f"   可用模組: {ModuleFactory.get_available_modules()}")
             
         except ImportError as e:
-            print(f"⚠️ [MODULE_FACTORY] 模組導入失敗: {e}")
+            print(f"[WARNING] [MODULE_FACTORY] 模組導入失敗: {e}")
         except Exception as e:
-            print(f"❌ [MODULE_FACTORY] 模組創建異常: {e}")
+            print(f"[ERROR] [MODULE_FACTORY] 模組創建異常: {e}")
         
         return None
     
@@ -4846,7 +5151,44 @@ class StyleHMainWindow(QMainWindow):
         elif "轉向" in function_name or "方向盤" in function_name:
             return TelemetryChartWidget("steering")
         elif "賽道" in function_name:
-            return TrackMapWidget()
+            # 使用新的 TrackAnalysisModule 而不是舊的 TrackMapWidget
+            try:
+                from modules.track_analysis import TrackAnalysisModule
+                
+                # 創建賽道分析模組實例
+                track_module = TrackAnalysisModule()
+                
+                # 初始化模組
+                success = track_module.initialize_module()
+                if success:
+                    # 獲取參數並更新模組
+                    params = self.get_current_parameters()
+                    track_module.update_parameters(params['year'], params['race'], params['session'])
+                    
+                    # 返回模組的 widget
+                    widget = track_module.get_widget()
+                    print(f"[OK] [NEW] 使用新版 TrackAnalysisModule: {params['year']} {params['race']} {params['session']}")
+                    return widget
+                else:
+                    print("[ERROR] [ERROR] TrackAnalysisModule 初始化失敗")
+                    
+            except ImportError as e:
+                print(f"[ERROR] [ERROR] TrackAnalysisModule 導入失敗: {e}")
+                
+            # 如果新模組失敗，返回佔位符而不是舊的 TrackMapWidget
+            placeholder = QLabel("[WARNING] 賽道分析模組不可用\n\n請使用菜單中的\n'[FINISH] 賽道軌跡分析'")
+            placeholder.setAlignment(Qt.AlignCenter)
+            placeholder.setStyleSheet("""
+                QLabel {
+                    color: #666666;
+                    font-size: 14px;
+                    padding: 20px;
+                    background: #F8F8F8;
+                    border: 2px dashed #CCCCCC;
+                    border-radius: 8px;
+                }
+            """)
+            return placeholder
         elif "圈速" in function_name:
             return self.create_lap_analysis_table()
         else:
@@ -5040,6 +5382,58 @@ class StyleHMainWindow(QMainWindow):
         params = self.get_current_parameters()
         #print(f"[分析] 圈速分析 - {params['year']} {params['race']} {params['session']}")
         pass
+        
+    def open_track_analysis_window(self):
+        """開啟賽道分析視窗"""
+        try:
+            # 檢查模組是否可用
+            try:
+                from modules.track_analysis import TrackAnalysisModule
+                track_analysis_available = True
+            except ImportError:
+                track_analysis_available = False
+                
+            if not track_analysis_available:
+                QMessageBox.warning(self, "警告", "賽道分析模組不可用")
+                return
+                
+            # 創建賽道分析模組實例
+            track_module = TrackAnalysisModule()
+            
+            # 生成視窗標題
+            current_year = self.main_window_parameter_provider.get_current_year()
+            current_race = self.main_window_parameter_provider.get_current_race()
+            current_session = self.main_window_parameter_provider.get_current_session()
+            
+            window_title = track_module.get_window_title(current_year, current_race, current_session)
+            
+            # 創建 PopoutSubWindow
+            sub_window = PopoutSubWindow(
+                parent=self,
+                title=window_title,
+                analysis_module=track_module,  # 傳遞分析模組
+                sync_enabled=True,  # 預設使用同步模式
+                parameter_provider=self.main_window_parameter_provider,
+                global_signal_manager=self.global_signal_manager
+            )
+            
+            # 添加到 MDI 區域
+            self.mdi_area.addSubWindow(sub_window)
+            sub_window.show()
+            
+            # 連接信號
+            sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
+            track_module.module_error.connect(lambda msg: self.show_error_message(f"賽道分析錯誤: {msg}"))
+            
+            # 記錄視窗
+            self.active_subwindows.append(sub_window)
+            
+            # 更新狀態
+            self.update_status_bar(f"已開啟賽道分析視窗: {window_title}")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "錯誤", f"無法開啟賽道分析視窗: {str(e)}")
+            self.update_status_bar(f"賽道分析視窗開啟失敗: {str(e)}")
     
     def rain_analysis(self):
         """開啟降雨分析 - 使用通用圖表系統"""
@@ -5060,7 +5454,7 @@ class StyleHMainWindow(QMainWindow):
                 session=params['session']
             )
             
-            # 🔧 修正：使用新的標題格式
+            # [TOOL] 修正：使用新的標題格式
             tab_title = f"降雨分析_{params['year']}_{params['race']}_{params['session']}"
             
             # 添加到主分頁控件 (使用空字串隱藏標題)
@@ -6474,6 +6868,42 @@ class StyleHMainWindow(QMainWindow):
         msg.setText(message)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
+    
+    def closeEvent(self, event):
+        """視窗關閉事件處理"""
+        try:
+            # 停止所有正在執行的 CLI 分析
+            self.stop_all_analyses()
+            
+            # 接受關閉事件
+            event.accept()
+            print("[END] 主視窗已關閉，所有分析已停止")
+            
+        except Exception as e:
+            print(f"[ERROR] 關閉視窗時發生錯誤: {e}")
+            event.accept()  # 即使出錯也要關閉
+    
+    def stop_all_analyses(self):
+        """停止所有正在執行的分析"""
+        try:
+            # 清理全域 CLI 分析管理器
+            cli_analysis_manager.cleanup_all()
+            
+            # 停止所有子視窗中的 CLI 分析
+            for mdi_area in self.mdi_areas:
+                for sub_window in mdi_area.subWindowList():
+                    widget = sub_window.widget()
+                    if hasattr(widget, 'stop_cli_analysis'):
+                        widget.stop_cli_analysis()
+            
+            # 停止當前視窗的分析（如果有的話）
+            if hasattr(self, 'stop_cli_analysis'):
+                self.stop_cli_analysis()
+                
+            print("[STOP] 所有分析已停止")
+            
+        except Exception as e:
+            print(f"[ERROR] 停止分析時發生錯誤: {e}")
         
     def remove_welcome_tab(self):
         """移除歡迎頁面 - 當使用者開始分析時"""

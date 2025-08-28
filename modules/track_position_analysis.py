@@ -20,8 +20,8 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
         data_loader: 數據載入器
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
     """
-    print(f"� 開始執行賽道位置分析...")
-    print(f"�🛣️ F1 賽道位置分析 (功能2)")
+    print(f"[TEST] 開始執行賽道位置分析...")
+    print(f"[TEST][TRACK] F1 賽道位置分析 (功能2)")
     print(f"[INFO] 分析目標：賽道位置座標、距離數據 (僅使用FastF1/OpenF1真實數據)")
     print("=" * 60)
     
@@ -35,14 +35,14 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
     cache_used = cached_data is not None
     
     if cached_data and not show_detailed_output:
-        print("📦 使用緩存數據")
+        print("[PACKAGE] 使用緩存數據")
         position_data = cached_data
         
         # 結果驗證和反饋
         if not report_analysis_results(position_data, "賽道位置分析"):
             return None
         
-        print(f"\n✅ 賽道位置分析分析完成！")
+        print(f"\n[OK] 賽道位置分析分析完成！")
         return {
             "success": True,
             "data": position_data,
@@ -52,7 +52,7 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
         }
         
     elif cached_data and show_detailed_output:
-        print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
+        print("[PACKAGE] 使用緩存數據 + [STATS] 顯示詳細分析結果")
         position_data = cached_data
         
         # 結果驗證和反饋
@@ -62,7 +62,7 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
         # 顯示詳細輸出 - 即使使用緩存
         _display_cached_detailed_output(position_data, session_info)
         
-        print(f"\n✅ 賽道位置分析分析完成！")
+        print(f"\n[OK] 賽道位置分析分析完成！")
         return {
             "success": True,
             "data": position_data,
@@ -71,17 +71,17 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
             "function_id": "2"
         }
     else:
-        print("🔄 重新計算 - 開始數據分析...")
+        print("[REFRESH] 重新計算 - 開始數據分析...")
         # 分析賽道位置數據
         position_data = analyze_track_position_data(data_loader)
         
         if not position_data:
-            print("❌ 賽道位置分析失敗：無可用數據")
+            print("[ERROR] 賽道位置分析失敗：無可用數據")
             return None
         
         # 保存緩存
         save_cache(position_data, cache_key)
-        print("💾 分析結果已緩存")
+        print("[SAVE] 分析結果已緩存")
     
     # 結果驗證和反饋
     if not report_analysis_results(position_data, "賽道位置分析"):
@@ -96,7 +96,7 @@ def run_track_position_analysis(data_loader, show_detailed_output=True):
     # 保存Raw Data
     save_position_raw_data(session_info, position_data)
     
-    print(f"\n✅ 賽道位置分析分析完成！")
+    print(f"\n[OK] 賽道位置分析分析完成！")
     return {
         "success": True,
         "data": position_data,
@@ -138,26 +138,26 @@ def save_cache(data, cache_key):
 def report_analysis_results(data, analysis_type="analysis"):
     """報告分析結果狀態"""
     if not data:
-        print(f"❌ {analysis_type}失敗：無可用數據")
+        print(f"[ERROR] {analysis_type}失敗：無可用數據")
         return False
     
     data_count = len(data.get('position_records', [])) if data else 0
-    print(f"📊 {analysis_type}結果摘要：")
+    print(f"[STATS] {analysis_type}結果摘要：")
     print(f"   • 數據項目數量: {data_count}")
-    print(f"   • 數據完整性: {'✅ 良好' if data_count > 0 else '❌ 不足'}")
+    print(f"   • 數據完整性: {'[OK] 良好' if data_count > 0 else '[ERROR] 不足'}")
     
     # 檢查關鍵欄位
     if data and 'position_records' in data:
         missing_coords = sum(1 for r in data['position_records'] if not (r.get('position_x') and r.get('position_y')))
         print(f"   • 缺失座標點: {missing_coords}")
     
-    print(f"✅ {analysis_type}分析完成！")
+    print(f"[OK] {analysis_type}分析完成！")
     return True
 
 
 def _display_cached_detailed_output(position_data, session_info):
     """當使用緩存數據但需要顯示詳細輸出時調用此函數"""
-    print("\n📊 顯示緩存的詳細分析結果...")
+    print("\n[STATS] 顯示緩存的詳細分析結果...")
     
     # 顯示位置數據表格
     display_position_table(position_data)
@@ -197,18 +197,54 @@ def format_time(time_obj):
 
 def get_session_info(data_loader):
     """獲取賽事基本信息"""
+    # 使用賽事全名映射
+    race_full_names = {
+        "Bahrain": "Bahrain Grand Prix",
+        "Saudi Arabia": "Saudi Arabian Grand Prix", 
+        "Australia": "Australian Grand Prix",
+        "Japan": "Japanese Grand Prix",
+        "China": "Chinese Grand Prix",
+        "Miami": "Miami Grand Prix",
+        "Emilia Romagna": "Emilia Romagna Grand Prix",
+        "Monaco": "Monaco Grand Prix",
+        "Canada": "Canadian Grand Prix",
+        "Spain": "Spanish Grand Prix", 
+        "Austria": "Austrian Grand Prix",
+        "Great Britain": "British Grand Prix",
+        "Hungary": "Hungarian Grand Prix",
+        "Belgium": "Belgian Grand Prix",
+        "Netherlands": "Dutch Grand Prix",
+        "Italy": "Italian Grand Prix",
+        "Azerbaijan": "Azerbaijan Grand Prix",
+        "Singapore": "Singapore Grand Prix",
+        "United States": "United States Grand Prix",
+        "Mexico": "Mexican Grand Prix",
+        "Brazil": "Brazilian Grand Prix",
+        "Las Vegas": "Las Vegas Grand Prix",
+        "Qatar": "Qatar Grand Prix",
+        "Abu Dhabi": "Abu Dhabi Grand Prix"
+    }
+    
+    # 先嘗試從 data_loader 獲取簡短賽事名稱，然後映射到完整名稱
+    race_short = getattr(data_loader, 'race', 'Unknown')
+    race_full = race_full_names.get(race_short, race_short)
+    
     session_info = {
         "year": getattr(data_loader, 'year', 'Unknown'),
-        "race": getattr(data_loader, 'race', 'Unknown'),
+        "race": race_full,  # 使用完整賽事名稱
         "session_type": getattr(data_loader, 'session_type', 'Unknown'),
-        "track_name": "Unknown",
         "date": "Unknown"
     }
     
+    # 優先從 FastF1 Session 獲取正確的賽事名稱
     if hasattr(data_loader, 'session') and data_loader.session is not None:
         try:
             session = data_loader.session
-            session_info["track_name"] = getattr(session, 'event', {}).get('EventName', 'Unknown')
+            # 從 FastF1 session 獲取正確的賽事名稱
+            event_name = getattr(session, 'event', {}).get('EventName', None)
+            if event_name and event_name != 'Unknown':
+                session_info["race"] = event_name
+            
             session_info["date"] = str(getattr(session, 'date', 'Unknown'))
         except:
             pass
@@ -219,10 +255,9 @@ def get_session_info(data_loader):
 def print_session_summary(session_info):
     """顯示賽事摘要信息"""
     print(f"\n[LIST] 賽事信息摘要:")
-    print(f"   📅 賽季: {session_info['year']}")
+    print(f"   [CALENDAR] 賽季: {session_info['year']}")
     print(f"   [FINISH] 賽事: {session_info['race']}")
-    print(f"   🏎️ 賽段: {session_info['session_type']}")
-    print(f"   🏟️ 賽道: {session_info['track_name']}")
+    print(f"   [F1] 賽段: {session_info['session_type']}")
     print(f"   📆 日期: {session_info['date']}")
 
 
@@ -352,7 +387,7 @@ def analyze_track_position_data(data_loader):
                             print("\n[ERROR] 位置數據中沒有 X, Y 座標")
                             # 嘗試備用方法：使用車輛數據中的位置信息
                             if not car_data.empty and 'X' in car_data.columns and 'Y' in car_data.columns:
-                                print("🔄 嘗試使用車輛數據中的位置信息...")
+                                print("[REFRESH] 嘗試使用車輛數據中的位置信息...")
                                 return extract_position_from_car_data(car_data, position_data)
                             else:
                                 return position_data
@@ -361,7 +396,7 @@ def analyze_track_position_data(data_loader):
                         print(f"   [WARNING] 獲取位置數據失敗: {pos_error}")
                         # 嘗試備用方法：使用車輛數據
                         if not car_data.empty and 'X' in car_data.columns and 'Y' in car_data.columns:
-                            print("🔄 嘗試使用車輛數據中的位置信息...")
+                            print("[REFRESH] 嘗試使用車輛數據中的位置信息...")
                             return extract_position_from_car_data(car_data, position_data)
                         else:
                             return position_data
@@ -498,8 +533,8 @@ def display_position_statistics(position_data):
         track_width = bounds["x_max"] - bounds["x_min"]
         track_height = bounds["y_max"] - bounds["y_min"]
         print(f"   📏 賽道尺寸: {track_width:.0f}m × {track_height:.0f}m")
-        print(f"   📍 X座標範圍: {bounds['x_min']:.1f}m ~ {bounds['x_max']:.1f}m")
-        print(f"   📍 Y座標範圍: {bounds['y_min']:.1f}m ~ {bounds['y_max']:.1f}m")
+        print(f"   [PIN] X座標範圍: {bounds['x_min']:.1f}m ~ {bounds['x_max']:.1f}m")
+        print(f"   [PIN] Y座標範圍: {bounds['y_min']:.1f}m ~ {bounds['y_max']:.1f}m")
     
     if position_data["distance_covered"]:
         print(f"   [FINISH] 圈長: {position_data['distance_covered']:.0f}m ({position_data['distance_covered']/1000:.3f}km)")
@@ -507,7 +542,7 @@ def display_position_statistics(position_data):
     if position_data["position_records"]:
         print(f"   [INFO] FastF1數據點數: {len(position_data['position_records'])} 個")
         distances = [r["distance_m"] for r in position_data["position_records"]]
-        print(f"   � 距離範圍: {min(distances):.0f}m - {max(distances):.0f}m")
+        print(f"   [TEST] 距離範圍: {min(distances):.0f}m - {max(distances):.0f}m")
 
 
 def save_position_raw_data(session_info, position_data):
@@ -550,17 +585,22 @@ def save_position_raw_data(session_info, position_data):
     json_dir = "json"
     os.makedirs(json_dir, exist_ok=True)
     
-    raw_data_file = os.path.join(json_dir, f"raw_data_track_position_{session_info['year']}_{session_info['race']}_{datetime.now().strftime('%Y%m%d')}.json")
+    # 檔案命名格式：raw_data_track_position_YYYY_賽事.json
+    # 使用賽事名稱（如 "Chinese Grand Prix"）
+    year = session_info.get('year', 2025)
+    race_name = session_info.get('race', 'Unknown')
+    
+    raw_data_file = os.path.join(json_dir, f"raw_data_track_position_{year}_{race_name}.json")
     
     try:
         with open(raw_data_file, "w", encoding="utf-8") as f:
             json.dump(raw_data, f, ensure_ascii=False, indent=2)
-        print(f"\n💾 Raw Data 已保存: {raw_data_file}")
+        print(f"\n[SAVE] Raw Data 已保存: {raw_data_file}")
     except Exception as e:
         print(f"\n[ERROR] Raw Data 保存失敗: {e}")
 
 
 if __name__ == "__main__":
     # 測試用途
-    print("🛣️ 賽道位置分析模組 - 測試模式")
+    print("[TRACK] 賽道位置分析模組 - 測試模式")
     run_track_position_analysis(None)
