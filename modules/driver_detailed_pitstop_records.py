@@ -79,12 +79,13 @@ def report_analysis_results(data, analysis_type="analysis"):
     return True
 
 
-def run_driver_detailed_pitstop_records(data_loader, show_detailed_output=True):
+def run_driver_detailed_pitstop_records(data_loader, show_detailed_output=True, **extra_params):
     """執行車手進站詳細記錄分析 - 功能5 (Function 15 標準)
     
     Args:
         data_loader: 數據載入器
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
+        **extra_params: 額外參數，包含year, race, session等
     
     Returns:
         dict: 包含成功狀態、數據、緩存狀態和緩存鍵的標準化返回格式
@@ -94,8 +95,8 @@ def run_driver_detailed_pitstop_records(data_loader, show_detailed_output=True):
     print("=" * 60)
     
     try:
-        # 獲取基本賽事資訊
-        session_info = get_session_info(data_loader)
+        # 🔧 修正：獲取基本賽事資訊，優先使用傳入的參數
+        session_info = get_session_info(data_loader, **extra_params)
         cache_key = f"driver_detailed_pitstops_{session_info.get('year')}_{session_info.get('event_name', 'Unknown').replace(' ', '_')}"
         
         # 檢查緩存 - Function 15 標準實現
@@ -174,16 +175,26 @@ def run_driver_detailed_pitstop_records(data_loader, show_detailed_output=True):
         return {"success": False, "message": f"分析失敗: {str(e)}", "function_id": "5"}
 
 
-def get_session_info(data_loader):
+def get_session_info(data_loader, **extra_params):
     """獲取賽事基本信息"""
     session_info = {}
     if hasattr(data_loader, 'session') and data_loader.session is not None:
+        # 🔧 修正：優先使用傳入的年份參數，如果沒有則從data_loader獲取
+        year = extra_params.get('year')
+        if not year:
+            year = getattr(data_loader, 'year', 2024) if hasattr(data_loader, 'year') else 2024
+        
         session_info = {
             "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
             "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
             "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-            "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+            "year": year  # 🔧 使用修正後的年份邏輯
         }
+        
+        # 調試信息：確認獲取的年份和參數來源
+        param_source = "extra_params" if extra_params.get('year') else "data_loader" if hasattr(data_loader, 'year') else "default"
+        print(f"[DEBUG] [SESSION_INFO] year={session_info['year']} (來源: {param_source}), event_name={session_info['event_name']}")
+        
     return session_info
 
 
@@ -392,7 +403,10 @@ def save_json_results(driver_records, session_info, analysis_type):
         "data": driver_records
     }
     
-    filename = f"{analysis_type}_{session_info.get('year')}_{session_info.get('event_name', 'Unknown').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # 更新檔案命名格式：driver_detailed_pitstop_records_YYYY_賽事.json
+    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
+    year = session_info.get('year', 'Unknown')
+    filename = f"driver_detailed_pitstop_records_{year}_{event_name}.json"
     filepath = os.path.join(json_dir, filename)
     
     try:

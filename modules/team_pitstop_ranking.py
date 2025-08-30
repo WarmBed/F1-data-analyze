@@ -108,6 +108,9 @@ def run_team_pitstop_ranking(data_loader, show_detailed_output=True):
             if not report_analysis_results(ranking_data, "車隊進站時間排行榜"):
                 return {"success": False, "message": "結果驗證失敗", "function_id": "4"}
             
+            # 保存 JSON 結果 - 即使使用緩存也要保存
+            save_json_results(ranking_data, session_info, "team_pitstop_ranking")
+            
             print("\n✅ 車隊進站時間排行榜分析完成！")
             return {
                 "success": True,
@@ -127,6 +130,9 @@ def run_team_pitstop_ranking(data_loader, show_detailed_output=True):
                 
             # 顯示詳細輸出 - 即使使用緩存
             _display_cached_detailed_output(ranking_data, session_info)
+            
+            # 保存 JSON 結果 - 即使使用緩存也要保存
+            save_json_results(ranking_data, session_info, "team_pitstop_ranking")
             
             print("\n✅ 車隊進站時間排行榜分析完成！")
             return {
@@ -174,14 +180,22 @@ def run_team_pitstop_ranking(data_loader, show_detailed_output=True):
 
 def get_session_info(data_loader):
     """獲取賽事基本信息"""
+    from datetime import datetime
+    current_year = datetime.now().year
+    
     session_info = {}
     if hasattr(data_loader, 'session') and data_loader.session is not None:
+        event = data_loader.session.event if hasattr(data_loader.session, 'event') else {}
         session_info = {
-            "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
-            "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
+            "event_name": getattr(event, 'EventName', 'Unknown'),
+            "circuit_name": getattr(event, 'Location', 'Unknown'),
             "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-            "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+            "year": getattr(event, 'year', current_year)  # 使用當前年份作為預設值
         }
+        
+        # 調試信息：檢查獲取的年份是否正確
+        print(f"[DEBUG] Session info: year={session_info['year']}, event_name={session_info['event_name']}")
+        
     return session_info
 
 
@@ -389,7 +403,9 @@ def save_json_results(ranking_data, session_info, analysis_type):
         "data": ranking_data
     }
     
-    filename = f"{analysis_type}_{session_info.get('year')}_{session_info.get('event_name', 'Unknown').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # 修正檔名格式：team_pitstop_ranking_YYYY_賽事.json
+    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
+    filename = f"{analysis_type}_{session_info.get('year')}_{event_name}.json"
     filepath = os.path.join(json_dir, filename)
     
     try:

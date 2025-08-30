@@ -339,6 +339,25 @@ echo.
 pause
 goto main_menu
 
+:function_5
+cls
+echo ================================================================================
+echo 功能5: 車手進站詳細記錄 (Driver Detailed Pitstop Records)
+echo ================================================================================
+echo.
+echo 正在執行車手進站詳細記錄分析...
+echo 賽事設定: %DEFAULT_YEAR% 年 %DEFAULT_RACE% 站 %DEFAULT_SESSION% 賽段
+echo.
+echo 🎯 此功能將顯示所有車手的詳細進站記錄
+echo 📊 包含進站時間、圈數、策略統計等詳細資訊
+echo.
+python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -f 5
+echo.
+echo 車手進站詳細記錄分析完成！
+echo.
+pause
+goto main_menu
+
 :function_6
 cls
 echo ================================================================================

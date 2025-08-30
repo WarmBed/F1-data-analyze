@@ -491,9 +491,20 @@ class F1AnalysisFunctionMapper:
             
             from modules.driver_detailed_pitstop_records import run_driver_detailed_pitstop_records
             print("[INFO] 執行車手進站詳細記錄 (功能5)...")
+            
+            # 🔧 修正：傳遞額外的年份參數確保正確性
+            extra_params = {}
+            if hasattr(self, 'year') and self.year:
+                extra_params['year'] = self.year
+            if hasattr(self, 'race') and self.race:
+                extra_params['race'] = self.race
+            if hasattr(self, 'session') and self.session:
+                extra_params['session'] = self.session
+                
             result = run_driver_detailed_pitstop_records(
                 self.data_loader, 
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                **extra_params
             )
             
             # 結果反饋 - 根據新返回格式處理
