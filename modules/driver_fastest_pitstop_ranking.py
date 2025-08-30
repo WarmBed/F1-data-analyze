@@ -187,11 +187,17 @@ def get_session_info(data_loader):
     """獲取賽事基本信息"""
     session_info = {}
     if hasattr(data_loader, 'session') and data_loader.session is not None:
+        # 優先從 data_loader 的屬性獲取年份，因為它是在載入數據時設置的正確年份
+        year = getattr(data_loader, 'year', None)
+        if year is None:
+            # 如果 data_loader 沒有年份屬性，嘗試從 session 獲取
+            year = getattr(data_loader.session, 'event', {}).get('year', 2024)
+        
         session_info = {
             "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
             "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
             "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-            "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+            "year": year
         }
     return session_info
 
@@ -212,6 +218,7 @@ def analyze_driver_fastest_pitstops(data_loader, session_info):
             'British Grand Prix': 'britain',
             'Japanese Grand Prix': 'japan', 
             'Australian Grand Prix': 'australia',
+            'Chinese Grand Prix': 'china',  # 添加中國大獎賽映射
             'Monaco Grand Prix': 'monaco',
             'Spanish Grand Prix': 'spain',
             'Canadian Grand Prix': 'canada',
@@ -245,6 +252,11 @@ def analyze_driver_fastest_pitstops(data_loader, session_info):
             return None
         
         session_key = race_session.get('session_key')
+        session_type = race_session.get('session_type', 'Unknown')
+        session_name = race_session.get('session_name', 'Unknown')
+        location = race_session.get('location', 'Unknown')
+        
+        print(f"✅ 找到比賽會話: {location} | Type: {session_type} | Name: {session_name}")
         print(f"📡 從 OpenF1 API 獲取進站數據 (session_key: {session_key})...")
         
         # 獲取 OpenF1 進站數據
@@ -325,7 +337,10 @@ def save_json_results(ranking_data, session_info, analysis_type):
         "data": ranking_data
     }
     
-    filename = f"{analysis_type}_{session_info.get('year')}_{session_info.get('event_name', 'Unknown').replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+    # 修改文件命名格式為：driver_fastest_pitstop_ranking_YYYY_賽事.json
+    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
+    year = session_info.get('year', 'Unknown')
+    filename = f"driver_fastest_pitstop_ranking_{year}_{event_name}.json"
     filepath = os.path.join(json_dir, filename)
     
     try:

@@ -139,13 +139,14 @@ class F1OpenDataAnalyzer:
     def find_race_session_by_name(self, year: int, race_name: str) -> dict:
         """根據比賽名稱找到對應的會話"""
         sessions = self.get_sessions(year)
-        race_sessions = [s for s in sessions if s.get('session_type') == 'Race']
+        race_sessions = [s for s in sessions if s.get('session_type') == 'Race' and s.get('session_name') == 'Race']
         
         # 建立比賽名稱對應表
         race_name_mapping = {
             'british': ['silverstone', 'britain', 'uk', 'united kingdom', 'great britain'],
             'japan': ['suzuka', 'japanese'],
             'australia': ['melbourne', 'australian'],
+            'china': ['shanghai', 'chinese'],  # 添加中國大獎賽映射
             'monaco': ['monte carlo', 'montecarlo'],
             'spain': ['barcelona', 'spanish', 'catalunya'],
             'canada': ['montreal', 'canadian', 'montréal'],

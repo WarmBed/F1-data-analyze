@@ -1540,10 +1540,24 @@ class PopoutSubWindow(QMdiSubWindow):
         # [TOOL] 新增：如果有模組，進行初始化
         if self.analysis_module and self._parameter_provider:
             self.analysis_module.parameter_provider = self._parameter_provider
-            # 連接模組信號
-            if hasattr(self.analysis_module, 'signals'):
-                self.analysis_module.signals.module_error.connect(self._handle_module_error)
-                self.analysis_module.signals.parameters_updated.connect(self._handle_parameters_updated)
+            # 連接模組信號 - 修正：信號直接在模組上，不在 signals 屬性下
+            if hasattr(self.analysis_module, 'module_error'):
+                self.analysis_module.module_error.connect(self._handle_module_error)
+            if hasattr(self.analysis_module, 'parameters_updated'):
+                self.analysis_module.parameters_updated.connect(self._handle_parameters_updated)
+                
+            print(f"[SYNC] [INIT] {title} 已連接模組同步信號")
+            
+            # [FIX] 立即進行一次初始同步，確保模組獲得當前參數
+            try:
+                if hasattr(self.analysis_module, 'update_parameters'):
+                    year = int(self._parameter_provider.get_current_year())
+                    race = self._parameter_provider.get_current_race()
+                    session = self._parameter_provider.get_current_session()
+                    print(f"[SYNC] [INIT] 進行初始參數同步: {year} {race} {session}")
+                    self.analysis_module.update_parameters(year, race, session)
+            except Exception as e:
+                print(f"[WARNING] [INIT] 初始同步失敗: {e}")
         
         # 初始化最小化狀態
         self.is_minimized = False
@@ -1611,18 +1625,18 @@ class PopoutSubWindow(QMdiSubWindow):
                 if self.sync_enabled and self._parameter_provider:
                     # 同步模式：使用主視窗參數
                     params = {
-                        'year': self._parameter_provider.get_current_year(),
+                        'year': int(self._parameter_provider.get_current_year()),  # 轉換為int
                         'race': self._parameter_provider.get_current_race(),
                         'session': self._parameter_provider.get_current_session()
                     }
                     # 更新本地參數
-                    self.local_year = params['year']
+                    self.local_year = str(params['year'])  # 本地參數保持字符串
                     self.local_race = params['race'] 
                     self.local_session = params['session']
                 else:
                     # 非同步模式：使用本地參數
                     params = {
-                        'year': self.local_year,
+                        'year': int(self.local_year),  # 轉換為int
                         'race': self.local_race,
                         'session': self.local_session
                     }
@@ -4999,19 +5013,33 @@ class StyleHMainWindow(QMainWindow):
         analysis_module = self._create_analysis_module(function_name)
         
         if analysis_module:
-            # 使用新的模組化方式
-            window_title = analysis_module.get_title()
+            # [FIX] 獲取當前參數，類似賽道分析模組
+            current_year = self.year_combo.currentText()
+            current_race = self.race_combo.currentText()  
+            current_session = self.session_combo.currentText()
+            
+            # 使用 get_window_title 方法並傳入當前參數
+            if hasattr(analysis_module, 'get_window_title'):
+                window_title = analysis_module.get_window_title(current_year, current_race, current_session)
+                print(f"[TITLE] [FIX] 使用當前參數生成標題: {window_title}")
+            else:
+                window_title = analysis_module.get_title()
+                print(f"[TITLE] [FALLBACK] 使用預設標題: {window_title}")
+                
             analysis_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             
             # 設置模組的widget
             content_widget = analysis_module.get_widget()
             analysis_window.setWidget(content_widget)
             
+            # [REMOVED] 不再需要重新設置標題，因為已經使用 get_window_title 設置正確標題
+            print(f"[TITLE] [OK] 視窗標題已設置為: {window_title}")
+            
             # 使用模組推薦的尺寸
             width, height = analysis_module.get_default_size()
             analysis_window.resize(width, height)
             
-            print(f"[OK] [MODULE] 使用模組化架構創建視窗: {window_title}")
+            print(f"[OK] [MODULE] 使用模組化架構創建視窗: {analysis_window.windowTitle()}")
             
         else:
             # [TOOL] 保留：舊版相容性邏輯
@@ -5086,6 +5114,7 @@ class StyleHMainWindow(QMainWindow):
                 "賽道": ModuleTypes.TRACK_MAP,
                 "賽道分析": ModuleTypes.TRACK_MAP,  # 新增賽道分析映射
                 "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
+                "進站分析": "pitstop_analysis",  # 新增進站分析映射
                 "圈速": ModuleTypes.LAP_ANALYSIS
             }
             
@@ -5096,18 +5125,53 @@ class StyleHMainWindow(QMainWindow):
                     module_type = mod_type
                     break
             
-            if module_type and ModuleFactory.module_exists(module_type):
+            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis"):
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
                 
-                # 創建模組
-                module = ModuleFactory.create_module(module_type, parameter_provider=parameter_provider)
-                
-                if module:
-                    print(f"[OK] [MODULE_FACTORY] 成功創建模組: {module_type} ({function_name})")
-                    return module
+                # 特殊處理進站分析模組
+                if module_type == "pitstop_analysis":
+                    # 修正：也使用 ModuleFactory 來創建，確保一致性
+                    try:
+                        from modules.pitstop_analysis_mdi import PitstopAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建進站分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = PitstopAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 修正：在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 進站分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 進站分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 進站分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 進站分析模組創建失敗: {e}")
+                        return None
                 else:
-                    print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {module_type}")
+                    # 創建模組
+                    module = ModuleFactory.create_module(module_type, parameter_provider=parameter_provider)
+                    
+                    if module:
+                        print(f"[OK] [MODULE_FACTORY] 成功創建模組: {module_type} ({function_name})")
+                        return module
+                    else:
+                        print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {module_type}")
             else:
                 print(f"[WARNING] [MODULE_FACTORY] 未找到模組類型: {function_name} -> {module_type}")
                 print(f"   可用模組: {ModuleFactory.get_available_modules()}")
@@ -5191,6 +5255,55 @@ class StyleHMainWindow(QMainWindow):
             return placeholder
         elif "圈速" in function_name:
             return self.create_lap_analysis_table()
+        elif "進站分析" in function_name:
+            # 使用新的進站分析模組
+            try:
+                from modules.pitstop_analysis_mdi import PitstopAnalysisModule
+                print(f"[OK] [LEGACY] 創建進站分析模組")
+                
+                # 創建模組實例
+                module = PitstopAnalysisModule()
+                
+                # 初始化模組
+                if module.initialize_module():
+                    print(f"[OK] [LEGACY] 進站分析模組初始化成功")
+                    return module.get_widget()  # 返回內容 widget
+                else:
+                    print(f"[ERROR] [LEGACY] 進站分析模組初始化失敗")
+                    raise Exception("模組初始化失敗")
+                
+            except ImportError as e:
+                print(f"[ERROR] 進站分析模組導入失敗: {e}")
+                # 後備方案 - 顯示錯誤提示
+                placeholder = QLabel("[ERROR] 進站分析模組不可用\n\n請檢查模組是否正確安裝")
+                placeholder.setAlignment(Qt.AlignCenter)
+                placeholder.setStyleSheet("""
+                    QLabel {
+                        color: #ff6666;
+                        font-size: 14px;
+                        padding: 20px;
+                        background: #fff8f8;
+                        border: 2px dashed #ffcccc;
+                        border-radius: 8px;
+                    }
+                """)
+                return placeholder
+            except Exception as e:
+                print(f"[ERROR] 進站分析模組創建失敗: {e}")
+                # 後備方案 - 顯示錯誤提示
+                placeholder = QLabel(f"[ERROR] 進站分析模組錯誤\n\n{str(e)}")
+                placeholder.setAlignment(Qt.AlignCenter)
+                placeholder.setStyleSheet("""
+                    QLabel {
+                        color: #ff6666;
+                        font-size: 14px;
+                        padding: 20px;
+                        background: #fff8f8;
+                        border: 2px dashed #ffcccc;
+                        border-radius: 8px;
+                    }
+                """)
+                return placeholder
         else:
             # 預設創建速度遙測圖表
             return TelemetryChartWidget("speed")

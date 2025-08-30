@@ -1,0 +1,1223 @@
+#!/usr/bin/env python3
+"""
+F1T 進站分析 MDI 模組
+基於開發設計文檔實現的車手最快進站時間排行榜 GUI 模組
+使用統一CLI管理器避免編碼問題
+"""
+
+import sys
+import os
+import json
+import datetime
+import traceback
+from typing import Dict, List, Any, Optional
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
+    QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
+    QHeaderView, QDialog, QDialogButtonBox, QComboBox, QCheckBox,
+    QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
+    QTabWidget, QScrollArea, QSplitter
+)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
+from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
+
+# 導入分析模組介面
+try:
+    from .interfaces import IAnalysisModule
+except ImportError:
+    # 如果相對導入失敗，嘗試絕對導入
+    try:
+        from modules.interfaces import IAnalysisModule
+    except ImportError:
+        # 如果都失敗，定義一個基本的接口
+        from PyQt5.QtCore import QObject
+        class IAnalysisModule(QObject):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+
+# 導入基礎類別
+# from f1t_gui_main import PopoutSubWindow  # 不再直接繼承PopoutSubWindow
+
+class PitstopDataManager(QObject):
+    """進站數據管理器 - 負責JSON緩存和CLI備援 - 採用檔案系統監控機制"""
+    
+    # 信號定義
+    data_loaded = pyqtSignal(dict)
+    error_occurred = pyqtSignal(str)
+    loading_progress = pyqtSignal(int)
+    status_changed = pyqtSignal(str)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.cache_dir = os.path.join(os.getcwd(), "cache")
+        self.current_year = None  # 修正：初始化為 None，等待同步
+        self.current_race = None  # 修正：初始化為 None，等待同步
+        self.current_session = None  # 修正：初始化為 None，等待同步
+        self.loading = False
+        self._is_loading = False  # 載入狀態標誌
+        self._generation_params = None  # 生成參數
+        
+        # 檔案生成監控定時器（類似賽道分析）
+        self._generation_timer = QTimer()
+        self._generation_timer.timeout.connect(self._check_generation_progress)
+        
+        self._generation_timeout_timer = QTimer()
+        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        
+    # check_json_cache 方法已移除，改用 _find_pitstop_data_file
+    
+    def _find_pitstop_data_file(self, year: str, race: str, session: str) -> Optional[str]:
+        """搜尋進站數據檔案（類似賽道分析模組的 _find_track_data_file）"""
+        try:
+            print(f"[FOLDER] [PITSTOP] 搜尋進站數據檔案: {year} {race} {session}")
+            
+            # 修正：優先檢查 json/ 和 json_exports/ 目錄下的完整JSON檔案，使用正確的賽事名稱
+            search_dirs = ["json", "json_exports"]  # 擴大搜尋範圍，與賽道分析一致
+            
+            # 構建賽事的完整名稱（加上 Grand Prix）
+            race_full_names = {
+                "Japan": "Japanese_Grand_Prix",
+                "China": "Chinese_Grand_Prix", 
+                "Belgium": "Belgian_Grand_Prix",
+                "Bahrain": "Bahrain_Grand_Prix",
+                "Saudi Arabia": "Saudi_Arabian_Grand_Prix",
+                "Australia": "Australian_Grand_Prix",
+                "Miami": "Miami_Grand_Prix",
+                "Emilia Romagna": "Emilia_Romagna_Grand_Prix",
+                "Monaco": "Monaco_Grand_Prix",
+                "Canada": "Canadian_Grand_Prix",
+                "Spain": "Spanish_Grand_Prix",
+                "Austria": "Austrian_Grand_Prix",
+                "Great Britain": "British_Grand_Prix",
+                "Hungary": "Hungarian_Grand_Prix",
+                "Netherlands": "Dutch_Grand_Prix",
+                "Italy": "Italian_Grand_Prix",
+                "Azerbaijan": "Azerbaijan_Grand_Prix",
+                "Singapore": "Singapore_Grand_Prix",
+                "United States": "United_States_Grand_Prix",
+                "Mexico": "Mexican_Grand_Prix",
+                "Brazil": "Brazilian_Grand_Prix",
+                "Las Vegas": "Las_Vegas_Grand_Prix",
+                "Qatar": "Qatar_Grand_Prix",
+                "Abu Dhabi": "Abu_Dhabi_Grand_Prix"
+            }
+            
+            # 獲取完整賽事名稱
+            race_full_name = race_full_names.get(race, f"{race.replace(' ', '_')}_Grand_Prix")
+            
+            # 精確匹配模式（多種檔案命名格式）
+            patterns = [
+                f"driver_fastest_pitstop_ranking_{year}_{race_full_name}.json",
+                f"driver_fastest_pitstop_ranking_{year}_{race.replace(' ', '_')}_Grand_Prix.json",
+                f"driver_fastest_pitstop_{year}_{race_full_name}.json",
+                f"driver_fastest_pitstop_{year}_{race.replace(' ', '_')}.json",
+                f"pitstop_ranking_{year}_{race_full_name}.json",
+                f"pitstop_ranking_{year}_{race.replace(' ', '_')}.json"
+            ]
+            
+            # 搜尋多個目錄中的精確匹配
+            for search_dir in search_dirs:
+                for pattern in patterns:
+                    import glob
+                    search_path = os.path.join(search_dir, pattern)
+                    files = glob.glob(search_path)
+                    if files:
+                        print(f"[FOLDER] [PITSTOP] 找到檔案: {files[0]}")
+                        return files[0]  # 返回第一個匹配的檔案
+            
+            # 如果精確匹配失敗，嘗試模糊搜尋（類似賽道分析）
+            print(f"[FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...")
+            
+            for search_dir in search_dirs:
+                # 使用通配符搜尋
+                import glob
+                fuzzy_patterns = [
+                    f"*pitstop*{year}*{session}*.json",
+                    f"*pitstop*{year}*.json"
+                ]
+                
+                for fuzzy_pattern in fuzzy_patterns:
+                    search_path = os.path.join(search_dir, fuzzy_pattern)
+                    files = glob.glob(search_path)
+                    
+                    # 動態生成賽事關鍵字
+                    race_keywords = []
+                    if race:
+                        race_normalized = race.lower().replace(' ', '_').replace("'", "")
+                        race_full = race_full_names.get(race, race)
+                        race_full_lower = race_full.lower() if isinstance(race_full, str) else race.lower()
+                        
+                        race_keywords.extend([
+                            race.lower(),
+                            race_normalized,
+                            race.lower().replace(' ', ''),
+                            race.split()[0].lower() if ' ' in race else race.lower(),
+                            race_full_lower,
+                            race_full_lower.replace(' ', '_'),
+                            race_full_lower.replace(' ', ''),
+                        ])
+                    
+                    print(f"[FOLDER] [PITSTOP] 模糊搜尋關鍵字: {race_keywords}")
+                    
+                    # 檢查檔案是否匹配賽事關鍵字
+                    for file_path in files:
+                        file_name_lower = os.path.basename(file_path).lower()
+                        
+                        for keyword in race_keywords:
+                            if keyword in file_name_lower:
+                                print(f"[FOLDER] [PITSTOP] 模糊搜尋找到: {file_path}")
+                                return file_path
+            
+            # 最後檢查cache目錄的PKL檔案
+            cache_pattern = f"driver_fastest_pitstop_{year}_{race.replace(' ', '_')}_Grand_Prix.pkl"
+            cache_path = os.path.join(self.cache_dir, cache_pattern)
+            if os.path.exists(cache_path):
+                print(f"[FOLDER] [PITSTOP] 找到PKL緩存: {cache_path}")
+                return cache_path
+            
+            print(f"[FOLDER] [PITSTOP] 找不到檔案: {year} {race} {session}")
+            return None
+                
+        except Exception as e:
+            print(f"[ERROR] [PITSTOP] 搜尋檔案時發生錯誤: {str(e)}")
+            self.error_occurred.emit(f"搜尋檔案時發生錯誤: {str(e)}")
+            return None
+    
+    def _start_cli_generation(self, year: str, race: str, session: str):
+        """
+        啟動 CLI 生成流程 - 非阻塞方式（類似賽道分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段代碼
+        """
+        try:
+            # 儲存參數供後續使用
+            self._generation_params = (year, race, session)
+            
+            # 啟動 CLI 生成
+            success = self._generate_pitstop_data_via_cli(year, race, session)
+            
+            if success:
+                # 啟動定時器檢查檔案是否生成完成
+                self._start_generation_monitoring(year, race, session)
+            else:
+                self.error_occurred.emit(f"啟動 CLI 生成失敗: {year} {race} {session}")
+                self._is_loading = False
+                
+        except Exception as e:
+            print(f"[ERROR] [CLI_GEN] 啟動生成時發生錯誤: {e}")
+            self.error_occurred.emit(f"啟動生成時發生錯誤: {str(e)}")
+            self._is_loading = False
+    
+    def _start_generation_monitoring(self, year: str, race: str, session: str):
+        """
+        啟動檔案生成監控（類似賽道分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱  
+            session: 賽段代碼
+        """
+        # 確保定時器存在
+        if not hasattr(self, '_generation_timer'):
+            self._generation_timer = QTimer()
+            self._generation_timer.timeout.connect(self._check_generation_progress)
+        
+        if not hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer = QTimer()
+            self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        
+        # 啟動監控 (每5秒檢查一次，最多等待180秒)
+        self._generation_timer.start(5000)
+        self._generation_timeout_timer.start(180000)
+        
+    def _check_generation_progress(self):
+        """檢查檔案生成進度（類似賽道分析模組）"""
+        if hasattr(self, '_generation_params'):
+            year, race, session = self._generation_params
+            
+            # 檢查是否有新檔案生成
+            json_file = self._find_pitstop_data_file(year, race, session)
+            
+            if json_file:
+                print(f"[OK] [CLI_GEN] 檔案生成完成: {json_file}")
+                
+                # 停止監控
+                self._stop_generation_monitoring()
+                
+                # 載入新生成的檔案
+                QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+            else:
+                print(f"⏳ [CLI_GEN] 繼續等待檔案生成...")
+                
+    def _on_generation_timeout(self):
+        """處理生成超時（類似賽道分析模組）"""
+        print(f"[TIME] [CLI_GEN] 檔案生成超時")
+        self._stop_generation_monitoring()
+        self.error_occurred.emit("數據生成超時，請檢查網路連線或稍後重試")
+        self._is_loading = False
+        
+    def _stop_generation_monitoring(self):
+        """停止生成監控（類似賽道分析模組）"""
+        if hasattr(self, '_generation_timer'):
+            self._generation_timer.stop()
+        if hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer.stop()
+    
+    def _generate_pitstop_data_via_cli(self, year: str, race: str, session: str) -> bool:
+        """
+        透過 CLI 工具生成進站數據 - 使用非阻塞方式（類似賽道分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段代碼
+            
+        Returns:
+            bool: 請求是否成功提交（注意：不是生成是否成功）
+        """
+        try:
+            print(f"[CLI] [GENERATE] 開始生成進站數據: {year} {race} {session}")
+            
+            # 直接調用 CLI 分析腳本
+            import subprocess
+            import threading
+            
+            # 構建命令
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "3",  # 功能3: 車手最快進站時間排行榜
+                "-y", str(year),
+                "-r", race,
+                "-s", session
+            ]
+            
+            print(f"[CLI] [GENERATE] 執行命令: {' '.join(command)}")
+            
+            # 非阻塞執行
+            def run_cli():
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        print(f"[OK] [CLI_GEN] CLI 執行成功")
+                    else:
+                        print(f"[ERROR] [CLI_GEN] CLI 執行失敗: {stderr}")
+                        
+                except Exception as e:
+                    print(f"[ERROR] [CLI_GEN] CLI 執行異常: {e}")
+            
+            # 在後台執行 CLI
+            thread = threading.Thread(target=run_cli, daemon=True)
+            thread.start()
+            
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [CLI_GEN] 啟動 CLI 失敗: {e}")
+            return False
+    
+    def _load_json_file(self, file_path: str) -> None:
+        """
+        載入 JSON 檔案（類似賽道分析模組）
+        
+        Args:
+            file_path: JSON 檔案路徑
+        """
+        try:
+            print(f"[LOAD] [JSON] 開始載入檔案: {file_path}")
+            self.loading_progress.emit(90)
+            
+            # 判斷檔案類型並載入
+            if file_path.endswith('.pkl'):
+                import pickle
+                with open(file_path, 'rb') as f:
+                    data = pickle.load(f)
+            else:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+            
+            # 驗證數據格式
+            if self._validate_pitstop_data(data):
+                self.loading_progress.emit(100)
+                self.status_changed.emit("數據載入完成")
+                self.data_loaded.emit(data)
+                print(f"[OK] [JSON] 檔案載入完成: {file_path}")
+            else:
+                self.error_occurred.emit("載入的數據格式無效")
+                
+        except Exception as e:
+            print(f"[ERROR] [JSON] 檔案載入失敗: {e}")
+            self.error_occurred.emit(f"檔案載入失敗: {str(e)}")
+        
+        finally:
+            self._is_loading = False
+    
+    def _validate_pitstop_data(self, data: dict) -> bool:
+        """
+        驗證進站數據格式（類似賽道分析模組）
+        
+        Args:
+            data: 要驗證的數據
+            
+        Returns:
+            bool: 數據是否有效
+        """
+        try:
+            # 檢查基本結構
+            if not isinstance(data, dict):
+                print(f"[ERROR] [VALIDATE] 數據不是字典格式")
+                return False
+                
+            # 檢查不同可能的數據格式
+            records = None
+            
+            # 格式1: 新的標準格式 - data 陣列
+            if 'data' in data:
+                records = data['data']
+                print(f"[INFO] [VALIDATE] 檢測到標準格式：data 陣列")
+            # 格式2: 舊格式 - driver_fastest_pitstops
+            elif 'driver_fastest_pitstops' in data:
+                records = data['driver_fastest_pitstops']
+                print(f"[INFO] [VALIDATE] 檢測到舊格式：driver_fastest_pitstops")
+            # 格式3: 其他格式 - pitstop_ranking
+            elif 'pitstop_ranking' in data:
+                records = data['pitstop_ranking']
+                print(f"[INFO] [VALIDATE] 檢測到其他格式：pitstop_ranking")
+            # 格式4: 直接是陣列
+            elif isinstance(data, list):
+                records = data
+                print(f"[INFO] [VALIDATE] 檢測到直接陣列格式")
+            else:
+                print(f"[ERROR] [VALIDATE] 找不到進站數據記錄，可用欄位：{list(data.keys())}")
+                return False
+                
+            if not records:
+                print(f"[ERROR] [VALIDATE] 進站數據記錄為空")
+                return False
+                
+            if not isinstance(records, list):
+                print(f"[ERROR] [VALIDATE] 進站數據不是陣列格式")
+                return False
+                
+            # 驗證第一筆記錄的欄位
+            first_record = records[0]
+            print(f"[INFO] [VALIDATE] 第一筆記錄欄位：{list(first_record.keys())}")
+            
+            # 檢查不同可能的欄位名稱
+            driver_field = None
+            time_field = None
+            
+            # 檢查車手欄位
+            for field in ['driver', 'driver_code', 'driver_name']:
+                if field in first_record:
+                    driver_field = field
+                    break
+                    
+            # 檢查時間欄位  
+            for field in ['fastest_time', 'fastest_pitstop_time', 'pitstop_time', 'time']:
+                if field in first_record:
+                    time_field = field
+                    break
+            
+            if not driver_field:
+                print(f"[ERROR] [VALIDATE] 找不到車手欄位，可用欄位：{list(first_record.keys())}")
+                return False
+                
+            if not time_field:
+                print(f"[ERROR] [VALIDATE] 找不到時間欄位，可用欄位：{list(first_record.keys())}")
+                return False
+                    
+            print(f"[OK] [VALIDATE] 進站數據驗證通過，記錄數量：{len(records)}")
+            print(f"[OK] [VALIDATE] 車手欄位：{driver_field}，時間欄位：{time_field}")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [VALIDATE] 數據驗證異常: {e}")
+            return False
+    
+    # 舊的統一CLI管理器方法已移除，改用檔案系統監控機制
+    
+    def load_data(self, year: str, race: str, session: str):
+        """載入數據的主要方法（類似賽道分析模組）"""
+        try:
+            print(f"[FOLDER] [DATA_MANAGER] 開始載入進站數據: {year} {race} {session}")
+            
+            if self._is_loading:
+                self.error_occurred.emit("載入器正忙，請稍後再試")
+                return False
+                
+            self._is_loading = True
+            self.loading_progress.emit(0)
+            
+            # 儲存當前參數
+            self.current_year = year
+            self.current_race = race
+            self.current_session = session
+            
+            # 尋找對應的 JSON 檔案
+            json_file = self._find_pitstop_data_file(year, race, session)
+            print(f"[FOLDER] [DATA_MANAGER] 搜尋到的檔案: {json_file}")
+            
+            if not json_file:
+                print(f"[FOLDER] [DATA_MANAGER] 找不到現有 JSON，開始生成: {year} {race} {session}")
+                # 呼叫 CLI 生成 JSON (異步)
+                self._start_cli_generation(year, race, session)
+                return True  # 返回 True 表示已啟動生成流程
+                    
+            # 使用 QTimer 模擬異步載入
+            QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+            return True
+            
+        except Exception as e:
+            self.error_occurred.emit(f"載入失敗: {str(e)}")
+            self._is_loading = False
+            return False
+
+class PitstopRankingWidget(QWidget):
+    """進站排行榜主要內容Widget"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ranking_data = []
+        self.current_data = {}  # 儲存當前數據，用於導出功能
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """設置使用者界面"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
+        
+        # 控制面板 - 隱藏
+        # control_panel = self.create_control_panel()
+        # layout.addWidget(control_panel)
+        
+        # 主要表格
+        self.table_widget = self.create_ranking_table()
+        layout.addWidget(self.table_widget)
+        
+        # 狀態面板 - 隱藏
+        # status_panel = self.create_status_panel()
+        # layout.addWidget(status_panel)
+        
+        # 創建隱藏的控制組件但不顯示（保持功能性）
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        
+        self.status_label = QLabel()
+        self.status_label.setVisible(False)
+        
+        self.data_source_label = QLabel()
+        self.data_source_label.setVisible(False)
+        
+        self.update_time_label = QLabel()
+        self.update_time_label.setVisible(False)
+    
+    def create_control_panel(self) -> QWidget:
+        """創建控制面板"""
+        panel = QFrame()
+        panel.setObjectName("ControlPanel")
+        panel.setFixedHeight(40)
+        
+        layout = QHBoxLayout(panel)
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 刷新按鈕
+        self.refresh_btn = QPushButton("🔄 刷新")
+        self.refresh_btn.setToolTip("重新載入進站排行榜數據")
+        layout.addWidget(self.refresh_btn)
+        
+        # 匯出按鈕
+        self.export_btn = QPushButton("📤 匯出")
+        self.export_btn.setToolTip("匯出進站排行榜數據")
+        layout.addWidget(self.export_btn)
+        
+        # 設定按鈕
+        self.settings_btn = QPushButton("⚙️ 設定")
+        self.settings_btn.setToolTip("顯示設定對話框")
+        layout.addWidget(self.settings_btn)
+        
+        layout.addStretch()  # 推送按鈕到左側
+        
+        # 載入進度條
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setFixedWidth(200)
+        layout.addWidget(self.progress_bar)
+        
+        return panel
+    
+    def create_ranking_table(self) -> QTableWidget:
+        """創建排行榜表格"""
+        table = QTableWidget()
+        table.setObjectName("PitstopRankingTable")
+        
+        # 設置表格欄位 (根據設計文檔，已移除進站類型和輪胎類型)
+        headers = ["排名", "車手代碼", "車手全名", "最快時間", "與第一名差距", "進站圈數"]
+        table.setColumnCount(len(headers))
+        table.setHorizontalHeaderLabels(headers)
+        
+        # 設置表格屬性
+        table.setAlternatingRowColors(True)
+        table.setSelectionBehavior(QTableWidget.SelectRows)
+        table.setSelectionMode(QTableWidget.SingleSelection)
+        table.setSortingEnabled(True)
+        
+        # 設置欄位寬度
+        header = table.horizontalHeader()
+        header.setStretchLastSection(False)
+        
+        # 排名 - 固定寬度
+        table.setColumnWidth(0, 60)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)
+        
+        # 車手代碼 - 固定寬度
+        table.setColumnWidth(1, 80)
+        header.setSectionResizeMode(1, QHeaderView.Fixed)
+        
+        # 車手全名 - 自動拉伸
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
+        
+        # 最快時間 - 固定寬度
+        table.setColumnWidth(3, 100)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
+        
+        # 與第一名差距 - 固定寬度
+        table.setColumnWidth(4, 120)
+        header.setSectionResizeMode(4, QHeaderView.Fixed)
+        
+        # 進站圈數 - 固定寬度
+        table.setColumnWidth(5, 80)
+        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        
+        return table
+    
+    def create_status_panel(self) -> QWidget:
+        """創建狀態面板"""
+        panel = QFrame()
+        panel.setObjectName("StatusPanel")
+        panel.setFixedHeight(30)
+        
+        layout = QHBoxLayout(panel)
+        layout.setContentsMargins(5, 2, 5, 2)
+        
+        # 數據來源標籤
+        self.data_source_label = QLabel("📄 數據來源: 未載入")
+        layout.addWidget(self.data_source_label)
+        
+        layout.addStretch()
+        
+        # 載入狀態標籤
+        self.status_label = QLabel("📊 狀態: 等待載入")
+        layout.addWidget(self.status_label)
+        
+        layout.addStretch()
+        
+        # 更新時間標籤
+        self.update_time_label = QLabel("⏱️ 更新: 未更新")
+        layout.addWidget(self.update_time_label)
+        
+        return panel
+    
+    def update_ranking_data(self, data: Dict[str, Any]):
+        """更新排行榜數據"""
+        try:
+            print(f"[RANK] 開始更新排行榜數據...")
+            print(f"[DEBUG] 收到數據鍵: {list(data.keys()) if isinstance(data, dict) else 'not_dict'}")
+            
+            # 儲存當前數據
+            self.current_data = data
+            
+            # 清空現有數據
+            self.table_widget.setRowCount(0)
+            
+            # 檢查數據格式 - 添加更詳細的檢查
+            if not data:
+                print(f"[WARNING] 數據為空")
+                self.show_no_data_message()
+                return
+                
+            if not isinstance(data, dict):
+                print(f"[WARNING] 數據不是字典格式: {type(data)}")
+                self.show_no_data_message()
+                return
+            
+            if 'data' not in data:
+                print(f"[WARNING] 數據中缺少 'data' 鍵，可用鍵: {list(data.keys())}")
+                self.show_no_data_message()
+                return
+            
+            ranking_data = data['data']
+            if not ranking_data:
+                print(f"[WARNING] 無排行榜數據")
+                self.show_no_data_message()
+                return
+            
+            # 解析並顯示數據
+            self.ranking_data = ranking_data
+            self.populate_table(ranking_data)
+            
+            # 更新狀態信息
+            self.update_status_info(data)
+            
+            print(f"[OK] 排行榜數據更新完成，共 {len(ranking_data)} 筆記錄")
+            
+        except Exception as e:
+            print(f"[ERROR] 更新排行榜數據失敗: {str(e)}")
+            self.show_error_message(f"數據更新失敗: {str(e)}")
+    
+    def populate_table(self, ranking_data: List[Dict[str, Any]]):
+        """填充表格數據"""
+        try:
+            row_count = len(ranking_data)
+            self.table_widget.setRowCount(row_count)
+            
+            # 車手代碼到全名的映射
+            driver_names = {
+                'HAM': 'Lewis Hamilton', 'VER': 'Max Verstappen', 'LEC': 'Charles Leclerc',
+                'RUS': 'George Russell', 'NOR': 'Lando Norris', 'PIA': 'Oscar Piastri',
+                'SAI': 'Carlos Sainz', 'PER': 'Sergio Perez', 'ALO': 'Fernando Alonso',
+                'STR': 'Lance Stroll', 'TSU': 'Yuki Tsunoda', 'RIC': 'Daniel Ricciardo',
+                'HUL': 'Nico Hulkenberg', 'MAG': 'Kevin Magnussen', 'GAS': 'Pierre Gasly',
+                'OCO': 'Esteban Ocon', 'ALB': 'Alexander Albon', 'SAR': 'Logan Sargeant',
+                'ZHO': 'Zhou Guanyu', 'BOT': 'Valtteri Bottas', 'DOO': 'Jack Doohan'
+            }
+            
+            # 計算第一名時間，用於計算差距
+            first_time = None
+            if ranking_data and len(ranking_data) > 0:
+                first_time = ranking_data[0].get('fastest_time', None)
+            
+            for row, driver_data in enumerate(ranking_data):
+                # 排名
+                rank_item = QTableWidgetItem(str(row + 1))
+                rank_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 0, rank_item)
+                
+                # 車手代碼 - 修正：使用 'driver' 而不是 'driver_abbreviation'
+                driver_code = driver_data.get('driver', driver_data.get('driver_abbreviation', 'N/A'))
+                code_item = QTableWidgetItem(driver_code)
+                code_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 1, code_item)
+                
+                # 車手全名 - 修正：從映射表獲取全名
+                driver_name = driver_names.get(driver_code, f'{driver_code} (Unknown)')
+                name_item = QTableWidgetItem(driver_name)
+                self.table_widget.setItem(row, 2, name_item)
+                
+                # 最快時間 - 修正：使用 'fastest_time' 而不是 'fastest_pitstop_time'
+                fastest_time = driver_data.get('fastest_time', driver_data.get('fastest_pitstop_time', 'N/A'))
+                if fastest_time != 'N/A':
+                    time_text = f"{fastest_time:.1f}s"
+                else:
+                    time_text = 'N/A'
+                time_item = QTableWidgetItem(time_text)
+                time_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 3, time_item)
+                
+                # 與第一名差距 - 修正：自動計算差距
+                if row == 0:
+                    gap_text = "-"
+                else:
+                    if first_time is not None and fastest_time != 'N/A' and fastest_time is not None:
+                        try:
+                            gap = float(fastest_time) - float(first_time)
+                            gap_text = f"+{gap:.1f}s"
+                        except (ValueError, TypeError):
+                            gap_text = 'N/A'
+                    else:
+                        gap_text = 'N/A'
+                gap_item = QTableWidgetItem(gap_text)
+                gap_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 4, gap_item)
+                
+                # 進站圈數
+                lap_number = driver_data.get('lap_number', 'N/A')
+                lap_item = QTableWidgetItem(str(lap_number))
+                lap_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 5, lap_item)
+                
+                # 設置第一名的特殊樣式
+                if row == 0:
+                    for col in range(self.table_widget.columnCount()):
+                        item = self.table_widget.item(row, col)
+                        if item:
+                            font = item.font()
+                            font.setBold(True)
+                            item.setFont(font)
+                            item.setBackground(QColor(255, 215, 0, 50))  # 淡金色背景
+            
+        except Exception as e:
+            print(f"[ERROR] 填充表格失敗: {str(e)}")
+            raise
+    
+    def update_status_info(self, data: Dict[str, Any]):
+        """更新狀態信息"""
+        try:
+            # 隱藏狀態更新，只在控制台輸出
+            cache_used = data.get('cache_used', False)
+            source_text = "JSON緩存" if cache_used else "CLI分析"
+            driver_count = len(data.get('data', []))
+            current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            print(f"[STATUS] 數據來源: {source_text}, 車手數: {driver_count}, 更新時間: {current_time}")
+            
+            # 原本的UI更新代碼已隱藏
+            # self.data_source_label.setText(f"📄 數據來源: {source_text}")
+            # self.status_label.setText(f"📊 總共 {driver_count} 位車手")
+            # self.update_time_label.setText(f"⏱️ 更新: {current_time}")
+            
+        except Exception as e:
+            print(f"[ERROR] 更新狀態信息失敗: {str(e)}")
+    
+    def show_no_data_message(self):
+        """顯示無數據訊息"""
+        self.table_widget.setRowCount(1)
+        no_data_item = QTableWidgetItem("無可用數據")
+        no_data_item.setTextAlignment(Qt.AlignCenter)
+        self.table_widget.setItem(0, 0, no_data_item)
+        self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
+        
+        # 隱藏狀態標籤更新
+        # self.status_label.setText("📊 狀態: 無數據")
+    
+    def show_error_message(self, message: str):
+        """顯示錯誤訊息"""
+        self.table_widget.setRowCount(1)
+        error_item = QTableWidgetItem(f"載入失敗: {message}")
+        error_item.setTextAlignment(Qt.AlignCenter)
+        self.table_widget.setItem(0, 0, error_item)
+        self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
+        
+        self.status_label.setText("📊 狀態: 錯誤")
+    
+    def show_loading_state(self):
+        """顯示載入中狀態"""
+        # 隱藏進度條，只在表格中顯示載入狀態
+        # self.progress_bar.setVisible(True)
+        # self.progress_bar.setValue(0)
+        
+        self.table_widget.setRowCount(1)
+        loading_item = QTableWidgetItem("⏳ 正在載入數據...")
+        loading_item.setTextAlignment(Qt.AlignCenter)
+        self.table_widget.setItem(0, 0, loading_item)
+        self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
+        
+        # 隱藏狀態標籤更新
+        # self.status_label.setText("📊 狀態: 載入中")
+    
+    def hide_loading_state(self):
+        """隱藏載入中狀態"""
+        # 隱藏進度條（已經隱藏）
+        # self.progress_bar.setVisible(False)
+        pass
+    
+    def clear_table(self):
+        """清空表格數據"""
+        self.table_widget.setRowCount(0)
+        self.ranking_data = []
+        self.current_data = {}
+        # 隱藏狀態標籤更新
+        # self.status_label.setText("📊 狀態: 已清空")
+        print(f"[CLEAR] [RANKING_WIDGET] 表格數據已清空")
+
+class PitstopAnalysisModule(IAnalysisModule):
+    """進站分析模組 - 實現IAnalysisModule介面，提供進站時間排行榜功能"""
+    
+    # 信號定義
+    parameter_update_received = pyqtSignal(str, str, str)  # year, race, session
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        # 模組基本資訊
+        self._module_name = "PitstopAnalysis"
+        self._display_name = "進站分析"
+        self._version = "1.0.0"
+        self._description = "F1 車手最快進站時間排行榜"
+        
+        # 參數
+        self.current_year = None  # 修正：初始化為 None，等待同步
+        self.current_race = None  # 修正：初始化為 None，等待同步
+        self.current_session = None  # 修正：初始化為 None，等待同步
+        
+        # 同步設定
+        self.sync_enabled = True  # 預設啟用同步
+        
+        # UI 組件
+        self._main_widget = None
+        self.tab_widget = None
+        self.ranking_widget = None
+        
+        # 初始化數據管理器
+        self.data_manager = PitstopDataManager(self)
+        self.setup_connections()
+    
+    @property
+    def module_name(self) -> str:
+        """返回模組名稱"""
+        return self._module_name
+        
+    @property
+    def display_name(self) -> str:
+        """返回顯示名稱"""
+        return self._display_name
+        
+    @property
+    def version(self) -> str:
+        """返回模組版本"""
+        return self._version
+        
+    @property
+    def description(self) -> str:
+        """返回模組描述"""
+        return self._description
+    
+    def initialize_module(self, parent_widget=None, **kwargs) -> bool:
+        """
+        初始化模組
+        
+        Args:
+            parent_widget: 父級 widget (PopoutSubWindow)
+            **kwargs: 額外參數
+            
+        Returns:
+            bool: 初始化是否成功
+        """
+        try:
+            # 創建主要 Widget
+            self._main_widget = QWidget(parent_widget)
+            
+            # 設置UI
+            self.setup_ui()
+            
+            # 修正：不立即載入數據，等待同步觸發
+            # self.load_data()  # 移除立即載入
+            
+            print(f"✅ [PITSTOP_MODULE] 模組已初始化，等待參數同步...")
+            
+            self.set_initialized(True)
+            return True
+            
+        except Exception as e:
+            self.emit_error(f"模組初始化失敗: {str(e)}")
+            return False
+    
+    def get_widget(self):
+        """返回模組的主要 Widget - 必需的介面方法"""
+        return self._main_widget
+    
+    def get_title(self) -> str:
+        """返回模組標題 - 模組工廠需要的方法"""
+        # 修正：處理 None 參數，提供預設值
+        year = self.current_year or "2025"
+        race = self.current_race or "Unknown"
+        session = self.current_session or "R"
+        return f"進站分析_{year}_{race}_{session}"
+    
+    def get_window_title(self, year: str, race: str, session: str) -> str:
+        """生成視窗標題"""
+        return f"進站分析_{year}_{race}_{session}"
+    
+    def get_default_size(self):
+        """獲取預設視窗大小 - GUI系統要求的方法"""
+        return (800, 600)  # 寬度, 高度
+    
+    def validate_parameters(self, year: int, race: str, session: str) -> bool:
+        """驗證分析參數"""
+        try:
+            # 驗證年份
+            if not isinstance(year, (int, str)) or int(year) < 2020 or int(year) > 2030:
+                return False
+            
+            # 驗證賽段
+            if session not in ["FP1", "FP2", "FP3", "Q", "S", "R"]:
+                return False
+                
+            return True
+        except:
+            return False
+    
+    def update_parameters(self, year: int, race: str, session: str) -> bool:
+        """
+        更新分析參數
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段
+            
+        Returns:
+            bool: 更新是否成功
+        """
+        try:
+            # 驗證參數
+            if not self.validate_parameters(year, race, session):
+                self.emit_error(f"無效的參數: {year}, {race}, {session}")
+                return False
+                
+            # 檢查參數是否有變化（處理初始 None 值）
+            params_changed = (
+                self.current_year is None or str(self.current_year) != str(year) or 
+                self.current_race is None or self.current_race != race or 
+                self.current_session is None or self.current_session != session
+            )
+            
+            # 更新內部參數
+            self.current_year = str(year)
+            self.current_race = race  
+            self.current_session = session
+            
+            # 如果參數有變化，重新載入數據
+            if params_changed:
+                print(f"🔄 [PITSTOP_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
+                
+                # 發出參數更新信號
+                params = {
+                    'year': year,
+                    'race': race,
+                    'session': session,
+                    'module': self.module_name
+                }
+                self.emit_parameters_updated(params)
+                
+                # 確保 UI 已經設置完成再載入數據
+                if self.ranking_widget is not None:
+                    # 立即載入數據，但有短暫延遲確保UI完全準備好
+                    QTimer.singleShot(100, self.load_data)
+                    print(f"📅 [PITSTOP_MODULE] 已安排數據載入任務: {year} {race} {session}")
+                else:
+                    # UI 還沒準備好，稍後再試
+                    print(f"🔄 [PITSTOP_MODULE] UI 未準備好，延遲載入: {year} {race} {session}")
+                    QTimer.singleShot(500, self.load_data)
+                
+            return True
+            
+        except Exception as e:
+            self.emit_error(f"更新參數失敗: {str(e)}")
+            return False
+    
+    def load_data(self):
+        """載入數據"""
+        if self.data_manager:
+            # 修正：檢查參數完整性，類似賽道分析模組
+            if not all([self.current_year, self.current_race, self.current_session]):
+                error_msg = f"缺少必要參數，無法載入數據: year={self.current_year}, race={self.current_race}, session={self.current_session}"
+                print(f"[WARNING] [PITSTOP_MODULE] {error_msg}")
+                # 不要發出錯誤信號，只是記錄警告，避免在初始化時阻斷流程
+                # self.emit_error(error_msg)
+                return False
+                
+            print(f"🔄 [PITSTOP_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
+            self.data_manager.current_year = self.current_year
+            self.data_manager.current_race = self.current_race
+            self.data_manager.current_session = self.current_session
+            # 修正：調用正確的方法名稱
+            self.data_manager.load_data(self.current_year, self.current_race, self.current_session)
+            return True
+        return False
+    
+    def clear_data(self):
+        """清除數據 - IAnalysisModule 必需方法"""
+        if self.ranking_widget:
+            self.ranking_widget.clear_table()
+        print(f"[CLEAR] [PITSTOP_MODULE] 數據已清除")
+    
+    def export_data(self, format_type: str = "json") -> bool:
+        """導出數據 - IAnalysisModule 必需方法"""
+        try:
+            if self.ranking_widget and hasattr(self.ranking_widget, 'current_data'):
+                data = self.ranking_widget.current_data
+                if data:
+                    filename = f"pitstop_analysis_{self.current_year}_{self.current_race}_{self.current_session}.{format_type}"
+                    filepath = os.path.join(os.getcwd(), "json_exports", filename)
+                    
+                    # 確保目錄存在
+                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                    
+                    if format_type.lower() == "json":
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            json.dump(data, f, ensure_ascii=False, indent=2)
+                    
+                    print(f"[EXPORT] [PITSTOP_MODULE] 數據已導出: {filepath}")
+                    return True
+            
+            print(f"[WARNING] [PITSTOP_MODULE] 無數據可導出")
+            return False
+            
+        except Exception as e:
+            print(f"[ERROR] [PITSTOP_MODULE] 導出失敗: {e}")
+            return False
+    
+    def get_current_data(self) -> dict:
+        """獲取當前數據 - IAnalysisModule 必需方法"""
+        if self.ranking_widget and hasattr(self.ranking_widget, 'current_data'):
+            return self.ranking_widget.current_data or {}
+        return {}
+    
+    def refresh_analysis(self) -> bool:
+        """刷新分析 - IAnalysisModule 必需方法"""
+        try:
+            self.load_data()
+            print(f"[REFRESH] [PITSTOP_MODULE] 分析已刷新")
+            return True
+        except Exception as e:
+            print(f"[ERROR] [PITSTOP_MODULE] 刷新失敗: {e}")
+            return False
+    
+    def setup_ui(self):
+        """設置使用者界面"""
+        if not self._main_widget:
+            return
+            
+        layout = QVBoxLayout(self._main_widget)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
+        
+        # 創建分頁容器
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setObjectName("PitstopAnalysisTabWidget")
+        
+        # 分頁1: 車手最快進站排行榜 (已實現)
+        self.ranking_widget = PitstopRankingWidget(self._main_widget)
+        self.tab_widget.addTab(self.ranking_widget, "🏆 車手最快進站排行榜")
+        
+        # 分頁2: 預留給未來功能
+        placeholder_widget2 = QLabel("📊 進站統計分析\n(功能開發中)")
+        placeholder_widget2.setAlignment(Qt.AlignCenter)
+        placeholder_widget2.setStyleSheet("color: #666; font-size: 14px;")
+        self.tab_widget.addTab(placeholder_widget2, "📊 統計分析")
+        
+        # 分頁3: 預留給未來功能
+        placeholder_widget3 = QLabel("🔍 進站詳細記錄\n(功能開發中)")
+        placeholder_widget3.setAlignment(Qt.AlignCenter)
+        placeholder_widget3.setStyleSheet("color: #666; font-size: 14px;")
+        self.tab_widget.addTab(placeholder_widget3, "🔍 詳細記錄")
+        
+        layout.addWidget(self.tab_widget)
+        
+        print(f"[UI] [PITSTOP_MODULE] UI 設置完成，tab_widget已添加到主layout")
+        
+        # UI設置完成後，檢查是否有有效參數需要載入數據
+        if all([self.current_year, self.current_race, self.current_session]):
+            print(f"[UI] [PITSTOP_MODULE] UI設置完成，發現有效參數，開始載入數據: {self.current_year} {self.current_race} {self.current_session}")
+            QTimer.singleShot(200, self.load_data)
+    
+    def setup_connections(self):
+        """設置信號連接"""
+        # 數據管理器信號連接
+        self.data_manager.data_loaded.connect(self.on_data_loaded)
+        self.data_manager.error_occurred.connect(self.on_error_occurred)
+        self.data_manager.loading_progress.connect(self.on_loading_progress)
+        self.data_manager.status_changed.connect(self.on_status_changed)
+    
+    def load_data(self):
+        """載入數據"""
+        print(f"[LOAD] 載入進站分析數據: {self.current_year} {self.current_race} {self.current_session}")
+        
+        # 顯示載入狀態
+        self.ranking_widget.show_loading_state()
+        
+        # 啟動數據載入
+        self.data_manager.load_data(self.current_year, self.current_race, self.current_session)
+    
+    def on_data_loaded(self, data: Dict[str, Any]):
+        """處理數據載入完成"""
+        print(f"[OK] 數據載入完成")
+        
+        # 隱藏載入狀態
+        if self.ranking_widget:
+            self.ranking_widget.hide_loading_state()
+            # 更新排行榜數據
+            self.ranking_widget.update_ranking_data(data)
+    
+    def on_error_occurred(self, error_message: str):
+        """處理錯誤"""
+        print(f"[ERROR] 載入錯誤: {error_message}")
+        
+        # 隱藏載入狀態
+        if self.ranking_widget:
+            self.ranking_widget.hide_loading_state()
+            # 顯示錯誤訊息
+            self.ranking_widget.show_error_message(error_message)
+    
+    def on_loading_progress(self, progress: int):
+        """處理載入進度"""
+        # 隱藏進度條更新，只在控制台輸出
+        print(f"[PROGRESS] 載入進度: {progress}%")
+        # if self.ranking_widget:
+        #     self.ranking_widget.progress_bar.setValue(progress)
+    
+    def on_status_changed(self, status: str):
+        """處理狀態變更"""
+        # 隱藏狀態標籤更新，只在控制台輸出
+        print(f"[STATUS] 狀態變更: {status}")
+        # if self.ranking_widget:
+        #     self.ranking_widget.status_label.setText(f"📊 狀態: {status}")
+    
+    def refresh_data(self):
+        """刷新數據"""
+        print(f"[REFRESH] 手動刷新數據")
+        self.load_data()
+    
+    def receive_main_window_update_notification(self, param_type, value):
+        """接收主視窗參數變更通知"""
+        print(f"[ANNOUNCE] [NOTIFICATION] 進站分析模組收到主視窗更新通知: {param_type}={value}")
+        
+        # 檢查同步狀態 - 假設總是啟用同步
+        sync_enabled = True
+        
+        # 方法1: 檢查 sync_enabled 屬性
+        if hasattr(self, 'sync_enabled'):
+            sync_enabled = self.sync_enabled
+            print(f"[SEARCH] [NOTIFICATION] 進站分析模組使用屬性檢查同步狀態: {sync_enabled}")
+        else:
+            print(f"[SEARCH] [NOTIFICATION] 進站分析模組預設啟用同步")
+        
+        # 如果未啟用同步，直接返回
+        if not sync_enabled:
+            print(f"🔴 [NOTIFICATION] 進站分析模組同步已停用，忽略更新通知")
+            return
+        
+        print(f"[GREEN] [NOTIFICATION] 進站分析模組同步已啟用，處理參數更新")
+        
+        # [TOOL] 更新本地參數（同步模式）
+        if param_type == 'year':
+            self.current_year = str(value)
+            print(f"[UPDATE] 年份更新為: {self.current_year}")
+        elif param_type == 'race':
+            self.current_race = str(value)
+            print(f"[UPDATE] 賽事更新為: {self.current_race}")
+        elif param_type == 'session':
+            self.current_session = str(value)
+            print(f"[UPDATE] 場次更新為: {self.current_session}")
+        
+        # [TOOL] 更新窗口標題（如果有父窗口）
+        if hasattr(self, 'parent') and hasattr(self.parent(), 'setWindowTitle'):
+            title = f"進站分析 - {self.current_year} {self.current_race} {self.current_session}"
+            self.parent().setWindowTitle(title)
+            print(f"[TITLE] 窗口標題更新為: {title}")
+        
+        # [TOOL] 立即刷新數據
+        try:
+            self.load_data()
+            print(f"[OK] [NOTIFICATION] 進站分析模組內容更新成功")
+        except Exception as e:
+            print(f"[ERROR] [NOTIFICATION] 進站分析模組內容更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
+# 導出模組的主要類別
+__all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager']
