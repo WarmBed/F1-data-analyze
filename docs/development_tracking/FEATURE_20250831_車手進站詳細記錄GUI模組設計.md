@@ -135,27 +135,47 @@ f1t_gui_main.py                     # 主 GUI 程式 (無需修改) ✅
 ```python
 class DriverDetailedPitstopWidget(QWidget):
     """
-    車手進站詳細記錄視窗組件
-    實現每位車手完整進站歷程展示和管理功能
+    車手進站詳細記錄視窗組件 - 統一匯總表格版
+    實現所有車手進站記錄的統一表格展示
     """
     
     def __init__(self, data_manager):
         # 初始化UI組件
         self.data_manager = data_manager
         self.detailed_data = {}
+        self.max_pitstops = 0  # 追蹤最大進站次數
         self.setupUI()
         
     def setupUI(self):
-        # 建立車手詳細記錄表格
-        # 支援多車手滾動視圖
+        # 建立統一的車手進站匯總表格
+        # 支援動態欄位調整和水平滾動
+        
+    def setup_summary_table(self):
+        # 設置統一匯總表格
+        # 根據最大進站次數動態調整欄位
         
     def update_detailed_records(self, year, race, session):
         # 更新車手詳細記錄數據
         # 呼叫數據管理器載入詳細JSON
         
     def display_detailed_data(self, detailed_data):
-        # 顯示車手詳細記錄
-        # 按車手分組，按進站次序排列
+        # 顯示車手詳細記錄統一表格
+        # 計算最大進站次數並動態調整欄位
+        
+    def populate_summary_table(self):
+        # 填充統一匯總表格
+        # 計算每車手的統計數據（最快/最慢時間）
+        
+    def calculate_driver_stats(self, pitstops):
+        # 計算單一車手的統計數據
+        # 返回最快時間、最慢時間等
+        
+    def format_time_display(self, seconds):
+        # 格式化時間顯示為SS.0格式
+        
+    def create_dynamic_headers(self):
+        # 根據最大進站次數創建動態表格標題
+        # 固定欄位 + 動態進站欄位 + 統計欄位
 ```
 
 #### 2. `PitstopDataManager` 詳細記錄支援擴展 🆕
@@ -233,75 +253,83 @@ def executeDriverDetailedCLI(self, year, race, session):
 
 ## 📊 UI設計規格
 
-### 🛞 車手進站詳細記錄子視窗 - 分頁3設計
+### 🛞 車手進站詳細記錄子視窗 - 分頁3設計 (統一匯總表格版)
 ```
-┌───────────────────────────────────────────────────────────────────────────────────────────┐
-│ 🏆 進站分析 - 2025 Belgian Race                                                  ❌關閉     │
-├───────────────────────────────────────────────────────────────────────────────────────────┤
-│ 🏆 最快進站 │🏁 車隊統計│🛞 詳細記錄│                                                     │
-├───────────────────────────────────────────────────────────────────────────────────────────┤
-│                                🛞 車手進站詳細記錄                                          │
-│                                                                                           │
-│ 🏎️ VER (Red Bull Racing) - 共 2 次進站:                                                   │
-│ ┌──────────┬──────┬──────────┬──────────────┐                                             │
-│ │ 進站次數 │ 圈數 │ 進站時間 │     備註     │                                             │
-│ ├──────────┼──────┼──────────┼──────────────┤                                             │
-│ │  第1次   │  16  │  23.1秒  │   正常進站   │                                             │
-│ │  第2次   │  34  │  23.2秒  │   正常進站   │                                             │
-│ └──────────┴──────┴──────────┴──────────────┘                                             │
-│                                                                                           │
-│ 🏎️ LEC (Ferrari) - 共 1 次進站:                                                           │
-│ ┌──────────┬──────┬──────────┬──────────────┐                                             │
-│ │ 進站次數 │ 圈數 │ 進站時間 │     備註     │                                             │
-│ ├──────────┼──────┼──────────┼──────────────┤                                             │
-│ │  第1次   │  26  │  23.2秒  │   正常進站   │                                             │
-│ └──────────┴──────┴──────────┴──────────────┘                                             │
-│                                                                                           │
-│ 🏎️ HAM (Mercedes) - 共 2 次進站:                                                          │
-│ ┌──────────┬──────┬──────────┬──────────────┐                                             │
-│ │ 進站次數 │ 圈數 │ 進站時間 │     備註     │                                             │
-│ ├──────────┼──────┼──────────┼──────────────┤                                             │
-│ │  第1次   │  23  │  23.3秒  │   正常進站   │                                             │
-│ │  第2次   │  39  │  23.9秒  │   正常進站   │                                             │
-│ └──────────┴──────┴──────────┴──────────────┘                                             │
-│                                                                                           │
-│ [繼續顯示其他車手...]                                                                      │
-│                                                                                           │
-├───────────────────────────────────────────────────────────────────────────────────────────┤
-│ 📊 共 18 位車手 │ 📄 來源: JSON │ ⏱️ 更新: 2025-08-31 14:35:20 │ 🤖 智能生成: 開啟   │
-└───────────────────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ 🏆 進站分析 - 2025 Chinese Race                                                                                                                        ❌關閉     │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 🏆 最快進站 │🏁 車隊統計│🛞 詳細記錄│                                                                                                                                │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                       � 車手進站匯總表格                                                                                          │
+│                                                                                                                                                                     │
+│ ┌──────┬─────────────────┬────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐               │
+│ │ 車手 │       車隊      │ 總進站次數 │  第1次時間  │  第1次圈數  │  第2次時間  │  第2次圈數  │  第3次時間  │  第3次圈數  │  最快時間   │  最慢時間   │               │
+│ ├──────┼─────────────────┼────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤               │
+│ │ ALB  │    Williams     │     2      │    23.2秒   │      9      │    23.6秒   │     23      │      -      │      -      │    23.2秒   │    23.6秒   │               │
+│ │ ALO  │  Aston Martin   │     3      │    23.5秒   │     10      │    22.9秒   │     22      │    24.1秒   │     37      │    22.9秒   │    24.1秒   │               │
+│ │ BOT  │  Kick Sauber    │     1      │    22.9秒   │      9      │      -      │      -      │      -      │      -      │    22.9秒   │    22.9秒   │               │
+│ │ GAS  │     Alpine      │     2      │    23.2秒   │     10      │    23.4秒   │     23      │      -      │      -      │    23.2秒   │    23.4秒   │               │
+│ │ HAM  │    Mercedes     │     2      │    22.5秒   │      9      │    22.6秒   │     21      │      -      │      -      │    22.5秒   │    22.6秒   │               │
+│ │ HUL  │  Haas F1 Team   │     2      │    23.0秒   │      8      │    23.3秒   │     23      │      -      │      -      │    23.0秒   │    23.3秒   │               │
+│ │ LEC  │    Ferrari      │     1      │    22.7秒   │     22      │      -      │      -      │      -      │      -      │    22.7秒   │    22.7秒   │               │
+│ │ NOR  │    McLaren      │     2      │    22.8秒   │     10      │    22.9秒   │     22      │      -      │      -      │    22.8秒   │    22.9秒   │               │
+│ │ OCO  │     Alpine      │     2      │    23.1秒   │      9      │    23.2秒   │     23      │      -      │      -      │    23.1秒   │    23.2秒   │               │
+│ │ PIA  │    McLaren      │     1      │    23.5秒   │     22      │      -      │      -      │      -      │      -      │    23.5秒   │    23.5秒   │               │
+│ │ RUS  │    Mercedes     │     2      │    22.4秒   │     10      │    22.8秒   │     22      │      -      │      -      │    22.4秒   │    22.8秒   │               │
+│ │ SAI  │    Ferrari      │     2      │    22.9秒   │     10      │    22.7秒   │     22      │      -      │      -      │    22.7秒   │    22.9秒   │               │
+│ │ STR  │  Aston Martin   │     3      │    23.8秒   │      9      │    22.9秒   │     21      │    34.7秒   │     35      │    22.9秒   │    34.7秒   │               │
+│ │ TSU  │       RB        │     2      │    23.1秒   │      8      │    22.3秒   │     23      │      -      │      -      │    22.3秒   │    23.1秒   │               │
+│ │ VER  │ Red Bull Racing │     2      │    22.3秒   │     10      │    22.5秒   │     22      │      -      │      -      │    22.3秒   │    22.5秒   │               │
+│ │ ZHO  │  Kick Sauber    │     3      │    23.3秒   │      8      │    25.6秒   │     23      │    23.2秒   │     40      │    23.2秒   │    25.6秒   │               │
+│ └──────┴─────────────────┴────────────┴─────────────┴─────────────┴─────────────┴─────────────┴─────────────┴─────────────┴─────────────┴─────────────┘               │
+│                                                                                                                                                                     │
+├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ 📊 共 16 位車手 │ 📄 來源: JSON │ ⏱️ 更新: 2025-08-31 14:35:20 │ 🎯 最快進站: RUS 22.4秒 │ 🐌 最慢進站: STR 34.7秒 │ 🤖 智能生成: 開啟             │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 🔍 車手詳細記錄表格結構
+### 🔍 車手進站匯總表格結構
 
-#### 每車手獨立表格設計
-- **車手標題列**: 🏎️ [車手代碼] ([車隊名稱]) - 共 X 次進站
-- **詳細記錄表格**: 4欄標準格式
-  - 進站次數 (第1次、第2次...)
-  - 圈數 (整數)
-  - 進站時間 (SS.0格式)
-  - 備註 (正常進站/異常)
+#### 統一表格設計
+- **固定欄位**: 車手、車隊、總進站次數、最快時間、最慢時間
+- **動態欄位**: 第1次時間/圈數、第2次時間/圈數、第3次時間/圈數...
+- **智能顯示**: 未進站的次數顯示為 "-"
+- **排序邏輯**: 按車手代碼字母順序排列
+
+#### 表格欄位詳細說明
+
+| 欄位名稱 | 寬度 | 說明 | 格式 |
+|----------|------|------|------|
+| 車手 | 60px | 三位車手代碼 | VER, HAM, LEC... |
+| 車隊 | 120px | 完整車隊名稱 | Red Bull Racing, Ferrari... |
+| 總進站次數 | 80px | 該車手總進站次數 | 1, 2, 3... |
+| 第N次時間 | 80px | 第N次進站時間 | SS.0秒格式 |
+| 第N次圈數 | 80px | 第N次進站圈數 | 整數 |
+| 最快時間 | 80px | 該車手最快進站時間 | SS.0秒格式 |
+| 最慢時間 | 80px | 該車手最慢進站時間 | SS.0秒格式 |
 
 #### 表格特點
-- ✅ **滾動視圖**: 支援多車手垂直滾動
-- ✅ **分組顯示**: 按車手分組，每車手一個獨立表格
+- ✅ **動態欄位**: 根據最大進站次數自動調整欄位數量
+- ✅ **水平滾動**: 支援多次進站的水平滾動查看
 - ✅ **統一格式**: 時間格式統一為SS.0（秒.十分位）
-- ✅ **智能排序**: 車手按字母順序，進站按時間順序
-- ✅ **即時更新**: 支援CLI生成後自動刷新
+- ✅ **智能填充**: 未進站次數顯示為 "-"
+- ✅ **排序顯示**: 車手按字母順序排列
+- ✅ **統計信息**: 底部顯示最快/最慢進站統計
 
 ## 🔧 詳細實現規格
 
 ### 1. DriverDetailedPitstopWidget 類別實現
 
-#### 類別結構
+#### 類別結構 (統一匯總表格版)
 ```python
 class DriverDetailedPitstopWidget(QWidget):
-    """車手進站詳細記錄 Widget - 顯示每位車手完整進站歷程"""
+    """車手進站詳細記錄 Widget - 統一匯總表格顯示所有車手進站記錄"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         self.detailed_data = {}          # 車手詳細記錄數據
-        self.current_data = {}           # 儲存當前數據，用於分析功能
+        self.max_pitstops = 0            # 最大進站次數
+        self.summary_table = None        # 統一匯總表格
         self.setup_ui()
         
     def setup_ui(self):
@@ -311,38 +339,202 @@ class DriverDetailedPitstopWidget(QWidget):
         
         # 隱藏工具列，保持與車隊排行榜一致的設計
         
-        # 主要滾動區域
-        self.scroll_area = QScrollArea()
-        self.scroll_widget = QWidget()
-        self.scroll_layout = QVBoxLayout(self.scroll_widget)
+        # 統一匯總表格 (支援水平滾動)
+        self.table_scroll = QScrollArea()
+        self.table_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        layout.addWidget(self.table_scroll)
         
-        self.scroll_area.setWidget(self.scroll_widget)
-        self.scroll_area.setWidgetResizable(True)
-        layout.addWidget(self.scroll_area)
+        # 狀態列
+        self.status_layout = QHBoxLayout()
+        layout.addLayout(self.status_layout)
         
-    def setup_driver_tables(self):
-        """為每位車手設置獨立的進站記錄表格"""
-        # 清理現有表格
-        # 為每位車手創建標題和表格
-        # 設置統一的4欄格式
+    def setup_summary_table(self):
+        """設置統一匯總表格"""
+        # 計算最大進站次數
+        self.calculate_max_pitstops()
+        
+        # 創建動態表格標題
+        headers = self.create_dynamic_headers()
+        
+        # 建立QTableWidget
+        self.summary_table = QTableWidget()
+        self.summary_table.setColumnCount(len(headers))
+        self.summary_table.setHorizontalHeaderLabels(headers)
+        
+        # 設置表格樣式和欄位寬度
+        self.configure_table_style()
+        
+    def create_dynamic_headers(self):
+        """根據最大進站次數創建動態表格標題"""
+        headers = ["車手", "車隊", "總進站次數"]
+        
+        # 動態添加進站次數欄位
+        for i in range(1, self.max_pitstops + 1):
+            headers.extend([f"第{i}次時間", f"第{i}次圈數"])
+        
+        # 添加統計欄位
+        headers.extend(["最快時間", "最慢時間"])
+        return headers
+        
+    def calculate_max_pitstops(self):
+        """計算所有車手中的最大進站次數"""
+        if not self.detailed_data:
+            self.max_pitstops = 0
+            return
+            
+        max_stops = 0
+        for driver_data in self.detailed_data.values():
+            if isinstance(driver_data, list):
+                max_stops = max(max_stops, len(driver_data))
+        self.max_pitstops = max_stops
         
     def update_detailed_data(self, data: Dict[str, Any]):
         """更新車手詳細記錄數據"""
-        # 驗證數據格式
-        # 按車手分組處理數據
-        # 延遲更新UI確保數據準備完成
+        if "data" in data:
+            self.detailed_data = data["data"]
+            # 延遲更新UI確保數據準備完成
+            QTimer.singleShot(100, self.populate_summary_table)
         
-    def populate_driver_tables(self):
-        """填充所有車手的詳細記錄表格"""
-        # 遍歷所有車手數據
-        # 為每位車手創建獨立表格
-        # 填充進站詳細記錄
+    def populate_summary_table(self):
+        """填充統一匯總表格"""
+        if not self.detailed_data:
+            return
+            
+        # 重新設置表格結構
+        self.setup_summary_table()
         
-    def format_pitstop_display(self, pitstop_data):
-        """格式化進站記錄顯示"""
-        # 進站次數格式化
-        # 時間格式化為SS.0
-        # 備註信息生成
+        # 按車手代碼排序
+        sorted_drivers = sorted(self.detailed_data.keys())
+        self.summary_table.setRowCount(len(sorted_drivers))
+        
+        for row, driver in enumerate(sorted_drivers):
+            pitstops = self.detailed_data[driver]
+            if not pitstops:
+                continue
+                
+            # 填充基本信息
+            self.summary_table.setItem(row, 0, QTableWidgetItem(driver))
+            self.summary_table.setItem(row, 1, QTableWidgetItem(pitstops[0].get("team", "Unknown")))
+            self.summary_table.setItem(row, 2, QTableWidgetItem(str(len(pitstops))))
+            
+            # 填充每次進站詳細信息
+            col_index = 3
+            for i in range(self.max_pitstops):
+                if i < len(pitstops):
+                    # 填充實際進站數據
+                    pit_time = self.format_time_display(pitstops[i].get("pit_duration", 0))
+                    lap_num = str(pitstops[i].get("lap_number", 0))
+                    
+                    self.summary_table.setItem(row, col_index, QTableWidgetItem(pit_time))
+                    self.summary_table.setItem(row, col_index + 1, QTableWidgetItem(lap_num))
+                else:
+                    # 填充空白欄位
+                    self.summary_table.setItem(row, col_index, QTableWidgetItem("-"))
+                    self.summary_table.setItem(row, col_index + 1, QTableWidgetItem("-"))
+                
+                col_index += 2
+            
+            # 計算並填充統計信息
+            stats = self.calculate_driver_stats(pitstops)
+            self.summary_table.setItem(row, col_index, QTableWidgetItem(stats["fastest"]))
+            self.summary_table.setItem(row, col_index + 1, QTableWidgetItem(stats["slowest"]))
+        
+        # 設置表格到滾動區域
+        self.table_scroll.setWidget(self.summary_table)
+        
+        # 更新狀態列
+        self.update_status_bar()
+        
+    def calculate_driver_stats(self, pitstops):
+        """計算單一車手的統計數據"""
+        if not pitstops:
+            return {"fastest": "-", "slowest": "-"}
+            
+        times = [pit.get("pit_duration", 0) for pit in pitstops if pit.get("pit_duration", 0) > 0]
+        
+        if not times:
+            return {"fastest": "-", "slowest": "-"}
+            
+        return {
+            "fastest": self.format_time_display(min(times)),
+            "slowest": self.format_time_display(max(times))
+        }
+        
+    def format_time_display(self, seconds):
+        """格式化時間顯示為SS.0格式"""
+        if seconds <= 0:
+            return "-"
+        return f"{seconds:.1f}秒"
+        
+    def configure_table_style(self):
+        """設置表格樣式和欄位寬度"""
+        if not self.summary_table:
+            return
+            
+        # 設置欄位寬度
+        self.summary_table.setColumnWidth(0, 60)   # 車手
+        self.summary_table.setColumnWidth(1, 120)  # 車隊
+        self.summary_table.setColumnWidth(2, 80)   # 總進站次數
+        
+        # 動態欄位寬度
+        for i in range(3, self.summary_table.columnCount() - 2):
+            self.summary_table.setColumnWidth(i, 80)
+            
+        # 統計欄位寬度
+        if self.summary_table.columnCount() >= 2:
+            self.summary_table.setColumnWidth(self.summary_table.columnCount() - 2, 80)  # 最快時間
+            self.summary_table.setColumnWidth(self.summary_table.columnCount() - 1, 80)  # 最慢時間
+        
+        # 表格樣式設置
+        self.summary_table.setAlternatingRowColors(True)
+        self.summary_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.summary_table.horizontalHeader().setStretchLastSection(False)
+        
+    def update_status_bar(self):
+        """更新狀態列信息"""
+        # 清理現有狀態
+        for i in reversed(range(self.status_layout.count())):
+            self.status_layout.itemAt(i).widget().setParent(None)
+        
+        # 計算統計信息
+        total_drivers = len(self.detailed_data)
+        fastest_overall, slowest_overall = self.calculate_overall_stats()
+        
+        # 添加狀態標籤
+        status_items = [
+            f"📊 共 {total_drivers} 位車手",
+            "📄 來源: JSON",
+            f"⏱️ 更新: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"🎯 最快進站: {fastest_overall}",
+            f"🐌 最慢進站: {slowest_overall}",
+            "🤖 智能生成: 開啟"
+        ]
+        
+        for item in status_items:
+            label = QLabel(item)
+            self.status_layout.addWidget(label)
+            
+        self.status_layout.addStretch()
+        
+    def calculate_overall_stats(self):
+        """計算全域最快/最慢進站時間"""
+        all_times = []
+        
+        for driver_data in self.detailed_data.values():
+            if isinstance(driver_data, list):
+                for pit in driver_data:
+                    duration = pit.get("pit_duration", 0)
+                    if duration > 0:
+                        all_times.append(duration)
+        
+        if not all_times:
+            return "-", "-"
+            
+        fastest = min(all_times)
+        slowest = max(all_times)
+        
+        return self.format_time_display(fastest), self.format_time_display(slowest)
 ```
 
 ### 2. PitstopDataManager 車手詳細記錄支援

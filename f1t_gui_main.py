@@ -5053,6 +5053,8 @@ class StyleHMainWindow(QMainWindow):
             # 舊版尺寸設定
             if "降雨分析" in function_name:
                 analysis_window.resize(800, 600)
+            elif "進站分析" in function_name:
+                analysis_window.resize(1200, 800)  # 進站分析使用較大尺寸，充分利用MDI區域
             else:
                 analysis_window.resize(450, 280)
             

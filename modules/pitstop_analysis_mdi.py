@@ -45,6 +45,8 @@ class PitstopDataManager(QObject):
     data_loaded = pyqtSignal(dict)
     team_data_loaded = pyqtSignal(dict)  # 新增車隊數據載入完成信號
     team_data_reload_requested = pyqtSignal()  # 新增車隊數據重新載入請求信號
+    driver_detailed_loaded = pyqtSignal(dict)  # 新增車手詳細數據載入完成信號
+    driver_detailed_reload_requested = pyqtSignal()  # 新增車手詳細數據重新載入請求信號
     error_occurred = pyqtSignal(str)
     loading_progress = pyqtSignal(int)
     status_changed = pyqtSignal(str)
@@ -685,6 +687,204 @@ class PitstopDataManager(QObject):
         print(f"[SIGNAL] [TEAM_RELOAD] 發送車隊數據重新載入信號")
         self.team_data_reload_requested.emit()
 
+    # === 車手進站詳細記錄支援 ===
+    
+    def _find_driver_detailed_file(self, year: str, race: str, session: str) -> Optional[str]:
+        """搜尋車手進站詳細數據檔案（支援多格式匹配）"""
+        try:
+            print(f"[FOLDER] [DRIVER_DETAILED] 搜尋車手詳細檔案: {year} {race} {session}")
+            
+            search_dirs = ["json", "json_exports", "cache"]
+            
+            # 賽事名稱映射
+            race_full_names = {
+                "Japan": "Japanese_Grand_Prix",
+                "China": "Chinese_Grand_Prix", 
+                "Belgium": "Belgian_Grand_Prix",
+                "Miami": "Miami_Grand_Prix",
+                "Bahrain": "Bahrain_Grand_Prix",
+                "Saudi Arabia": "Saudi_Arabian_Grand_Prix",
+                "Australia": "Australian_Grand_Prix",
+                "Emilia Romagna": "Emilia_Romagna_Grand_Prix",
+                "Monaco": "Monaco_Grand_Prix",
+                "Canada": "Canadian_Grand_Prix",
+                "Spain": "Spanish_Grand_Prix",
+                "Austria": "Austrian_Grand_Prix",
+                "Great Britain": "British_Grand_Prix",
+                "Hungary": "Hungarian_Grand_Prix",
+                "Netherlands": "Dutch_Grand_Prix",
+                "Italy": "Italian_Grand_Prix",
+                "Azerbaijan": "Azerbaijan_Grand_Prix",
+                "Singapore": "Singapore_Grand_Prix",
+                "United States": "United_States_Grand_Prix",
+                "Mexico": "Mexican_Grand_Prix",
+                "Brazil": "Brazilian_Grand_Prix",
+                "Las Vegas": "Las_Vegas_Grand_Prix",
+                "Qatar": "Qatar_Grand_Prix",
+                "Abu Dhabi": "Abu_Dhabi_Grand_Prix"
+            }
+            
+            race_full_name = race_full_names.get(race, f"{race.replace(' ', '_')}_Grand_Prix")
+            
+            patterns = [
+                f"driver_detailed_pitstop_records_{year}_{race_full_name}.json",
+                f"driver_detailed_pitstops_{year}_{race_full_name}.json",
+                f"driver_detailed_pitstop_records_{year}_{race.replace(' ', '_')}.json",
+            ]
+            
+            # 搜尋多個目錄中的精確匹配
+            for search_dir in search_dirs:
+                for pattern in patterns:
+                    import glob
+                    search_path = os.path.join(search_dir, pattern)
+                    files = glob.glob(search_path)
+                    if files:
+                        print(f"[FOLDER] [DRIVER_DETAILED] 找到檔案: {files[0]}")
+                        return files[0]
+            
+            print(f"[FOLDER] [DRIVER_DETAILED] 找不到檔案: {year} {race} {session}")
+            return None
+                
+        except Exception as e:
+            print(f"[ERROR] [DRIVER_DETAILED] 搜尋檔案時發生錯誤: {str(e)}")
+            return None
+
+    def load_driver_detailed_data(self, year: str, race: str, session: str):
+        """載入車手進站詳細數據 - 支援JSON優先+CLI後備"""
+        try:
+            print(f"[FOLDER] [DRIVER_DETAILED_MANAGER] 開始載入車手詳細數據: {year} {race} {session}")
+            
+            # 檢查現有JSON檔案
+            json_file = self._find_driver_detailed_file(year, race, session)
+            print(f"[FOLDER] [DRIVER_DETAILED_MANAGER] 搜尋到的檔案: {json_file}")
+            
+            if json_file:
+                # 載入現有JSON
+                QTimer.singleShot(10, lambda: self._load_driver_detailed_json(json_file))
+            else:
+                # 自動觸發CLI生成
+                print(f"[CLI] [DRIVER_DETAILED_GENERATE] 找不到JSON檔案，嘗試生成: {year} {race} {session}")
+                success = self._generate_driver_detailed_via_cli(year, race, session)
+                if not success:
+                    self.error_occurred.emit("找不到車手詳細進站數據檔案，且CLI生成失敗")
+            
+            return True
+            
+        except Exception as e:
+            self.error_occurred.emit(f"車手詳細數據載入失敗: {str(e)}")
+            return False
+
+    def _load_driver_detailed_json(self, file_path: str):
+        """載入車手詳細JSON檔案"""
+        try:
+            print(f"[LOAD] [DRIVER_DETAILED_JSON] 載入車手詳細 JSON 檔案: {file_path}")
+            
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # 驗證車手詳細數據
+            if self._validate_driver_detailed_data(data):
+                print(f"[OK] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入成功")
+                self.driver_detailed_loaded.emit(data)
+            else:
+                self.error_occurred.emit("車手詳細進站數據格式無效")
+                
+        except Exception as e:
+            print(f"[ERROR] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入失敗: {e}")
+            self.error_occurred.emit(f"車手詳細 JSON 載入失敗: {str(e)}")
+
+    def _validate_driver_detailed_data(self, data: Dict[str, Any]) -> bool:
+        """驗證車手詳細進站數據格式"""
+        try:
+            # 檢查基本結構
+            if not isinstance(data, dict):
+                return False
+            
+            # 檢查 function_id 是否為 5 (車手詳細進站記錄)
+            if data.get("function_id") != 5:
+                print(f"[ERROR] [VALIDATE] 車手詳細數據 function_id 不匹配: {data.get('function_id')}")
+                return False
+            
+            # 提取記錄
+            records = data.get("data", {})
+            if not records or not isinstance(records, dict):
+                return False
+                
+            # 驗證第一個車手記錄的欄位
+            for driver, pitstops in records.items():
+                if not isinstance(pitstops, list) or not pitstops:
+                    continue
+                    
+                first_pitstop = pitstops[0]
+                required_fields = ["pitstop_number", "lap_number", "pit_duration", "team"]
+                
+                for field in required_fields:
+                    if field not in first_pitstop:
+                        print(f"[ERROR] [VALIDATE] 車手詳細數據缺少必要欄位: {field}")
+                        return False
+                
+                break  # 只檢查第一個車手的第一次進站
+                
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [VALIDATE] 車手詳細數據驗證失敗: {e}")
+            return False
+
+    def _generate_driver_detailed_via_cli(self, year: str, race: str, session: str) -> bool:
+        """透過CLI生成車手進站詳細數據（後台執行）"""
+        try:
+            import subprocess
+            import threading
+            
+            # 建構CLI命令 - 功能5: 車手進站詳細記錄
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "5",  # 功能5: 車手進站詳細記錄
+                "-y", str(year),
+                "-r", race,
+                "-s", session
+            ]
+            
+            print(f"[CLI] [DRIVER_DETAILED_GENERATE] 執行車手詳細數據生成命令: {' '.join(command)}")
+            
+            # 非阻塞執行
+            def run_driver_detailed_cli():
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        print(f"[OK] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行成功")
+                        # 使用信號機制，在主執行緒中處理
+                        print(f"[RELOAD] [DRIVER_DETAILED_CLI_GEN] 發送車手詳細數據重新載入信號")
+                        self.driver_detailed_reload_requested.emit()
+                    else:
+                        print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行失敗: {stderr}")
+                        self.error_occurred.emit(f"車手詳細CLI生成失敗: {stderr}")
+                        
+                except Exception as e:
+                    print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行異常: {e}")
+                    self.error_occurred.emit(f"車手詳細CLI執行異常: {str(e)}")
+            
+            # 在後台執行車手詳細 CLI
+            thread = threading.Thread(target=run_driver_detailed_cli, daemon=True)
+            thread.start()
+            
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 啟動車手詳細CLI失敗: {e}")
+            return False
+
 class PitstopRankingWidget(QWidget):
     """進站排行榜主要內容Widget"""
     
@@ -775,32 +975,52 @@ class PitstopRankingWidget(QWidget):
         table.setSelectionMode(QTableWidget.SingleSelection)
         table.setSortingEnabled(True)
         
-        # 設置欄位寬度
+        # 設置欄位寬度 - 響應式設計，適應小視窗
         header = table.horizontalHeader()
-        header.setStretchLastSection(False)
+        header.setStretchLastSection(True)  # 最後一列自動拉伸
         
-        # 排名 - 固定寬度
-        table.setColumnWidth(0, 60)
+        # 🎯 全新響應式列寬設定 - 完全適應450×280視窗
+        # 總可用寬度約 430px (450 - 20px邊距)
+        
+        # 排名 - 最小必要寬度
+        table.setColumnWidth(0, 30)
         header.setSectionResizeMode(0, QHeaderView.Fixed)
         
-        # 車手代碼 - 固定寬度
-        table.setColumnWidth(1, 80)
+        # 車手代碼 - 最小必要寬度  
+        table.setColumnWidth(1, 45)
         header.setSectionResizeMode(1, QHeaderView.Fixed)
         
-        # 車手全名 - 自動拉伸
+        # 車手全名 - 主要彈性列，佔用最多空間
         header.setSectionResizeMode(2, QHeaderView.Stretch)
         
-        # 最快時間 - 固定寬度
-        table.setColumnWidth(3, 100)
+        # 最快時間 - 緊湊寬度
+        table.setColumnWidth(3, 60)
         header.setSectionResizeMode(3, QHeaderView.Fixed)
         
-        # 與第一名差距 - 固定寬度
-        table.setColumnWidth(4, 120)
+        # 與第一名差距 - 緊湊寬度
+        table.setColumnWidth(4, 65)
         header.setSectionResizeMode(4, QHeaderView.Fixed)
         
-        # 進站圈數 - 固定寬度
-        table.setColumnWidth(5, 80)
-        header.setSectionResizeMode(5, QHeaderView.Fixed)
+        # 進站圈數 - 最小寬度，也可彈性調整
+        table.setColumnWidth(5, 40)
+        header.setSectionResizeMode(5, QHeaderView.Interactive)
+        
+        # 🔧 新增：響應式調整功能
+        # 當視窗大小改變時，自動重新計算列寬
+        def adjust_columns():
+            """根據當前表格寬度調整列寬比例"""
+            if table.width() > 0:
+                available_width = table.width() - 40  # 減去滾動條等空間
+                fixed_width = 30 + 45 + 60 + 65 + 40  # 固定列總寬度 = 240px
+                stretch_width = max(available_width - fixed_width, 100)  # 彈性列最小100px
+                
+                # 重新分配彈性列寬度
+                if stretch_width > 100:
+                    # 如果空間充足，給車手全名更多空間
+                    pass  # Stretch模式會自動處理
+                    
+        # 連接調整大小事件
+        table.resizeEvent = lambda event: (QTableWidget.resizeEvent(table, event), adjust_columns())[1]
         
         return table
     
@@ -947,6 +1167,7 @@ class PitstopRankingWidget(QWidget):
                 lap_number = driver_data.get('lap_number', 'N/A')
                 lap_item = QTableWidgetItem(str(lap_number))
                 lap_item.setTextAlignment(Qt.AlignCenter)
+                lap_item.setForeground(QColor(0, 100, 200))  # 設置為藍色
                 self.table_widget.setItem(row, 5, lap_item)
                 
                 # 設置第一名的特殊樣式
@@ -1061,6 +1282,7 @@ class PitstopAnalysisModule(IAnalysisModule):
         self.tab_widget = None
         self.ranking_widget = None
         self.team_ranking_widget = None  # 新增車隊排行榜控件
+        self.detailed_widget = None      # 新增車手詳細記錄控件
         
         # 初始化數據管理器
         self.data_manager = PitstopDataManager(self)
@@ -1234,6 +1456,10 @@ class PitstopAnalysisModule(IAnalysisModule):
         """清除數據 - IAnalysisModule 必需方法"""
         if self.ranking_widget:
             self.ranking_widget.clear_table()
+        if self.team_ranking_widget:
+            self.team_ranking_widget.clear_table()
+        if self.detailed_widget:
+            self.detailed_widget.clear_table()
         print(f"[CLEAR] [PITSTOP_MODULE] 數據已清除")
     
     def export_data(self, format_type: str = "json") -> bool:
@@ -1299,11 +1525,9 @@ class PitstopAnalysisModule(IAnalysisModule):
         self.team_ranking_widget = TeamPitstopRankingWidget(self._main_widget)
         self.tab_widget.addTab(self.team_ranking_widget, "🏁 車隊進站統計")
         
-        # 分頁3: 預留給未來功能
-        placeholder_widget3 = QLabel("🔍 進站詳細記錄\n(功能開發中)")
-        placeholder_widget3.setAlignment(Qt.AlignCenter)
-        placeholder_widget3.setStyleSheet("color: #666; font-size: 14px;")
-        self.tab_widget.addTab(placeholder_widget3, "🔍 詳細記錄")
+        # 分頁3: 車手進站詳細記錄 (新實現)
+        self.detailed_widget = DriverDetailedPitstopWidget(self._main_widget)
+        self.tab_widget.addTab(self.detailed_widget, "� 詳細記錄")
         
         layout.addWidget(self.tab_widget)
         
@@ -1320,6 +1544,8 @@ class PitstopAnalysisModule(IAnalysisModule):
         self.data_manager.data_loaded.connect(self.on_data_loaded)
         self.data_manager.team_data_loaded.connect(self.on_team_data_loaded)  # 新增車隊數據信號連接
         self.data_manager.team_data_reload_requested.connect(self.on_team_data_reload_requested)  # 新增車隊重新載入信號連接
+        self.data_manager.driver_detailed_loaded.connect(self.on_driver_detailed_loaded)  # 新增車手詳細數據信號連接
+        self.data_manager.driver_detailed_reload_requested.connect(self.on_driver_detailed_reload_requested)  # 新增車手詳細重新載入信號連接
         self.data_manager.error_occurred.connect(self.on_error_occurred)
         self.data_manager.loading_progress.connect(self.on_loading_progress)
         self.data_manager.status_changed.connect(self.on_status_changed)
@@ -1333,10 +1559,13 @@ class PitstopAnalysisModule(IAnalysisModule):
             self.ranking_widget.show_loading_state()
         if self.team_ranking_widget:
             self.team_ranking_widget.show_loading_state()
+        if self.detailed_widget:
+            self.detailed_widget.show_loading_state()
         
-        # 同時啟動車手和車隊數據載入
+        # 同時啟動車手排行榜、車隊排行榜和車手詳細記錄數據載入
         self.data_manager.load_data(self.current_year, self.current_race, self.current_session)
         self.data_manager.load_team_data(self.current_year, self.current_race, self.current_session)
+        self.data_manager.load_driver_detailed_data(self.current_year, self.current_race, self.current_session)
     
     def on_data_loaded(self, data: Dict[str, Any]):
         """處理數據載入完成"""
@@ -1366,6 +1595,24 @@ class PitstopAnalysisModule(IAnalysisModule):
         # 延遲刷新，確保JSON檔案已完全生成
         QTimer.singleShot(2000, self.refresh_analysis)
     
+    def on_driver_detailed_loaded(self, data: Dict[str, Any]):
+        """處理車手詳細數據載入完成"""
+        print(f"[OK] 車手詳細數據載入完成")
+        
+        # 隱藏載入狀態
+        if self.detailed_widget:
+            self.detailed_widget.hide_loading_state()
+            # 更新車手詳細記錄數據
+            self.detailed_widget.update_detailed_data(data)
+    
+    def on_driver_detailed_reload_requested(self):
+        """處理車手詳細數據重新載入請求"""
+        print(f"[RELOAD] [MAIN_MODULE] 收到車手詳細數據重新載入請求")
+        
+        # 延遲刷新，確保JSON檔案已完全生成
+        QTimer.singleShot(2000, lambda: self.data_manager.load_driver_detailed_data(
+            self.current_year, self.current_race, self.current_session))
+    
     def on_error_occurred(self, error_message: str):
         """處理錯誤"""
         print(f"[ERROR] 載入錯誤: {error_message}")
@@ -1375,6 +1622,14 @@ class PitstopAnalysisModule(IAnalysisModule):
             self.ranking_widget.hide_loading_state()
             # 顯示錯誤訊息
             self.ranking_widget.show_error_message(error_message)
+        
+        if self.team_ranking_widget:
+            self.team_ranking_widget.hide_loading_state()
+        
+        if self.detailed_widget:
+            self.detailed_widget.hide_loading_state()
+            # 顯示錯誤訊息
+            self.detailed_widget.show_error_message(error_message)
     
     def on_loading_progress(self, progress: int):
         """處理載入進度"""
@@ -1499,22 +1754,31 @@ class TeamPitstopRankingWidget(QWidget):
         self.table_widget.setSelectionBehavior(QTableWidget.SelectRows)
         self.table_widget.setSortingEnabled(True)
         
-        # 🔧 修正：設置列寬（更新為6列）
+        # 🔧 響應式列寬設定 - 適應小視窗
         header = self.table_widget.horizontalHeader()
         header.setStretchLastSection(True)
-        header.setSectionResizeMode(0, QHeaderView.Fixed)      # 排名
-        header.setSectionResizeMode(1, QHeaderView.Interactive) # 車隊名稱
-        header.setSectionResizeMode(2, QHeaderView.Fixed)      # 最快時間
-        header.setSectionResizeMode(3, QHeaderView.Fixed)      # 最慢時間
-        header.setSectionResizeMode(4, QHeaderView.Fixed)      # 進站次數
-        header.setSectionResizeMode(5, QHeaderView.Fixed)      # 一致性分數
         
-        # 🔧 修正：設置固定列寬（更新欄位索引）
-        self.table_widget.setColumnWidth(0, 60)   # 排名
-        self.table_widget.setColumnWidth(2, 80)   # 最快時間
-        self.table_widget.setColumnWidth(3, 80)   # 最慢時間
-        self.table_widget.setColumnWidth(4, 80)   # 進站次數
-        self.table_widget.setColumnWidth(5, 100)  # 一致性分數
+        # 排名 - 緊湊寬度
+        self.table_widget.setColumnWidth(0, 35)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)
+        
+        # 車隊名稱 - 比例拉伸
+        header.setSectionResizeMode(1, QHeaderView.Stretch)
+        
+        # 最快時間 - 緊湊寬度
+        self.table_widget.setColumnWidth(2, 60)
+        header.setSectionResizeMode(2, QHeaderView.Fixed)
+        
+        # 最慢時間 - 緊湊寬度
+        self.table_widget.setColumnWidth(3, 60)
+        header.setSectionResizeMode(3, QHeaderView.Fixed)
+        
+        # 進站次數 - 緊湊寬度
+        self.table_widget.setColumnWidth(4, 50)
+        header.setSectionResizeMode(4, QHeaderView.Fixed)
+        
+        # 一致性分數 - 自動拉伸（最後一列）
+        header.setSectionResizeMode(5, QHeaderView.Stretch)
         
     def update_ranking_data(self, data: Dict[str, Any]):
         """更新車隊排行榜數據"""
@@ -1556,8 +1820,6 @@ class TeamPitstopRankingWidget(QWidget):
     
     def populate_table(self):
         """填充表格數據"""
-        print(f"[DEBUG] 開始填充車隊表格，數據量: {len(self.ranking_data)}")
-        
         # 🔧 修正：更徹底的表格清理
         self.table_widget.clearContents()  # 清空內容但保留表頭
         self.table_widget.setRowCount(0)   # 先設為0行
@@ -1573,8 +1835,6 @@ class TeamPitstopRankingWidget(QWidget):
             return
         
         for row, team_data in enumerate(self.ranking_data):
-            print(f"[DEBUG] 填充第{row+1}行: {team_data.get('team', 'Unknown')} - {team_data.get('fastest_time', 0):.1f}s")
-            
             # 排名
             rank_item = QTableWidgetItem()
             if row == 0:
@@ -1593,16 +1853,14 @@ class TeamPitstopRankingWidget(QWidget):
             team_item = QTableWidgetItem(team_name)
             team_item.setTextAlignment(Qt.AlignCenter)
             self.table_widget.setItem(row, 1, team_item)
-            print(f"[DEBUG] 設置第{row+1}行車隊名稱: {team_name}")
             
-            # 🔧 修正：最快時間（格式為SS.0）
+            # 🔧 修正：最快時間（格式為SS.0s）
             fastest_time = team_data.get("fastest_time", 0)
-            fastest_item = QTableWidgetItem(f"{fastest_time:.1f}")
+            fastest_item = QTableWidgetItem(f"{fastest_time:.1f}s")
             fastest_item.setTextAlignment(Qt.AlignCenter)
             self.table_widget.setItem(row, 2, fastest_item)
-            print(f"[DEBUG] 設置第{row+1}行最快時間: {fastest_time:.1f}")
             
-            # 🔧 新增：最慢時間（格式為SS.0）
+            # 🔧 新增：最慢時間（格式為SS.0s）
             # 假設最慢時間從數據中獲取，如果沒有則計算
             slowest_time = team_data.get("slowest_time")
             if slowest_time is None:
@@ -1610,7 +1868,7 @@ class TeamPitstopRankingWidget(QWidget):
                 std_dev = team_data.get("std_deviation", 0)
                 slowest_time = fastest_time + (std_dev * 2)  # 估算最慢時間
             
-            slowest_item = QTableWidgetItem(f"{slowest_time:.1f}")
+            slowest_item = QTableWidgetItem(f"{slowest_time:.1f}s")
             slowest_item.setTextAlignment(Qt.AlignCenter)
             self.table_widget.setItem(row, 3, slowest_item)
             
@@ -1626,8 +1884,6 @@ class TeamPitstopRankingWidget(QWidget):
             consistency_item.setTextAlignment(Qt.AlignCenter)
             self.table_widget.setItem(row, 5, consistency_item)
         
-        print(f"[DEBUG] 車隊表格填充完成，總行數: {self.table_widget.rowCount()}")
-    
     def validate_team_data(self, data: Dict[str, Any]) -> bool:
         """驗證車隊進站數據格式"""
         try:
@@ -1700,5 +1956,408 @@ class TeamPitstopRankingWidget(QWidget):
         print(f"[EXPORT] 車隊進站排行榜匯出功能 (開發中)")
         # TODO: 實現CSV匯出功能
 
+
+class DriverDetailedPitstopWidget(QWidget):
+    """車手進站詳細記錄 Widget - 統一匯總表格顯示所有車手進站記錄"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.detailed_data = {}          # 車手詳細記錄數據
+        self.max_pitstops = 0            # 最大進站次數
+        self.summary_table = None        # 統一匯總表格
+        self.current_data = {}           # 儲存當前數據
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """設置使用者界面"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 隱藏工具列，保持與車隊排行榜一致的設計
+        
+        # 統一匯總表格 (支援水平滾動) - 590px測試模式
+        self.table_scroll = QScrollArea()
+        self.table_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.table_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        # 🎯 設定滾動區域的最小尺寸以適應590px表格
+        self.table_scroll.setMinimumWidth(600)  # 稍微大於590px以容納滾動條
+        self.table_scroll.setMinimumHeight(300) # 增加高度以顯示更多行
+        
+        layout.addWidget(self.table_scroll)
+        
+        # 狀態列
+        self.status_layout = QHBoxLayout()
+        layout.addLayout(self.status_layout)
+        
+        print(f"[UI_SETUP] 車手詳細記錄UI設置完成 - 滾動區域最小尺寸: 600x300")
+        
+    def setup_summary_table(self):
+        """設置統一匯總表格"""
+        # 計算最大進站次數
+        self.calculate_max_pitstops()
+        
+        # 創建動態表格標題
+        headers = self.create_dynamic_headers()
+        
+        # 建立QTableWidget
+        self.summary_table = QTableWidget()
+        self.summary_table.setColumnCount(len(headers))
+        self.summary_table.setHorizontalHeaderLabels(headers)
+        
+        # 設置表格樣式和欄位寬度
+        self.configure_table_style()
+        
+    def create_dynamic_headers(self):
+        """根據最大進站次數創建動態表格標題"""
+        headers = ["車手", "車隊", "總進站次數"]
+        
+        # 動態添加進站次數欄位
+        for i in range(1, self.max_pitstops + 1):
+            headers.extend([f"第{i}次時間", f"第{i}次圈數"])
+        
+        # 添加統計欄位
+        headers.extend(["最快時間", "最慢時間"])
+        return headers
+        
+    def calculate_max_pitstops(self):
+        """計算所有車手中的最大進站次數"""
+        if not self.detailed_data:
+            self.max_pitstops = 0
+            return
+            
+        max_stops = 0
+        for driver_data in self.detailed_data.values():
+            if isinstance(driver_data, list):
+                max_stops = max(max_stops, len(driver_data))
+        self.max_pitstops = max_stops
+        
+    def update_detailed_data(self, data: Dict[str, Any]):
+        """更新車手詳細記錄數據"""
+        try:
+            # 儲存完整數據
+            self.current_data = data
+            
+            if "data" in data:
+                self.detailed_data = data["data"]
+                # 延遲更新UI確保數據準備完成
+                QTimer.singleShot(100, self.populate_summary_table)
+            else:
+                self.show_error_message("車手詳細數據格式無效")
+                
+        except Exception as e:
+            print(f"[ERROR] 更新車手詳細數據失敗: {e}")
+            self.show_error_message(f"更新車手詳細數據失敗: {str(e)}")
+        
+    def populate_summary_table(self):
+        """填充統一匯總表格"""
+        try:
+            if not self.detailed_data:
+                print("[WARNING] 車手詳細數據為空")
+                return
+                
+            # 重新設置表格結構
+            self.setup_summary_table()
+            
+            # 按車手代碼排序
+            sorted_drivers = sorted(self.detailed_data.keys())
+            self.summary_table.setRowCount(len(sorted_drivers))
+            
+            for row, driver in enumerate(sorted_drivers):
+                pitstops = self.detailed_data[driver]
+                if not pitstops or not isinstance(pitstops, list):
+                    continue
+                    
+                # 填充基本信息
+                self.summary_table.setItem(row, 0, QTableWidgetItem(driver))
+                self.summary_table.setItem(row, 1, QTableWidgetItem(pitstops[0].get("team", "Unknown")))
+                self.summary_table.setItem(row, 2, QTableWidgetItem(str(len(pitstops))))
+                
+                # 填充每次進站詳細信息
+                col_index = 3
+                for i in range(self.max_pitstops):
+                    if i < len(pitstops):
+                        # 填充實際進站數據
+                        pit_time = self.format_time_display(pitstops[i].get("pit_duration", 0))
+                        lap_num = str(pitstops[i].get("lap_number", 0))
+                        
+                        self.summary_table.setItem(row, col_index, QTableWidgetItem(pit_time))
+                        # 設置圈數為藍色
+                        lap_item = QTableWidgetItem(lap_num)
+                        lap_item.setForeground(QColor(0, 100, 200))  # 設置為藍色
+                        self.summary_table.setItem(row, col_index + 1, lap_item)
+                    else:
+                        # 填充空白欄位
+                        self.summary_table.setItem(row, col_index, QTableWidgetItem("-"))
+                        self.summary_table.setItem(row, col_index + 1, QTableWidgetItem("-"))
+                    
+                    col_index += 2
+                
+                # 計算並填充統計信息
+                stats = self.calculate_driver_stats(pitstops)
+                self.summary_table.setItem(row, col_index, QTableWidgetItem(stats["fastest"]))
+                self.summary_table.setItem(row, col_index + 1, QTableWidgetItem(stats["slowest"]))
+            
+            # 設置表格到滾動區域
+            self.table_scroll.setWidget(self.summary_table)
+            
+            # 🎯 強制調整表格大小以適應內容
+            self.adjust_table_size()
+            
+            # 更新狀態列
+            self.update_status_bar()
+            
+            print(f"[OK] 車手詳細記錄表格更新完成: {len(sorted_drivers)} 位車手")
+            
+        except Exception as e:
+            print(f"[ERROR] 填充車手詳細表格失敗: {e}")
+            self.show_error_message(f"填充車手詳細表格失敗: {str(e)}")
+        
+    def calculate_driver_stats(self, pitstops):
+        """計算單一車手的統計數據"""
+        if not pitstops:
+            return {"fastest": "-", "slowest": "-"}
+            
+        times = [pit.get("pit_duration", 0) for pit in pitstops if pit.get("pit_duration", 0) > 0]
+        
+        if not times:
+            return {"fastest": "-", "slowest": "-"}
+            
+        return {
+            "fastest": self.format_time_display(min(times)),
+            "slowest": self.format_time_display(max(times))
+        }
+        
+    def format_time_display(self, seconds):
+        """格式化時間顯示為SS.0s格式"""
+        if seconds <= 0:
+            return "-"
+        return f"{seconds:.1f}s"
+        
+    def configure_table_style(self):
+        """設置表格樣式和欄位寬度 - 響應式設計 (預設590px寬度)"""
+        if not self.summary_table:
+            return
+            
+        # 🎯 預設590px寬度配置 - 測試模式
+        total_columns = self.summary_table.columnCount()
+        
+        # 基本列寬度設定 - 針對590px優化
+        self.summary_table.setColumnWidth(0, 50)   # 車手 - 增加寬度
+        self.summary_table.setColumnWidth(1, 100)  # 車隊 - 增加寬度  
+        self.summary_table.setColumnWidth(2, 60)   # 總進站次數 - 增加寬度
+        
+        # 動態欄位寬度 - 進站記錄使用更寬的設定
+        for i in range(3, total_columns - 2):
+            self.summary_table.setColumnWidth(i, 70)  # 進站時間和圈數使用70px
+            
+        # 統計欄位寬度 - 加寬模式
+        if total_columns >= 2:
+            self.summary_table.setColumnWidth(total_columns - 2, 80)  # 最快時間
+            self.summary_table.setColumnWidth(total_columns - 1, 80)  # 最慢時間
+        
+        # 🎯 設置響應式拉伸策略 - 590px模式
+        header = self.summary_table.horizontalHeader()
+        
+        # 基本列設定
+        header.setSectionResizeMode(0, QHeaderView.Fixed)   # 車手 - 固定
+        header.setSectionResizeMode(1, QHeaderView.Stretch) # 車隊 - 主要拉伸列
+        header.setSectionResizeMode(2, QHeaderView.Fixed)   # 總進站次數 - 固定
+        
+        # 動態列設定為可交互調整
+        for i in range(3, total_columns - 2):
+            header.setSectionResizeMode(i, QHeaderView.Interactive)  # 可手動調整
+            
+        # 最後一列設為拉伸，以填滿剩餘空間
+        if total_columns >= 1:
+            header.setSectionResizeMode(total_columns - 1, QHeaderView.Stretch)
+        
+        # 表格樣式設置
+        self.summary_table.setAlternatingRowColors(True)
+        self.summary_table.setSelectionBehavior(QTableWidget.SelectRows)
+        header.setStretchLastSection(True)  # 最後一列自動拉伸
+        
+        print(f"[TABLE_CONFIG] 表格配置完成 - 欄數:{total_columns}, 預設總寬度:~590px")
+        
+    def adjust_table_size(self):
+        """調整表格大小以適應內容和容器"""
+        if not self.summary_table:
+            return
+            
+        # 計算表格應有的寬度
+        total_column_width = 0
+        for i in range(self.summary_table.columnCount()):
+            total_column_width += self.summary_table.columnWidth(i)
+        
+        # 考慮垂直滾動條的寬度（約20px）
+        required_width = total_column_width + 25
+        
+        # 獲取滾動區域的可用寬度
+        scroll_width = self.table_scroll.width()
+        
+        # 設置表格寬度以填滿滾動區域
+        table_width = max(required_width, scroll_width - 20)  # 留20px邊距和滾動條
+        
+        print(f"[TABLE_SIZE_DEBUG] 表格大小調整:")
+        print(f"[TABLE_SIZE_DEBUG] - 計算的欄位總寬度: {total_column_width}px")
+        print(f"[TABLE_SIZE_DEBUG] - 建議表格寬度: {required_width}px")
+        print(f"[TABLE_SIZE_DEBUG] - 滾動區域寬度: {scroll_width}px")
+        print(f"[TABLE_SIZE_DEBUG] - 最終設定表格寬度: {table_width}px")
+        
+        # 設置表格大小策略為擴展
+        from PyQt5.QtWidgets import QSizePolicy
+        size_policy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.summary_table.setSizePolicy(size_policy)
+        
+        # 設置表格寬度以填滿滾動區域，高度自動適應內容
+        self.summary_table.setFixedWidth(table_width)
+        
+        # 計算表格應有的高度（根據行數）
+        header_height = self.summary_table.horizontalHeader().height()
+        row_count = self.summary_table.rowCount()
+        row_height = self.summary_table.rowHeight(0) if row_count > 0 else 30
+        total_height = header_height + (row_count * row_height) + 10  # 加10px邊距
+        
+        # 獲取滾動區域的可用高度
+        scroll_height = self.table_scroll.height()
+        table_height = min(total_height, scroll_height - 20)  # 最大不超過滾動區域
+        
+        print(f"[TABLE_SIZE_DEBUG] 高度計算:")
+        print(f"[TABLE_SIZE_DEBUG] - 表頭高度: {header_height}px")
+        print(f"[TABLE_SIZE_DEBUG] - 行數: {row_count}, 每行高度: {row_height}px")
+        print(f"[TABLE_SIZE_DEBUG] - 計算總高度: {total_height}px")
+        print(f"[TABLE_SIZE_DEBUG] - 滾動區域高度: {scroll_height}px")
+        print(f"[TABLE_SIZE_DEBUG] - 最終表格高度: {table_height}px")
+        
+        # 設置表格高度
+        self.summary_table.setFixedHeight(table_height)
+        
+        # 強制重新計算佈局
+        self.summary_table.updateGeometry()
+        self.table_scroll.updateGeometry()
+        
+    def update_status_bar(self):
+        """更新狀態列信息"""
+        try:
+            # 清理現有狀態
+            for i in reversed(range(self.status_layout.count())):
+                item = self.status_layout.itemAt(i)
+                if item and item.widget():
+                    item.widget().setParent(None)
+            
+            # 計算統計信息
+            total_drivers = len(self.detailed_data)
+            fastest_overall, slowest_overall = self.calculate_overall_stats()
+            
+            # 添加狀態標籤
+            status_items = [
+                f"📊 共 {total_drivers} 位車手",
+                "📄 來源: JSON",
+                f"⏱️ 更新: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                f"🎯 最快進站: {fastest_overall}",
+                f"🐌 最慢進站: {slowest_overall}",
+                "🤖 智能生成: 開啟"
+            ]
+            
+            for item in status_items:
+                label = QLabel(item)
+                self.status_layout.addWidget(label)
+                
+            self.status_layout.addStretch()
+            
+        except Exception as e:
+            print(f"[ERROR] 更新狀態列失敗: {e}")
+            
+    def calculate_overall_stats(self):
+        """計算全域最快/最慢進站時間"""
+        all_times = []
+        
+        for driver_data in self.detailed_data.values():
+            if isinstance(driver_data, list):
+                for pit in driver_data:
+                    duration = pit.get("pit_duration", 0)
+                    if duration > 0:
+                        all_times.append(duration)
+        
+        if not all_times:
+            return "-", "-"
+            
+        fastest = min(all_times)
+        slowest = max(all_times)
+        
+        return self.format_time_display(fastest), self.format_time_display(slowest)
+    
+    def show_loading_state(self):
+        """顯示載入狀態"""
+        # 創建簡單的載入提示
+        loading_widget = QLabel("🔄 載入車手詳細記錄中...")
+        loading_widget.setAlignment(Qt.AlignCenter)
+        loading_widget.setStyleSheet("color: #666; font-size: 14px; padding: 20px;")
+        self.table_scroll.setWidget(loading_widget)
+    
+    def hide_loading_state(self):
+        """隱藏載入狀態"""
+        # 載入狀態會在populate_summary_table中被替換
+        pass
+    
+    def show_error_message(self, message: str):
+        """顯示錯誤訊息"""
+        error_widget = QLabel(f"❌ {message}")
+        error_widget.setAlignment(Qt.AlignCenter)
+        error_widget.setStyleSheet("color: #d32f2f; font-size: 14px; padding: 20px;")
+        self.table_scroll.setWidget(error_widget)
+    
+    def resizeEvent(self, event):
+        """監控視窗大小變化"""
+        super().resizeEvent(event)
+        
+        # 獲取新的視窗大小
+        new_size = event.size()
+        widget_width = new_size.width()
+        widget_height = new_size.height()
+        
+        print(f"[RESIZE_DEBUG] DriverDetailedPitstopWidget 視窗大小變化:")
+        print(f"[RESIZE_DEBUG] - Widget 寬度: {widget_width}px")
+        print(f"[RESIZE_DEBUG] - Widget 高度: {widget_height}px")
+        
+        # 如果存在滾動區域，也列印其大小
+        if hasattr(self, 'table_scroll') and self.table_scroll:
+            scroll_size = self.table_scroll.size()
+            print(f"[RESIZE_DEBUG] - QScrollArea 寬度: {scroll_size.width()}px")
+            print(f"[RESIZE_DEBUG] - QScrollArea 高度: {scroll_size.height()}px")
+            
+            # 如果存在表格，也列印表格大小
+            if hasattr(self, 'summary_table') and self.summary_table:
+                table_size = self.summary_table.size()
+                table_width = self.summary_table.width()
+                column_count = self.summary_table.columnCount()
+                print(f"[RESIZE_DEBUG] - QTableWidget 寬度: {table_width}px")
+                print(f"[RESIZE_DEBUG] - QTableWidget 高度: {table_size.height()}px")
+                print(f"[RESIZE_DEBUG] - 表格欄數: {column_count}")
+                
+                # 檢查每個欄位的寬度
+                if column_count > 0:
+                    column_widths = []
+                    total_column_width = 0
+                    for i in range(column_count):
+                        width = self.summary_table.columnWidth(i)
+                        column_widths.append(width)
+                        total_column_width += width
+                    print(f"[RESIZE_DEBUG] - 欄位寬度: {column_widths}")
+                    print(f"[RESIZE_DEBUG] - 總欄位寬度: {total_column_width}px")
+                
+                # 重新調整表格大小以適應新的視窗大小
+                self.adjust_table_size()
+        
+        print(f"[RESIZE_DEBUG] ===== 視窗大小變化監控結束 =====")
+    
+    def clear_table(self):
+        """清空表格"""
+        if self.summary_table:
+            self.summary_table.setRowCount(0)
+        self.detailed_data = {}
+        self.current_data = {}
+        print(f"[CLEAR] 車手詳細記錄表格數據已清空")
+
 # 導出模組的主要類別
-__all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager', 'TeamPitstopRankingWidget']
+__all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager', 'TeamPitstopRankingWidget', 'DriverDetailedPitstopWidget']
