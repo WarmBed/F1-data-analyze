@@ -89,15 +89,8 @@ class RainAnalysisCache:
             if os.path.exists(cache_path):
                 return cache_path
         
-        # 檢查最新的相關檔案
-        cache_files = [f for f in os.listdir(self.cache_dir) 
-                      if cache_key.replace('rain_analysis_', '') in f 
-                      and f.endswith('.json')]
-        
-        if cache_files:
-            cache_files.sort(reverse=True)  # 按檔案名排序（日期倒序）
-            return os.path.join(self.cache_dir, cache_files[0])
-        
+        # 移除模糊搜尋機制，避免載入其他模組的檔案
+        print(f"[CACHE] 未找到降雨分析檔案: {cache_key}")
         return None
     
     def is_cache_valid(self, cache_path):
@@ -1276,18 +1269,15 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
         """返回動態標題"""
         return f"降雨分析 - {self.year} {self.race} ({self.session})"
     
-    def update_parameters(self, **params) -> bool:
+    def update_parameters(self, year: int, race: str, session: str) -> bool:
         """更新分析參數並重新載入資料 - 統一使用 auto_start_analysis"""
         try:
             # 更新內部參數
             old_year, old_race, old_session = self.year, self.race, self.session
             
-            if 'year' in params:
-                self.year = int(params['year'])
-            if 'race' in params:
-                self.race = params['race']
-            if 'session' in params:
-                self.session = params['session']
+            self.year = int(year)
+            self.race = race
+            self.session = session
             
             print(f"[REFRESH] [RainAnalysisAdapter] 參數更新: {old_year}/{old_race}/{old_session} → {self.year}/{self.race}/{self.session}")
             
@@ -1308,12 +1298,12 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
                 self._rain_module.auto_start_analysis()
                 
                 # 調用基類更新
-                return super().update_parameters(**params)
+                return super().update_parameters(year, race, session)
             else:
                 # 如果模組不存在，重新創建
                 print(f"[WARNING] [RainAnalysisAdapter] 模組不存在，重新創建...")
                 self._create_rain_module()
-                return super().update_parameters(**params)
+                return super().update_parameters(year, race, session)
             
         except Exception as e:
             print(f"[ERROR] [RainAnalysisAdapter] 參數更新失敗: {e}")

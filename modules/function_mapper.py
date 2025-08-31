@@ -896,22 +896,32 @@ class F1AnalysisFunctionMapper:
             return {"success": False, "message": f"單一車手綜合分析失敗: {str(e)}", "function_id": "11"}
     
     def _execute_single_driver_telemetry(self, **kwargs):
-        """執行單一車手詳細遙測分析 - 符合開發核心原則"""
+        """執行單一車手詳細遙測分析 - 符合開發核心原則 (更新版支援所有車手分析)"""
         try:
-            print("[START] 開始執行單一車手詳細遙測分析...")
+            print("[START] 開始執行車手詳細遙測分析...")
             
             # 1. 參數處理 - 支援詳細輸出控制
             show_detailed_output = kwargs.get('show_detailed_output', True)
+            driver = kwargs.get('driver')  # 檢查是否指定特定車手
+            
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
-            from modules.single_driver_analysis import run_single_driver_telemetry_json
+            from modules.single_driver_analysis import run_single_driver_telemetry_json, run_all_drivers_telemetry_analysis
             from prettytable import PrettyTable
             import os
             import json
             from datetime import datetime
             
-            # 2. 顯示功能列表 (詳細輸出模式)
+            # 2. 功能選擇邏輯
+            if driver:
+                print(f"[INFO] 指定車手模式: 分析車手 {driver}")
+                analysis_mode = "single"
+            else:
+                print("[INFO] 所有車手模式: 分析所有可用車手")
+                analysis_mode = "all"
+            
+            # 3. 顯示功能列表 (詳細輸出模式)
             if show_detailed_output:
                 print("\n[SEARCH] Function 12 提供的遙測分析功能:")
                 
@@ -919,7 +929,7 @@ class F1AnalysisFunctionMapper:
                 features_table.field_names = ["功能類別", "分析項目", "詳細說明"]
                 features_table.align = "l"
                 
-                features_table.add_row(["[F1] 車手基本信息", "車手代碼識別", "自動識別並分析指定車手"])
+                features_table.add_row(["[F1] 車手基本信息", "車手代碼識別", "自動識別並分析指定/所有車手"])
                 features_table.add_row(["", "總圈數統計", "計算車手完成的總圈數"])
                 features_table.add_row(["", "有效圈數", "分析有效圈速數據數量"])
                 features_table.add_row(["", "最終名次", "顯示車手比賽最終排名"])
@@ -935,18 +945,13 @@ class F1AnalysisFunctionMapper:
                 features_table.add_row(["", "Sector 3 時間", "第三區間的詳細時間分析"])
                 features_table.add_row(["", "區間最佳", "各區間的最佳時間記錄"])
                 
-                features_table.add_row(["🛞 輪胎分析", "輪胎配方", "分析最快圈使用的輪胎類型"])
+                features_table.add_row(["🛞 輪胎分析", "輪胎配方", "分析使用的輪胎類型"])
                 features_table.add_row(["", "輪胎壽命", "記錄輪胎使用的圈數"])
                 features_table.add_row(["", "輪胎策略", "分析整場比賽的輪胎策略"])
                 
                 features_table.add_row(["[TOOL] Pitstop 分析", "進站次數", "統計車手總進站次數"])
                 features_table.add_row(["", "進站時間", "詳細記錄每次進站時間"])
-                features_table.add_row(["", "平均進站時長", "計算平均進站作業時間"])
                 features_table.add_row(["", "進站圈數", "記錄每次進站的圈數"])
-                
-                features_table.add_row(["[STATS] 統計分析", "一致性評估", "評估車手圈速一致性"])
-                features_table.add_row(["", "性能趨勢", "分析整場比賽的性能變化"])
-                features_table.add_row(["", "比較基準", "提供與其他車手比較的基準"])
                 
                 features_table.add_row(["📄 數據輸出", "JSON 詳細報告", "生成完整的 JSON 格式分析報告"])
                 features_table.add_row(["", "時間格式化", "統一的時間顯示格式 (H:MM:SS.mmm)"])
@@ -954,82 +959,154 @@ class F1AnalysisFunctionMapper:
                 
                 print(features_table)
                 
-                print("\n💡 Function 12 特色:")
-                print("   • [TARGET] 自動車手選擇: 如果未指定車手，自動選擇第一個可用車手")
-                print("   • [PACKAGE] 緩存支持: 支持數據緩存，提升重複查詢性能") 
-                print("   • [FAST] 高效分析: 快速處理大量遙測數據")
-                print("   • [SEARCH] 深度洞察: 提供車手表現的全方位分析")
-                print("   • [CHART] 趨勢分析: 識別性能模式和改進機會")
-                print("   • 🛠️ 專業工具: 適用於車隊分析師和工程師")
+                print("\n💡 Function 12 特色 (更新版):")
+                print("   • [TARGET] 智能模式選擇: 自動檢測是分析單一車手還是所有車手")
+                print("   • [PACKAGE] 批量分析: 一次性分析所有車手的完整遙測數據") 
+                print("   • [FAST] 高效處理: 並行處理多車手數據，提升分析效率")
+                print("   • [SEARCH] 深度洞察: 提供車手表現的全方位比較分析")
+                print("   • [CHART] 統計摘要: 生成賽事整體統計和車手排名")
+                print("   • 🛠️ 專業工具: 適用於車隊分析師和工程師的批量分析")
             
-            print("\n[START] 開始執行遙測分析...")
+            print(f"\n[START] 開始執行遙測分析 ({analysis_mode} 模式)...")
             
-            # 3. 模組調用 (移除不支援的參數)
-            result = run_single_driver_telemetry_json(
-                self.data_loader,
-                None,  # open_analyzer
-                f1_analysis_instance=self.f1_analysis_instance,
-                enable_debug=True
-            )
+            # 4. 執行分析
+            if analysis_mode == "single":
+                # 單一車手分析
+                result = run_single_driver_telemetry_json(
+                    self.data_loader,
+                    None,  # open_analyzer
+                    f1_analysis_instance=self.f1_analysis_instance,
+                    enable_debug=True,
+                    selected_driver=driver
+                )
+            else:
+                # 所有車手分析
+                result = run_all_drivers_telemetry_analysis(
+                    self.data_loader,
+                    None,  # open_analyzer
+                    f1_analysis_instance=self.f1_analysis_instance,
+                    enable_debug=True
+                )
             
-            # 4. 結果驗證和反饋
-            if not self._report_analysis_results(result, "單一車手詳細遙測分析"):
+            # 5. 結果驗證和反饋
+            if not self._report_analysis_results(result, f"車手詳細遙測分析 ({analysis_mode} 模式)"):
                 return {"success": False, "message": "結果驗證失敗", "function_id": "12"}
             
-            # 5. 詳細結果顯示 (詳細輸出模式)
+            # 6. 詳細結果顯示 (詳細輸出模式)
             if show_detailed_output and result and result.get('success'):
                 data = result.get('data', {})
-                telemetry_data = data.get('single_driver_telemetry', {})
-                driver_info = telemetry_data.get('driver_info', {})
-                lap_analysis = telemetry_data.get('lap_time_analysis', {})
-                pitstop_analysis = telemetry_data.get('pitstop_analysis', {})
                 
-                print("\n[STATS] 遙測分析結果摘要:")
-                summary_table = PrettyTable()
-                summary_table.field_names = ["分析項目", "結果"]
-                summary_table.align = "l"
-                
-                if driver_info:
-                    summary_table.add_row(["[F1] 分析車手", driver_info.get('driver_code', 'N/A')])
-                    summary_table.add_row(["[STATS] 總圈數", driver_info.get('total_laps', 'N/A')])
-                    summary_table.add_row(["[OK] 有效圈數", driver_info.get('valid_laps', 'N/A')])
-                    summary_table.add_row(["🏆 最終名次", driver_info.get('final_position', 'N/A')])
-                
-                if lap_analysis:
-                    fastest_lap = lap_analysis.get('fastest_lap', {})
-                    if fastest_lap:
-                        summary_table.add_row(["[FAST] 最快圈時間", fastest_lap.get('lap_time', 'N/A')])
-                        summary_table.add_row(["[FINISH] 最快圈圈數", f"第 {fastest_lap.get('lap_number', 'N/A')} 圈"])
-                        summary_table.add_row(["🛞 最快圈輪胎", fastest_lap.get('tire_compound', 'N/A')])
+                if analysis_mode == "single":
+                    # 單一車手結果顯示
+                    telemetry_data = data.get('single_driver_telemetry', {})
+                    driver_info = telemetry_data.get('driver_info', {})
+                    lap_analysis = telemetry_data.get('lap_time_analysis', {})
+                    pitstop_analysis = telemetry_data.get('pitstop_analysis', {})
                     
-                    stats = lap_analysis.get('statistics', {})
-                    if stats:
-                        summary_table.add_row(["[CHART] 平均圈速", stats.get('average_lap_time', 'N/A')])
-                        summary_table.add_row(["[STATS] 圈速穩定性", stats.get('lap_time_std', 'N/A')])
-                
-                if pitstop_analysis:
-                    summary_table.add_row(["[TOOL] 進站次數", pitstop_analysis.get('pitstop_count', 'N/A')])
-                    summary_table.add_row(["⏱️ 平均進站時間", pitstop_analysis.get('average_pitstop_time', 'N/A')])
-                
-                print(summary_table)
+                    print("\n[STATS] 單一車手遙測分析結果摘要:")
+                    summary_table = PrettyTable()
+                    summary_table.field_names = ["分析項目", "結果"]
+                    summary_table.align = "l"
+                    
+                    if driver_info:
+                        summary_table.add_row(["[F1] 分析車手", driver_info.get('driver_code', 'N/A')])
+                        summary_table.add_row(["[START] 初始名次", driver_info.get('starting_position', 'N/A')])
+                        summary_table.add_row(["🏆 最終名次", driver_info.get('final_position', 'N/A')])
+                    
+                    if lap_analysis:
+                        fastest_lap = lap_analysis.get('fastest_lap', {})
+                        if fastest_lap:
+                            summary_table.add_row(["[FAST] 最快圈時間", fastest_lap.get('lap_time', 'N/A')])
+                            summary_table.add_row(["[FINISH] 最快圈圈數", f"第 {fastest_lap.get('lap_number', 'N/A')} 圈"])
+                            summary_table.add_row(["🛞 最快圈輪胎", fastest_lap.get('tire_compound', 'N/A')])
+                        
+                        stats = lap_analysis.get('statistics', {})
+                        if stats:
+                            summary_table.add_row(["[CHART] 平均圈速", stats.get('average_lap_time', 'N/A')])
+                            summary_table.add_row(["[STATS] 圈速穩定性", stats.get('lap_time_std', 'N/A')])
+                    
+                    if pitstop_analysis:
+                        summary_table.add_row(["[TOOL] 進站次數", pitstop_analysis.get('pitstop_count', 'N/A')])
+                    
+                    print(summary_table)
+                    
+                else:
+                    # 所有車手結果顯示
+                    all_drivers_data = data.get('all_drivers_telemetry', {})
+                    analysis_summary = data.get('analysis_summary', {})
+                    
+                    print(f"\n[STATS] 所有車手遙測分析結果摘要:")
+                    print(f"[INFO] 成功分析 {len(all_drivers_data)} 位車手")
+                    
+                    # 創建車手概覽表
+                    overview_table = PrettyTable()
+                    overview_table.field_names = ["車手", "車隊", "初始排名", "最終排名", "最快圈時間"]
+                    overview_table.align = "l"
+                    
+                    fastest_overall = None
+                    fastest_time = float('inf')
+                    
+                    for driver_code, driver_data in all_drivers_data.items():
+                        driver_info = driver_data.get('driver_info', {})
+                        lap_analysis = driver_data.get('lap_time_analysis', {})
+                        
+                        # 獲取最快圈時間
+                        fastest_lap = lap_analysis.get('fastest_lap', {})
+                        fastest_lap_time = fastest_lap.get('lap_time', 'N/A')
+                        
+                        # 追蹤整體最快圈
+                        if fastest_lap_time != 'N/A':
+                            try:
+                                # 直接比較時間字符串（已經是MM:SS.000格式）
+                                if fastest_overall is None:
+                                    fastest_time = fastest_lap_time
+                                    fastest_overall = driver_code
+                                elif fastest_lap_time < fastest_time:
+                                    fastest_time = fastest_lap_time
+                                    fastest_overall = driver_code
+                            except:
+                                pass
+                        
+                        overview_table.add_row([
+                            driver_info.get('driver_code', 'N/A'),
+                            driver_info.get('team_name', 'N/A')[:15] + "..." if len(driver_info.get('team_name', '')) > 15 else driver_info.get('team_name', 'N/A'),
+                            driver_info.get('starting_position', 'N/A'),
+                            driver_info.get('final_position', 'N/A'),
+                            fastest_lap_time
+                        ])
+                    
+                    print(overview_table)
+                    
+                    if fastest_overall:
+                        print(f"\n🏆 全場最快圈: {fastest_overall} ({fastest_time})")
                 
                 # 保存JSON輸出
                 json_dir = "json"
                 os.makedirs(json_dir, exist_ok=True)
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                json_filename = f"single_driver_telemetry_analysis_{timestamp}.json"
+                
+                # 獲取年份、賽事和賽段信息
+                year = getattr(self.data_loader, 'year', 'Unknown')
+                race_name = getattr(self.data_loader, 'race_name', 'Unknown')
+                session_type = getattr(self.data_loader, 'session_type', 'Unknown')
+                
+                if analysis_mode == "single":
+                    json_filename = f"single_driver_telemetry_analysis_{year}_{race_name}_{session_type}.json"
+                else:
+                    json_filename = f"all_drivers_telemetry_analysis_{year}_{race_name}_{session_type}.json"
+                
                 json_path = os.path.join(json_dir, json_filename)
                 
                 with open(json_path, 'w', encoding='utf-8') as f:
                     json.dump(result, f, ensure_ascii=False, indent=2, default=str)
                 
                 print(f"\n📄 JSON 分析報告已保存: {json_path}")
-                print("[OK] Function 12 遙測分析完成！")
+                print(f"[OK] Function 12 遙測分析完成 ({analysis_mode} 模式)！")
             
             return result
+            
         except Exception as e:
-            print(f"[ERROR] 單一車手詳細遙測分析失敗: {str(e)}")
-            return {"success": False, "message": f"單一車手詳細遙測分析失敗: {str(e)}", "function_id": "12"}
+            print(f"[ERROR] 車手詳細遙測分析失敗: {str(e)}")
+            return {"success": False, "message": f"車手詳細遙測分析失敗: {str(e)}", "function_id": "12"}
     
     def _execute_driver_comparison(self, **kwargs):
         """執行車手對比分析 - 包含詳細遙測比較功能"""

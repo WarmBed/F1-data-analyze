@@ -3000,34 +3000,23 @@ class PopoutSubWindow(QMdiSubWindow):
         """子視窗關閉事件處理"""
         try:
             window_title = self.windowTitle()
-            print(f"[SUB_CLOSE] 🔄 子視窗關閉事件觸發: '{window_title}'")
             
             # 發出關閉信號
             self.window_closed.emit()
-            print(f"[SUB_CLOSE] 📡 已發出關閉信號: '{window_title}'")
             
             # 停止任何正在執行的 CLI 分析
             if hasattr(self, 'stop_cli_analysis'):
-                print(f"[SUB_CLOSE] 🛑 停止子視窗 '{window_title}' 的 CLI 分析...")
                 self.stop_cli_analysis()
-                print(f"[SUB_CLOSE] ✅ 子視窗 '{window_title}' 的 CLI 分析已停止")
-            else:
-                print(f"[SUB_CLOSE] ℹ️ 子視窗 '{window_title}' 沒有正在執行的 CLI 分析")
             
             # 如果內容widget有 CLI 分析功能，也要停止
             if self.content_widget and hasattr(self.content_widget, 'stop_cli_analysis'):
-                print(f"[SUB_CLOSE] 🛑 停止子視窗 '{window_title}' 內容組件的 CLI 分析...")
                 self.content_widget.stop_cli_analysis()
-                print(f"[SUB_CLOSE] ✅ 子視窗 '{window_title}' 內容組件的 CLI 分析已停止")
             
             # 接受關閉事件，讓 PyQt 自動處理移除
             event.accept()
-            print(f"[SUB_CLOSE] ✅ 子視窗 '{window_title}' 已關閉")
             
         except Exception as e:
-            print(f"[SUB_CLOSE] ❌ 關閉子視窗時發生錯誤: {e}")
             event.accept()  # 即使出錯也要關閉
-            print(f"[SUB_CLOSE] ⚠️ 儘管出錯，仍強制關閉子視窗")
 
 class ContextMenuTreeWidget(QTreeWidget):
     """支援右鍵選單的功能樹"""
@@ -3690,6 +3679,8 @@ class StyleHMainWindow(QMainWindow):
         analysis_menu.addAction('[RAIN] 降雨分析', self.rain_analysis)
         analysis_menu.addSeparator()
         analysis_menu.addAction('[FINISH] 賽道軌跡分析', self.open_track_analysis_window)
+        analysis_menu.addAction('🏎️ 遙測分析', self.open_telemetry_analysis)
+        analysis_menu.addSeparator()
         analysis_menu.addAction('圈速分析', self.lap_analysis)
         analysis_menu.addAction('遙測比較', self.telemetry_comparison)
         analysis_menu.addAction('車手比較', self.driver_comparison)
@@ -5106,13 +5097,10 @@ class StyleHMainWindow(QMainWindow):
         # 連接關閉信號 - 確保視窗關閉時從追蹤列表移除
         if hasattr(analysis_window, 'window_closed'):
             analysis_window.window_closed.connect(lambda: self.on_subwindow_closed(analysis_window))
-            print(f"[TRACK] ✅ 已連接關閉信號: {analysis_window.windowTitle()}")
         
         # 添加到追蹤列表
         if hasattr(self, 'active_subwindows'):
             self.active_subwindows.append(analysis_window)
-            print(f"[TRACK] ✅ 已添加到追蹤列表: {analysis_window.windowTitle()}")
-            print(f"[TRACK] 📊 當前追蹤的子視窗數量: {len(self.active_subwindows)}")
         
         analysis_window.show()
         
@@ -5151,9 +5139,14 @@ class StyleHMainWindow(QMainWindow):
                 TRACK_ANALYSIS_AVAILABLE = False
                 print(f"警告: TrackAnalysisModule 不可用: {e}")
             
-            # 根據功能名稱映射到模組類型
+            # 根據功能名稱映射到模組類型 - 注意：更具體的匹配必須放在前面
             module_mapping = {
                 "降雨分析": ModuleTypes.RAIN_ANALYSIS,
+                "遙測分析": "telemetry_analysis",  # 遙測分析映射 - 必須在"遙測"之前
+                "賽道分析": ModuleTypes.TRACK_MAP,  # 賽道分析映射
+                "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
+                "進站分析": "pitstop_analysis",  # 進站分析映射
+                "事故分析": "accident_analysis",  # 事故分析映射
                 "遙測": ModuleTypes.TELEMETRY_SPEED,
                 "速度": ModuleTypes.TELEMETRY_SPEED,
                 "煞車": ModuleTypes.TELEMETRY_BRAKE,
@@ -5164,10 +5157,6 @@ class StyleHMainWindow(QMainWindow):
                 "方向盤": ModuleTypes.TELEMETRY_STEERING,
                 "統計": ModuleTypes.STATISTICS,
                 "賽道": ModuleTypes.TRACK_MAP,
-                "賽道分析": ModuleTypes.TRACK_MAP,  # 新增賽道分析映射
-                "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
-                "進站分析": "pitstop_analysis",  # 新增進站分析映射
-                "事故分析": "accident_analysis",  # 新增事故分析映射
                 "圈速": ModuleTypes.LAP_ANALYSIS
             }
             
@@ -5178,7 +5167,7 @@ class StyleHMainWindow(QMainWindow):
                     module_type = mod_type
                     break
             
-            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis"):
+            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis" or module_type == "telemetry_analysis"):
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
                 
@@ -5249,6 +5238,40 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 事故分析模組創建失敗: {e}")
+                        return None
+                
+                # 特殊處理遙測分析模組
+                elif module_type == "telemetry_analysis":
+                    try:
+                        from modules.telemetry_analysis_mdi import TelemetryAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建遙測分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = TelemetryAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 遙測分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 遙測分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組創建失敗: {e}")
                         return None
                 else:
                     # 創建模組
@@ -5674,6 +5697,68 @@ class StyleHMainWindow(QMainWindow):
             import traceback
             traceback.print_exc()
             self.show_error_message("降雨分析錯誤", f"開啟降雨分析時發生錯誤: {e}")
+    
+    def open_telemetry_analysis(self):
+        """開啟遙測分析模組"""
+        try:
+            # 移除歡迎頁面（如果存在）
+            self.remove_welcome_tab()
+            
+            params = self.get_current_parameters()
+            print(f"[分析] [TELEMETRY] 遙測分析 - {params['year']} {params['race']} {params['session']}")
+            
+            # 導入遙測分析模組
+            from modules.telemetry_analysis_mdi import TelemetryAnalysisModule
+            
+            # 創建模組實例
+            telemetry_module = TelemetryAnalysisModule()
+            
+            # 設置參數提供者
+            parameter_provider = MainWindowParameterProvider(self)
+            telemetry_module.parameter_provider = parameter_provider
+            
+            # 設置當前參數
+            telemetry_module.current_year = str(params['year'])
+            telemetry_module.current_race = params['race']
+            telemetry_module.current_session = params['session']
+            
+            # 初始化模組
+            if telemetry_module.initialize_module():
+                print(f"[OK] 遙測分析模組初始化成功")
+                
+                # 創建子視窗
+                subwindow = QMdiSubWindow()
+                subwindow.setWidget(telemetry_module.get_widget())
+                
+                # 設置視窗標題
+                window_title = telemetry_module.get_window_title(params['year'], params['race'], params['session'])
+                subwindow.setWindowTitle(window_title)
+                
+                # 設置視窗大小
+                default_size = telemetry_module.get_default_size()
+                subwindow.resize(default_size[0], default_size[1])
+                
+                # 添加到MDI區域
+                self.mdi_area.addSubWindow(subwindow)
+                subwindow.show()
+                
+                # 觸發參數更新以載入數據
+                telemetry_module.update_parameters(params['year'], params['race'], params['session'])
+                
+                print(f"[OK] 遙測分析視窗已開啟: {window_title}")
+                
+            else:
+                print(f"[ERROR] 遙測分析模組初始化失敗")
+                self.show_error_message("模組錯誤", "遙測分析模組初始化失敗")
+            
+        except ImportError as e:
+            print(f"[ERROR] 遙測分析模組導入失敗: {e}")
+            self.show_error_message("模組錯誤", f"無法載入遙測分析模組: {e}")
+        except Exception as e:
+            print(f"[ERROR] 遙測分析開啟失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.show_error_message("遙測分析錯誤", f"開啟遙測分析時發生錯誤: {e}")
             
     def telemetry_comparison(self): 
         params = self.get_current_parameters()
@@ -5690,12 +5775,10 @@ class StyleHMainWindow(QMainWindow):
         pass
     def tile_windows(self):
         """重新排列視窗 - 智能平鋪當前活動MDI區域中的所有子視窗"""
-        print("[TILE] 🔄 開始重新排列視窗...")
         
         # 獲取當前活動的MDI區域
         current_tab = self.tab_widget.currentWidget()
         if current_tab is None:
-            print("[TILE] ❌ 沒有活動的分頁")
             return
             
         # 查找當前分頁中的MDI區域
@@ -5711,34 +5794,17 @@ class StyleHMainWindow(QMainWindow):
                 break
                 
         if mdi_area is None:
-            print("[TILE] ❌ 當前分頁中沒有找到MDI區域")
             return
             
         # 獲取所有子視窗
         subwindows = mdi_area.subWindowList()
         if not subwindows:
-            print("[TILE] ❌ MDI區域中沒有子視窗需要排列")
             return
-            
-        print(f"[TILE] 📊 開始重新排列 {len(subwindows)} 個子視窗")
         
-        # 列出所有子視窗的詳細信息
-        for i, subwindow in enumerate(subwindows):
-            title = subwindow.windowTitle()
-            pos = subwindow.pos()
-            size = subwindow.size()
-            print(f"[TILE] 📋 視窗 {i+1}: '{title}' 位置:({pos.x()}, {pos.y()}) 尺寸:{size.width()}x{size.height()}")
-        
-        # 檢查追蹤列表中的視窗數量
+        # 檢查並清理未追蹤的視窗
         if hasattr(self, 'active_subwindows'):
-            print(f"[TILE] 🔍 追蹤列表中的視窗數量: {len(self.active_subwindows)}")
-            for i, tracked_window in enumerate(self.active_subwindows):
-                print(f"[TILE] 📝 追蹤 {i+1}: '{tracked_window.windowTitle()}'")
-            
             # 檢查不一致
             if len(subwindows) != len(self.active_subwindows):
-                print(f"[TILE] ⚠️ 發現不一致！MDI區域有 {len(subwindows)} 個，追蹤列表有 {len(self.active_subwindows)} 個")
-                
                 # 找出多餘的視窗 - 使用物件引用而非標題
                 tracked_windows = set(self.active_subwindows)
                 ghost_windows = []
@@ -5746,34 +5812,19 @@ class StyleHMainWindow(QMainWindow):
                 for subwindow in subwindows:
                     if subwindow not in tracked_windows:
                         ghost_windows.append(subwindow)
-                        print(f"[TILE] 👻 發現未追蹤的視窗: '{subwindow.windowTitle()}' (物件ID: {id(subwindow)})")
                 
                 # 清理未追蹤的視窗
                 for ghost_window in ghost_windows:
-                    print(f"[TILE] 🗑️ 正在清理未追蹤的視窗: '{ghost_window.windowTitle()}'...")
                     try:
                         mdi_area.removeSubWindow(ghost_window)
                         ghost_window.close()
                         ghost_window.deleteLater()
-                        print(f"[TILE] ✅ 已清理未追蹤的視窗: '{ghost_window.windowTitle()}'")
                     except Exception as e:
-                        print(f"[TILE] ❌ 清理視窗時發生錯誤: {e}")
+                        pass
                 
                 # 重新獲取子視窗列表
                 subwindows = mdi_area.subWindowList()
-                print(f"[TILE] 🔄 清理後 MDI 區域有 {len(subwindows)} 個子視窗")
-                
-                # 如果清理後仍然不一致，列出詳細信息
-                if len(subwindows) != len(self.active_subwindows):
-                    print(f"[TILE] ⚠️ 清理後仍不一致！")
-                    print(f"[TILE] 📋 MDI區域視窗詳情:")
-                    for i, sw in enumerate(subwindows):
-                        print(f"[TILE]   {i+1}. '{sw.windowTitle()}' (ID: {id(sw)})")
-                    print(f"[TILE] 📋 追蹤列表視窗詳情:")
-                    for i, tw in enumerate(self.active_subwindows):
-                        print(f"[TILE]   {i+1}. '{tw.windowTitle()}' (ID: {id(tw)})")
-            else:
-                print(f"[TILE] ✅ MDI區域與追蹤列表一致")
+        
         # 計算排列配置
         available_width = mdi_area.width() - 20  # 預留邊距
         available_height = mdi_area.height() - 20
@@ -5794,8 +5845,6 @@ class StyleHMainWindow(QMainWindow):
         window_width = max(window_width, min_width)
         window_height = max(window_height, min_height)
         
-        print(f"[TILE] 📐 排列配置: {rows}行 x {cols}列, 每個視窗尺寸: {window_width}x{window_height}")
-        
         # 排列視窗
         for i, subwindow in enumerate(subwindows):
             row = i // cols
@@ -5810,12 +5859,9 @@ class StyleHMainWindow(QMainWindow):
             # 確保視窗可見和正常化
             subwindow.showNormal()
             subwindow.raise_()
-            
-            print(f"[TILE] 🔧 視窗 {i+1}: '{subwindow.windowTitle()}' 移動到 ({x}, {y}) 尺寸 {window_width}x{window_height}")
         
         # 刷新MDI區域
         mdi_area.update()
-        print(f"[TILE] ✅ 成功重新排列 {len(subwindows)} 個視窗")
     def cascade_windows(self):
         """層疊視窗 - 將當前活動MDI區域中的所有子視窗以階梯式排列"""
         #print("[檢視] 層疊視窗")
@@ -7124,103 +7170,52 @@ class StyleHMainWindow(QMainWindow):
     def closeEvent(self, event):
         """視窗關閉事件處理"""
         try:
-            print("[CLOSE] 🔄 主視窗關閉事件觸發")
-            print("[CLOSE] 🛑 開始停止所有正在執行的 CLI 分析...")
-            
             # 停止所有正在執行的 CLI 分析
             self.stop_all_analyses()
             
-            print("[CLOSE] ✅ 所有分析已停止")
-            print("[CLOSE] 📝 接受關閉事件...")
-            
             # 接受關閉事件
             event.accept()
-            print("[CLOSE] ✅ 主視窗關閉事件已接受")
-            print("[CLOSE] 🎯 主視窗已關閉，所有分析已停止")
             
         except Exception as e:
-            print(f"[CLOSE] ❌ 關閉視窗時發生錯誤: {e}")
             event.accept()  # 即使出錯也要關閉
-            print("[CLOSE] ⚠️ 儘管出錯，仍強制接受關閉事件")
     
     def stop_all_analyses(self):
         """停止所有正在執行的分析"""
         try:
-            print("[STOP] 🧹 開始清理所有分析資源...")
-            
             # 清理全域 CLI 分析管理器
-            print("[STOP] 🔄 清理全域 CLI 分析管理器...")
             cli_analysis_manager.cleanup_all()
-            print("[STOP] ✅ 全域 CLI 分析管理器已清理")
             
             # 停止所有子視窗中的 CLI 分析
-            print(f"[STOP] 🔍 檢查 {len(self.mdi_areas)} 個 MDI 區域...")
-            total_subwindows = 0
-            stopped_analyses = 0
-            
-            for i, mdi_area in enumerate(self.mdi_areas):
+            for mdi_area in self.mdi_areas:
                 subwindows = mdi_area.subWindowList()
-                total_subwindows += len(subwindows)
-                print(f"[STOP] 📋 MDI區域 {i+1}: 發現 {len(subwindows)} 個子視窗")
                 
-                # 詳細列出每個子視窗
-                for j, sub_window in enumerate(subwindows):
-                    window_title = sub_window.windowTitle() if sub_window else "未知視窗"
-                    print(f"[STOP] 📝 子視窗 {j+1}: '{window_title}'")
-                    
+                for sub_window in subwindows:
                     widget = sub_window.widget()
                     if hasattr(widget, 'stop_cli_analysis'):
-                        print(f"[STOP] 🛑 停止子視窗 {j+1} 的 CLI 分析...")
                         widget.stop_cli_analysis()
-                        stopped_analyses += 1
-                        print(f"[STOP] ✅ 子視窗 {j+1} 的分析已停止")
-                    else:
-                        print(f"[STOP] ℹ️ 子視窗 {j+1} 沒有 CLI 分析功能")
-            
-            print(f"[STOP] 📊 總計: {total_subwindows} 個子視窗，{stopped_analyses} 個分析已停止")
             
             # 清理追蹤列表
             if hasattr(self, 'active_subwindows'):
-                print(f"[STOP] 🧹 清理子視窗追蹤列表: {len(self.active_subwindows)} 個")
                 self.active_subwindows.clear()
-                print("[STOP] ✅ 子視窗追蹤列表已清空")
             
             # 停止當前視窗的分析（如果有的話）
             if hasattr(self, 'stop_cli_analysis'):
-                print("[STOP] 🔄 停止主視窗的 CLI 分析...")
                 self.stop_cli_analysis()
-                print("[STOP] ✅ 主視窗的分析已停止")
-            else:
-                print("[STOP] ℹ️ 主視窗沒有正在執行的 CLI 分析")
                 
-            print("[STOP] 🎯 所有分析已停止")
-            
         except Exception as e:
-            print(f"[STOP] ❌ 停止分析時發生錯誤: {e}")
-            import traceback
-            print(f"[STOP] 📋 錯誤詳情:\n{traceback.format_exc()}")
+            pass
     
     def on_subwindow_closed(self, subwindow):
         """處理子視窗關閉事件 - 從追蹤列表中移除"""
         try:
             window_title = subwindow.windowTitle() if subwindow else "未知視窗"
-            print(f"[CLEANUP] 🧹 處理子視窗關閉: '{window_title}'")
             
             # 從活動子視窗列表中移除
             if hasattr(self, 'active_subwindows') and subwindow in self.active_subwindows:
                 self.active_subwindows.remove(subwindow)
-                print(f"[CLEANUP] ✅ 已從追蹤列表移除: '{window_title}'")
-                print(f"[CLEANUP] 📊 剩餘活動子視窗: {len(self.active_subwindows)} 個")
-            else:
-                print(f"[CLEANUP] ⚠️ 視窗不在追蹤列表中: '{window_title}'")
-            
-            # 更新狀態 - 只更新狀態列，不傳遞參數
-            print(f"[CLEANUP] 📝 視窗已關閉: {window_title}")
             
         except Exception as e:
-            print(f"[CLEANUP] ❌ 處理子視窗關閉時發生錯誤: {e}")
-            import traceback
-            print(f"[CLEANUP] 📋 錯誤詳情:\n{traceback.format_exc()}")
+            pass
         
     def remove_welcome_tab(self):
         """移除歡迎頁面 - 當使用者開始分析時"""
@@ -7241,37 +7236,20 @@ def main():
     print("[MAIN] 🚀 啟動 F1T 專業賽車分析工作站...")
     
     app = QApplication(sys.argv)
-    print("[MAIN] ✅ QApplication 已創建")
     
     app.setApplicationName("F1T Professional Racing Analysis Workstation")
-    print("[MAIN] ✅ 應用程式名稱已註冊: F1T Professional Racing Analysis Workstation")
-    
     app.setOrganizationName("F1T Professional Racing Analysis Team")
-    print("[MAIN] ✅ 組織名稱已註冊: F1T Professional Racing Analysis Team")
     
     # 設置應用程式字體
     font = QFont("Arial", 8)
     app.setFont(font)
-    print("[MAIN] ✅ 應用程式字體已設定: Arial, 8pt")
     
     # 創建主視窗
-    print("[MAIN] 🏗️ 開始創建主視窗...")
     window = StyleHMainWindow()
-    print("[MAIN] ✅ 主視窗創建完成")
-    
-    print("[MAIN] 👁️ 顯示主視窗...")
     window.show()
-    print("[MAIN] ✅ 主視窗已顯示")
-    
-    # 顯示歡迎訊息
-    print("[MAIN] 🎉 F1T 專業賽車分析工作站已啟動完成！")
-    print("[MAIN] 🎯 專業級F1數據分析平台已就緒")
-    print("[MAIN] 🖥️ 多視窗分析界面，支援完整賽車數據處理")
-    print("[MAIN] ⚡ 進入事件循環...")
     
     result = app.exec_()
-    print("[MAIN] 🔚 應用程式事件循環已結束")
-    print(f"[MAIN] 📊 應用程式退出碼: {result}")
+    sys.exit(result)
     
     sys.exit(result)
 

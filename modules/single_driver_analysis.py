@@ -686,7 +686,7 @@ def _create_all_drivers_lap_time_trend_chart(laps, all_driver_data, data, f1_ana
         traceback.print_exc()
 
 def _format_time(time_value):
-    """格式化時間顯示"""
+    """格式化時間顯示 - 新格式 MM:SS.000"""
     if pd.isna(time_value):
         return "N/A"
     
@@ -695,7 +695,7 @@ def _format_time(time_value):
             total_seconds = time_value.total_seconds()
             minutes = int(total_seconds // 60)
             seconds = total_seconds % 60
-            return f"{minutes}:{seconds:06.3f}"
+            return f"{minutes:02d}:{seconds:06.3f}"
         else:
             return str(time_value)
     except:
@@ -922,6 +922,254 @@ def run_single_driver_telemetry_json(data_loader, open_analyzer, f1_analysis_ins
         return {
             "success": False,
             "message": f"執行單一車手詳細遙測分析時發生錯誤: {str(e)}",
+            "data": None,
+            "timestamp": datetime.now().isoformat()
+        }
+
+
+def run_all_drivers_telemetry_analysis(data_loader, open_analyzer, f1_analysis_instance=None, enable_debug=False):
+    """執行所有車手詳細遙測分析並返回JSON結果
+    
+    Args:
+        data_loader: 數據載入器
+        open_analyzer: OpenF1數據分析器
+        f1_analysis_instance: F1分析實例
+        enable_debug: 是否啟用調試模式
+        
+    Returns:
+        dict: 包含所有車手分析結果的JSON格式字典
+    """
+    try:
+        from datetime import datetime
+        import pandas as pd
+        import numpy as np
+        
+        if enable_debug:
+            print("[DEBUG] 開始執行所有車手詳細遙測分析 (JSON版)...")
+        
+        # 獲取已載入的數據
+        data = data_loader.get_loaded_data()
+        if not data:
+            return {
+                "success": False,
+                "message": "沒有可用的數據，請先載入數據",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        laps = data['laps']
+        session = data['session']
+        weather_data = data.get('weather_data')
+        results = data['results']
+        
+        # 獲取所有可用車手
+        drivers = sorted(laps['Driver'].unique())
+        if not drivers:
+            return {
+                "success": False,
+                "message": "沒有找到可用的車手數據",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        if enable_debug:
+            print(f"[INFO] 找到 {len(drivers)} 位車手: {', '.join(drivers)}")
+        
+        # 所有車手的分析結果
+        all_drivers_data = {}
+        analysis_summary = {}
+        
+        for driver_code in drivers:
+            if enable_debug:
+                print(f"[INFO] 正在分析車手: {driver_code}")
+            
+            try:
+                # 獲取該車手的圈數據
+                driver_laps = laps[laps['Driver'] == driver_code].copy()
+                
+                if driver_laps.empty:
+                    if enable_debug:
+                        print(f"[WARNING] 車手 {driver_code} 沒有圈數據")
+                    continue
+                
+                # 車手基本信息（移除總圈數和有效圈數，增加初始名次）
+                # 從results中獲取最終位置和初始位置
+                try:
+                    driver_result = results[results['Abbreviation'] == driver_code].iloc[0]
+                    # 將位置轉換為整數，移除小數點
+                    final_position = int(driver_result['Position']) if pd.notna(driver_result['Position']) else "N/A"
+                    full_name = driver_result['FullName']
+                    team_name = driver_result['TeamName']
+                    # 獲取初始名次（GridPosition）並轉換為整數
+                    grid_pos = driver_result.get('GridPosition', 'N/A')
+                    starting_position = int(grid_pos) if pd.notna(grid_pos) and grid_pos != 'N/A' else "N/A"
+                except:
+                    final_position = "N/A"
+                    full_name = "N/A"
+                    team_name = "N/A"
+                    starting_position = "N/A"
+                
+                # 圈速分析
+                lap_time_analysis = {}
+                valid_lap_times = driver_laps.dropna(subset=['LapTime'])
+                
+                if not valid_lap_times.empty:
+                    # 最快圈
+                    fastest_lap_row = valid_lap_times.loc[valid_lap_times['LapTime'].idxmin()]
+                    fastest_lap_time = fastest_lap_row['LapTime']
+                    fastest_lap_number = fastest_lap_row['LapNumber']
+                    
+                    # 最慢圈
+                    slowest_lap_row = valid_lap_times.loc[valid_lap_times['LapTime'].idxmax()]
+                    slowest_lap_time = slowest_lap_row['LapTime']
+                    slowest_lap_number = slowest_lap_row['LapNumber']
+                    
+                    # 統計數據
+                    lap_times_seconds = valid_lap_times['LapTime'].dt.total_seconds()
+                    average_lap_time = pd.Timedelta(seconds=lap_times_seconds.mean())
+                    lap_time_std = lap_times_seconds.std()
+                    
+                    lap_time_analysis = {
+                        "fastest_lap": {
+                            "lap_time": _format_time(fastest_lap_time),
+                            "lap_number": int(fastest_lap_number),
+                            "tire_compound": fastest_lap_row.get('Compound', 'N/A')
+                        },
+                        "slowest_lap": {
+                            "lap_time": _format_time(slowest_lap_time),
+                            "lap_number": int(slowest_lap_number)
+                        },
+                        "statistics": {
+                            "average_lap_time": _format_time(average_lap_time),
+                            "lap_time_std": f"{lap_time_std:.3f}s",
+                            "total_valid_laps": len(valid_lap_times)
+                        }
+                    }
+                
+                # 區間時間分析
+                sector_analysis = {}
+                for sector_num in [1, 2, 3]:
+                    sector_col = f'Sector{sector_num}Time'
+                    if sector_col in driver_laps.columns:
+                        sector_data = driver_laps.dropna(subset=[sector_col])
+                        if not sector_data.empty:
+                            best_sector = sector_data.loc[sector_data[sector_col].idxmin()]
+                            sector_times = sector_data[sector_col].dt.total_seconds()
+                            
+                            sector_analysis[f"sector_{sector_num}"] = {
+                                "best_time": _format_time(best_sector[sector_col]),
+                                "best_lap_number": int(best_sector['LapNumber']),
+                                "average_time": f"{sector_times.mean():.3f}s",
+                                "total_records": len(sector_data)
+                            }
+                
+                # 輪胎分析
+                tire_analysis = {}
+                tire_compounds = driver_laps['Compound'].value_counts()
+                tire_usage = {}
+                
+                for compound, count in tire_compounds.items():
+                    if pd.notna(compound):
+                        compound_laps = driver_laps[driver_laps['Compound'] == compound]
+                        tire_usage[compound] = {
+                            "laps_used": int(count),
+                            "first_lap": int(compound_laps['LapNumber'].min()),
+                            "last_lap": int(compound_laps['LapNumber'].max())
+                        }
+                
+                tire_analysis = {
+                    "compounds_used": list(tire_usage.keys()),
+                    "tire_usage": tire_usage,
+                    "total_compounds": len(tire_usage)
+                }
+                
+                # Pitstop 分析
+                pitstop_analysis = {}
+                if 'PitOutTime' in driver_laps.columns:
+                    pitstops = driver_laps.dropna(subset=['PitOutTime'])
+                    pitstop_count = len(pitstops)
+                    
+                    if pitstop_count > 0:
+                        pitstop_laps = pitstops['LapNumber'].tolist()
+                        pitstop_analysis = {
+                            "pitstop_count": pitstop_count,
+                            "pitstop_laps": [int(lap) for lap in pitstop_laps],
+                            "average_pitstop_lap": f"{np.mean(pitstop_laps):.1f}"
+                        }
+                    else:
+                        pitstop_analysis = {
+                            "pitstop_count": 0,
+                            "pitstop_laps": [],
+                            "average_pitstop_lap": "N/A"
+                        }
+                else:
+                    pitstop_analysis = {
+                        "pitstop_count": "N/A",
+                        "pitstop_laps": [],
+                        "average_pitstop_lap": "N/A"
+                    }
+                
+                # 整合該車手的所有數據
+                driver_data = {
+                    "driver_info": {
+                        "driver_code": driver_code,
+                        "full_name": full_name,
+                        "team_name": team_name,
+                        "starting_position": starting_position,
+                        "final_position": final_position
+                    },
+                    "lap_time_analysis": lap_time_analysis,
+                    "sector_analysis": sector_analysis,
+                    "tire_analysis": tire_analysis,
+                    "pitstop_analysis": pitstop_analysis
+                }
+                
+                all_drivers_data[driver_code] = driver_data
+                
+                if enable_debug:
+                    print(f"[SUCCESS] 車手 {driver_code} 分析完成")
+                    
+            except Exception as e:
+                if enable_debug:
+                    print(f"[ERROR] 分析車手 {driver_code} 時發生錯誤: {str(e)}")
+                continue
+        
+        # 生成整體摘要
+        analysis_summary = {
+            "total_drivers_analyzed": len(all_drivers_data),
+            "available_drivers": drivers,
+            "analysis_timestamp": datetime.now().isoformat(),
+            "race_info": {
+                "year": getattr(session, 'event', {}).get('EventDate', 'N/A'),
+                "event_name": getattr(session, 'event', {}).get('EventName', 'N/A'),
+                "session_name": getattr(session, 'name', 'N/A')
+            }
+        }
+        
+        result_data = {
+            "all_drivers_telemetry": all_drivers_data,
+            "analysis_summary": analysis_summary
+        }
+        
+        if enable_debug:
+            print(f"[SUCCESS] 所有車手遙測分析完成，共分析 {len(all_drivers_data)} 位車手")
+        
+        return {
+            "success": True,
+            "message": f"成功分析 {len(all_drivers_data)} 位車手的遙測數據",
+            "data": result_data,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        if enable_debug:
+            print(f"[ERROR] 執行所有車手遙測分析時發生錯誤: {str(e)}")
+            import traceback
+            traceback.print_exc()
+        
+        return {
+            "success": False,
+            "message": f"執行所有車手遙測分析時發生錯誤: {str(e)}",
             "data": None,
             "timestamp": datetime.now().isoformat()
         }
