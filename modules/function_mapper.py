@@ -1121,24 +1121,64 @@ class F1AnalysisFunctionMapper:
             # 獲取車手參數
             driver1 = kwargs.get('driver1', kwargs.get('driver'))
             driver2 = kwargs.get('driver2')
-            lap1 = kwargs.get('lap1', 1)
-            lap2 = kwargs.get('lap2', 1)
+            # 正確映射lap參數到lap1，同時支援舊參數
+            lap1 = kwargs.get('lap1', kwargs.get('lap', 1))
+            lap2 = kwargs.get('lap2', kwargs.get('lap', 1))
             
-            # 如果沒有提供driver2，使用常見的測試車手對比
-            if not driver2:
-                if driver1 == 'VER':
-                    driver2 = 'LEC'
-                elif driver1 == 'LEC':
-                    driver2 = 'VER'
-                else:
-                    driver2 = 'ALO'  # 默認對比車手
-                print(f"[STATS] 自動選擇對比車手: {driver1} vs {driver2}")
+            # 判斷是否為單車手模式
+            single_driver_mode = driver2 is None
             
-            print(f"[BALANCE] 執行詳細遙測比較分析: {driver1} vs {driver2}")
-            print(f"   • 圈數: 第 {lap1} 圈 vs 第 {lap2} 圈")
-            print(f"   • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比")
+            if single_driver_mode:
+                print(f"[STATS] 單車手分析模式: {driver1}")
+                print(f"[BALANCE] 執行單車手遙測分析: {driver1}")
+                print(f"   • 圈數: 第 {lap1} 圈")
+                print(f"   • 包含: 速度/RPM/油門/煞車/檔位/加速度分析")
+                
+                # 單車手模式：使用詳細遙測分析，但將兩個車手設為相同以獲取詳細數據
+                from modules.two_driver_telemetry_comparison_fixed import run_two_driver_telemetry_comparison_analysis
+                
+                # 準備參數，避免重複
+                analysis_kwargs = {k: v for k, v in kwargs.items() if k not in ['year', 'race', 'session', 'driver', 'driver2', 'lap_number', 'show_detailed_output']}
+                
+                try:
+                    result = run_two_driver_telemetry_comparison_analysis(
+                        data_loader=self.data_loader,
+                        year=getattr(self.data_loader, 'year', 2025),
+                        race=getattr(self.data_loader, 'race_name', 'Japan'),
+                        session=getattr(self.data_loader, 'session_type', 'R'),
+                        driver=driver1,
+                        driver2=driver1,  # 單車手模式：兩個車手相同以獲取詳細遙測數據
+                        lap_number=lap1,  # 使用正確的lap1參數
+                        show_detailed_output=show_detailed_output,
+                        **analysis_kwargs
+                    )
+                    if result and result.get("success"):
+                        return result
+                except Exception as e:
+                    print(f"[ERROR] 單車手遙測分析失敗: {e}")
+                
+                # 如果遙測分析失敗，回退到基本分析
+                print("[REFRESH] 回退到基本車手分析...")
+                from modules.driver_comparison_advanced import run_driver_comparison_json
+                result = run_driver_comparison_json(
+                    self.data_loader,
+                    f1_analysis_instance=self.f1_analysis_instance,
+                    enable_debug=True,
+                    driver1=driver1,
+                    driver2=None,  # 確保為None表示單車手模式
+                    lap1=lap1,
+                    lap2=None,
+                    show_detailed_output=show_detailed_output
+                )
+                return result
+                
+            else:
+                print(f"[STATS] 雙車手比較模式: {driver1} vs {driver2}")
+                print(f"[BALANCE] 執行詳細遙測比較分析: {driver1} vs {driver2}")
+                print(f"   • 圈數: 第 {lap1} 圈 vs 第 {lap2} 圈")
+                print(f"   • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比")
             
-            # 使用詳細遙測比較模組
+            # 使用詳細遙測比較模組（僅雙車手模式）
             from modules.two_driver_telemetry_comparison_fixed import run_two_driver_telemetry_comparison_analysis
             
             # 準備參數，避免重複

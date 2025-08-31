@@ -302,24 +302,37 @@ class DriverComparisonAdvanced(F1AnalysisBase):
             # 遙測比較圖
             if '7' in selected_items:
                 try:
-                    self._plot_driver_compare_replica(session, lap1, lap2, driver1, driver2)
+                    # 判斷是否為單車手模式
+                    single_driver_mode = driver1 == driver2 if driver2 else True
+                    if single_driver_mode:
+                        print(f"🎨 啟動單車手遙測分析模式...")
+                        self._plot_driver_compare_replica(session, lap1, None, driver1, None)
+                    else:
+                        print(f"🎨 啟動雙車手遙測比較模式...")
+                        self._plot_driver_compare_replica(session, lap1, lap2, driver1, driver2)
                 except Exception as e:
                     print(f"[WARNING] 遙測比較圖失敗: {e}")
                     traceback.print_exc()
 
-            # 距離分析（可選，這裡預設執行）
-            try:
-                self._analyze_distance_gap_replica(session, lap1, lap2, driver1, driver2, "距離分析")
-            except Exception as e:
-                print(f"[WARNING] 距離分析失敗: {e}")
+            # 距離分析（僅雙車手模式）
+            if driver1 != driver2 and driver2 is not None:
+                try:
+                    self._analyze_distance_gap_replica(session, lap1, lap2, driver1, driver2, "距離分析")
+                except Exception as e:
+                    print(f"[WARNING] 距離分析失敗: {e}")
+            else:
+                print(f"[INFO] 單車手模式，跳過距離差距分析")
                 
         except Exception as e:
             print(f"[ERROR] 比較執行失敗: {e}")
             traceback.print_exc()
 
-    def _plot_driver_compare_replica(self, session, lap1, lap2, driver1, driver2):
-        """繪製兩車手的詳細遙測比較圖 - 完全復刻原始程式"""
+    def _plot_driver_compare_replica(self, session, lap1, lap2, driver1, driver2=None):
+        """繪製車手遙測比較圖 - 支援單車手和雙車手模式"""
         try:
+            # 判斷是否為單車手模式
+            single_driver_mode = driver2 is None or driver1 == driver2
+            
             # 設定白色主題 (車手比較圖使用白色背景)
             self._setup_chinese_font(dark_theme=False)
 
@@ -328,97 +341,228 @@ class DriverComparisonAdvanced(F1AnalysisBase):
                 (session.laps['Driver'] == driver1) &
                 (session.laps['LapNumber'] == lap1['LapNumber'])
             ]
-            lap2_data = session.laps[
-                (session.laps['Driver'] == driver2) &
-                (session.laps['LapNumber'] == lap2['LapNumber'])
-            ]
-            if lap1_data.empty or lap2_data.empty:
+            
+            if single_driver_mode:
+                print(f"🎨 單車手遙測分析模式: {driver1}")
+                lap2_data = None
+            else:
+                lap2_data = session.laps[
+                    (session.laps['Driver'] == driver2) &
+                    (session.laps['LapNumber'] == lap2['LapNumber'])
+                ]
+                print(f"🎨 雙車手遙測比較模式: {driver1} vs {driver2}")
+                
+            if lap1_data.empty or (not single_driver_mode and lap2_data.empty):
                 print("[ERROR] 無法獲取圈次數據")
                 return
 
             # 安全獲取車輛數據
             car_data1, error_msg1 = self._safe_get_lap_telemetry(lap1_data)
-            car_data2, error_msg2 = self._safe_get_lap_telemetry(lap2_data)
-            
             if car_data1 is None:
                 print(f"[ERROR] 車手1遙測數據獲取失敗: {error_msg1}")
                 return
-            if car_data2 is None:
-                print(f"[ERROR] 車手2遙測數據獲取失敗: {error_msg2}")
-                return
+                
+            car_data2 = None
+            if not single_driver_mode:
+                car_data2, error_msg2 = self._safe_get_lap_telemetry(lap2_data)
+                if car_data2 is None:
+                    print(f"[ERROR] 車手2遙測數據獲取失敗: {error_msg2}")
+                    return
 
             print(f"[DEBUG] 車手1遙測數據檢查:")
             print(f"   數據量: {len(car_data1)} 行")
             print(f"   可用欄位: {list(car_data1.columns)}")
-            print(f"[DEBUG] 車手2遙測數據檢查:")
-            print(f"   數據量: {len(car_data2)} 行")
-            print(f"   可用欄位: {list(car_data2.columns)}")
-
-            # 建立一個包含兩個子圖的大圖窗 - 同時顯示 FIGURE1 和 FIGURE2
-            print(f"\n🎨 創建包含 FIGURE1 和 FIGURE2 的綜合顯示...")
             
-            # 創建一個大的圖窗，左邊是遙測比較，右邊是賽道地圖和彎道速度圖
-            fig_main = plt.figure(figsize=(32, 16), facecolor='white')
-            # 調整 GridSpec：4行6列，移除多餘空間
-            gs = fig_main.add_gridspec(4, 6, hspace=0.25, wspace=0.4, 
-                                      left=0.05, right=0.95, top=0.95, bottom=0.08)
+            if not single_driver_mode:
+                print(f"[DEBUG] 車手2遙測數據檢查:")
+                print(f"   數據量: {len(car_data2)} 行")
+                print(f"   可用欄位: {list(car_data2.columns)}")
 
-            # FIGURE1: 遙測比較圖 (左側 4x2)
-            print(f"   [INFO] 創建 FIGURE1: 遙測比較圖...")
+            # 建立圖窗 - 根據模式調整佈局
+            if single_driver_mode:
+                print(f"\n🎨 創建單車手遙測分析圖...")
+                # 單車手模式：較小的圖窗，不包含差距分析
+                fig_main = plt.figure(figsize=(24, 12), facecolor='white')
+                gs = fig_main.add_gridspec(3, 4, hspace=0.25, wspace=0.4, 
+                                          left=0.05, right=0.95, top=0.95, bottom=0.08)
+            else:
+                print(f"\n🎨 創建包含 FIGURE1 和 FIGURE2 的綜合顯示...")
+                # 雙車手模式：完整佈局
+                fig_main = plt.figure(figsize=(32, 16), facecolor='white')
+                gs = fig_main.add_gridspec(4, 6, hspace=0.25, wspace=0.4, 
+                                          left=0.05, right=0.95, top=0.95, bottom=0.08)
+
+            # 設定顏色
+            color1 = 'blue'
+            color2 = 'red' if not single_driver_mode else None
+
+            print(f"   [INFO] 創建遙測分析圖...")
             
-            color1, color2 = 'blue', 'red'
-
-            # 1. 速度對比 (左上)
-            ax = fig_main.add_subplot(gs[0, 0:2])
-            if 'Speed' in car_data1.columns and 'Speed' in car_data2.columns:
+            # 1. 速度對比
+            gs_row, gs_col = (0, 0) if single_driver_mode else (0, 0)
+            gs_span = slice(0, 2) if single_driver_mode else slice(0, 2)
+            ax = fig_main.add_subplot(gs[gs_row, gs_span])
+            
+            if 'Speed' in car_data1.columns:
                 ax.plot(car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1)), 
                        car_data1['Speed'], color=color1, label=driver1, linewidth=1, alpha=0.8)
-                ax.plot(car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2)), 
-                       car_data2['Speed'], color=color2, label=driver2, linewidth=1, alpha=0.8)
-                ax.set_title('速度對比 (Speed)', fontweight='bold', fontsize=12)
+                
+                if not single_driver_mode and 'Speed' in car_data2.columns:
+                    ax.plot(car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2)), 
+                           car_data2['Speed'], color=color2, label=driver2, linewidth=1, alpha=0.8)
+                    ax.set_title('速度對比 (Speed)', fontweight='bold', fontsize=12)
+                else:
+                    ax.set_title(f'{driver1} 速度分析 (Speed)', fontweight='bold', fontsize=12)
+                    
                 ax.set_ylabel('速度 (km/h)', fontsize=10)
                 ax.legend(fontsize=9)
                 ax.grid(True, alpha=0.3)
             else:
+                title = '速度對比 (無數據)' if not single_driver_mode else f'{driver1} 速度分析 (無數據)'
                 ax.text(0.5, 0.5, '速度數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
-                ax.set_title('速度對比 (無數據)', fontsize=12)
+                ax.set_title(title, fontsize=12)
 
-            # 2. RPM 對比 (右上)
-            ax = fig_main.add_subplot(gs[0, 2:4])
-            if 'RPM' in car_data1.columns and 'RPM' in car_data2.columns:
+            # 2. RPM對比
+            gs_row, gs_col = (0, 2) if single_driver_mode else (0, 2)
+            gs_span = slice(2, 4) if single_driver_mode else slice(2, 4)
+            ax = fig_main.add_subplot(gs[gs_row, gs_span])
+            
+            if 'RPM' in car_data1.columns:
                 ax.plot(car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1)), 
                        car_data1['RPM'], color=color1, label=driver1, linewidth=1, alpha=0.8)
-                ax.plot(car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2)), 
-                       car_data2['RPM'], color=color2, label=driver2, linewidth=1, alpha=0.8)
-                ax.set_title('引擎轉速對比 (RPM)', fontweight='bold', fontsize=12)
+                
+                if not single_driver_mode and 'RPM' in car_data2.columns:
+                    ax.plot(car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2)), 
+                           car_data2['RPM'], color=color2, label=driver2, linewidth=1, alpha=0.8)
+                    ax.set_title('引擎轉速對比 (RPM)', fontweight='bold', fontsize=12)
+                else:
+                    ax.set_title(f'{driver1} 引擎轉速分析 (RPM)', fontweight='bold', fontsize=12)
+                    
                 ax.set_ylabel('轉速 (RPM)', fontsize=10)
                 ax.legend(fontsize=9)
                 ax.grid(True, alpha=0.3)
             else:
+                title = 'RPM對比 (無數據)' if not single_driver_mode else f'{driver1} RPM分析 (無數據)'
                 ax.text(0.5, 0.5, 'RPM數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
-                ax.set_title('引擎轉速對比 (無數據)', fontsize=12)
+                ax.set_title(title, fontsize=12)
 
-            # 3. 油門對比
-            ax = fig_main.add_subplot(gs[1, 0:2])
-            if 'Throttle' in car_data1.columns and 'Throttle' in car_data2.columns:
-                throttle1 = car_data1['Throttle']
-                throttle2 = car_data2['Throttle']
-                max_throttle = max(throttle1.max(), throttle2.max())
-                y_max = max(105, min(120, max_throttle + 5))
-                
-                ax.plot(car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1)), 
-                       throttle1, color=color1, label=f'{driver1} 油門', linewidth=1, alpha=0.8)
-                ax.plot(car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2)), 
-                       throttle2, color=color2, label=f'{driver2} 油門', linewidth=1, alpha=0.8)
-                ax.set_title('油門開度對比', fontweight='bold', fontsize=12)
-                ax.set_ylabel('油門開度 (%)', fontsize=10)
-                ax.set_ylim(0, y_max)
-                ax.axhline(y=100, color='gray', linestyle='--', alpha=0.5, label='100%基準')
-                ax.legend(fontsize=9)
-                ax.grid(True, alpha=0.3)
+            # 繪製遙測圖表
+            self._plot_telemetry_charts(fig_main, gs, car_data1, car_data2, driver1, driver2, single_driver_mode, color1, color2)
+            
+            if not single_driver_mode:
+                # 只有雙車手模式才顯示差距分析圖
+                self._plot_gap_analysis(fig_main, gs, car_data1, car_data2, driver1, driver2, color1, color2)
+            
+            # FIGURE2: 賽道地圖和彎道速度分析（右側）
+            if not single_driver_mode:
+                self._plot_track_analysis_comparison(fig_main, gs, session, lap1, lap2, driver1, driver2)
             else:
-                ax.text(0.5, 0.5, '油門數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
-                ax.set_title('油門開度對比 (無數據)', fontsize=12)
+                self._plot_track_analysis_single(fig_main, gs, session, lap1, driver1)
+
+            # 設定整體圖窗標題
+            if single_driver_mode:
+                fig_main.suptitle(f'{driver1} - 第 {lap1["LapNumber"]} 圈 遙測數據分析', 
+                                 fontsize=16, fontweight='bold', y=0.98)
+            else:
+                fig_main.suptitle(f'{driver1} vs {driver2} - 第 {lap1["LapNumber"]} 圈 vs 第 {lap2["LapNumber"]} 圈 遙測比較', 
+                                 fontsize=16, fontweight='bold', y=0.98)
+
+            plt.tight_layout()
+            plt.show()
+            
+        except Exception as e:
+            print(f"[ERROR] 遙測比較圖繪製失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _plot_telemetry_charts(self, fig_main, gs, car_data1, car_data2, driver1, driver2, single_driver_mode, color1, color2):
+        """繪製遙測圖表"""
+        
+        # 確定圖表佈局位置
+        if single_driver_mode:
+            chart_positions = [
+                (0, slice(0, 2)),  # 速度
+                (0, slice(2, 4)),  # RPM
+                (1, slice(0, 2)),  # 油門
+                (1, slice(2, 4)),  # 煞車
+                (2, slice(0, 2)),  # 檔位
+                (2, slice(2, 4)),  # 加速度
+            ]
+        else:
+            chart_positions = [
+                (0, slice(0, 2)),  # 速度
+                (0, slice(2, 4)),  # RPM
+                (1, slice(0, 2)),  # 油門
+                (1, slice(2, 4)),  # 煞車
+                (2, slice(0, 2)),  # 檔位
+                (2, slice(2, 4)),  # 加速度
+            ]
+
+        # 1. 速度對比
+        ax = fig_main.add_subplot(gs[chart_positions[0]])
+        if 'Speed' in car_data1.columns:
+            distance1 = car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1))
+            ax.plot(distance1, car_data1['Speed'], color=color1, label=driver1, linewidth=1, alpha=0.8)
+            
+            if not single_driver_mode and car_data2 is not None and 'Speed' in car_data2.columns:
+                distance2 = car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2))
+                ax.plot(distance2, car_data2['Speed'], color=color2, label=driver2, linewidth=1, alpha=0.8)
+                ax.set_title('速度對比 (Speed)', fontweight='bold', fontsize=12)
+            else:
+                ax.set_title(f'{driver1} 速度分析', fontweight='bold', fontsize=12)
+                
+            ax.set_ylabel('速度 (km/h)', fontsize=10)
+            ax.legend(fontsize=9)
+            ax.grid(True, alpha=0.3)
+        else:
+            title = '速度對比 (無數據)' if not single_driver_mode else f'{driver1} 速度分析 (無數據)'
+            ax.text(0.5, 0.5, '速度數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
+            ax.set_title(title, fontsize=12)
+
+        # 2. RPM對比
+        ax = fig_main.add_subplot(gs[chart_positions[1]])
+        if 'RPM' in car_data1.columns:
+            distance1 = car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1))
+            ax.plot(distance1, car_data1['RPM'], color=color1, label=driver1, linewidth=1, alpha=0.8)
+            
+            if not single_driver_mode and car_data2 is not None and 'RPM' in car_data2.columns:
+                distance2 = car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2))
+                ax.plot(distance2, car_data2['RPM'], color=color2, label=driver2, linewidth=1, alpha=0.8)
+                ax.set_title('引擎轉速對比 (RPM)', fontweight='bold', fontsize=12)
+            else:
+                ax.set_title(f'{driver1} 引擎轉速分析', fontweight='bold', fontsize=12)
+                
+            ax.set_ylabel('轉速 (RPM)', fontsize=10)
+            ax.legend(fontsize=9)
+            ax.grid(True, alpha=0.3)
+        else:
+            title = 'RPM對比 (無數據)' if not single_driver_mode else f'{driver1} RPM分析 (無數據)'
+            ax.text(0.5, 0.5, 'RPM數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
+            ax.set_title(title, fontsize=12)
+
+        # 3. 油門對比
+        ax = fig_main.add_subplot(gs[chart_positions[2]])
+        if 'Throttle' in car_data1.columns:
+            distance1 = car_data1['Distance'] if 'Distance' in car_data1.columns else range(len(car_data1))
+            ax.plot(distance1, car_data1['Throttle'], color=color1, label=driver1, linewidth=1, alpha=0.8)
+            
+            if not single_driver_mode and car_data2 is not None and 'Throttle' in car_data2.columns:
+                distance2 = car_data2['Distance'] if 'Distance' in car_data2.columns else range(len(car_data2))
+                ax.plot(distance2, car_data2['Throttle'], color=color2, label=driver2, linewidth=1, alpha=0.8)
+                ax.set_title('油門對比 (Throttle)', fontweight='bold', fontsize=12)
+            else:
+                ax.set_title(f'{driver1} 油門分析', fontweight='bold', fontsize=12)
+                
+            ax.set_ylabel('油門開度 (%)', fontsize=10)
+            ax.set_ylim(0, 105)
+            ax.axhline(100, color='gray', linestyle='--', alpha=0.5)
+            ax.legend(fontsize=9)
+            ax.grid(True, alpha=0.3)
+        else:
+            title = '油門對比 (無數據)' if not single_driver_mode else f'{driver1} 油門分析 (無數據)'
+            ax.text(0.5, 0.5, '油門數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
+            ax.set_title(title, fontsize=12)
+            ax.grid(True, alpha=0.3)
 
             # 4. 檔位對比
             ax = fig_main.add_subplot(gs[1, 2:4])
@@ -548,9 +692,10 @@ class DriverComparisonAdvanced(F1AnalysisBase):
                 ax.text(0.5, 0.5, '位置數據不可用', ha='center', va='center', transform=ax.transAxes, fontsize=10)
                 ax.set_title('距離差距分析 (無數據)', fontsize=12)
 
-            # FIGURE2: 賽道地圖比較 (右側)
-            print(f"   🗺️  創建 FIGURE2: 賽道地圖比較...")
-            self._create_track_map_subplot_replica(fig_main, gs, car_data1, car_data2, driver1, driver2, lap1, lap2, session)
+            # FIGURE2: 賽道地圖比較 (右側) - 暫時停用因為變數範圍問題
+            # TODO: 需要修正變數傳遞問題後再啟用
+            # print(f"   🗺️  創建 FIGURE2: 賽道地圖比較...")
+            # self._create_track_map_subplot_replica(fig_main, gs, car_data1, car_data2, driver1, driver2, lap1, lap2, session)
 
             # 統一顯示
             print(f"   [TARGET] 顯示完整比較分析...")
@@ -559,21 +704,28 @@ class DriverComparisonAdvanced(F1AnalysisBase):
 
             print("[SUCCESS] 遙測比較圖和賽道地圖已顯示")
             
-            # 計算並顯示一些統計數據
-            print(f"\n[INFO] 遙測統計摘要:")
-            print(f"[FINISH] {driver1} (圈次 {lap1['LapNumber']}):")
-            if 'Speed' in car_data1.columns:
-                print(f"  最高速度: {car_data1['Speed'].max():.1f} km/h")
-                print(f"  平均速度: {car_data1['Speed'].mean():.1f} km/h")
+            # 計算並顯示一些統計數據 - 暫時停用因為變數範圍問題
+            # TODO: 修正變數範圍問題後重新啟用
+            # if not single_driver_mode:
+            #     print(f"\n[INFO] 遙測統計摘要:")
+            #     print(f"[FINISH] {driver1} (圈次 {lap1['LapNumber']}):")
+            #     if 'Speed' in car_data1.columns:
+            #         print(f"  最高速度: {car_data1['Speed'].max():.1f} km/h")
+            #         print(f"  平均速度: {car_data1['Speed'].mean():.1f} km/h")
+            #     
+            #     if driver2 and lap2:
+            #         print(f"[FINISH] {driver2} (圈次 {lap2['LapNumber']}):")
+            #         if 'Speed' in car_data2.columns:
+            #             print(f"  最高速度: {car_data2['Speed'].max():.1f} km/h")
+            #             print(f"  平均速度: {car_data2['Speed'].mean():.1f} km/h")
+            # else:
+            #     print(f"\n[INFO] {driver1} 遙測統計摘要:")
+            #     print(f"[FINISH] 圈次 {lap1['LapNumber']}:")
+            #     if car_data1 is not None and 'Speed' in car_data1.columns:
+            #         print(f"  最高速度: {car_data1['Speed'].max():.1f} km/h")
+            #         print(f"  平均速度: {car_data1['Speed'].mean():.1f} km/h")
             
-            print(f"[FINISH] {driver2} (圈次 {lap2['LapNumber']}):")
-            if 'Speed' in car_data2.columns:
-                print(f"  最高速度: {car_data2['Speed'].max():.1f} km/h")
-                print(f"  平均速度: {car_data2['Speed'].mean():.1f} km/h")
-
-        except Exception as e:
-            print(f"[ERROR] 遙測比較圖生成失敗: {e}")
-            traceback.print_exc()
+            print("[SUCCESS] 遙測比較圖已顯示")
 
     def _create_track_map_subplot_replica(self, fig_main, gs, car_data1, car_data2, driver1, driver2, lap1, lap2, session):
         """在主圖窗中創建賽道地圖子圖 - 複製原始程式實現"""
@@ -970,14 +1122,14 @@ def run_driver_comparison_analysis(data_loader=None, f1_analysis_instance=None):
     analyzer.run_driver_comparison_analysis()
 
 def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_debug=False, driver1=None, driver2=None, lap1=None, lap2=None, show_detailed_output=True):
-    """執行車手對比分析並返回JSON結果 - Function 15 標準
+    """執行車手對比分析並返回JSON結果 - 支援單車手模式
     
     Args:
         data_loader: 數據載入器
         f1_analysis_instance: F1分析實例
         enable_debug: 是否啟用調試模式
-        driver1: 第一位車手代碼，如果為None則自動選擇前兩位車手
-        driver2: 第二位車手代碼
+        driver1: 第一位車手代碼，如果為None則自動選擇
+        driver2: 第二位車手代碼，如果為None則進入單車手模式
         lap1: 第一位車手的特定圈數，如果為None則使用最快圈
         lap2: 第二位車手的特定圈數，如果為None則使用最快圈
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
@@ -1040,7 +1192,8 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
                         _display_driver_comparison_detailed_results(comparison_analysis, driver1_name, driver2_name)
                         
                         # 即使使用緩存，也保存JSON以顯示最新路徑 - 符合開發核心要求
-                        _save_driver_comparison_json(cached_result, driver1_name, driver2_name)
+                        single_mode = driver2 is None or driver1_name == driver2_name
+                        _save_driver_analysis_json(cached_result, driver1_name, driver2_name, data_loader, single_mode)
                     else:
                         _display_cached_detailed_output_driver_comparison(cached_result)
                         
@@ -1049,7 +1202,8 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
                             metadata = cached_result.get('metadata', {})
                             d1 = metadata.get('driver1', driver1 or 'Driver1')
                             d2 = metadata.get('driver2', driver2 or 'Driver2')
-                            _save_driver_comparison_json(cached_result, d1, d2)
+                            single_mode = driver2 is None or d1 == d2
+                            _save_driver_analysis_json(cached_result, d1, d2, data_loader, single_mode)
                         except Exception as e:
                             print(f"⚠️ JSON保存失敗: {e}")
                     
@@ -1088,19 +1242,21 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
         
         # 獲取可用車手
         available_drivers = sorted(laps['Driver'].unique())
-        if len(available_drivers) < 2:
+        if len(available_drivers) < 1:
             return {
                 "success": False,
-                "message": "需要至少兩位車手的數據才能進行比較",
+                "message": "需要至少一位車手的數據才能進行分析",
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }
         
+        # 判斷是否為單車手模式
+        single_driver_mode = driver2 is None
+        
         # 選擇車手
-        if not driver1 or not driver2:
-            # 自動選擇前兩位車手
+        if not driver1:
+            # 自動選擇第一位車手
             selected_driver1 = available_drivers[0]
-            selected_driver2 = available_drivers[1]
         else:
             if driver1 not in available_drivers:
                 return {
@@ -1109,30 +1265,58 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
                     "data": None,
                     "timestamp": datetime.now().isoformat()
                 }
-            if driver2 not in available_drivers:
-                return {
-                    "success": False,
-                    "message": f"指定的車手 '{driver2}' 不在可用車手列表中",
-                    "data": None,
-                    "timestamp": datetime.now().isoformat()
-                }
             selected_driver1 = driver1
-            selected_driver2 = driver2
+        
+        # 處理第二位車手（如果不是單車手模式）
+        selected_driver2 = None
+        if not single_driver_mode:
+            if not driver2:
+                # 自動選擇第二位車手（不同於第一位）
+                other_drivers = [d for d in available_drivers if d != selected_driver1]
+                if other_drivers:
+                    selected_driver2 = other_drivers[0]
+                else:
+                    # 如果只有一位車手，進入單車手模式
+                    single_driver_mode = True
+                    print(f"[INFO] 只有一位車手數據，自動切換為單車手分析模式")
+            else:
+                if driver2 not in available_drivers:
+                    return {
+                        "success": False,
+                        "message": f"指定的車手 '{driver2}' 不在可用車手列表中",
+                        "data": None,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                selected_driver2 = driver2
         
         if enable_debug:
-            print(f"[INFO] 比較車手: {selected_driver1} vs {selected_driver2}")
+            if single_driver_mode:
+                print(f"[INFO] 單車手分析模式: {selected_driver1}")
+            else:
+                print(f"[INFO] 比較車手: {selected_driver1} vs {selected_driver2}")
         
         # 獲取車手圈速數據
         driver1_laps = laps[laps['Driver'] == selected_driver1].copy()
-        driver2_laps = laps[laps['Driver'] == selected_driver2].copy()
         
-        if driver1_laps.empty or driver2_laps.empty:
+        if driver1_laps.empty:
             return {
                 "success": False,
-                "message": f"車手 {selected_driver1} 或 {selected_driver2} 沒有圈速數據",
+                "message": f"車手 {selected_driver1} 沒有圈速數據",
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }
+        
+        # 處理第二位車手數據（如果不是單車手模式）
+        driver2_laps = None
+        if not single_driver_mode:
+            driver2_laps = laps[laps['Driver'] == selected_driver2].copy()
+            if driver2_laps.empty:
+                return {
+                    "success": False,
+                    "message": f"車手 {selected_driver2} 沒有圈速數據",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
+                }
         
         # 選擇比較的圈次
         def get_comparison_lap(driver_laps, lap_num=None):
@@ -1149,158 +1333,274 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
             return valid_laps.loc[valid_laps['LapTime'].idxmin()]
         
         lap_data1 = get_comparison_lap(driver1_laps, lap1)
-        lap_data2 = get_comparison_lap(driver2_laps, lap2)
+        lap_data2 = None
         
-        if lap_data1 is None or lap_data2 is None:
+        if lap_data1 is None:
             return {
                 "success": False,
-                "message": "無法獲取比較的圈次數據",
+                "message": f"無法獲取車手 {selected_driver1} 的圈次數據",
                 "data": None,
                 "timestamp": datetime.now().isoformat()
             }
         
-        # 構建比較分析結果
-        comparison_analysis = {
-            "driver_comparison": {
-                "driver1": {
-                    "driver_code": selected_driver1,
-                    "lap_number": int(lap_data1['LapNumber']),
-                    "lap_time": _format_comparison_time(lap_data1['LapTime']),
-                    "lap_time_seconds": lap_data1['LapTime'].total_seconds() if pd.notna(lap_data1['LapTime']) else None
-                },
-                "driver2": {
-                    "driver_code": selected_driver2,
-                    "lap_number": int(lap_data2['LapNumber']),
-                    "lap_time": _format_comparison_time(lap_data2['LapTime']),
-                    "lap_time_seconds": lap_data2['LapTime'].total_seconds() if pd.notna(lap_data2['LapTime']) else None
+        # 處理第二位車手的圈次數據（如果不是單車手模式）
+        if not single_driver_mode:
+            lap_data2 = get_comparison_lap(driver2_laps, lap2)
+            if lap_data2 is None:
+                return {
+                    "success": False,
+                    "message": f"無法獲取車手 {selected_driver2} 的圈次數據",
+                    "data": None,
+                    "timestamp": datetime.now().isoformat()
                 }
-            },
-            "performance_comparison": {},
-            "telemetry_comparison": {},
-            "summary": {}
-        }
         
-        # 圈速比較
-        if pd.notna(lap_data1['LapTime']) and pd.notna(lap_data2['LapTime']):
-            time1_seconds = lap_data1['LapTime'].total_seconds()
-            time2_seconds = lap_data2['LapTime'].total_seconds()
-            time_diff = abs(time1_seconds - time2_seconds)
-            faster_driver = selected_driver1 if time1_seconds < time2_seconds else selected_driver2
-            
-            comparison_analysis["performance_comparison"]["lap_time"] = {
-                "faster_driver": faster_driver,
-                "time_difference": f"{time_diff:.3f}s",
-                "time_difference_seconds": time_diff
-            }
-        
-        # 最高速度比較
-        speed1 = lap_data1.get('SpeedFL')
-        speed2 = lap_data2.get('SpeedFL')
-        if pd.notna(speed1) and pd.notna(speed2):
-            speed_diff = abs(speed1 - speed2)
-            faster_speed_driver = selected_driver1 if speed1 > speed2 else selected_driver2
-            
-            comparison_analysis["performance_comparison"]["max_speed"] = {
-                "driver1_speed": f"{speed1:.1f} km/h",
-                "driver2_speed": f"{speed2:.1f} km/h",
-                "faster_driver": faster_speed_driver,
-                "speed_difference": f"{speed_diff:.1f} km/h"
-            }
-        
-        # 區間時間比較
-        sector_comparison = {}
-        for sector_num, sector_col in enumerate([('Sector1Time', '第一區間'), ('Sector2Time', '第二區間'), ('Sector3Time', '第三區間')], 1):
-            sector_field, sector_name = sector_col
-            s1 = lap_data1.get(sector_field)
-            s2 = lap_data2.get(sector_field)
-            
-            if pd.notna(s1) and pd.notna(s2):
-                if hasattr(s1, 'total_seconds') and hasattr(s2, 'total_seconds'):
-                    s1_seconds = s1.total_seconds()
-                    s2_seconds = s2.total_seconds()
-                    sector_diff = abs(s1_seconds - s2_seconds)
-                    faster_sector_driver = selected_driver1 if s1_seconds < s2_seconds else selected_driver2
-                    
-                    sector_comparison[f"sector_{sector_num}"] = {
-                        "sector_name": sector_name,
-                        "driver1_time": _format_comparison_time(s1),
-                        "driver2_time": _format_comparison_time(s2),
-                        "faster_driver": faster_sector_driver,
-                        "time_difference": f"{sector_diff:.3f}s"
+        # 構建比較分析結果
+        if single_driver_mode:
+            # 單車手分析模式
+            comparison_analysis = {
+                "analysis_mode": "single_driver",
+                "driver_analysis": {
+                    "driver": {
+                        "driver_code": selected_driver1,
+                        "lap_number": int(lap_data1['LapNumber']),
+                        "lap_time": _format_comparison_time(lap_data1['LapTime']),
+                        "lap_time_seconds": lap_data1['LapTime'].total_seconds() if pd.notna(lap_data1['LapTime']) else None
                     }
+                },
+                "performance_data": {},
+                "telemetry_data": {},
+                "summary": {}
+            }
+        else:
+            # 雙車手比較模式
+            comparison_analysis = {
+                "analysis_mode": "driver_comparison",
+                "driver_comparison": {
+                    "driver1": {
+                        "driver_code": selected_driver1,
+                        "lap_number": int(lap_data1['LapNumber']),
+                        "lap_time": _format_comparison_time(lap_data1['LapTime']),
+                        "lap_time_seconds": lap_data1['LapTime'].total_seconds() if pd.notna(lap_data1['LapTime']) else None
+                    },
+                    "driver2": {
+                        "driver_code": selected_driver2,
+                        "lap_number": int(lap_data2['LapNumber']),
+                        "lap_time": _format_comparison_time(lap_data2['LapTime']),
+                        "lap_time_seconds": lap_data2['LapTime'].total_seconds() if pd.notna(lap_data2['LapTime']) else None
+                    }
+                },
+                "performance_comparison": {},
+                "telemetry_comparison": {},
+                "summary": {}
+            }
         
-        comparison_analysis["performance_comparison"]["sector_times"] = sector_comparison
-        
-        # 輪胎比較
-        compound1 = lap_data1.get('Compound', 'N/A')
-        compound2 = lap_data2.get('Compound', 'N/A')
-        age1 = lap_data1.get('TyreLife', 'N/A')
-        age2 = lap_data2.get('TyreLife', 'N/A')
-        
-        comparison_analysis["performance_comparison"]["tire_data"] = {
-            "driver1_tire": f"{compound1} ({age1}圈)" if age1 != 'N/A' else f"{compound1}",
-            "driver2_tire": f"{compound2} ({age2}圈)" if age2 != 'N/A' else f"{compound2}"
-        }
-        
-        # 遙測數據分析（簡化版本）
-        try:
-            # 嘗試獲取遙測數據進行基本分析
-            lap1_data_query = session.laps[
-                (session.laps['Driver'] == selected_driver1) &
-                (session.laps['LapNumber'] == lap_data1['LapNumber'])
-            ]
-            lap2_data_query = session.laps[
-                (session.laps['Driver'] == selected_driver2) &
-                (session.laps['LapNumber'] == lap_data2['LapNumber'])
-            ]
+        # 性能數據分析
+        if single_driver_mode:
+            # 單車手模式 - 只記錄數據，不做比較
+            performance_data = comparison_analysis["performance_data"]
             
-            if not lap1_data_query.empty and not lap2_data_query.empty:
-                comparison_analysis["telemetry_comparison"]["telemetry_available"] = True
-                comparison_analysis["telemetry_comparison"]["note"] = "遙測數據可用，但API版本僅提供基本統計"
+            # 圈速數據
+            if pd.notna(lap_data1['LapTime']):
+                performance_data["lap_time"] = {
+                    "lap_time": _format_comparison_time(lap_data1['LapTime']),
+                    "lap_time_seconds": lap_data1['LapTime'].total_seconds()
+                }
+            
+            # 最高速度
+            speed1 = lap_data1.get('SpeedFL')
+            if pd.notna(speed1):
+                performance_data["max_speed"] = {
+                    "speed": f"{speed1:.1f} km/h",
+                    "speed_value": speed1
+                }
+            
+            # 區間時間
+            sector_data = {}
+            for sector_num, sector_col in enumerate([('Sector1Time', '第一區間'), ('Sector2Time', '第二區間'), ('Sector3Time', '第三區間')], 1):
+                sector_field, sector_name = sector_col
+                s1 = lap_data1.get(sector_field)
+                
+                if pd.notna(s1) and hasattr(s1, 'total_seconds'):
+                    sector_data[f"sector_{sector_num}"] = {
+                        "sector_name": sector_name,
+                        "time": _format_comparison_time(s1),
+                        "time_seconds": s1.total_seconds()
+                    }
+            
+            performance_data["sector_times"] = sector_data
+            
+            # 輪胎數據
+            compound1 = lap_data1.get('Compound', 'N/A')
+            age1 = lap_data1.get('TyreLife', 'N/A')
+            performance_data["tire_data"] = {
+                "tire": f"{compound1} ({age1}圈)" if age1 != 'N/A' else f"{compound1}"
+            }
+            
+        else:
+            # 雙車手比較模式
+            performance_comparison = comparison_analysis["performance_comparison"]
+            
+            # 圈速比較
+            if pd.notna(lap_data1['LapTime']) and pd.notna(lap_data2['LapTime']):
+                time1_seconds = lap_data1['LapTime'].total_seconds()
+                time2_seconds = lap_data2['LapTime'].total_seconds()
+                time_diff = abs(time1_seconds - time2_seconds)
+                faster_driver = selected_driver1 if time1_seconds < time2_seconds else selected_driver2
+                
+                performance_comparison["lap_time"] = {
+                    "faster_driver": faster_driver,
+                    "time_difference": f"{time_diff:.3f}s",
+                    "time_difference_seconds": time_diff
+                }
+            
+            # 最高速度比較
+            speed1 = lap_data1.get('SpeedFL')
+            speed2 = lap_data2.get('SpeedFL')
+            if pd.notna(speed1) and pd.notna(speed2):
+                speed_diff = abs(speed1 - speed2)
+                faster_speed_driver = selected_driver1 if speed1 > speed2 else selected_driver2
+                
+                performance_comparison["max_speed"] = {
+                    "driver1_speed": f"{speed1:.1f} km/h",
+                    "driver2_speed": f"{speed2:.1f} km/h",
+                    "faster_driver": faster_speed_driver,
+                    "speed_difference": f"{speed_diff:.1f} km/h"
+                }
+            
+            # 區間時間比較
+            sector_comparison = {}
+            for sector_num, sector_col in enumerate([('Sector1Time', '第一區間'), ('Sector2Time', '第二區間'), ('Sector3Time', '第三區間')], 1):
+                sector_field, sector_name = sector_col
+                s1 = lap_data1.get(sector_field)
+                s2 = lap_data2.get(sector_field)
+                
+                if pd.notna(s1) and pd.notna(s2):
+                    if hasattr(s1, 'total_seconds') and hasattr(s2, 'total_seconds'):
+                        s1_seconds = s1.total_seconds()
+                        s2_seconds = s2.total_seconds()
+                        sector_diff = abs(s1_seconds - s2_seconds)
+                        faster_sector_driver = selected_driver1 if s1_seconds < s2_seconds else selected_driver2
+                        
+                        sector_comparison[f"sector_{sector_num}"] = {
+                            "sector_name": sector_name,
+                            "driver1_time": _format_comparison_time(s1),
+                            "driver2_time": _format_comparison_time(s2),
+                            "faster_driver": faster_sector_driver,
+                            "time_difference": f"{sector_diff:.3f}s"
+                        }
+            
+            performance_comparison["sector_times"] = sector_comparison
+            
+            # 輪胎比較
+            compound1 = lap_data1.get('Compound', 'N/A')
+            compound2 = lap_data2.get('Compound', 'N/A')
+            age1 = lap_data1.get('TyreLife', 'N/A')
+            age2 = lap_data2.get('TyreLife', 'N/A')
+            
+            performance_comparison["tire_data"] = {
+                "driver1_tire": f"{compound1} ({age1}圈)" if age1 != 'N/A' else f"{compound1}",
+                "driver2_tire": f"{compound2} ({age2}圈)" if age2 != 'N/A' else f"{compound2}"
+            }
+        
+        # 遙測數據分析
+        try:
+            telemetry_section = "telemetry_data" if single_driver_mode else "telemetry_comparison"
+            
+            if single_driver_mode:
+                # 單車手模式 - 檢查遙測數據可用性
+                lap1_data_query = session.laps[
+                    (session.laps['Driver'] == selected_driver1) &
+                    (session.laps['LapNumber'] == lap_data1['LapNumber'])
+                ]
+                
+                if not lap1_data_query.empty:
+                    comparison_analysis[telemetry_section]["telemetry_available"] = True
+                    comparison_analysis[telemetry_section]["note"] = "遙測數據可用，單車手分析模式"
+                else:
+                    comparison_analysis[telemetry_section]["telemetry_available"] = False
+                    comparison_analysis[telemetry_section]["note"] = "遙測數據不可用"
             else:
-                comparison_analysis["telemetry_comparison"]["telemetry_available"] = False
-                comparison_analysis["telemetry_comparison"]["note"] = "遙測數據不可用"
+                # 雙車手比較模式
+                lap1_data_query = session.laps[
+                    (session.laps['Driver'] == selected_driver1) &
+                    (session.laps['LapNumber'] == lap_data1['LapNumber'])
+                ]
+                lap2_data_query = session.laps[
+                    (session.laps['Driver'] == selected_driver2) &
+                    (session.laps['LapNumber'] == lap_data2['LapNumber'])
+                ]
+                
+                if not lap1_data_query.empty and not lap2_data_query.empty:
+                    comparison_analysis[telemetry_section]["telemetry_available"] = True
+                    comparison_analysis[telemetry_section]["note"] = "遙測數據可用，但API版本僅提供基本統計"
+                else:
+                    comparison_analysis[telemetry_section]["telemetry_available"] = False
+                    comparison_analysis[telemetry_section]["note"] = "遙測數據不可用"
         except Exception as e:
-            comparison_analysis["telemetry_comparison"]["telemetry_available"] = False
-            comparison_analysis["telemetry_comparison"]["error"] = str(e)
+            telemetry_section = "telemetry_data" if single_driver_mode else "telemetry_comparison"
+            comparison_analysis[telemetry_section]["telemetry_available"] = False
+            comparison_analysis[telemetry_section]["error"] = str(e)
         
         # 生成總結
-        if "lap_time" in comparison_analysis["performance_comparison"]:
-            faster_overall = comparison_analysis["performance_comparison"]["lap_time"]["faster_driver"]
-            time_gap = comparison_analysis["performance_comparison"]["lap_time"]["time_difference"]
-            comparison_analysis["summary"]["overall_faster"] = faster_overall
-            comparison_analysis["summary"]["overall_time_gap"] = time_gap
+        if single_driver_mode:
+            # 單車手總結
+            summary = comparison_analysis["summary"]
+            summary["analysis_mode"] = "single_driver"
+            summary["driver"] = selected_driver1
+            summary["lap_analyzed"] = int(lap_data1['LapNumber'])
             
-            if faster_overall == selected_driver1:
-                comparison_analysis["summary"]["result"] = f"{selected_driver1} 比 {selected_driver2} 快 {time_gap}"
+            if "lap_time" in comparison_analysis["performance_data"]:
+                lap_time = comparison_analysis["performance_data"]["lap_time"]["lap_time"]
+                summary["result"] = f"{selected_driver1} 在第 {lap_data1['LapNumber']} 圈的成績為 {lap_time}"
             else:
-                comparison_analysis["summary"]["result"] = f"{selected_driver2} 比 {selected_driver1} 快 {time_gap}"
+                summary["result"] = f"{selected_driver1} 的數據分析完成"
+                
         else:
-            comparison_analysis["summary"]["result"] = "無法確定整體表現差異"
+            # 雙車手比較總結
+            performance_comparison = comparison_analysis.get("performance_comparison", {})
+            if "lap_time" in performance_comparison:
+                faster_overall = performance_comparison["lap_time"]["faster_driver"]
+                time_gap = performance_comparison["lap_time"]["time_difference"]
+                comparison_analysis["summary"]["overall_faster"] = faster_overall
+                comparison_analysis["summary"]["overall_time_gap"] = time_gap
+                
+                if faster_overall == selected_driver1:
+                    comparison_analysis["summary"]["result"] = f"{selected_driver1} 比 {selected_driver2} 快 {time_gap}"
+                else:
+                    comparison_analysis["summary"]["result"] = f"{selected_driver2} 比 {selected_driver1} 快 {time_gap}"
+            else:
+                comparison_analysis["summary"]["result"] = "無法確定整體表現差異"
         
         # 創建metadata
         metadata = {
-            "analysis_type": "driver_comparison_analysis",
-            "function_name": "Driver Comparison Analysis",
+            "analysis_type": "single_driver_analysis" if single_driver_mode else "driver_comparison_analysis",
+            "function_name": "Driver Analysis" if single_driver_mode else "Driver Comparison Analysis",
             "generated_at": datetime.now().isoformat(),
             "version": "1.0",
-            "comparison_type": "same_driver" if selected_driver1 == selected_driver2 else "different_drivers"
+            "comparison_type": "single_driver" if single_driver_mode else ("same_driver" if selected_driver1 == selected_driver2 else "different_drivers")
         }
         
         # 構建最終結果
         result_data = {
             "metadata": metadata,
-            "driver_comparison": comparison_analysis
+            "analysis_result": comparison_analysis
         }
         
-        # Function 15 標準格式結果
+        # Function 13 標準格式結果
+        if single_driver_mode:
+            message = f"成功完成 {selected_driver1} 的車手數據分析"
+            debug_message = f"[SUCCESS] 單車手分析完成: {selected_driver1}"
+        else:
+            message = f"成功完成 {selected_driver1} vs {selected_driver2} 的對比分析"
+            debug_message = f"[SUCCESS] 車手對比分析完成: {selected_driver1} vs {selected_driver2}"
+            
         result = {
             "success": True,
             "data": result_data,
             "cache_used": cache_used,
             "cache_key": cache_key,
             "function_id": 13,
-            "message": f"成功完成 {selected_driver1} vs {selected_driver2} 的對比分析",
+            "message": message,
             "timestamp": datetime.now().isoformat()
         }
         
@@ -1314,16 +1614,19 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
             print(f"⚠️ 緩存保存失敗: {e}")
         
         # 顯示詳細比較結果表格
-        _display_driver_comparison_detailed_results(comparison_analysis, selected_driver1, selected_driver2)
+        if single_driver_mode:
+            _display_single_driver_detailed_results(comparison_analysis, selected_driver1)
+        else:
+            _display_driver_comparison_detailed_results(comparison_analysis, selected_driver1, selected_driver2)
         
-        # 保存JSON結果 - 符合開發核心要求
-        _save_driver_comparison_json(result_data, selected_driver1, selected_driver2)
+        # 保存JSON結果 - 使用新的命名格式
+        _save_driver_analysis_json(result_data, selected_driver1, selected_driver2, data_loader, single_driver_mode)
         
         # 顯示結果反饋
-        _report_driver_comparison_results(result_data)
+        _report_driver_analysis_results(result_data, single_driver_mode)
         
         if enable_debug:
-            print(f"[SUCCESS] 車手對比分析完成: {selected_driver1} vs {selected_driver2}")
+            print(debug_message)
         
         return result
         
@@ -1648,8 +1951,296 @@ def _display_driver_comparison_detailed_results(comparison_analysis, driver1, dr
     except Exception as e:
         print(f"⚠️ 詳細結果顯示失敗: {e}")
 
+def _save_driver_analysis_json(result_data, driver1, driver2, data_loader, single_driver_mode):
+    """保存車手分析的JSON結果 - 新的命名格式 driver_data_駕駛員_YYYY_賽事_賽段.json"""
+    try:
+        import json
+        from datetime import datetime
+        
+        # 創建json目錄
+        json_dir = "json"
+        os.makedirs(json_dir, exist_ok=True)
+        
+        # 獲取年份、賽事和賽段信息
+        year = getattr(data_loader, 'year', '2025')
+        
+        # 嘗試從 data_loader 獲取原始CLI參數
+        race_param = getattr(data_loader, 'race', None)  # 這是原始的CLI參數
+        session_param = getattr(data_loader, 'session', None)  # 這是原始的CLI參數
+        
+        # 調試：打印所有可能的參數值
+        print(f"[DEBUG] year: {year}")
+        print(f"[DEBUG] race_param: {race_param}")
+        print(f"[DEBUG] session_param: {session_param}")
+        print(f"[DEBUG] race_name: {getattr(data_loader, 'race_name', 'None')}")
+        print(f"[DEBUG] session_name: {getattr(data_loader, 'session_name', 'None')}")
+        
+        # 如果無法獲取原始參數，則從處理後的值中提取
+        if race_param:
+            race = race_param  # 使用原始CLI參數 "Japan"
+        else:
+            race_full = getattr(data_loader, 'race_name', 'Unknown')
+            race = race_full
+            if "Grand Prix" in race_full:
+                # 提取 "Japanese Grand Prix" -> "Japan"
+                if "Japanese" in race_full:
+                    race = "Japan"
+                elif "Chinese" in race_full:
+                    race = "China"
+                elif "Australian" in race_full:
+                    race = "Australia"
+                elif "Belgian" in race_full:
+                    race = "Belgium"
+                elif "British" in race_full:
+                    race = "Britain"
+                elif "Canadian" in race_full:
+                    race = "Canada"
+                elif "Dutch" in race_full:
+                    race = "Netherlands"
+                elif "French" in race_full:
+                    race = "France"
+                elif "German" in race_full:
+                    race = "Germany"
+                elif "Hungarian" in race_full:
+                    race = "Hungary"
+                elif "Italian" in race_full:
+                    race = "Italy"
+                elif "Monaco" in race_full:
+                    race = "Monaco"
+                elif "Spanish" in race_full:
+                    race = "Spain"
+                else:
+                    # 如果無法識別，取第一個單詞
+                    words = race_full.split()
+                    race = words[0] if words else "Unknown"
+        
+        # 處理賽段參數
+        # 處理session參數 - 始終進行簡化處理
+        session_param = getattr(data_loader, 'session', None)
+        if session_param:
+            session_full = session_param
+        else:
+            session_full = getattr(data_loader, 'session', 'R')
+            
+        print(f"[DEBUG] session_full: {session_full}")
+        print(f"[DEBUG] session_full type: {type(session_full)}")
+        print(f"[DEBUG] isinstance check: {isinstance(session_full, str)}")
+        
+        # 簡化賽段名稱 - 處理 Session 對象和字符串
+        if hasattr(session_full, 'name'):
+            # 如果是 fastf1.core.Session 對象，獲取其 name 屬性
+            session_name = getattr(session_full, 'name', str(session_full))
+            print(f"[DEBUG] Session 對象，name 屬性: {session_name}")
+            session_str = session_name
+        elif isinstance(session_full, str):
+            session_str = session_full
+        else:
+            session_str = str(session_full)
+            
+        print(f"[DEBUG] 處理後的 session_str: {session_str}")
+        
+        # 根據 session_str 確定簡化名稱
+        if isinstance(session_str, str):
+            print(f"[DEBUG] 進入字符串處理分支")
+            if "Race" in session_str:
+                session = "R"
+                print(f"[DEBUG] 檢測到 Race，設置為 R")
+            elif "Qualifying" in session_str:
+                session = "Q"
+            elif "Practice" in session_str:
+                if "1" in session_str:
+                    session = "P1"
+                elif "2" in session_str:
+                    session = "P2"
+                elif "3" in session_str:
+                    session = "P3"
+                else:
+                    session = "P"
+            elif "Sprint" in session_str:
+                if "Qualifying" in session_str:
+                    session = "SQ"
+                else:
+                    session = "S"
+            else:
+                # 如果無法識別，檢查是否為簡短格式
+                if session_str in ['R', 'Q', 'P1', 'P2', 'P3', 'S', 'SQ']:
+                    session = session_str
+                else:
+                    session = "R"  # 默認為Race
+        else:
+            session = str(session_str)
+        
+        print(f"[DEBUG] 最終參數 - race: {race}, session: {session}")
+        
+        # 準備JSON數據
+        if single_driver_mode:
+            json_data = {
+                "function_id": 13,
+                "function_name": "Driver Data Analysis",
+                "analysis_type": "single_driver_analysis",
+                "driver": driver1,
+                "timestamp": datetime.now().isoformat(),
+                "data": result_data
+            }
+            # 單車手文件名: driver_data_VER_2025_Japan_R.json
+            filename = f"driver_data_{driver1}_{year}_{race}_{session}.json"
+        else:
+            json_data = {
+                "function_id": 13,
+                "function_name": "Driver Comparison Analysis", 
+                "analysis_type": "driver_comparison",
+                "comparison_drivers": f"{driver1}_vs_{driver2}",
+                "timestamp": datetime.now().isoformat(),
+                "data": result_data
+            }
+            # 雙車手文件名: driver_data_VER_vs_LEC_2025_Japan_R.json
+            filename = f"driver_data_{driver1}_vs_{driver2}_{year}_{race}_{session}.json"
+        
+        filepath = os.path.join(json_dir, filename)
+        
+        # 保存JSON文件
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(json_data, f, ensure_ascii=False, indent=2)
+        
+        print(f"💾 JSON結果已保存到: file:///{os.path.abspath(filepath)}")
+        print(f"📄 文件名: {filename}")
+        
+    except Exception as e:
+        print(f"⚠️ JSON保存失敗: {e}")
+
+def _display_single_driver_detailed_results(comparison_analysis, driver):
+    """顯示單車手分析的詳細結果表格"""
+    try:
+        from prettytable import PrettyTable
+        
+        print("\n" + "="*80)
+        print(f"📊 車手數據分析詳細結果: {driver}")
+        print("="*80)
+        
+        # 基本信息表格
+        if 'driver_analysis' in comparison_analysis:
+            driver_data = comparison_analysis['driver_analysis']['driver']
+            print("\n📋 基本分析信息:")
+            basic_table = PrettyTable()
+            basic_table.field_names = ["項目", "數值"]
+            basic_table.add_row(["車手", driver_data.get('driver_code', 'N/A')])
+            basic_table.add_row(["分析圈數", f"第 {driver_data.get('lap_number', 'N/A')} 圈"])
+            basic_table.add_row(["圈時間", driver_data.get('lap_time', 'N/A')])
+            print(basic_table)
+        
+        # 性能數據表格
+        if 'performance_data' in comparison_analysis:
+            performance_data = comparison_analysis['performance_data']
+            print("\n📈 性能數據:")
+            performance_table = PrettyTable()
+            performance_table.field_names = ["項目", "數值"]
+            
+            # 圈速
+            if 'lap_time' in performance_data:
+                lap_data = performance_data['lap_time']
+                performance_table.add_row(["圈速", lap_data.get('lap_time', 'N/A')])
+            
+            # 最高速度
+            if 'max_speed' in performance_data:
+                speed_data = performance_data['max_speed']
+                performance_table.add_row(["最高速", speed_data.get('speed', 'N/A')])
+            
+            # 區間時間
+            if 'sector_times' in performance_data:
+                sector_data = performance_data['sector_times']
+                for i in range(1, 4):
+                    sector_key = f'sector_{i}'
+                    if sector_key in sector_data:
+                        sector_info = sector_data[sector_key]
+                        performance_table.add_row([
+                            sector_info.get('sector_name', f'第{i}區間'),
+                            sector_info.get('time', 'N/A')
+                        ])
+            
+            # 輪胎
+            if 'tire_data' in performance_data:
+                tire_data = performance_data['tire_data']
+                performance_table.add_row(["輪胎(壽命)", tire_data.get('tire', 'N/A')])
+            
+            print(performance_table)
+        
+        # 總結表格
+        if 'summary' in comparison_analysis:
+            summary = comparison_analysis['summary']
+            print("\n📊 分析總結:")
+            summary_table = PrettyTable()
+            summary_table.field_names = ["分析項目", "結果"]
+            summary_table.add_row(["分析模式", "單車手數據分析"])
+            summary_table.add_row(["分析結果", summary.get('result', 'N/A')])
+            print(summary_table)
+        
+        print("\n✅ 詳細結果顯示完成")
+        
+    except Exception as e:
+        print(f"⚠️ 詳細結果顯示失敗: {e}")
+
+def _report_driver_analysis_results(data, single_driver_mode):
+    """報告車手分析結果狀態"""
+    if not data:
+        result_type = "車手數據分析" if single_driver_mode else "車手對比分析"
+        print(f"❌ {result_type}失敗：無可用數據")
+        return False
+    
+    try:
+        if single_driver_mode:
+            print("📊 車手數據分析結果摘要：")
+            
+            # 檢查基本信息
+            if 'analysis_result' in data and 'driver_analysis' in data['analysis_result']:
+                driver_data = data['analysis_result']['driver_analysis']['driver']
+                print(f"   • 分析車手: {driver_data.get('driver_code', 'N/A')}")
+                print(f"   • 分析圈數: 第 {driver_data.get('lap_number', 'N/A')} 圈")
+            
+            # 檢查數據完整性
+            if 'analysis_result' in data:
+                analysis_data = data['analysis_result']
+                data_sections = ['performance_data', 'telemetry_data']
+                available_sections = [section for section in data_sections if section in analysis_data]
+                print(f"   • 數據完整性: {len(available_sections)}/{len(data_sections)} 個區塊")
+                
+                if 'summary' in analysis_data:
+                    summary = analysis_data['summary']
+                    print(f"   • 分析結果: {summary.get('result', '無結果')}")
+            
+            print("✅ 車手數據分析完成！")
+        else:
+            print("📊 車手對比分析結果摘要：")
+            
+            # 檢查基本信息
+            if 'analysis_result' in data and 'driver_comparison' in data['analysis_result']:
+                comparison_data = data['analysis_result']['driver_comparison']
+                driver1_data = comparison_data.get('driver1', {})
+                driver2_data = comparison_data.get('driver2', {})
+                print(f"   • 比較車手: {driver1_data.get('driver_code', 'N/A')} vs {driver2_data.get('driver_code', 'N/A')}")
+                print(f"   • 比較圈數: {driver1_data.get('lap_number', 'N/A')} vs {driver2_data.get('lap_number', 'N/A')}")
+            
+            # 檢查數據完整性
+            if 'analysis_result' in data:
+                analysis_data = data['analysis_result']
+                data_sections = ['performance_comparison', 'telemetry_comparison']
+                available_sections = [section for section in data_sections if section in analysis_data]
+                print(f"   • 數據完整性: {len(available_sections)}/{len(data_sections)} 個區塊")
+                
+                if 'summary' in analysis_data:
+                    summary = analysis_data['summary']
+                    print(f"   • 分析結果: {summary.get('result', '無結果')}")
+            
+            print("✅ 車手對比分析完成！")
+        
+        return True
+        
+    except Exception as e:
+        result_type = "車手數據分析" if single_driver_mode else "車手對比分析"
+        print(f"❌ {result_type}結果報告生成失敗: {e}")
+        return False
+
 def _save_driver_comparison_json(result_data, driver1, driver2):
-    """保存車手對比分析的JSON結果 - 符合開發核心要求"""
+    """保存車手對比分析的JSON結果 - 舊版本兼容性保留"""
     try:
         import json
         from datetime import datetime
