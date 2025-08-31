@@ -1210,7 +1210,7 @@ def run_special_incident_reports(data_loader, year=None, race=None, session='R')
     print("\n✅ 特殊事件報告分析完成！")
     return special_data
 
-def run_special_incident_reports_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True):
+def run_special_incident_reports_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
     """執行特殊事件報告分析並返回JSON格式結果 - API專用版本
     
     Args:
@@ -1219,19 +1219,32 @@ def run_special_incident_reports_json(data_loader, dynamic_team_mapping=None, f1
         f1_analysis_instance: F1分析實例
         enable_debug: 是否啟用調試模式
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
+        year: 用戶指定的年份（覆蓋data_loader中的年份）
+        race: 用戶指定的賽事（覆蓋data_loader中的賽事）
+        session: 用戶指定的賽段（覆蓋data_loader中的賽段）
     """
     if enable_debug:
         print(f"\n[NEW_MODULE] 執行特殊事件報告分析模組 (JSON輸出版)...")
+        if year or race or session:
+            print(f"[OVERRIDE] 使用者指定參數: 年份={year}, 賽事={race}, 賽段={session}")
     
     try:
-        # 獲取賽事資訊
+        # 獲取賽事資訊 - 優先使用用戶指定的參數
         session_info = {}
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             session_info = {
-                "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
+                "event_name": race or getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
                 "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
-                "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-                "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+                "session_type": session or getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
+                "year": year or getattr(data_loader.session, 'event', {}).get('year', 2025)
+            }
+        else:
+            # 當沒有session資料時，使用用戶指定的參數
+            session_info = {
+                "event_name": race or 'Unknown',
+                "circuit_name": 'Unknown',
+                "session_type": session or 'Unknown',
+                "year": year or 2025
             }
         
         # Function 15 標準 - 檢查緩存
@@ -1242,6 +1255,20 @@ def run_special_incident_reports_json(data_loader, dynamic_team_mapping=None, f1
         if cached_data and not show_detailed_output:
             if enable_debug:
                 print("📦 使用緩存數據")
+            
+            # 確保即使使用緩存也會生成 JSON 文件
+            json_result = {
+                "function_id": 9,
+                "function_name": "Special Incident Reports",
+                "analysis_type": "special_incident_reports",
+                "session_info": session_info,
+                "timestamp": datetime.now().isoformat(),
+                "data": {
+                    "special_incidents": cached_data
+                }
+            }
+            save_json_results(json_result, session_info)
+            
             return {
                 "success": True,
                 "message": "成功執行 特殊事件報告分析 (緩存)",
@@ -1261,6 +1288,20 @@ def run_special_incident_reports_json(data_loader, dynamic_team_mapping=None, f1
                 print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
             # 顯示詳細輸出
             _display_cached_detailed_output(cached_data, session_info)
+            
+            # 確保即使使用緩存也會生成 JSON 文件
+            json_result = {
+                "function_id": 9,
+                "function_name": "Special Incident Reports",
+                "analysis_type": "special_incident_reports",
+                "session_info": session_info,
+                "timestamp": datetime.now().isoformat(),
+                "data": {
+                    "special_incidents": cached_data
+                }
+            }
+            save_json_results(json_result, session_info)
+            
             return {
                 "success": True,
                 "message": "成功執行 特殊事件報告分析 (緩存+詳細)",

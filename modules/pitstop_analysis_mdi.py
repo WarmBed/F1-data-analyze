@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 F1T 進站分析 MDI 模組
 基於開發設計文檔實現的車手最快進站時間排行榜 GUI 模組
@@ -977,50 +977,20 @@ class PitstopRankingWidget(QWidget):
         
         # 設置欄位寬度 - 響應式設計，適應小視窗
         header = table.horizontalHeader()
-        header.setStretchLastSection(True)  # 最後一列自動拉伸
         
-        # 🎯 全新響應式列寬設定 - 完全適應450×280視窗
-        # 總可用寬度約 430px (450 - 20px邊距)
+        # 設定初始寬度
+        table.setColumnWidth(0, 30)   # 排名
+        table.setColumnWidth(1, 45)   # 車手代碼
+        table.setColumnWidth(2, 100)  # 車手全名
+        table.setColumnWidth(3, 60)   # 最快時間
+        table.setColumnWidth(4, 65)   # 與第一名差距
+        table.setColumnWidth(5, 40)   # 進站圈數
         
-        # 排名 - 最小必要寬度
-        table.setColumnWidth(0, 30)
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
+        # 所有欄位都設為可手動調整
+        for col in range(len(headers)):
+            header.setSectionResizeMode(col, QHeaderView.Interactive)
         
-        # 車手代碼 - 最小必要寬度  
-        table.setColumnWidth(1, 45)
-        header.setSectionResizeMode(1, QHeaderView.Fixed)
-        
-        # 車手全名 - 主要彈性列，佔用最多空間
-        header.setSectionResizeMode(2, QHeaderView.Stretch)
-        
-        # 最快時間 - 緊湊寬度
-        table.setColumnWidth(3, 60)
-        header.setSectionResizeMode(3, QHeaderView.Fixed)
-        
-        # 與第一名差距 - 緊湊寬度
-        table.setColumnWidth(4, 65)
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
-        
-        # 進站圈數 - 最小寬度，也可彈性調整
-        table.setColumnWidth(5, 40)
-        header.setSectionResizeMode(5, QHeaderView.Interactive)
-        
-        # 🔧 新增：響應式調整功能
-        # 當視窗大小改變時，自動重新計算列寬
-        def adjust_columns():
-            """根據當前表格寬度調整列寬比例"""
-            if table.width() > 0:
-                available_width = table.width() - 40  # 減去滾動條等空間
-                fixed_width = 30 + 45 + 60 + 65 + 40  # 固定列總寬度 = 240px
-                stretch_width = max(available_width - fixed_width, 100)  # 彈性列最小100px
-                
-                # 重新分配彈性列寬度
-                if stretch_width > 100:
-                    # 如果空間充足，給車手全名更多空間
-                    pass  # Stretch模式會自動處理
-                    
-        # 連接調整大小事件
-        table.resizeEvent = lambda event: (QTableWidget.resizeEvent(table, event), adjust_columns())[1]
+        # 🔧 新增：響應式調整功能已移除，改為手動調整
         
         return table
     
@@ -1527,7 +1497,7 @@ class PitstopAnalysisModule(IAnalysisModule):
         
         # 分頁3: 車手進站詳細記錄 (新實現)
         self.detailed_widget = DriverDetailedPitstopWidget(self._main_widget)
-        self.tab_widget.addTab(self.detailed_widget, "� 詳細記錄")
+        self.tab_widget.addTab(self.detailed_widget, "📋 詳細記錄")
         
         layout.addWidget(self.tab_widget)
         
@@ -1754,31 +1724,20 @@ class TeamPitstopRankingWidget(QWidget):
         self.table_widget.setSelectionBehavior(QTableWidget.SelectRows)
         self.table_widget.setSortingEnabled(True)
         
-        # 🔧 響應式列寬設定 - 適應小視窗
+        # 響應式列寬設定 - 允許手動調整
         header = self.table_widget.horizontalHeader()
-        header.setStretchLastSection(True)
         
-        # 排名 - 緊湊寬度
-        self.table_widget.setColumnWidth(0, 35)
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
+        # 設定初始寬度
+        self.table_widget.setColumnWidth(0, 35)   # 排名
+        self.table_widget.setColumnWidth(1, 100)  # 車隊名稱
+        self.table_widget.setColumnWidth(2, 60)   # 最快時間
+        self.table_widget.setColumnWidth(3, 60)   # 最慢時間
+        self.table_widget.setColumnWidth(4, 50)   # 進站次數
+        self.table_widget.setColumnWidth(5, 80)   # 一致性分數
         
-        # 車隊名稱 - 比例拉伸
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        
-        # 最快時間 - 緊湊寬度
-        self.table_widget.setColumnWidth(2, 60)
-        header.setSectionResizeMode(2, QHeaderView.Fixed)
-        
-        # 最慢時間 - 緊湊寬度
-        self.table_widget.setColumnWidth(3, 60)
-        header.setSectionResizeMode(3, QHeaderView.Fixed)
-        
-        # 進站次數 - 緊湊寬度
-        self.table_widget.setColumnWidth(4, 50)
-        header.setSectionResizeMode(4, QHeaderView.Fixed)
-        
-        # 一致性分數 - 自動拉伸（最後一列）
-        header.setSectionResizeMode(5, QHeaderView.Stretch)
+        # 所有欄位都設為可手動調整
+        for col in range(len(headers)):
+            header.setSectionResizeMode(col, QHeaderView.Interactive)
         
     def update_ranking_data(self, data: Dict[str, Any]):
         """更新車隊排行榜數據"""
@@ -2156,26 +2115,16 @@ class DriverDetailedPitstopWidget(QWidget):
             self.summary_table.setColumnWidth(total_columns - 2, 80)  # 最快時間
             self.summary_table.setColumnWidth(total_columns - 1, 80)  # 最慢時間
         
-        # 🎯 設置響應式拉伸策略 - 590px模式
+        # 🎯 設置響應式拉伸策略 - 所有欄位可手動調整
         header = self.summary_table.horizontalHeader()
         
-        # 基本列設定
-        header.setSectionResizeMode(0, QHeaderView.Fixed)   # 車手 - 固定
-        header.setSectionResizeMode(1, QHeaderView.Stretch) # 車隊 - 主要拉伸列
-        header.setSectionResizeMode(2, QHeaderView.Fixed)   # 總進站次數 - 固定
-        
-        # 動態列設定為可交互調整
-        for i in range(3, total_columns - 2):
-            header.setSectionResizeMode(i, QHeaderView.Interactive)  # 可手動調整
-            
-        # 最後一列設為拉伸，以填滿剩餘空間
-        if total_columns >= 1:
-            header.setSectionResizeMode(total_columns - 1, QHeaderView.Stretch)
+        # 所有欄位都設為可手動調整
+        for col in range(total_columns):
+            header.setSectionResizeMode(col, QHeaderView.Interactive)
         
         # 表格樣式設置
         self.summary_table.setAlternatingRowColors(True)
         self.summary_table.setSelectionBehavior(QTableWidget.SelectRows)
-        header.setStretchLastSection(True)  # 最後一列自動拉伸
         
         print(f"[TABLE_CONFIG] 表格配置完成 - 欄數:{total_columns}, 預設總寬度:~590px")
         

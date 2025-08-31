@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-F1 Analysis CLI - 模組化主程式
-F1 Analysis CLI - Modular Main Program
-版本: 5.3 (增強賽事顯示版)
+F1 Analysis CLI - 模組化主程式 (CLI 參數化模式)
+F1 Analysis CLI - Modular Main Program (CLI Parameter Mode)
+版本: 5.4 (CLI專用版)
 作者: F1 Analysis Team
 
 專用模組化主程式，負責呼叫各個獨立分析模組
+僅支援 CLI 參數化模式，適合自動化和腳本化使用
 修正了 AllDriversDNFAdvanced 變數範圍問題和雨天分析依賴問題
-新增: 賽事日期顯示、完整賽事名稱、增強型賽事選擇界面
 """
 
 import os
@@ -252,283 +252,9 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 賽事數據載入失敗")
             return False
 
-    def load_race_data_at_startup(self):
-        """程序啟動時載入賽事數據"""
-        print("\n[TOOL] 初始化系統 - 請選擇要分析的賽事")
-        print("=" * 60)
-        
-        # 初始化數據載入器
-        try:
-            self.data_loader = CompatibleF1DataLoader()
-            print("[OK] 兼容數據載入器初始化成功")
-        except Exception as e:
-            print(f"[ERROR] 數據載入器初始化失敗: {e}")
-            return False
-        
-        # 獲取賽季
-        while True:
-            try:
-                year_input = input("請輸入賽季年份 (2024/2025，直接按 Enter 使用 2025): ").strip()
-                if not year_input:
-                    year = 2025
-                    print(f"[OK] 使用預設年份: {year}")
-                else:
-                    year = int(year_input)
-                    if year not in [2024, 2025]:
-                        print("[ERROR] 請輸入 2024 或 2025")
-                        continue
-                    print(f"[OK] 使用年份: {year}")
-                break
-            except ValueError:
-                print("[ERROR] 請輸入有效的年份")
-            except EOFError:
-                # 處理管道輸入或測試環境
-                year = 2025
-                print(f"[OK] 自動使用預設年份: {year}")
-                break
-        
-        # 賽事列表與日期 - 完整更新版本
-        race_options = {
-            2024: [
-                "Bahrain", "Saudi Arabia", "Australia", "Japan", "China", "Miami",
-                "Emilia Romagna", "Monaco", "Canada", "Spain", "Austria", "Great Britain",
-                "Hungary", "Belgium", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-            ],
-            2025: [
-                "Australia", "China", "Japan", "Bahrain", "Saudi Arabia", "Miami",
-                "Emilia Romagna", "Monaco", "Spain", "Canada", "Austria", "Great Britain",
-                "Belgium", "Hungary", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-            ]
-        }
-        
-        # 賽事日期映射 - 詳細完整版本
-        race_dates = {
-            2024: {
-                "Bahrain": "2024-03-02",
-                "Saudi Arabia": "2024-03-09", 
-                "Australia": "2024-03-24",
-                "Japan": "2024-04-07",
-                "China": "2024-04-21",
-                "Miami": "2024-05-05",
-                "Emilia Romagna": "2024-05-19",
-                "Monaco": "2024-05-26",
-                "Canada": "2024-06-09",
-                "Spain": "2024-06-23",
-                "Austria": "2024-06-30",
-                "Great Britain": "2024-07-07",
-                "Hungary": "2024-07-21",
-                "Belgium": "2024-07-28",
-                "Netherlands": "2024-09-01",
-                "Italy": "2024-09-01",
-                "Azerbaijan": "2024-09-15",
-                "Singapore": "2024-09-22",
-                "United States": "2024-10-20",
-                "Mexico": "2024-10-27",
-                "Brazil": "2024-11-03",
-                "Las Vegas": "2024-11-23",
-                "Qatar": "2024-12-01",
-                "Abu Dhabi": "2024-12-08"
-            },
-            2025: {
-                "Australia": "2025-03-16",
-                "China": "2025-03-23",
-                "Japan": "2025-04-06", 
-                "Bahrain": "2025-04-13",
-                "Saudi Arabia": "2025-04-20",
-                "Miami": "2025-05-04",
-                "Emilia Romagna": "2025-05-18",
-                "Monaco": "2025-05-25",
-                "Spain": "2025-06-01",
-                "Canada": "2025-06-15",
-                "Austria": "2025-06-29",
-                "Great Britain": "2025-07-06",
-                "Hungary": "2025-08-03",  # 修正：匈牙利大獎賽
-                "Belgium": "2025-07-27",  # 修正：比利時大獎賽（根據FastF1）
-                "Netherlands": "2025-08-31",  # 修正：荷蘭大獎賽
-                "Italy": "2025-09-07",  # 恢復：義大利大獎賽正確日期
-                "Azerbaijan": "2025-09-21",
-                "Singapore": "2025-10-05",
-                "United States": "2025-10-19",
-                "Mexico": "2025-10-26",
-                "Brazil": "2025-11-09",
-                "Las Vegas": "2025-11-22",
-                "Qatar": "2025-11-30",
-                "Abu Dhabi": "2025-12-07"
-            }
-        }
-        
-        # 賽事全名映射 - 標準正式名稱
-        race_full_names = {
-            "Bahrain": "Bahrain Grand Prix",
-            "Saudi Arabia": "Saudi Arabian Grand Prix",
-            "Australia": "Australian Grand Prix",
-            "Japan": "Japanese Grand Prix",
-            "China": "Chinese Grand Prix", 
-            "Miami": "Miami Grand Prix",
-            "Emilia Romagna": "Emilia Romagna Grand Prix",
-            "Monaco": "Monaco Grand Prix",
-            "Canada": "Canadian Grand Prix",
-            "Spain": "Spanish Grand Prix",
-            "Austria": "Austrian Grand Prix",
-            "Great Britain": "British Grand Prix",
-            "Hungary": "Hungarian Grand Prix",
-            "Belgium": "Belgian Grand Prix",
-            "Netherlands": "Dutch Grand Prix",
-            "Italy": "Italian Grand Prix",
-            "Azerbaijan": "Azerbaijan Grand Prix",
-            "Singapore": "Singapore Grand Prix",
-            "United States": "United States Grand Prix",
-            "Mexico": "Mexican Grand Prix",
-            "Brazil": "Brazilian Grand Prix", 
-            "Las Vegas": "Las Vegas Grand Prix",
-            "Qatar": "Qatar Grand Prix",
-            "Abu Dhabi": "Abu Dhabi Grand Prix"
-        }
-        
-        races = race_options.get(year, race_options[2025])
-        dates = race_dates.get(year, race_dates[2025])
-        
-        print(f"\n[FINISH] {year} 年賽事列表:")
-        race_table = PrettyTable()
-        race_table.field_names = ["編號", "比賽日期", "賽事名稱", "完整名稱"]
-        race_table.align = "l"
-        
-        for i, race in enumerate(races, 1):
-            race_date = dates.get(race, "TBD")
-            full_name = race_full_names.get(race, f"{race} Grand Prix")
-            race_table.add_row([i, race_date, race, full_name])
-        
-        print(race_table)
-        
-        # 讓使用者選擇賽事
-        while True:
-            try:
-                choice_input = input(f"\n請選擇賽事編號 (1-{len(races)}，或直接按 Enter 使用 Japan): ").strip()
-                if not choice_input:
-                    race_name = "Japan"
-                    print(f"[OK] 使用預設賽事: {race_name}")
-                else:
-                    choice = int(choice_input)
-                    if choice < 1 or choice > len(races):
-                        print(f"[ERROR] 請輸入 1 到 {len(races)} 之間的數字")
-                        continue
-                    race_name = races[choice - 1]
-                    print(f"[OK] 已選擇: {race_name}")
-                break
-            except ValueError:
-                print("[ERROR] 請輸入有效的數字")
-            except EOFError:
-                race_name = "Japan"
-                print(f"[OK] 自動選擇: {race_name}")
-                break
-        
-        # 獲取賽段類型
-        print(f"\n[F1]  賽段類型選項:")
-        print("   R  - 正賽 (Race)")
-        print("   Q  - 排位賽 (Qualifying)")
-        print("   FP1, FP2, FP3 - 自由練習")
-        print("   S  - 短衝刺賽 (Sprint)")
-        
-        session_type = input("請輸入賽段類型 (直接按 Enter 使用 R): ").strip().upper()
-        if not session_type:
-            session_type = "R"
-            print(f"[OK] 使用預設賽段類型: {session_type}")
-        
-        # 載入數據
-        print(f"\n[STATS] 載入 {year} {race_name} {session_type} 數據...")
-        if self.data_loader.load_race_data(year, race_name, session_type):
-            self.session_loaded = True
-            print(f"[OK] 賽事數據載入完成！")
-            
-            # 初始化 OpenF1 分析器
-            self._initialize_open_analyzer()
-            
-            # 更新F1分析實例
-            self._update_f1_analysis_instance()
-            
-            return True
-        else:
-            print(f"[ERROR] 賽事數據載入失敗")
-            return False
 
-    def display_menu(self):
-        """顯示主選單"""
-        print("\n" + "="*80)
-        print("[F1]  F1 賽事分析 CLI 模組化版本 v2.0")
-        print("="*80)
-        
-        if self.session_loaded:
-            print("[STATS] 數據狀態: [OK] 已載入賽事數據")
-        else:
-            print("[STATS] 數據狀態: [ERROR] 尚未載入賽事數據")
-        print("─" * 80)
-        
-        print("\n基礎分析模組")
-        print("1.  [RAIN] 降雨強度分析                 (Rain Intensity Analysis)")
-        print("2.  [TRACK] 賽道路線分析                 (Track Path Analysis)")
-        print("3.  🏆 車手最快進站時間排行榜        (Driver Fastest Pitstop Ranking)")
-        print("4.  [FINISH] 車隊進站時間排行榜            (Team Pitstop Ranking)")  
-        print("5.  [INFO] 車手進站詳細記錄              (Driver Detailed Pitstop Records)")
-        print("6.  💥 獨立事故分析                 (Independent Accident Analysis)")
-        
-        print("\n事故分析子模組")
-        print("6.1 [CHECK] 關鍵事件摘要                 (Key Events Summary)")
-        print("6.2 [ALERT] 特殊事件報告                 (Special Incident Reports)")
-        print("6.3 🏆 車手嚴重程度分數統計         (Driver Severity Scores)")
-        print("6.4 [FINISH] 車隊風險分數統計             (Team Risk Scores)")
-        print("6.5 [INFO] 所有事件詳細列表             (All Incidents Summary)")
-        
-        print("\n單車手單圈分析模組")
-        print("7.  [F1] 單一車手綜合分析             (Single Driver Comprehensive Analysis)")
-        print("8.  📡 單一車手詳細遙測分析         (Single Driver Detailed Telemetry)")
-        
-        print("\n遙測分析子模組")
-        print("6.1 [CHART] 詳細圈次分析                 (Complete Lap Analysis)")
-        print("6.2 [FINISH] 詳細輪胎策略分析             (Detailed Tire Strategy)")
-        print("6.3 [STATS] 輪胎性能詳細分析             (Tire Performance Analysis)")
-        print("6.4 [PIT] 進站記錄                     (Pitstop Records)")
-        print("6.5 [ALERT] 特殊事件分析                 (Special Events)")
-        print("6.6 [F1] 最快圈速度遙測數據           (Fastest Lap Speed Data)")
-        print("6.7 [STATS] 指定圈次完整遙測數據         (Specific Lap Full Telemetry)")
-        
-        print("\n比較分析模組")
-        print("7.  🆚 雙車手比較分析               (Two Driver Comparison)")
-        print("7.1 [F1] 速度差距分析                 (Speed Gap Analysis)")
-        print("7.2 📏 距離差距分析                 (Distance Gap Analysis)")
-        print("10. [FINISH] 單一車手超車分析             (Single Driver Overtaking)")
-        print("11. [TOOL] 獨立單一車手DNF分析          (Independent Single Driver DNF)")
-        print("12. [TARGET] 單賽事指定彎道詳細分析       (Single Race Specific Corner Detailed Analysis)")
-        print("13. [STATS] 單一車手指定賽事全部彎道詳細分析 (Single Driver All Corners Detailed Analysis)")
-        
-        print("\n全部車手單圈分析模組")
-        print("14.1 [STATS] 車手數據統計總覽           (Driver Statistics Overview)")
-        print("14.2 [TOOL] 車手遙測資料統計           (Driver Telemetry Statistics)")
-        print("14.3 [START] 車手超車分析               (Driver Overtaking Analysis)")
-        print("14.9 👥 所有車手綜合分析           (All Drivers Comprehensive Analysis)")
-        print("15. [F1] 彎道速度分析                 (Corner Speed Analysis)")
-        
-        print("\n全部車手全年分析模組")
-        print("16. [START] 全部車手超車分析             (All Drivers Overtaking) [新版子模組]")
-        print("    • 16.1 年度超車統計 • 16.2 表現比較 • 16.3 視覺化分析 • 16.4 趨勢分析")
-        print("17. [STATS] 獨立全部車手DNF分析          (Independent All Drivers DNF)")
-        
-        print("\n系統功能")
-        print("18. [REFRESH] 重新載入賽事數據             (Reload Race Data)")
-        print("19. [PACKAGE] 顯示模組狀態                 (Show Module Status)")
-        print("20. 📖 顯示幫助信息                 (Show Help)")
-        print("21. [SAVE] 超車暫存管理                 (Overtaking Cache Management)")
-        print("22. [ARCHIVE] DNF暫存管理                 (DNF Cache Management)")
-        
-        print("\n設定功能")
-        print("S.  [SETTINGS] 重新設定賽事參數             (Change Race Settings)")
-        print("L.  [INFO] 列出支援的賽事               (List Supported Races)")
-        print("C.  [CHECK] 暫存狀態檢查                 (Check Cache Status)")
-        print("D.  [CHECK] DNF暫存檢查                  (Check DNF Cache)")
-        
-        print("\n0.  退出程式 (Exit)")
-        print("─" * 80)
+
+
 
     def show_module_status(self):
         """顯示模組狀態"""
@@ -1092,15 +818,67 @@ class F1AnalysisModularCLI:
                         "timestamp": datetime.now().isoformat()
                     }
             
-            # 功能 8: 車手對比分析
+            # 功能 8: 所有事件詳細列表分析 (All Incidents Summary)
             elif function_id == 8:
                 try:
-                    from modules.driver_comparison_advanced import run_driver_comparison_json
-                    print("\n[BALANCE] 執行車手對比分析 (JSON輸出版)...")
+                    from modules.all_incidents_analysis import run_all_incidents_analysis
+                    print("\n📋 執行所有事件詳細列表分析 (增強版本)...")
                     
-                    # 執行JSON版本的車手對比分析
-                    json_result = run_driver_comparison_json(
-                        self.data_loader, 
+                    # 執行增強版本的所有事件分析
+                    success = run_all_incidents_analysis(self.data_loader)
+                    
+                    if success:
+                        return {
+                            "success": True,
+                            "message": "所有事件詳細列表分析完成 (增強版本)",
+                            "data": {
+                                "analysis_type": "all_incidents_analysis",
+                                "year": getattr(self.data_loader, 'current_year', 2025),
+                                "race": getattr(self.data_loader, 'current_race', 'Unknown'),
+                                "session": getattr(self.data_loader, 'current_session', 'R'),
+                                "enhanced_features": [
+                                    "保留所有原始 race_control_messages",
+                                    "詳細的旗幟分類 (DOUBLE_YELLOW, BLUE_FLAG 等)",
+                                    "增強的事件分類系統",
+                                    "完整的 FastF1 原始欄位",
+                                    "雙重分類系統 (原始+增強)"
+                                ]
+                            },
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "message": "所有事件詳細列表分析失敗",
+                            "data": None,
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        
+                except ImportError as e:
+                    return {
+                        "success": False,
+                        "message": f"所有事件分析模組未找到: {str(e)}",
+                        "data": None,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                except Exception as e:
+                    return {
+                        "success": False,
+                        "message": f"執行所有事件詳細列表分析時發生錯誤: {str(e)}",
+                        "data": None,
+                        "timestamp": datetime.now().isoformat()
+                    }
+            
+            # 功能 9: 特殊事件報告分析 (Special Incident Reports)
+            elif function_id == 9:
+                try:
+                    from modules.special_incidents_analysis import run_special_incidents_analysis_json
+                    print("\n🚨 執行特殊事件報告分析 (JSON輸出版)...")
+                    
+                    # 執行JSON版本的特殊事件報告分析
+                    json_result = run_special_incidents_analysis_json(
+                        self.data_loader,
+                        dynamic_team_mapping=self.dynamic_team_mapping,
                         f1_analysis_instance=self.f1_analysis_instance,
                         enable_debug=True
                     )
@@ -1108,26 +886,51 @@ class F1AnalysisModularCLI:
                     return json_result
                         
                 except ImportError as e:
-                    return {
-                        "success": False,
-                        "message": f"車手對比分析模組未找到: {str(e)}",
-                        "data": None,
-                        "timestamp": datetime.now().isoformat()
-                    }
+                    # 後備方案：使用原始方法並強制生成 JSON
+                    print(f"[WARNING] JSON版模組未找到，使用後備方案: {e}")
+                    try:
+                        self.run_accident_special_incidents()
+                        
+                        # 強制生成基本 JSON 結果
+                        return {
+                            "success": True,
+                            "message": "特殊事件報告分析完成 (後備方案)",
+                            "data": {
+                                "analysis_type": "special_incidents",
+                                "year": getattr(self.data_loader, 'current_year', 2025),
+                                "race": getattr(self.data_loader, 'current_race', 'Unknown'),
+                                "session": getattr(self.data_loader, 'current_session', 'R'),
+                                "fallback_mode": True,
+                                "note": "使用後備分析方法，請檢查模組 modules.special_incidents_analysis"
+                            },
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    except Exception as fallback_error:
+                        return {
+                            "success": False,
+                            "message": f"特殊事件報告分析後備方案也失敗: {str(fallback_error)}",
+                            "data": None,
+                            "timestamp": datetime.now().isoformat()
+                        }
+                        
                 except Exception as e:
                     return {
                         "success": False,
-                        "message": f"執行車手對比分析時發生錯誤: {str(e)}",
+                        "message": f"執行特殊事件報告分析時發生錯誤: {str(e)}",
                         "data": None,
                         "timestamp": datetime.now().isoformat()
                     }
             
             else:
-                # 對於其他功能，返回標準執行結果
-                result = self.run_analysis(function_id)
+                # 對於其他功能，返回基本 JSON 結果
                 return {
-                    "success": result if isinstance(result, bool) else True,
-                    "data": {"message": "功能執行完成", "supports_json": False}
+                    "success": False,
+                    "message": f"功能 {function_id} 尚未實作 JSON 輸出版本",
+                    "data": {
+                        "function_id": str(function_id),
+                        "note": "此功能需要進一步實作 JSON 支援"
+                    },
+                    "timestamp": datetime.now().isoformat()
                 }
                 
         except Exception as e:
@@ -1311,86 +1114,11 @@ class F1AnalysisModularCLI:
         except Exception as e:
             print(f"[ERROR] 基本所有事件詳細列表失敗: {e}")
 
-    def _show_function_16_submenu(self):
-        """顯示 Function 16 子選單"""
-        print("\n" + "=" * 60)
-        print("[START] 全部車手超車分析模組 (Function 16)")
-        print("=" * 60)
-        print("請選擇分析類型:")
-        print("16.1 [STATS] 年度超車統計               (Annual Overtaking Statistics)")
-        print("16.2 [FINISH] 表現比較分析               (Performance Comparison)")
-        print("16.3 [CHART] 視覺化分析                 (Visualization Analysis)")
-        print("16.4 [CHART] 趨勢分析                   (Trends Analysis)")
-        print("0.   ↩️ 返回主選單                 (Back to Main Menu)")
-        print("=" * 60)
-        
-        try:
-            choice = input("\n請輸入選項 (16.1, 16.2, 16.3, 16.4, 0): ").strip()
-            
-            if choice == "0":
-                return
-            elif choice == "16.1":
-                print("\n[STATS] 執行年度超車統計分析...")
-                success = run_all_drivers_annual_overtaking_statistics(
-                    self.data_loader, 
-                    self.dynamic_team_mapping, 
-                    self.f1_analysis_instance
-                )
-                if success:
-                    print("[OK] 年度超車統計分析完成")
-                else:
-                    print("[ERROR] 年度超車統計分析失敗")
-                    
-            elif choice == "16.2":
-                print("\n[FINISH] 執行表現比較分析...")
-                success = run_all_drivers_overtaking_performance_comparison(
-                    self.data_loader, 
-                    self.dynamic_team_mapping, 
-                    self.f1_analysis_instance
-                )
-                if success:
-                    print("[OK] 表現比較分析完成")
-                else:
-                    print("[ERROR] 表現比較分析失敗")
-                    
-            elif choice == "16.3":
-                print("\n[CHART] 執行視覺化分析...")
-                success = run_all_drivers_overtaking_visualization_analysis(
-                    self.data_loader, 
-                    self.dynamic_team_mapping, 
-                    self.f1_analysis_instance
-                )
-                if success:
-                    print("[OK] 視覺化分析完成")
-                else:
-                    print("[ERROR] 視覺化分析失敗")
-                    
-            elif choice == "16.4":
-                print("\n[CHART] 執行趨勢分析...")
-                success = run_all_drivers_overtaking_trends_analysis(
-                    self.data_loader, 
-                    self.dynamic_team_mapping, 
-                    self.f1_analysis_instance
-                )
-                if success:
-                    print("[OK] 趨勢分析完成")
-                else:
-                    print("[ERROR] 趨勢分析失敗")
-                    
-            else:
-                print(f"[ERROR] 無效選項: {choice}")
-                print("請輸入有效的選項 (16.1, 16.2, 16.3, 16.4, 0)")
-                
-        except KeyboardInterrupt:
-            print("\n[WARNING] 操作已取消")
-        except Exception as e:
-            print(f"[ERROR] 子選單執行失敗: {e}")
-
     def show_help(self):
         """顯示幫助信息"""
-        print("\n📖 F1分析CLI - 模組化版本使用說明 (v5.3)")
+        print("\n📖 F1分析CLI - 模組化版本使用說明 (v5.4 CLI專用版)")
         print("=" * 80)
-        print("這是完全模組化的F1分析系統，每個功能都是獨立的模組。")
+        print("這是完全模組化的F1分析系統，僅支援CLI參數化模式。")
         print("基於FastF1和OpenF1官方API，支援2024-2025年F1賽季的專業級遙測數據分析。")
         print("✨ 新功能: 增強型賽事選擇界面，顯示賽事日期與完整Grand Prix名稱")
         
@@ -1640,8 +1368,8 @@ class F1AnalysisModularCLI:
         print("=" * 80)
         
         print("16. [REFRESH] 重新載入賽事數據 (Reload Race Data)")
-        print("    功能描述：重新選擇年份、賽事和賽段")
-        print("    輸入參數：互動式選擇新的賽事參數")
+        print("    功能描述：使用新參數重新載入賽事數據")
+        print("    輸入參數：年份、賽事、賽段參數")
         print("    主要輸出：資料載入狀態確認訊息")
         
         print("\n17. [PACKAGE] 顯示模組狀態 (Show Module Status)")
@@ -1668,8 +1396,8 @@ class F1AnalysisModularCLI:
         print("=" * 80)
         
         print("S.  [SETTINGS] 重新設定賽事參數 (Change Race Settings)")
-        print("    功能描述：重新設定分析的賽事參數")
-        print("    輸入參數：互動式重新選擇年份、賽事、賽段")
+        print("    功能描述：使用新參數重新設定分析的賽事參數")
+        print("    輸入參數：年份、賽事、賽段參數")
         
         print("\nL.  [INFO] 列出支援的賽事 (List Supported Races)")
         print("    功能描述：顯示2024-2025年支援的所有賽事")
@@ -1709,931 +1437,40 @@ class F1AnalysisModularCLI:
         print("[REFRESH] 更新日期：2025年8月1日 | 版本：v5.3 (增強賽事顯示版)")
         print("=" * 80)
 
-    def run_analysis(self, choice) -> bool:
-        """執行選定的分析功能
-        
-        Args:
-            choice: 使用者選擇的功能編號或字母
-            
-        Returns:
-            bool: 是否繼續運行程式
-        """
-        try:
-            # 調試輸出 - 幫助追蹤問題
-            print(f"[CHECK] DEBUG: run_analysis 接收到參數: {repr(choice)} (類型: {type(choice)})")
-            
-            # 處理字母選項
-            if choice == 'S':
-                print("\n[SETTINGS] 重新設定賽事參數...")
-                self.load_race_data_at_startup()
-                return True
-                
-            elif choice == 'L':
-                print("\n[INFO] 列出支援的賽事...")
-                print_supported_races()
-                return True
-                
-            elif choice == 'C':
-                print("\n[CHECK] 暫存狀態檢查...")
-                self.check_cache_status()
-                return True
-                
-            elif choice == 'D':
-                print("\n[CHECK] DNF暫存檢查...")
-                self.check_dnf_cache()
-                return True
-            
-            # 處理事故分析子模組選項 (4.1-4.5)
-            elif choice == "4.1":  # 關鍵事件摘要
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[CHECK] 執行關鍵事件摘要分析...")
-                self.run_accident_key_events_summary()
-                return True
-                
-            elif choice == "4.2":  # 特殊事件報告
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[ALERT] 執行特殊事件報告分析...")
-                self.run_accident_special_incidents()
-                return True
-                
-            elif choice == "4.3":  # 車手嚴重程度分數統計
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n🏆 執行車手嚴重程度分數統計...")
-                self.run_accident_driver_severity_scores()
-                return True
-                
-            elif choice == "4.4":  # 車隊風險分數統計
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[FINISH] 執行車隊風險分數統計...")
-                self.run_accident_team_risk_scores()
-                return True
-                
-            elif choice == "4.5":  # 所有事件詳細列表
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[INFO] 執行所有事件詳細列表...")
-                self.run_accident_all_incidents_summary()
-                return True
-            
-            # 處理遙測分析子模組選項 (6.1-6.7)
-            elif choice == "6.1":  # 詳細圈次分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[CHART] 執行詳細圈次分析...")
-                self.run_telemetry_complete_lap_analysis()
-                return True
-                
-            elif choice == "6.2":  # 詳細輪胎策略分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[FINISH] 執行詳細輪胎策略分析...")
-                self.run_telemetry_detailed_tire_strategy()
-                return True
-                
-            elif choice == "6.3":  # 輪胎性能詳細分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[STATS] 執行輪胎性能詳細分析...")
-                self.run_telemetry_tire_performance_analysis()
-                return True
-                
-            elif choice == "6.4":  # 進站記錄
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[PIT] 執行進站記錄分析...")
-                self.run_telemetry_pitstop_records()
-                return True
-                
-            elif choice == "6.5":  # 特殊事件分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[ALERT] 執行特殊事件分析...")
-                self.run_telemetry_special_events()
-                return True
-                
-            elif choice == "6.6":  # 最快圈速度遙測數據
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[F1] 執行最快圈速度遙測數據...")
-                self.run_telemetry_fastest_lap()
-                return True
-                
-            elif choice == "6.7":  # 指定圈次完整遙測數據
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[STATS] 執行指定圈次完整遙測數據...")
-                self.run_telemetry_specific_lap()
-                return True
-            
-            # 處理子模組選項
-            elif choice == "7.1":  # 速度差距分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[F1] 執行速度差距分析模組 (含原始數據輸出)...")
-                try:
-                    # 優先使用增強版分析，並自動選擇車手
-                    from enhanced_gap_analysis_with_raw_data import enhance_gap_analysis_with_raw_data
-                    enhance_gap_analysis_with_raw_data(self.data_loader, analysis_type="speed", auto_driver1="VER", auto_driver2="NOR")
-                except ImportError:
-                    # 後備使用原版分析
-                    try:
-                        from modules.speed_gap_analysis import run_speed_gap_analysis
-                        run_speed_gap_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    except ImportError:
-                        print("[ERROR] 速度差距分析模組未找到")
-                return True
-                
-            elif choice == "7.2":  # 距離差距分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n📏 執行距離差距分析模組 (含原始數據輸出)...")
-                try:
-                    # 優先使用增強版分析，並自動選擇車手
-                    from enhanced_gap_analysis_with_raw_data import enhance_gap_analysis_with_raw_data
-                    enhance_gap_analysis_with_raw_data(self.data_loader, analysis_type="distance", auto_driver1="VER", auto_driver2="NOR")
-                except ImportError:
-                    # 後備使用原版分析
-                    try:
-                        from modules.distance_gap_analysis import run_distance_gap_analysis
-                        run_distance_gap_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    except ImportError:
-                        print("[ERROR] 距離差距分析模組未找到")
-                return True
-            
-            elif choice == "11.1":  # 詳細DNF與責任事故分析
-                print("\n[ALERT] 執行詳細DNF與責任事故分析模組...")
-                try:
-                    from modules.single_driver_dnf_detailed import run_single_driver_detailed_dnf_analysis
-                    result = run_single_driver_detailed_dnf_analysis(self.data_loader)
-                    
-                    if result:
-                        print("[OK] 詳細DNF與責任事故分析完成")
-                    else:
-                        print("[ERROR] 詳細DNF與責任事故分析失敗")
-                        
-                except Exception as e:
-                    print(f"[ERROR] 執行詳細DNF與責任事故分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-            
-            elif choice == "11.2":  # 年度DNF統計摘要
-                print("\n[STATS] 執行年度DNF統計摘要分析模組...")
-                try:
-                    from modules.annual_dnf_statistics import run_annual_dnf_statistics_analysis
-                    result = run_annual_dnf_statistics_analysis(2024)
-                    
-                    if result:
-                        print("[OK] 年度DNF統計摘要分析完成")
-                    else:
-                        print("[ERROR] 年度DNF統計摘要分析失敗")
-                        
-                except Exception as e:
-                    print(f"[ERROR] 執行年度DNF統計摘要分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-            
-            elif choice == "14.1":  # 車手數據統計總覽
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[STATS] 執行車手數據統計總覽...")
-                try:
-                    from modules.driver_statistics_overview import run_driver_statistics_overview
-                    run_driver_statistics_overview(self.data_loader, self.dynamic_team_mapping, self.f1_analysis_instance)
-                    print("[OK] 車手數據統計總覽完成")
-                except ImportError as e:
-                    print(f"[ERROR] 模組導入失敗: {e}")
-                    print("請確認 modules/driver_statistics_overview.py 檔案存在")
-                except Exception as e:
-                    print(f"[ERROR] 執行車手數據統計總覽時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-                    
-            elif choice == "14.2":  # 車手遙測資料統計
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[TOOL] 執行車手遙測資料統計...")
-                try:
-                    from modules.driver_telemetry_statistics import run_driver_telemetry_statistics
-                    run_driver_telemetry_statistics(self.data_loader, self.dynamic_team_mapping, self.f1_analysis_instance)
-                    print("[OK] 車手遙測資料統計完成")
-                except ImportError as e:
-                    print(f"[ERROR] 模組導入失敗: {e}")
-                    print("請確認 modules/driver_telemetry_statistics.py 檔案存在")
-                except Exception as e:
-                    print(f"[ERROR] 執行車手遙測資料統計時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-                    
-            elif choice == "14.3":  # 車手超車分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[START] 執行車手超車分析...")
-                try:
-                    from modules.driver_overtaking_analysis import run_driver_overtaking_analysis
-                    run_driver_overtaking_analysis(self.data_loader, self.dynamic_team_mapping, self.f1_analysis_instance)
-                    print("[OK] 車手超車分析完成")
-                except ImportError as e:
-                    print(f"[ERROR] 模組導入失敗: {e}")
-                    print("請確認 modules/driver_overtaking_analysis.py 檔案存在")
-                except Exception as e:
-                    print(f"[ERROR] 執行車手超車分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-                
-            elif choice.lower().strip() == '14.4':
-                # Function 14.4: 🏆 最速圈排名分析 - 含區間時間
-                if not self.session_loaded:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[START] 執行最速圈排名分析...")
-                try:
-                    from modules.driver_fastest_lap_ranking import run_driver_fastest_lap_ranking
-                    run_driver_fastest_lap_ranking(self.data_loader, self.dynamic_team_mapping, self.f1_analysis_instance)
-                    print("[OK] 最速圈排名分析完成")
-                except ImportError as e:
-                    print(f"[ERROR] 模組導入失敗: {e}")
-                    print("請確認 modules/driver_fastest_lap_ranking.py 檔案存在")
-                except Exception as e:
-                    print(f"[ERROR] 執行最速圈排名分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                return True
-            
-            # 處理數字選項
-            if choice == 0:
-                print("\n👋 感謝使用F1分析CLI模組化版本！")
-                return False
-                
-            elif choice == 18:  # 重新載入賽事數據
-                print("\n[REFRESH] 重新載入賽事數據...")
-                self.load_race_data_at_startup()
-                
-            elif choice == 19:  # 顯示模組狀態
-                self.show_module_status()
-                
-            elif choice == 20:  # 顯示幫助信息
-                self.show_help()
-                
-            elif choice == 21:  # 超車暫存管理
-                print("\n[SAVE] 超車暫存管理...")
-                self.manage_overtaking_cache()
-                
-            elif choice == 22:  # DNF暫存管理
-                print("\n[ARCHIVE] DNF暫存管理...")
-                self.manage_dnf_cache()
-            
-            # 處理字符串格式的子功能選項
-            elif choice == "12.1":  # 單一車手詳細彎道分析 (增強版)
-                print("\n[F1] 執行單一車手詳細彎道分析 (增強版)...")
-                try:
-                    print("[CHECK] 自動選擇車手: LEC")
-                    print("[TARGET] 自動選擇彎道: 第 1 彎")
-                    print("[STATS] 含 JSON 原始數據輸出 + 進站與事件資料")
-                    
-                    result = run_single_driver_corner_analysis_integrated(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    
-                    if result:
-                        print("[OK] 單一車手詳細彎道分析完成")
-                    else:
-                        print("[ERROR] 單一車手詳細彎道分析失敗")
-                        
-                except Exception as e:
-                    print(f"[ERROR] 執行單一車手詳細彎道分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-            
-            elif choice == "12.2":  # 團隊車手對比彎道分析
-                print("\n🆚 執行團隊車手對比彎道分析...")
-                try:
-                    print("[CHECK] 自動選擇車手: VER vs NOR")
-                    print("[TARGET] 自動選擇彎道: 第 1 彎")
-                    print("[STATS] 含 JSON 原始數據輸出 + 進站與事件資料")
-                    
-                    result = run_team_drivers_corner_comparison_integrated(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    
-                    if result:
-                        print("[OK] 團隊車手對比彎道分析完成")
-                    else:
-                        print("[ERROR] 團隊車手對比彎道分析失敗")
-                        
-                except Exception as e:
-                    print(f"[ERROR] 執行團隊車手對比彎道分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                
-            # Function 16 子選項處理 - 全部車手超車分析
-            elif choice == "16.1":  # 年度超車統計
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[STATS] 執行年度超車統計分析...")
-                try:
-                    success = run_all_drivers_annual_overtaking_statistics(
-                        self.data_loader, 
-                        self.dynamic_team_mapping, 
-                        self.f1_analysis_instance
-                    )
-                    if success:
-                        print("[OK] 年度超車統計分析完成")
-                    else:
-                        print("[ERROR] 年度超車統計分析失敗")
-                except Exception as e:
-                    print(f"[ERROR] 執行年度超車統計分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    
-            elif choice == "16.2":  # 表現比較分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[FINISH] 執行表現比較分析...")
-                try:
-                    success = run_all_drivers_overtaking_performance_comparison(
-                        self.data_loader, 
-                        self.dynamic_team_mapping, 
-                        self.f1_analysis_instance
-                    )
-                    if success:
-                        print("[OK] 表現比較分析完成")
-                    else:
-                        print("[ERROR] 表現比較分析失敗")
-                except Exception as e:
-                    print(f"[ERROR] 執行表現比較分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    
-            elif choice == "16.3":  # 視覺化分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[CHART] 執行視覺化分析...")
-                try:
-                    success = run_all_drivers_overtaking_visualization_analysis(
-                        self.data_loader, 
-                        self.dynamic_team_mapping, 
-                        self.f1_analysis_instance
-                    )
-                    if success:
-                        print("[OK] 視覺化分析完成")
-                    else:
-                        print("[ERROR] 視覺化分析失敗")
-                except Exception as e:
-                    print(f"[ERROR] 執行視覺化分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    
-            elif choice == "16.4":  # 趨勢分析
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！請先選擇選項18載入賽事數據")
-                    return True
-                print("\n[CHART] 執行趨勢分析...")
-                try:
-                    success = run_all_drivers_overtaking_trends_analysis(
-                        self.data_loader, 
-                        self.dynamic_team_mapping, 
-                        self.f1_analysis_instance
-                    )
-                    if success:
-                        print("[OK] 趨勢分析完成")
-                    else:
-                        print("[ERROR] 趨勢分析失敗")
-                except Exception as e:
-                    print(f"[ERROR] 執行趨勢分析時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                
-            elif choice in range(1, 23) or (isinstance(choice, str) and choice.isdigit() and int(choice) in range(1, 23)):
-                # 轉換字符串為整數
-                if isinstance(choice, str) and choice.isdigit():
-                    choice = int(choice)
-                    
-                # 檢查是否已載入數據
-                if not self.session_loaded or not self.data_loader:
-                    print("\n[ERROR] 尚未載入賽事數據！")
-                    print("請先選擇選項18載入賽事數據，或重新啟動程式")
-                    return True
-                
-                # 執行分析功能 - 重新排列後的順序
-                if choice == 1:  # 降雨強度分析
-                    self.run_rain_intensity_analysis()
-                    
-                elif choice == 2:  # 賽道位置分析 (Raw Data版本)
-                    print("\n[TRACK] 執行賽道位置分析模組 (Raw Data表格版本)...")
-                    try:
-                        from modules.track_position_analysis import run_track_position_analysis
-                        run_track_position_analysis(self.data_loader)
-                    except ImportError:
-                        print("[ERROR] 賽道位置分析模組未找到")
-                        # 後備方案：使用舊版分析
-                        run_track_path_analysis(self.data_loader, self.dynamic_team_mapping, self.f1_analysis_instance)
-                    
-                elif choice == 3:  # 進站策略分析
-                    print("\n[PIT] 執行進站策略分析模組...")
-                    
-                    # 也可以執行完整的進站策略分析
-                    try:
-                        from modules.pitstop_analysis_complete import run_pitstop_analysis
-                        run_pitstop_analysis(self.data_loader, self.dynamic_team_mapping, f1_analysis_instance=self.f1_analysis_instance)
-                    except ImportError:
-                        try:
-                            from modules.pitstop_analysis import run_pitstop_analysis
-                            run_pitstop_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                        except ImportError:
-                            print("[ERROR] 進站策略分析模組未找到")
-                    
-                elif choice == 4:  # 獨立事故分析 (一般模式)
-                    print("\n 執行事故分析模組...")
-                    try:
-                        from modules.accident_analysis_complete import run_accident_analysis
-                        run_accident_analysis(self.data_loader, self.dynamic_team_mapping, f1_analysis_instance=self.f1_analysis_instance)
-                    except ImportError:
-                        try:
-                            from modules.accident_analysis import run_accident_analysis
-                            run_accident_analysis(self.data_loader, self.dynamic_team_mapping, f1_analysis_instance=self.f1_analysis_instance)
-                        except ImportError:
-                            print("[ERROR] 事故分析模組未找到")
-                    
-                elif choice == 5:  # 單一車手綜合分析
-                    print("\n[F1]  執行單一車手綜合分析模組...")
-                    run_single_driver_comprehensive_analysis(self.data_loader, self.dynamic_team_mapping)
-                    
-                elif choice == 6:  # 單一車手詳細遙測分析 (一般模式) - 安全檢查
-                    print(f"[CHECK] DEBUG: 觸發功能 6，choice={repr(choice)}")
-                    print("📡 執行單一車手詳細遙測分析模組...")
-                    try:
-                        from modules.single_driver_detailed_telemetry import run_single_driver_detailed_telemetry_analysis
-                        run_single_driver_detailed_telemetry_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    except ImportError:
-                        print("[ERROR] 單一車手詳細遙測分析模組未找到")
-                    
-                elif choice == 7:  # 雙車手比較分析
-                    print("\n🆚 執行雙車手比較分析模組...")
-                    run_driver_comparison_analysis(self.data_loader)
-                    
-                elif choice == 8:  # 賽事位置變化圖 (僅數據，不生成圖片)
-                    print("\n[STATS] 執行賽事位置變化圖分析...")
-                    try:
-                        # 使用專門的位置變化圖工具
-                        from race_position_chart import RacePositionChartGenerator
-                        
-                        generator = RacePositionChartGenerator()
-                        generator.data_loader = self.data_loader
-                        
-                        # 自動選擇車手
-                        driver_input = "VER"  # 預設車手
-                        print(f"[CHECK] 自動選擇車手: {driver_input}")
-                        
-                        # 使用當前載入的賽事數據
-                        year = self.data_loader.current_year if hasattr(self.data_loader, 'current_year') else 2025
-                        race = self.data_loader.current_race if hasattr(self.data_loader, 'current_race') else "Japan"
-                        
-                        # 僅生成數據，不生成圖片
-                        success = generator.generate_position_changes_chart(driver_input, year, race, generate_chart=False)
-                        
-                        if success:
-                            print("[OK] 位置變化圖分析完成")
-                        else:
-                            print("[ERROR] 位置變化圖分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 位置變化圖生成失敗: {e}")
-                        import traceback
-                        traceback.print_exc()
-                    
-                elif choice == 9:  # 賽事超車統計分析 (Raw Data輸出版)
-                    print("\n[CHART] 執行賽事超車統計分析...")
-                    try:
-                        # 使用完整的超車分析功能，但專注於Raw Data輸出
-                        print("[FINISH] 啟動超車統計分析模組...")
-                        
-                        # 自動選擇車手
-                        driver_input = "VER"  # 預設車手
-                        print(f"[CHECK] 自動選擇車手: {driver_input}")
-                        
-                        # 使用當前載入的賽事數據
-                        year = self.data_loader.current_year if hasattr(self.data_loader, 'current_year') else 2025
-                        
-                        print(f"[STATS] 分析 {driver_input} 在 {year} 年的超車統計...")
-                        print("[REFRESH] 載入超車分析模組...")
-                        
-                        # 使用完整的超車分析功能
-                        from modules.single_driver_overtaking_advanced import SingleDriverOvertakingAdvanced
-                        analyzer = SingleDriverOvertakingAdvanced(self.data_loader)
-                        
-                        # 執行分析並顯示Raw Data
-                        result = analyzer.analyze_single_driver_overtaking(driver_input, [year])
-                        
-                        if result:
-                            print("[OK] 超車統計分析完成")
-                            print("\n[INFO] Raw Data 超車統計摘要:")
-                            print(f"車手: {driver_input}")
-                            print(f"分析年份: {year}")
-                            print(f"分析結果已保存到相應檔案")
-                        else:
-                            print("[ERROR] 超車統計分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 超車統計分析失敗: {e}")
-                        import traceback
-                        traceback.print_exc()
-                    
-                elif choice == 10:  # 單一車手超車分析 (完整統計分析)
-                    print("\n[FINISH] 執行單一車手超車分析模組...")
-                    run_single_driver_overtaking_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    
-                elif choice == 11:  # 獨立單一車手DNF分析
-                    print("\n[TOOL] 執行獨立單一車手DNF分析模組...")
-                    try:
-                        from modules.all_drivers_dnf_advanced import AllDriversDNFAdvanced
-                        from modules.data_loader import F1DataLoader
-                        
-                        # 初始化資料載入器和DNF分析器
-                        data_loader = F1DataLoader()
-                        dnf_analyzer = AllDriversDNFAdvanced(data_loader)
-                        
-                        # 執行單一車手詳細DNF分析
-                        result = dnf_analyzer.run_single_driver_detailed_dnf_analysis()
-                        
-                        if result:
-                            print("[OK] 獨立單一車手DNF分析完成")
-                        else:
-                            print("[ERROR] 獨立單一車手DNF分析失敗")
-                            
-                    except ImportError as e:
-                        print(f"[ERROR] 模組導入失敗: {e}")
-                    except Exception as e:
-                        print(f"[ERROR] 執行獨立單一車手DNF分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-                elif choice == 11.1:  # 詳細DNF與責任事故分析
-                    print("\n[ALERT] 執行詳細DNF與責任事故分析模組...")
-                    try:
-                        from modules.single_driver_dnf_detailed import run_single_driver_detailed_dnf_analysis
-                        result = run_single_driver_detailed_dnf_analysis(self.data_loader)
-                        
-                        if result:
-                            print("[OK] 詳細DNF與責任事故分析完成")
-                        else:
-                            print("[ERROR] 詳細DNF與責任事故分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 執行詳細DNF與責任事故分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-                elif choice == 11.2:  # 年度DNF統計摘要
-                    print("\n[STATS] 執行年度DNF統計摘要分析模組...")
-                    try:
-                        from modules.annual_dnf_statistics import run_annual_dnf_statistics_analysis
-                        result = run_annual_dnf_statistics_analysis(2024)
-                        
-                        if result:
-                            print("[OK] 年度DNF統計摘要分析完成")
-                        else:
-                            print("[ERROR] 年度DNF統計摘要分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 執行年度DNF統計摘要分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                    
-                elif choice == 12:  # 單賽事指定彎道詳細分析
-                    print("\n[TARGET] 執行單一車手詳細彎道分析模組...")
-                    run_single_driver_detailed_corner_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                    
-                elif choice == 13:  # 單一車手指定賽事全部彎道詳細分析
-                    print("\n[STATS] 執行單一車手指定賽事全部彎道詳細分析模組...")
-                    print("[TARGET] 包含Box-and-Whisker速度分析、雷達圖彎道編號顯示、速度與穩定度複合圖")
-                    try:
-                        from modules.single_driver_all_corners_detailed_analysis import run_single_driver_all_corners_detailed_analysis
-                        run_single_driver_all_corners_detailed_analysis(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                        print("[OK] 單一車手指定賽事全部彎道詳細分析完成")
-                    except ImportError as e:
-                        print(f"[ERROR] 模組導入失敗: {e}")
-                        print("請確認 modules/single_driver_all_corners_detailed_analysis.py 檔案存在")
-                    except Exception as e:
-                        print(f"[ERROR] 執行單一車手指定賽事全部彎道詳細分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                    
-                elif choice == 14:  # 保留原有功能作為14.9 (所有車手綜合分析) - 使用統一映射器
-                    print("\n👥 執行所有車手綜合分析模組...")
-                    result = self.function_mapper.execute_function(21)  # Function 21: 所有車手綜合分析
-                    if result:
-                        print("[OK] 所有車手綜合分析完成！")
-                    else:
-                        print("[ERROR] 所有車手綜合分析執行失敗")
-                    
-                elif choice == 15:  # 彎道速度分析
-                    print("\n[F1]  執行彎道速度分析模組...")
-                    run_corner_speed_analysis(self.data_loader, self.f1_analysis_instance)
-                    
-                elif choice == 16:  # 全部車手超車分析子選單
-                    self._show_function_16_submenu()
-                    
-                elif choice == 17:  # 獨立全部車手DNF分析
-                    print("\n[STATS] 執行全部車手DNF與責任分析模組...")
-                    try:
-                        from modules.all_drivers_dnf_advanced import AllDriversDNFAdvanced
-                        
-                        # 使用完全復刻 f1_analysis_cli_new.py 選項 10 的功能
-                        dnf_analyzer = AllDriversDNFAdvanced(self.data_loader)
-                        dnf_analyzer.run_analysis()
-                        print("[OK] 全部車手DNF與責任分析完成")
-                        
-                    except ImportError as e:
-                        print(f"[ERROR] 模組導入失敗: {e}")
-                        print("請確認 modules/all_drivers_dnf_advanced.py 檔案存在")
-                    except Exception as e:
-                        print(f"[ERROR] 執行全部車手DNF與責任分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-                # 新增的彎道分析子功能
-                elif choice == "12.1":  # 單一車手詳細彎道分析 (增強版)
-                    print("\n[F1] 執行單一車手詳細彎道分析 (增強版)...")
-                    try:
-                        print("[CHECK] 自動選擇車手: LEC")
-                        print("[TARGET] 自動選擇彎道: 第 1 彎")
-                        print("[STATS] 含 JSON 原始數據輸出 + 進站與事件資料")
-                        
-                        result = run_single_driver_corner_analysis_integrated(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                        
-                        if result:
-                            print("[OK] 單一車手詳細彎道分析完成")
-                        else:
-                            print("[ERROR] 單一車手詳細彎道分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 執行單一車手詳細彎道分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-                elif choice == "12.2":  # 團隊車手對比彎道分析
-                    print("\n🆚 執行團隊車手對比彎道分析...")
-                    try:
-                        print("[CHECK] 自動選擇車手: VER vs NOR")
-                        print("[TARGET] 自動選擇彎道: 第 1 彎")
-                        print("[STATS] 含 JSON 原始數據輸出 + 進站與事件資料")
-                        
-                        result = run_team_drivers_corner_comparison_integrated(self.data_loader, f1_analysis_instance=self.f1_analysis_instance)
-                        
-                        if result:
-                            print("[OK] 團隊車手對比彎道分析完成")
-                        else:
-                            print("[ERROR] 團隊車手對比彎道分析失敗")
-                            
-                    except Exception as e:
-                        print(f"[ERROR] 執行團隊車手對比彎道分析時發生錯誤: {e}")
-                        import traceback
-                        traceback.print_exc()
-                
-            else:
-                print("[ERROR] 無效的選項，請選擇 0-22、字母選項 S, L, C, D 或子模組選項 14.1-14.3, 16.1-16.4, 7.1, 7.2, 12.1, 12.2")
-                
-        except KeyboardInterrupt:
-            print("\n\n[WARNING]  使用者中斷操作")
-            return False
-        except Exception as e:
-            print(f"\n[ERROR] 執行分析時發生錯誤: {e}")
-            print("請檢查模組是否正確安裝，或聯繫技術支援")
-            
-        return True
+    # 移除了大量的互動式模式方法，包括：
+    # - run_analysis: 處理互動式選單選擇的龐大方法
+    # 移除了 run_analysis 方法 - 僅支援參數化模式
+    # 所有互動式選單處理邏輯已移除，程式更加簡潔高效
 
-    def check_cache_status(self):
-        """檢查暫存狀態"""
-        print("\n[CHECK] 暫存狀態檢查")
-        print("=" * 50)
-        
-        cache_dirs = [
-            ("cache", "基礎暫存目錄"),
-            ("f1_cache", "F1數據暫存"),
-            ("f1_analysis_cache", "F1分析暫存"),
-            ("overtaking_cache", "超車分析暫存"),
-            ("corner_analysis_cache", "彎道分析暫存"),
-            ("dnf_analysis_cache", "DNF分析暫存")
-        ]
-        
-        for cache_dir, description in cache_dirs:
-            cache_path = os.path.join(os.getcwd(), cache_dir)
-            if os.path.exists(cache_path):
-                file_count = len([f for f in os.listdir(cache_path) if os.path.isfile(os.path.join(cache_path, f))])
-                print(f"[OK] {description}: {file_count} 個檔案")
-            else:
-                print(f"[ERROR] {description}: 目錄不存在")
-        
-        print("=" * 50)
+    # 移除了 manage_dnf_cache 方法 - 僅保留參數化模式核心功能
 
-    def check_dnf_cache(self):
-        """檢查DNF暫存狀態"""
-        print("\n[CHECK] DNF暫存檢查")
-        print("=" * 50)
-        
-        dnf_cache_dir = os.path.join(os.getcwd(), "dnf_analysis_cache")
-        if os.path.exists(dnf_cache_dir):
-            files = os.listdir(dnf_cache_dir)
-            txt_files = [f for f in files if f.endswith('.txt')]
-            png_files = [f for f in files if f.endswith('.png')]
-            
-            print(f"[STATS] DNF分析文字檔案: {len(txt_files)} 個")
-            print(f"[CHART] DNF分析圖表檔案: {len(png_files)} 個")
-            
-            if txt_files:
-                print("\n📄 最近的DNF分析文字檔案:")
-                for txt_file in sorted(txt_files)[-5:]:  # 顯示最新的5個檔案
-                    print(f"   • {txt_file}")
-        else:
-            print("[ERROR] DNF暫存目錄不存在")
-        
-        print("=" * 50)
 
-    def manage_overtaking_cache(self):
-        """管理超車暫存檔案"""
-        print("\n[SAVE] 超車暫存管理")
-        print("=" * 50)
-        
-        overtaking_cache_dir = os.path.join(os.getcwd(), "overtaking_cache")
-        if not os.path.exists(overtaking_cache_dir):
-            print("[ERROR] 超車暫存目錄不存在")
-            return
-        
-        files = os.listdir(overtaking_cache_dir)
-        if not files:
-            print("[FOLDER] 超車暫存目錄為空")
-            return
-        
-        print(f"[STATS] 找到 {len(files)} 個超車暫存檔案")
-        print("\n選項:")
-        print("1. 列出所有檔案")
-        print("2. 清除所有暫存檔案")
-        print("3. 返回主選單")
-        
-        try:
-            choice = input("\n請選擇 (1-3): ").strip()
-            
-            if choice == '1':
-                print("\n[INFO] 超車暫存檔案列表:")
-                for i, file in enumerate(sorted(files), 1):
-                    file_path = os.path.join(overtaking_cache_dir, file)
-                    file_size = os.path.getsize(file_path)
-                    print(f"   {i:2d}. {file} ({file_size} bytes)")
-                    
-            elif choice == '2':
-                confirm = input("[WARNING] 確定要清除所有超車暫存檔案嗎? (y/N): ").strip().lower()
-                if confirm == 'y':
-                    for file in files:
-                        os.remove(os.path.join(overtaking_cache_dir, file))
-                    print("[OK] 所有超車暫存檔案已清除")
-                else:
-                    print("[ERROR] 取消清除操作")
-                    
-        except Exception as e:
-            print(f"[ERROR] 管理超車暫存時發生錯誤: {e}")
-        
-        print("=" * 50)
-
-    def manage_dnf_cache(self):
-        """管理DNF暫存檔案"""
-        print("\n[ARCHIVE] DNF暫存管理")
-        print("=" * 50)
-        
-        dnf_cache_dir = os.path.join(os.getcwd(), "dnf_analysis_cache")
-        if not os.path.exists(dnf_cache_dir):
-            print("[ERROR] DNF暫存目錄不存在")
-            return
-        
-        files = os.listdir(dnf_cache_dir)
-        if not files:
-            print("[FOLDER] DNF暫存目錄為空")
-            return
-        
-        txt_files = [f for f in files if f.endswith('.txt')]
-        png_files = [f for f in files if f.endswith('.png')]
-        
-        print(f"[STATS] 找到 {len(txt_files)} 個DNF分析文字檔案")
-        print(f"[CHART] 找到 {len(png_files)} 個DNF分析圖表檔案")
-        
-        print("\n選項:")
-        print("1. 列出文字檔案")
-        print("2. 列出圖表檔案")
-        print("3. 清除所有DNF暫存檔案")
-        print("4. 返回主選單")
-        
-        try:
-            choice = input("\n請選擇 (1-4): ").strip()
-            
-            if choice == '1':
-                print("\n📄 DNF分析文字檔案:")
-                for i, file in enumerate(sorted(txt_files), 1):
-                    print(f"   {i:2d}. {file}")
-                    
-            elif choice == '2':
-                print("\n[CHART] DNF分析圖表檔案:")
-                for i, file in enumerate(sorted(png_files), 1):
-                    print(f"   {i:2d}. {file}")
-                    
-            elif choice == '3':
-                confirm = input("[WARNING] 確定要清除所有DNF暫存檔案嗎? (y/N): ").strip().lower()
-                if confirm == 'y':
-                    for file in files:
-                        os.remove(os.path.join(dnf_cache_dir, file))
-                    print("[OK] 所有DNF暫存檔案已清除")
-                else:
-                    print("[ERROR] 取消清除操作")
-                    
-        except Exception as e:
-            print(f"[ERROR] 管理DNF暫存時發生錯誤: {e}")
-        
-        print("=" * 50)
-
-    def get_user_choice(self) -> Optional[str]:
-        """獲取使用者選擇"""
-        try:
-            choice_str = input("\n請選擇功能 (0-22, 4.1-4.5, 6.1-6.7, 7.1, 7.2, 14.1-14.3, 16.1-16.4, S, L, C, D): ").strip().upper()
-            if not choice_str:
-                return None
-            
-            # 處理字母選項
-            if choice_str in ['S', 'L', 'C', 'D']:
-                return choice_str
-            
-            # 處理子模組選項
-            if choice_str in ['4.1', '4.2', '4.3', '4.4', '4.5', '6.1', '6.2', '6.3', '6.4', '6.5', '6.6', '6.7', '7.1', '7.2', '14.1', '14.2', '14.3']:
-                return choice_str
-            
-            # 處理數字選項
-            return int(choice_str)
-        except ValueError:
-            if choice_str in ['S', 'L', 'C', 'D', '4.1', '4.2', '4.3', '4.4', '4.5', '6.1', '6.2', '6.3', '6.4', '6.5', '6.6', '6.7', '7.1', '7.2', '14.1', '14.2', '14.3']:
-                return choice_str
-            print("[ERROR] 請輸入有效的數字或選項 (S, L, C, D, 4.1-4.5, 6.1-6.7, 7.1, 7.2, 14.1-14.3, 16.1-16.4)")
-            return None
-        except KeyboardInterrupt:
-            print("\n\n👋 程式已被使用者中斷")
-            return 0
 
     def run(self):
-        """主運行迴圈"""
+        """執行 F1 分析 - 僅支援參數化模式"""
         self.display_header()
         
-        print(f"\n[OK] 模組化F1分析系統已啟動")
+        print(f"\n[OK] 模組化F1分析系統已啟動 (參數化模式)")
         print(f"[FILES] 模組目錄: {modules_dir}")
         print(f"[PYTHON] Python版本: {sys.version.split()[0]}")
         
-        # 檢查是否為參數模式
-        if self.args and (self.args.year or self.args.race or self.args.session or self.args.function):
-            print("\n[START] 參數模式啟動...")
-            return self.run_parameter_mode()
+        # 檢查是否提供了必要參數
+        if not self.args or not (self.args.year or self.args.race or self.args.session or self.args.function):
+            print("\n[ERROR] 此程式僅支援參數化模式運行")
+            print("請提供必要的參數來執行分析功能")
+            print("\n使用範例:")
+            print("  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1")
+            print("  python f1_analysis_modular_main.py --help  # 查看完整參數說明")
+            return False
         
-        # 互動模式
-        print("\n[START] 系統初始化中...")
-        if not self.load_race_data_at_startup():
-            print("\n[WARNING] 數據載入失敗，但您仍可使用系統功能 (選項18-22)")
-            print("若要執行分析功能，請使用選項18重新載入數據")
-        
-        while True:
-            self.display_menu()
-            choice = self.get_user_choice()
-            
-            if choice is None:
-                continue
-                
-            if not self.run_analysis(choice):
-                break
-                
-            input("\n按 Enter 鍵繼續...")
+        # 參數模式
+        print("\n[START] 參數模式啟動...")
+        return self.run_parameter_mode()
 
     def run_parameter_mode(self):
-        """參數模式運行 - 使用統一功能映射器"""
+        """參數模式運行 - 唯一支援的運行模式"""
         print("=" * 60)
-        print("[TOOL] 參數化模式 - 符合核心開發原則")
+        print("[TOOL] 參數化模式 - F1分析系統核心")
         print("=" * 60)
         
         # 載入數據
@@ -2678,22 +1515,17 @@ class F1AnalysisModularCLI:
         else:
             print("[ERROR] 參數模式需要指定功能編號 (-f)")
             print("範例: python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1")
+            print("使用 --help 查看所有可用參數和功能")
             return False
 
 
 def create_argument_parser():
     """創建命令行參數解析器"""
     parser = argparse.ArgumentParser(
-        description='F1 Analysis CLI - 模組化主程式 v5.3',
+        description='F1 Analysis CLI - 參數化模式專用版本 v6.0',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
-使用範例:
-  # 互動模式 (預設)
-  python f1_analysis_modular_main.py
-  
-  # 載入特定賽事後進入互動模式
-  python f1_analysis_modular_main.py -y 2025 -r Japan -s R
-  
+使用範例 (僅支援參數化模式):
   # 直接執行降雨強度分析
   python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1
   
@@ -2703,11 +1535,14 @@ def create_argument_parser():
   # 執行詳細DNF分析 (指定車手)
   python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 11.1 -d VER
   
-  # 顯示模組狀態
-  python f1_analysis_modular_main.py -f 19
+  # 執行事故分析功能8 (所有事件詳細列表)
+  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 8
   
-  # 顯示幫助
-  python f1_analysis_modular_main.py -f 20
+  # 顯示支援的賽事列表
+  python f1_analysis_modular_main.py --list-races
+  
+  # 查看完整參數說明
+  python f1_analysis_modular_main.py --help
 
 功能編號對照:
   [RAIN]  基礎分析模組:
@@ -2736,15 +1571,8 @@ def create_argument_parser():
       ├── 16.2 [FINISH] 表現比較分析
       ├── 16.3 [CHART] 視覺化分析
       └── 16.4 [CHART] 趨勢分析
-  
-  [TOOL] 系統功能:
-  18 [REFRESH] 重新載入賽事數據         21 [SAVE] 超車暫存管理
-  19 [PACKAGE] 顯示模組狀態            22 [ARCHIVE] DNF暫存管理
-  20 📖 顯示幫助信息
-  
-  [SETTINGS]  設定功能:
-  S  [SETTINGS] 重新設定賽事參數          C  [CHECK] 暫存狀態檢查
-  L  [INFO] 列出支援的賽事            D  [CHECK] DNF暫存檢查
+
+💡 注意：本版本僅支援參數化模式，所有功能都需要透過命令行參數指定
         '''
     )
     
@@ -2784,7 +1612,7 @@ def create_argument_parser():
     return parser
 
 def main():
-    """主程式進入點"""
+    """主程式進入點 - 僅支援參數化模式"""
     try:
         # 解析命令行參數
         parser = create_argument_parser()
@@ -2806,9 +1634,12 @@ def main():
             print("請確保在正確的工作目錄中運行此程式")
             sys.exit(1)
             
-        # 啟動模組化CLI
+        # 啟動模組化CLI (僅參數化模式)
         cli = F1AnalysisModularCLI(args)
-        cli.run()
+        success = cli.run()
+        
+        if not success:
+            sys.exit(1)
         
     except KeyboardInterrupt:
         print("\n\n👋 程式已被使用者中斷，再見！")

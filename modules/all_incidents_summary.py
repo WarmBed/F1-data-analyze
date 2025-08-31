@@ -77,23 +77,49 @@ def categorize_incident_detailed(message):
     
     if 'CHEQUERED FLAG' in message:
         return 'RACE_END'
+    elif 'TRACK CLEAR' in message:
+        return 'GREEN_FLAG'
+    elif 'DRS ENABLED' in message:
+        return 'DRS'
+    elif 'RECOVERY VEHICLE' in message:
+        return 'RECOVERY_VEHICLE'
     elif any(word in message for word in ['ACCIDENT', 'COLLISION', 'CRASH']):
         return 'ACCIDENT'
+    elif 'SAFETY CAR WILL USE START/FINISH STRAIGHT' in message:
+        return 'OTHER'
+    elif 'NOTED - SAFETY CAR INFRINGEMENT' in message:
+        return 'OTHER'
+    elif 'INCIDENT INVOLVING CAR' in message and 'NOTED - SAFETY CAR INFRINGEMENT' in message:
+        return 'OTHER'
+    elif 'FIA STEWARDS: INCIDENT INVOLVING' in message and 'UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT' in message:
+        return 'INVESTIGATION'
+    elif 'INCIDENT INVOLVING CAR' in message and 'UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT' in message:
+        return 'INVESTIGATION'
     elif 'SAFETY CAR' in message:
         return 'SAFETY_CAR'
     elif 'RED FLAG' in message:
         return 'RED_FLAG'
-    elif 'YELLOW FLAG' in message:
+    elif 'YELLOW FLAG' in message or 'DOUBLE YELLOW' in message or 'YELLOW' in message:
         return 'YELLOW_FLAG'
+    elif 'NO FURTHER INVESTIGATION' in message or 'REVIEWED NO FURTHER INVESTIGATION' in message:
+        return 'NO_FURTHER_ACTION'
     elif 'INVESTIGATION' in message:
         return 'INVESTIGATION'
     elif 'PENALTY' in message:
         return 'PENALTY'
     elif any(word in message for word in ['CONTACT', 'INCIDENT']):
         return 'CONTACT'
+    elif 'LEAVING THE TRACK AND GAINING AN ADVANTAGE' in message or 'GAINING AN ADVANTAGE' in message:
+        return 'ADVANTAGE'
+    elif 'PIT EXIT' in message:
+        return 'PIT_EXIT'
     elif 'PIT' in message:
         return 'PIT_RELATED'
-    elif any(word in message for word in ['TRACK', 'LIMIT', 'ADVANTAGE']):
+    elif 'TRACK SURFACE SLIPPERY' in message:
+        return 'OTHER'
+    elif 'CLEAR IN TRACK SECTOR' in message:
+        return 'OTHER'
+    elif any(word in message for word in ['TRACK', 'LIMIT']):
         return 'TRACK_LIMITS'
     else:
         return 'OTHER'
@@ -104,19 +130,49 @@ def assess_incident_impact(message, category):
     
     if category == 'RED_FLAG':
         return 'RACE_STOPPED'
+    elif category == 'RECOVERY_VEHICLE':
+        return 'SAFETY_INTERVENTION'
+    elif 'TRACK CLEAR' in message:
+        return 'MONITORING'
+    elif 'DRS ENABLED' in message:
+        return 'MONITORING'
+    elif 'TRACK SURFACE SLIPPERY' in message:
+        return 'MONITORING'
+    elif 'CLEAR IN TRACK SECTOR' in message:
+        return 'MONITORING'
+    elif 'NOTED - SAFETY CAR INFRINGEMENT' in message:
+        return 'NOTED'
+    elif 'FIA STEWARDS: INCIDENT INVOLVING' in message and 'UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT' in message:
+        return 'UNDER_REVIEW'
+    elif 'SAFETY CAR WILL USE START/FINISH STRAIGHT' in message:
+        return 'SAFETY_INTERVENTION'
     elif category == 'SAFETY_CAR':
+        return 'SAFETY_INTERVENTION'
+    elif 'DOUBLE YELLOW' in message:
         return 'SAFETY_INTERVENTION'
     elif 'NO FURTHER INVESTIGATION' in message or 'NO ACTION' in message:
         return 'NO_ACTION'
     elif 'TIME PENALTY' in message or 'POSITION PENALTY' in message:
         return 'PENALTY_APPLIED'
-    elif 'UNDER INVESTIGATION' in message or 'NOTED' in message:
+    elif 'NOTED' in message and 'UNDER INVESTIGATION' not in message:
+        return 'NOTED'
+    elif 'UNDER INVESTIGATION' in message:
         return 'UNDER_REVIEW'
     else:
         return 'MONITORING'
 
 def analyze_all_incidents(session):
     """分析所有事故事件詳細資訊"""
+    print(f"[DEBUG] 開始分析事故事件...")
+    
+    # 調試：檢查 session 狀態
+    if session is None:
+        print(f"[ERROR] session 為 None")
+        return None
+    
+    print(f"[DEBUG] session 類型: {type(session)}")
+    print(f"[DEBUG] session 屬性: {dir(session)}")
+    
     incidents_data = {
         'all_incidents': [],
         'incident_summary': {
@@ -125,7 +181,29 @@ def analyze_all_incidents(session):
             'by_impact': {},
             'by_lap_range': {},
             'involved_drivers': set(),
-            'timeline_analysis': {}
+            'timeline_analysis': {},
+            'flag_statistics': {
+                'yellow_flags': {
+                    'total_count': 0,
+                    'by_reason': {},
+                    'by_location': {},
+                    'details': []
+                },
+                'red_flags': {
+                    'total_count': 0,
+                    'by_reason': {},
+                    'details': []
+                },
+                'safety_car_events': {
+                    'total_count': 0,
+                    'details': []
+                },
+                'other_flags': {
+                    'green_flags': 0,
+                    'blue_flags': 0,
+                    'chequered_flags': 0
+                }
+            }
         },
         'chronological_sequence': [],
         'driver_involvement': {},
@@ -133,105 +211,230 @@ def analyze_all_incidents(session):
     }
     
     try:
+        # 調試：檢查 race_control_messages 屬性
         if hasattr(session, 'race_control_messages'):
+            print(f"[DEBUG] session 有 race_control_messages 屬性")
             race_control = session.race_control_messages
+            
+            # 調試：檢查 race_control_messages 內容
+            print(f"[DEBUG] race_control 類型: {type(race_control)}")
+            print(f"[DEBUG] race_control 是否為 None: {race_control is None}")
+            
+            if race_control is not None:
+                if hasattr(race_control, 'empty'):
+                    print(f"[DEBUG] race_control 是否為空: {race_control.empty}")
+                    if not race_control.empty:
+                        print(f"[DEBUG] race_control_messages 總數: {len(race_control)}")
+                        print(f"[DEBUG] race_control 欄位: {list(race_control.columns) if hasattr(race_control, 'columns') else 'N/A'}")
+                        
+                        # 顯示前幾條訊息
+                        print(f"[DEBUG] 前 5 條訊息:")
+                        for i, (_, message) in enumerate(race_control.head(5).iterrows()):
+                            print(f"  [{i+1}] 圈數: {message.get('Lap', 'N/A')}, 訊息: {message.get('Message', 'N/A')[:100]}")
+                    else:
+                        print(f"[ERROR] race_control_messages 是空的 DataFrame")
+                        return incidents_data  # 返回空數據結構
+                else:
+                    print(f"[DEBUG] race_control 沒有 empty 屬性，長度: {len(race_control) if hasattr(race_control, '__len__') else 'N/A'}")
+            else:
+                print(f"[ERROR] race_control_messages 為 None")
+                return incidents_data  # 返回空數據結構
             
             if race_control is not None and not race_control.empty:
                 # 找出最後一圈圈數，用於過濾正常結束的 CHEQUERED FLAG
                 max_lap = race_control['Lap'].max() if 'Lap' in race_control.columns else 0
-                incident_sequence = 1
+                print(f"[DEBUG] 最大圈數: {max_lap}")
                 
-                for _, message in race_control.iterrows():
+                incident_sequence = 1
+                # race_started = False  # 取消比賽開始過濾 - 處理所有訊息
+                race_start_messages_found = []  # 記錄找到的比賽開始訊息
+                
+                print(f"[DEBUG] 開始逐條處理 race_control_messages...")
+                
+                for idx, (_, message) in enumerate(race_control.iterrows()):
                     msg_text = str(message.get('Message', ''))
                     msg_upper = msg_text.upper()
                     lap = message.get('Lap', 0)
                     time = message.get('Time', 'N/A')
                     
+                    # 每處理 50 條訊息就顯示進度
+                    if idx % 50 == 0:
+                        print(f"[DEBUG] 處理進度: {idx+1}/{len(race_control)}")
+                    
+                    # 檢測比賽開始的關鍵消息 (僅作記錄，不再用於過濾)
+                    # if not race_started:
+                    #     # 檢查是否為比賽開始的標誌
+                    #     race_start_keywords = [
+                    #         'FORMATION LAP WILL START',
+                    #         'ABORTED START',
+                    #         'RACE START',
+                    #         'GREEN LIGHT - RACE START',
+                    #         'LIGHTS OUT'
+                    #     ]
+                    #     
+                    #     # 記錄所有可能的比賽開始相關訊息
+                    #     if any(keyword in msg_upper for keyword in ['START', 'FORMATION', 'LIGHTS']):
+                    #         race_start_messages_found.append(f"圈數 {lap}: {msg_text}")
+                    #     
+                    #     if any(keyword in msg_upper for keyword in race_start_keywords):
+                    #         race_started = True
+                    #         print(f"[RACE_START] 檢測到比賽開始標誌: {msg_text}")
+                    #     else:
+                    #         continue  # 跳過比賽開始前的所有消息
+                    
                     # 過濾最後一圈的正常比賽結束 CHEQUERED FLAG
                     if 'CHEQUERED FLAG' in msg_upper and lap == max_lap:
                         continue  # 跳過正常的比賽結束標誌
                     
-                    # 識別事故相關關鍵字
-                    if any(keyword in msg_upper for keyword in [
-                        'ACCIDENT', 'COLLISION', 'CRASH', 'INCIDENT', 
-                        'SAFETY CAR', 'RED FLAG', 'YELLOW FLAG',
-                        'INVESTIGATION', 'PENALTY', 'CONTACT', 'CHEQUERED FLAG',
-                        'PIT EXIT', 'TRACK LIMITS', 'ADVANTAGE'
-                    ]):
-                        # 提取車手資訊
-                        involved_drivers = extract_driver_info(msg_text)
+                    # 處理所有消息（不再使用關鍵字過濾）
+                    # 提取車手資訊
+                    involved_drivers = extract_driver_info(msg_text)
+                    
+                    # 分類事故
+                    category = categorize_incident_detailed(msg_text)
+                    
+                    # 評估影響
+                    impact = assess_incident_impact(msg_text, category)
+                    
+                    # 評估嚴重程度
+                    severity = assess_severity_detailed(msg_upper)
+                    
+                    # 提取賽道區段信息
+                    sector_info = extract_sector(msg_text)
+                    
+                    incident_detail = {
+                        'sequence_number': incident_sequence,
+                        'lap': lap,
+                        'time': format_time(time) if time != 'N/A' else str(time),
+                        'raw_time': str(time),
+                        'message': msg_text,
+                        'category': category,
+                        'severity': severity,
+                        'impact': impact,
+                        'involved_drivers': involved_drivers,
+                        'driver_codes': [d['driver_code'] for d in involved_drivers],
+                        'car_numbers': [d['car_number'] for d in involved_drivers],
+                        'keywords': extract_keywords(msg_upper),
+                        'flags_mentioned': extract_flags(msg_upper),
+                        'sector': sector_info
+                    }
+                    
+                    incidents_data['all_incidents'].append(incident_detail)
+                    incidents_data['chronological_sequence'].append({
+                        'sequence': incident_sequence,
+                        'lap': lap,
+                        'category': category,
+                        'severity': severity
+                    })
+                    
+                    # 統計分析
+                    incidents_data['incident_summary']['total_count'] += 1
+                    
+                    # 旗幟統計分析
+                    flags_mentioned = incident_detail['flags_mentioned']
+                    for flag in flags_mentioned:
+                        if isinstance(flag, dict):
+                            flag_type = flag.get('type', '').upper()
+                            
+                            if flag_type == 'YELLOW_FLAG':
+                                flag_stats = incidents_data['incident_summary']['flag_statistics']['yellow_flags']
+                                flag_stats['total_count'] += 1
+                                
+                                # 按原因統計
+                                reason = flag.get('reason', 'UNKNOWN')
+                                if reason not in flag_stats['by_reason']:
+                                    flag_stats['by_reason'][reason] = 0
+                                flag_stats['by_reason'][reason] += 1
+                                
+                                # 按位置統計
+                                location = flag.get('location', 'UNKNOWN')
+                                if location not in flag_stats['by_location']:
+                                    flag_stats['by_location'][location] = 0
+                                flag_stats['by_location'][location] += 1
+                                
+                                # 詳細記錄
+                                flag_stats['details'].append({
+                                    'sequence': incident_sequence,
+                                    'lap': lap,
+                                    'timestamp': str(time),
+                                    'reason': reason,
+                                    'location': location,
+                                    'message': msg_text[:100] + "..." if len(msg_text) > 100 else msg_text
+                                })
+                            
+                            elif flag_type == 'RED_FLAG':
+                                flag_stats = incidents_data['incident_summary']['flag_statistics']['red_flags']
+                                flag_stats['total_count'] += 1
+                                
+                                # 按原因統計
+                                reason = flag.get('reason', 'UNKNOWN')
+                                if reason not in flag_stats['by_reason']:
+                                    flag_stats['by_reason'][reason] = 0
+                                flag_stats['by_reason'][reason] += 1
+                                
+                                # 詳細記錄
+                                flag_stats['details'].append({
+                                    'sequence': incident_sequence,
+                                    'lap': lap,
+                                    'timestamp': str(time),
+                                    'reason': reason,
+                                    'session_status': flag.get('session_status', 'STOPPED'),
+                                    'message': msg_text[:100] + "..." if len(msg_text) > 100 else msg_text
+                                })
+                            
+                            elif flag_type == 'SAFETY_CAR':
+                                safety_stats = incidents_data['incident_summary']['flag_statistics']['safety_car_events']
+                                safety_stats['total_count'] += 1
+                                safety_stats['details'].append({
+                                    'sequence': incident_sequence,
+                                    'lap': lap,
+                                    'timestamp': str(time),
+                                    'status': flag.get('status', 'ACTIVE'),
+                                    'message': msg_text
+                                })
+                            
+                            elif flag_type == 'GREEN_FLAG':
+                                incidents_data['incident_summary']['flag_statistics']['other_flags']['green_flags'] += 1
+                            elif flag_type == 'BLUE_FLAG':
+                                incidents_data['incident_summary']['flag_statistics']['other_flags']['blue_flags'] += 1
+                            elif flag_type == 'CHEQUERED_FLAG':
+                                incidents_data['incident_summary']['flag_statistics']['other_flags']['chequered_flags'] += 1
+                    
+                    # 按類別統計
+                    if category not in incidents_data['incident_summary']['by_category']:
+                        incidents_data['incident_summary']['by_category'][category] = 0
+                    incidents_data['incident_summary']['by_category'][category] += 1
+                    
+                    # 按影響統計
+                    if impact not in incidents_data['incident_summary']['by_impact']:
+                        incidents_data['incident_summary']['by_impact'][impact] = 0
+                    incidents_data['incident_summary']['by_impact'][impact] += 1
+                    
+                    # 記錄涉及的車手
+                    for driver in involved_drivers:
+                        driver_code = driver['driver_code']
+                        incidents_data['incident_summary']['involved_drivers'].add(driver_code)
                         
-                        # 分類事故
-                        category = categorize_incident_detailed(msg_text)
-                        
-                        # 評估影響
-                        impact = assess_incident_impact(msg_text, category)
-                        
-                        # 評估嚴重程度
-                        severity = assess_severity_detailed(msg_upper)
-                        
-                        incident_detail = {
-                            'sequence_number': incident_sequence,
-                            'lap': lap,
-                            'time': format_time(time) if time != 'N/A' else str(time),
-                            'raw_time': str(time),
-                            'message': msg_text,
-                            'category': category,
-                            'severity': severity,
-                            'impact': impact,
-                            'involved_drivers': involved_drivers,
-                            'driver_codes': [d['driver_code'] for d in involved_drivers],
-                            'car_numbers': [d['car_number'] for d in involved_drivers],
-                            'keywords': extract_keywords(msg_upper),
-                            'flags_mentioned': extract_flags(msg_upper)
-                        }
-                        
-                        incidents_data['all_incidents'].append(incident_detail)
-                        incidents_data['chronological_sequence'].append({
+                        if driver_code not in incidents_data['driver_involvement']:
+                            incidents_data['driver_involvement'][driver_code] = []
+                        incidents_data['driver_involvement'][driver_code].append({
                             'sequence': incident_sequence,
                             'lap': lap,
                             'category': category,
                             'severity': severity
                         })
-                        
-                        # 統計分析
-                        incidents_data['incident_summary']['total_count'] += 1
-                        
-                        # 按類別統計
-                        if category not in incidents_data['incident_summary']['by_category']:
-                            incidents_data['incident_summary']['by_category'][category] = 0
-                        incidents_data['incident_summary']['by_category'][category] += 1
-                        
-                        # 按影響統計
-                        if impact not in incidents_data['incident_summary']['by_impact']:
-                            incidents_data['incident_summary']['by_impact'][impact] = 0
-                        incidents_data['incident_summary']['by_impact'][impact] += 1
-                        
-                        # 記錄涉及的車手
-                        for driver in involved_drivers:
-                            driver_code = driver['driver_code']
-                            incidents_data['incident_summary']['involved_drivers'].add(driver_code)
-                            
-                            if driver_code not in incidents_data['driver_involvement']:
-                                incidents_data['driver_involvement'][driver_code] = []
-                            incidents_data['driver_involvement'][driver_code].append({
-                                'sequence': incident_sequence,
-                                'lap': lap,
-                                'category': category,
-                                'severity': severity
-                            })
-                        
-                        # 按圈數分析
-                        lap_range = f"{(lap//10)*10}-{(lap//10)*10+9}"
-                        if lap_range not in incidents_data['incident_summary']['by_lap_range']:
-                            incidents_data['incident_summary']['by_lap_range'][lap_range] = 0
-                        incidents_data['incident_summary']['by_lap_range'][lap_range] += 1
-                        
-                        if lap not in incidents_data['lap_analysis']:
-                            incidents_data['lap_analysis'][lap] = []
-                        incidents_data['lap_analysis'][lap].append(incident_detail)
-                        
-                        incident_sequence += 1
+                    
+                    # 按圈數分析
+                    lap_range = f"{(lap//10)*10}-{(lap//10)*10+9}"
+                    if lap_range not in incidents_data['incident_summary']['by_lap_range']:
+                        incidents_data['incident_summary']['by_lap_range'][lap_range] = 0
+                    incidents_data['incident_summary']['by_lap_range'][lap_range] += 1
+                    
+                    if lap not in incidents_data['lap_analysis']:
+                        incidents_data['lap_analysis'][lap] = []
+                    incidents_data['lap_analysis'][lap].append(incident_detail)
+                    
+                    incident_sequence += 1
                 
                 # 轉換 set 為 list 以便 JSON 序列化
                 incidents_data['incident_summary']['involved_drivers'] = list(incidents_data['incident_summary']['involved_drivers'])
@@ -244,10 +447,32 @@ def analyze_all_incidents(session):
 
 def assess_severity_detailed(message):
     """詳細評估事故嚴重程度"""
-    if any(word in message for word in ['RED FLAG', 'RACE SUSPENSION', 'MEDICAL CAR']):
+    if 'RECOVERY VEHICLE' in message:
         return 'CRITICAL'
-    elif any(word in message for word in ['SAFETY CAR', 'YELLOW FLAG', 'COLLISION', 'CRASH']):
+    elif any(word in message for word in ['RED FLAG', 'RACE SUSPENSION', 'MEDICAL CAR']):
+        return 'CRITICAL'
+    elif 'TRACK CLEAR' in message:
+        return 'LOW'
+    elif 'DRS ENABLED' in message:
+        return 'LOW'
+    elif 'TRACK SURFACE SLIPPERY' in message:
+        return 'MEDIUM'
+    elif 'CLEAR IN TRACK SECTOR' in message:
+        return 'LOW'
+    elif 'NOTED - SAFETY CAR INFRINGEMENT' in message:
+        return 'MEDIUM'
+    elif 'FIA STEWARDS: INCIDENT INVOLVING' in message and 'UNDER INVESTIGATION - SAFETY CAR INFRINGEMENT' in message:
+        return 'MEDIUM'
+    elif 'SAFETY CAR WILL USE START/FINISH STRAIGHT' in message:
+        return 'MEDIUM'
+    elif any(word in message for word in ['SAFETY CAR', 'COLLISION', 'CRASH']):
         return 'HIGH'
+    elif 'DOUBLE YELLOW' in message:
+        return 'MEDIUM'
+    elif 'YELLOW FLAG' in message or 'YELLOW' in message:
+        return 'HIGH'
+    elif 'NO FURTHER INVESTIGATION' in message or 'REVIEWED NO FURTHER INVESTIGATION' in message:
+        return 'LOW'
     elif any(word in message for word in ['INVESTIGATION', 'CONTACT', 'PENALTY']):
         return 'MEDIUM'
     else:
@@ -257,7 +482,7 @@ def extract_keywords(message):
     """提取關鍵字"""
     keywords = []
     keyword_list = ['ACCIDENT', 'COLLISION', 'CRASH', 'SAFETY CAR', 'RED FLAG', 'YELLOW FLAG',
-                   'INVESTIGATION', 'PENALTY', 'CONTACT', 'PIT EXIT', 'TRACK LIMITS', 'ADVANTAGE']
+                   'INVESTIGATION', 'PENALTY', 'CONTACT', 'PIT EXIT', 'TRACK LIMITS', 'ADVANTAGE', 'DRS']
     
     for keyword in keyword_list:
         if keyword in message:
@@ -265,14 +490,181 @@ def extract_keywords(message):
     
     return keywords
 
-def extract_flags(message):
-    """提取旗幟相關資訊"""
-    flags = []
-    flag_types = ['RED FLAG', 'YELLOW FLAG', 'CHEQUERED FLAG', 'SAFETY CAR']
+def extract_sector(message):
+    """提取賽道區段信息 - 返回簡潔的區段數字"""
+    import re
     
-    for flag in flag_types:
-        if flag in message:
-            flags.append(flag)
+    message_upper = message.upper()
+    
+    # 檢查是否包含 SECTOR 關鍵字
+    if 'SECTOR' not in message_upper:
+        return None
+    
+    # 使用正則表達式提取 SECTOR 後面的數字
+    # 模式: SECTOR 數字 或 TRACK SECTOR 數字
+    sector_patterns = [
+        r'TRACK\s+SECTOR\s+(\d+)',  # "TRACK SECTOR 17"
+        r'SECTOR\s+(\d+)',          # "SECTOR 17" 
+        r'SECTOR\s*(\d+)'           # "SECTOR17"
+    ]
+    
+    for pattern in sector_patterns:
+        match = re.search(pattern, message_upper)
+        if match:
+            sector_number = match.group(1)
+            return sector_number  # 直接返回數字字串
+    
+    # 如果找到 SECTOR 但沒有數字，返回 "UNKNOWN"
+    return "UNKNOWN"
+
+def extract_flags(message):
+    """提取旗幟相關資訊 - 增強版本包含詳細信息"""
+    flags = []
+    message_upper = message.upper()
+    
+    # Double Yellow Flag 優先檢測
+    if 'DOUBLE YELLOW' in message_upper:
+        flag_info = {
+            "type": "DOUBLE_YELLOW_FLAG",
+            "count": 2,
+            "reason": "",
+            "location": "",
+            "severity": "CAUTION"
+        }
+        
+        # 分析雙黃旗原因
+        if any(keyword in message_upper for keyword in ['ACCIDENT', 'CRASH', 'COLLISION']):
+            flag_info["reason"] = "ACCIDENT"
+        elif any(keyword in message_upper for keyword in ['DEBRIS', 'OBJECT']):
+            flag_info["reason"] = "DEBRIS_ON_TRACK"
+        elif any(keyword in message_upper for keyword in ['SPIN', 'STOPPED']):
+            flag_info["reason"] = "VEHICLE_INCIDENT"
+        elif any(keyword in message_upper for keyword in ['MARSHAL', 'RECOVERY']):
+            flag_info["reason"] = "TRACK_OPERATIONS"
+        elif any(keyword in message_upper for keyword in ['WEATHER', 'RAIN']):
+            flag_info["reason"] = "WEATHER_CONDITIONS"
+        else:
+            flag_info["reason"] = "GENERAL_CAUTION"
+        
+        # 提取位置信息
+        import re
+        sector_match = re.search(r'SECTOR (\d+)', message_upper)
+        turn_match = re.search(r'TURN (\d+)', message_upper)
+        corner_match = re.search(r'CORNER (\d+)', message_upper)
+        
+        if sector_match:
+            flag_info["location"] = f"SECTOR_{sector_match.group(1)}"
+        elif turn_match:
+            flag_info["location"] = f"TURN_{turn_match.group(1)}"
+        elif corner_match:
+            flag_info["location"] = f"CORNER_{corner_match.group(1)}"
+        else:
+            flag_info["location"] = "TRACK_GENERAL"
+        
+        flags.append(flag_info)
+    
+    # Single Yellow Flag 詳細分析 (只有在沒有 DOUBLE YELLOW 時才處理)
+    elif 'YELLOW FLAG' in message_upper or 'YELLOW' in message_upper:
+        flag_info = {
+            "type": "YELLOW_FLAG",
+            "reason": "",
+            "location": "",
+            "severity": "WARNING"
+        }
+        
+        # 分析黃旗原因
+        if any(keyword in message_upper for keyword in ['ACCIDENT', 'CRASH', 'COLLISION']):
+            flag_info["reason"] = "ACCIDENT"
+        elif any(keyword in message_upper for keyword in ['DEBRIS', 'OBJECT']):
+            flag_info["reason"] = "DEBRIS_ON_TRACK"
+        elif any(keyword in message_upper for keyword in ['SPIN', 'STOPPED']):
+            flag_info["reason"] = "VEHICLE_INCIDENT"
+        elif any(keyword in message_upper for keyword in ['MARSHAL', 'RECOVERY']):
+            flag_info["reason"] = "TRACK_OPERATIONS"
+        elif any(keyword in message_upper for keyword in ['WEATHER', 'RAIN']):
+            flag_info["reason"] = "WEATHER_CONDITIONS"
+        else:
+            flag_info["reason"] = "GENERAL_CAUTION"
+        
+        # 提取位置信息
+        import re
+        sector_match = re.search(r'SECTOR (\d+)', message_upper)
+        turn_match = re.search(r'TURN (\d+)', message_upper)
+        corner_match = re.search(r'CORNER (\d+)', message_upper)
+        
+        if sector_match:
+            flag_info["location"] = f"SECTOR_{sector_match.group(1)}"
+        elif turn_match:
+            flag_info["location"] = f"TURN_{turn_match.group(1)}"
+        elif corner_match:
+            flag_info["location"] = f"CORNER_{corner_match.group(1)}"
+        else:
+            flag_info["location"] = "TRACK_GENERAL"
+        
+        flags.append(flag_info)
+    
+    # Red Flag 詳細分析
+    if 'RED FLAG' in message_upper:
+        flag_info = {
+            "type": "RED_FLAG", 
+            "reason": "",
+            "session_status": "STOPPED",
+            "severity": "CRITICAL"
+        }
+        
+        # 分析紅旗原因
+        if any(keyword in message_upper for keyword in ['SERIOUS ACCIDENT', 'MAJOR INCIDENT', 'SAFETY']):
+            flag_info["reason"] = "SAFETY_CONCERN"
+        elif any(keyword in message_upper for keyword in ['WEATHER', 'RAIN', 'CONDITIONS']):
+            flag_info["reason"] = "WEATHER_CONDITIONS"
+        elif any(keyword in message_upper for keyword in ['BARRIER', 'DAMAGE', 'TRACK']):
+            flag_info["reason"] = "TRACK_DAMAGE"
+        elif 'SESSION STOPPED' in message_upper:
+            flag_info["reason"] = "SESSION_SUSPENSION"
+        else:
+            flag_info["reason"] = "GENERAL_STOPPAGE"
+        
+        flags.append(flag_info)
+    
+    # Safety Car 分析 - 排除安全車違規事件
+    if ('SAFETY CAR' in message_upper or 'SC DEPLOYED' in message_upper) and not ('INCIDENT INVOLVING CAR' in message_upper and 'SAFETY CAR INFRINGEMENT' in message_upper):
+        flag_info = {
+            "type": "SAFETY_CAR",
+            "status": "DEPLOYED" if 'DEPLOYED' in message_upper else "ACTIVE",
+            "severity": "HIGH"
+        }
+        flags.append(flag_info)
+    
+    # Virtual Safety Car 分析
+    if 'VSC' in message_upper or 'VIRTUAL SAFETY CAR' in message_upper:
+        flag_info = {
+            "type": "VIRTUAL_SAFETY_CAR",
+            "status": "ACTIVE",
+            "severity": "MEDIUM"
+        }
+        flags.append(flag_info)
+    
+    # 其他旗幟
+    if 'GREEN FLAG' in message_upper or 'GREEN LIGHT' in message_upper:
+        flags.append({
+            "type": "GREEN_FLAG",
+            "status": "SESSION_RESUMED" if 'FLAG' in message_upper else "PIT_EXIT_OPEN",
+            "severity": "INFO"
+        })
+    
+    if 'BLUE FLAG' in message_upper:
+        flags.append({
+            "type": "BLUE_FLAG", 
+            "instruction": "MOVE_ASIDE",
+            "severity": "INFO"
+        })
+    
+    if 'CHEQUERED FLAG' in message_upper:
+        flags.append({
+            "type": "CHEQUERED_FLAG",
+            "status": "SESSION_END",
+            "severity": "INFO"
+        })
     
     return flags
 
@@ -323,6 +715,49 @@ def display_all_incidents_summary(data):
     
     print(f"\n📋 事件類別分佈:")
     print(category_table)
+    
+    # 旗幟統計摘要
+    flag_stats = data['incident_summary'].get('flag_statistics', {})
+    if flag_stats:
+        print(f"\n🏁 旗幟統計摘要:")
+        
+        yellow_flags = flag_stats.get('yellow_flags', {})
+        red_flags = flag_stats.get('red_flags', {})
+        safety_car = flag_stats.get('safety_car_events', {})
+        other_flags = flag_stats.get('other_flags', {})
+        
+        flag_summary_table = PrettyTable()
+        flag_summary_table.field_names = ["旗幟類型", "數量", "說明"]
+        
+        flag_summary_table.add_row(["🟡 黃旗事件", yellow_flags.get('total_count', 0), "黃旗警示事件"])
+        flag_summary_table.add_row(["🔴 紅旗事件", red_flags.get('total_count', 0), "比賽中止事件"])
+        flag_summary_table.add_row(["🚗 安全車事件", safety_car.get('total_count', 0), "安全車部署事件"])
+        flag_summary_table.add_row(["🟢 綠旗事件", other_flags.get('green_flags', 0), "比賽恢復/坑道開啟"])
+        flag_summary_table.add_row(["🔵 藍旗事件", other_flags.get('blue_flags', 0), "讓道指示"])
+        flag_summary_table.add_row(["🏁 方格旗事件", other_flags.get('chequered_flags', 0), "比賽結束"])
+        
+        print(flag_summary_table)
+        
+        # 黃旗詳細分析
+        if yellow_flags.get('total_count', 0) > 0:
+            print(f"\n🟡 黃旗事件詳細分析:")
+            if yellow_flags.get('by_reason'):
+                print("   黃旗原因分布:")
+                for reason, count in yellow_flags['by_reason'].items():
+                    print(f"     • {reason}: {count} 次")
+            
+            if yellow_flags.get('by_location'):
+                print("   黃旗位置分布:")
+                for location, count in yellow_flags['by_location'].items():
+                    print(f"     • {location}: {count} 次")
+        
+        # 紅旗詳細分析
+        if red_flags.get('total_count', 0) > 0:
+            print(f"\n🔴 紅旗事件詳細分析:")
+            if red_flags.get('by_reason'):
+                print("   紅旗原因分布:")
+                for reason, count in red_flags['by_reason'].items():
+                    print(f"     • {reason}: {count} 次")
     
     # 詳細事件列表表格 (顯示前15筆)
     details_table = PrettyTable()
@@ -375,9 +810,9 @@ def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 🔧 修改：移除時間戳，簡化檔案名稱格式
     event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
-    filename = f"all_incidents_summary_{session_info.get('year', 2024)}_{event_name}_{timestamp}.json"
+    filename = f"all_incidents_summary_{session_info.get('year', 2024)}_{event_name}.json"
     filepath = os.path.join("json", filename)
     
     json_result = {
@@ -428,7 +863,7 @@ def run_all_incidents_summary(data_loader, year=None, race=None, session='R'):
         "event_name": race or "Unknown",
         "circuit_name": "Unknown",
         "session_type": session,
-        "year": year or 2024
+        "year": year or 2024  # 保持原預設值，但優先使用傳入的year
     }
     
     if hasattr(data_loader, 'session') and data_loader.session is not None:
@@ -436,7 +871,7 @@ def run_all_incidents_summary(data_loader, year=None, race=None, session='R'):
             "event_name": getattr(data_loader.session, 'event', {}).get('EventName', race or 'Unknown'),
             "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
             "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', session),
-            "year": getattr(data_loader.session, 'event', {}).get('year', year or 2024)
+            "year": getattr(data_loader.session, 'event', {}).get('year', year or 2024)  # 保持原預設值，但優先使用傳入的year
         })
     
     # 2. 檢查快取
@@ -448,6 +883,39 @@ def run_all_incidents_summary(data_loader, year=None, race=None, session='R'):
         incidents_data = cached_data
     else:
         print("🔄 重新計算 - 開始數據分析...")
+        
+        # 調試：檢查 data_loader 狀態
+        print(f"[DEBUG] data_loader 類型: {type(data_loader)}")
+        print(f"[DEBUG] data_loader 有 session 屬性: {hasattr(data_loader, 'session')}")
+        
+        if hasattr(data_loader, 'session'):
+            print(f"[DEBUG] data_loader.session 是否為 None: {data_loader.session is None}")
+            if data_loader.session is not None:
+                print(f"[DEBUG] data_loader.session 類型: {type(data_loader.session)}")
+                
+                # 安全地檢查 session 的基本資訊
+                try:
+                    if hasattr(data_loader.session, 'event'):
+                        event = data_loader.session.event
+                        print(f"[DEBUG] session.event 存在，類型: {type(event)}")
+                        # 安全地獲取 event 資訊
+                        if hasattr(event, 'EventName'):
+                            print(f"[DEBUG] EventName: {event.EventName}")
+                        if hasattr(event, 'Location'):
+                            print(f"[DEBUG] Location: {event.Location}")
+                        if hasattr(event, 'year'):
+                            print(f"[DEBUG] Year: {event.year}")
+                except Exception as e:
+                    print(f"[DEBUG] 檢查 session.event 時發生錯誤: {e}")
+                
+                try:
+                    if hasattr(data_loader.session, 'session_info'):
+                        session_info_obj = data_loader.session.session_info
+                        print(f"[DEBUG] session.session_info 存在，類型: {type(session_info_obj)}")
+                        if hasattr(session_info_obj, 'Type'):
+                            print(f"[DEBUG] Session Type: {session_info_obj.Type}")
+                except Exception as e:
+                    print(f"[DEBUG] 檢查 session.session_info 時發生錯誤: {e}")
         
         # 3. 執行分析
         if hasattr(data_loader, 'session') and data_loader.session is not None:
@@ -474,7 +942,7 @@ def run_all_incidents_summary(data_loader, year=None, race=None, session='R'):
     print("\n✅ 所有事件詳細列表分析完成！")
     return incidents_data
 
-def run_all_incidents_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True):
+def run_all_incidents_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
     """執行所有事件詳細列表分析並返回JSON格式結果 - API專用版本
     
     Args:
@@ -483,19 +951,30 @@ def run_all_incidents_summary_json(data_loader, dynamic_team_mapping=None, f1_an
         f1_analysis_instance: F1分析實例
         enable_debug: 是否啟用調試模式
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
+        year: 年份（可選，優先於 data_loader 中的年份）
+        race: 賽事名稱（可選，優先於 data_loader 中的賽事）
+        session: 賽段類型（可選，優先於 data_loader 中的賽段）
     """
     if enable_debug:
         print(f"\n[NEW_MODULE] 執行所有事件詳細列表分析模組 (JSON輸出版)...")
     
     try:
-        # 獲取賽事資訊
+        # 🔧 修復：優先使用傳入的參數，然後才使用 data_loader 的資訊
         session_info = {}
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             session_info = {
-                "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
+                "event_name": race or getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
                 "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
-                "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-                "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+                "session_type": session or getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
+                "year": year or getattr(data_loader.session, 'event', {}).get('year', 2024)  # 保持原預設值
+            }
+        else:
+            # 如果沒有 data_loader.session，使用傳入的參數
+            session_info = {
+                "event_name": race or 'Unknown',
+                "circuit_name": 'Unknown',
+                "session_type": session or 'R',
+                "year": year or 2024  # 保持原預設值，但優先使用傳入的year
             }
         
         # Function 15 標準 - 檢查緩存
@@ -506,6 +985,10 @@ def run_all_incidents_summary_json(data_loader, dynamic_team_mapping=None, f1_an
         if cached_data and not show_detailed_output:
             if enable_debug:
                 print("📦 使用緩存數據")
+            
+            # 🔧 修復：確保使用緩存數據時也生成 JSON 檔案
+            save_json_results(cached_data, session_info)
+            
             return {
                 "success": True,
                 "message": "成功執行 所有事件詳細列表分析 (緩存)",
@@ -525,6 +1008,10 @@ def run_all_incidents_summary_json(data_loader, dynamic_team_mapping=None, f1_an
                 print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
             # 顯示詳細輸出
             _display_cached_detailed_output(cached_data, session_info)
+            
+            # 🔧 修復：確保使用緩存數據時也生成 JSON 檔案
+            save_json_results(cached_data, session_info)
+            
             return {
                 "success": True,
                 "message": "成功執行 所有事件詳細列表分析 (緩存+詳細)",

@@ -5117,6 +5117,7 @@ class StyleHMainWindow(QMainWindow):
                 "賽道分析": ModuleTypes.TRACK_MAP,  # 新增賽道分析映射
                 "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
                 "進站分析": "pitstop_analysis",  # 新增進站分析映射
+                "事故分析": "accident_analysis",  # 新增事故分析映射
                 "圈速": ModuleTypes.LAP_ANALYSIS
             }
             
@@ -5127,7 +5128,7 @@ class StyleHMainWindow(QMainWindow):
                     module_type = mod_type
                     break
             
-            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis"):
+            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis"):
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
                 
@@ -5164,6 +5165,40 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 進站分析模組創建失敗: {e}")
+                        return None
+                
+                # 特殊處理事故分析模組
+                elif module_type == "accident_analysis":
+                    try:
+                        from modules.accident_analysis_mdi import AccidentAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建事故分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = AccidentAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 事故分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 事故分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 事故分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 事故分析模組創建失敗: {e}")
                         return None
                 else:
                     # 創建模組

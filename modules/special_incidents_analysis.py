@@ -288,6 +288,105 @@ def save_special_incidents_raw_data(analysis_result, data_loader):
         print(f"[ERROR] 保存JSON文件失敗: {e}")
 
 
+def run_special_incidents_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False):
+    """執行特殊事件報告分析並返回 JSON 格式結果"""
+    try:
+        if enable_debug:
+            print("\n🚨 開始特殊事件報告分析 (JSON模式)...")
+        
+        # 檢查數據載入器
+        if not data_loader:
+            return {
+                "success": False,
+                "message": "數據載入器未初始化",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # 分析特殊事件數據
+        analysis_result = analyze_special_incidents_data(data_loader)
+        
+        if not analysis_result:
+            return {
+                "success": False,
+                "message": "特殊事件分析失敗",
+                "data": None,
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        # 顯示分析結果（如果啟用除錯）
+        if enable_debug:
+            display_special_incidents_table(analysis_result)
+        
+        # 保存原始數據
+        save_special_incidents_raw_data(analysis_result, data_loader)
+        
+        # 準備 JSON 輸出
+        json_output = {
+            "success": True,
+            "message": "特殊事件報告分析完成",
+            "data": {
+                "analysis_type": "special_incidents_reports",
+                "session_info": analysis_result.get("session_info", {}),
+                "special_incidents": analysis_result.get("special_incidents", {}),
+                "incident_summary": analysis_result.get("incident_summary", {}),
+                "race_control_messages": clean_for_json(analysis_result.get("race_control_messages", [])),
+                "statistics": analysis_result.get("statistics", {}),
+                "year": getattr(data_loader, 'current_year', 2025),
+                "race": getattr(data_loader, 'current_race', 'Unknown'),
+                "session": getattr(data_loader, 'current_session', 'R')
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # 保存 JSON 檔案
+        try:
+            year = getattr(data_loader, 'current_year', 2025)
+            race = getattr(data_loader, 'current_race', 'Unknown')
+            session = getattr(data_loader, 'current_session', 'R')
+            
+            json_filename = f"special_incidents_analysis_{year}_{race}_{session}.json"
+            json_dir = "json"
+            
+            if not os.path.exists(json_dir):
+                os.makedirs(json_dir)
+            
+            json_path = os.path.join(json_dir, json_filename)
+            
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(json_output, f, indent=2, ensure_ascii=False)
+            
+            if enable_debug:
+                print(f"[SUCCESS] JSON 檔案已保存: {json_path}")
+                
+            json_output["data"]["json_file"] = json_path
+            
+        except Exception as json_error:
+            if enable_debug:
+                print(f"[WARNING] JSON 檔案保存失敗: {json_error}")
+            json_output["data"]["json_file"] = None
+        
+        if enable_debug:
+            print("[SUCCESS] 特殊事件報告分析完成 (JSON模式)")
+        
+        return json_output
+        
+    except Exception as e:
+        error_result = {
+            "success": False,
+            "message": f"執行特殊事件報告分析時發生錯誤: {str(e)}",
+            "data": None,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        if enable_debug:
+            print(f"[ERROR] {error_result['message']}")
+            import traceback
+            traceback.print_exc()
+        
+        return error_result
+
+
 def run_special_incidents_analysis(data_loader):
     """執行特殊事件報告分析的主函數"""
     try:

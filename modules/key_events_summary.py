@@ -14,7 +14,7 @@ from prettytable import PrettyTable
 
 def generate_cache_key(session_info):
     """生成快取鍵值"""
-    return f"key_events_summary_{session_info.get('year', 2024)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
+    return f"key_events_summary_{session_info.get('year', 2025)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
 
 def check_cache(cache_key):
     """檢查快取是否存在"""
@@ -570,9 +570,9 @@ def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
-    filename = f"key_events_summary_{session_info.get('year', 2024)}_{event_name}_{timestamp}.json"
+    year = session_info.get('year', 2025)
+    filename = f"key_events_summary_{year}_{event_name}.json"
     filepath = os.path.join("json", filename)
     
     json_result = {
@@ -669,7 +669,7 @@ def run_key_events_summary(data_loader, year=None, race=None, session='R'):
     print("\n✅ 關鍵事件摘要分析完成！")
     return key_events_data
 
-def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True):
+def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
     """執行關鍵事件摘要分析並返回JSON格式結果 - API專用版本 (Function 15 標準)
     
     Args:
@@ -678,22 +678,35 @@ def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analy
         f1_analysis_instance: F1分析實例
         enable_debug: 是否啟用調試模式
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
+        year: 用戶指定的年份（覆蓋data_loader中的年份）
+        race: 用戶指定的賽事（覆蓋data_loader中的賽事）
+        session: 用戶指定的賽段（覆蓋data_loader中的賽段）
     
     Returns:
         dict: 包含成功狀態、數據、緩存狀態和緩存鍵的標準化返回格式
     """
     if enable_debug:
         print(f"\n[NEW_MODULE] 執行關鍵事件摘要分析模組 (JSON輸出版)...")
+        if year or race or session:
+            print(f"[OVERRIDE] 使用者指定參數: 年份={year}, 賽事={race}, 賽段={session}")
     
     try:
-        # 獲取賽事資訊
+        # 獲取賽事資訊 - 優先使用用戶指定的參數
         session_info = {}
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             session_info = {
-                "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
+                "event_name": race or getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
                 "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
-                "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-                "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+                "session_type": session or getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
+                "year": year or getattr(data_loader.session, 'event', {}).get('year', 2025)
+            }
+        else:
+            # 當沒有session資料時，使用用戶指定的參數
+            session_info = {
+                "event_name": race or 'Unknown',
+                "circuit_name": 'Unknown',
+                "session_type": session or 'Unknown',
+                "year": year or 2025
             }
         
         # Function 15 標準 - 檢查緩存
@@ -704,6 +717,8 @@ def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analy
         if cached_data and not show_detailed_output:
             if enable_debug:
                 print("📦 使用緩存數據")
+            # 確保即使使用緩存也保存JSON結果
+            save_json_results(cached_data, session_info)
             return {
                 "success": True,
                 "message": "成功執行 關鍵事件摘要分析 (緩存)",
@@ -723,6 +738,8 @@ def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analy
                 print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
             # 顯示詳細輸出
             _display_cached_detailed_output(cached_data, session_info)
+            # 確保即使使用緩存也保存JSON結果
+            save_json_results(cached_data, session_info)
             return {
                 "success": True,
                 "message": "成功執行 關鍵事件摘要分析 (緩存+詳細)",

@@ -14,7 +14,7 @@ from prettytable import PrettyTable
 
 def generate_cache_key(session_info):
     """生成快取鍵值"""
-    return f"accident_statistics_{session_info.get('year', 2024)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
+    return f"accident_statistics_{session_info.get('year', 2025)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
 
 def check_cache(cache_key):
     """檢查快取是否存在"""
@@ -205,9 +205,9 @@ def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
     
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    # 🔧 修改：移除時間戳，簡化檔案名稱格式
     event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
-    filename = f"accident_statistics_summary_{session_info.get('year', 2024)}_{event_name}_{timestamp}.json"
+    filename = f"accident_statistics_summary_{session_info.get('year', 2025)}_{event_name}.json"
     filepath = os.path.join("json", filename)
     
     json_result = {
@@ -304,7 +304,7 @@ def run_accident_statistics_summary(data_loader, year=None, race=None, session='
     print("\n✅ 事故統計摘要分析完成！")
     return statistics_data
 
-def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True):
+def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
     """執行事故統計摘要分析並返回JSON格式結果 - API專用版本
     
     Args:
@@ -313,19 +313,30 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
         f1_analysis_instance: F1分析實例
         enable_debug: 是否啟用調試模式
         show_detailed_output: 是否顯示詳細輸出（即使使用緩存也顯示完整表格）
+        year: 年份（可選，優先於 data_loader 中的年份）
+        race: 賽事名稱（可選，優先於 data_loader 中的賽事）
+        session: 賽段類型（可選，優先於 data_loader 中的賽段）
     """
     if enable_debug:
         print(f"\n[NEW_MODULE] 執行事故統計摘要分析模組 (JSON輸出版)...")
     
     try:
-        # 獲取賽事資訊
+        # 🔧 修復：優先使用傳入的參數，然後才使用 data_loader 的資訊
         session_info = {}
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             session_info = {
-                "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
+                "event_name": race or getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
                 "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
-                "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
-                "year": getattr(data_loader.session, 'event', {}).get('year', 2024)
+                "session_type": session or getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
+                "year": year or getattr(data_loader.session, 'event', {}).get('year', 2024)  # 保持原預設值
+            }
+        else:
+            # 如果沒有 data_loader.session，使用傳入的參數
+            session_info = {
+                "event_name": race or 'Unknown',
+                "circuit_name": 'Unknown',
+                "session_type": session or 'R',
+                "year": year or 2024  # 保持原預設值，但優先使用傳入的year
             }
         
         # Function 15 標準 - 檢查緩存
@@ -336,6 +347,10 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
         if cached_data and not show_detailed_output:
             if enable_debug:
                 print("📦 使用緩存數據")
+            
+            # 🔧 修復：確保使用緩存數據時也生成 JSON 檔案
+            save_json_results(cached_data, session_info)
+            
             return {
                 "success": True,
                 "message": "成功執行 事故統計摘要分析 (緩存)",
@@ -356,6 +371,9 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
             
             # 顯示詳細輸出 - 即使使用緩存也顯示完整表格
             _display_cached_detailed_output(cached_data, session_info)
+            
+            # 🔧 修復：確保使用緩存數據時也生成 JSON 檔案
+            save_json_results(cached_data, session_info)
             
             return {
                 "success": True,

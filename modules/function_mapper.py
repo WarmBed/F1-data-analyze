@@ -557,6 +557,13 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
+            # 從kwargs正確提取year, race, session參數
+            year = kwargs.get('year', None)
+            race = kwargs.get('race', None)
+            session = kwargs.get('session', None)
+            
+            print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
+            
             from modules.accident_statistics_summary import run_accident_statistics_summary_json
             print("[STATS] 執行事故統計摘要分析 (功能6)...")
             result = run_accident_statistics_summary_json(
@@ -564,7 +571,10 @@ class F1AnalysisFunctionMapper:
                 dynamic_team_mapping=self.dynamic_team_mapping,
                 f1_analysis_instance=self.f1_analysis_instance,
                 enable_debug=True,
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                year=year,
+                race=race,
+                session=session
             )
             
             # 結果反饋 - 根據新返回格式處理
@@ -601,11 +611,6 @@ class F1AnalysisFunctionMapper:
         except Exception as e:
             print(f"[ERROR] 事故統計摘要分析失敗: {str(e)}")
             return {"success": False, "message": f"事故統計摘要分析失敗: {str(e)}", "function_id": "6"}
-            
-            return result
-        except Exception as e:
-            print(f"[ERROR] 事故統計摘要分析失敗: {str(e)}")
-            return {"success": False, "message": f"事故統計摘要分析失敗: {str(e)}", "function_id": "6"}
     
     def _execute_severity_distribution_analysis(self, **kwargs):
         """執行嚴重程度分佈分析 (功能7) - 符合開發核心原則"""
@@ -617,6 +622,13 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
+            # 從kwargs正確提取year, race, session參數
+            year = kwargs.get('year', None)
+            race = kwargs.get('race', None)
+            session = kwargs.get('session', None)
+            
+            print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
+            
             from modules.severity_distribution_analysis import run_severity_distribution_analysis_json
             print("[WARNING] 執行嚴重程度分佈分析 (功能7)...")
             result = run_severity_distribution_analysis_json(
@@ -624,7 +636,10 @@ class F1AnalysisFunctionMapper:
                 dynamic_team_mapping=self.dynamic_team_mapping,
                 f1_analysis_instance=self.f1_analysis_instance,
                 enable_debug=True,
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                year=year,
+                race=race,
+                session=session
             )
             
             # 結果反饋 - 根據新返回格式處理
@@ -672,6 +687,13 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
+            # 從kwargs正確提取year, race, session參數
+            year = kwargs.get('year', None)
+            race = kwargs.get('race', None)
+            session = kwargs.get('session', None)
+            
+            print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
+            
             from modules.all_incidents_summary import run_all_incidents_summary_json
             print("[INFO] 執行所有事件詳細列表分析 (功能8)...")
             result = run_all_incidents_summary_json(
@@ -679,7 +701,10 @@ class F1AnalysisFunctionMapper:
                 dynamic_team_mapping=self.dynamic_team_mapping,
                 f1_analysis_instance=self.f1_analysis_instance,
                 enable_debug=True,
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                year=year,
+                race=race,
+                session=session
             )
             
             # 結果反饋 - 根據新返回格式處理
@@ -727,14 +752,20 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
-            from modules.special_incident_reports import run_special_incident_reports_json
+            # 從kwargs正確提取year, race, session參數
+            year = kwargs.get('year', None)
+            race = kwargs.get('race', None)
+            session = kwargs.get('session', None)
+            
+            print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
+            
+            from modules.special_incidents_analysis import run_special_incidents_analysis_json
             print("[ALERT] 執行特殊事件報告分析 (JSON輸出版)...")
-            result = run_special_incident_reports_json(
+            result = run_special_incidents_analysis_json(
                 self.data_loader,
                 dynamic_team_mapping=self.dynamic_team_mapping,
                 f1_analysis_instance=self.f1_analysis_instance,
-                enable_debug=True,
-                show_detailed_output=show_detailed_output
+                enable_debug=True
             )
             
             # 結果反饋 - 根據新返回格式處理
@@ -782,6 +813,13 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
+            # 從kwargs正確提取year, race, session參數
+            year = kwargs.get('year', None)
+            race = kwargs.get('race', None)
+            session = kwargs.get('session', None)
+            
+            print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
+            
             from modules.key_events_summary import run_key_events_summary_json
             print("[KEY] 執行關鍵事件摘要分析 (JSON輸出版)...")
             result = run_key_events_summary_json(
@@ -789,7 +827,10 @@ class F1AnalysisFunctionMapper:
                 dynamic_team_mapping=self.dynamic_team_mapping,
                 f1_analysis_instance=self.f1_analysis_instance,
                 enable_debug=True,
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                year=year,
+                race=race,
+                session=session
             )
             
             # 結果反饋 - 根據新返回格式處理
