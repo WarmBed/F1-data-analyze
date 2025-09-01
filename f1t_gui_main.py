@@ -2183,7 +2183,12 @@ class PopoutSubWindow(QMdiSubWindow):
         try:
             # 如果有 analysis_module，使用模組的 get_window_title 方法
             if self.analysis_module and hasattr(self.analysis_module, 'get_window_title'):
-                new_title = self.analysis_module.get_window_title()
+                # 傳遞當前參數給模組的 get_window_title 方法
+                new_title = self.analysis_module.get_window_title(
+                    year=str(self.local_year), 
+                    race=self.local_race, 
+                    session=self.local_session
+                )
                 print(f"[TITLE] [MODULE] 使用模組標題: {new_title}")
             else:
                 # 舊版邏輯：保持原始格式，只更新參數部分
@@ -4700,7 +4705,11 @@ class StyleHMainWindow(QMainWindow):
             ]
             
             for control in controls_to_remove:
-                self.main_toolbar.removeWidget(control)
+                # 查找包含這個widget的action並移除
+                for action in self.main_toolbar.actions():
+                    if action.defaultWidget() == control:
+                        self.main_toolbar.removeAction(action)
+                        break
             
             # 移除更新按鈕
             if hasattr(self, 'update_all_action') and self.update_all_action:
@@ -4740,9 +4749,23 @@ class StyleHMainWindow(QMainWindow):
     
     def on_lap_analysis_window_closed(self, window_object):
         """圈速分析視窗關閉時調用"""
+        # 從追蹤集合中移除
         self.lap_analysis_windows.discard(window_object)
+        
+        # 獲取視窗標題用於日誌
         window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
         print(f"[LAP_CONTROL] 📊 圈速分析視窗已關閉: {window_title}")
+        
+        # 如果是分析模組，確保清理相關引用
+        if hasattr(window_object, '_sub_window'):
+            sub_window = window_object._sub_window
+            # 從 MDI 區域中移除子視窗
+            if sub_window and sub_window.parent():
+                mdi_area = sub_window.parent()
+                if hasattr(mdi_area, 'removeSubWindow'):
+                    mdi_area.removeSubWindow(sub_window)
+                    print(f"[LAP_CONTROL] 🗑️ 已從 MDI 區域移除子視窗: {window_title}")
+        
         print(f"[LAP_CONTROL] 📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
         
         # 如果沒有活動視窗，隱藏圈速控件
@@ -6746,8 +6769,12 @@ class StyleHMainWindow(QMainWindow):
                     if analysis_module.initialize_module():
                         print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
-                        # 獲取模組標題
-                        window_title = analysis_module.get_window_title()
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=str(params['year']), 
+                            race=params['race'], 
+                            session=params['session']
+                        )
                         print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
@@ -7158,12 +7185,14 @@ class StyleHMainWindow(QMainWindow):
         if mdi_area is None:
             return
             
-        # 獲取所有子視窗
-        subwindows = mdi_area.subWindowList()
-        print(f"[TILE DEBUG] 找到 {len(subwindows)} 個子視窗")
+        # 獲取所有子視窗並過濾出可見的視窗
+        all_subwindows = mdi_area.subWindowList()
+        # 只包含可見且未關閉的視窗
+        subwindows = [sw for sw in all_subwindows if sw.isVisible() and not sw.isWindowModified()]
+        print(f"[TILE DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見")
         
         if not subwindows:
-            print(f"[TILE DEBUG] 沒有子視窗需要排列")
+            print(f"[TILE DEBUG] 沒有可見的子視窗需要排列")
             return
         
         # 移除有問題的清理邏輯 - 直接使用現有的子視窗列表

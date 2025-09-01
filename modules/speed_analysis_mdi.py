@@ -15,8 +15,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
     QHeaderView, QDialog, QDialogButtonBox, QComboBox, QCheckBox,
-    QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
-    QTabWidget, QScrollArea, QSplitter
+    QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame, QScrollArea, QSplitter
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
@@ -189,8 +188,24 @@ class SpeedAnalysisModule(IAnalysisModule):
     
     def set_parent_window(self, parent_window):
         """設置父視窗引用（MDI 子視窗）"""
+        print(f"[SPEED_TITLE_DEBUG] 🔗 設置父視窗引用...")
+        print(f"[SPEED_TITLE_DEBUG]   - 父視窗類型: {type(parent_window).__name__}")
+        print(f"[SPEED_TITLE_DEBUG]   - 父視窗是否為None: {parent_window is None}")
+        
         self.parent_window = parent_window
-        print(f"[SPEED_MDI] 🔗 已設置父視窗引用: {type(parent_window).__name__}")
+        
+        if parent_window:
+            # 獲取當前標題以供調試
+            current_title = parent_window.windowTitle()
+            print(f"[SPEED_TITLE_DEBUG]   - 當前父視窗標題: '{current_title}'")
+            
+            # 立即設置正確的標題
+            print(f"[SPEED_TITLE_DEBUG] 🏷️ 父視窗設置後立即更新標題...")
+            self.update_window_title()
+        else:
+            print(f"[SPEED_TITLE_DEBUG] ⚠️ 父視窗為None，無法設置標題")
+        
+        print(f"[SPEED_TITLE_DEBUG] ✅ 父視窗引用設置完成")
     
     def _setup_ui(self):
         """設置用戶界面"""
@@ -259,33 +274,70 @@ class SpeedAnalysisModule(IAnalysisModule):
             traceback.print_exc()
             self.module_error.emit(f"處理圈數變更失敗: {str(e)}")
     
-    def update_parameters(self, year: int, race: str, session: str) -> None:
+    def update_parameters(self, year: int = None, race: str = None, session: str = None, **kwargs) -> bool:
         """更新參數 - 實現抽象方法"""
         try:
-            print(f"[SPEED_MDI] ========== 新版更新參數 ==========")
-            print(f"[SPEED_MDI] 收到更新請求: {year} {race} {session}")
-            print(f"[SPEED_MDI] 當前參數: {self.current_year} {self.current_race} {self.current_session}")
+            print(f"[SPEED_PARAMS_DEBUG] ========== 參數更新請求 ==========")
+            print(f"[SPEED_PARAMS_DEBUG] 📋 收到更新請求:")
+            print(f"[SPEED_PARAMS_DEBUG]   - 年份: {year}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽事: {race}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽段: {session}")
+            print(f"[SPEED_PARAMS_DEBUG] 📊 當前模組狀態:")
+            print(f"[SPEED_PARAMS_DEBUG]   - 當前年份: {self.current_year}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 當前賽事: {self.current_race}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 當前賽段: {self.current_session}")
             
-            # 檢查參數是否有變化
+            # 準備更新的參數
+            new_year = str(year) if year is not None else self.current_year
+            new_race = race if race is not None else self.current_race
+            new_session = session if session is not None else self.current_session
+            
+            print(f"[SPEED_PARAMS_DEBUG] 🎯 計算後的新參數:")
+            print(f"[SPEED_PARAMS_DEBUG]   - 新年份: {new_year}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 新賽事: {new_race}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 新賽段: {new_session}")
+            
+            # 檢查參數是否有變化（基於當前的模組參數）
             params_changed = (
-                self.current_year != str(year) or 
-                self.current_race != race or 
-                self.current_session != session
+                self.current_year != new_year or 
+                self.current_race != new_race or 
+                self.current_session != new_session
             )
             
-            print(f"[SPEED_MDI] 參數是否變化: {params_changed}")
+            print(f"[SPEED_PARAMS_DEBUG] 🔍 參數變化檢查:")
+            print(f"[SPEED_PARAMS_DEBUG]   - 年份變化: {self.current_year} → {new_year} ({self.current_year != new_year})")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽事變化: {self.current_race} → {new_race} ({self.current_race != new_race})")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽段變化: {self.current_session} → {new_session} ({self.current_session != new_session})")
+            print(f"[SPEED_PARAMS_DEBUG]   - 整體參數是否變化: {params_changed}")
             
-            # 更新本地參數
-            self.current_year = str(year)
-            self.current_race = race
-            self.current_session = session
+            # 更新本地參數（如果調用者沒有提前更新的話）
+            old_year, old_race, old_session = self.current_year, self.current_race, self.current_session
+            self.current_year = new_year
+            self.current_race = new_race
+            self.current_session = new_session
+            
+            print(f"[SPEED_PARAMS_DEBUG] 🔄 參數已更新至模組:")
+            print(f"[SPEED_PARAMS_DEBUG]   - 年份: {old_year} → {self.current_year}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽事: {old_race} → {self.current_race}")
+            print(f"[SPEED_PARAMS_DEBUG]   - 賽段: {old_session} → {self.current_session}")
+            
+            # 確保視窗標題是最新的（防止任何可能的延遲更新）
+            print(f"[SPEED_PARAMS_DEBUG] 🏷️ 確保視窗標題最新...")
+            self.update_window_title()
             
             if params_changed:
-                print(f"[SPEED_MDI] 🔄 參數已變化，開始重載數據...")
+                print(f"[SPEED_PARAMS_DEBUG] 🔄 參數已變化，開始重載數據...")
                 
                 # 載入新數據
                 if self.data_manager:
-                    print(f"[SPEED_MDI] 📡 調用數據管理器載入新數據...")
+                    print(f"[SPEED_PARAMS_DEBUG] 📡 調用數據管理器載入新數據...")
+                    print(f"[SPEED_PARAMS_DEBUG] 📊 載入參數:")
+                    print(f"[SPEED_PARAMS_DEBUG]   - 年份: {self.current_year}")
+                    print(f"[SPEED_PARAMS_DEBUG]   - 賽事: {self.current_race}")
+                    print(f"[SPEED_PARAMS_DEBUG]   - 賽段: {self.current_session}")
+                    print(f"[SPEED_PARAMS_DEBUG]   - 車手1: {self.driver1} (第{self.lap1}圈)")
+                    print(f"[SPEED_PARAMS_DEBUG]   - 車手2: {self.driver2} (第{self.lap2}圈)")
+                    
                     success = self.data_manager.load_speed_data(
                         year=self.current_year,
                         race=self.current_race,
@@ -297,24 +349,29 @@ class SpeedAnalysisModule(IAnalysisModule):
                     )
                     
                     if success:
-                        print(f"[SPEED_MDI] ✅ 新版參數更新成功")
+                        print(f"[SPEED_PARAMS_DEBUG] ✅ 數據載入成功")
+                        # 數據載入成功後再次確保標題正確
+                        print(f"[SPEED_PARAMS_DEBUG] 🏷️ 數據載入後再次確認標題正確...")
+                        self.update_window_title()
                         self.parameters_updated.emit({
-                            'year': year,
-                            'race': race,
-                            'session': session
+                            'year': int(new_year),
+                            'race': new_race,
+                            'session': new_session
                         })
+                        print(f"[SPEED_PARAMS_DEBUG] ✅ 參數更新完全成功")
                         return True
                     else:
-                        print(f"[SPEED_MDI] ❌ 數據載入失敗")
+                        print(f"[SPEED_PARAMS_DEBUG] ❌ 數據載入失敗")
+                        print(f"[SPEED_PARAMS_DEBUG] ❌ 數據載入失敗")
                         return False
                 else:
-                    print(f"[SPEED_MDI] ❌ 數據管理器未初始化")
+                    print(f"[SPEED_PARAMS_DEBUG] ❌ 數據管理器未初始化")
                     return False
             else:
-                print(f"[SPEED_MDI] ℹ️ 參數未變化，檢查是否需要首次載入...")
+                print(f"[SPEED_PARAMS_DEBUG] ℹ️ 參數未變化，檢查是否需要首次載入...")
                 # 如果是首次載入或沒有數據，仍然需要載入
                 if self.data_manager and not hasattr(self, '_data_loaded'):
-                    print(f"[SPEED_MDI] 🔄 首次載入數據...")
+                    print(f"[SPEED_PARAMS_DEBUG] 🔄 首次載入數據...")
                     success = self.data_manager.load_speed_data(
                         year=self.current_year,
                         race=self.current_race,
@@ -326,16 +383,23 @@ class SpeedAnalysisModule(IAnalysisModule):
                     )
                     if success:
                         self._data_loaded = True
-                        print(f"[SPEED_MDI] ✅ 首次數據載入成功")
+                        print(f"[SPEED_PARAMS_DEBUG] ✅ 首次數據載入成功")
+                        return True
                     else:
-                        print(f"[SPEED_MDI] ❌ 首次數據載入失敗")
+                        print(f"[SPEED_PARAMS_DEBUG] ❌ 首次數據載入失敗")
                         return False
                 else:
-                    print(f"[SPEED_MDI] ℹ️ 數據已存在，跳過載入")
-                return True
+                    print(f"[SPEED_PARAMS_DEBUG] ℹ️ 數據已存在或未初始化，跳過載入")
+                    return True
+            
+            print(f"[SPEED_PARAMS_DEBUG] ========== 參數更新完成 ==========")
                 
         except Exception as e:
-            print(f"[SPEED_MDI] ❌ 參數更新失敗: {e}")
+            print(f"[ERROR] [SPEED_PARAMS_DEBUG] 參數更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.module_error.emit(f"參數更新失敗: {str(e)}")
+            return False
             import traceback
             traceback.print_exc()
             self.module_error.emit(f"參數更新失敗: {str(e)}")
@@ -409,10 +473,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                             'lap2': self.lap2
                         })
                         
-                        # 更新視窗標題以反映新的參數
-                        new_title = self.get_window_title()
-                        if self.parent_window:
-                            self.parent_window.setWindowTitle(new_title)
+                        # 更新視窗標題以反映新的參數 - 使用統一的 get_window_title
+                        parent = getattr(self, 'parent_window', None)
+                        if parent and hasattr(parent, 'setWindowTitle'):
+                            new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                            parent.setWindowTitle(new_title)
                             print(f"[SPEED_MDI] 🏷️ 視窗標題已更新為: {new_title}")
                         else:
                             print(f"[SPEED_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
@@ -427,13 +492,15 @@ class SpeedAnalysisModule(IAnalysisModule):
             else:
                 print(f"[SPEED_MDI] ℹ️ 圈速參數未變化，保持現有數據")
                 
-                # 即使參數未變化，也確保視窗標題是正確的
-                current_title = self.parent_window.windowTitle() if self.parent_window else ""
-                expected_title = self.get_window_title()
-                if current_title != expected_title and self.parent_window:
-                    self.parent_window.setWindowTitle(expected_title)
-                    print(f"[SPEED_MDI] 🏷️ 同步視窗標題: {expected_title}")
-                elif not self.parent_window:
+                # 即使參數未變化，也確保視窗標題是正確的 - 使用統一的 get_window_title
+                parent = getattr(self, 'parent_window', None)
+                if parent and hasattr(parent, 'setWindowTitle'):
+                    current_title = parent.windowTitle()
+                    expected_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                    if current_title != expected_title:
+                        parent.setWindowTitle(expected_title)
+                        print(f"[SPEED_MDI] 🏷️ 同步視窗標題: {expected_title}")
+                else:
                     print(f"[SPEED_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
                 
                 return True
@@ -445,11 +512,96 @@ class SpeedAnalysisModule(IAnalysisModule):
             self.module_error.emit(f"圈速參數更新失敗: {str(e)}")
             return False
     
-    def get_window_title(self) -> str:
-        """獲取視窗標題"""
-        driver_info = f"{self.driver1} vs {self.driver2}"
-        lap_info = f"第{self.lap1}圈 vs 第{self.lap2}圈"
-        return f"⚡ 速度分析 - {driver_info} ({lap_info}) - {self.current_year} {self.current_race} {self.current_session}"
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """獲取視窗標題 - 兼容其他模組的接口"""
+        # 如果提供了參數，使用傳入的參數；否則使用內部狀態
+        use_year = year if year is not None else self.current_year
+        use_race = race if race is not None else self.current_race
+        use_session = session if session is not None else self.current_session
+        
+        # 簡化標題格式，只顯示基本信息
+        title = f"⚡ 速度分析 - {use_year} {use_race} {use_session}"
+        print(f"[SPEED_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
+        print(f"[SPEED_TITLE_DEBUG]   📊 參數詳情:")
+        print(f"[SPEED_TITLE_DEBUG]     - 年份: {use_year}")
+        print(f"[SPEED_TITLE_DEBUG]     - 賽事: {use_race}")
+        print(f"[SPEED_TITLE_DEBUG]     - 賽段: {use_session}")
+        return title
+    
+    def update_window_title(self) -> None:
+        """更新視窗標題"""
+        try:
+            print(f"[SPEED_TITLE_DEBUG] 🔄 開始更新視窗標題...")
+            print(f"[SPEED_TITLE_DEBUG] 📋 當前狀態檢查:")
+            
+            # 檢查 parent_window 屬性（MDI 子視窗引用）
+            parent = getattr(self, 'parent_window', None)
+            print(f"[SPEED_TITLE_DEBUG]   - parent_window 存在: {parent is not None}")
+            
+            if parent and hasattr(parent, 'setWindowTitle'):
+                old_title = parent.windowTitle()
+                print(f"[SPEED_TITLE_DEBUG]   - 舊標題: '{old_title}'")
+                
+                new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                print(f"[SPEED_TITLE_DEBUG]   - 新標題: '{new_title}'")
+                print(f"[SPEED_TITLE_DEBUG]   - 標題是否變化: {old_title != new_title}")
+                
+                parent.setWindowTitle(new_title)
+                
+                # 強制刷新視窗顯示
+                parent.update()
+                parent.repaint()
+                
+                # 驗證標題是否真的被設置
+                actual_title = parent.windowTitle()
+                print(f"[SPEED_TITLE_DEBUG]   - 設置後實際標題: '{actual_title}'")
+                print(f"[SPEED_TITLE_DEBUG]   - 設置是否成功: {actual_title == new_title}")
+                
+                if actual_title == new_title:
+                    print(f"[SPEED_TITLE_DEBUG] ✅ 視窗標題更新成功")
+                else:
+                    print(f"[SPEED_TITLE_DEBUG] ❌ 視窗標題更新可能失敗，嘗試延遲更新...")
+                    print(f"[SPEED_TITLE_DEBUG]   預期: '{new_title}'")
+                    print(f"[SPEED_TITLE_DEBUG]   實際: '{actual_title}'")
+                    
+                    # 嘗試延遲設置
+                    from PyQt5.QtCore import QTimer
+                    QTimer.singleShot(100, lambda: self._delayed_title_update(new_title))
+            else:
+                print(f"[SPEED_TITLE_DEBUG] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                print(f"[SPEED_TITLE_DEBUG]   📋 模組內部參數狀態:")
+                print(f"[SPEED_TITLE_DEBUG]     - current_year: {getattr(self, 'current_year', 'NOT_SET')}")
+                print(f"[SPEED_TITLE_DEBUG]     - current_race: {getattr(self, 'current_race', 'NOT_SET')}")
+                print(f"[SPEED_TITLE_DEBUG]     - current_session: {getattr(self, 'current_session', 'NOT_SET')}")
+                print(f"[SPEED_TITLE_DEBUG]     - driver1: {getattr(self, 'driver1', 'NOT_SET')}")
+                print(f"[SPEED_TITLE_DEBUG]     - driver2: {getattr(self, 'driver2', 'NOT_SET')}")
+        except Exception as e:
+            print(f"[ERROR] [SPEED_TITLE_DEBUG] 更新視窗標題失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _delayed_title_update(self, title: str) -> None:
+        """延遲標題更新 - 採用進站分析模式"""
+        try:
+            # 使用 parent_window 屬性而不是 parent() 方法
+            parent = getattr(self, 'parent_window', None)
+            if parent and hasattr(parent, 'setWindowTitle'):
+                print(f"[SPEED_TITLE_DEBUG] 🔄 延遲標題更新: '{title}'")
+                parent.setWindowTitle(title)
+                parent.update()
+                parent.repaint()
+                
+                # 再次驗證
+                actual_title = parent.windowTitle()
+                success = (actual_title == title)
+                print(f"[SPEED_TITLE_DEBUG] 延遲更新結果: {success}, 實際標題: '{actual_title}'")
+                
+                if not success:
+                    print(f"[ERROR] [SPEED_TITLE_DEBUG] ❌ 延遲更新也失敗了！可能是視窗引用問題")
+                    print(f"[SPEED_TITLE_DEBUG] 視窗類型: {type(parent)}")
+                    print(f"[SPEED_TITLE_DEBUG] 視窗是否可見: {parent.isVisible()}")
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 延遲標題更新失敗: {e}")
     
     # 實現 IAnalysisModule 抽象方法
     @property
@@ -544,6 +696,72 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[ERROR] [SPEED_MDI] get_current_data 失敗: {e}")
             return None
     
+    def receive_main_window_update_notification(self, param_type, value):
+        """接收主視窗參數更新通知
+        
+        支援兩種調用方式：
+        1. 主視窗格式: receive_main_window_update_notification(param_type, value)
+        2. 直接參數格式: receive_main_window_update_notification(year=xxx, race=xxx, session=xxx)
+        
+        Args:
+            param_type_or_year: 參數類型('year'/'race'/'session') 或直接的年份值
+            value_or_race: 參數值 或直接的賽事名稱
+            session: 賽段 (當使用直接參數格式時)
+            **kwargs: 其他可能的參數
+        """
+        try:
+            print(f"[SPEED_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
+            print(f"[SPEED_NOTIFICATION_DEBUG] � 原始參數:")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - param_type: {param_type}")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - value: {value}")
+            
+            # 簡化的參數處理
+            # 直接處理參數更新
+            if param_type == 'year':
+                self.current_year = str(value)
+                print(f"[UPDATE] 年份更新為: {self.current_year}")
+            elif param_type == 'race':
+                self.current_race = str(value)
+                print(f"[UPDATE] 賽事更新為: {self.current_race}")
+            elif param_type == 'session':
+                self.current_session = str(value)
+                print(f"[UPDATE] 場次更新為: {self.current_session}")
+            
+            print(f"[SPEED_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前年份: {self.current_year}")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前賽事: {self.current_race}")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前賽段: {self.current_session}")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前車手: {self.driver1} vs {self.driver2}")
+            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前圈數: 第{self.lap1}圈 vs 第{self.lap2}圈")
+            
+            # [TOOL] 更新窗口標題（如果有父窗口）- 使用統一的 get_window_title
+            parent = getattr(self, 'parent_window', None)
+            if parent and hasattr(parent, 'setWindowTitle'):
+                title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                parent.setWindowTitle(title)
+                print(f"[TITLE] 窗口標題更新為: {title}")
+            else:
+                print(f"[WARNING] 無法更新視窗標題 - 父視窗引用未設置")
+            
+            # 重新載入數據
+            if self.data_manager:
+                print(f"[REFRESH] 重新載入速度數據...")
+                self.data_manager.load_speed_data(
+                    year=self.current_year,
+                    race=self.current_race,
+                    session=self.current_session,
+                    driver1=self.driver1,
+                    driver2=self.driver2,
+                    lap1=self.lap1,
+                    lap2=self.lap2
+                )
+            print(f"[OK] [NOTIFICATION] ⚡ 速度分析模組內容更新成功")
+                
+        except Exception as e:
+            print(f"[ERROR] [NOTIFICATION] ⚡ 速度分析模組內容更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據 - 實現抽象方法"""
         try:

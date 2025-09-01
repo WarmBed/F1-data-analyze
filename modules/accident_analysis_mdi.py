@@ -1240,7 +1240,15 @@ class AccidentAnalysisModule(IAnalysisModule):
             # 設置初始化狀態
             self.set_initialized(True)
             
-            print(f"✅ [ACCIDENT_MODULE] 模組已初始化，等待參數同步...")
+            print(f"✅ [ACCIDENT_MODULE] 模組已初始化")
+            
+            # 參照進站分析流程：如果已有參數，立即載入數據
+            if self.current_year and self.current_race and self.current_session:
+                print(f"🚀 [ACCIDENT_MODULE] 預先載入事故分析數據: {self.current_year} {self.current_race} {self.current_session}")
+                self.load_data()
+            else:
+                print(f"📋 [ACCIDENT_MODULE] 等待參數同步後載入數據...")
+            
             return True
         except Exception as e:
             print(f"[ERROR] [ACCIDENT_MODULE] 模組初始化失敗: {str(e)}")
@@ -1296,33 +1304,281 @@ class AccidentAnalysisModule(IAnalysisModule):
             self.emit_error(f"更新參數失敗: {str(e)}")
     
     def load_data(self, **kwargs) -> bool:
-        """載入數據 - 從JSON檔案讀取all_incidents_summary資料"""
+        """載入數據 - 從JSON檔案讀取all_incidents_summary資料（參照進站分析流程）"""
         if not all([self.current_year, self.current_race, self.current_session]):
             print(f"[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
+            print(f"[WARNING] [ACCIDENT_MODULE] 當前參數: year={self.current_year}, race={self.current_race}, session={self.current_session}")
             return False
             
-        print(f"🔄 [ACCIDENT_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
+        print(f"🔄 [ACCIDENT_MODULE] ========== 載入事故分析數據 ==========")
+        print(f"🔄 [ACCIDENT_MODULE] 載入參數: {self.current_year} {self.current_race} {self.current_session}")
         
         # 載入JSON檔案數據
         json_file_path = self.get_json_file_path()
         
         if json_file_path and os.path.exists(json_file_path):
             try:
-                print(f"📁 [ACCIDENT_MODULE] 讀取JSON檔案: {json_file_path}")
+                print(f"📁 [ACCIDENT_MODULE] 找到JSON檔案: {json_file_path}")
+                print(f"📊 [ACCIDENT_MODULE] 開始讀取JSON數據...")
+                
+                with open(json_file_path, 'r', encoding='utf-8') as f:
+                    json_data = json.load(f)
+                
+                print(f"📈 [ACCIDENT_MODULE] JSON數據讀取成功，開始處理...")
+                
+                # 處理並更新統計數據
+                self.process_json_data(json_data)
+                print(f"✅ [ACCIDENT_MODULE] 事故分析數據載入完成")
+                print(f"✅ [ACCIDENT_MODULE] ========================================")
+                return True
+                
+            except Exception as e:
+                print(f"❌ [ACCIDENT_MODULE] 讀取JSON檔案失敗: {e}")
+                print(f"❌ [ACCIDENT_MODULE] 檔案路徑: {json_file_path}")
+                
+                # 顯示用戶友好的錯誤訊息
+                if hasattr(self, 'error_label'):
+                    self.error_label.setText(f"載入失敗: {str(e)}")
+                    self.error_label.show()
+                    
+                return False
+        else:
+            print(f"⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...")
+            print(f"⚠️ [ACCIDENT_MODULE] 目標檔案: {json_file_path}")
+            
+            # 搜尋可能的檔案
+            self.search_and_suggest_files()
+            
+            # 啟動CLI生成流程（參照進站分析模式）
+            print(f"🔧 [ACCIDENT_MODULE] 開始透過CLI生成事故分析數據...")
+            success = self._start_cli_generation(self.current_year, self.current_race, self.current_session)
+            
+            if success:
+                print(f"✅ [ACCIDENT_MODULE] CLI生成流程已啟動，等待數據生成...")
+                # 顯示友好的訊息
+                if hasattr(self, 'error_label'):
+                    self.error_label.setText(f"正在生成事故分析數據，請稍候...")
+                    self.error_label.show()
+                return True
+            else:
+                # 顯示友好的訊息
+                if hasattr(self, 'error_label'):
+                    self.error_label.setText(f"找不到事故分析數據檔案\n請先執行 CLI 分析生成數據")
+                    self.error_label.show()
+                return False
+
+    def _start_cli_generation(self, year: str, race: str, session: str) -> bool:
+        """
+        啟動 CLI 生成流程 - 非阻塞方式（參照進站分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段代碼
+        """
+        try:
+            # 儲存參數供後續使用
+            self._generation_params = (year, race, session)
+            
+            # 啟動 CLI 生成
+            success = self._generate_accident_data_via_cli(year, race, session)
+            
+            if success:
+                # 啟動定時器檢查檔案是否生成完成
+                self._start_generation_monitoring(year, race, session)
+                return True
+            else:
+                print(f"❌ [ACCIDENT_MODULE] 啟動CLI生成失敗: {year} {race} {session}")
+                return False
+                
+        except Exception as e:
+            print(f"❌ [ACCIDENT_MODULE] 啟動生成時發生錯誤: {e}")
+            return False
+
+    def _generate_accident_data_via_cli(self, year: str, race: str, session: str) -> bool:
+        """
+        透過 CLI 工具生成事故數據 - 使用非阻塞方式（參照進站分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段代碼
+            
+        Returns:
+            bool: 請求是否成功提交（注意：不是生成是否成功）
+        """
+        try:
+            print(f"🔧 [ACCIDENT_MODULE] 開始生成事故分析數據: {year} {race} {session}")
+            
+            # 直接調用 CLI 分析腳本
+            import subprocess
+            import threading
+            
+            # 構建命令 - 功能8是事故分析
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "8",  # 功能8: 事故分析
+                "-y", str(year),
+                "-r", race,
+                "-s", session
+            ]
+            
+            print(f"🔧 [ACCIDENT_MODULE] 執行命令: {' '.join(command)}")
+            
+            # 非阻塞執行
+            def run_cli():
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        print(f"✅ [ACCIDENT_MODULE] CLI執行成功")
+                        print(f"📊 [ACCIDENT_MODULE] CLI輸出: {stdout[:200]}...")  # 顯示前200字符
+                    else:
+                        print(f"❌ [ACCIDENT_MODULE] CLI執行失敗: {stderr}")
+                        
+                except Exception as e:
+                    print(f"❌ [ACCIDENT_MODULE] CLI執行時發生錯誤: {e}")
+            
+            # 在後台執行
+            cli_thread = threading.Thread(target=run_cli, daemon=True)
+            cli_thread.start()
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ [ACCIDENT_MODULE] 生成數據時發生錯誤: {e}")
+            return False
+
+    def _start_generation_monitoring(self, year: str, race: str, session: str):
+        """
+        啟動檔案生成監控（參照進站分析模組）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱  
+            session: 賽段代碼
+        """
+        # 確保定時器存在
+        if not hasattr(self, '_generation_timer'):
+            self._generation_timer = QTimer()
+            self._generation_timer.timeout.connect(self._check_generation_progress)
+        
+        if not hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer = QTimer()
+            self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        
+        # 啟動監控 (每5秒檢查一次，最多等待180秒)
+        print(f"⏰ [ACCIDENT_MODULE] 啟動檔案生成監控，每5秒檢查一次...")
+        self._generation_timer.start(5000)
+        self._generation_timeout_timer.start(180000)
+
+    def _check_generation_progress(self):
+        """檢查檔案生成進度（參照進站分析模組）"""
+        if not hasattr(self, '_generation_params'):
+            return
+            
+        year, race, session = self._generation_params
+        
+        # 檢查目標檔案是否已生成
+        json_file_path = self.get_json_file_path()
+        
+        if json_file_path and os.path.exists(json_file_path):
+            print(f"✅ [ACCIDENT_MODULE] 檔案生成完成: {json_file_path}")
+            
+            # 停止監控
+            if hasattr(self, '_generation_timer'):
+                self._generation_timer.stop()
+            if hasattr(self, '_generation_timeout_timer'):
+                self._generation_timeout_timer.stop()
+            
+            # 載入生成的數據
+            try:
+                print(f"📊 [ACCIDENT_MODULE] 開始載入新生成的數據...")
                 with open(json_file_path, 'r', encoding='utf-8') as f:
                     json_data = json.load(f)
                 
                 # 處理並更新統計數據
                 self.process_json_data(json_data)
-                print(f"✅ [ACCIDENT_MODULE] JSON數據載入成功")
-                return True
+                print(f"✅ [ACCIDENT_MODULE] 新生成的事故分析數據載入完成")
+                
+                # 更新UI提示
+                if hasattr(self, 'error_label'):
+                    self.error_label.setText(f"✅ 事故分析數據生成並載入成功")
+                    self.error_label.show()
+                    # 5秒後隱藏成功訊息
+                    QTimer.singleShot(5000, lambda: self.error_label.hide())
                 
             except Exception as e:
-                print(f"❌ [ACCIDENT_MODULE] 讀取JSON檔案失敗: {e}")
-                return False
+                print(f"❌ [ACCIDENT_MODULE] 載入新生成數據失敗: {e}")
+                if hasattr(self, 'error_label'):
+                    self.error_label.setText(f"載入失敗: {str(e)}")
+                    self.error_label.show()
         else:
-            print(f"⚠️ [ACCIDENT_MODULE] 未找到JSON檔案: {json_file_path}")
-            return False
+            print(f"⏳ [ACCIDENT_MODULE] 檔案尚未生成，繼續等待...")
+
+    def _on_generation_timeout(self):
+        """生成超時處理（參照進站分析模組）"""
+        print(f"⏰ [ACCIDENT_MODULE] 檔案生成超時，停止監控")
+        
+        # 停止所有定時器
+        if hasattr(self, '_generation_timer'):
+            self._generation_timer.stop()
+        if hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer.stop()
+        
+        # 顯示超時訊息
+        if hasattr(self, 'error_label'):
+            self.error_label.setText(f"❌ 數據生成超時，請檢查網路連線或稍後再試")
+            self.error_label.show()
+            
+        print(f"❌ [ACCIDENT_MODULE] 數據生成流程已超時")
+
+    def search_and_suggest_files(self):
+        """搜尋並建議可能的檔案（參照進站分析流程）"""
+        print(f"🔍 [ACCIDENT_MODULE] ========== 搜尋可用的事故分析檔案 ==========")
+        
+        # 搜尋 json_exports 目錄下的相關檔案
+        json_exports_dir = os.path.join(os.getcwd(), 'json_exports')
+        if os.path.exists(json_exports_dir):
+            print(f"📂 [ACCIDENT_MODULE] 搜尋目錄: {json_exports_dir}")
+            
+            # 搜尋包含當前年份和比賽的檔案
+            pattern = f"*{self.current_year}*{self.current_race}*all_incidents_summary*"
+            search_pattern = os.path.join(json_exports_dir, pattern)
+            
+            try:
+                import glob
+                matching_files = glob.glob(search_pattern)
+                
+                if matching_files:
+                    print(f"🎯 [ACCIDENT_MODULE] 找到 {len(matching_files)} 個相關檔案:")
+                    for i, file_path in enumerate(matching_files, 1):
+                        filename = os.path.basename(file_path)
+                        print(f"   {i}. {filename}")
+                        
+                    # 建議使用第一個找到的檔案
+                    suggested_file = matching_files[0]
+                    print(f"💡 [ACCIDENT_MODULE] 建議使用: {os.path.basename(suggested_file)}")
+                    
+                else:
+                    print(f"❌ [ACCIDENT_MODULE] 未找到符合的檔案")
+                    print(f"❌ [ACCIDENT_MODULE] 搜尋模式: {pattern}")
+                    
+            except Exception as e:
+                print(f"❌ [ACCIDENT_MODULE] 搜尋檔案時發生錯誤: {e}")
+        else:
+            print(f"❌ [ACCIDENT_MODULE] json_exports 目錄不存在: {json_exports_dir}")
+            
+        print(f"🔍 [ACCIDENT_MODULE] =============================================")
     
     def get_json_file_path(self):
         """獲取JSON檔案路徑"""
