@@ -1,0 +1,444 @@
+#!/usr/bin/env python3
+"""
+F1T 速度分析 MDI 模組
+基於進站分析模組的成功架構設計
+支援雙車手速度對比的 GUI 模組，使用新版模組更新機制
+"""
+
+import sys
+import os
+import json
+import datetime
+import traceback
+from typing import Dict, List, Any, Optional
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
+    QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
+    QHeaderView, QDialog, QDialogButtonBox, QComboBox, QCheckBox,
+    QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
+    QTabWidget, QScrollArea, QSplitter
+)
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
+from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
+
+# 導入分析模組介面
+try:
+    from .interfaces.analysis_module import IAnalysisModule
+except ImportError:
+    # 如果相對導入失敗，嘗試絕對導入
+    try:
+        from modules.interfaces.analysis_module import IAnalysisModule
+    except ImportError:
+        # 如果都失敗，定義一個基本的接口
+        from PyQt5.QtCore import QObject
+        class IAnalysisModule(QObject):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+
+class SpeedDataManager(QObject):
+    """速度數據管理器 - 負責JSON緩存和CLI備援"""
+    
+    # 信號定義
+    data_loaded = pyqtSignal(dict)
+    error_occurred = pyqtSignal(str)
+    loading_progress = pyqtSignal(int)
+    status_changed = pyqtSignal(str)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.current_year = None
+        self.current_race = None
+        self.current_session = None
+        self.loading = False
+        self._is_loading = False
+        
+    def load_speed_data(self, year: str, race: str, session: str, 
+                       driver1: str = "VER", driver2: str = "VER",
+                       lap1: int = 1, lap2: int = 1) -> bool:
+        """載入速度對比數據"""
+        try:
+            print(f"[SPEED_MDI_DATA] ========== 載入速度數據 ==========")
+            print(f"[SPEED_MDI_DATA] 參數: {year} {race} {session}")
+            print(f"[SPEED_MDI_DATA] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            
+            if self._is_loading:
+                print(f"[SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求")
+                self.error_occurred.emit("載入器正忙，請稍後再試")
+                return False
+                
+            self._is_loading = True
+            self.loading_progress.emit(0)
+            self.status_changed.emit("開始載入速度數據...")
+            
+            print(f"[SPEED_MDI_DATA] 🔗 創建 SpeedAnalysisDataLoader...")
+            
+            # 使用現有的速度分析數據載入器
+            from modules.speed_analysis_data_loader import SpeedAnalysisDataLoader
+            
+            print(f"[SPEED_MDI_DATA] 🚀 調用 load_speed_data...")
+            
+            # 創建數據載入器
+            speed_loader = SpeedAnalysisDataLoader()
+            speed_loader.data_loaded.connect(self._on_data_loaded)
+            speed_loader.load_error.connect(self._on_load_error)
+            speed_loader.status_changed.connect(self.status_changed.emit)
+            speed_loader.load_progress.connect(self.loading_progress.emit)
+            
+            # 開始載入數據
+            success = speed_loader.load_speed_data(
+                year=int(year),
+                race=race,
+                session=session,
+                driver1=driver1,
+                driver2=driver2,
+                lap1=lap1,
+                lap2=lap2,
+                is_fastest_lap=False
+            )
+            
+            # 保存載入器引用避免被回收
+            self._speed_loader = speed_loader
+            
+            return success
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 速度數據載入失敗: {e}")
+            self.error_occurred.emit(f"載入失敗: {str(e)}")
+            self._is_loading = False
+            return False
+    
+    def _on_data_loaded(self, data: dict):
+        """處理數據載入完成"""
+        try:
+            print(f"[SPEED_MDI] 數據載入完成")
+            self._is_loading = False
+            self.data_loaded.emit(data)
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 數據處理失敗: {e}")
+            self.error_occurred.emit(f"數據處理失敗: {str(e)}")
+    
+    def _on_load_error(self, error_message: str):
+        """處理載入錯誤"""
+        print(f"[ERROR] [SPEED_MDI] 載入錯誤: {error_message}")
+        self._is_loading = False
+        self.error_occurred.emit(error_message)
+
+class SpeedAnalysisModule(IAnalysisModule):
+    """速度分析主模組"""
+    
+    # 信號定義
+    module_error = pyqtSignal(str)
+    parameters_updated = pyqtSignal(dict)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        
+        # 參數狀態
+        self.current_year = "2025"
+        self.current_race = "Japan"
+        self.current_session = "R"
+        self.parameter_provider = None
+        
+        # 車手和圈數參數
+        self.driver1 = "VER"
+        self.driver2 = "VER" 
+        self.lap1 = 1
+        self.lap2 = 1
+        
+        # 組件
+        self.data_manager = None
+        self.speed_chart_widget = None
+        self.main_widget = None  # 主容器 widget
+        
+        # 初始化狀態
+        self._initialized = False
+        
+    def initialize_module(self, parent_widget=None, **kwargs) -> bool:
+        """初始化模組 - 實現抽象方法"""
+        try:
+            print(f"[SPEED_MDI] 初始化速度分析模組")
+            
+            # 創建數據管理器
+            self.data_manager = SpeedDataManager()
+            self.data_manager.data_loaded.connect(self._update_chart)
+            self.data_manager.error_occurred.connect(self._handle_error)
+            
+            # 創建速度圖表組件
+            from modules.speed_analysis_chart_widget import SpeedAnalysisChartWidget
+            self.speed_chart_widget = SpeedAnalysisChartWidget()
+            
+            # 連接圈數變更信號
+            self.speed_chart_widget.lap_numbers_changed.connect(self._on_lap_numbers_changed)
+            
+            # 設置初始圈數
+            self.speed_chart_widget.set_lap_numbers(self.lap1, self.lap2)
+            
+            # 設置主界面
+            self._setup_ui()
+            
+            self._initialized = True
+            print(f"[OK] [SPEED_MDI] 速度分析模組初始化完成")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 模組初始化失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _setup_ui(self):
+        """設置用戶界面"""
+        # 創建主容器 widget
+        self.main_widget = QWidget()
+        layout = QVBoxLayout()
+        
+        # 添加速度圖表
+        if self.speed_chart_widget:
+            layout.addWidget(self.speed_chart_widget)
+        
+        # 設置佈局到主 widget
+        self.main_widget.setLayout(layout)
+    
+    def _update_chart(self, data: dict):
+        """更新圖表"""
+        try:
+            print(f"[SPEED_MDI] 更新速度圖表")
+            if self.speed_chart_widget:
+                self.speed_chart_widget.update_speed_data(data)
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 圖表更新失敗: {e}")
+            self.module_error.emit(f"圖表更新失敗: {str(e)}")
+    
+    def _handle_error(self, error_message: str):
+        """處理錯誤"""
+        print(f"[ERROR] [SPEED_MDI] {error_message}")
+        self.module_error.emit(error_message)
+    
+    def _on_lap_numbers_changed(self, lap1: int, lap2: int):
+        """處理圈數變更"""
+        try:
+            print(f"[SPEED_MDI] ========== 圈數變更處理 ==========")
+            print(f"[SPEED_MDI] 新圈數: 第{lap1}圈 vs 第{lap2}圈")
+            
+            # 更新模組的圈數參數
+            old_lap1, old_lap2 = self.lap1, self.lap2
+            self.lap1 = lap1
+            self.lap2 = lap2
+            
+            print(f"[SPEED_MDI] 圈數變更: 第{old_lap1}圈 vs 第{old_lap2}圈 → 第{lap1}圈 vs 第{lap2}圈")
+            
+            # 重新載入數據
+            if self.data_manager:
+                print(f"[SPEED_MDI] 🔄 因圈數變更重新載入數據...")
+                success = self.data_manager.load_speed_data(
+                    year=self.current_year,
+                    race=self.current_race,
+                    session=self.current_session,
+                    driver1=self.driver1,
+                    driver2=self.driver2,
+                    lap1=self.lap1,
+                    lap2=self.lap2
+                )
+                
+                if success:
+                    print(f"[SPEED_MDI] ✅ 圈數變更後數據重載成功")
+                else:
+                    print(f"[SPEED_MDI] ❌ 圈數變更後數據重載失敗")
+            else:
+                print(f"[SPEED_MDI] ❌ 數據管理器未初始化，無法重載數據")
+                
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] 處理圈數變更失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.module_error.emit(f"處理圈數變更失敗: {str(e)}")
+    
+    def update_parameters(self, year: int, race: str, session: str) -> None:
+        """更新參數 - 實現抽象方法"""
+        try:
+            print(f"[SPEED_MDI] ========== 新版更新參數 ==========")
+            print(f"[SPEED_MDI] 收到更新請求: {year} {race} {session}")
+            print(f"[SPEED_MDI] 當前參數: {self.current_year} {self.current_race} {self.current_session}")
+            
+            # 檢查參數是否有變化
+            params_changed = (
+                self.current_year != str(year) or 
+                self.current_race != race or 
+                self.current_session != session
+            )
+            
+            print(f"[SPEED_MDI] 參數是否變化: {params_changed}")
+            
+            # 更新本地參數
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
+            
+            if params_changed:
+                print(f"[SPEED_MDI] 🔄 參數已變化，開始重載數據...")
+                
+                # 載入新數據
+                if self.data_manager:
+                    print(f"[SPEED_MDI] 📡 調用數據管理器載入新數據...")
+                    success = self.data_manager.load_speed_data(
+                        year=self.current_year,
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=self.driver1,
+                        driver2=self.driver2,
+                        lap1=self.lap1,
+                        lap2=self.lap2
+                    )
+                    
+                    if success:
+                        print(f"[SPEED_MDI] ✅ 新版參數更新成功")
+                        self.parameters_updated.emit({
+                            'year': year,
+                            'race': race,
+                            'session': session
+                        })
+                        return True
+                    else:
+                        print(f"[SPEED_MDI] ❌ 數據載入失敗")
+                        return False
+                else:
+                    print(f"[SPEED_MDI] ❌ 數據管理器未初始化")
+                    return False
+            else:
+                print(f"[SPEED_MDI] ℹ️ 參數未變化，檢查是否需要首次載入...")
+                # 如果是首次載入或沒有數據，仍然需要載入
+                if self.data_manager and not hasattr(self, '_data_loaded'):
+                    print(f"[SPEED_MDI] 🔄 首次載入數據...")
+                    success = self.data_manager.load_speed_data(
+                        year=self.current_year,
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=self.driver1,
+                        driver2=self.driver2,
+                        lap1=self.lap1,
+                        lap2=self.lap2
+                    )
+                    if success:
+                        self._data_loaded = True
+                        print(f"[SPEED_MDI] ✅ 首次數據載入成功")
+                    else:
+                        print(f"[SPEED_MDI] ❌ 首次數據載入失敗")
+                        return False
+                else:
+                    print(f"[SPEED_MDI] ℹ️ 數據已存在，跳過載入")
+                return True
+                
+        except Exception as e:
+            print(f"[SPEED_MDI] ❌ 參數更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.module_error.emit(f"參數更新失敗: {str(e)}")
+            return False
+    
+    def get_window_title(self) -> str:
+        """獲取視窗標題"""
+        driver_info = f"{self.driver1} vs {self.driver2}"
+        lap_info = f"第{self.lap1}圈 vs 第{self.lap2}圈"
+        return f"⚡ 速度分析 - {driver_info} ({lap_info}) - {self.current_year} {self.current_race} {self.current_session}"
+    
+    # 實現 IAnalysisModule 抽象方法
+    @property
+    def module_name(self) -> str:
+        """模組名稱"""
+        return "speed_analysis"
+    
+    @property
+    def display_name(self) -> str:
+        """顯示名稱"""
+        return "速度分析"
+    
+    @property
+    def description(self) -> str:
+        """模組描述"""
+        return "F1賽車速度分析模組，支援雙車手圈速對比"
+    
+    @property
+    def version(self) -> str:
+        """模組版本"""
+        return "1.0.0"
+    
+    def get_widget(self):
+        """獲取主要組件"""
+        if hasattr(self, 'main_widget'):
+            return self.main_widget
+        else:
+            # 如果主 widget 還沒創建，返回圖表組件作為後備
+            return self.speed_chart_widget
+    
+    def get_default_size(self):
+        """獲取預設尺寸"""
+        return (900, 600)
+    
+    def load_data(self, **kwargs) -> bool:
+        """載入數據 - 實現抽象方法"""
+        try:
+            year = str(kwargs.get('year', self.current_year))
+            race = kwargs.get('race', self.current_race)
+            session = kwargs.get('session', self.current_session)
+            
+            return self.data_manager.load_speed_data(
+                year=year,
+                race=race,
+                session=session,
+                driver1=kwargs.get('driver1', 'VER'),
+                driver2=kwargs.get('driver2', 'VER'),
+                lap1=kwargs.get('lap1', 1),
+                lap2=kwargs.get('lap2', 1)
+            )
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] load_data 失敗: {e}")
+            return False
+    
+    def refresh_analysis(self) -> None:
+        """刷新分析 - 實現抽象方法"""
+        try:
+            self.data_manager.load_speed_data(
+                year=self.current_year,
+                race=self.current_race,
+                session=self.current_session,
+                driver1="VER",
+                driver2="VER",
+                lap1=1,
+                lap2=1
+            )
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] refresh_analysis 失敗: {e}")
+    
+    def clear_data(self):
+        """清除數據 - 實現抽象方法"""
+        try:
+            if self.speed_chart_widget:
+                # 清除速度圖表數據
+                self.speed_chart_widget.reset_data()
+            print(f"[SPEED_MDI] 數據已清除")
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] clear_data 失敗: {e}")
+    
+    def get_current_data(self) -> Optional[Dict[str, Any]]:
+        """獲取當前數據 - 實建抽象方法"""
+        try:
+            return {
+                'module': 'speed_analysis',
+                'year': self.current_year,
+                'race': self.current_race,
+                'session': self.current_session,
+                'initialized': self._initialized,
+                'data_loaded': self.data_manager is not None
+            }
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] get_current_data 失敗: {e}")
+            return None
+    
+    def export_data(self, export_path: str, export_format: str = "json") -> bool:
+        """匯出數據 - 實現抽象方法"""
+        try:
+            print(f"[SPEED_MDI] 匯出數據功能尚未實現 (路徑: {export_path}, 格式: {export_format})")
+            return False
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] export_data 失敗: {e}")
+            return False

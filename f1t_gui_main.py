@@ -14,7 +14,8 @@ from PyQt5.QtWidgets import (
     QTabWidget, QMdiArea, QMdiSubWindow, QTableWidget, QTableWidgetItem,
     QSplitter, QLineEdit, QStatusBar, QLabel, QProgressBar, QGroupBox,
     QFrame, QToolBar, QAction, QMenuBar, QMenu, QGridLayout, QLCDNumber,
-    QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox
+    QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox,
+    QListWidget, QListWidgetItem
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect, QThread
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPainter, QPen, QBrush, QMouseEvent
@@ -494,6 +495,497 @@ class MainWindowParameterProvider:
         except Exception as e:
             print(f"[WARNING] [PARAM_PROVIDER] 獲取賽段失敗: {e}")
         return "R"  # 預設值
+
+class LapAnalysisOptionsDialog(QDialog):
+    """圈速分析選項對話框 - 讓使用者選擇要顯示的遙測圖表和車手"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("圈速分析選項")
+        self.setModal(True)
+        self.setFixedSize(420, 520)
+        
+        # 設置字體 - 與主程式保持一致
+        font = QFont("Arial", 8)  # 與主程式app.setFont(font)一致
+        self.setFont(font)
+        
+        # 設置視窗樣式 - 採用主程式風格
+        self.setStyleSheet("""
+            QDialog {
+                background-color: #f0f0f0;
+                color: #333333;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                font-size: 8pt;
+            }
+            QListWidget {
+                background-color: #f9f9f9;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                padding: 2px;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                font-size: 8pt;
+                alternate-background-color: #f0f0f0;
+            }
+            QListWidget::item {
+                padding: 3px 8px;
+                border-bottom: 1px solid #e8e8e8;
+                min-height: 16px;
+            }
+            QListWidget::item:hover {
+                background-color: #e8f4f8;
+            }
+            QListWidget::item:selected {
+                background-color: #d1e7dd;
+                color: #333333;
+                border: 1px solid #a3cfbb;
+            }
+            QPushButton {
+                background: #FFFFFF;
+                color: #333333;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                font-size: 8pt;
+                padding: 4px 12px;
+                min-height: 18px;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            }
+            QPushButton:hover {
+                background: #F0F0F0;
+                border: 1px solid #999999;
+            }
+            QPushButton:pressed {
+                background: #E0E0E0;
+            }
+            QLabel {
+                color: #333333;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                font-size: 8pt;
+            }
+            QComboBox {
+                background: #FFFFFF;
+                color: #333333;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                padding: 2px 5px;
+                font-size: 8pt;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                min-height: 18px;
+            }
+            QComboBox:hover {
+                border: 1px solid #999999;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 15px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border: 2px solid #999999;
+                width: 3px;
+                height: 3px;
+                border-top: none;
+                border-left: none;
+                margin-right: 3px;
+            }
+            QLineEdit {
+                background: #FFFFFF;
+                color: #333333;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                padding: 2px 5px;
+                font-size: 8pt;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                min-height: 18px;
+            }
+            QLineEdit:hover {
+                border: 1px solid #999999;
+            }
+            QLineEdit:focus {
+                border: 1px solid #4CAF50;
+            }
+            QCheckBox {
+                color: #333333;
+                font-size: 8pt;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+                font-weight: bold;
+            }
+            QCheckBox::indicator {
+                width: 16px;
+                height: 16px;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                background-color: #FFFFFF;
+            }
+            QCheckBox::indicator:hover {
+                border: 1px solid #999999;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #4CAF50;
+                border: 1px solid #4CAF50;
+            }
+            QCheckBox::indicator:checked:before {
+                content: "✓";
+                color: white;
+                font-weight: bold;
+                text-align: center;
+            }
+            QGroupBox {
+                color: #333333;
+                font-weight: bold;
+                font-size: 8pt;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                margin-top: 8px;
+                padding-top: 5px;
+                font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 8px;
+                padding: 0 3px 0 3px;
+                background: #f0f0f0;
+            }
+        """)
+        
+        self.init_ui()
+        self.selected_charts = []
+        
+    def init_ui(self):
+        """初始化使用者介面"""
+        layout = QVBoxLayout(self)
+        layout.setSpacing(10)
+        layout.setContentsMargins(15, 15, 15, 15)
+        
+        # 標題
+        title_label = QLabel("請選擇要顯示的遙測圖表")
+        title_label.setStyleSheet("font-size: 9pt; font-weight: bold; color: #333333; margin-bottom: 5px; font-family: 'Arial', 'Microsoft JhengHei', sans-serif;")
+        layout.addWidget(title_label)
+        
+        # 車手選擇區域
+        driver_group = QGroupBox("車手與圈數選擇")
+        driver_layout = QGridLayout(driver_group)
+        driver_layout.setSpacing(8)
+        
+        # 車手1 (必選)
+        driver1_label = QLabel("車手1 (必選):")
+        self.driver1_combo = QComboBox()
+        self.driver1_combo.setFixedWidth(100)
+        driver_layout.addWidget(driver1_label, 0, 0)
+        driver_layout.addWidget(self.driver1_combo, 0, 1)
+        
+        # 車手1圈數
+        lap1_label = QLabel("圈數:")
+        self.lap1_input = QLineEdit()
+        self.lap1_input.setText("1")
+        self.lap1_input.setFixedWidth(50)
+        self.lap1_input.setPlaceholderText("圈數")
+        driver_layout.addWidget(lap1_label, 0, 2)
+        driver_layout.addWidget(self.lap1_input, 0, 3)
+        
+        # 車手2 (選用)
+        driver2_label = QLabel("車手2 (選用):")
+        self.driver2_combo = QComboBox()
+        self.driver2_combo.setFixedWidth(100)
+        self.driver2_combo.addItem("無")  # 第一個選項為無
+        driver_layout.addWidget(driver2_label, 1, 0)
+        driver_layout.addWidget(self.driver2_combo, 1, 1)
+        
+        # 車手2圈數
+        lap2_label = QLabel("圈數:")
+        self.lap2_input = QLineEdit()
+        self.lap2_input.setText("1")
+        self.lap2_input.setFixedWidth(50)
+        self.lap2_input.setPlaceholderText("圈數")
+        driver_layout.addWidget(lap2_label, 1, 2)
+        driver_layout.addWidget(self.lap2_input, 1, 3)
+        
+        # 最速圈勾選框
+        self.fastest_lap_checkbox = QCheckBox("最速圈")
+        self.fastest_lap_checkbox.setChecked(False)
+        self.fastest_lap_checkbox.stateChanged.connect(self._on_fastest_lap_changed)
+        driver_layout.addWidget(self.fastest_lap_checkbox, 0, 4, 2, 1)  # 跨兩行放在右邊
+        
+        # 設置列寬度比例
+        driver_layout.setColumnStretch(5, 1)  # 添加彈性空間
+        
+        layout.addWidget(driver_group)
+        
+        # 載入可用車手
+        self._load_available_drivers()
+        
+        # 創建列表控件 - 更緊湊的設計
+        telemetry_group = QGroupBox("遙測選項")
+        telemetry_layout = QVBoxLayout(telemetry_group)
+        
+        self.telemetry_list = QListWidget()
+        self.telemetry_list.setSelectionMode(QListWidget.MultiSelection)
+        self.telemetry_list.setAlternatingRowColors(True)
+        
+        # 定義遙測選項
+        self.telemetry_options = {
+            'speed_analysis': ('⚡ 速度分析 (Speed Analysis)', True),  # 設為預設選中
+            # 'speed': ('🏃 速度 (Speed)', True),  # 移除速度選項
+            'brake': ('🛑 煞車 (Brake)', True),
+            'throttle': ('⚡油門 (Throttle)', True),
+            'steering': ('🎯 轉向 (Steering)', False),
+            'gear': ('⚙️ 檔位 (Gear)', False),
+            'rpm': ('🔄 轉速 (RPM)', False),
+            'acceleration': ('📈 加速度 (Acceleration)', False),
+            'speed_diff': ('📊 速度差 (Speed Difference)', False),
+            'distance_diff': ('📏 累積距離差 (Distance Difference)', False)
+        }
+        
+        # 添加選項到列表
+        for key, (label, default_checked) in self.telemetry_options.items():
+            item = QListWidgetItem(label)
+            item.setData(Qt.UserRole, key)  # 存儲鍵值
+            self.telemetry_list.addItem(item)
+            if default_checked:
+                item.setSelected(True)
+        
+        telemetry_layout.addWidget(self.telemetry_list)
+        layout.addWidget(telemetry_group)
+        
+        # 快速選擇按鈕 - 更緊湊的布局
+        quick_select_layout = QHBoxLayout()
+        quick_select_layout.setSpacing(8)
+        
+        select_all_btn = QPushButton("全選")
+        select_all_btn.setFixedSize(60, 24)
+        select_all_btn.clicked.connect(self.select_all)
+        quick_select_layout.addWidget(select_all_btn)
+        
+        select_none_btn = QPushButton("全不選")
+        select_none_btn.setFixedSize(60, 24)
+        select_none_btn.clicked.connect(self.select_none)
+        quick_select_layout.addWidget(select_none_btn)
+        
+        default_btn = QPushButton("恢復預設")
+        default_btn.setFixedSize(70, 24)
+        default_btn.clicked.connect(self.set_default)
+        quick_select_layout.addWidget(default_btn)
+        
+        quick_select_layout.addStretch()
+        layout.addLayout(quick_select_layout)
+        
+        # 對話框按鈕
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(8)
+        button_layout.addStretch()
+        
+        ok_btn = QPushButton("確定")
+        ok_btn.setFixedSize(60, 26)
+        ok_btn.clicked.connect(self.accept)
+        button_layout.addWidget(ok_btn)
+        
+        cancel_btn = QPushButton("取消")
+        cancel_btn.setFixedSize(60, 26)
+        cancel_btn.clicked.connect(self.reject)
+        button_layout.addWidget(cancel_btn)
+        
+        layout.addLayout(button_layout)
+        
+    def _load_available_drivers(self):
+        """載入可用的車手列表 - 從進站分析JSON獲取"""
+        try:
+            import json
+            import glob
+            import os
+            
+            # 獲取當前年份和賽事
+            year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
+            race = self.race_combo.currentText() if hasattr(self, 'race_combo') else "Japan"
+            
+            print(f"[DRIVERS] 從進站分析JSON載入車手列表: {year} {race}")
+            
+            # 搜尋進站分析JSON檔案
+            pitstop_patterns = [
+                f"json/pitstop_analysis_{year}_{race}*.json",
+                f"json_exports/pitstop_analysis_{year}_{race}*.json",
+                f"cache/driver_fastest_pitstop_{year}_{race}*.pkl",  # 如果有PKL檔案也可以嘗試
+                f"json/driver_pitstop_summary_{year}*.json"
+            ]
+            
+            drivers = []
+            found_file = None
+            
+            # 嘗試找到進站分析檔案
+            for pattern in pitstop_patterns:
+                files = glob.glob(pattern)
+                if files:
+                    found_file = files[0]  # 取第一個找到的檔案
+                    print(f"[DRIVERS] 找到進站分析檔案: {found_file}")
+                    break
+            
+            if found_file and found_file.endswith('.json'):
+                # 從JSON檔案中提取車手代碼
+                with open(found_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    
+                # 嘗試從不同的JSON結構中提取車手代碼
+                if 'drivers' in data:
+                    drivers = data['drivers']
+                elif 'data' in data and isinstance(data['data'], dict):
+                    # 檢查是否有車手相關的鍵值
+                    for key, value in data['data'].items():
+                        if 'drivers' in key.lower():
+                            if isinstance(value, list):
+                                drivers = value
+                            elif isinstance(value, dict):
+                                drivers = list(value.keys())
+                            break
+                    
+                    # 如果還沒找到，嘗試從進站數據中提取
+                    if not drivers and 'pitstop_data' in data['data']:
+                        pitstop_data = data['data']['pitstop_data']
+                        if isinstance(pitstop_data, dict):
+                            drivers = list(pitstop_data.keys())
+                        elif isinstance(pitstop_data, list) and pitstop_data:
+                            # 從進站記錄中提取唯一的車手代碼
+                            driver_set = set()
+                            for record in pitstop_data:
+                                if isinstance(record, dict) and 'driver' in record:
+                                    driver_set.add(record['driver'])
+                                elif isinstance(record, dict) and 'Driver' in record:
+                                    driver_set.add(record['Driver'])
+                            drivers = sorted(list(driver_set))
+                
+                print(f"[DRIVERS] 從JSON提取到 {len(drivers)} 個車手: {drivers}")
+            
+            # 如果沒有從JSON獲取到車手，使用預設車手列表
+            if not drivers:
+                print(f"[DRIVERS] 使用預設車手列表")
+                drivers = ["VER", "LEC", "HAM", "RUS", "NOR", "PIA", "SAI", "PER", "ALO", "STR", 
+                          "TSU", "GAS", "OCO", "ALB", "SAR", "HUL", "MAG", "BOT", "ZHO", "COL"]
+            
+            # 添加車手到下拉式選單
+            self.driver1_combo.clear()
+            self.driver2_combo.clear()
+            
+            # 車手2先加入"無"選項
+            self.driver2_combo.addItem("無")
+            
+            for driver in drivers:
+                self.driver1_combo.addItem(driver)
+                self.driver2_combo.addItem(driver)
+            
+            # 預設選擇
+            if len(drivers) > 0:
+                self.driver1_combo.setCurrentIndex(0)  # 車手1選擇第一個車手
+                self.driver2_combo.setCurrentIndex(0)  # 車手2預設選擇"無"
+                print(f"[DRIVERS] ✅ 成功載入 {len(drivers)} 個車手，預設選擇: 車手1={drivers[0]}, 車手2=無")
+            
+        except Exception as e:
+            print(f"[ERROR] [DRIVERS] 載入車手列表失敗: {e}")
+            # 發生錯誤時使用預設車手列表
+            default_drivers = ["VER", "LEC", "HAM", "RUS", "NOR", "PIA", "SAI", "PER", "ALO", "STR", 
+                             "TSU", "GAS", "OCO", "ALB", "SAR", "HUL", "MAG", "BOT", "ZHO", "COL"]
+            
+            self.driver1_combo.clear()
+            self.driver2_combo.clear()
+            
+            # 車手2先加入"無"選項
+            self.driver2_combo.addItem("無")
+            
+            for driver in default_drivers:
+                self.driver1_combo.addItem(driver)
+                self.driver2_combo.addItem(driver)
+            
+            # 預設選擇
+            if len(default_drivers) > 0:
+                self.driver1_combo.setCurrentIndex(0)  # 車手1選擇第一個車手
+                self.driver2_combo.setCurrentIndex(0)  # 車手2預設選擇"無"
+                print(f"[DRIVERS] 使用預設車手列表: 車手1={default_drivers[0]}, 車手2=無")
+        
+    def _on_fastest_lap_changed(self, state):
+        """當最速圈勾選框變更時的處理"""
+        if state == 2:  # 勾選時 (Qt.Checked)
+            # 最速圈被選中，禁用兩個圈數輸入
+            self.lap1_input.setEnabled(False)
+            self.lap1_input.setText("最速圈")
+            self.lap1_input.setStyleSheet("color: #666666;")
+            
+            self.lap2_input.setEnabled(False)
+            self.lap2_input.setText("最速圈")
+            self.lap2_input.setStyleSheet("color: #666666;")
+        else:
+            # 最速圈未選中，啟用兩個圈數輸入
+            self.lap1_input.setEnabled(True)
+            self.lap1_input.setText("1")
+            self.lap1_input.setStyleSheet("")
+            
+            self.lap2_input.setEnabled(True)
+            self.lap2_input.setText("1")
+            self.lap2_input.setStyleSheet("")
+    
+    def get_selected_drivers(self):
+        """獲取選擇的車手和圈數資訊"""
+        driver1 = self.driver1_combo.currentText()
+        driver2 = self.driver2_combo.currentText()
+        
+        # 判斷是否選擇最速圈
+        is_fastest_lap = self.fastest_lap_checkbox.isChecked()
+        
+        if is_fastest_lap:
+            lap1_number = "fastest"
+            lap2_number = "fastest"
+            lap_type = "最速圈"
+        else:
+            # 嘗試解析車手1圈數輸入
+            try:
+                lap1_number = int(self.lap1_input.text())
+            except ValueError:
+                lap1_number = 1  # 預設值
+            
+            # 嘗試解析車手2圈數輸入
+            try:
+                lap2_number = int(self.lap2_input.text())
+            except ValueError:
+                lap2_number = 1  # 預設值
+                
+            lap_type = "指定圈數"
+        
+        # 如果車手2選擇了"無"，則返回None
+        if driver2 == "無":
+            driver2 = None
+            lap2_number = None
+            
+        return {
+            'driver1': driver1,
+            'driver2': driver2,
+            'lap1_number': lap1_number,
+            'lap2_number': lap2_number,
+            'lap_type': lap_type,
+            'is_fastest_lap': is_fastest_lap
+        }
+        
+    def select_all(self):
+        """全選所有選項"""
+        for i in range(self.telemetry_list.count()):
+            item = self.telemetry_list.item(i)
+            item.setSelected(True)
+            
+    def select_none(self):
+        """取消所有選項"""
+        self.telemetry_list.clearSelection()
+            
+    def set_default(self):
+        """恢復預設選項"""
+        self.telemetry_list.clearSelection()
+        for i in range(self.telemetry_list.count()):
+            item = self.telemetry_list.item(i)
+            key = item.data(Qt.UserRole)
+            default_checked = self.telemetry_options[key][1]
+            if default_checked:
+                item.setSelected(True)
+    
+    def get_selected_charts(self):
+        """獲取使用者選擇的圖表類型"""
+        selected = []
+        for item in self.telemetry_list.selectedItems():
+            key = item.data(Qt.UserRole)
+            selected.append(key)
+        return selected
 
 class TelemetryChartWidget(QWidget):
     """遙測曲線圖表小部件 - 支援縮放、拖拉、X軸同步"""
@@ -1601,7 +2093,13 @@ class PopoutSubWindow(QMdiSubWindow):
                 return "遙測分析"
             elif "_" in title:
                 # 新格式：模組名稱_年份_賽事_賽段
-                return title.split('_')[0]
+                module_part = title.split('_')[0]
+                # 處理帶圖標的模組名稱，如 "⚡ 速度分析" -> "速度分析"
+                if " " in module_part and not module_part.startswith("["):
+                    parts = module_part.split(" ")
+                    if len(parts) >= 2:
+                        return " ".join(parts[1:])  # 移除圖標，保留模組名稱
+                return module_part
             elif " - " in title:
                 # 舊格式：[TAG] 模組名稱 - 詳細資訊
                 if "]" in title:
@@ -1629,7 +2127,12 @@ class PopoutSubWindow(QMdiSubWindow):
     
     def update_current_window(self):
         """更新當前視窗 - 委託給模組處理"""
+        print(f"[UPDATE_DEBUG] ========== 視窗更新請求 ==========")
+        print(f"[UPDATE_DEBUG] 視窗標題: {self.windowTitle()}")
+        print(f"[UPDATE_DEBUG] 是否有 analysis_module: {self.analysis_module is not None}")
+        
         if self.analysis_module:
+            print(f"[UPDATE_DEBUG] 🎯 使用新版模組更新邏輯")
             # 如果有模組，委託給模組處理
             try:
                 params = {}
@@ -1670,13 +2173,28 @@ class PopoutSubWindow(QMdiSubWindow):
                 return False
         else:
             # 舊版模式：直接調用原有邏輯
+            print(f"[UPDATE_DEBUG] ⚠️ 使用舊版更新邏輯")
+            print(f"[UPDATE_DEBUG] 原因: analysis_module 為 None")
             print(f"[WARNING] [LEGACY] {self.windowTitle()} 使用舊版更新模式")
             return self._legacy_update_current_window()
     
     def update_window_title(self):
         """更新視窗標題"""
         try:
-            new_title = f"{self.module_name}_{self.local_year}_{self.local_race}_{self.local_session}"
+            # 如果有 analysis_module，使用模組的 get_window_title 方法
+            if self.analysis_module and hasattr(self.analysis_module, 'get_window_title'):
+                new_title = self.analysis_module.get_window_title()
+                print(f"[TITLE] [MODULE] 使用模組標題: {new_title}")
+            else:
+                # 舊版邏輯：保持原始格式，只更新參數部分
+                if hasattr(self, 'original_title') and self.original_title:
+                    # 保持原始標題格式，只添加參數後綴
+                    new_title = f"{self.original_title}_{self.local_year}_{self.local_race}_{self.local_session}"
+                else:
+                    # 最後備選方案
+                    new_title = f"{self.module_name}_{self.local_year}_{self.local_race}_{self.local_session}"
+                print(f"[TITLE] [LEGACY] 使用舊版標題格式: {new_title}")
+            
             self.setWindowTitle(new_title)
             
             # 同時更新自定義標題欄
@@ -2514,8 +3032,8 @@ class PopoutSubWindow(QMdiSubWindow):
         # 創建進度顯示
         self.show_analysis_progress()
         
-        # 創建並啟動工作執行緒
-        self.cli_worker = CliAnalysisWorker(year, race, session, self)
+        # 創建並啟動工作執行緒 - 速度分析使用函數 13
+        self.cli_worker = CliAnalysisWorker(year, race, session, 13)
         
         # 連接信號
         self.cli_worker.progress_updated.connect(self.on_analysis_progress)
@@ -2660,22 +3178,99 @@ class PopoutSubWindow(QMdiSubWindow):
         print(f"[STATS] 開始更新圖表和分析結果...")
         
         try:
-            # 更新遙測圖表
-            if 'telemetry' in json_data:
-                self.update_telemetry_chart(json_data['telemetry'])
-                
-            # 更新軌道地圖
-            if 'track_data' in json_data:
-                self.update_track_map(json_data['track_data'])
-                
-            # 更新分析數據
-            if 'analysis_results' in json_data:
-                self.update_analysis_data(json_data['analysis_results'])
+            # 檢查當前視窗是否為速度分析視窗
+            window_title = self.windowTitle()
+            print(f"[CHART UPDATE] 更新視窗: {window_title}")
+            
+            if '速度分析' in window_title or 'Speed Analysis' in window_title:
+                print(f"[SPEED UPDATE] 檢測到速度分析視窗，使用專用更新邏輯")
+                self._update_speed_analysis_chart(json_data)
+            else:
+                # 更新遙測圖表
+                if 'telemetry' in json_data:
+                    self.update_telemetry_chart(json_data['telemetry'])
+                    
+                # 更新軌道地圖
+                if 'track_data' in json_data:
+                    self.update_track_map(json_data['track_data'])
+                    
+                # 更新分析數據
+                if 'analysis_results' in json_data:
+                    self.update_analysis_data(json_data['analysis_results'])
                 
             print(f"[OK] 圖表和分析結果更新完成")
             
         except Exception as e:
             print(f"[ERROR] 圖表更新錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_speed_analysis_chart(self, json_data):
+        """更新速度分析圖表的專用方法"""
+        print(f"[SPEED UPDATE] ========== 開始更新速度分析圖表 ==========")
+        
+        try:
+            # 尋找速度分析圖表組件
+            from modules.speed_analysis_chart_widget import SpeedAnalysisChartWidget
+            
+            def find_speed_widgets(widget):
+                """遞歸查找 SpeedAnalysisChartWidget"""
+                widgets = []
+                if isinstance(widget, SpeedAnalysisChartWidget):
+                    widgets.append(widget)
+                
+                # 遞歸檢查子組件
+                if hasattr(widget, 'findChildren'):
+                    for child in widget.findChildren(SpeedAnalysisChartWidget):
+                        widgets.append(child)
+                elif hasattr(widget, 'children'):
+                    for child in widget.children():
+                        widgets.extend(find_speed_widgets(child))
+                        
+                return widgets
+            
+            speed_widgets = find_speed_widgets(self)
+            print(f"[SPEED UPDATE] 找到 {len(speed_widgets)} 個速度分析圖表組件")
+            
+            if speed_widgets:
+                for i, widget in enumerate(speed_widgets):
+                    print(f"[SPEED UPDATE] 更新第 {i+1} 個速度分析圖表")
+                    
+                    # 檢查是否有數據載入器
+                    if hasattr(widget, 'speed_loader'):
+                        print(f"[SPEED UPDATE] 找到數據載入器，觸發重新載入")
+                        
+                        # 獲取當前參數
+                        year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
+                        race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
+                        session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
+                        
+                        # 重新載入數據（使用預設的VER vs VER進行測試）
+                        widget.speed_loader.load_speed_data(
+                            year=year,
+                            race=race,
+                            session=session,
+                            driver1='VER',
+                            driver2='VER',
+                            lap1=1,
+                            lap2=1,
+                            is_fastest_lap=False
+                        )
+                        print(f"[SPEED UPDATE] ✅ 已觸發數據重新載入")
+                    else:
+                        print(f"[SPEED UPDATE] ⚠️ 未找到數據載入器")
+                        
+                        # 嘗試直接更新數據（使用JSON數據）
+                        if json_data:
+                            print(f"[SPEED UPDATE] 嘗試直接使用JSON數據更新")
+                            widget.update_speed_data(json_data)
+            else:
+                print(f"[SPEED UPDATE] ⚠️ 未找到速度分析圖表組件")
+                
+            print(f"[SPEED UPDATE] ========== 速度分析圖表更新完成 ==========")
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED UPDATE] 速度分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -5017,6 +5612,12 @@ class StyleHMainWindow(QMainWindow):
         """為功能樹的分析項目創建新視窗 - 升級支援模組化架構"""
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
+        
+        # 特殊處理：圈速分析直接調用 lap_analysis 方法
+        if "圈速" in function_name:
+            print(f"[圈速分析] 檢測到圈速分析請求: {function_name}")
+            self.lap_analysis()
+            return
 
         # 獲取當前活動的分頁
         current_tab = self.tab_widget.currentWidget()
@@ -5147,8 +5748,8 @@ class StyleHMainWindow(QMainWindow):
                 "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
                 "進站分析": "pitstop_analysis",  # 進站分析映射
                 "事故分析": "accident_analysis",  # 事故分析映射
-                "遙測": ModuleTypes.TELEMETRY_SPEED,
-                "速度": ModuleTypes.TELEMETRY_SPEED,
+                "速度分析": "speed_analysis",  # 速度分析映射
+                "遙測": "telemetry_analysis",  # 遙測也使用新版模組
                 "煞車": ModuleTypes.TELEMETRY_BRAKE,
                 "制動": ModuleTypes.TELEMETRY_BRAKE,
                 "油門": ModuleTypes.TELEMETRY_THROTTLE,
@@ -5167,7 +5768,7 @@ class StyleHMainWindow(QMainWindow):
                     module_type = mod_type
                     break
             
-            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis" or module_type == "telemetry_analysis"):
+            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis" or module_type == "telemetry_analysis" or module_type == "speed_analysis"):
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
                 
@@ -5272,6 +5873,40 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組創建失敗: {e}")
+                        return None
+                
+                # 特殊處理速度分析模組
+                elif module_type == "speed_analysis":
+                    try:
+                        from modules.speed_analysis_mdi import SpeedAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建速度分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = SpeedAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 速度分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 速度分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 速度分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 速度分析模組創建失敗: {e}")
                         return None
                 else:
                     # 創建模組
@@ -5462,6 +6097,23 @@ class StyleHMainWindow(QMainWindow):
                 
                 return universal_widgets
             
+            def find_speed_analysis_widgets(widget):
+                """遞歸查找 SpeedAnalysisChartWidget"""
+                from modules.speed_analysis_chart_widget import SpeedAnalysisChartWidget
+                speed_widgets = []
+                
+                # 檢查當前widget
+                if isinstance(widget, SpeedAnalysisChartWidget):
+                    speed_widgets.append(widget)
+                
+                # 遞歸檢查所有子widget
+                if hasattr(widget, 'children'):
+                    for child in widget.children():
+                        if isinstance(child, QWidget):
+                            speed_widgets.extend(find_speed_analysis_widgets(child))
+                
+                return speed_widgets
+            
             for i, subwindow in enumerate(subwindows):
                 if subwindow and subwindow.widget():
                     widget = subwindow.widget()
@@ -5472,8 +6124,10 @@ class StyleHMainWindow(QMainWindow):
                     telemetry_widgets = find_telemetry_widgets(widget)
                     # 遞歸查找所有 UniversalChartWidget
                     universal_widgets = find_universal_chart_widgets(widget)
+                    # 遞歸查找所有 SpeedAnalysisChartWidget
+                    speed_widgets = find_speed_analysis_widgets(widget)
                     
-                    print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表")
+                    print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表, {len(speed_widgets)} 個速度分析圖表")
                     
                     if telemetry_widgets:
                         for telemetry_widget in telemetry_widgets:
@@ -5560,6 +6214,14 @@ class StyleHMainWindow(QMainWindow):
                             reset_count += 1
                             print(f"[OK] 通用圖表重置完成: {universal_widget.title}")
                     
+                    # 處理速度分析圖表 (SpeedAnalysisChartWidget)
+                    if speed_widgets:
+                        for speed_widget in speed_widgets:
+                            print(f"[TARGET] 重置速度分析圖表")
+                            speed_widget.reset_chart_view()
+                            reset_count += 1
+                            print(f"[OK] 速度分析圖表重置完成")
+                    
                     # 檢查是否為其他類型的圖表或可縮放小部件
                     elif hasattr(widget, 'fit_to_view'):
                         # 如果小部件有適合視圖的方法
@@ -5602,9 +6264,319 @@ class StyleHMainWindow(QMainWindow):
         pass
         
     def lap_analysis(self): 
+        """圈速分析 - 彈出選項對話框讓使用者選擇要顯示的遙測圖表和車手"""
         params = self.get_current_parameters()
-        #print(f"[分析] 圈速分析 - {params['year']} {params['race']} {params['session']}")
-        pass
+        print(f"[分析] 圈速分析 - {params['year']} {params['race']} {params['session']}")
+        
+        try:
+            # 移除歡迎頁面（如果存在）
+            self.remove_welcome_tab()
+            
+            # 彈出選項對話框
+            dialog = LapAnalysisOptionsDialog(self)
+            
+            if dialog.exec_() == QDialog.Accepted:
+                selected_charts = dialog.get_selected_charts()
+                driver_info = dialog.get_selected_drivers()
+                
+                driver1 = driver_info['driver1']
+                driver2 = driver_info['driver2']
+                lap1_number = driver_info['lap1_number']
+                lap2_number = driver_info['lap2_number']
+                lap_type = driver_info['lap_type']
+                is_fastest_lap = driver_info['is_fastest_lap']
+                
+                if not selected_charts:
+                    QMessageBox.information(self, "提示", "沒有選擇任何圖表，將不會開啟視窗。")
+                    return
+                
+                if not driver1:
+                    QMessageBox.information(self, "提示", "請選擇至少一位車手。")
+                    return
+                
+                print(f"[圈速分析] 使用者選擇的圖表: {selected_charts}")
+                print(f"[圈速分析] 選擇的車手: 車手1={driver1}, 車手2={driver2 if driver2 else '無'}")
+                if is_fastest_lap:
+                    print(f"[圈速分析] 圈數設定: 最速圈")
+                else:
+                    if driver2:
+                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}圈, 車手2第{lap2_number}圈")
+                    else:
+                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}圈")
+                
+                # 為每個選擇的圖表類型創建視窗
+                for chart_type in selected_charts:
+                    # 特殊處理：將速度圖表映射到速度分析
+                    if chart_type == 'speed':
+                        chart_type = 'speed_analysis'
+                        print(f"[圈速分析] 映射 'speed' -> 'speed_analysis'")
+                    
+                    self.create_telemetry_window(chart_type, params, driver1, driver2, lap1_number, lap2_number, lap_type, is_fastest_lap)
+                
+                driver_summary = f"車手: {driver1}" + (f" vs {driver2}" if driver2 else "")
+                if is_fastest_lap:
+                    lap_summary = "最速圈"
+                else:
+                    if driver2:
+                        lap_summary = f"車手1第{lap1_number}圈, 車手2第{lap2_number}圈"
+                    else:
+                        lap_summary = f"第{lap1_number}圈"
+                print(f"[OK] 圈速分析完成，已開啟 {len(selected_charts)} 個遙測圖表視窗 ({driver_summary}, {lap_summary})")
+            else:
+                print(f"[圈速分析] 使用者取消了分析")
+                
+        except Exception as e:
+            print(f"[ERROR] 圈速分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.show_error_message("圈速分析錯誤", f"開啟圈速分析時發生錯誤: {e}")
+    
+    def create_telemetry_window(self, chart_type, params, driver1=None, driver2=None, lap1_number=1, lap2_number=1, lap_type="最快圈", is_fastest_lap=False):
+        """創建單個遙測圖表視窗 - 支援速度分析"""
+        print(f"[CREATE_DEBUG] ========== 創建遙測視窗 ==========")
+        print(f"[CREATE_DEBUG] 圖表類型: {chart_type}")
+        print(f"[CREATE_DEBUG] 參數: {params}")
+        print(f"[CREATE_DEBUG] 車手: {driver1} vs {driver2}")
+        print(f"[CREATE_DEBUG] 圈數: {lap1_number} vs {lap2_number}")
+        
+        # 獲取當前分頁的 MDI 區域 - 提前定義避免變量未定義錯誤
+        current_mdi_area = self.get_current_mdi_area()
+        if not current_mdi_area:
+            print("[ERROR] 無法獲取當前 MDI 區域")
+            return
+        
+        try:
+            # 檢查是否為速度分析 - 使用新版模組架構
+            if chart_type == 'speed_analysis':
+                print(f"[CREATE_DEBUG] 🎯 檢測到速度分析請求，嘗試新版模組架構")
+                
+                # 使用新版模組化架構創建速度分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入速度分析模組...")
+                    from modules.speed_analysis_mdi import SpeedAnalysisModule
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = SpeedAnalysisModule()
+                    analysis_module.parameter_provider = self
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化速度分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題
+                        window_title = analysis_module.get_window_title()
+                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        
+                        # 創建帶有模組的視窗
+                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置視窗大小
+                        width, height = analysis_module.get_default_size()
+                        sub_window.resize(width, height)
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 速度分析模組視窗已創建: {window_title}")
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 速度分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] 速度分析模組創建失敗: {e}，回退到舊版模式")
+                    import traceback
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版速度分析模式")
+                
+                # 回退：特殊處理速度分析（舊版模式）
+                if driver2 is None:
+                    driver2 = driver1
+                    lap2_number = lap1_number
+                    print(f"[SPEED] 速度分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
+                
+                # 創建速度分析組件（舊版）
+                try:
+                    from modules.speed_analysis_chart_widget import SpeedAnalysisChartWidget
+                    from modules.speed_analysis_data_loader import SpeedAnalysisDataLoader
+                    
+                    chart_widget = SpeedAnalysisChartWidget()
+                    
+                    # 創建數據載入器
+                    speed_loader = SpeedAnalysisDataLoader()
+                    speed_loader.data_loaded.connect(chart_widget.update_speed_data)
+                    speed_loader.load_error.connect(lambda error: print(f"[ERROR] 速度數據載入失敗: {error}"))
+                    
+                    # 開始載入數據
+                    print(f"[SPEED] 開始載入速度數據: {driver1} vs {driver2}")
+                    speed_loader.load_speed_data(
+                        year=params['year'],
+                        race=params['race'], 
+                        session=params['session'],
+                        driver1=driver1,
+                        driver2=driver2,
+                        lap1=lap1_number,
+                        lap2=lap2_number,
+                        is_fastest_lap=is_fastest_lap
+                    )
+                    
+                    # 將載入器保存到widget以避免被回收
+                    chart_widget.speed_loader = speed_loader
+                    
+                    # 舊版速度分析視窗創建（僅作為回退，應該避免使用）
+                    print(f"[WARNING] [LEGACY] 使用舊版速度分析創建模式")
+                    
+                except ImportError as e:
+                    print(f"[ERROR] 無法導入速度分析模組: {e}")
+                    chart_widget = self.create_placeholder_telemetry_widget('speed_analysis')
+                
+            elif chart_type in ['speed', 'brake', 'throttle', 'steering']:
+                # 這些是現有的TelemetryChartWidget支援的類型
+                chart_widget = TelemetryChartWidget(chart_type)
+            else:
+                # 對於其他類型，創建佔位符Widget
+                chart_widget = self.create_placeholder_telemetry_widget(chart_type)
+            
+            # 獲取圖表類型的中文名稱和圖示
+            chart_info = self.get_chart_info(chart_type)
+            
+            # 構建視窗標題，包含車手和圈數資訊
+            driver_info = ""
+            if driver1:
+                driver_info = f" - {driver1}"
+                if driver2:
+                    driver_info += f" vs {driver2}"
+            
+            # 添加圈數資訊
+            lap_info = ""
+            if is_fastest_lap:
+                lap_info = " (最速圈)"
+            else:
+                if driver2:
+                    lap_info = f" (車手1第{lap1_number}圈, 車手2第{lap2_number}圈)"
+                else:
+                    lap_info = f" (第{lap1_number}圈)"
+            
+            window_title = f"{chart_info['icon']} {chart_info['name']}{driver_info}{lap_info} - {params['year']} {params['race']} {params['session']}"
+            
+            sub_window = PopoutSubWindow(window_title, current_mdi_area)
+            sub_window.setWidget(chart_widget)
+            
+            # 設置視窗大小 - 速度分析需要更大的視窗
+            if chart_type == 'speed_analysis':
+                sub_window.resize(900, 600)  # 速度分析使用更大尺寸
+            else:
+                sub_window.resize(600, 400)
+            
+            # 添加到MDI區域
+            current_mdi_area.addSubWindow(sub_window)
+            sub_window.show()
+            
+            print(f"[OK] 已創建遙測視窗: {window_title}")
+            
+        except Exception as e:
+            print(f"[ERROR] 創建遙測視窗失敗 ({chart_type}): {e}")
+    
+    def get_current_mdi_area(self):
+        """獲取當前分頁的 MDI 區域"""
+        try:
+            # 獲取當前分頁
+            current_tab = self.tab_widget.currentWidget()
+            if not current_tab:
+                print("[ERROR] 無法獲取當前分頁")
+                return None
+            
+            # 在當前分頁中查找 CustomMdiArea
+            def find_mdi_area(widget):
+                if isinstance(widget, CustomMdiArea):
+                    return widget
+                
+                # 遞歸查找子元件
+                if hasattr(widget, 'children'):
+                    for child in widget.children():
+                        if isinstance(child, QWidget):
+                            result = find_mdi_area(child)
+                            if result:
+                                return result
+                return None
+            
+            mdi_area = find_mdi_area(current_tab)
+            if not mdi_area:
+                print("[ERROR] 在當前分頁中未找到 MDI 區域")
+                return None
+            
+            print(f"[OK] 找到當前 MDI 區域: {mdi_area.objectName()}")
+            return mdi_area
+            
+        except Exception as e:
+            print(f"[ERROR] 獲取當前 MDI 區域失敗: {e}")
+            return None
+
+    def create_placeholder_telemetry_widget(self, chart_type):
+        """為尚未實現的圖表類型創建佔位符Widget"""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        chart_info = self.get_chart_info(chart_type)
+        
+        # 標題
+        title_label = QLabel(f"{chart_info['icon']} {chart_info['name']}")
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet("font-size: 18px; font-weight: bold; color: #0078d4; margin: 20px;")
+        layout.addWidget(title_label)
+        
+        # 訊息
+        message_label = QLabel("此圖表類型正在開發中...\n請等待後續版本更新")
+        message_label.setAlignment(Qt.AlignCenter)
+        message_label.setStyleSheet("font-size: 14px; color: #666; margin: 20px;")
+        layout.addWidget(message_label)
+        
+        # 狀態標籤
+        status_label = QLabel("🚧 開發中 🚧")
+        status_label.setAlignment(Qt.AlignCenter)
+        status_label.setStyleSheet("font-size: 16px; color: #ff6600; font-weight: bold; margin: 20px;")
+        layout.addWidget(status_label)
+        
+        layout.addStretch()
+        
+        return widget
+    
+    def get_chart_info(self, chart_type):
+        """獲取圖表類型的資訊"""
+        chart_info_map = {
+            'speed_analysis': {'name': '速度分析', 'icon': '⚡'},  # 新增速度分析
+            # 'speed': {'name': '速度圖表', 'icon': '🏃'},  # 移除速度圖表
+            'brake': {'name': '煞車圖表', 'icon': '🛑'},
+            'throttle': {'name': '油門圖表', 'icon': '⚡'},
+            'steering': {'name': '轉向圖表', 'icon': '🎯'},
+            'gear': {'name': '檔位圖表', 'icon': '⚙️'},
+            'rpm': {'name': '轉速圖表', 'icon': '🔄'},
+            'acceleration': {'name': '加速度圖表', 'icon': '📈'},
+            'speed_diff': {'name': '速度差圖表', 'icon': '📊'},
+            'distance_diff': {'name': '累積距離差圖表', 'icon': '📏'}
+        }
+        
+        return chart_info_map.get(chart_type, {'name': '未知圖表', 'icon': '❓'})
         
     def open_track_analysis_window(self):
         """開啟賽道分析視窗"""
@@ -5798,60 +6770,68 @@ class StyleHMainWindow(QMainWindow):
             
         # 獲取所有子視窗
         subwindows = mdi_area.subWindowList()
+        print(f"[TILE DEBUG] 找到 {len(subwindows)} 個子視窗")
+        
         if not subwindows:
+            print(f"[TILE DEBUG] 沒有子視窗需要排列")
             return
         
-        # 檢查並清理未追蹤的視窗
-        if hasattr(self, 'active_subwindows'):
-            # 檢查不一致
-            if len(subwindows) != len(self.active_subwindows):
-                # 找出多餘的視窗 - 使用物件引用而非標題
-                tracked_windows = set(self.active_subwindows)
-                ghost_windows = []
-                
-                for subwindow in subwindows:
-                    if subwindow not in tracked_windows:
-                        ghost_windows.append(subwindow)
-                
-                # 清理未追蹤的視窗
-                for ghost_window in ghost_windows:
-                    try:
-                        mdi_area.removeSubWindow(ghost_window)
-                        ghost_window.close()
-                        ghost_window.deleteLater()
-                    except Exception as e:
-                        pass
-                
-                # 重新獲取子視窗列表
-                subwindows = mdi_area.subWindowList()
+        # 移除有問題的清理邏輯 - 直接使用現有的子視窗列表
+        print(f"[TILE DEBUG] 準備排列 {len(subwindows)} 個視窗")
         
         # 計算排列配置
         available_width = mdi_area.width() - 20  # 預留邊距
         available_height = mdi_area.height() - 20
+        print(f"[TILE DEBUG] MDI區域大小: {mdi_area.width()}x{mdi_area.height()}")
+        print(f"[TILE DEBUG] 可用空間: {available_width}x{available_height}")
         
         # 計算最佳的行列配置
         num_windows = len(subwindows)
+        print(f"[TILE DEBUG] 視窗數量: {num_windows}")
+        
+        if num_windows == 0:
+            print(f"[TILE DEBUG] 視窗數量為0，退出")
+            return  # 沒有視窗需要排列
+            
         cols = int(num_windows ** 0.5)
+        print(f"[TILE DEBUG] 初始計算 cols: {cols}")
+        
+        if cols == 0:  # 防止除零錯誤
+            cols = 1
+            print(f"[TILE DEBUG] cols 修正為 1")
+            
         if cols * cols < num_windows:
             cols += 1
+            print(f"[TILE DEBUG] cols 調整為: {cols}")
+            
         rows = (num_windows + cols - 1) // cols
+        print(f"[TILE DEBUG] 計算得到 rows: {rows}")
+        
+        if rows == 0:  # 額外保護
+            rows = 1
+            print(f"[TILE DEBUG] rows 修正為 1")
         
         # 計算每個視窗的尺寸
-        window_width = available_width // cols
-        window_height = available_height // rows
+        window_width = available_width // cols if cols > 0 else available_width
+        window_height = available_height // rows if rows > 0 else available_height
+        print(f"[TILE DEBUG] 每個視窗尺寸: {window_width}x{window_height}")
         
         # 確保最小尺寸
         min_width, min_height = 250, 150
         window_width = max(window_width, min_width)
         window_height = max(window_height, min_height)
+        print(f"[TILE DEBUG] 調整後視窗尺寸: {window_width}x{window_height}")
         
         # 排列視窗
+        print(f"[TILE DEBUG] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
         for i, subwindow in enumerate(subwindows):
             row = i // cols
             col = i % cols
             
             x = col * window_width + 10
             y = row * window_height + 10
+            
+            print(f"[TILE DEBUG] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
             
             # 設置視窗位置和尺寸
             subwindow.setGeometry(x, y, window_width, window_height)

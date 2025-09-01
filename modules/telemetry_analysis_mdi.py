@@ -135,7 +135,7 @@ class TelemetryDataManager(QObject):
                         print(f"[FOUND] 遙測JSON檔案: {search_path}")
                         return search_path
             
-            # 模糊搜尋 - 嚴格匹配賽事名稱
+            # 模糊搜尋 - 嚴格匹配賽事名稱，避免誤判比較遙測檔案
             import glob
             for search_dir in search_dirs:
                 if not os.path.exists(search_dir):
@@ -151,12 +151,41 @@ class TelemetryDataManager(QObject):
                     search_path = os.path.join(search_dir, fuzzy_pattern)
                     files = glob.glob(search_path)
                     if files:
-                        # 雙重檢查：確保檔案名稱包含正確的賽事名稱
+                        # 三重檢查：確保檔案名稱包含正確的賽事名稱且不是比較遙測檔案
                         for file_path in files:
                             filename = os.path.basename(file_path).lower()
+                            
+                            # 排除比較遙測檔案和其他非分析檔案
+                            if any(exclude_pattern in filename for exclude_pattern in [
+                                "comparison", "compare", "vs", "_vs_", "raw_data", "export"
+                            ]):
+                                print(f"[SKIP] 跳過非分析檔案: {file_path}")
+                                continue
+                                
+                            # 確保包含賽事名稱
                             if race.lower() in filename:
-                                print(f"[FUZZY] 遙測JSON檔案: {file_path}")
-                                return file_path
+                                # 優先選擇包含 "analysis" 或 "all_drivers" 的檔案
+                                if any(priority_pattern in filename for priority_pattern in [
+                                    "analysis", "all_drivers", "telemetry_analysis"
+                                ]):
+                                    # 快速驗證檔案內容是否為有效的遙測分析檔案
+                                    if self._quick_validate_file(file_path):
+                                        print(f"[FUZZY] 遙測JSON檔案 (優先): {file_path}")
+                                        return file_path
+                                    else:
+                                        print(f"[SKIP] 檔案驗證失敗: {file_path}")
+                                        continue
+                                else:
+                                    print(f"[FUZZY] 遙測JSON檔案 (備選): {file_path}")
+                                    backup_file = file_path
+                        
+                        # 如果沒找到優先檔案，驗證並使用備選檔案
+                        if 'backup_file' in locals():
+                            if self._quick_validate_file(backup_file):
+                                print(f"[FUZZY] 使用備選遙測JSON檔案: {backup_file}")
+                                return backup_file
+                            else:
+                                print(f"[SKIP] 備選檔案驗證失敗: {backup_file}")
             
             print(f"[NOT_FOUND] 未找到遙測JSON檔案")
             return None
@@ -165,6 +194,32 @@ class TelemetryDataManager(QObject):
             print(f"[ERROR] 搜尋遙測檔案時發生錯誤: {str(e)}")
             self.error_occurred.emit(f"搜尋檔案時發生錯誤: {str(e)}")
             return None
+    
+    def _quick_validate_file(self, file_path: str) -> bool:
+        """快速驗證檔案是否為有效的遙測分析檔案"""
+        try:
+            # 簡單檢查檔案內容的前幾行，避免完整載入大檔案
+            with open(file_path, 'r', encoding='utf-8') as f:
+                # 讀取前1000個字符來快速檢查
+                preview = f.read(1000)
+                
+            # 檢查是否包含遙測分析的關鍵字段
+            required_patterns = ['all_drivers_telemetry', 'driver_info', 'lap_time_analysis']
+            exclude_patterns = ['comparison', 'compare', 'vs']
+            
+            # 確保包含必要字段
+            if not any(pattern in preview for pattern in required_patterns):
+                return False
+                
+            # 確保不包含排除字段
+            if any(pattern in preview for pattern in exclude_patterns):
+                return False
+                
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] 快速驗證檔案失敗: {e}")
+            return False
     
     def _load_telemetry_json(self, file_path: str):
         """載入遙測JSON檔案"""
@@ -194,12 +249,23 @@ class TelemetryDataManager(QObject):
             self._is_loading = False
     
     def _validate_telemetry_data(self, data: dict) -> bool:
-        """驗證遙測數據格式"""
+        """驗證遙測數據格式 - 增強版，排除比較遙測檔案"""
         try:
             if not isinstance(data, dict):
                 print(f"[ERROR] 遙測數據不是字典格式")
                 return False
-                
+            
+            # 首先檢查是否為比較遙測檔案（應該被排除）
+            comparison_indicators = [
+                'comparison_data', 'driver_comparison', 'lap_comparison', 
+                'telemetry_comparison', 'compare_analysis'
+            ]
+            
+            for indicator in comparison_indicators:
+                if indicator in data:
+                    print(f"[ERROR] 檢測到比較遙測檔案，拒絕載入: {indicator}")
+                    return False
+            
             # 檢查不同可能的數據格式
             telemetry_data = None
             
@@ -215,7 +281,7 @@ class TelemetryDataManager(QObject):
                 print(f"[INFO] 檢測到直接格式：all_drivers_telemetry")
             
             if telemetry_data and isinstance(telemetry_data, dict):
-                # 檢查是否有車手數據
+                # 檢查是否有車手數據且數量合理（比較遙測通常只有2個車手）
                 if len(telemetry_data) > 0:
                     # 檢查第一個車手的數據結構
                     first_driver = list(telemetry_data.values())[0]
@@ -226,8 +292,24 @@ class TelemetryDataManager(QObject):
                             print(f"[ERROR] 缺少必需的遙測數據字段: {key}")
                             return False
                     
-                    print(f"[OK] 遙測數據格式驗證通過，包含 {len(telemetry_data)} 位車手")
-                    return True
+                    # 額外檢查：所有車手分析通常包含多位車手（>= 3）
+                    # 比較遙測通常只有2位車手
+                    driver_count = len(telemetry_data)
+                    if driver_count >= 3:
+                        print(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（符合所有車手分析）")
+                        return True
+                    elif driver_count == 2:
+                        # 檢查是否真的是所有車手分析（可能是只有2位車手的比賽）
+                        # 檢查是否有analysis_summary等指標
+                        if 'analysis_summary' in data.get('data', {}):
+                            print(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（含分析摘要）")
+                            return True
+                        else:
+                            print(f"[WARNING] 只有2位車手且無分析摘要，可能是比較遙測檔案")
+                            return False
+                    else:
+                        print(f"[ERROR] 車手數量不足: {driver_count}")
+                        return False
             
             print(f"[ERROR] 無效的遙測數據格式")
             return False

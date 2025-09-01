@@ -1130,32 +1130,31 @@ class F1AnalysisFunctionMapper:
             
             if single_driver_mode:
                 print(f"[STATS] 單車手分析模式: {driver1}")
-                print(f"[BALANCE] 執行單車手遙測分析: {driver1}")
+                print(f"[BALANCE] 執行單車手圈速分析: {driver1}")
                 print(f"   • 圈數: 第 {lap1} 圈")
-                print(f"   • 包含: 速度/RPM/油門/煞車/檔位/加速度分析")
+                print(f"   • 輸出格式: driver_data_{driver1}_{getattr(self.data_loader, 'year', 2025)}_{getattr(self.data_loader, 'race_name', 'Japan')}_{getattr(self.data_loader, 'session_type', 'R')}_Lap{lap1}.json")
+                print(f"   • 圖表生成: 已禁用")
                 
-                # 單車手模式：使用詳細遙測分析，但將兩個車手設為相同以獲取詳細數據
-                from modules.two_driver_telemetry_comparison_fixed import run_two_driver_telemetry_comparison_analysis
-                
-                # 準備參數，避免重複
-                analysis_kwargs = {k: v for k, v in kwargs.items() if k not in ['year', 'race', 'session', 'driver', 'driver2', 'lap_number', 'show_detailed_output']}
+                # 單車手模式：使用車手圈速分析模組
+                from modules.single_driver_laptime_analysis import SingleDriverLaptimeAnalysis
                 
                 try:
-                    result = run_two_driver_telemetry_comparison_analysis(
+                    analyzer = SingleDriverLaptimeAnalysis(
                         data_loader=self.data_loader,
                         year=getattr(self.data_loader, 'year', 2025),
                         race=getattr(self.data_loader, 'race_name', 'Japan'),
-                        session=getattr(self.data_loader, 'session_type', 'R'),
-                        driver=driver1,
-                        driver2=driver1,  # 單車手模式：兩個車手相同以獲取詳細遙測數據
-                        lap_number=lap1,  # 使用正確的lap1參數
-                        show_detailed_output=show_detailed_output,
-                        **analysis_kwargs
+                        session=getattr(self.data_loader, 'session_type', 'R')
                     )
+                    
+                    # 執行分析並獲取結果
+                    result = analyzer.analyze_lap_times(driver=driver1, lap_number=lap1, **kwargs)
+                    
                     if result and result.get("success"):
+                        # 保存為指定格式的JSON檔案
+                        self._save_driver_data_json(result, driver1, lap1)
                         return result
                 except Exception as e:
-                    print(f"[ERROR] 單車手遙測分析失敗: {e}")
+                    print(f"[ERROR] 單車手圈速分析失敗: {e}")
                 
                 # 如果遙測分析失敗，回退到基本分析
                 print("[REFRESH] 回退到基本車手分析...")
@@ -1170,6 +1169,11 @@ class F1AnalysisFunctionMapper:
                     lap2=None,
                     show_detailed_output=show_detailed_output
                 )
+                
+                # 即使回退，也要保存為正確格式的JSON檔案
+                if result and result.get("success"):
+                    self._save_driver_data_json(result, driver1, lap1)
+                    
                 return result
                 
             else:
@@ -1182,7 +1186,7 @@ class F1AnalysisFunctionMapper:
             from modules.two_driver_telemetry_comparison_fixed import run_two_driver_telemetry_comparison_analysis
             
             # 準備參數，避免重複
-            analysis_kwargs = {k: v for k, v in kwargs.items() if k not in ['year', 'race', 'session', 'driver', 'driver2', 'lap_number', 'show_detailed_output']}
+            analysis_kwargs = {k: v for k, v in kwargs.items() if k not in ['year', 'race', 'session', 'driver', 'driver2', 'lap_number', 'lap1', 'lap2', 'show_detailed_output']}
             
             result = run_two_driver_telemetry_comparison_analysis(
                 data_loader=self.data_loader,
@@ -1191,7 +1195,9 @@ class F1AnalysisFunctionMapper:
                 session=getattr(self.data_loader, 'session_type', 'R'),
                 driver=driver1,
                 driver2=driver2,
-                lap_number=lap1,
+                lap_number=lap1,  # 保持向後兼容
+                lap1=lap1,
+                lap2=lap2,
                 show_detailed_output=show_detailed_output,
                 **analysis_kwargs
             )
@@ -2717,6 +2723,33 @@ class F1AnalysisFunctionMapper:
         except Exception as e:
             print(f"[ERROR] 單一車手綜合分析執行失敗: {e}")
             return {"success": False, "error": str(e), "function_id": "11"}
+
+    def _save_driver_data_json(self, result, driver, lap_number):
+        """保存車手資料為指定格式的JSON檔案"""
+        try:
+            import json
+            import os
+            
+            # 創建 json 目錄
+            json_dir = "json"
+            os.makedirs(json_dir, exist_ok=True)
+            
+            # 生成檔案名稱: driver_data_VER_2025_Japan_R_Lap12.json
+            year = getattr(self.data_loader, 'year', 2025)
+            race = getattr(self.data_loader, 'race_name', 'Japan')
+            session = getattr(self.data_loader, 'session_type', 'R')
+            
+            filename = f"driver_data_{driver}_{year}_{race}_{session}_Lap{lap_number}.json"
+            filepath = os.path.join(json_dir, filename)
+            
+            # 保存JSON檔案
+            with open(filepath, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+            
+            print(f"💾 車手資料JSON已保存: {filepath}")
+            
+        except Exception as e:
+            print(f"⚠️ 車手資料JSON保存失敗: {e}")
 
 # ===== 支援函數和工具 =====
 

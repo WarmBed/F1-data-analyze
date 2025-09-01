@@ -1193,7 +1193,13 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
                         
                         # 即使使用緩存，也保存JSON以顯示最新路徑 - 符合開發核心要求
                         single_mode = driver2 is None or driver1_name == driver2_name
-                        _save_driver_analysis_json(cached_result, driver1_name, driver2_name, data_loader, single_mode)
+                        # 從緩存數據中嘗試提取圈數資訊
+                        lap_num = None
+                        if 'driver_analysis' in comparison_analysis:
+                            lap_num = comparison_analysis['driver_analysis']['driver'].get('lap_number')
+                        elif 'driver_comparison' in comparison_analysis:
+                            lap_num = comparison_analysis['driver_comparison']['driver1'].get('lap_number')
+                        _save_driver_analysis_json(cached_result, driver1_name, driver2_name, data_loader, single_mode, lap_num)
                     else:
                         _display_cached_detailed_output_driver_comparison(cached_result)
                         
@@ -1203,7 +1209,15 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
                             d1 = metadata.get('driver1', driver1 or 'Driver1')
                             d2 = metadata.get('driver2', driver2 or 'Driver2')
                             single_mode = driver2 is None or d1 == d2
-                            _save_driver_analysis_json(cached_result, d1, d2, data_loader, single_mode)
+                            # 嘗試從緩存數據中提取圈數
+                            lap_num = None
+                            if 'comparison_analysis' in cached_result:
+                                analysis = cached_result['comparison_analysis']
+                                if 'driver_analysis' in analysis:
+                                    lap_num = analysis['driver_analysis']['driver'].get('lap_number')
+                                elif 'driver_comparison' in analysis:
+                                    lap_num = analysis['driver_comparison']['driver1'].get('lap_number')
+                            _save_driver_analysis_json(cached_result, d1, d2, data_loader, single_mode, lap_num)
                         except Exception as e:
                             print(f"⚠️ JSON保存失敗: {e}")
                     
@@ -1619,8 +1633,15 @@ def run_driver_comparison_json(data_loader, f1_analysis_instance=None, enable_de
         else:
             _display_driver_comparison_detailed_results(comparison_analysis, selected_driver1, selected_driver2)
         
-        # 保存JSON結果 - 使用新的命名格式
-        _save_driver_analysis_json(result_data, selected_driver1, selected_driver2, data_loader, single_driver_mode)
+        # 保存JSON結果 - 使用新的命名格式，包含圈數資訊
+        lap_number_for_file = None
+        if single_driver_mode and lap_data1 is not None:
+            lap_number_for_file = int(lap_data1['LapNumber'])
+        elif not single_driver_mode and lap_data1 is not None and lap_data2 is not None:
+            # 對於雙車手比較，可以選擇使用第一位車手的圈數，或組合圈數
+            lap_number_for_file = f"{int(lap_data1['LapNumber'])}_vs_{int(lap_data2['LapNumber'])}"
+        
+        _save_driver_analysis_json(result_data, selected_driver1, selected_driver2, data_loader, single_driver_mode, lap_number_for_file)
         
         # 顯示結果反饋
         _report_driver_analysis_results(result_data, single_driver_mode)
@@ -1951,7 +1972,7 @@ def _display_driver_comparison_detailed_results(comparison_analysis, driver1, dr
     except Exception as e:
         print(f"⚠️ 詳細結果顯示失敗: {e}")
 
-def _save_driver_analysis_json(result_data, driver1, driver2, data_loader, single_driver_mode):
+def _save_driver_analysis_json(result_data, driver1, driver2, data_loader, single_driver_mode, lap_number=None):
     """保存車手分析的JSON結果 - 新的命名格式 driver_data_駕駛員_YYYY_賽事_賽段.json"""
     try:
         import json
@@ -2082,8 +2103,11 @@ def _save_driver_analysis_json(result_data, driver1, driver2, data_loader, singl
                 "timestamp": datetime.now().isoformat(),
                 "data": result_data
             }
-            # 單車手文件名: driver_data_VER_2025_Japan_R.json
-            filename = f"driver_data_{driver1}_{year}_{race}_{session}.json"
+            # 單車手文件名: driver_data_VER_2025_Japan_R_Lap12.json (包含圈數)
+            if lap_number is not None:
+                filename = f"driver_data_{driver1}_{year}_{race}_{session}_Lap{lap_number}.json"
+            else:
+                filename = f"driver_data_{driver1}_{year}_{race}_{session}.json"
         else:
             json_data = {
                 "function_id": 13,
@@ -2093,8 +2117,11 @@ def _save_driver_analysis_json(result_data, driver1, driver2, data_loader, singl
                 "timestamp": datetime.now().isoformat(),
                 "data": result_data
             }
-            # 雙車手文件名: driver_data_VER_vs_LEC_2025_Japan_R.json
-            filename = f"driver_data_{driver1}_vs_{driver2}_{year}_{race}_{session}.json"
+            # 雙車手文件名: driver_data_VER_vs_LEC_2025_Japan_R_Lap12_vs_15.json (包含圈數)
+            if lap_number is not None:
+                filename = f"driver_data_{driver1}_vs_{driver2}_{year}_{race}_{session}_Lap{lap_number}.json"
+            else:
+                filename = f"driver_data_{driver1}_vs_{driver2}_{year}_{race}_{session}.json"
         
         filepath = os.path.join(json_dir, filename)
         

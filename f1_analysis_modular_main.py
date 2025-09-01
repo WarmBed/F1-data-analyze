@@ -555,6 +555,8 @@ class F1AnalysisModularCLI:
                 driver=getattr(self.args, 'driver', None),
                 driver2=getattr(self.args, 'driver2', None),
                 lap=getattr(self.args, 'lap', None),
+                lap1=getattr(self.args, 'lap1', None),
+                lap2=getattr(self.args, 'lap2', None),
                 corner=getattr(self.args, 'corner', None),
                 show_detailed_output=show_detailed_output
             )
@@ -1459,7 +1461,7 @@ class F1AnalysisModularCLI:
             print("\n[ERROR] 此程式僅支援參數化模式運行")
             print("請提供必要的參數來執行分析功能")
             print("\n使用範例:")
-            print("  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1")
+            print("  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 1")
             print("  python f1_analysis_modular_main.py --help  # 查看完整參數說明")
             return False
         
@@ -1475,7 +1477,7 @@ class F1AnalysisModularCLI:
         
         # 載入數據
         year = self.args.year if self.args.year else 2025
-        race = self.args.race if self.args.race else "Japan"
+        race = self.args.race if self.args.race else "China"
         session = self.args.session if self.args.session else "R"
         
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
@@ -1514,7 +1516,7 @@ class F1AnalysisModularCLI:
                 return False
         else:
             print("[ERROR] 參數模式需要指定功能編號 (-f)")
-            print("範例: python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1")
+            print("範例: python f1_analysis_modular_main.py -y 2025 -r China -s R -f 1")
             print("使用 --help 查看所有可用參數和功能")
             return False
 
@@ -1527,16 +1529,16 @@ def create_argument_parser():
         epilog='''
 使用範例 (僅支援參數化模式):
   # 直接執行降雨強度分析
-  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1
+  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 1
   
   # 執行速度差距分析 (指定車手)
-  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 7.1 -d VER -d2 LEC
+  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 7.1 -d VER -d2 LEC
   
   # 執行詳細DNF分析 (指定車手)
-  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 11.1 -d VER
+  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 11.1 -d VER
   
   # 執行事故分析功能8 (所有事件詳細列表)
-  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 8
+  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 8
   
   # 顯示支援的賽事列表
   python f1_analysis_modular_main.py --list-races
@@ -1580,7 +1582,7 @@ def create_argument_parser():
     parser.add_argument('-y', '--year', type=int, choices=[2024, 2025], 
                        help='賽季年份 (2024 或 2025)')
     parser.add_argument('-r', '--race', type=str,
-                       help='賽事名稱 (如: Japan, Bahrain, Australia 等)')
+                       help='賽事名稱 (如: China, Bahrain, Australia 等)')
     parser.add_argument('-s', '--session', type=str,
                        help='賽段類型 (R=正賽, Q=排位賽, FP1/FP2/FP3=練習賽, S=短衝刺賽)')
     
@@ -1597,6 +1599,10 @@ def create_argument_parser():
     # 分析參數
     parser.add_argument('--lap', type=int,
                        help='指定圈數 (用於特定圈數的遙測分析)')
+    parser.add_argument('--lap1', type=int,
+                       help='車手1的指定圈數 (用於雙車手比較分析)')
+    parser.add_argument('--lap2', type=int,
+                       help='車手2的指定圈數 (用於雙車手比較分析)')
     parser.add_argument('--corner', type=int,
                        help='指定彎道編號 (用於彎道詳細分析，如: 1, 2, 3 等)')
     
@@ -1639,6 +1645,7 @@ def main():
         success = cli.run()
         
         if not success:
+            print("[ERROR] 分析執行失敗")
             sys.exit(1)
         
     except KeyboardInterrupt:
