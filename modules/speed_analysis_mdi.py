@@ -53,7 +53,7 @@ class SpeedDataManager(QObject):
         
     def load_speed_data(self, year: str, race: str, session: str, 
                        driver1: str = "VER", driver2: str = "VER",
-                       lap1: int = 1, lap2: int = 1) -> bool:
+                       lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """載入速度對比數據"""
         try:
             print(f"[SPEED_MDI_DATA] ========== 載入速度數據 ==========")
@@ -68,6 +68,15 @@ class SpeedDataManager(QObject):
             self._is_loading = True
             self.loading_progress.emit(0)
             self.status_changed.emit("開始載入速度數據...")
+            
+            # 檢查最速圈選項並自動載入遙測分析
+            if is_fastest or lap1 == "fastest" or lap2 == "fastest":
+                print(f"🔄 [SPEED_MDI_DATA] 檢測到最速圈選項，檢查遙測分析數據...")
+                self._check_and_load_telemetry_if_needed()
+                
+                # 解析最速圈參數為實際圈數
+                lap1, lap2 = self._resolve_lap_numbers(lap1, lap2, driver1, driver2, is_fastest)
+                print(f"🔢 [SPEED_MDI_DATA] 最速圈解析完成: {driver1}=第{lap1}圈, {driver2}=第{lap2}圈")
             
             print(f"[SPEED_MDI_DATA] 🔗 創建 SpeedAnalysisDataLoader...")
             
@@ -92,7 +101,7 @@ class SpeedDataManager(QObject):
                 driver2=driver2,
                 lap1=lap1,
                 lap2=lap2,
-                is_fastest_lap=False
+                is_fastest_lap=is_fastest  # 修正：使用傳入的is_fastest參數
             )
             
             # 保存載入器引用避免被回收
@@ -105,6 +114,128 @@ class SpeedDataManager(QObject):
             self.error_occurred.emit(f"載入失敗: {str(e)}")
             self._is_loading = False
             return False
+
+    def _check_and_load_telemetry_if_needed(self):
+        """檢查並在需要時載入遙測分析"""
+        try:
+            print(f"📞 [SPEED_MDI] 調用主視窗開啟遙測分析...")
+            
+            # 通過主視窗調用遙測分析
+            if hasattr(self, 'parent_window') and self.parent_window:
+                if hasattr(self.parent_window, 'open_telemetry_analysis'):
+                    self.parent_window.open_telemetry_analysis()
+                    print(f"✅ [SPEED_MDI] 遙測分析已觸發")
+                    return True
+                elif hasattr(self.parent_window, 'create_telemetry_analysis_tab'):
+                    self.parent_window.create_telemetry_analysis_tab()
+                    print(f"✅ [SPEED_MDI] 遙測分析已觸發")
+                    return True
+                else:
+                    print(f"❌ [SPEED_MDI] 主視窗沒有遙測分析方法")
+                    return False
+            else:
+                print(f"❌ [SPEED_MDI] 找不到主視窗引用")
+                return False
+                
+        except Exception as e:
+            print(f"❌ [SPEED_MDI] 觸發遙測分析時發生錯誤: {e}")
+            return False
+
+    def _get_fastest_lap_number(self, driver: str) -> int:
+        """從遙測分析數據獲取指定車手的最速圈數"""
+        try:
+            print(f"🔍 [SPEED_MDI] 開始搜尋 {driver} 的最速圈數據...")
+            
+            # 搜尋遙測分析JSON檔案
+            telemetry_patterns = [
+                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}.json"
+            ]
+            
+            search_dirs = ["json", "json_exports", "cache"]
+            telemetry_file = None
+            
+            for directory in search_dirs:
+                if os.path.exists(directory):
+                    for pattern in telemetry_patterns:
+                        file_path = os.path.join(directory, pattern)
+                        if os.path.exists(file_path):
+                            telemetry_file = file_path
+                            print(f"📁 [SPEED_MDI] 找到遙測檔案: {telemetry_file}")
+                            break
+                    if telemetry_file:
+                        break
+            
+            if not telemetry_file:
+                print(f"❌ [SPEED_MDI] 找不到遙測分析檔案，使用預設圈數 1")
+                return 1
+                
+            # 讀取並解析遙測分析數據
+            with open(telemetry_file, 'r', encoding='utf-8') as f:
+                telemetry_data = json.load(f)
+            
+            print(f"📊 [SPEED_MDI] 遙測檔案讀取成功，開始解析最速圈數據...")
+            
+            # 嘗試多種數據結構格式
+            fastest_lap_num = None
+            
+            # 格式1: data.all_drivers_telemetry[driver].fastest_lap
+            if 'data' in telemetry_data and 'all_drivers_telemetry' in telemetry_data['data']:
+                driver_data = telemetry_data['data']['all_drivers_telemetry'].get(driver)
+                if driver_data and 'fastest_lap' in driver_data:
+                    fastest_lap_num = driver_data['fastest_lap'].get('lap_number')
+                    if fastest_lap_num:
+                        print(f"✅ [SPEED_MDI] 從格式1找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                        return int(fastest_lap_num)
+            
+            # 格式2: data.fastest_laps中的列表
+            if 'data' in telemetry_data and 'fastest_laps' in telemetry_data['data']:
+                for fastest_data in telemetry_data['data']['fastest_laps']:
+                    if fastest_data.get('driver') == driver:
+                        fastest_lap_num = fastest_data.get('lap_number')
+                        if fastest_lap_num:
+                            print(f"✅ [SPEED_MDI] 從格式2找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                            return int(fastest_lap_num)
+            
+            # 格式3: 直接在data下按車手分組
+            if 'data' in telemetry_data:
+                driver_data = telemetry_data['data'].get(driver)
+                if driver_data and 'fastest_lap_number' in driver_data:
+                    fastest_lap_num = driver_data['fastest_lap_number']
+                    print(f"✅ [SPEED_MDI] 從格式3找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                    return int(fastest_lap_num)
+            
+            print(f"⚠️ [SPEED_MDI] 無法找到 {driver} 的最速圈數據，使用預設圈數 1")
+            return 1
+            
+        except Exception as e:
+            print(f"❌ [SPEED_MDI] 解析最速圈數據時發生錯誤: {e}")
+            return 1
+
+    def _resolve_lap_numbers(self, lap1, lap2, driver1, driver2, is_fastest):
+        """解析圈數參數，將'fastest'轉換為實際圈數"""
+        try:
+            resolved_lap1 = lap1
+            resolved_lap2 = lap2
+            
+            # 處理lap1
+            if lap1 == "fastest" or is_fastest:
+                print(f"🔄 [SPEED_MDI] 解析 {driver1} 的最速圈...")
+                resolved_lap1 = self._get_fastest_lap_number(driver1)
+                
+            # 處理lap2
+            if lap2 == "fastest" or is_fastest:
+                print(f"🔄 [SPEED_MDI] 解析 {driver2} 的最速圈...")
+                resolved_lap2 = self._get_fastest_lap_number(driver2)
+            
+            print(f"📊 [SPEED_MDI] 圈數解析結果: {driver1}=第{resolved_lap1}圈, {driver2}=第{resolved_lap2}圈")
+            
+            return int(resolved_lap1), int(resolved_lap2)
+            
+        except Exception as e:
+            print(f"❌ [SPEED_MDI] 解析圈數時發生錯誤: {e}")
+            return 1, 1
     
     def _on_data_loaded(self, data: dict):
         """處理數據載入完成"""
@@ -417,6 +548,21 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[SPEED_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[SPEED_MDI] 最速圈: {is_fastest}")
             
+            # 檢查是否需要最速圈數據
+            if is_fastest:
+                print(f"[SPEED_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
+                fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
+                if fastest_laps:
+                    # 使用最速圈數據更新圈數
+                    if driver1 in fastest_laps:
+                        lap1 = fastest_laps[driver1]
+                        print(f"[SPEED_MDI] 🏁 車手 {driver1} 最速圈: 第{lap1}圈")
+                    if driver2 and driver2 in fastest_laps:
+                        lap2 = fastest_laps[driver2]
+                        print(f"[SPEED_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
+                else:
+                    print(f"[SPEED_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
+            
             # 檢查參數是否有變化
             params_changed = (
                 self.current_year != str(year) or 
@@ -695,7 +841,200 @@ class SpeedAnalysisModule(IAnalysisModule):
         except Exception as e:
             print(f"[ERROR] [SPEED_MDI] get_current_data 失敗: {e}")
             return None
-    
+
+    def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
+        """確保遙測分析數據存在，並獲取最速圈數據
+        
+        Returns:
+            Dict[str, int]: 車手代碼到最速圈數的映射，例如 {'VER': 15, 'LEC': 23}
+        """
+        try:
+            print(f"[SPEED_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
+            
+            # 檢查遙測分析JSON檔案是否存在
+            telemetry_file = self._find_telemetry_analysis_file()
+            
+            if not telemetry_file:
+                print(f"[SPEED_MDI] 📡 遙測分析數據不存在，開始自動載入...")
+                success = self._trigger_telemetry_analysis()
+                if success:
+                    # 重新檢查檔案
+                    telemetry_file = self._find_telemetry_analysis_file()
+                else:
+                    print(f"[SPEED_MDI] ❌ 遙測分析載入失敗")
+                    return None
+            
+            if telemetry_file:
+                print(f"[SPEED_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
+                return self._extract_fastest_laps_from_telemetry(telemetry_file)
+            else:
+                print(f"[SPEED_MDI] ❌ 無法獲取遙測分析數據")
+                return None
+                
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
+            return None
+
+    def _find_telemetry_analysis_file(self) -> Optional[str]:
+        """尋找遙測分析JSON檔案"""
+        try:
+            import glob
+            
+            # 搜尋可能的檔案位置
+            search_patterns = [
+                f"json/telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"json/telemetry_analysis_{self.current_year}_{self.current_race}.json",
+                f"json_exports/telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"json_exports/telemetry_analysis_{self.current_year}_{self.current_race}.json"
+            ]
+            
+            for pattern in search_patterns:
+                matching_files = glob.glob(pattern)
+                if matching_files:
+                    print(f"[SPEED_MDI] 🎯 找到遙測分析檔案: {matching_files[0]}")
+                    return matching_files[0]
+            
+            # 如果沒找到精確匹配，嘗試模糊搜尋
+            fuzzy_pattern = f"json*/telemetry_analysis*{self.current_year}*{self.current_race}*.json"
+            matching_files = glob.glob(fuzzy_pattern)
+            if matching_files:
+                print(f"[SPEED_MDI] 🔍 模糊搜尋找到遙測分析檔案: {matching_files[0]}")
+                return matching_files[0]
+            
+            print(f"[SPEED_MDI] ❌ 未找到遙測分析檔案")
+            return None
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] _find_telemetry_analysis_file 失敗: {e}")
+            return None
+
+    def _trigger_telemetry_analysis(self) -> bool:
+        """觸發遙測分析載入/生成"""
+        try:
+            print(f"[SPEED_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
+            
+            # 方法1: 嘗試通過主視窗找到遙測分析模組
+            if hasattr(self, 'parent_window') and self.parent_window:
+                main_window = self.parent_window
+                # 尋找主視窗的父級(可能是F1T主視窗)
+                while main_window.parent():
+                    main_window = main_window.parent()
+                
+                # 檢查是否有MDI區域
+                if hasattr(main_window, 'mdi_area'):
+                    # 檢查是否已有遙測分析視窗
+                    for sub_window in main_window.mdi_area.subWindowList():
+                        window_title = sub_window.windowTitle()
+                        if "遙測分析" in window_title:
+                            print(f"[SPEED_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
+                            # 激活並刷新遙測分析視窗
+                            main_window.mdi_area.setActiveSubWindow(sub_window)
+                            return True
+                    
+                    # 如果沒有遙測分析視窗，嘗試創建一個
+                    print(f"[SPEED_MDI] 📡 嘗試創建遙測分析視窗...")
+                    if hasattr(main_window, 'create_telemetry_analysis'):
+                        main_window.create_telemetry_analysis()
+                        return True
+            
+            # 方法2: 通過CLI生成遙測分析數據
+            print(f"[SPEED_MDI] 🔧 通過CLI生成遙測分析數據...")
+            return self._generate_telemetry_via_cli()
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] _trigger_telemetry_analysis 失敗: {e}")
+            return False
+
+    def _generate_telemetry_via_cli(self) -> bool:
+        """通過CLI生成遙測分析數據"""
+        try:
+            import subprocess
+            import threading
+            import time
+            
+            # 構建CLI命令 - 功能7是遙測分析
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "7",  # 功能7: 遙測分析
+                "-y", str(self.current_year),
+                "-r", self.current_race,
+                "-s", self.current_session
+            ]
+            
+            print(f"[SPEED_MDI] 🔧 執行CLI命令: {' '.join(command)}")
+            
+            # 同步執行CLI命令（因為速度分析需要立即使用結果）
+            process = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',
+                cwd=os.getcwd()
+            )
+            
+            stdout, stderr = process.communicate(timeout=120)  # 2分鐘超時
+            
+            if process.returncode == 0:
+                print(f"[SPEED_MDI] ✅ 遙測分析CLI執行成功")
+                # 等待檔案寫入完成
+                time.sleep(2)
+                return True
+            else:
+                print(f"[SPEED_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
+                return False
+                
+        except subprocess.TimeoutExpired:
+            print(f"[SPEED_MDI] ⏰ 遙測分析CLI執行超時")
+            process.kill()
+            return False
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] _generate_telemetry_via_cli 失敗: {e}")
+            return False
+
+    def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:
+        """從遙測分析JSON檔案中提取最速圈數據"""
+        try:
+            import json
+            
+            print(f"[SPEED_MDI] 📊 讀取遙測分析檔案: {telemetry_file}")
+            
+            with open(telemetry_file, 'r', encoding='utf-8') as f:
+                telemetry_data = json.load(f)
+            
+            fastest_laps = {}
+            
+            # 檢查數據結構
+            if 'data' in telemetry_data:
+                driver_data = telemetry_data['data']
+            else:
+                driver_data = telemetry_data
+            
+            # 提取每個車手的最速圈數
+            for driver_code, driver_info in driver_data.items():
+                if isinstance(driver_info, dict):
+                    lap_analysis = driver_info.get('lap_time_analysis', {})
+                    fastest_lap = lap_analysis.get('fastest_lap', {})
+                    lap_number = fastest_lap.get('lap_number')
+                    
+                    if lap_number and lap_number != 'N/A':
+                        try:
+                            fastest_laps[driver_code] = int(lap_number)
+                            print(f"[SPEED_MDI] 🏁 {driver_code} 最速圈: 第{lap_number}圈")
+                        except (ValueError, TypeError):
+                            print(f"[SPEED_MDI] ⚠️ {driver_code} 最速圈數無效: {lap_number}")
+            
+            if fastest_laps:
+                print(f"[SPEED_MDI] ✅ 成功提取 {len(fastest_laps)} 個車手的最速圈數據")
+                return fastest_laps
+            else:
+                print(f"[SPEED_MDI] ❌ 未找到有效的最速圈數據")
+                return None
+                
+        except Exception as e:
+            print(f"[ERROR] [SPEED_MDI] _extract_fastest_laps_from_telemetry 失敗: {e}")
+            return None
+
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數更新通知
         
