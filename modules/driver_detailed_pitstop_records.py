@@ -208,16 +208,51 @@ def analyze_driver_detailed_pitstops(data_loader, session_info):
         # 創建 OpenF1 分析器
         openf1_analyzer = F1OpenDataAnalyzer()
         
+        # 🔧 修正：賽事名稱映射 - 解決FastF1和OpenF1命名不一致問題 (同步功能3)
+        event_name = session_info.get('event_name', 'Unknown')
+        race_name_mapping = {
+            'British Grand Prix': 'britain',
+            'Japanese Grand Prix': 'japan', 
+            'Australian Grand Prix': 'australia',
+            'Chinese Grand Prix': 'china',  # 添加中國大獎賽映射
+            'Monaco Grand Prix': 'monaco',
+            'Spanish Grand Prix': 'spain',
+            'Canadian Grand Prix': 'canada',
+            'Austrian Grand Prix': 'austria',
+            'French Grand Prix': 'france',
+            'Hungarian Grand Prix': 'hungary',
+            'Belgian Grand Prix': 'belgium',
+            'Italian Grand Prix': 'italy',
+            'Singapore Grand Prix': 'singapore',
+            'Russian Grand Prix': 'russia',
+            'Turkish Grand Prix': 'turkey',
+            'United States Grand Prix': 'usa',
+            'Mexican Grand Prix': 'mexico',
+            'Brazilian Grand Prix': 'brazil',
+            'Abu Dhabi Grand Prix': 'abu dhabi',
+            'Bahrain Grand Prix': 'bahrain',
+            'Saudi Arabian Grand Prix': 'saudi arabia'
+        }
+        
+        # 標準化賽事名稱
+        search_name = race_name_mapping.get(event_name, event_name.lower())
+        print(f"🔍 搜尋賽事會話: '{event_name}' -> '{search_name}'")
+        
         # 根據年份和比賽名稱找到對應的 session_key
         race_session = openf1_analyzer.find_race_session_by_name(
-            session_info.get('year'), session_info.get('event_name')
+            session_info.get('year'), search_name
         )
         
         if not race_session:
-            print("[ERROR] 無法找到對應的比賽會話")
+            print(f"[ERROR] 無法找到對應的比賽會話: {event_name} ({search_name})")
             return None
         
         session_key = race_session.get('session_key')
+        session_type = race_session.get('session_type', 'Unknown')
+        session_name = race_session.get('session_name', 'Unknown')
+        location = race_session.get('location', 'Unknown')
+        
+        print(f"✅ 找到比賽會話: {location} | Type: {session_type} | Name: {session_name}")
         print(f"📡 從 OpenF1 API 獲取進站數據 (session_key: {session_key})...")
         
         # 獲取 OpenF1 進站數據
@@ -239,10 +274,9 @@ def analyze_driver_detailed_pitstops(data_loader, session_info):
             team = driver_info.get('team_name', 'Unknown Team')
             pit_duration = stop.get('pit_duration')
             
-            # 只處理有效的進站時間（通常在 15-60 秒之間，過濾掉無效的巨大數值）
-            # 同時排除第1圈的起始位置數據
+            # 🔧 修正：使用與功能3相同的篩選條件，確保數據一致性
             lap_number = stop.get('lap_number', 0)
-            if pit_duration is not None and 15.0 <= pit_duration <= 60.0 and lap_number > 1:
+            if pit_duration is not None and pit_duration > 0:
                 if driver not in driver_records:
                     driver_records[driver] = []
                 
@@ -518,6 +552,10 @@ def _display_cached_detailed_output(driver_records, session_info):
     print("\n💾 數據來源: 緩存檔案")
     print(f"📅 賽事: {session_info.get('year', 'Unknown')} {session_info.get('event_name', 'Unknown')}")
     print(f"🏁 賽段: {session_info.get('session', 'Unknown')}")
+    
+    # 🔧 修正：即使使用緩存數據也要保存JSON檔案
+    save_json_results(driver_records, session_info, "driver_detailed_pitstop_records")
+    
     print("✅ 緩存數據詳細輸出完成")
 
 
