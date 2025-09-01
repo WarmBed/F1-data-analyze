@@ -822,7 +822,7 @@ class SpeedAnalysisChartWidget(QWidget):
         separator2.setStyleSheet("color: #bdc3c7;")
         layout.addWidget(separator2)
         
-        # 輪胎圈數資訊 - 改為可編輯的輸入框
+        # 輪胎圈數資訊 - 改為只顯示的標籤
         tyre_life_container = QWidget()
         tyre_life_layout = QHBoxLayout(tyre_life_container)
         tyre_life_layout.setContentsMargins(0, 0, 0, 0)
@@ -833,42 +833,46 @@ class SpeedAnalysisChartWidget(QWidget):
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         
-        # 車手1圈數輸入
-        self.lap1_spinbox = QSpinBox()
-        self.lap1_spinbox.setRange(1, 99)
-        self.lap1_spinbox.setValue(1)
-        self.lap1_spinbox.setStyleSheet("""
-            QSpinBox {
+        # 車手1圈數顯示（只讀）
+        self.lap1_display = QLabel("1")
+        self.lap1_display.setStyleSheet("""
+            QLabel {
                 font-size: 10px; 
                 border: 1px solid #bdc3c7; 
                 border-radius: 2px;
                 padding: 2px;
                 max-width: 40px;
+                min-width: 40px;
+                background-color: #f8f9fa;
+                color: #2c3e50;
+                text-align: center;
             }
         """)
-        self.lap1_spinbox.valueChanged.connect(self._on_lap_changed)
-        tyre_life_layout.addWidget(self.lap1_spinbox)
+        self.lap1_display.setAlignment(Qt.AlignCenter)
+        tyre_life_layout.addWidget(self.lap1_display)
         
         # vs 標籤
         vs_label = QLabel("vs")
         vs_label.setStyleSheet("font-size: 10px; color: #7f8c8d;")
         tyre_life_layout.addWidget(vs_label)
         
-        # 車手2圈數輸入
-        self.lap2_spinbox = QSpinBox()
-        self.lap2_spinbox.setRange(1, 99)
-        self.lap2_spinbox.setValue(1)
-        self.lap2_spinbox.setStyleSheet("""
-            QSpinBox {
+        # 車手2圈數顯示（只讀）
+        self.lap2_display = QLabel("1")
+        self.lap2_display.setStyleSheet("""
+            QLabel {
                 font-size: 10px; 
                 border: 1px solid #bdc3c7; 
                 border-radius: 2px;
                 padding: 2px;
                 max-width: 40px;
+                min-width: 40px;
+                background-color: #f8f9fa;
+                color: #2c3e50;
+                text-align: center;
             }
         """)
-        self.lap2_spinbox.valueChanged.connect(self._on_lap_changed)
-        tyre_life_layout.addWidget(self.lap2_spinbox)
+        self.lap2_display.setAlignment(Qt.AlignCenter)
+        tyre_life_layout.addWidget(self.lap2_display)
         
         layout.addWidget(tyre_life_container)
         
@@ -1127,38 +1131,22 @@ class SpeedAnalysisChartWidget(QWidget):
         if hasattr(self, 'chart_widget'):
             self.chart_widget.clear_fixed_line()
     
-    def _on_lap_changed(self):
-        """處理圈數變更"""
+    def get_lap_numbers(self):
+        """獲取當前顯示的圈數（只讀）"""
         try:
-            print(f"[LAP_CHANGE] ========== 圈數變更觸發 ==========")
-            lap1 = self.lap1_spinbox.value()
-            lap2 = self.lap2_spinbox.value()
-            print(f"[LAP_CHANGE] 用戶變更圈數: 第{lap1}圈 vs 第{lap2}圈")
-            
-            # 發送圈數變更信號
-            print(f"[LAP_CHANGE] 🚀 準備發射圈數變更信號...")
-            self.lap_numbers_changed.emit(lap1, lap2)
-            print(f"[LAP_CHANGE] ✅ 圈數變更信號已發射")
-            
-        except Exception as e:
-            print(f"[ERROR] 處理圈數變更失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            lap1 = int(self.lap1_display.text())
+            lap2 = int(self.lap2_display.text())
+            return lap1, lap2
+        except (ValueError, AttributeError) as e:
+            print(f"[ERROR] 獲取圈數失敗: {e}")
+            return 1, 1
     
     def set_lap_numbers(self, lap1: int, lap2: int):
-        """設置圈數（不觸發信號）"""
+        """設置圈數（更新只讀顯示）"""
         try:
-            # 暫時斷開信號連接
-            self.lap1_spinbox.valueChanged.disconnect()
-            self.lap2_spinbox.valueChanged.disconnect()
-            
-            # 設置值
-            self.lap1_spinbox.setValue(lap1)
-            self.lap2_spinbox.setValue(lap2)
-            
-            # 重新連接信號
-            self.lap1_spinbox.valueChanged.connect(self._on_lap_changed)
-            self.lap2_spinbox.valueChanged.connect(self._on_lap_changed)
+            # 直接更新顯示標籤的文本
+            self.lap1_display.setText(str(lap1))
+            self.lap2_display.setText(str(lap2))
             
             print(f"[LAP_SET] 圈數已設置: 第{lap1}圈 vs 第{lap2}圈")
             

@@ -7,8 +7,13 @@
 
 import sys
 import os
-import json
 import glob
+import json
+import pickle
+import time
+from datetime import datetime
+import pandas as pd
+import fastf1
 import subprocess
 import threading
 from typing import Dict, List, Any, Optional
@@ -52,6 +57,17 @@ class SpeedAnalysisDataLoader(QObject):
             print(f"[SPEED DEBUG]   車手1: {driver1}, 圈數: {lap1}")
             print(f"[SPEED DEBUG]   車手2: {driver2}, 圈數: {lap2}")
             print(f"[SPEED DEBUG]   最快圈: {is_fastest_lap}")
+            
+            # 檢測同車手同圈數的特殊情況
+            if driver2 and driver1 == driver2 and lap1 == lap2:
+                print(f"[SPEED DEBUG] 🔍 檢測到同車手同圈數特殊情況: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+                print(f"[SPEED DEBUG] ⚠️ 注意：這種情況 CLI -f13 會生成 comparison_type: 'same_driver' 的特殊JSON格式")
+            elif driver2 and driver1 == driver2:
+                print(f"[SPEED DEBUG] 🔍 檢測到同車手不同圈數情況: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            elif driver2:
+                print(f"[SPEED DEBUG] 🔍 標準雙車手比較: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            else:
+                print(f"[SPEED DEBUG] 🔍 單車手分析: {driver1} 第{lap1}圈")
             
             if self._is_loading:
                 self.load_error.emit("載入器正忙，請稍後再試")
@@ -100,76 +116,76 @@ class SpeedAnalysisDataLoader(QObject):
                              lap1: int = 1, lap2: int = 1) -> Optional[str]:
         """搜尋速度分析數據檔案"""
         try:
-            print(f"[SPEED DEBUG] ========== 搜尋速度分析檔案 ==========")
-            print(f"[SPEED DEBUG] 搜尋條件: {year} {race} {session}")
+            print(f"[JSON_SEARCH] ========== 搜尋速度分析檔案 ==========")
+            print(f"[JSON_SEARCH] 🔍 搜尋條件:")
+            print(f"[JSON_SEARCH]   📅 年份: {year}")
+            print(f"[JSON_SEARCH]   🏁 賽事: {race}")
+            print(f"[JSON_SEARCH]   🏁 賽段: {session}")
+            print(f"[JSON_SEARCH]   🏎️ 車手1: {driver1} (第{lap1}圈)")
+            print(f"[JSON_SEARCH]   🏎️ 車手2: {driver2} (第{lap2}圈)")
             
             # 搜尋目錄
             search_dirs = ["json", "json_exports", "cache"]
-            print(f"[SPEED DEBUG] 搜尋目錄: {search_dirs}")
+            print(f"[JSON_SEARCH] 📂 搜尋目錄: {search_dirs}")
             
             # 構建檔案名稱搜尋模式
             if driver2:
-                # 雙車手對比檔案，支援兩種格式：
-                # 1. 相同圈數：comparison_telemetry_車手1_車手2_YYYY_賽事_賽段_Lap圈數.json
-                # 2. 不同圈數：comparison_telemetry_車手1_車手2_YYYY_賽事_賽段_Lap圈數1_Lap圈數2.json
+                # 雙車手對比檔案 - 只允許精確搜尋模式，避免誤判
                 filename_patterns = [
-                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap*_Lap*.json",  # 不同圈數格式
-                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap*.json"       # 相同圈數格式
+                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json"   # 只允許模式1：精確匹配
                 ]
-                print(f"[SPEED DEBUG] 雙車手檔案搜尋模式:")
-                for pattern in filename_patterns:
-                    print(f"[SPEED DEBUG]   - {pattern}")
+                print(f"[JSON_SEARCH] 🔄 雙車手檔案搜尋模式（僅精確搜尋）:")
+                for i, pattern in enumerate(filename_patterns, 1):
+                    print(f"[JSON_SEARCH]   {i}. {pattern}")
+                print(f"[JSON_SEARCH] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判")
             else:
-                # 單車手分析檔案，同樣支援兩種格式
+                # 單車手檔案
                 filename_patterns = [
-                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*_Lap*.json",  # 不同圈數格式  
-                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*.json"       # 相同圈數格式
+                    f"speed_telemetry_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
+                    f"speed_telemetry_{driver1}_{year}_{race}_{session}_Lap*.json"
                 ]
-                print(f"[SPEED DEBUG] 單車手檔案搜尋模式:")
-                for pattern in filename_patterns:
-                    print(f"[SPEED DEBUG]   - {pattern}")
-                # 備用：傳統格式
-                fallback_filename = f"driver_data_{driver1}_{year}_{race}_{session}_Lap{lap1}.json"
-                print(f"[SPEED DEBUG] 備用檔案名稱: {fallback_filename}")
+                print(f"[JSON_SEARCH] 👤 單車手檔案搜尋模式:")
+                for i, pattern in enumerate(filename_patterns, 1):
+                    print(f"[JSON_SEARCH]   {i}. {pattern}")
             
             # 精確搜尋
-            print(f"[SPEED DEBUG] 開始精確搜尋...")
+            print(f"[JSON_SEARCH] 🔍 開始精確搜尋...")
             found_file = None
             
             for search_dir in search_dirs:
+                print(f"[JSON_SEARCH] 📂 搜尋目錄: {search_dir}")
+                
                 # 按順序搜尋各種模式
-                for filename_pattern in filename_patterns:
+                for i, filename_pattern in enumerate(filename_patterns, 1):
                     search_pattern = os.path.join(search_dir, filename_pattern)
-                    print(f"[SPEED DEBUG]   搜尋模式: {search_pattern}")
+                    print(f"[JSON_SEARCH]   🔍 模式 {i}: {search_pattern}")
                     matches = glob.glob(search_pattern)
                     
                     if matches:
                         # 如果有多個匹配，選擇最新的
                         found_file = max(matches, key=os.path.getmtime)
-                        print(f"[SPEED DEBUG] ✅ 找到遙測檔案: {found_file}")
+                        print(f"[JSON_SEARCH] ✅ 找到檔案: {found_file}")
+                        print(f"[JSON_SEARCH] 📊 匹配檔案數量: {len(matches)}")
+                        if len(matches) > 1:
+                            print(f"[JSON_SEARCH] 📋 所有匹配檔案:")
+                            for match in matches:
+                                print(f"[JSON_SEARCH]     - {match}")
                         break
+                    else:
+                        print(f"[JSON_SEARCH]   ❌ 模式 {i} 無匹配")
                 
                 # 如果找到檔案就跳出目錄循環
                 if found_file:
                     break
                 
-                # 如果是單車手模式且找不到遙測檔案，嘗試備用格式
-                if not driver2:
-                    fallback_path = os.path.join(search_dir, fallback_filename)
-                    print(f"[SPEED DEBUG]   檢查備用: {fallback_path}")
-                    if os.path.exists(fallback_path):
-                        found_file = fallback_path
-                        print(f"[SPEED DEBUG] ✅ 找到備用檔案: {found_file}")
-                        break
-                    print(f"[SPEED DEBUG]   備用檔案不存在")
-                
-                print(f"[SPEED DEBUG]   該目錄未找到匹配檔案")
+                print(f"[JSON_SEARCH] ❌ 目錄 {search_dir} 無匹配檔案")
             
             if found_file:
+                print(f"[JSON_SEARCH] ✅ 搜尋成功: {found_file}")
                 return found_file
             
             # 精確搜尋失敗，直接生成新檔案
-            print(f"[SPEED] 未找到符合的JSON檔案，需要生成新檔案")
+            print(f"[JSON_SEARCH] ❌ 未找到符合的JSON檔案，需要生成新檔案")
             return None
             
         except Exception as e:

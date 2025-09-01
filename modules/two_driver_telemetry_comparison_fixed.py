@@ -758,13 +758,9 @@ class TwoDriverTelemetryComparison:
                 "results": analysis_result
             }
             
-            # 生成檔案名 - 支援雙圈數格式
-            if lap_number2 is not None and lap_number2 != lap_number1:
-                # 不同圈數的情況
-                filename = f"comparison_telemetry_{driver1}_{driver2}_{self.year}_{self.race}_{self.session}_Lap{lap_number1}_Lap{lap_number2}.json"
-            else:
-                # 相同圈數的情況
-                filename = f"comparison_telemetry_{driver1}_{driver2}_{self.year}_{self.race}_{self.session}_Lap{lap_number1}.json"
+            # 生成檔案名 - 統一使用完整格式，即使是同車手同圈數
+            # 修改：始終使用 comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json 格式
+            filename = f"comparison_telemetry_{driver1}_{driver2}_{self.year}_{self.race}_{self.session}_Lap{lap_number1}_Lap{lap_number2}.json"
             
             filepath = os.path.join(json_dir, filename)
             
@@ -773,6 +769,7 @@ class TwoDriverTelemetryComparison:
             
             print(f"\n💾 JSON 遙測比較結果已保存到: {filepath}")
             print(f"📄 檔案名: {filename}")
+            print(f"🔄 使用統一命名格式: comparison_telemetry_{driver1}_{driver2}_{self.year}_{self.race}_{self.session}_Lap{lap_number1}_Lap{lap_number2}.json")
             
         except Exception as e:
             print(f"⚠️ JSON 保存失敗: {e}")

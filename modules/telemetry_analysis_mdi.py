@@ -560,7 +560,7 @@ class DriverTelemetryOverviewWidget(QWidget):
         # 設置表格標題
         headers = [
             "車手", "車隊", "初始排名", "最終排名", 
-            "最快圈時間", "平均圈速", "圈速穩定性",
+            "最快圈時間", "最速圈數", "平均圈速", "圈速穩定性",
             "最佳S1", "最佳S2", "最佳S3", "進站次數"
         ]
         
@@ -575,7 +575,7 @@ class DriverTelemetryOverviewWidget(QWidget):
     def configure_table_style(self):
         """設置表格樣式"""
         # 設置欄位寬度
-        widths = [60, 120, 80, 80, 100, 100, 100, 80, 80, 80, 80]
+        widths = [60, 120, 80, 80, 100, 80, 100, 100, 80, 80, 80, 80]
         for i, width in enumerate(widths):
             self.overview_table.setColumnWidth(i, width)
         
@@ -985,6 +985,7 @@ class DriverTelemetryOverviewWidget(QWidget):
             
             # 格式化圈速時間
             fastest_lap_time = self.format_lap_time(lap_analysis.get('fastest_lap', {}).get('lap_time', 'N/A'))
+            fastest_lap_number = lap_analysis.get('fastest_lap', {}).get('lap_number', 'N/A')
             avg_lap_time = self.format_lap_time(lap_analysis.get('statistics', {}).get('average_lap_time', 'N/A'))
             sector1_time = self.format_lap_time(sector_analysis.get('sector_1', {}).get('best_time', 'N/A'))
             sector2_time = self.format_lap_time(sector_analysis.get('sector_2', {}).get('best_time', 'N/A'))
@@ -997,6 +998,7 @@ class DriverTelemetryOverviewWidget(QWidget):
                 str(starting_pos),
                 str(final_pos),
                 fastest_lap_time,
+                str(fastest_lap_number),  # 新增：最速圈數
                 avg_lap_time,
                 lap_analysis.get('statistics', {}).get('lap_time_std', 'N/A'),
                 sector1_time,
@@ -1019,17 +1021,27 @@ class DriverTelemetryOverviewWidget(QWidget):
                         table_item = NumericTableWidgetItem(str(item), sort_value)
                     except:
                         table_item = NumericTableWidgetItem(str(item), 999)
-                elif col in [4, 5, 7, 8, 9]:  # 時間欄位
+                elif col == 4:  # 最快圈時間
                     # 為時間欄位設置秒數作為排序值
                     seconds = self.parse_time_to_seconds(str(item))
                     table_item = NumericTableWidgetItem(str(item), seconds)
-                elif col == 6:  # 圈速穩定性（數值）
+                elif col == 5:  # 最速圈數
+                    try:
+                        sort_value = int(item) if item != 'N/A' else 999
+                        table_item = NumericTableWidgetItem(str(item), sort_value)
+                    except:
+                        table_item = NumericTableWidgetItem(str(item), 999)
+                elif col in [6, 8, 9, 10]:  # 時間欄位（平均圈速、最佳S1、最佳S2、最佳S3）
+                    # 為時間欄位設置秒數作為排序值
+                    seconds = self.parse_time_to_seconds(str(item))
+                    table_item = NumericTableWidgetItem(str(item), seconds)
+                elif col == 7:  # 圈速穩定性（數值）
                     try:
                         sort_value = float(item) if item != 'N/A' else float('inf')
                         table_item = NumericTableWidgetItem(str(item), sort_value)
                     except:
                         table_item = NumericTableWidgetItem(str(item), float('inf'))
-                elif col == 10:  # 進站次數
+                elif col == 11:  # 進站次數
                     try:
                         sort_value = int(item) if item != 'N/A' else 0
                         table_item = NumericTableWidgetItem(str(item), sort_value)

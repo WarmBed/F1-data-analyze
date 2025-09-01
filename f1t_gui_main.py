@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import (
     QSplitter, QLineEdit, QStatusBar, QLabel, QProgressBar, QGroupBox,
     QFrame, QToolBar, QAction, QMenuBar, QMenu, QGridLayout, QLCDNumber,
     QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox,
-    QListWidget, QListWidgetItem
+    QListWidget, QListWidgetItem, QSpinBox
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect, QThread
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPainter, QPen, QBrush, QMouseEvent
@@ -4211,15 +4211,25 @@ class StyleHMainWindow(QMainWindow):
         self.mdi_areas = []  # 存儲所有MDI區域的引用
         print("[INIT] ✅ MDI區域引用已初始化")
         
+        # 初始化圈速分析狀態追蹤
+        self.lap_analysis_active = False  # 是否有圈速分析活動
+        self.lap_analysis_windows = set()  # 活動的圈速分析視窗集合
+        self.lap_controls_visible = False  # 圈速控件是否可見
+        self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
+        print("[INIT] ✅ 圈速分析狀態追蹤已初始化")
+        
         print("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
         print("[INIT] 🎨 開始應用樣式...")
         self.apply_style_h()
+        
         print("[INIT] ✅ 主視窗初始化完成！")
         
-        # 延遲檢查標籤欄隱藏狀態
+        # 延遲檢查標籤欄隱藏狀態和圈速控件狀態
         from PyQt5.QtCore import QTimer
         print("[INIT] ⏰ 設置延遲檢查機制 (1秒後執行)...")
+        
+        # 設置延遲檢查機制，確保標籤隱藏狀態正確
         QTimer.singleShot(1000, self.check_and_hide_tabs)
         
     def init_ui(self):
@@ -4228,7 +4238,9 @@ class StyleHMainWindow(QMainWindow):
         self.create_professional_menubar()
         
         # 創建工具欄
+        print("[INIT] 🔧 開始創建專業工具欄...")
         self.create_professional_toolbar()
+        print("[INIT] ✅ 專業工具欄創建完成")
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -4334,6 +4346,12 @@ class StyleHMainWindow(QMainWindow):
         self.session_combo.setFixedWidth(50)
         toolbar.addWidget(self.session_combo)
         
+        # 保存工具欄引用以便動態添加/移除控件
+        self.main_toolbar = toolbar
+        
+        # 建立圈速分析控件但不添加到工具欄（將在需要時動態添加）
+        self._create_lap_analysis_controls()
+        
         toolbar.addSeparator()
         
         # 檢視控制
@@ -4349,6 +4367,57 @@ class StyleHMainWindow(QMainWindow):
         
         # 初始化賽事列表
         self.on_year_changed(self.year_combo.currentText())
+    
+    def _create_lap_analysis_controls(self):
+        """創建圈速分析控件（不添加到工具欄）"""
+        print("[LAP_CONTROL] 🏗️ 創建圈速分析控件...")
+        
+        # 動態圈速分析控件
+        self.lap_separator = None
+        
+        # 車手1控件
+        self.driver1_label = QLabel("車手1:")
+        self.driver1_combo = QComboBox()
+        self.driver1_combo.setObjectName("ParameterCombo")
+        self.driver1_combo.setFixedWidth(60)
+        
+        # 圈數1控件
+        self.lap1_label = QLabel("圈數:")
+        self.lap1_spinbox = QSpinBox()
+        self.lap1_spinbox.setRange(1, 100)
+        self.lap1_spinbox.setValue(1)
+        self.lap1_spinbox.setFixedWidth(50)
+        
+        # 車手2控件
+        self.driver2_label = QLabel("車手2:")
+        self.driver2_combo = QComboBox()
+        self.driver2_combo.setObjectName("ParameterCombo")
+        self.driver2_combo.addItem("無")  # 預設選項
+        self.driver2_combo.setFixedWidth(60)
+        
+        # 圈數2控件
+        self.lap2_label = QLabel("圈數:")
+        self.lap2_spinbox = QSpinBox()
+        self.lap2_spinbox.setRange(1, 100)
+        self.lap2_spinbox.setValue(1)
+        self.lap2_spinbox.setFixedWidth(50)
+        
+        # 最速圈選項
+        self.fastest_lap_checkbox = QCheckBox("最速圈")
+        
+        # 更新按鈕動作（稍後動態添加）
+        self.update_all_action = None
+        
+        # 🔄 修改：移除即時連接，改為手動更新模式
+        # 原本：控件變更時立即觸發更新
+        # 現在：只有點擊「更新所有分析」按鈕時才更新
+        # self.driver1_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        # self.driver2_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        # self.lap1_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        # self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        # self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
+        
+        print("[LAP_CONTROL] ✅ 圈速分析控件創建完成（手動更新模式）")
     
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
@@ -4498,6 +4567,304 @@ class StyleHMainWindow(QMainWindow):
         self.update_status_bar()
         # 同步賽段到MDI子視窗
         self.sync_to_all_mdi_subwindows('session', session)
+    
+    # ========== 圈速分析控件管理 ==========
+    
+    def initialize_driver_lists(self):
+        """初始化車手列表"""
+        print("[LAP_CONTROL] 🎮 開始初始化車手列表")
+        import traceback
+        stack = traceback.format_stack()
+        print("[LAP_CONTROL] 📞 調用堆疊:")
+        for frame in stack[-3:]:  # 顯示最後3個堆疊框架
+            print(f"[LAP_CONTROL]   {frame.strip()}")
+            
+        try:
+            # 標準車手列表（2025賽季）
+            drivers = [
+                "VER", "PER", "LEC", "SAI", "HAM", "RUS", "NOR", "PIA", 
+                "ALO", "STR", "TSU", "YUK", "ALB", "SAR", "MAG", "HUL",
+                "GAS", "OCO", "BOT", "ZHO"
+            ]
+            
+            print("[LAP_CONTROL] 🔄 清空並填充車手列表...")
+            # 清空並添加車手到兩個下拉框
+            self.driver1_combo.clear()
+            self.driver1_combo.addItems(drivers)
+            self.driver1_combo.setCurrentText("VER")  # 預設選擇VER
+            print("[LAP_CONTROL] ✅ driver1_combo 設定完成")
+            
+            self.driver2_combo.clear()
+            self.driver2_combo.addItem("無")  # 第一個選項
+            self.driver2_combo.addItems(drivers)
+            self.driver2_combo.setCurrentText("無")  # 預設無第二車手
+            print("[LAP_CONTROL] ✅ driver2_combo 設定完成")
+            
+            print(f"[LAP_CONTROL] ✅ 已初始化車手列表，共 {len(drivers)} 位車手")
+            
+        except Exception as e:
+            print(f"[ERROR] [LAP_CONTROL] 初始化車手列表失敗: {e}")
+    
+    def show_lap_controls(self):
+        """顯示圈速分析控件（動態添加到工具欄）"""
+        print("[LAP_CONTROL] � 開始顯示圈速分析控件（動態添加）")
+        
+        # 檢查是否已經添加到工具欄
+        if hasattr(self, '_lap_controls_added') and self._lap_controls_added:
+            print("[LAP_CONTROL] ⚠️ 圈速分析控件已經在工具欄中，跳過重複添加")
+            return
+        
+        try:
+            # 初始化車手列表（如果還沒初始化）
+            if self.driver1_combo.count() == 0:
+                self.initialize_driver_lists()
+            
+            # 在賽事會話控件後添加分隔符
+            session_action = None
+            for action in self.main_toolbar.actions():
+                widget = self.main_toolbar.widgetForAction(action)
+                if widget == self.session_combo:
+                    session_action = action
+                    break
+            
+            if session_action:
+                # 找到會話控件的下一個位置
+                session_index = self.main_toolbar.actions().index(session_action)
+                next_action = None
+                if session_index + 1 < len(self.main_toolbar.actions()):
+                    next_action = self.main_toolbar.actions()[session_index + 1]
+                
+                # 添加分隔符
+                if next_action:
+                    self.lap_separator = self.main_toolbar.insertSeparator(next_action)
+                else:
+                    self.lap_separator = self.main_toolbar.addSeparator()
+                
+                # 依序添加圈速分析控件
+                controls_to_add = [
+                    self.driver1_label, self.driver1_combo,
+                    self.lap1_label, self.lap1_spinbox,
+                    self.driver2_label, self.driver2_combo,
+                    self.lap2_label, self.lap2_spinbox,
+                    self.fastest_lap_checkbox
+                ]
+                
+                for control in controls_to_add:
+                    if next_action:
+                        self.main_toolbar.insertWidget(next_action, control)
+                    else:
+                        self.main_toolbar.addWidget(control)
+                
+                # 添加更新按鈕
+                update_action = QAction("🔄 更新所有分析", self)
+                update_action.triggered.connect(self.update_all_lap_analysis)
+                
+                if next_action:
+                    self.update_all_action = self.main_toolbar.insertAction(next_action, update_action)
+                else:
+                    self.update_all_action = self.main_toolbar.addAction(update_action)
+                
+                print("[LAP_CONTROL] ✅ 圈速分析控件成功添加到工具欄")
+                self._lap_controls_added = True
+                self.lap_controls_visible = True
+                
+        except Exception as e:
+            print(f"[LAP_CONTROL] ❌ 添加圈速分析控件時發生錯誤: {e}")
+    
+    def hide_lap_controls(self):
+        """隱藏圈速分析控件（從工具欄移除）"""
+        if len(self.lap_analysis_windows) > 0:
+            print("[LAP_CONTROL] ⚠️ 還有圈速分析視窗開啟中，不隱藏控件")
+            return
+            
+        print("[LAP_CONTROL] 🔴 開始隱藏圈速分析控件（從工具欄移除）")
+        
+        # 檢查是否已經從工具欄移除
+        if not hasattr(self, '_lap_controls_added') or not self._lap_controls_added:
+            print("[LAP_CONTROL] ⚠️ 圈速分析控件已經不在工具欄中，跳過移除")
+            return
+        
+        try:
+            # 移除所有圈速分析控件
+            if hasattr(self, 'lap_separator') and self.lap_separator:
+                self.main_toolbar.removeAction(self.lap_separator)
+                self.lap_separator = None
+            
+            # 移除控件
+            controls_to_remove = [
+                self.driver1_label, self.driver1_combo,
+                self.lap1_label, self.lap1_spinbox,
+                self.driver2_label, self.driver2_combo,
+                self.lap2_label, self.lap2_spinbox,
+                self.fastest_lap_checkbox
+            ]
+            
+            for control in controls_to_remove:
+                self.main_toolbar.removeWidget(control)
+            
+            # 移除更新按鈕
+            if hasattr(self, 'update_all_action') and self.update_all_action:
+                self.main_toolbar.removeAction(self.update_all_action)
+                self.update_all_action = None
+            
+            print("[LAP_CONTROL] ✅ 圈速分析控件成功從工具欄移除")
+            self._lap_controls_added = False
+            self.lap_controls_visible = False
+            
+        except Exception as e:
+            print(f"[LAP_CONTROL] ❌ 移除圈速分析控件時發生錯誤: {e}")
+
+
+        print("[LAP_CONTROL] 🔍 ========== 調試結束 ==========")
+    
+    def on_lap_analysis_window_opened(self, window_object, analysis_type):
+        """圈速分析視窗開啟時調用"""
+        window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
+        print(f"[LAP_CONTROL] 🚨 CRITICAL: on_lap_analysis_window_opened 被調用!")
+        print(f"[LAP_CONTROL] 📊 參數: window_title='{window_title}', analysis_type='{analysis_type}'")
+        
+        import traceback
+        stack = traceback.format_stack()
+        print("[LAP_CONTROL] 📞 CRITICAL 調用堆疊:")
+        for frame in stack[-5:]:  # 顯示最後5個堆疊框架
+            print(f"[LAP_CONTROL]   {frame.strip()}")
+        
+        # 存儲視窗對象而不是標題字符串
+        self.lap_analysis_windows.add(window_object)
+        print(f"[LAP_CONTROL] 📊 圈速分析視窗已開啟: {window_title} ({analysis_type})")
+        print(f"[LAP_CONTROL] 📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
+        
+        # 顯示圈速控件
+        print("[LAP_CONTROL] 🎯 即將調用 show_lap_controls()...")
+        self.show_lap_controls()
+    
+    def on_lap_analysis_window_closed(self, window_object):
+        """圈速分析視窗關閉時調用"""
+        self.lap_analysis_windows.discard(window_object)
+        window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
+        print(f"[LAP_CONTROL] 📊 圈速分析視窗已關閉: {window_title}")
+        print(f"[LAP_CONTROL] 📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
+        
+        # 如果沒有活動視窗，隱藏圈速控件
+        if len(self.lap_analysis_windows) == 0:
+            self.hide_lap_controls()
+    
+    def update_all_lap_analysis(self):
+        """更新所有圈速分析視窗"""
+        print("[LAP_CONTROL] 🔄 開始更新所有圈速分析視窗...")
+        
+        if len(self.lap_analysis_windows) == 0:
+            print("[LAP_CONTROL] ⚠️ 沒有活動的圈速分析視窗")
+            return
+        
+        # 獲取當前設置
+        driver1 = self.driver1_combo.currentText()
+        driver2 = self.driver2_combo.currentText() if self.driver2_combo.currentText() != "無" else None
+        lap1 = self.lap1_spinbox.value()
+        lap2 = self.lap2_spinbox.value()
+        is_fastest = self.fastest_lap_checkbox.isChecked()
+        
+        print(f"[LAP_CONTROL] 🎯 更新參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+        
+        # 獲取當前基本設置
+        year = self.year_combo.currentText()
+        race = self.race_combo.currentText()
+        session = self.session_combo.currentText()
+        
+        print(f"[LAP_CONTROL] 📊 基本設置: {year} {race} {session}")
+        
+        # 遍歷所有圈速分析視窗並更新
+        updated_count = 0
+        for i, analysis_module in enumerate(list(self.lap_analysis_windows), 1):  # 使用 list() 避免迭代時修改集合
+            try:
+                # 獲取視窗標題用於日誌
+                window_title = "未知視窗"
+                if hasattr(analysis_module, 'get_window_title'):
+                    window_title = analysis_module.get_window_title()
+                elif hasattr(analysis_module, '_sub_window') and hasattr(analysis_module._sub_window, 'windowTitle'):
+                    window_title = analysis_module._sub_window.windowTitle()
+                
+                print(f"[LAP_CONTROL] 🔄 更新視窗 {i}/{len(self.lap_analysis_windows)}: {window_title}")
+                print(f"[LAP_CONTROL]   📋 模組類型: {type(analysis_module).__name__}")
+                
+                # 檢查是否為速度分析模組
+                if hasattr(analysis_module, 'update_lap_parameters'):
+                    print(f"[LAP_CONTROL]   ✅ 找到 update_lap_parameters 方法，開始調用...")
+                    
+                    # 調用更新方法並傳遞詳細參數
+                    success = analysis_module.update_lap_parameters(
+                        year=year,
+                        race=race, 
+                        session=session,
+                        driver1=driver1,
+                        driver2=driver2,
+                        lap1=lap1,
+                        lap2=lap2,
+                        is_fastest=is_fastest
+                    )
+                    
+                    if success:
+                        updated_count += 1
+                        print(f"[LAP_CONTROL]   ✅ 視窗更新成功")
+                    else:
+                        print(f"[LAP_CONTROL]   ❌ 視窗更新失敗")
+                else:
+                    available_methods = [method for method in dir(analysis_module) if not method.startswith('_')]
+                    print(f"[LAP_CONTROL]   ❌ 模組沒有 update_lap_parameters 方法")
+                    print(f"[LAP_CONTROL]   📝 可用方法示例: {available_methods[:10]}...")
+                    
+            except Exception as e:
+                print(f"[LAP_CONTROL]   ❌ 更新視窗時發生錯誤: {e}")
+                import traceback
+                print(f"[LAP_CONTROL]   📋 錯誤詳情: {traceback.format_exc()}")
+        
+        print(f"[LAP_CONTROL] ✅ 更新完成，成功更新 {updated_count}/{len(self.lap_analysis_windows)} 個視窗")
+    
+    def on_lap_parameters_changed(self):
+        """圈速參數變更時自動更新所有分析"""
+        print("[LAP_CONTROL] 🔄 圈速參數已變更，準備自動更新...")
+        
+        # 詳細調試：記錄當前所有參數值
+        try:
+            driver1 = self.driver1_combo.currentText() if hasattr(self, 'driver1_combo') else "未知"
+            driver2 = self.driver2_combo.currentText() if hasattr(self, 'driver2_combo') else "未知"
+            lap1 = self.lap1_spinbox.value() if hasattr(self, 'lap1_spinbox') else "未知"
+            lap2 = self.lap2_spinbox.value() if hasattr(self, 'lap2_spinbox') else "未知"
+            is_fastest = self.fastest_lap_checkbox.isChecked() if hasattr(self, 'fastest_lap_checkbox') else False
+            
+            print(f"[LAP_CONTROL] 📊 當前參數值:")
+            print(f"[LAP_CONTROL]   🏎️ 車手1: '{driver1}'")
+            print(f"[LAP_CONTROL]   🏎️ 車手2: '{driver2}'")
+            print(f"[LAP_CONTROL]   🏁 圈數1: {lap1}")
+            print(f"[LAP_CONTROL]   🏁 圈數2: {lap2}")
+            print(f"[LAP_CONTROL]   ⚡ 最速圈: {is_fastest}")
+            
+            # 檢查發送者控件
+            sender = self.sender()
+            if sender:
+                sender_name = sender.objectName() if hasattr(sender, 'objectName') and sender.objectName() else type(sender).__name__
+                print(f"[LAP_CONTROL] 📤 觸發控件: {sender_name}")
+                if hasattr(sender, 'currentText'):
+                    print(f"[LAP_CONTROL] 📤 觸發值: '{sender.currentText()}'")
+                elif hasattr(sender, 'value'):
+                    print(f"[LAP_CONTROL] 📤 觸發值: {sender.value()}")
+                elif hasattr(sender, 'isChecked'):
+                    print(f"[LAP_CONTROL] 📤 觸發值: {sender.isChecked()}")
+            else:
+                print("[LAP_CONTROL] 📤 觸發控件: 未知（無發送者）")
+                
+        except Exception as e:
+            print(f"[LAP_CONTROL] ❌ 參數調試時發生錯誤: {e}")
+        
+        # 延遲更新，避免用戶快速調整時頻繁觸發
+        if hasattr(self, '_lap_update_timer'):
+            self._lap_update_timer.stop()
+        
+        from PyQt5.QtCore import QTimer
+        self._lap_update_timer = QTimer()
+        self._lap_update_timer.setSingleShot(True)
+        self._lap_update_timer.timeout.connect(self.update_all_lap_analysis)
+        self._lap_update_timer.start(500)  # 500毫秒延遲
         
     def create_left_panel_with_log(self):
         """創建左側面板包含功能樹和系統日誌"""
@@ -6388,6 +6755,12 @@ class StyleHMainWindow(QMainWindow):
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 連接視窗關閉信號
+                        sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(analysis_module))
+                        
                         # 設置視窗大小
                         width, height = analysis_module.get_default_size()
                         sub_window.resize(width, height)
@@ -6397,6 +6770,13 @@ class StyleHMainWindow(QMainWindow):
                         sub_window.show()
                         
                         print(f"[OK] [NEW_MODULE] 速度分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "speed_analysis")
+                        
                         print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
@@ -6482,6 +6862,11 @@ class StyleHMainWindow(QMainWindow):
             sub_window = PopoutSubWindow(window_title, current_mdi_area)
             sub_window.setWidget(chart_widget)
             
+            # 檢查是否為圈速分析相關視窗，如果是則連接關閉信號
+            lap_analysis_types = ['speed', 'brake', 'throttle', 'steering', 'gear', 'rpm']
+            if chart_type in lap_analysis_types:
+                sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(window_title))
+            
             # 設置視窗大小 - 速度分析需要更大的視窗
             if chart_type == 'speed_analysis':
                 sub_window.resize(900, 600)  # 速度分析使用更大尺寸
@@ -6493,6 +6878,11 @@ class StyleHMainWindow(QMainWindow):
             sub_window.show()
             
             print(f"[OK] 已創建遙測視窗: {window_title}")
+            
+            # 檢查是否為圈速分析相關視窗，如果是則通知主視窗
+            lap_analysis_types = ['speed', 'brake', 'throttle', 'steering', 'gear', 'rpm']
+            if chart_type in lap_analysis_types:
+                self.on_lap_analysis_window_opened(window_title, chart_type)
             
         except Exception as e:
             print(f"[ERROR] 創建遙測視窗失敗 ({chart_type}): {e}")

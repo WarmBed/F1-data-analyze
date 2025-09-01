@@ -149,6 +149,7 @@ class SpeedAnalysisModule(IAnalysisModule):
         self.data_manager = None
         self.speed_chart_widget = None
         self.main_widget = None  # 主容器 widget
+        self.parent_window = None  # MDI 子視窗引用
         
         # 初始化狀態
         self._initialized = False
@@ -185,6 +186,11 @@ class SpeedAnalysisModule(IAnalysisModule):
             import traceback
             traceback.print_exc()
             return False
+    
+    def set_parent_window(self, parent_window):
+        """設置父視窗引用（MDI 子視窗）"""
+        self.parent_window = parent_window
+        print(f"[SPEED_MDI] 🔗 已設置父視窗引用: {type(parent_window).__name__}")
     
     def _setup_ui(self):
         """設置用戶界面"""
@@ -333,6 +339,110 @@ class SpeedAnalysisModule(IAnalysisModule):
             import traceback
             traceback.print_exc()
             self.module_error.emit(f"參數更新失敗: {str(e)}")
+            return False
+    
+    def update_lap_parameters(self, year: str, race: str, session: str, 
+                            driver1: str, driver2: str = None, 
+                            lap1: int = 1, lap2: int = 1, 
+                            is_fastest: bool = False) -> bool:
+        """更新圈速分析參數（包含車手和圈數）"""
+        try:
+            print(f"[SPEED_MDI] ========== 圈速參數更新 ==========")
+            print(f"[SPEED_MDI] 收到參數: {year} {race} {session}")
+            print(f"[SPEED_MDI] 車手: {driver1} vs {driver2}")
+            print(f"[SPEED_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
+            print(f"[SPEED_MDI] 最速圈: {is_fastest}")
+            
+            # 檢查參數是否有變化
+            params_changed = (
+                self.current_year != str(year) or 
+                self.current_race != race or 
+                self.current_session != session or
+                self.driver1 != driver1 or
+                self.driver2 != (driver2 or "VER") or  # 處理 None 值
+                self.lap1 != lap1 or
+                self.lap2 != lap2
+            )
+            
+            print(f"[SPEED_MDI] 參數是否變化: {params_changed}")
+            
+            # 更新所有參數
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
+            self.driver1 = driver1
+            self.driver2 = driver2 or "VER"  # 如果沒有第二個車手，預設為 VER
+            self.lap1 = lap1
+            self.lap2 = lap2
+            
+            # 更新圖表組件的圈數顯示
+            if self.speed_chart_widget:
+                self.speed_chart_widget.set_lap_numbers(lap1, lap2)
+                print(f"[SPEED_MDI] ✅ 已更新圖表組件的圈數顯示")
+            
+            if params_changed:
+                print(f"[SPEED_MDI] 🔄 參數已變化，開始重載數據...")
+                
+                # 載入新數據
+                if self.data_manager:
+                    print(f"[SPEED_MDI] 📡 調用數據管理器載入新數據...")
+                    success = self.data_manager.load_speed_data(
+                        year=self.current_year,
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=self.driver1,
+                        driver2=self.driver2,
+                        lap1=self.lap1,
+                        lap2=self.lap2
+                    )
+                    
+                    if success:
+                        print(f"[SPEED_MDI] ✅ 圈速參數更新後數據重載成功")
+                        # 發送參數更新信號
+                        self.parameters_updated.emit({
+                            'year': self.current_year,
+                            'race': self.current_race,
+                            'session': self.current_session,
+                            'driver1': self.driver1,
+                            'driver2': self.driver2,
+                            'lap1': self.lap1,
+                            'lap2': self.lap2
+                        })
+                        
+                        # 更新視窗標題以反映新的參數
+                        new_title = self.get_window_title()
+                        if self.parent_window:
+                            self.parent_window.setWindowTitle(new_title)
+                            print(f"[SPEED_MDI] 🏷️ 視窗標題已更新為: {new_title}")
+                        else:
+                            print(f"[SPEED_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                        
+                        return True
+                    else:
+                        print(f"[SPEED_MDI] ❌ 圈速參數更新後數據重載失敗")
+                        return False
+                else:
+                    print(f"[SPEED_MDI] ❌ 數據管理器未初始化")
+                    return False
+            else:
+                print(f"[SPEED_MDI] ℹ️ 圈速參數未變化，保持現有數據")
+                
+                # 即使參數未變化，也確保視窗標題是正確的
+                current_title = self.parent_window.windowTitle() if self.parent_window else ""
+                expected_title = self.get_window_title()
+                if current_title != expected_title and self.parent_window:
+                    self.parent_window.setWindowTitle(expected_title)
+                    print(f"[SPEED_MDI] 🏷️ 同步視窗標題: {expected_title}")
+                elif not self.parent_window:
+                    print(f"[SPEED_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
+                
+                return True
+                
+        except Exception as e:
+            print(f"[SPEED_MDI] ❌ 圈速參數更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.module_error.emit(f"圈速參數更新失敗: {str(e)}")
             return False
     
     def get_window_title(self) -> str:
