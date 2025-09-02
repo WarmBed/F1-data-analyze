@@ -139,10 +139,10 @@ class SpeedAnalysisDataLoader(QObject):
                     print(f"[JSON_SEARCH]   {i}. {pattern}")
                 print(f"[JSON_SEARCH] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判")
             else:
-                # 單車手檔案
+                # 單車手檔案 - 修正為使用 comparison_telemetry 格式
                 filename_patterns = [
-                    f"speed_telemetry_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
-                    f"speed_telemetry_{driver1}_{year}_{race}_{session}_Lap*.json"
+                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
+                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*.json"
                 ]
                 print(f"[JSON_SEARCH] 👤 單車手檔案搜尋模式:")
                 for i, pattern in enumerate(filename_patterns, 1):
@@ -247,21 +247,22 @@ class SpeedAnalysisDataLoader(QObject):
             ]
             
             # 添加第二位車手參數
+            # 添加第二位車手參數
             if driver2:
                 command.extend(["-d2", driver2])
                 print(f"[SPEED DEBUG] 雙車手模式: {driver1} vs {driver2}")
             else:
-                print(f"[SPEED DEBUG] 單車手模式: {driver1}")
+                # 單車手模式：設置 driver2 與 driver1 相同
+                command.extend(["-d2", driver1])
+                print(f"[SPEED DEBUG] 單車手模式: {driver1} vs {driver1}")
             
-            # 添加圈數參數
+            # 添加圈數參數 - 始終使用雙參數模式
+            command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
+            
             if driver2:
-                # 雙車手模式：使用 lap1 和 lap2 參數
-                command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
                 print(f"[SPEED DEBUG] 雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
             else:
-                # 單車手模式：使用 lap1 參數（車手與自己比較）
-                command.extend(["--lap1", str(lap1)])
-                print(f"[SPEED DEBUG] 單車手模式圈數設定: {driver1} 第{lap1}圈")
+                print(f"[SPEED DEBUG] 單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
             
             print(f"[SPEED DEBUG] 完整 CLI 命令: {' '.join(command)}")
             self.status_changed.emit(f"正在生成速度數據...")
@@ -291,6 +292,7 @@ class SpeedAnalysisDataLoader(QObject):
                     print(f"[ERROR] [SPEED] CLI 執行異常: {e}")
             
             # 在背景執行緒中執行CLI
+            import threading
             thread = threading.Thread(target=run_cli, daemon=True)
             thread.start()
             
@@ -535,43 +537,76 @@ class SpeedAnalysisDataLoader(QObject):
             if distance_data:
                 print(f"[SPEED DEBUG] 距離樣本: {distance_data[:5]} ... {distance_data[-5:]}")
             
+            # 檢查是否為單車手模式
+            is_single_driver = (hasattr(self, '_current_params') and 
+                              self._current_params and 
+                              self._current_params.get('driver2') is None)
+            
+            print(f"[SPEED DEBUG] 單車手模式: {is_single_driver}")
+            
             # 構建處理後的數據結構
             processed = {
                 'metadata': {
                     'analysis_type': 'speed_comparison',
-                    'drivers': [
-                        {
-                            'code': comparison_info.get('driver1', 'Unknown'),
-                            'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                            'compound': comparison_info.get('compound1', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life1', 0)
-                        },
-                        {
-                            'code': comparison_info.get('driver2', 'Unknown'),
-                            'lap_time': comparison_info.get('lap_time2', 'N/A'),
-                            'compound': comparison_info.get('compound2', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life2', 0)
-                        }
-                    ],
+                    'is_single_driver': is_single_driver,
+                    'drivers': [],
                     'track_length': max(distance_data) if distance_data else 5807.0,
                     'sectors': self._generate_sector_data(distance_data)
                 },
                 'speed_data': {
                     'distance': distance_data,
                     'driver1_speed': driver1_speed,
-                    'driver2_speed': driver2_speed,
-                    'driver1_name': comparison_info.get('driver1', 'Driver 1'),
-                    'driver2_name': comparison_info.get('driver2', 'Driver 2')
+                    'driver1_name': comparison_info.get('driver1', 'Driver 1')
                 },
-                'statistics': self._calculate_speed_statistics_new(driver1_speed, driver2_speed, distance_data),
+                'statistics': {},
                 'raw_data': raw_data
             }
+            
+            # 根據模式添加車手信息和數據
+            if is_single_driver:
+                # 單車手模式：只添加一個車手，但保持數據結構一致
+                processed['speed_data']['driver2_speed'] = []  # 空的車手2數據
+                processed['speed_data']['driver2_name'] = ""   # 空的車手2名稱
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    }
+                ]
+                processed['statistics'] = self._calculate_speed_statistics_single(driver1_speed, distance_data)
+                print(f"[SPEED DEBUG] ✅ 單車手模式數據處理完成")
+            else:
+                # 雙車手模式：添加兩個車手
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    },
+                    {
+                        'code': comparison_info.get('driver2', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time2', 'N/A'),
+                        'compound': comparison_info.get('compound2', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life2', 0)
+                    }
+                ]
+                processed['speed_data']['driver2_speed'] = driver2_speed
+                processed['speed_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
+                processed['statistics'] = self._calculate_speed_statistics_new(driver1_speed, driver2_speed, distance_data)
+                print(f"[SPEED DEBUG] ✅ 雙車手模式數據處理完成")
             
             print(f"[SPEED DEBUG] ========== 處理結果摘要 ==========")
             print(f"[SPEED DEBUG] 處理後數據鍵值: {list(processed.keys())}")
             print(f"[SPEED DEBUG] 速度數據鍵值: {list(processed['speed_data'].keys())}")
             print(f"[SPEED DEBUG] 車手1名稱: {processed['speed_data']['driver1_name']}")
-            print(f"[SPEED DEBUG] 車手2名稱: {processed['speed_data']['driver2_name']}")
+            # 只有在存在 driver2_name 時才輸出
+            if 'driver2_name' in processed['speed_data']:
+                print(f"[SPEED DEBUG] 車手2名稱: {processed['speed_data']['driver2_name']}")
+            else:
+                print(f"[SPEED DEBUG] 車手2名稱: 無 (單車手模式)")
             print(f"[SPEED DEBUG] ✅ 新格式數據處理完成")
             
             return processed
@@ -847,4 +882,85 @@ class SpeedAnalysisDataLoader(QObject):
             
         except Exception as e:
             print(f"[ERROR] 計算分段統計失敗: {e}")
+            return {}
+
+    def _calculate_speed_statistics_single(self, driver_speed: list, distance_data: list = None) -> dict:
+        """計算單車手速度統計信息"""
+        try:
+            if not driver_speed:
+                return {}
+            
+            stats = {
+                'driver_stats': {
+                    'max_speed': max(driver_speed),
+                    'min_speed': min(driver_speed),
+                    'avg_speed': sum(driver_speed) / len(driver_speed),
+                    'data_points': len(driver_speed)
+                },
+                'track_info': {
+                    'total_data_points': len(distance_data) if distance_data else len(driver_speed),
+                    'track_coverage': max(distance_data) if distance_data else 0
+                }
+            }
+            
+            # 計算分段統計（如果有距離數據）
+            if distance_data and len(distance_data) == len(driver_speed):
+                sector_stats = self._calculate_single_driver_sector_statistics(distance_data, driver_speed)
+                if sector_stats:
+                    stats['sector_stats'] = sector_stats
+            
+            return stats
+            
+        except Exception as e:
+            print(f"[ERROR] 計算單車手統計信息失敗: {e}")
+            return {}
+
+    def _calculate_single_driver_sector_statistics(self, distance_data: list, driver_speed: list) -> dict:
+        """計算單車手分段統計信息"""
+        try:
+            if not distance_data or not driver_speed:
+                return {}
+            
+            max_distance = max(distance_data)
+            
+            # 定義分段邊界（大約等分三段）
+            sector_boundaries = [
+                max_distance * 0.33,  # S1 結束
+                max_distance * 0.67,  # S2 結束
+                max_distance          # S3 結束
+            ]
+            
+            sector_stats = {}
+            
+            for sector_num in range(1, 4):
+                # 確定分段範圍
+                start_dist = sector_boundaries[sector_num - 2] if sector_num > 1 else 0
+                end_dist = sector_boundaries[sector_num - 1]
+                
+                # 找到該分段內的數據點
+                sector_indices = [
+                    i for i, dist in enumerate(distance_data)
+                    if start_dist <= dist <= end_dist
+                ]
+                
+                if sector_indices:
+                    # 提取該分段的速度數據
+                    sector_speeds = [driver_speed[i] for i in sector_indices]
+                    
+                    # 計算該分段統計
+                    sector_stats[f'sector_{sector_num}'] = {
+                        'max_speed': max(sector_speeds),
+                        'min_speed': min(sector_speeds),
+                        'avg_speed': sum(sector_speeds) / len(sector_speeds),
+                        'start_distance': start_dist,
+                        'end_distance': end_dist,
+                        'data_points': len(sector_indices)
+                    }
+                    
+                    print(f"[DEBUG] S{sector_num} 單車手統計: 最高={sector_stats[f'sector_{sector_num}']['max_speed']:.1f}, 平均={sector_stats[f'sector_{sector_num}']['avg_speed']:.1f}")
+            
+            return sector_stats
+            
+        except Exception as e:
+            print(f"[ERROR] 計算單車手分段統計失敗: {e}")
             return {}

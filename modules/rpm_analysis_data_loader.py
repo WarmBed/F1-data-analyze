@@ -9,6 +9,12 @@ import sys
 import os
 import json
 import glob
+import pickle
+import time
+from datetime import datetime
+import threading
+import fastf1
+import pandas as pd
 import subprocess
 import pickle
 from typing import Dict, List, Any, Optional
@@ -20,7 +26,6 @@ class RPMAnalysisDataLoader(QObject):
     # 信號定義 (與速度模組一致，但保留RPM模組需要的額外信號)
     data_loaded = pyqtSignal(dict)
     load_progress = pyqtSignal(int)
-    loading_progress = pyqtSignal(str, int)  # RPM模組需要的進度信號
     load_error = pyqtSignal(str)
     status_changed = pyqtSignal(str)
     
@@ -28,15 +33,17 @@ class RPMAnalysisDataLoader(QObject):
         super().__init__(parent)
         
         # 狀態變數
+        self._base_path = "json"
         self._is_loading = False
         self._current_data = None
         self.current_session = None
         
-        # 生成監控定時器
-        self._generation_timer = QTimer()
+        # 生成監控定時器 - 設置 parent 防止被垃圾回收
+        self._generation_timer = QTimer(self)
         self._generation_timer.timeout.connect(self._check_generation_progress)
         
-        self._generation_timeout_timer = QTimer()
+        self._generation_timeout_timer = QTimer(self)
+        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
     
     def load_rpm_data(self, year: int, race: str, session: str, 
@@ -137,43 +144,41 @@ class RPMAnalysisDataLoader(QObject):
     def _find_rpm_data_file(self, year: int, race: str, session: str, 
                            driver1: str, driver2: str = None, 
                            lap1: int = 1, lap2: int = 1) -> str:
-        """尋找對應的RPM數據檔案"""
+        """搜尋RPM分析數據檔案 - 使用與速度分析相同的搜尋邏輯"""
         try:
-            print(f"[JSON_SEARCH] 🔍 開始搜尋RPM數據檔案...")
-            print(f"[JSON_SEARCH] 參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
+            print(f"[JSON_SEARCH] ========== 搜尋RPM分析檔案 ==========")
+            print(f"[JSON_SEARCH] 🔍 搜尋條件:")
+            print(f"[JSON_SEARCH]   📅 年份: {year}")
+            print(f"[JSON_SEARCH]   🏁 賽事: {race}")
+            print(f"[JSON_SEARCH]   🏁 賽段: {session}")
+            print(f"[JSON_SEARCH]   🏎️ 車手1: {driver1} (第{lap1}圈)")
+            print(f"[JSON_SEARCH]   🏎️ 車手2: {driver2} (第{lap2}圈)")
             
-            # 定義搜尋目錄（按優先級排序）
-            search_dirs = [
-                "json",
-                "json_exports", 
-                "cache",
-                f"cache/{year}",
-                "."
-            ]
+            # 搜尋目錄 - 與速度分析相同
+            search_dirs = ["json", "json_exports", "cache"]
+            print(f"[JSON_SEARCH] 📂 搜尋目錄: {search_dirs}")
             
-            # 定義檔案名稱模式（按優先級排序）
-            filename_patterns = [
-                # 精確匹配模式
-                f"comparison_telemetry_{year}_{race}_{session}_{driver1}_{driver2}_*.json",
-                f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_*.json",
-                f"telemetry_comparison_{year}_{race}_{session}_{driver1}_{driver2}_*.json",
-                
-                # 通用匹配模式
-                f"*telemetry*{year}*{race}*{session}*{driver1}*{driver2}*.json",
-                f"*comparison*{year}*{race}*{session}*{driver1}*{driver2}*.json",
-                f"*{year}*{race}*{session}*telemetry*.json",
-                f"*{year}*{race}*{session}*comparison*.json"
-            ]
+            # 構建檔案名稱搜尋模式 - 與速度分析完全相同
+            if driver2:
+                # 雙車手對比檔案 - 只允許精確搜尋模式，避免誤判
+                filename_patterns = [
+                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json"   # 只允許模式1：精確匹配
+                ]
+                print(f"[JSON_SEARCH] 🔄 雙車手檔案搜尋模式（僅精確搜尋）:")
+                for i, pattern in enumerate(filename_patterns, 1):
+                    print(f"[JSON_SEARCH]   {i}. {pattern}")
+                print(f"[JSON_SEARCH] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判")
+            else:
+                # 單車手檔案 - 修正為使用 comparison_telemetry 格式
+                filename_patterns = [
+                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
+                    f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*.json"
+                ]
+                print(f"[JSON_SEARCH] � 單車手檔案搜尋模式:")
+                for i, pattern in enumerate(filename_patterns, 1):
+                    print(f"[JSON_SEARCH]   {i}. {pattern}")
             
-            print(f"[JSON_SEARCH] 📂 搜尋目錄清單:")
-            for i, search_dir in enumerate(search_dirs, 1):
-                print(f"[JSON_SEARCH]   {i}. {search_dir}")
-            
-            print(f"[JSON_SEARCH] 📝 檔案模式清單:")
-            for i, pattern in enumerate(filename_patterns, 1):
-                print(f"[JSON_SEARCH]   {i}. {pattern}")
-            
-            # 精確搜尋
+            # 精確搜尋 - 與速度分析相同的邏輯
             print(f"[JSON_SEARCH] 🔍 開始精確搜尋...")
             found_file = None
             
@@ -221,78 +226,134 @@ class RPMAnalysisDataLoader(QObject):
     def _start_cli_generation(self, year: int, race: str, session: str,
                              driver1: str, driver2: str = None,
                              lap1: int = 1, lap2: int = 1):
-        """啟動 CLI 生成流程 - 修復版本"""
+        """啟動 CLI 生成流程 - 與速度分析完全相同的邏輯"""
         try:
-            print(f"[RPM_LOADER] 🚀 啟動 CLI 生成流程...")
-            print(f"[RPM_LOADER] 參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
+            print(f"[RPM DEBUG] ========== 啟動 CLI 生成流程 ==========")
+            print(f"[RPM DEBUG] 生成參數:")
+            print(f"[RPM DEBUG]   年份: {year}")
+            print(f"[RPM DEBUG]   賽站: {race}")
+            print(f"[RPM DEBUG]   賽段: {session}")
+            print(f"[RPM DEBUG]   車手1: {driver1}, 圈數: {lap1}")
+            print(f"[RPM DEBUG]   車手2: {driver2}, 圈數: {lap2}")
             
-            # 儲存生成參數以供監控使用
+            # 儲存參數供後續使用
             self._generation_params = (year, race, session, driver1, driver2, lap1, lap2)
             
-            # 檢查是否有可用的遙測分析數據
-            telemetry_file = self._find_telemetry_analysis_file(year, race, session)
+            # 啟動 CLI 生成
+            success = self._generate_rpm_data_via_cli(year, race, session, driver1, driver2, lap1, lap2)
             
-            if telemetry_file:
-                print(f"[RPM_LOADER] ✅ 找到遙測分析檔案: {telemetry_file}")
-                # 從遙測分析數據提取 RPM 數據
-                self._extract_rpm_from_telemetry(telemetry_file, driver1, driver2, lap1, lap2)
-                return
+            if success:
+                print(f"[RPM DEBUG] ✅ CLI 啟動成功，開始監控檔案生成")
+                # 啟動定時器檢查檔案是否生成完成
+                self._start_generation_monitoring()
+            else:
+                print(f"[RPM DEBUG] ❌ CLI 啟動失敗")
+                self.load_error.emit(f"啟動 CLI 生成失敗: {year} {race} {session}")
+                self._is_loading = False
+                
+        except Exception as e:
+            print(f"[ERROR] [RPM DEBUG] 啟動生成時發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+            self.load_error.emit(f"啟動生成時發生錯誤: {str(e)}")
+            self._is_loading = False
+    
+    def _generate_rpm_data_via_cli(self, year: int, race: str, session: str,
+                                  driver1: str, driver2: str = None,
+                                  lap1: int = 1, lap2: int = 1) -> bool:
+        """透過 CLI 工具生成RPM數據 - 與速度分析相同的邏輯"""
+        try:
+            print(f"[RPM DEBUG] ========== CLI 命令生成 ==========")
+            print(f"[RPM DEBUG] 生成RPM數據: {year} {race} {session}")
             
-            # 如果沒有遙測分析，先生成遙測分析數據
-            print(f"[RPM_LOADER] 📡 先生成遙測分析數據...")
-            
-            # 構建 CLI 命令 - 使用功能 5 (車手對比分析，通常包含遙測數據)
-            cmd = [
-                sys.executable,
-                "f1_analysis_modular_main.py",
-                "-f", "5",  # Function 5: 車手對比分析 (包含遙測數據)
+            # 構建命令 - 與速度分析相同，使用Function 13
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "13",  # 功能13: 車手比較分析
                 "-y", str(year),
                 "-r", race,
-                "-s", session
+                "-s", session,
+                "-d", driver1
             ]
             
-            print(f"[RPM_LOADER] 📝 CLI 命令: {' '.join(cmd)}")
+            # 添加第二位車手參數
+            if driver2:
+                command.extend(["-d2", driver2])
+                print(f"[RPM DEBUG] 雙車手模式: {driver1} vs {driver2}")
+            else:
+                # 單車手模式：設置 driver2 與 driver1 相同
+                command.extend(["-d2", driver1])
+                print(f"[RPM DEBUG] 單車手模式: {driver1} vs {driver1}")
             
-            # 啟動檔案生成監控
-            self._start_generation_monitoring()
+            # 添加圈數參數 - 始終使用雙參數模式
+            command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
             
-            # 異步執行 CLI 命令
-            self.loading_progress.emit("正在生成遙測分析數據...", 30)
+            if driver2:
+                print(f"[RPM DEBUG] 雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            else:
+                print(f"[RPM DEBUG] 單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
             
-            # 在背景執行 CLI 命令
-            process = subprocess.Popen(cmd, 
-                           stdout=subprocess.PIPE, 
-                           stderr=subprocess.PIPE,
-                           text=True,
-                           encoding='utf-8',
-                           errors='replace',  # 遇到無法解碼的字符時用替代字符
-                           cwd=".")
+            print(f"[RPM DEBUG] 完整 CLI 命令: {' '.join(command)}")
+            self.status_changed.emit(f"正在生成RPM數據...")
             
-            # 保存程序引用以供監控
-            self._generation_process = process
+            # 非阻塞執行
+            def run_cli():
+                try:
+                    print(f"[RPM DEBUG] 🚀 開始執行 CLI 命令...")
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',  # 遇到無法解碼的字符時用替代字符
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        print(f"[OK] [RPM] CLI 執行成功")
+                    else:
+                        print(f"[ERROR] [RPM] CLI 執行失敗: {stderr}")
+                        
+                except Exception as e:
+                    print(f"[ERROR] [RPM] CLI 執行異常: {e}")
             
-            print(f"[RPM_LOADER] ✅ CLI 命令已啟動，開始監控檔案生成...")
+            # 在背景執行緒中執行CLI
+            import threading
+            thread = threading.Thread(target=run_cli, daemon=True)
+            thread.start()
+            
+            return True
             
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 啟動 CLI 生成失敗: {str(e)}")
-            self.load_error.emit(f"生成數據失敗: {str(e)}")
-            self._is_loading = False
+            print(f"[ERROR] [RPM] 啟動 CLI 失敗: {e}")
+            return False
     
     def _start_generation_monitoring(self):
         """啟動檔案生成監控"""
-        # 初始化定時器
-        if not hasattr(self, '_generation_timer'):
-            self._generation_timer = QTimer()
-            self._generation_timer.timeout.connect(self._check_generation_progress)
-        
-        if not hasattr(self, '_generation_timeout_timer'):
-            self._generation_timeout_timer = QTimer()
-            self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        print(f"[RPM_MONITOR] ========== 啟動監控系統 ==========")
+        print(f"[RPM_MONITOR] 檢查計時器狀態...")
+        print(f"[RPM_MONITOR] _generation_timer 存在: {hasattr(self, '_generation_timer')}")
+        print(f"[RPM_MONITOR] _generation_timeout_timer 存在: {hasattr(self, '_generation_timeout_timer')}")
         
         # 啟動監控 (每5秒檢查一次，最多等待180秒)
+        print(f"[RPM_MONITOR] 啟動主監控計時器 (每5秒檢查)")
         self._generation_timer.start(5000)
+        print(f"[RPM_MONITOR] 計時器是否運行: {self._generation_timer.isActive()}")
+        print(f"[RPM_MONITOR] 計時器間隔: {self._generation_timer.interval()}")
+        
+        print(f"[RPM_MONITOR] 啟動超時計時器 (180秒)")
         self._generation_timeout_timer.start(180000)
+        print(f"[RPM_MONITOR] 超時計時器是否運行: {self._generation_timeout_timer.isActive()}")
+        
+        print(f"[RPM_MONITOR] ✅ 監控系統已啟動")
         self.status_changed.emit("正在生成數據，請稍候...")
+        
+        # 立即執行一次檢查以確認方法可以被調用
+        print(f"[RPM_MONITOR] 🧪 執行立即測試檢查...")
+        QTimer.singleShot(1000, self._check_generation_progress)
     
     def _find_telemetry_analysis_file(self, year: int, race: str, session: str) -> str:
         """尋找遙測分析檔案"""
@@ -386,36 +447,60 @@ class RPMAnalysisDataLoader(QObject):
         
     def _check_generation_progress(self):
         """檢查檔案生成進度"""
-        if hasattr(self, '_generation_params'):
-            year, race, session, driver1, driver2, lap1, lap2 = self._generation_params
+        try:
+            print(f"[RPM_MONITOR] ========== 監控檢查觸發 ==========")
+            print(f"[RPM_MONITOR] 時間: {datetime.now().strftime('%H:%M:%S')}")
             
-            # 檢查是否有新檔案生成
-            json_file = self._find_rpm_data_file(year, race, session, driver1, driver2, lap1, lap2)
-            
-            if json_file:
-                print(f"[OK] [RPM_LOADER] 檔案生成完成: {json_file}")
+            if hasattr(self, '_generation_params'):
+                year, race, session, driver1, driver2, lap1, lap2 = self._generation_params
+                print(f"[RPM_MONITOR] 檢查參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
                 
-                # 停止監控
+                # 檢查是否有新檔案生成
+                print(f"[RPM_MONITOR] 開始搜尋檔案...")
+                json_file = self._find_rpm_data_file(year, race, session, driver1, driver2, lap1, lap2)
+                
+                if json_file:
+                    print(f"[OK] [RPM_LOADER] 檔案生成完成: {json_file}")
+                    print(f"[RPM_MONITOR] 停止監控並載入檔案")
+                    
+                    # 停止監控
+                    self._stop_generation_monitoring()
+                    
+                    # 載入新生成的檔案
+                    QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+                else:
+                    print(f"⏳ [RPM_LOADER] 繼續等待檔案生成...")
+                    print(f"[RPM_MONITOR] 下次檢查將在5秒後進行")
+            else:
+                print(f"[RPM_MONITOR] ❌ 缺少 _generation_params 參數")
+                print(f"[RPM_MONITOR] 停止監控")
                 self._stop_generation_monitoring()
                 
-                # 載入新生成的檔案
-                QTimer.singleShot(10, lambda: self._load_json_file(json_file))
-            else:
-                print(f"⏳ [RPM_LOADER] 繼續等待檔案生成...")
+        except Exception as e:
+            print(f"[ERROR] [RPM_MONITOR] 監控檢查異常: {e}")
+            import traceback
+            traceback.print_exc()
+            print(f"[RPM_MONITOR] 嘗試繼續監控...")
                 
     def _on_generation_timeout(self):
         """處理生成超時"""
-        print(f"[TIMEOUT] [RPM_LOADER] 檔案生成超時")
+        print(f"[TIMEOUT] [RPM_LOADER] ========== 監控超時 ==========")
+        print(f"[TIMEOUT] [RPM_LOADER] 檔案生成超時 (180秒)")
+        print(f"[TIMEOUT] [RPM_LOADER] 停止監控系統")
         self._stop_generation_monitoring()
         self.load_error.emit("數據生成超時，請檢查網路連線或重試")
         self._is_loading = False
         
     def _stop_generation_monitoring(self):
         """停止檔案生成監控"""
+        print(f"[RPM_MONITOR] ========== 停止監控系統 ==========")
         if hasattr(self, '_generation_timer'):
             self._generation_timer.stop()
+            print(f"[RPM_MONITOR] 主監控計時器已停止")
         if hasattr(self, '_generation_timeout_timer'):
             self._generation_timeout_timer.stop()
+            print(f"[RPM_MONITOR] 超時計時器已停止")
+        print(f"[RPM_MONITOR] ✅ 監控系統已完全停止")
 
     def _load_json_file(self, file_path: str):
         """載入 JSON 檔案"""
@@ -432,7 +517,8 @@ class RPMAnalysisDataLoader(QObject):
             file_size = os.path.getsize(file_path)
             print(f"[RPM_LOADER] 檔案大小: {file_size} bytes")
             
-            self.loading_progress.emit("正在處理數據...", 90)
+            self.load_progress.emit(90)
+            self.status_changed.emit("正在處理數據...")
             self.status_changed.emit("正在處理數據...")
             
             # 載入JSON檔案
@@ -461,7 +547,8 @@ class RPMAnalysisDataLoader(QObject):
                     print(f"[RPM_LOADER] 車手1 RPM點數: {len(rpm_data.get('driver1_rpm', []))}")
                     print(f"[RPM_LOADER] 車手2 RPM點數: {len(rpm_data.get('driver2_rpm', []))}")
                 
-                self.loading_progress.emit("數據載入完成", 100)
+                self.load_progress.emit(100)
+                self.status_changed.emit("數據載入完成")
                 self.status_changed.emit("數據載入完成")
                 self._current_data = processed_data
                 self._is_loading = False
@@ -586,37 +673,66 @@ class RPMAnalysisDataLoader(QObject):
             if distance_data:
                 print(f"[RPM_LOADER] 距離樣本: {distance_data[:5]} ... {distance_data[-5:]}")
             
+            # 檢查是否為單車手模式
+            is_single_driver = (self.current_session and 
+                              self.current_session.get('driver2') is None)
+            
+            print(f"[RPM_LOADER] 單車手模式: {is_single_driver}")
+            
             # 構建處理後的數據結構
             processed = {
                 'metadata': {
                     'analysis_type': 'rpm_comparison',
-                    'drivers': [
-                        {
-                            'code': comparison_info.get('driver1', 'Unknown'),
-                            'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                            'compound': comparison_info.get('compound1', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life1', 0)
-                        },
-                        {
-                            'code': comparison_info.get('driver2', 'Unknown'),
-                            'lap_time': comparison_info.get('lap_time2', 'N/A'),
-                            'compound': comparison_info.get('compound2', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life2', 0)
-                        }
-                    ],
+                    'is_single_driver': is_single_driver,
+                    'drivers': [],
                     'track_length': max(distance_data) if distance_data else 5807.0,
                     'sectors': self._generate_sector_data(distance_data)
                 },
                 'rpm_data': {
                     'distance': distance_data,
                     'driver1_rpm': driver1_rpm,
-                    'driver2_rpm': driver2_rpm,
-                    'driver1_name': comparison_info.get('driver1', 'Driver 1'),
-                    'driver2_name': comparison_info.get('driver2', 'Driver 2')
+                    'driver1_name': comparison_info.get('driver1', 'Driver 1')
                 },
-                'statistics': self._calculate_rpm_statistics_new(driver1_rpm, driver2_rpm, distance_data),
+                'statistics': {},
                 'timestamp': self._get_current_timestamp()
             }
+            
+            # 根據模式添加車手信息和數據
+            if is_single_driver:
+                # 單車手模式：只添加一個車手，但保持數據結構一致
+                processed['rpm_data']['driver2_rpm'] = []  # 空的車手2數據
+                processed['rpm_data']['driver2_name'] = ""   # 空的車手2名稱
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    }
+                ]
+                processed['statistics'] = self._calculate_rpm_statistics_single(driver1_rpm, distance_data)
+                print(f"[RPM_LOADER] ✅ 單車手模式數據處理完成")
+            else:
+                # 雙車手模式：添加兩個車手
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    },
+                    {
+                        'code': comparison_info.get('driver2', 'Unknown'),
+                        'lap_time': comparison_info.get('lap_time2', 'N/A'),
+                        'compound': comparison_info.get('compound2', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life2', 0)
+                    }
+                ]
+                processed['rpm_data']['driver2_rpm'] = driver2_rpm
+                processed['rpm_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
+                processed['statistics'] = self._calculate_rpm_statistics_new(driver1_rpm, driver2_rpm, distance_data)
+                print(f"[RPM_LOADER] ✅ 雙車手模式數據處理完成")
+            
             
             print(f"[RPM_LOADER] ✅ 新格式數據處理完成")
             return processed
@@ -643,37 +759,65 @@ class RPMAnalysisDataLoader(QObject):
             
             print(f"[RPM_LOADER] 舊格式 RPM數據點數: {len(driver1_rpm)}, {len(driver2_rpm)}, {len(distance_data)}")
             
+            # 檢查是否為單車手模式
+            is_single_driver = (self.current_session and 
+                              self.current_session.get('driver2') is None)
+            
+            print(f"[RPM_LOADER] 單車手模式: {is_single_driver}")
+            
             # 構建處理後的數據結構
             processed = {
                 'metadata': {
                     'analysis_type': 'rpm_comparison',
-                    'drivers': [
-                        {
-                            'code': comparison_info.get('driver1', 'Driver 1'),
-                            'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                            'compound': comparison_info.get('compound1', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life1', 0)
-                        },
-                        {
-                            'code': comparison_info.get('driver2', 'Driver 2'),
-                            'lap_time': comparison_info.get('lap_time2', 'N/A'),
-                            'compound': comparison_info.get('compound2', 'Unknown'),
-                            'tyre_life': comparison_info.get('tyre_life2', 0)
-                        }
-                    ],
+                    'is_single_driver': is_single_driver,
+                    'drivers': [],
                     'track_length': max(distance_data) if distance_data else 5807.0,
                     'sectors': self._generate_sector_data(distance_data)
                 },
                 'rpm_data': {
                     'distance': distance_data,
                     'driver1_rpm': driver1_rpm,
-                    'driver2_rpm': driver2_rpm,
-                    'driver1_name': comparison_info.get('driver1', 'Driver 1'),
-                    'driver2_name': comparison_info.get('driver2', 'Driver 2')
+                    'driver1_name': comparison_info.get('driver1', 'Driver 1')
                 },
-                'statistics': self._calculate_rpm_statistics_new(driver1_rpm, driver2_rpm, distance_data),
+                'statistics': {},
                 'timestamp': self._get_current_timestamp()
             }
+            
+            # 根據模式添加車手信息和數據
+            if is_single_driver:
+                # 單車手模式：只添加一個車手，但保持數據結構一致
+                processed['rpm_data']['driver2_rpm'] = []  # 空的車手2數據
+                processed['rpm_data']['driver2_name'] = ""   # 空的車手2名稱
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Driver 1'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    }
+                ]
+                processed['statistics'] = self._calculate_rpm_statistics_single(driver1_rpm, distance_data)
+                print(f"[RPM_LOADER] ✅ 單車手舊格式數據處理完成")
+            else:
+                # 雙車手模式：添加兩個車手
+                processed['metadata']['drivers'] = [
+                    {
+                        'code': comparison_info.get('driver1', 'Driver 1'),
+                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
+                        'compound': comparison_info.get('compound1', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life1', 0)
+                    },
+                    {
+                        'code': comparison_info.get('driver2', 'Driver 2'),
+                        'lap_time': comparison_info.get('lap_time2', 'N/A'),
+                        'compound': comparison_info.get('compound2', 'Unknown'),
+                        'tyre_life': comparison_info.get('tyre_life2', 0)
+                    }
+                ]
+                processed['rpm_data']['driver2_rpm'] = driver2_rpm
+                processed['rpm_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
+                processed['statistics'] = self._calculate_rpm_statistics_new(driver1_rpm, driver2_rpm, distance_data)
+                print(f"[RPM_LOADER] ✅ 雙車手舊格式數據處理完成")
             
             print(f"[RPM_LOADER] ✅ 舊格式數據處理完成")
             return processed
@@ -746,6 +890,30 @@ class RPMAnalysisDataLoader(QObject):
             print(f"[ERROR] [RPM_LOADER] 計算統計數據失敗: {str(e)}")
             return {}
 
+    def _calculate_rpm_statistics_single(self, driver_rpm: List[float], distance_data: List[float]) -> Dict[str, Any]:
+        """計算單車手RPM統計數據"""
+        try:
+            driver_stats = {
+                'max_rpm': max(driver_rpm) if driver_rpm else 0,
+                'min_rpm': min(driver_rpm) if driver_rpm else 0,
+                'avg_rpm': sum(driver_rpm) / len(driver_rpm) if driver_rpm else 0,
+                'data_points': len(driver_rpm)
+            }
+            
+            stats = {
+                'driver_stats': driver_stats,
+                'track_info': {
+                    'total_data_points': len(distance_data),
+                    'track_coverage': max(distance_data) if distance_data else 0
+                }
+            }
+            
+            return stats
+            
+        except Exception as e:
+            print(f"[ERROR] [RPM_LOADER] 計算單車手統計數據失敗: {str(e)}")
+            return {}
+
     def _get_current_timestamp(self) -> str:
         """取得當前時間戳"""
         from datetime import datetime
@@ -815,7 +983,8 @@ if __name__ == "__main__":
         try:
             print(f"[RPM_LOADER] 🔧 嘗試使用Function 7載入RPM數據...")
             
-            self.loading_progress.emit("正在執行遙測分析...", 30)
+            self.load_progress.emit(30)
+            self.status_changed.emit("正在執行遙測分析...")
             
             # 準備CLI參數
             args = [
@@ -841,14 +1010,16 @@ if __name__ == "__main__":
                 errors='replace'  # 遇到無法解碼的字符時用替代字符
             )
             
-            self.loading_progress.emit("正在處理遙測數據...", 70)
+            self.load_progress.emit(70)
+            self.status_changed.emit("正在處理遙測數據...")
             
             if result.returncode == 0:
                 # 解析遙測輸出
                 rpm_data = self._parse_function7_output(result.stdout)
                 
                 if rpm_data:
-                    self.loading_progress.emit("RPM遙測數據載入完成", 100)
+                    self.load_progress.emit(100)
+                    self.status_changed.emit("RPM遙測數據載入完成")
                     self.data_loaded.emit(rpm_data)
                     return True
                 else:
@@ -955,7 +1126,8 @@ if __name__ == "__main__":
         try:
             print(f"[RPM_LOADER] 💾 嘗試從緩存載入RPM數據...")
             
-            self.loading_progress.emit("正在搜尋緩存數據...", 40)
+            self.load_progress.emit(40)
+            self.status_changed.emit("正在搜尋緩存數據...")
             
             # 構建緩存檔案名稱
             cache_filename = self._build_cache_filename()
@@ -971,7 +1143,8 @@ if __name__ == "__main__":
                 rpm_data = self._convert_cached_to_rpm(cached_data)
                 
                 if rpm_data:
-                    self.loading_progress.emit("緩存RPM數據載入完成", 100)
+                    self.load_progress.emit(100)
+                    self.status_changed.emit("緩存RPM數據載入完成")
                     self.data_loaded.emit(rpm_data)
                     return True
                 else:
@@ -1379,7 +1552,7 @@ if __name__ == "__main__":
     
     # 連接信號
     loader.data_loaded.connect(on_data_loaded)
-    loader.loading_progress.connect(on_progress)
+    loader.load_progress.connect(lambda progress: on_progress(f"載入進度", progress))
     loader.load_error.connect(on_error)
     
     # 開始載入

@@ -393,8 +393,8 @@ class DriverComparisonAdvanced(F1AnalysisBase):
                                           left=0.05, right=0.95, top=0.95, bottom=0.08)
 
             # 設定顏色
-            color1 = 'blue'
-            color2 = 'red' if not single_driver_mode else None
+            color1 = 'blue'   # 車手1 - 藍色
+            color2 = 'red' if not single_driver_mode else None  # 車手2 - 紅色
 
             print(f"   [INFO] 創建遙測分析圖...")
             

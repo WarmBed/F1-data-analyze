@@ -4237,6 +4237,9 @@ class StyleHMainWindow(QMainWindow):
         # 設置延遲檢查機制，確保標籤隱藏狀態正確
         QTimer.singleShot(1000, self.check_and_hide_tabs)
         
+        # 延遲檢查圈速分析控件狀態 (2秒後執行，確保所有視窗都已初始化)
+        QTimer.singleShot(2000, self.check_and_show_lap_controls_if_needed)
+        
     def init_ui(self):
         """初始化用戶界面"""
         # 創建菜單欄
@@ -4585,6 +4588,54 @@ class StyleHMainWindow(QMainWindow):
     
     # ========== 圈速分析控件管理 ==========
     
+    def check_and_show_lap_controls_if_needed(self):
+        """檢查是否有圈速分析視窗，如果有就顯示控件"""
+        print("[LAP_CONTROL] 🔍 檢查是否需要顯示圈速分析控件...")
+        
+        # 檢查MDI區域中是否有圈速分析相關的視窗
+        current_mdi_area = self.get_current_mdi_area()
+        if not current_mdi_area:
+            print("[LAP_CONTROL] ❌ 無法獲取當前MDI區域")
+            return
+        
+        lap_analysis_windows_found = []
+        for sub_window in current_mdi_area.subWindowList():
+            if sub_window.isVisible():
+                widget = sub_window.widget()
+                window_title = sub_window.windowTitle()
+                
+                # 檢查是否為速度分析或RPM分析視窗
+                if any(keyword in window_title for keyword in ["速度分析", "RPM分析", "⚡", "🔄"]):
+                    lap_analysis_windows_found.append((sub_window, widget, window_title))
+                    print(f"[LAP_CONTROL] 🎯 發現圈速分析視窗: {window_title}")
+        
+        if lap_analysis_windows_found:
+            print(f"[LAP_CONTROL] 📊 找到 {len(lap_analysis_windows_found)} 個圈速分析視窗")
+            
+            # 清空並重建視窗追蹤集合
+            self.lap_analysis_windows.clear()
+            
+            for sub_window, widget, window_title in lap_analysis_windows_found:
+                # 將分析模組添加到追蹤集合（如果widget是分析模組）
+                if hasattr(widget, 'update_lap_parameters'):
+                    self.lap_analysis_windows.add(widget)
+                    print(f"[LAP_CONTROL] ✅ 已添加到追蹤: {window_title}")
+                else:
+                    # 如果不是分析模組，添加子視窗本身
+                    self.lap_analysis_windows.add(sub_window)
+                    print(f"[LAP_CONTROL] ✅ 已添加子視窗到追蹤: {window_title}")
+            
+            # 強制顯示圈速分析控件
+            print("[LAP_CONTROL] 🚀 強制顯示圈速分析控件...")
+            self.show_lap_controls()
+        else:
+            print("[LAP_CONTROL] ℹ️ 未發現圈速分析視窗，不顯示控件")
+    
+    def force_show_lap_controls(self):
+        """強制顯示圈速分析控件（測試用）"""
+        print("[LAP_CONTROL] 🚨 強制顯示圈速分析控件...")
+        self.show_lap_controls()
+    
     def initialize_driver_lists(self):
         """初始化車手列表"""
         print("[LAP_CONTROL] 🎮 開始初始化車手列表")
@@ -4684,14 +4735,18 @@ class StyleHMainWindow(QMainWindow):
                     control_text = getattr(control, 'text', lambda: '')() or getattr(control, 'currentText', lambda: '')()
                     print(f"[LAP_CONTROL] 添加控件 {i+1}: {control_name} - '{control_text}'")
                     
+                    # 設置控件的基本屬性
+                    control.setParent(self.main_toolbar)
+                    control.setVisible(True)
+                    control.setEnabled(True)
+                    
+                    # 添加到工具欄
                     if next_action:
                         self.main_toolbar.insertWidget(next_action, control)
                     else:
                         self.main_toolbar.addWidget(control)
                     
-                    # 強制設置可見性
-                    control.setVisible(True)
-                    print(f"[LAP_CONTROL] 控件 {i+1} 已添加，可見性: {control.isVisible()}")
+                    print(f"[LAP_CONTROL] 控件 {i+1} 已添加，可見性: {control.isVisible()}, 啟用: {control.isEnabled()}")
                 
                 # 添加更新按鈕
                 update_action = QAction("🔄 更新所有分析", self)

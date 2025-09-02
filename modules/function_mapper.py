@@ -1108,6 +1108,36 @@ class F1AnalysisFunctionMapper:
             print(f"[ERROR] 車手詳細遙測分析失敗: {str(e)}")
             return {"success": False, "message": f"車手詳細遙測分析失敗: {str(e)}", "function_id": "12"}
     
+    def _get_fastest_lap_number(self, driver):
+        """查找指定車手的最速圈圈數"""
+        try:
+            if not hasattr(self.data_loader, 'laps') or self.data_loader.laps is None:
+                print(f"[WARNING] 無法獲取圈速數據來查找 {driver} 的最速圈")
+                return None
+                
+            driver_data = self.data_loader.laps.pick_driver(driver)
+            if driver_data.empty:
+                print(f"[WARNING] 找不到車手 {driver} 的數據")
+                return None
+            
+            # 過濾有效的圈速數據
+            valid_laps = driver_data[driver_data['LapTime'].notna()]
+            if valid_laps.empty:
+                print(f"[WARNING] 車手 {driver} 沒有有效的圈速數據")
+                return None
+            
+            # 找到最速圈
+            fastest_lap = valid_laps.loc[valid_laps['LapTime'].idxmin()]
+            lap_number = int(fastest_lap['LapNumber'])
+            lap_time = fastest_lap['LapTime']
+            
+            print(f"[DEBUG] 車手 {driver} 最速圈: 第 {lap_number} 圈 (時間: {lap_time})")
+            return lap_number
+            
+        except Exception as e:
+            print(f"[ERROR] 查找車手 {driver} 最速圈時發生錯誤: {e}")
+            return None
+    
     def _execute_driver_comparison(self, **kwargs):
         """執行車手對比分析 - 包含詳細遙測比較功能"""
         try:
@@ -1121,9 +1151,50 @@ class F1AnalysisFunctionMapper:
             # 獲取車手參數
             driver1 = kwargs.get('driver1', kwargs.get('driver'))
             driver2 = kwargs.get('driver2')
-            # 正確映射lap參數到lap1，同時支援舊參數
-            lap1 = kwargs.get('lap1', kwargs.get('lap', 1))
-            lap2 = kwargs.get('lap2', kwargs.get('lap', 1))
+            
+            # 獲取初始圈數參數
+            lap1_original = kwargs.get('lap1') or kwargs.get('lap') or 1
+            lap2_original = kwargs.get('lap2') or kwargs.get('lap') or 1
+            lap1 = lap1_original
+            lap2 = lap2_original
+            
+            # 特殊處理：lap=99 觸發最速圈邏輯 - 在此階段查找實際圈數
+            if lap1 == 99:
+                print(f"[INFO] 車手1圈數設為99，查找最速圈...")
+                lap1_actual = self._get_fastest_lap_number(driver1)
+                if lap1_actual is not None:
+                    lap1 = lap1_actual
+                    print(f"[INFO] 車手 {driver1} 最速圈: 第 {lap1} 圈")
+                else:
+                    print(f"[WARNING] 無法找到車手 {driver1} 的最速圈，使用第1圈")
+                    lap1 = 1
+                    
+            if lap2 == 99:
+                print(f"[INFO] 車手2圈數設為99，查找最速圈...")
+                lap2_actual = self._get_fastest_lap_number(driver2)
+                if lap2_actual is not None:
+                    lap2 = lap2_actual
+                    print(f"[INFO] 車手 {driver2} 最速圈: 第 {lap2} 圈")
+                else:
+                    print(f"[WARNING] 無法找到車手 {driver2} 的最速圈，使用第1圈")
+                    lap2 = 1
+            
+            # 檢查是否啟用最速圈模式（保留舊的參數支援）
+            use_fastest_lap = kwargs.get('fastest_lap', False) or kwargs.get('fastest', False)
+            
+            # 正確處理圈數參數 - 支援最速圈模式
+            if use_fastest_lap:
+                # 舊的最速圈模式：查找實際圈數
+                lap1_actual = self._get_fastest_lap_number(driver1)
+                lap2_actual = self._get_fastest_lap_number(driver2)
+                if lap1_actual is not None and lap2_actual is not None:
+                    lap1, lap2 = lap1_actual, lap2_actual
+                    print(f"[DEBUG] 最速圈模式啟用: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+                else:
+                    print(f"[WARNING] 無法找到最速圈，使用第1圈")
+                    lap1, lap2 = 1, 1
+            
+            print(f"[DEBUG] 最終圈數設定: lap1={lap1}, lap2={lap2}")
             
             # 判斷是否為單車手模式
             single_driver_mode = driver2 is None
@@ -1198,6 +1269,9 @@ class F1AnalysisFunctionMapper:
                 lap_number=lap1,  # 保持向後兼容
                 lap1=lap1,
                 lap2=lap2,
+                # 傳遞原始圈數參數用於檔案命名
+                lap1_original=lap1_original,
+                lap2_original=lap2_original,
                 show_detailed_output=show_detailed_output,
                 **analysis_kwargs
             )

@@ -31,8 +31,8 @@ class SpeedChartWidget(QWidget):
         self.sectors = []
         
         # 顏色設定
-        self.driver1_color = QColor(255, 0, 0)  # 紅色
-        self.driver2_color = QColor(0, 0, 255)  # 藍色
+        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
+        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
         self.grid_color = QColor(200, 200, 200)
         self.axis_color = QColor(50, 50, 50)
         self.sector_color = QColor(100, 100, 100, 100)  # 半透明灰色
@@ -499,7 +499,9 @@ class SpeedChartWidget(QWidget):
         painter.setFont(QFont("Arial", 9))
         
         # 檢查是否為單車手模式
-        is_single_driver = (self.driver1_name == self.driver2_name)
+        is_single_driver = (self.driver1_name == self.driver2_name or 
+                           not self.driver2_name or 
+                           not self.driver2_speed)
         
         # 車手1圖例
         painter.setPen(QPen(self.driver1_color, 2))
@@ -1022,6 +1024,29 @@ class SpeedAnalysisChartWidget(QWidget):
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
+            elif len(drivers) == 1:
+                driver1_name = drivers[0].get('code', driver1_name)
+            
+            # 檢測是否為單車手模式或相同車手比較
+            is_single_driver_mode = False
+            if metadata.get('is_single_driver', False):
+                # 明確標記的單車手模式
+                is_single_driver_mode = True
+                print(f"[SPEED_CHART] 🔍 檢測到單車手模式標記")
+            elif driver1_name == driver2_name:
+                # 相同車手比較（如 VER vs VER）
+                is_single_driver_mode = True
+                print(f"[SPEED_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
+            elif len(drivers) == 1:
+                # 只有一個車手的數據
+                is_single_driver_mode = True
+                print(f"[SPEED_CHART] 🔍 檢測到單車手數據: {driver1_name}")
+            
+            if is_single_driver_mode:
+                print(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
+                # 清空車手2的數據，只顯示車手1
+                driver2_speed = []
+                driver2_name = ""
             
             # 更新圖表
             self.chart_widget.set_speed_data(

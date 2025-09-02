@@ -585,19 +585,21 @@ class SpeedAnalysisModule(IAnalysisModule):
                 self.current_race != race or 
                 self.current_session != session or
                 self.driver1 != driver1 or
-                self.driver2 != (driver2 or "VER") or  # 處理 None 值
+                self.driver2 != driver2 or  # 正確處理 None 值比較
                 self.lap1 != lap1 or
                 self.lap2 != lap2
             )
             
             print(f"[SPEED_MDI] 參數是否變化: {params_changed}")
             
-            # 更新所有參數
+            # 更新所有參數 - 保持 driver2 的原始值（包括 None）
             self.current_year = str(year)
             self.current_race = race
             self.current_session = session
             self.driver1 = driver1
-            self.driver2 = driver2 or "VER"  # 如果沒有第二個車手，預設為 VER
+            self.driver2 = driver2  # 保持原始值，支援單車手分析
+            self.lap1 = lap1
+            self.lap2 = lap2
             self.lap1 = lap1
             self.lap2 = lap2
             
@@ -675,14 +677,14 @@ class SpeedAnalysisModule(IAnalysisModule):
             return False
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
-        """獲取視窗標題 - 兼容其他模組的接口"""
+        """獲取視窗標題 - 統一格式，不包含車手資訊以保持模組兼容性"""
         # 如果提供了參數，使用傳入的參數；否則使用內部狀態
         use_year = year if year is not None else self.current_year
         use_race = race if race is not None else self.current_race
         use_session = session if session is not None else self.current_session
         
-        # 簡化標題格式，只顯示基本信息
-        title = f"⚡ 速度分析 - {use_year} {use_race} {use_session}"
+        # 使用統一的簡潔標題格式，與其他模組保持一致
+        title = f"速度分析_{use_year}_{use_race}_{use_session}"
         return title
     
     def update_window_title(self) -> None:

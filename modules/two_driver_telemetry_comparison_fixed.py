@@ -46,27 +46,39 @@ class TwoDriverTelemetryComparison:
         self.session = session
         self.cache_enabled = True
         
-    def analyze(self, driver1, driver2, lap_number=1, lap1=None, lap2=None, show_detailed_output=True, **kwargs):
+    def analyze(self, driver1, driver2, lap_number=1, lap1=None, lap2=None, lap_number1=None, lap_number2=None, file_lap1=None, file_lap2=None, show_detailed_output=True, **kwargs):
         """主要分析方法 - 比較兩位車手的指定圈數遙測數據"""
         
-        # 支援雙圈數參數
-        if lap1 is not None and lap2 is not None:
-            lap_number1 = lap1
-            lap_number2 = lap2
+        # 優先使用新的lap_number1, lap_number2參數
+        if lap_number1 is not None and lap_number2 is not None:
+            actual_lap1 = lap_number1
+            actual_lap2 = lap_number2
             print(f"🚀 開始執行雙車手遙測比較分析...")
-            print(f"   • 車手1: {driver1} (第{lap_number1}圈)")
-            print(f"   • 車手2: {driver2} (第{lap_number2}圈)")
+            print(f"   • 車手1: {driver1} (第{actual_lap1}圈)")
+            print(f"   • 車手2: {driver2} (第{actual_lap2}圈)")
+            print(f"   • 比較模式: 不同圈數比較")
+        # 支援舊的雙圈數參數
+        elif lap1 is not None and lap2 is not None:
+            actual_lap1 = lap1
+            actual_lap2 = lap2
+            print(f"🚀 開始執行雙車手遙測比較分析...")
+            print(f"   • 車手1: {driver1} (第{actual_lap1}圈)")
+            print(f"   • 車手2: {driver2} (第{actual_lap2}圈)")
             print(f"   • 比較模式: 不同圈數比較")
         else:
-            lap_number1 = lap_number
-            lap_number2 = lap_number
+            actual_lap1 = lap_number
+            actual_lap2 = lap_number
             print(f"🚀 開始執行雙車手遙測比較分析...")
             print(f"   • 車手1: {driver1}")
             print(f"   • 車手2: {driver2}")
             print(f"   • 指定圈數: {lap_number}")
         
+        # 設定檔案命名用的圈數
+        display_lap1 = file_lap1 if file_lap1 is not None else actual_lap1
+        display_lap2 = file_lap2 if file_lap2 is not None else actual_lap2
+        
         # 1. 檢查緩存 (使用雙圈數的緩存鍵)
-        cache_key = self._generate_cache_key(driver1, driver2, lap_number1, lap_number2, **kwargs)
+        cache_key = self._generate_cache_key(driver1, driver2, actual_lap1, actual_lap2, **kwargs)
         if self.cache_enabled:
             cached_result = self._check_cache(cache_key)
             if cached_result:
@@ -77,7 +89,7 @@ class TwoDriverTelemetryComparison:
                     print("📦 使用緩存數據")
                 
                 # 保存JSON結果（即使是緩存數據也要保存）
-                self._save_json_result(cached_result, driver1, driver2, lap_number1, lap_number2)
+                self._save_json_result(cached_result, driver1, driver2, display_lap1, display_lap2)
                 
                 # 結果驗證和反饋
                 self._report_analysis_results(cached_result, "雙車手遙測比較分析")
@@ -108,6 +120,33 @@ class TwoDriverTelemetryComparison:
             print(f"❌ 找不到車手 {driver2} 的數據")
             return None
         
+        # 4.5 處理最速圈邏輯
+        if actual_lap1 is None:
+            # 選擇車手1的最速圈
+            valid_laps1 = driver1_data[driver1_data['LapTime'].notna()]
+            if not valid_laps1.empty:
+                fastest_lap1 = valid_laps1.loc[valid_laps1['LapTime'].idxmin()]
+                actual_lap1 = fastest_lap1['LapNumber']
+                print(f"🏃 車手 {driver1} 最速圈: 第 {actual_lap1} 圈 (時間: {fastest_lap1['LapTime']})")
+            else:
+                print(f"❌ 車手 {driver1} 沒有有效的圈速數據")
+                return None
+        
+        if actual_lap2 is None:
+            # 選擇車手2的最速圈
+            valid_laps2 = driver2_data[driver2_data['LapTime'].notna()]
+            if not valid_laps2.empty:
+                fastest_lap2 = valid_laps2.loc[valid_laps2['LapTime'].idxmin()]
+                actual_lap2 = fastest_lap2['LapNumber']
+                print(f"🏃 車手 {driver2} 最速圈: 第 {actual_lap2} 圈 (時間: {fastest_lap2['LapTime']})")
+            else:
+                print(f"❌ 車手 {driver2} 沒有有效的圈速數據")
+                return None
+        
+        # 統一變數命名（便於後續使用）
+        lap_number1 = actual_lap1
+        lap_number2 = actual_lap2
+        
         # 5. 檢查指定圈數是否存在
         if lap_number1 not in driver1_data['LapNumber'].values:
             print(f"❌ 車手 {driver1} 沒有第 {lap_number1} 圈的數據")
@@ -131,11 +170,11 @@ class TwoDriverTelemetryComparison:
             telemetry2 = lap_data2.get_telemetry()
             
             if telemetry1.empty:
-                print(f"❌ 車手 {driver1} 第 {lap_number} 圈沒有遙測數據")
+                print(f"❌ 車手 {driver1} 第 {lap_number1} 圈沒有遙測數據")
                 return None
             
             if telemetry2.empty:
-                print(f"❌ 車手 {driver2} 第 {lap_number} 圈沒有遙測數據")
+                print(f"❌ 車手 {driver2} 第 {lap_number2} 圈沒有遙測數據")
                 return None
                 
         except Exception as e:
@@ -159,7 +198,7 @@ class TwoDriverTelemetryComparison:
         
         # 11. 保存JSON結果（確保一定會保存）
         if result:
-            self._save_json_result(result, driver1, driver2, lap_number1, lap_number2)
+            self._save_json_result(result, driver1, driver2, display_lap1, display_lap2)
         
         # 12. 保存緩存
         if self.cache_enabled and result:
@@ -203,7 +242,8 @@ class TwoDriverTelemetryComparison:
             'comparison_info': {
                 'driver1': driver1,
                 'driver2': driver2,
-                'lap_number': lap_number,
+                'act_lap1_number': lap_number1,
+                'act_lap2_number': lap_number2,
                 'lap_time1': lap_time1,
                 'lap_time2': lap_time2,
                 'compound1': getattr(lap_data1, 'Compound', 'Unknown'),
@@ -670,7 +710,7 @@ class TwoDriverTelemetryComparison:
         
         comp_info = analysis_result['comparison_info']
         info_table.add_row(["🏎️ 車手", comp_info['driver1'], comp_info['driver2']])
-        info_table.add_row(["🏁 圈數", f"第 {comp_info['lap_number']} 圈", f"第 {comp_info['lap_number']} 圈"])
+        info_table.add_row(["🏁 圈數", f"第 {comp_info['act_lap1_number']} 圈", f"第 {comp_info['act_lap2_number']} 圈"])
         info_table.add_row(["⏱️ 圈時間", comp_info['lap_time1'], comp_info['lap_time2']])
         info_table.add_row(["🛞 輪胎配方", comp_info['compound1'], comp_info['compound2']])
         info_table.add_row(["🔄 輪胎使用圈數", comp_info['tyre_life1'], comp_info['tyre_life2']])
@@ -1041,19 +1081,29 @@ class TwoDriverTelemetryComparison:
         return True
 
 
-def run_two_driver_telemetry_comparison_analysis(data_loader, year, race, session, driver, driver2, lap_number=1, lap1=None, lap2=None, **kwargs):
+def run_two_driver_telemetry_comparison_analysis(data_loader, year, race, session, driver, driver2, lap_number=1, lap1=None, lap2=None, lap1_original=None, lap2_original=None, **kwargs):
     """運行雙車手遙測比較分析的入口函數"""
     
     # 支援雙圈數參數
     if lap1 is not None and lap2 is not None:
-        # 使用 lap1 作為主要圈數，lap2 待後續支援
-        actual_lap = lap1
+        # 使用 lap1 和 lap2 進行分析
+        lap_number1 = lap1
+        lap_number2 = lap2
         print(f"[DEBUG] 使用雙圈數參數: lap1={lap1}, lap2={lap2}")
-        print(f"[WARNING] 目前版本使用 lap1({lap1}) 作為分析圈數，lap2({lap2}) 暫未支援")
     else:
         # 使用原有的 lap_number 參數
-        actual_lap = lap_number
+        lap_number1 = lap_number
+        lap_number2 = lap_number
         print(f"[DEBUG] 使用傳統圈數參數: lap_number={lap_number}")
+    
+    # 處理檔案命名用的圈數（保留原始輸入，如99表示最速圈）
+    if lap1_original is not None and lap2_original is not None:
+        file_lap1 = lap1_original
+        file_lap2 = lap2_original
+        print(f"[DEBUG] 檔案命名使用原始參數: lap1_original={lap1_original}, lap2_original={lap2_original}")
+    else:
+        file_lap1 = lap_number1
+        file_lap2 = lap_number2
     
     analyzer = TwoDriverTelemetryComparison(
         data_loader=data_loader,
@@ -1062,13 +1112,23 @@ def run_two_driver_telemetry_comparison_analysis(data_loader, year, race, sessio
         session=session
     )
     
-    result = analyzer.analyze(driver1=driver, driver2=driver2, lap_number=actual_lap, lap1=lap1, lap2=lap2, **kwargs)
+    result = analyzer.analyze(
+        driver1=driver, 
+        driver2=driver2, 
+        lap_number1=lap_number1, 
+        lap_number2=lap_number2,
+        lap1=lap1, 
+        lap2=lap2,
+        file_lap1=file_lap1,
+        file_lap2=file_lap2,
+        **kwargs
+    )
     
     # 包裝結果以符合 function_mapper 的期望格式
     if result:
         return {
             "success": True, 
-            "message": f"雙車手遙測比較分析完成 (車手: {driver} vs {driver2}, 圈數: {lap_number})", 
+            "message": f"雙車手遙測比較分析完成 (車手: {driver} vs {driver2}, 圈數: {lap_number1} vs {lap_number2})", 
             "data": result,
             "function_id": "13"
         }

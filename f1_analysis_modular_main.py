@@ -1603,6 +1603,8 @@ def create_argument_parser():
                        help='車手1的指定圈數 (用於雙車手比較分析)')
     parser.add_argument('--lap2', type=int,
                        help='車手2的指定圈數 (用於雙車手比較分析)')
+    parser.add_argument('--fastest', action='store_true',
+                       help='使用最速圈進行分析 (適用於車手比較分析)')
     parser.add_argument('--corner', type=int,
                        help='指定彎道編號 (用於彎道詳細分析，如: 1, 2, 3 等)')
     
