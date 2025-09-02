@@ -900,13 +900,13 @@ class LapAnalysisOptionsDialog(QDialog):
     def _on_fastest_lap_changed(self, state):
         """當最速圈勾選框變更時的處理"""
         if state == 2:  # 勾選時 (Qt.Checked)
-            # 最速圈被選中，禁用兩個圈數輸入
+            # 最速圈被選中，禁用兩個圈數輸入並顯示99
             self.lap1_input.setEnabled(False)
-            self.lap1_input.setText("最速圈")
+            self.lap1_input.setText("99")  # 顯示99代表最速圈
             self.lap1_input.setStyleSheet("color: #666666;")
             
             self.lap2_input.setEnabled(False)
-            self.lap2_input.setText("最速圈")
+            self.lap2_input.setText("99")  # 顯示99代表最速圈
             self.lap2_input.setStyleSheet("color: #666666;")
         else:
             # 最速圈未選中，啟用兩個圈數輸入
@@ -927,8 +927,10 @@ class LapAnalysisOptionsDialog(QDialog):
         is_fastest_lap = self.fastest_lap_checkbox.isChecked()
         
         if is_fastest_lap:
-            lap1_number = "fastest"
-            lap2_number = "fastest"
+            # 🏁 最速圈邏輯：使用圈數99代表最速圈
+            # 這與CLI命令 python f1_analysis_modular_main.py -f 13 --lap1 99 --lap2 99 一致
+            lap1_number = 99
+            lap2_number = 99
             lap_type = "最速圈"
         else:
             # 嘗試解析車手1圈數輸入
@@ -4423,6 +4425,9 @@ class StyleHMainWindow(QMainWindow):
         self.fastest_lap_checkbox = QCheckBox("最速圈")
         self.fastest_lap_checkbox.setVisible(False)  # 初始隱藏
         
+        # 🏁 連接最速圈checkbox的變更事件，自動設置圈數為99
+        self.fastest_lap_checkbox.toggled.connect(self._on_main_fastest_lap_changed)
+        
         # 更新按鈕動作（稍後動態添加）
         self.update_all_action = None
         
@@ -5012,7 +5017,36 @@ class StyleHMainWindow(QMainWindow):
                 print(f"[LAP_CONTROL]   📋 錯誤詳情: {traceback.format_exc()}")
         
         print(f"[LAP_CONTROL] ✅ 更新完成，成功更新 {updated_count}/{len(self.lap_analysis_windows)} 個視窗")
-    
+
+    def _on_main_fastest_lap_changed(self, checked):
+        """主頁面最速圈checkbox變更時的處理 - 自動設置圈數為99"""
+        print(f"[LAP_CONTROL] 🏁 主頁面最速圈checkbox變更: {checked}")
+        
+        if checked:
+            # 最速圈被勾選，自動設置圈數為99
+            print("[LAP_CONTROL] 🏁 最速圈被選中，自動設置圈數1和圈數2為99")
+            
+            if hasattr(self, 'lap1_spinbox'):
+                old_value1 = self.lap1_spinbox.value()
+                self.lap1_spinbox.setValue(99)
+                print(f"[LAP_CONTROL] 🏁 圈數1: {old_value1} → 99")
+                
+            if hasattr(self, 'lap2_spinbox'):
+                old_value2 = self.lap2_spinbox.value()
+                self.lap2_spinbox.setValue(99)
+                print(f"[LAP_CONTROL] 🏁 圈數2: {old_value2} → 99")
+        else:
+            # 最速圈被取消，恢復預設圈數1
+            print("[LAP_CONTROL] 🏁 最速圈被取消，恢復預設圈數1")
+            
+            if hasattr(self, 'lap1_spinbox'):
+                self.lap1_spinbox.setValue(1)
+                print(f"[LAP_CONTROL] 🏁 圈數1: 恢復為1")
+                
+            if hasattr(self, 'lap2_spinbox'):
+                self.lap2_spinbox.setValue(1)
+                print(f"[LAP_CONTROL] 🏁 圈數2: 恢復為1")
+
     def on_lap_parameters_changed(self):
         """圈速參數變更時自動更新所有分析"""
         print("[LAP_CONTROL] 🔄 圈速參數已變更，準備自動更新...")
