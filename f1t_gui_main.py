@@ -4383,42 +4383,42 @@ class StyleHMainWindow(QMainWindow):
         
         # 車手1控件
         self.driver1_label = QLabel("車手1:")
-        self.driver1_label.setVisible(True)  # 確保可見
+        self.driver1_label.setVisible(False)  # 初始隱藏
         self.driver1_combo = QComboBox()
         self.driver1_combo.setObjectName("ParameterCombo")
         self.driver1_combo.setFixedWidth(60)
-        self.driver1_combo.setVisible(True)  # 確保可見
+        self.driver1_combo.setVisible(False)  # 初始隱藏
         
         # 圈數1控件
         self.lap1_label = QLabel("圈數:")
-        self.lap1_label.setVisible(True)  # 確保可見
+        self.lap1_label.setVisible(False)  # 初始隱藏
         self.lap1_spinbox = QSpinBox()
         self.lap1_spinbox.setRange(1, 100)
         self.lap1_spinbox.setValue(1)
         self.lap1_spinbox.setFixedWidth(50)
-        self.lap1_spinbox.setVisible(True)  # 確保可見
+        self.lap1_spinbox.setVisible(False)  # 初始隱藏
         
         # 車手2控件
         self.driver2_label = QLabel("車手2:")
-        self.driver2_label.setVisible(True)  # 確保可見
+        self.driver2_label.setVisible(False)  # 初始隱藏
         self.driver2_combo = QComboBox()
         self.driver2_combo.setObjectName("ParameterCombo")
         self.driver2_combo.addItem("無")  # 預設選項
         self.driver2_combo.setFixedWidth(60)
-        self.driver2_combo.setVisible(True)  # 確保可見
+        self.driver2_combo.setVisible(False)  # 初始隱藏
         
         # 圈數2控件
         self.lap2_label = QLabel("圈數:")
-        self.lap2_label.setVisible(True)  # 確保可見
+        self.lap2_label.setVisible(False)  # 初始隱藏
         self.lap2_spinbox = QSpinBox()
         self.lap2_spinbox.setRange(1, 100)
         self.lap2_spinbox.setValue(1)
         self.lap2_spinbox.setFixedWidth(50)
-        self.lap2_spinbox.setVisible(True)  # 確保可見
+        self.lap2_spinbox.setVisible(False)  # 初始隱藏
         
         # 最速圈選項
         self.fastest_lap_checkbox = QCheckBox("最速圈")
-        self.fastest_lap_checkbox.setVisible(True)  # 確保可見
+        self.fastest_lap_checkbox.setVisible(False)  # 初始隱藏
         
         # 更新按鈕動作（稍後動態添加）
         self.update_all_action = None
