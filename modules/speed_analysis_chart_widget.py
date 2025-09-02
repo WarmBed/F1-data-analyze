@@ -82,11 +82,6 @@ class SpeedChartWidget(QWidget):
                       driver2_speed: List[float], driver1_name: str = "Driver 1", 
                       driver2_name: str = "Driver 2", sectors: List[Dict] = None):
         """設置速度數據"""
-        print(f"[SPEED CHART] 設置新的速度數據")
-        print(f"[SPEED CHART] 車手1: {driver1_name}, 數據點: {len(driver1_speed)}")
-        print(f"[SPEED CHART] 車手2: {driver2_name}, 數據點: {len(driver2_speed)}")
-        print(f"[SPEED CHART] 距離數據點: {len(distance)}")
-        
         # 強制重置視圖狀態
         self.view_min_distance = None
         self.view_max_distance = None
@@ -108,7 +103,6 @@ class SpeedChartWidget(QWidget):
         if distance:
             self.min_distance = min(distance)
             self.max_distance = max(distance)
-            print(f"[SPEED CHART] 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
         
         all_speeds = []
         if driver1_speed:
@@ -119,11 +113,9 @@ class SpeedChartWidget(QWidget):
         if all_speeds:
             self.min_speed = max(0, min(all_speeds) - 20)
             self.max_speed = max(all_speeds) + 20
-            print(f"[SPEED CHART] 速度範圍: {self.min_speed:.1f} - {self.max_speed:.1f}")
         
         # 強制重繪
         self.repaint()
-        print(f"[SPEED CHART] ✅ 數據設置完成，已重繪圖表")
         
     def reset_view(self):
         """重置視圖到原始範圍"""
@@ -138,7 +130,6 @@ class SpeedChartWidget(QWidget):
     
     def reset_data(self):
         """重置所有數據和視圖"""
-        print(f"[SPEED CHART] 重置數據和視圖")
         self.speed_data = None
         self.driver1_name = ""
         self.driver2_name = ""
@@ -157,7 +148,6 @@ class SpeedChartWidget(QWidget):
         
         # 重繪
         self.repaint()
-        print(f"[SPEED CHART] ✅ 數據重置完成")
         
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -417,7 +407,7 @@ class SpeedChartWidget(QWidget):
             painter.setPen(QPen(QColor(200, 0, 0), 2, Qt.SolidLine))
         else:
             # 跟隨線：虛線，較淡
-            painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.DashLine))
+            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
             
         painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
         
@@ -508,17 +498,21 @@ class SpeedChartWidget(QWidget):
         
         painter.setFont(QFont("Arial", 9))
         
+        # 檢查是否為單車手模式
+        is_single_driver = (self.driver1_name == self.driver2_name)
+        
         # 車手1圖例
         painter.setPen(QPen(self.driver1_color, 2))
         painter.drawLine(legend_x, legend_y, legend_x + 20, legend_y)
         painter.setPen(QPen(self.axis_color, 1))
         painter.drawText(legend_x + 25, legend_y - 5, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver1_name)
         
-        # 車手2圖例
-        painter.setPen(QPen(self.driver2_color, 2))
-        painter.drawLine(legend_x, legend_y + 20, legend_x + 20, legend_y + 20)
-        painter.setPen(QPen(self.axis_color, 1))
-        painter.drawText(legend_x + 25, legend_y + 15, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver2_name)
+        # 只有在非單車手模式且車手名稱不同時才顯示車手2圖例
+        if not is_single_driver and self.driver2_name != self.driver1_name:
+            painter.setPen(QPen(self.driver2_color, 2))
+            painter.drawLine(legend_x, legend_y + 20, legend_x + 20, legend_y + 20)
+            painter.setPen(QPen(self.axis_color, 1))
+            painter.drawText(legend_x + 25, legend_y + 15, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver2_name)
         
     def mouseMoveEvent(self, event: QMouseEvent):
         """滑鼠移動事件"""
@@ -661,13 +655,14 @@ class SpeedAnalysisChartWidget(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
         self.current_data = None
         self.setup_ui()
         
     def setup_ui(self):
         """設置UI界面"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除外層邊距，避免與MDI雙重邊距
         layout.setSpacing(5)
         
         # 主要分割器
@@ -703,7 +698,7 @@ class SpeedAnalysisChartWidget(QWidget):
         """)
         
         layout = QVBoxLayout(container)
-        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setContentsMargins(0, 0, 0, 0)  # 實驗：移除圖表容器邊距
         
         # 創建圖表組件
         self.chart_widget = SpeedChartWidget()
@@ -715,8 +710,12 @@ class SpeedAnalysisChartWidget(QWidget):
         """創建統計信息容器"""
         container = QFrame()
         container.setFrameStyle(QFrame.StyledPanel)
-        container.setMaximumHeight(80)  # 增加高度以容納狀態資訊欄
-        container.setMinimumHeight(80)  # 設置最小高度
+        container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # 水平擴展，垂直固定
+        
+        # 設置固定高度（調整為更小的高度，因為狀態信息已隱藏）
+        container.setMaximumHeight(60)
+        container.setMinimumHeight(60)
+        
         container.setStyleSheet("""
             QFrame {
                 border: 1px solid #bdc3c7;
@@ -770,8 +769,9 @@ class SpeedAnalysisChartWidget(QWidget):
         
         main_layout.addLayout(title_layout)
         
-        # 車手狀態資訊欄（總是顯示）
+        # 車手狀態資訊欄（隱藏，只在主頁面工具欄顯示）
         self.status_info_widget = self._create_status_info_widget()
+        self.status_info_widget.setVisible(False)  # 隱藏狀態信息區域
         main_layout.addWidget(self.status_info_widget)
         
         # 統計表格
@@ -843,7 +843,7 @@ class SpeedAnalysisChartWidget(QWidget):
                 padding: 2px;
                 max-width: 40px;
                 min-width: 40px;
-                background-color: #f8f9fa;
+                background-color: #ffffff;
                 color: #2c3e50;
                 text-align: center;
             }
@@ -866,7 +866,7 @@ class SpeedAnalysisChartWidget(QWidget):
                 padding: 2px;
                 max-width: 40px;
                 min-width: 40px;
-                background-color: #f8f9fa;
+                background-color: #ffffff;
                 color: #2c3e50;
                 text-align: center;
             }
@@ -967,9 +967,7 @@ class SpeedAnalysisChartWidget(QWidget):
             return
             
         row_count = self.stats_table.rowCount()
-        if row_count == 0:
-            return
-            
+        
         # 計算所需高度
         header_height = self.stats_table.horizontalHeader().height()
         row_height = self.stats_table.rowHeight(0) if row_count > 0 else 25
@@ -978,7 +976,14 @@ class SpeedAnalysisChartWidget(QWidget):
         title_bar_height = 30  # 標題欄高度
         status_bar_height = 35  # 狀態資訊欄高度
         margins = 15  # 上下邊距
-        table_height = header_height + (row_height * row_count)
+        
+        # 即使沒有數據行，也要顯示表格標題
+        if row_count == 0:
+            # 最小展開高度：標題欄 + 狀態欄 + 表格標題 + 邊距 + 一些額外空間
+            table_height = header_height + 30  # 保留一些空間
+        else:
+            table_height = header_height + (row_height * row_count)
+            
         total_height = title_bar_height + status_bar_height + table_height + margins
         
         # 設置容器高度（最小120，最大400）
@@ -994,7 +999,6 @@ class SpeedAnalysisChartWidget(QWidget):
         
     def update_speed_data(self, data: Dict[str, Any]):
         """更新速度數據"""
-        print(f"[SPEED CHART WIDGET] ========== 收到數據更新請求 ==========")
         self.current_data = data
         
         try:
@@ -1003,16 +1007,9 @@ class SpeedAnalysisChartWidget(QWidget):
             speed_data = data.get('speed_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[SPEED CHART WIDGET] 元數據鍵值: {list(metadata.keys())}")
-            print(f"[SPEED CHART WIDGET] 速度數據鍵值: {list(speed_data.keys())}")
-            print(f"[SPEED CHART WIDGET] 統計數據鍵值: {list(statistics.keys())}")
-            
             # 提取車手信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
-            
-            print(f"[SPEED CHART WIDGET] 車手數量: {len(drivers)}")
-            print(f"[SPEED CHART WIDGET] 分段數量: {len(sectors)}")
             
             # 提取速度數據
             distance = speed_data.get('distance', [])
@@ -1021,18 +1018,12 @@ class SpeedAnalysisChartWidget(QWidget):
             driver1_name = speed_data.get('driver1_name', 'Driver 1')
             driver2_name = speed_data.get('driver2_name', 'Driver 2')
             
-            print(f"[SPEED CHART WIDGET] 距離數據: {len(distance)} 點")
-            print(f"[SPEED CHART WIDGET] 車手1 ({driver1_name}) 速度: {len(driver1_speed)} 點")
-            print(f"[SPEED CHART WIDGET] 車手2 ({driver2_name}) 速度: {len(driver2_speed)} 點")
-            
             # 如果有車手信息，使用車手代碼作為名稱
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
-                print(f"[SPEED CHART WIDGET] 更新車手名稱: {driver1_name} vs {driver2_name}")
             
             # 更新圖表
-            print(f"[SPEED CHART WIDGET] 開始更新圖表...")
             self.chart_widget.set_speed_data(
                 distance=distance,
                 driver1_speed=driver1_speed,
@@ -1043,14 +1034,11 @@ class SpeedAnalysisChartWidget(QWidget):
             )
             
             # 更新統計表格
-            print(f"[SPEED CHART WIDGET] 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, driver2_name)
             
             # 更新狀態資訊顯示
-            print(f"[SPEED CHART WIDGET] 更新狀態資訊...")
             self._update_status_info(data)
             
-            print(f"[SPEED CHART WIDGET] ✅ 數據更新完成")
             self.chart_updated.emit()
             
         except Exception as e:
@@ -1152,3 +1140,37 @@ class SpeedAnalysisChartWidget(QWidget):
             
         except Exception as e:
             print(f"[ERROR] 設置圈數失敗: {e}")
+    
+    def resizeEvent(self, event):
+        """視窗大小變化事件"""
+        super().resizeEvent(event)
+        old_size = event.oldSize()
+        new_size = event.size()
+        
+        if old_size.isValid():
+            print(f"[SPEED_DEBUG] 視窗尺寸變化: {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+        else:
+            print(f"[SPEED_DEBUG] 視窗初始尺寸: {new_size.width()}x{new_size.height()}")
+        
+        # 檢查分割器尺寸
+        for i, child in enumerate(self.children()):
+            if hasattr(child, 'sizes'):  # QSplitter
+                sizes = child.sizes()
+                print(f"[SPEED_DEBUG] 分割器 {i} 當前尺寸: {sizes}")
+    
+    def showEvent(self, event):
+        """視窗顯示事件"""
+        super().showEvent(event)
+
+# 主程式測試
+if __name__ == "__main__":
+    import sys
+    from PyQt5.QtWidgets import QApplication
+    
+    app = QApplication(sys.argv)
+    
+    # 創建測試窗口
+    widget = SpeedAnalysisChartWidget()
+    widget.show()
+    
+    sys.exit(app.exec_())

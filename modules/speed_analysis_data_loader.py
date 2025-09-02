@@ -276,6 +276,7 @@ class SpeedAnalysisDataLoader(QObject):
                         stderr=subprocess.PIPE,
                         text=True,
                         encoding='utf-8',
+                        errors='replace',  # 遇到無法解碼的字符時用替代字符
                         cwd=os.getcwd()
                     )
                     

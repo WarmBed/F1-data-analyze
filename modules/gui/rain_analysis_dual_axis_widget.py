@@ -77,15 +77,12 @@ class RainAnalysisWorker(QThread):
             print(f"🚀 執行命令: {' '.join(cmd)}")
             
             # 使用更寬容的編碼處理
-            import locale
-            system_encoding = locale.getpreferredencoding() or 'cp1252'
-            
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 cwd=project_root,
-                encoding=system_encoding,
+                encoding='utf-8',  # 統一使用UTF-8編碼
                 errors='replace'  # 替換無法解碼的字符
             )
             

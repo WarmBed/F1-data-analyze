@@ -168,6 +168,8 @@ class TrackAnalysisWorkerThread(QThread):
                 cwd=project_root,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
+                errors='replace',  # 遇到無法解碼的字符時用替代字符
                 timeout=300  # 5分鐘超時
             )
             

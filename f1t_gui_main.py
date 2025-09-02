@@ -725,11 +725,11 @@ class LapAnalysisOptionsDialog(QDialog):
         self.telemetry_options = {
             'speed_analysis': ('⚡ 速度分析 (Speed Analysis)', True),  # 設為預設選中
             # 'speed': ('🏃 速度 (Speed)', True),  # 移除速度選項
-            'brake': ('🛑 煞車 (Brake)', True),
-            'throttle': ('⚡油門 (Throttle)', True),
+            'brake': ('🛑 煞車 (Brake)', False),
+            'throttle': ('⚡油門 (Throttle)', False),
             'steering': ('🎯 轉向 (Steering)', False),
             'gear': ('⚙️ 檔位 (Gear)', False),
-            'rpm': ('🔄 轉速 (RPM)', False),
+            'rpm': ('🔄 轉速 (RPM)', True),  # 設為預設選中
             'acceleration': ('📈 加速度 (Acceleration)', False),
             'speed_diff': ('📊 速度差 (Speed Difference)', False),
             'distance_diff': ('📏 累積距離差 (Distance Difference)', False)
@@ -4324,7 +4324,8 @@ class StyleHMainWindow(QMainWindow):
         toolbar.setMovable(False)
         toolbar.setFloatable(False)
         toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        toolbar.setFixedHeight(35)
+        # 修改：增加工具欄高度以容納圈速分析控件
+        toolbar.setFixedHeight(35)  # 從35增加到50像素
         self.addToolBar(toolbar)
         
         # 參數輸入區域
@@ -4382,33 +4383,42 @@ class StyleHMainWindow(QMainWindow):
         
         # 車手1控件
         self.driver1_label = QLabel("車手1:")
+        self.driver1_label.setVisible(True)  # 確保可見
         self.driver1_combo = QComboBox()
         self.driver1_combo.setObjectName("ParameterCombo")
         self.driver1_combo.setFixedWidth(60)
+        self.driver1_combo.setVisible(True)  # 確保可見
         
         # 圈數1控件
         self.lap1_label = QLabel("圈數:")
+        self.lap1_label.setVisible(True)  # 確保可見
         self.lap1_spinbox = QSpinBox()
         self.lap1_spinbox.setRange(1, 100)
         self.lap1_spinbox.setValue(1)
         self.lap1_spinbox.setFixedWidth(50)
+        self.lap1_spinbox.setVisible(True)  # 確保可見
         
         # 車手2控件
         self.driver2_label = QLabel("車手2:")
+        self.driver2_label.setVisible(True)  # 確保可見
         self.driver2_combo = QComboBox()
         self.driver2_combo.setObjectName("ParameterCombo")
         self.driver2_combo.addItem("無")  # 預設選項
         self.driver2_combo.setFixedWidth(60)
+        self.driver2_combo.setVisible(True)  # 確保可見
         
         # 圈數2控件
         self.lap2_label = QLabel("圈數:")
+        self.lap2_label.setVisible(True)  # 確保可見
         self.lap2_spinbox = QSpinBox()
         self.lap2_spinbox.setRange(1, 100)
         self.lap2_spinbox.setValue(1)
         self.lap2_spinbox.setFixedWidth(50)
+        self.lap2_spinbox.setVisible(True)  # 確保可見
         
         # 最速圈選項
         self.fastest_lap_checkbox = QCheckBox("最速圈")
+        self.fastest_lap_checkbox.setVisible(True)  # 確保可見
         
         # 更新按鈕動作（稍後動態添加）
         self.update_all_action = None
@@ -4585,6 +4595,13 @@ class StyleHMainWindow(QMainWindow):
             print(f"[LAP_CONTROL]   {frame.strip()}")
             
         try:
+            # 檢查控件狀態
+            print(f"[LAP_CONTROL] 🔍 檢查控件狀態:")
+            print(f"[LAP_CONTROL]   driver1_combo.isVisible(): {self.driver1_combo.isVisible()}")
+            print(f"[LAP_CONTROL]   driver1_combo.count(): {self.driver1_combo.count()}")
+            print(f"[LAP_CONTROL]   driver2_combo.isVisible(): {self.driver2_combo.isVisible()}")
+            print(f"[LAP_CONTROL]   driver2_combo.count(): {self.driver2_combo.count()}")
+            
             # 標準車手列表（2025賽季）
             drivers = [
                 "VER", "PER", "LEC", "SAI", "HAM", "RUS", "NOR", "PIA", 
@@ -4605,6 +4622,13 @@ class StyleHMainWindow(QMainWindow):
             self.driver2_combo.setCurrentText("無")  # 預設無第二車手
             print("[LAP_CONTROL] ✅ driver2_combo 設定完成")
             
+            # 驗證設定結果
+            print(f"[LAP_CONTROL] 📊 設定後狀態:")
+            print(f"[LAP_CONTROL]   driver1_combo當前文字: '{self.driver1_combo.currentText()}'")
+            print(f"[LAP_CONTROL]   driver2_combo當前文字: '{self.driver2_combo.currentText()}'")
+            print(f"[LAP_CONTROL]   driver1_combo項目數: {self.driver1_combo.count()}")
+            print(f"[LAP_CONTROL]   driver2_combo項目數: {self.driver2_combo.count()}")
+            
             print(f"[LAP_CONTROL] ✅ 已初始化車手列表，共 {len(drivers)} 位車手")
             
         except Exception as e:
@@ -4620,9 +4644,9 @@ class StyleHMainWindow(QMainWindow):
             return
         
         try:
-            # 初始化車手列表（如果還沒初始化）
-            if self.driver1_combo.count() == 0:
-                self.initialize_driver_lists()
+            # 強制重新初始化車手列表，確保在重新顯示時車手列表正確
+            print("[LAP_CONTROL] 🔄 強制重新初始化車手列表...")
+            self.initialize_driver_lists()
             
             # 在賽事會話控件後添加分隔符
             session_action = None
@@ -4654,11 +4678,20 @@ class StyleHMainWindow(QMainWindow):
                     self.fastest_lap_checkbox
                 ]
                 
-                for control in controls_to_add:
+                print(f"[LAP_CONTROL] 🔧 準備添加 {len(controls_to_add)} 個控件到工具欄")
+                for i, control in enumerate(controls_to_add):
+                    control_name = control.__class__.__name__
+                    control_text = getattr(control, 'text', lambda: '')() or getattr(control, 'currentText', lambda: '')()
+                    print(f"[LAP_CONTROL] 添加控件 {i+1}: {control_name} - '{control_text}'")
+                    
                     if next_action:
                         self.main_toolbar.insertWidget(next_action, control)
                     else:
                         self.main_toolbar.addWidget(control)
+                    
+                    # 強制設置可見性
+                    control.setVisible(True)
+                    print(f"[LAP_CONTROL] 控件 {i+1} 已添加，可見性: {control.isVisible()}")
                 
                 # 添加更新按鈕
                 update_action = QAction("🔄 更新所有分析", self)
@@ -4670,6 +4703,24 @@ class StyleHMainWindow(QMainWindow):
                     self.update_all_action = self.main_toolbar.addAction(update_action)
                 
                 print("[LAP_CONTROL] ✅ 圈速分析控件成功添加到工具欄")
+                print(f"[LAP_CONTROL] 📊 工具欄狀態檢查:")
+                print(f"[LAP_CONTROL]   - 工具欄可見: {self.main_toolbar.isVisible()}")
+                print(f"[LAP_CONTROL]   - 工具欄動作數量: {len(self.main_toolbar.actions())}")
+                print(f"[LAP_CONTROL]   - 工具欄尺寸: {self.main_toolbar.size()}")
+                
+                # 強制更新工具欄顯示
+                self.main_toolbar.update()
+                self.main_toolbar.repaint()
+                
+                # 檢查每個控件的狀態
+                print(f"[LAP_CONTROL] 🔍 控件狀態最終檢查:")
+                for i, control in enumerate(controls_to_add):
+                    widget_name = control.__class__.__name__
+                    is_visible = control.isVisible()
+                    is_enabled = control.isEnabled()
+                    size = control.size()
+                    print(f"[LAP_CONTROL]   控件{i+1} ({widget_name}): 可見={is_visible}, 啟用={is_enabled}, 尺寸={size}")
+                
                 self._lap_controls_added = True
                 self.lap_controls_visible = True
                 
@@ -4746,6 +4797,10 @@ class StyleHMainWindow(QMainWindow):
         # 顯示圈速控件
         print("[LAP_CONTROL] 🎯 即將調用 show_lap_controls()...")
         self.show_lap_controls()
+        
+        # 🎯 新增: 統一觸發工具欄狀態更新 - 任何圈速分析模組都會觸發
+        print(f"[TOOLBAR_TRIGGER] 🚀 圈速分析模組開啟，觸發工具欄狀態更新: {analysis_type}")
+        self._trigger_toolbar_status_for_lap_analysis(analysis_type, window_object)
     
     def on_lap_analysis_window_closed(self, window_object):
         """圈速分析視窗關閉時調用"""
@@ -4772,6 +4827,61 @@ class StyleHMainWindow(QMainWindow):
         if len(self.lap_analysis_windows) == 0:
             self.hide_lap_controls()
     
+    def _trigger_toolbar_status_for_lap_analysis(self, analysis_type, window_object):
+        """統一觸發工具欄狀態更新 - 任何圈速分析模組都會觸發"""
+        try:
+            print(f"[TOOLBAR_TRIGGER] 🎯 開始為 {analysis_type} 分析模組觸發工具欄狀態更新")
+            
+            # 根據分析類型設定模組名稱
+            module_name_mapping = {
+                "speed_analysis": "速度分析",
+                "rpm": "RPM分析", 
+                "brake": "煞車分析",
+                "throttle": "油門分析",
+                "steering": "轉向分析",
+                "gear": "檔位分析",
+                "acceleration": "加速度分析",
+                "speed_diff": "速度差分析",
+                "distance_diff": "距離差分析"
+            }
+            
+            module_name = module_name_mapping.get(analysis_type, f"{analysis_type}分析")
+            
+            # 獲取當前圈速分析設置
+            driver1 = self.driver1_combo.currentText() if hasattr(self, 'driver1_combo') else "VER"
+            driver2 = self.driver2_combo.currentText() if hasattr(self, 'driver2_combo') else "LEC"
+            lap1 = self.lap1_spinbox.value() if hasattr(self, 'lap1_spinbox') else 1
+            lap2 = self.lap2_spinbox.value() if hasattr(self, 'lap2_spinbox') else 1
+            
+            # 處理單車手模式
+            if driver2 == "無":
+                driver2 = None
+            
+            # 構建圈數信息
+            if driver2:
+                lap_numbers = f"{driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈"
+            else:
+                lap_numbers = f"{driver1} 第{lap1}圈"
+            
+            # 構建狀態信息（初始值，等數據載入後會更新更詳細的信息）
+            lap_time = "載入中..."
+            tyre_compound = "分析中..."
+            
+            # 觸發工具欄狀態更新
+            self.update_toolbar_status(
+                module_name=module_name,
+                lap_time=lap_time,
+                tyre_compound=tyre_compound,
+                lap_numbers=lap_numbers
+            )
+            
+            print(f"[TOOLBAR_TRIGGER] ✅ 已觸發工具欄狀態更新: {module_name} | {lap_numbers}")
+            
+        except Exception as e:
+            print(f"[ERROR] [TOOLBAR_TRIGGER] 觸發工具欄狀態更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
     def update_all_lap_analysis(self):
         """更新所有圈速分析視窗"""
         print("[LAP_CONTROL] 🔄 開始更新所有圈速分析視窗...")
@@ -4809,9 +4919,14 @@ class StyleHMainWindow(QMainWindow):
                 
                 print(f"[LAP_CONTROL] 🔄 更新視窗 {i}/{len(self.lap_analysis_windows)}: {window_title}")
                 print(f"[LAP_CONTROL]   📋 模組類型: {type(analysis_module).__name__}")
+                print(f"[LAP_CONTROL]   📋 模組實例: {analysis_module}")
+                print(f"[LAP_CONTROL]   📋 模組MRO: {[cls.__name__ for cls in type(analysis_module).__mro__]}")
                 
                 # 檢查是否為速度分析模組
-                if hasattr(analysis_module, 'update_lap_parameters'):
+                has_method = hasattr(analysis_module, 'update_lap_parameters')
+                print(f"[LAP_CONTROL]   🔍 hasattr檢查 update_lap_parameters: {has_method}")
+                
+                if has_method:
                     print(f"[LAP_CONTROL]   ✅ 找到 update_lap_parameters 方法，開始調用...")
                     
                     # 調用更新方法並傳遞詳細參數
@@ -5007,6 +5122,7 @@ class StyleHMainWindow(QMainWindow):
         
         # 連接分頁關閉信號
         self.tab_widget.tabCloseRequested.connect(self.close_tab)
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
         
         # 創建分頁右側控制按鈕容器
         tab_buttons_container = QWidget()
@@ -5097,7 +5213,15 @@ class StyleHMainWindow(QMainWindow):
         current_index = self.tab_widget.currentIndex()
         if current_index >= 0:
             self.close_tab(current_index)
-            
+    
+    def _on_tab_changed(self, index):
+        """分頁切換事件處理"""
+        try:
+            # 當切換分頁時，檢查並更新工具欄狀態
+            self._check_and_update_toolbar_status()
+        except Exception as e:
+            print(f"[ERROR] 分頁切換處理失敗: {e}")
+    
     def update_tab_count(self):
         """更新分頁數量顯示"""
         count = self.tab_widget.count()
@@ -5974,6 +6098,16 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         toolbar_layout.addWidget(title_label)
+        
+        # 添加分隔符
+        separator = QLabel("|")
+        separator.setStyleSheet("color: #bdc3c7; font-size: 12px;")
+        toolbar_layout.addWidget(separator)
+        
+        # 創建動態狀態信息區域
+        self.toolbar_status_widget = self._create_toolbar_status_widget()
+        toolbar_layout.addWidget(self.toolbar_status_widget)
+        
         toolbar_layout.addStretch()
         toolbar_layout.addWidget(reset_btn)
         
@@ -5997,6 +6131,118 @@ class StyleHMainWindow(QMainWindow):
         tab_layout.addWidget(mdi_area)
         
         return tab_container
+    
+    def _create_toolbar_status_widget(self) -> QWidget:
+        """創建工具欄狀態信息小部件"""
+        status_container = QWidget()
+        status_container.setStyleSheet("""
+            QWidget {
+                background: transparent;
+            }
+        """)
+        
+        layout = QHBoxLayout(status_container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+        
+        # 模組名稱標籤
+        self.toolbar_module_label = QLabel("")
+        self.toolbar_module_label.setStyleSheet("""
+            QLabel {
+                color: #2c3e50;
+                font-size: 11px;
+                font-weight: bold;
+                background: transparent;
+            }
+        """)
+        layout.addWidget(self.toolbar_module_label)
+        
+        # 圈時間標籤
+        self.toolbar_lap_time_label = QLabel("")
+        self.toolbar_lap_time_label.setStyleSheet("""
+            QLabel {
+                color: #D84315;
+                font-size: 11px;
+                font-weight: bold;
+                background: transparent;
+            }
+        """)
+        layout.addWidget(self.toolbar_lap_time_label)
+        
+        # 輪胎配方標籤
+        self.toolbar_tyre_label = QLabel("")
+        self.toolbar_tyre_label.setStyleSheet("""
+            QLabel {
+                color: #388E3C;
+                font-size: 11px;
+                font-weight: bold;
+                background: transparent;
+            }
+        """)
+        layout.addWidget(self.toolbar_tyre_label)
+        
+        # 圈數標籤
+        self.toolbar_lap_numbers_label = QLabel("")
+        self.toolbar_lap_numbers_label.setStyleSheet("""
+            QLabel {
+                color: #7B1FA2;
+                font-size: 11px;
+                font-weight: bold;
+                background: transparent;
+            }
+        """)
+        layout.addWidget(self.toolbar_lap_numbers_label)
+        
+        # 初始隱藏
+        status_container.setVisible(False)
+        
+        return status_container
+    
+    def update_toolbar_status(self, module_name: str = "", lap_time: str = "", 
+                            tyre_compound: str = "", lap_numbers: str = ""):
+        """更新工具欄狀態信息"""
+        try:
+            if hasattr(self, 'toolbar_status_widget'):
+                # 如果沒有模組名稱，隱藏狀態區域
+                if not module_name:
+                    self.toolbar_status_widget.setVisible(False)
+                    return
+                
+                # 更新模組名稱標籤
+                self.toolbar_module_label.setText(f"📊 {module_name}")
+                
+                # 更新圈時間標籤
+                if lap_time:
+                    self.toolbar_lap_time_label.setText(f"⏱️ {lap_time}")
+                    self.toolbar_lap_time_label.setVisible(True)
+                else:
+                    self.toolbar_lap_time_label.setVisible(False)
+                
+                # 更新輪胎配方標籤
+                if tyre_compound:
+                    self.toolbar_tyre_label.setText(f"🏎️ {tyre_compound}")
+                    self.toolbar_tyre_label.setVisible(True)
+                else:
+                    self.toolbar_tyre_label.setVisible(False)
+                
+                # 更新圈數標籤
+                if lap_numbers:
+                    self.toolbar_lap_numbers_label.setText(f"🏁 {lap_numbers}")
+                    self.toolbar_lap_numbers_label.setVisible(True)
+                else:
+                    self.toolbar_lap_numbers_label.setVisible(False)
+                
+                # 顯示狀態區域
+                self.toolbar_status_widget.setVisible(True)
+                
+                print(f"[TOOLBAR_STATUS] 已更新: {module_name} | {lap_time} | {tyre_compound} | {lap_numbers}")
+                
+        except Exception as e:
+            print(f"[ERROR] 更新工具欄狀態失敗: {e}")
+    
+    def clear_toolbar_status(self):
+        """清除工具欄狀態信息"""
+        self.update_toolbar_status("")
         
     def create_analysis_window(self, function_name):
         """為功能樹的分析項目創建新視窗 - 升級支援模組化架構"""
@@ -6857,6 +7103,131 @@ class StyleHMainWindow(QMainWindow):
                     print(f"[ERROR] 無法導入速度分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('speed_analysis')
                 
+            elif chart_type == 'rpm':
+                # RPM分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] 🔄 檢測到RPM分析請求，嘗試新版模組架構")
+                
+                # 使用新版模組化架構創建RPM分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入RPM分析模組...")
+                    from modules.rpm_analysis_mdi import RPMAnalysisModule
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = RPMAnalysisModule()
+                    analysis_module.parameter_provider = self
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化RPM分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=str(params['year']), 
+                            race=params['race'], 
+                            session=params['session']
+                        )
+                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        
+                        # 創建帶有模組的視窗
+                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 連接視窗關閉信號
+                        sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(analysis_module))
+                        
+                        # 設置視窗大小
+                        width, height = analysis_module.get_default_size()
+                        sub_window.resize(width, height)
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] RPM分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "rpm")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] RPM分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] RPM分析模組創建失敗: {e}，回退到舊版模式")
+                    import traceback
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版RPM分析模式")
+                
+                # 回退：舊版RPM分析模式
+                
+                try:
+                    from modules.rpm_analysis_chart_widget import RPMAnalysisChartWidget
+                    from modules.rpm_analysis_data_loader import RPMAnalysisDataLoader
+                    
+                    print(f"[CREATE_DEBUG] 📦 創建RPM分析組件...")
+                    chart_widget = RPMAnalysisChartWidget()
+                    
+                    # 創建RPM資料載入器
+                    print(f"[CREATE_DEBUG] � 創建RPM資料載入器...")
+                    rpm_loader = RPMAnalysisDataLoader()
+                    rpm_loader.data_loaded.connect(chart_widget.update_rpm_data)
+                    rpm_loader.loading_error.connect(lambda error: print(f"[ERROR] RPM資料載入失敗: {error}"))
+                    
+                    # 開始載入資料
+                    print(f"[CREATE_DEBUG] 🚀 開始載入RPM資料: {driver1} vs {driver2}")
+                    
+                    session_info = {
+                        'year': params['year'],
+                        'race': params['race'],
+                        'session': params['session'],
+                        'driver1': driver1 if driver1 else 'VER',
+                        'driver2': driver2 if driver2 else 'VER',
+                        'lap1': lap1_number,
+                        'lap2': lap2_number,
+                        'is_fastest_lap': is_fastest_lap
+                    }
+                    
+                    rpm_loader.load_rpm_analysis_data(session_info)
+                    
+                    # 將載入器保存到widget以避免被回收
+                    chart_widget.rpm_loader = rpm_loader
+                    
+                    print(f"[OK] RPM分析組件創建成功")
+                    
+                except ImportError as e:
+                    print(f"[ERROR] 無法導入RPM分析模組: {e}")
+                    chart_widget = self.create_placeholder_telemetry_widget('rpm')
+                except Exception as e:
+                    print(f"[ERROR] RPM分析組件創建失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    chart_widget = self.create_placeholder_telemetry_widget('rpm')
+                
             elif chart_type in ['speed', 'brake', 'throttle', 'steering']:
                 # 這些是現有的TelemetryChartWidget支援的類型
                 chart_widget = TelemetryChartWidget(chart_type)
@@ -6892,7 +7263,7 @@ class StyleHMainWindow(QMainWindow):
             # 檢查是否為圈速分析相關視窗，如果是則連接關閉信號
             lap_analysis_types = ['speed', 'brake', 'throttle', 'steering', 'gear', 'rpm']
             if chart_type in lap_analysis_types:
-                sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(window_title))
+                sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(chart_widget))
             
             # 設置視窗大小 - 速度分析需要更大的視窗
             if chart_type == 'speed_analysis':
@@ -6907,9 +7278,22 @@ class StyleHMainWindow(QMainWindow):
             print(f"[OK] 已創建遙測視窗: {window_title}")
             
             # 檢查是否為圈速分析相關視窗，如果是則通知主視窗
-            lap_analysis_types = ['speed', 'brake', 'throttle', 'steering', 'gear', 'rpm']
+            # 包含所有圈速分析子模組類型
+            lap_analysis_types = [
+                'speed_analysis',  # 速度分析模組
+                'speed',           # 傳統速度圖表
+                'brake',           # 煞車分析
+                'throttle',        # 油門分析
+                'steering',        # 轉向分析
+                'gear',            # 檔位分析
+                'rpm',             # RPM分析模組
+                'acceleration',    # 加速度分析
+                'speed_diff',      # 速度差分析
+                'distance_diff'    # 累積距離差分析
+            ]
             if chart_type in lap_analysis_types:
-                self.on_lap_analysis_window_opened(window_title, chart_type)
+                print(f"[LAP_CONTROL] 🎯 檢測到圈速分析類型: {chart_type} - 觸發工具欄控件")
+                self.on_lap_analysis_window_opened(chart_widget, chart_type)
             
         except Exception as e:
             print(f"[ERROR] 創建遙測視窗失敗 ({chart_type}): {e}")
@@ -7243,6 +7627,22 @@ class StyleHMainWindow(QMainWindow):
         
         # 排列視窗
         print(f"[TILE DEBUG] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
+        
+        # 預檢查：確保所有視窗的基本設定一致
+        print(f"[TILE DEBUG] ========== 預檢查視窗設定 ==========")
+        for i, subwindow in enumerate(subwindows):
+            widget = subwindow.widget()
+            if widget:
+                min_size = widget.minimumSize()
+                size_policy = widget.sizePolicy()
+                print(f"[TILE CHECK] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
+                
+                # 檢查是否有調試方法可以調用
+                if hasattr(widget, 'debug_window_status'):
+                    print(f"[TILE CHECK] 調用視窗 {i} 的狀態報告:")
+                    widget.debug_window_status()
+        print(f"[TILE DEBUG] ========== 預檢查完成 ==========")
+        
         for i, subwindow in enumerate(subwindows):
             row = i // cols
             col = i % cols
@@ -7258,6 +7658,77 @@ class StyleHMainWindow(QMainWindow):
             # 確保視窗可見和正常化
             subwindow.showNormal()
             subwindow.raise_()
+            
+            # 強制處理事件，確保尺寸更新完成
+            QApplication.processEvents()
+            
+            # 檢查實際尺寸並調試
+            actual_size = subwindow.size()
+            print(f"[TILE DEBUG] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
+            
+            if actual_size.width() != window_width or actual_size.height() != window_height:
+                print(f"[TILE WARNING] 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
+                
+                # 嘗試重新設置
+                subwindow.resize(window_width, window_height)
+                QApplication.processEvents()
+                final_size = subwindow.size()
+                print(f"[TILE DEBUG] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
+        
+        # 最終同步步驟：確保所有視窗尺寸一致
+        print(f"[TILE DEBUG] ========== 開始最終尺寸同步 ==========")
+        
+        # 收集所有視窗的實際尺寸
+        actual_sizes = []
+        for i, subwindow in enumerate(subwindows):
+            size = subwindow.size()
+            actual_sizes.append((size.width(), size.height()))
+            print(f"[TILE SYNC] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
+        
+        # 找到最小的共同尺寸（確保所有視窗都能適應）
+        if actual_sizes:
+            min_width = min(size[0] for size in actual_sizes)
+            min_height = min(size[1] for size in actual_sizes)
+            print(f"[TILE SYNC] 統一目標尺寸: {min_width}x{min_height}")
+            
+            # 將所有視窗設置為相同尺寸
+            for i, subwindow in enumerate(subwindows):
+                current_pos = subwindow.pos()
+                subwindow.setGeometry(current_pos.x(), current_pos.y(), min_width, min_height)
+                QApplication.processEvents()
+                
+                final_size = subwindow.size()
+                print(f"[TILE SYNC] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
+        
+        print(f"[TILE DEBUG] ========== 尺寸同步完成 ==========")
+        
+        # 調試：檢查每個子視窗的邊距設定
+        print(f"[TILE DEBUG] ========== 子視窗邊距檢查 ==========")
+        for i, subwindow in enumerate(subwindows):
+            widget = subwindow.widget()
+            print(f"[TILE DEBUG] 子視窗 {i}: {subwindow.windowTitle()}")
+            
+            # 檢查 MDI 子視窗的邊距
+            margins = subwindow.contentsMargins()
+            print(f"[TILE DEBUG]   MDI邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
+            
+            # 檢查子視窗的frameGeometry vs geometry
+            frame_geo = subwindow.frameGeometry()
+            geo = subwindow.geometry()
+            print(f"[TILE DEBUG]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
+            print(f"[TILE DEBUG]   geometry: {geo.width()}x{geo.height()}")
+            print(f"[TILE DEBUG]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
+            
+            if widget:
+                widget_size = widget.size()
+                print(f"[TILE DEBUG]   內部widget尺寸: {widget_size.width()}x{widget_size.height()}")
+                
+                # 如果有調試方法，調用之
+                if hasattr(widget, 'debug_margin_analysis'):
+                    print(f"[TILE DEBUG]   調用 widget 邊距分析...")
+                    widget.debug_margin_analysis()
+        
+        print(f"[TILE DEBUG] ========== 邊距檢查完成 ==========")
         
         # 刷新MDI區域
         mdi_area.update()
@@ -8613,8 +9084,46 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(self, 'active_subwindows') and subwindow in self.active_subwindows:
                 self.active_subwindows.remove(subwindow)
             
+            # 檢查是否還有分析模組在運行
+            self._check_and_update_toolbar_status()
+            
         except Exception as e:
             pass
+    
+    def _check_and_update_toolbar_status(self):
+        """檢查當前活動的分析模組並更新工具欄狀態"""
+        try:
+            # 查找當前分頁中的MDI區域
+            current_tab = self.tab_widget.currentWidget()
+            if not current_tab:
+                self.clear_toolbar_status()
+                return
+            
+            # 查找MDI區域
+            mdi_area = None
+            if isinstance(current_tab, CustomMdiArea):
+                mdi_area = current_tab
+            else:
+                for child in current_tab.findChildren(CustomMdiArea):
+                    mdi_area = child
+                    break
+            
+            if not mdi_area:
+                self.clear_toolbar_status()
+                return
+            
+            # 檢查MDI區域中是否有子視窗
+            subwindows = mdi_area.subWindowList()
+            if not subwindows:
+                # 沒有子視窗，清除工具欄狀態
+                self.clear_toolbar_status()
+                print(f"[TOOLBAR_STATUS] 沒有活動的分析模組，已清除工具欄狀態")
+            else:
+                print(f"[TOOLBAR_STATUS] 當前有 {len(subwindows)} 個活動的分析模組")
+                
+        except Exception as e:
+            print(f"[ERROR] 檢查工具欄狀態失敗: {e}")
+            self.clear_toolbar_status()
         
     def remove_welcome_tab(self):
         """移除歡迎頁面 - 當使用者開始分析時"""
