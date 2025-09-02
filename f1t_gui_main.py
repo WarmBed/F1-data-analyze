@@ -7050,6 +7050,24 @@ class StyleHMainWindow(QMainWindow):
                         # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
                         self.on_lap_analysis_window_opened(analysis_module, "speed_analysis")
                         
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入速度分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
                         print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
@@ -7170,6 +7188,24 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
                         self.on_lap_analysis_window_opened(analysis_module, "rpm")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入RPM分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
                         print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return

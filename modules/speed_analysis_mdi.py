@@ -914,8 +914,8 @@ class SpeedAnalysisModule(IAnalysisModule):
                         main_window.create_telemetry_analysis()
                         return True
             
-            # 方法2: 通過CLI生成遙測分析數據
-            print(f"[SPEED_MDI] 🔧 通過CLI生成遙測分析數據...")
+            # 方法2: 通過CLI生成遙測分析數據（Function 12）
+            print(f"[SPEED_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
             return self._generate_telemetry_via_cli()
             
         except Exception as e:
@@ -923,16 +923,16 @@ class SpeedAnalysisModule(IAnalysisModule):
             return False
 
     def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據"""
+        """通過CLI生成遙測分析數據（Function 12）"""
         try:
             import subprocess
             import threading
             import time
             
-            # 構建CLI命令 - 功能7是遙測分析
+            # 構建CLI命令 - 功能12是車手詳細遙測分析（正確的遙測數據來源）
             command = [
                 "python", "f1_analysis_modular_main.py",
-                "-f", "7",  # 功能7: 遙測分析
+                "-f", "12",  # 功能12: 車手詳細遙測分析
                 "-y", str(self.current_year),
                 "-r", self.current_race,
                 "-s", self.current_session
