@@ -302,7 +302,6 @@ class SpeedAnalysisChartWidget(QWidget):
     
     # 信號定義
     chart_updated = pyqtSignal()
-    data_point_selected = pyqtSignal(dict)
     
     def __init__(self, parent=None):
         super().__init__(parent)

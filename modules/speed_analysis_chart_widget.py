@@ -16,6 +16,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
+# 導入全域信號管理器
+try:
+    from f1t_gui_main import global_signals
+except ImportError:
+    global_signals = None
+
 class SpeedChartWidget(QWidget):
     """速度圖表繪製組件 - 使用 PyQt5 原生繪圖"""
     
@@ -59,11 +65,22 @@ class SpeedChartWidget(QWidget):
         self.fixed_distance_value = None  # 固定線對應的實際距離值
         self.show_fixed_line = False  # 是否顯示固定線
         
-        # 縮放和拖拉
-        self.scale_x = 1.0
-        self.scale_y = 1.0
-        self.offset_x = 0
-        self.offset_y = 0
+        # X軸連動功能 (獨立於同步功能)
+        self.linkage_enabled = True  # 是否啟用X軸連動
+        self.is_sending_linkage = False  # 避免循環信號發送
+        self.linkage_distance_value = None  # 連動接收的距離值
+        self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
+        self.show_linkage_line = False  # 是否顯示連動線
+        
+        # 連接X軸連動信號
+        if global_signals:
+            global_signals.lap_analysis_x_linkage.connect(self.on_x_linkage_received)
+            global_signals.lap_analysis_x_clear.connect(self.on_x_linkage_clear)
+            
+            # 連接點擊連動信號
+            global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
+            global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
+
         
         # 拖拉狀態
         self.middle_dragging = False  # 中鍵拖拉狀態
@@ -128,27 +145,6 @@ class SpeedChartWidget(QWidget):
         self.fixed_distance_value = None
         self.update()
     
-    def reset_data(self):
-        """重置所有數據和視圖"""
-        self.speed_data = None
-        self.driver1_name = ""
-        self.driver2_name = ""
-        self.distance = []
-        self.driver1_speed = []
-        self.driver2_speed = []
-        
-        # 重置範圍
-        self.min_distance = 0
-        self.max_distance = 5000
-        self.min_speed = 0
-        self.max_speed = 320
-        
-        # 重置視圖
-        self.reset_view()
-        
-        # 重繪
-        self.repaint()
-        
     def clear_fixed_line(self):
         """清除固定線條"""
         self.show_fixed_line = False
@@ -184,6 +180,10 @@ class SpeedChartWidget(QWidget):
         # 繪製滑鼠追蹤線和固定線條
         if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
             self._draw_mouse_tracker(painter, chart_rect)
+        
+        # 繪製連動線 (來自其他圖表的X軸連動)
+        if self.show_linkage_line and self.linkage_distance_value is not None:
+            self._draw_linkage_line(painter, chart_rect)
             
         # 繪製圖例
         self._draw_legend(painter)
@@ -296,13 +296,7 @@ class SpeedChartWidget(QWidget):
                     painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
     def _draw_speed_curves(self, painter: QPainter, chart_rect: QRect):
         """繪製速度曲線"""
-        # print(f"[SPEED CHART] ========== 開始繪製速度曲線 ==========")
-        # print(f"[SPEED CHART] 距離數據點數: {len(self.distance_data) if self.distance_data else 0}")
-        # print(f"[SPEED CHART] 車手1速度數據點數: {len(self.driver1_speed) if self.driver1_speed else 0}")
-        # print(f"[SPEED CHART] 車手2速度數據點數: {len(self.driver2_speed) if self.driver2_speed else 0}")
-        
         if not self.distance_data:
-            # print(f"[SPEED CHART] ❌ 沒有距離數據，跳過繪製")
             return
         
         # 使用當前視圖範圍或原始範圍
@@ -310,30 +304,15 @@ class SpeedChartWidget(QWidget):
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
         current_min_speed = self.view_min_speed if self.view_min_speed is not None else self.min_speed
         current_max_speed = self.view_max_speed if self.view_max_speed is not None else self.max_speed
-        
-        # print(f"[SPEED CHART] 當前距離範圍: {current_min_distance:.1f} - {current_max_distance:.1f}")
-        # print(f"[SPEED CHART] 當前速度範圍: {current_min_speed:.1f} - {current_max_speed:.1f}")
             
         distance_range = current_max_distance - current_min_distance
         speed_range = current_max_speed - current_min_speed
         
-        # print(f"[SPEED CHART] 距離範圍: {distance_range:.1f}, 速度範圍: {speed_range:.1f}")
-        
         if distance_range <= 0 or speed_range <= 0:
-            # print(f"[SPEED CHART] ❌ 範圍無效，跳過繪製")
             return
-        
-        # 顯示一些樣本數據
-        # if self.distance_data:
-        #     print(f"[SPEED CHART] 距離數據樣本: {self.distance_data[:5]} ... {self.distance_data[-5:]}")
-        # if self.driver1_speed:
-        #     print(f"[SPEED CHART] 車手1速度樣本: {self.driver1_speed[:5]} ... {self.driver1_speed[-5:]}")
-        # if self.driver2_speed:
-        #     print(f"[SPEED CHART] 車手2速度樣本: {self.driver2_speed[:5]} ... {self.driver2_speed[-5:]}")
         
         # 繪製車手1速度曲線
         if self.driver1_speed and len(self.driver1_speed) == len(self.distance_data):
-            # print(f"[SPEED CHART] 🔵 開始繪製車手1 ({self.driver1_name}) 曲線")
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
             for i, (distance, speed) in enumerate(zip(self.distance_data, self.driver1_speed)):
@@ -343,19 +322,12 @@ class SpeedChartWidget(QWidget):
                     y = chart_rect.bottom() - (speed - current_min_speed) / speed_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
-            # print(f"[SPEED CHART] 車手1 可見點數: {len(points)}")
-            
             # 繪製線段
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
-            # print(f"[SPEED CHART] ✅ 車手1 曲線繪製完成")
-        else:
-            # print(f"[SPEED CHART] ⚠️ 車手1 數據長度不匹配或為空")
-            pass
         
         # 繪製車手2速度曲線
         if self.driver2_speed and len(self.driver2_speed) == len(self.distance_data):
-            # print(f"[SPEED CHART] 🔴 開始繪製車手2 ({self.driver2_name}) 曲線")
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
             for i, (distance, speed) in enumerate(zip(self.distance_data, self.driver2_speed)):
@@ -365,17 +337,9 @@ class SpeedChartWidget(QWidget):
                     y = chart_rect.bottom() - (speed - current_min_speed) / speed_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
-            # print(f"[SPEED CHART] 車手2 可見點數: {len(points)}")
-            
             # 繪製線段
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
-            # print(f"[SPEED CHART] ✅ 車手2 曲線繪製完成")
-        else:
-            # print(f"[SPEED CHART] ⚠️ 車手2 數據長度不匹配或為空")
-            pass
-            
-        # print(f"[SPEED CHART] ========== 速度曲線繪製完成 ==========")
                 
     def _draw_mouse_tracker(self, painter: QPainter, chart_rect: QRect):
         """繪製滑鼠追蹤線和固定線"""
@@ -490,6 +454,84 @@ class SpeedChartWidget(QWidget):
             for i, (driver_name, speed, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
                 painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {speed:.1f} km/h")
+    
+    def _draw_linkage_line(self, painter: QPainter, chart_rect: QRect):
+        """繪製連動線 (來自其他圖表的X軸位置)"""
+        if not self.linkage_distance_value:
+            return
+            
+        # 計算連動線的X位置
+        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+        distance_range = current_max_distance - current_min_distance
+        
+        if distance_range <= 0:
+            return
+            
+        # 計算X座標
+        relative_pos = (self.linkage_distance_value - current_min_distance) / distance_range
+        x_pos = chart_rect.left() + int(relative_pos * chart_rect.width())
+        
+        # 檢查是否在圖表範圍內
+        if x_pos < chart_rect.left() or x_pos > chart_rect.right():
+            return
+            
+        # 繪製連動垂直線 (使用滑鼠追蹤線樣式 - 白色背景標籤)
+        painter.setPen(QPen(QColor(128, 128, 128), 1, Qt.DashLine))  # 灰色虛線
+        painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
+        
+        # 繪製連動標籤 (使用白色背景，類似滑鼠追蹤)
+        label_width = 160
+        label_height = 60
+        label_x = x_pos + 10
+        
+        # 使用同步的Y軸位置計算標籤位置
+        # linkage_y_relative: 0.0=圖表底部, 1.0=圖表頂部
+        label_y = chart_rect.bottom() - int(self.linkage_y_relative * chart_rect.height()) - label_height // 2
+        
+        # 確保標籤不會超出圖表區域
+        label_y = max(chart_rect.top() + 10, min(label_y, chart_rect.bottom() - label_height - 10))
+        
+        # 如果標籤會超出右邊界，則放在線的左邊
+        if label_x + label_width > chart_rect.right():
+            label_x = x_pos - label_width - 10
+            
+        # 繪製標籤背景 (白色背景，類似滑鼠追蹤)
+        painter.setBrush(QBrush(QColor(255, 255, 255, 230)))  # 白色半透明背景
+        painter.setPen(QPen(QColor(128, 128, 128), 1))
+        painter.drawRect(label_x, label_y, label_width, label_height)
+        
+        # 繪製距離資訊
+        painter.setPen(QPen(QColor(50, 50, 50), 1))
+        painter.setFont(QFont("Arial", 9))
+        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
+        
+        # 顯示當前位置的速度資訊
+        if self.distance_data and self.driver1_speed:
+            # 找到最接近的數據點
+            closest_idx = None
+            min_diff = float('inf')
+            for i, dist in enumerate(self.distance_data):
+                diff = abs(dist - self.linkage_distance_value)
+                if diff < min_diff:
+                    min_diff = diff
+                    closest_idx = i
+            
+            if closest_idx is not None:
+                text_y = label_y + 30
+                
+                # 車手1速度
+                if closest_idx < len(self.driver1_speed):
+                    speed1 = self.driver1_speed[closest_idx]
+                    painter.setPen(QPen(self.driver1_color, 1))
+                    painter.drawText(label_x + 5, text_y, f"{self.driver1_name}: {speed1:.1f} km/h")
+                
+                # 車手2速度 (如果存在)
+                if (self.driver2_speed and closest_idx < len(self.driver2_speed) and 
+                    self.driver2_name != self.driver1_name):
+                    speed2 = self.driver2_speed[closest_idx]
+                    painter.setPen(QPen(self.driver2_color, 1))
+                    painter.drawText(label_x + 5, text_y + 15, f"{self.driver2_name}: {speed2:.1f} km/h")
             
     def _draw_legend(self, painter: QPainter):
         """繪製圖例"""
@@ -558,6 +600,32 @@ class SpeedChartWidget(QWidget):
             
             self.last_drag_pos = event.pos()
         
+        # 發送X軸連動信號 (僅在滑鼠在圖表區域內時)
+        chart_rect = QRect(
+            self.margin_left, self.margin_top,
+            self.width() - self.margin_left - self.margin_right,
+            self.height() - self.margin_top - self.margin_bottom
+        )
+        
+        if chart_rect.contains(event.pos()) and global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            # 計算當前滑鼠對應的距離值
+            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+            distance_range = current_max_distance - current_min_distance
+            
+            if distance_range > 0:
+                relative_x = event.x() - chart_rect.left()
+                distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+                
+                # 計算Y軸相對位置 (0.0=底部, 1.0=頂部)
+                relative_y = (chart_rect.bottom() - event.y()) / chart_rect.height()
+                relative_y = max(0.0, min(1.0, relative_y))  # 限制範圍
+                
+                # 發送連動信號 (包含Y軸位置)
+                self.is_sending_linkage = True
+                global_signals.lap_analysis_x_linkage.emit(distance_value, relative_y)
+                self.is_sending_linkage = False
+        
         self.update()
         
     def mousePressEvent(self, event: QMouseEvent):
@@ -580,7 +648,27 @@ class SpeedChartWidget(QWidget):
                     relative_x = event.x() - chart_rect.left()
                     self.fixed_distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
                     self.show_fixed_line = True
+                    
+                    # 發送點擊連動信號給其他圖表
+                    if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                        self.is_sending_linkage = True
+                        global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
+                        self.is_sending_linkage = False
+                    
                     self.update()
+            
+        elif event.button() == Qt.RightButton:
+            # 右鍵點擊：清除固定線
+            self.show_fixed_line = False
+            self.fixed_distance_value = None
+            
+            # 發送點擊清除連動信號給其他圖表
+            if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                self.is_sending_linkage = True
+                global_signals.lap_analysis_click_clear.emit()
+                self.is_sending_linkage = False
+            
+            self.update()
             
         elif event.button() == Qt.MiddleButton:
             # 中鍵按下：開始拖拉
@@ -644,6 +732,57 @@ class SpeedChartWidget(QWidget):
         """滑鼠離開事件"""
         self.mouse_x = -1
         self.mouse_y = -1
+        # 發送X軸連動清除信號
+        if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            self.is_sending_linkage = True
+            global_signals.lap_analysis_x_clear.emit()
+            self.is_sending_linkage = False
+        self.update()
+    
+    def on_x_linkage_received(self, distance_value: float, y_relative: float):
+        """接收來自其他圖表的X軸連動信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 根據距離值設置連動線 (使用滑鼠追蹤樣式)
+        self.linkage_distance_value = distance_value
+        self.linkage_y_relative = y_relative
+        self.show_linkage_line = True
+        self.update()
+    
+    def on_x_linkage_clear(self):
+        """接收X軸連動清除信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 清除連動線
+        self.show_linkage_line = False
+        self.linkage_distance_value = None
+        self.linkage_y_relative = 0.5
+        self.update()
+    
+    def set_linkage_enabled(self, enabled: bool):
+        """設置是否啟用X軸連動功能"""
+        self.linkage_enabled = enabled
+    
+    def on_click_linkage_received(self, distance_value: float):
+        """接收來自其他圖表的點擊連動信號 (設置固定線)"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 設置固定線 (紅色背景樣式)
+        self.fixed_distance_value = distance_value
+        self.show_fixed_line = True
+        self.update()
+    
+    def on_click_linkage_clear(self):
+        """接收點擊連動清除信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 清除固定線
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
         self.update()
 
 
@@ -652,7 +791,6 @@ class SpeedAnalysisChartWidget(QWidget):
     
     # 信號定義
     chart_updated = pyqtSignal()
-    data_point_selected = pyqtSignal(dict)
     lap_numbers_changed = pyqtSignal(int, int)  # 圈數變更信號 (lap1, lap2)
     
     def __init__(self, parent=None):
@@ -1165,27 +1303,6 @@ class SpeedAnalysisChartWidget(QWidget):
             
         except Exception as e:
             print(f"[ERROR] 設置圈數失敗: {e}")
-    
-    def resizeEvent(self, event):
-        """視窗大小變化事件"""
-        super().resizeEvent(event)
-        old_size = event.oldSize()
-        new_size = event.size()
-        
-        if old_size.isValid():
-            print(f"[SPEED_DEBUG] 視窗尺寸變化: {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
-        else:
-            print(f"[SPEED_DEBUG] 視窗初始尺寸: {new_size.width()}x{new_size.height()}")
-        
-        # 檢查分割器尺寸
-        for i, child in enumerate(self.children()):
-            if hasattr(child, 'sizes'):  # QSplitter
-                sizes = child.sizes()
-                print(f"[SPEED_DEBUG] 分割器 {i} 當前尺寸: {sizes}")
-    
-    def showEvent(self, event):
-        """視窗顯示事件"""
-        super().showEvent(event)
 
 # 主程式測試
 if __name__ == "__main__":

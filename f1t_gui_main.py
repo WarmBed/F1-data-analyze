@@ -282,6 +282,14 @@ class GlobalSignalManager(QObject):
     sync_x_position = pyqtSignal(int)  # X軸位置同步信號 (滑鼠位置)
     sync_x_range = pyqtSignal(float, float)  # X軸範圍同步信號 (偏移, 縮放)
     
+    # 新增：圈速分析模組連動信號 (獨立於同步功能)
+    lap_analysis_x_linkage = pyqtSignal(float, float)  # 圈速分析X軸連動信號 (距離值, Y軸相對位置)
+    lap_analysis_x_clear = pyqtSignal()  # 圈速分析X軸清除信號
+    
+    # 新增：圈速分析點擊連動信號
+    lap_analysis_click_linkage = pyqtSignal(float)  # 圈速分析點擊連動信號 (距離值)
+    lap_analysis_click_clear = pyqtSignal()  # 圈速分析點擊清除信號
+    
     def __init__(self):
         super().__init__()
         
@@ -4321,6 +4329,14 @@ class StyleHMainWindow(QMainWindow):
         tools_menu.addAction('數據驗證', self.data_validation)
         tools_menu.addAction('系統設定', self.system_settings)
         tools_menu.addAction('清除日誌', self.clear_log)
+        tools_menu.addSeparator()
+        
+        # X軸連動功能控制
+        self.linkage_action = QAction('🔗 圈速分析X軸連動', self)
+        self.linkage_action.setCheckable(True)
+        self.linkage_action.setChecked(True)  # 預設啟用
+        self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
+        tools_menu.addAction(self.linkage_action)
         
     def create_professional_toolbar(self):
         """創建專業工具欄"""
@@ -4617,14 +4633,39 @@ class StyleHMainWindow(QMainWindow):
         if lap_analysis_windows_found:
             print(f"[LAP_CONTROL] 📊 找到 {len(lap_analysis_windows_found)} 個圈速分析視窗")
             
-            # 清空並重建視窗追蹤集合
+            # 🔧 修復：不清空現有追蹤，而是進行智能合併
+            # 保留已正確追蹤的模組，只添加新發現的
+            existing_modules = set()
+            for existing in self.lap_analysis_windows:
+                if hasattr(existing, 'update_lap_parameters'):
+                    existing_modules.add(existing)
+                    print(f"[LAP_CONTROL] ✅ 保留現有模組追蹤: {type(existing).__name__}")
+            
+            # 清空並重建，但保留正確的模組
             self.lap_analysis_windows.clear()
+            self.lap_analysis_windows.update(existing_modules)
             
             for sub_window, widget, window_title in lap_analysis_windows_found:
+                # 檢查是否已經通過模組正確追蹤了這個視窗
+                already_tracked = False
+                for tracked_module in existing_modules:
+                    if (hasattr(tracked_module, '_sub_window') and 
+                        tracked_module._sub_window == sub_window):
+                        already_tracked = True
+                        print(f"[LAP_CONTROL] ✅ 視窗已通過模組正確追蹤: {window_title}")
+                        break
+                
+                if already_tracked:
+                    continue
+                
                 # 將分析模組添加到追蹤集合（如果widget是分析模組）
                 if hasattr(widget, 'update_lap_parameters'):
                     self.lap_analysis_windows.add(widget)
-                    print(f"[LAP_CONTROL] ✅ 已添加到追蹤: {window_title}")
+                    print(f"[LAP_CONTROL] ✅ 已添加模組到追蹤: {window_title}")
+                # 🔧 修復：檢查widget是否有parent_module引用（圖表組件情況）
+                elif hasattr(widget, 'parent_module') and hasattr(widget.parent_module, 'update_lap_parameters'):
+                    self.lap_analysis_windows.add(widget.parent_module)
+                    print(f"[LAP_CONTROL] ✅ 已添加父模組到追蹤: {window_title}")
                 else:
                     # 如果不是分析模組，添加子視窗本身
                     self.lap_analysis_windows.add(sub_window)
@@ -8108,6 +8149,31 @@ class StyleHMainWindow(QMainWindow):
         #print("[工具] 清除日誌")
         # 這裡可以添加清除日誌的邏輯
         pass
+    
+    def toggle_lap_analysis_linkage(self, checked):
+        """切換圈速分析X軸連動功能"""
+        print(f"[連動] 圈速分析X軸連動功能: {'啟用' if checked else '停用'}")
+        
+        # 更新所有活躍的圖表組件的連動狀態
+        mdi_windows = self.mdi_area.subWindowList()
+        for window in mdi_windows:
+            widget = window.widget()
+            
+            # 檢查是否為速度分析MDI
+            if hasattr(widget, 'speed_chart_widget') and widget.speed_chart_widget:
+                # 直接訪問SpeedAnalysisChartWidget的chart_widget
+                if hasattr(widget.speed_chart_widget, 'chart_widget'):
+                    widget.speed_chart_widget.chart_widget.set_linkage_enabled(checked)
+            
+            # 檢查是否為RPM分析MDI
+            elif hasattr(widget, 'rpm_chart_widget') and widget.rpm_chart_widget:
+                # 直接訪問RPMAnalysisChartWidget的chart_widget
+                if hasattr(widget.rpm_chart_widget, 'chart_widget'):
+                    widget.rpm_chart_widget.chart_widget.set_linkage_enabled(checked)
+        
+        # 如果停用連動，發送清除信號
+        if not checked:
+            global_signals.lap_analysis_x_clear.emit()
         
     def apply_style_h(self):
         """應用風格H樣式 - 專業賽車分析工作站 (白色主題)"""

@@ -16,6 +16,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
+# 導入全域信號管理器
+try:
+    from f1t_gui_main import global_signals
+except ImportError:
+    global_signals = None
+
 # 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
 
 class RPMChartWidget(QWidget):
@@ -50,13 +56,13 @@ class RPMChartWidget(QWidget):
         self.view_min_rpm = None
         self.view_max_rpm = None
         
-        # 顏色設置
+        # 顏色設置 - 與速度分析完全一致
         self.bg_color = QColor(255, 255, 255)
-        self.grid_color = QColor(220, 220, 220)
-        self.axis_color = QColor(100, 100, 100)
+        self.grid_color = QColor(200, 200, 200)  # 修正：與速度分析一致
+        self.axis_color = QColor(50, 50, 50)     # 修正：與速度分析一致
         self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
         self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
-        self.sector_color = QColor(136, 136, 136)
+        self.sector_color = QColor(100, 100, 100, 100)  # 修正：半透明灰色
         
         # 滑鼠交互
         self.mouse_x = -1
@@ -69,6 +75,22 @@ class RPMChartWidget(QWidget):
         self.middle_dragging = False
         self.show_fixed_line = False
         self.fixed_distance_value = None
+        
+        # X軸連動功能 (獨立於同步功能)
+        self.linkage_enabled = True  # 是否啟用X軸連動
+        self.is_sending_linkage = False  # 避免循環信號發送
+        self.linkage_distance_value = None  # 連動接收的距離值
+        self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
+        self.show_linkage_line = False  # 是否顯示連動線
+        
+        # 連接X軸連動信號
+        if global_signals:
+            global_signals.lap_analysis_x_linkage.connect(self.on_x_linkage_received)
+            global_signals.lap_analysis_x_clear.connect(self.on_x_linkage_clear)
+            
+            # 連接點擊連動信號
+            global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
+            global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
         
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
@@ -158,6 +180,10 @@ class RPMChartWidget(QWidget):
         # 5. 繪製滑鼠追蹤線和固定線
         self._draw_mouse_tracker(painter, chart_rect)
         
+        # 5.5. 繪製連動線 (來自其他圖表的X軸連動)
+        if self.show_linkage_line and self.linkage_distance_value is not None:
+            self._draw_linkage_line(painter, chart_rect)
+        
         # 6. 繪製圖例
         self._draw_legend(painter)
     
@@ -180,10 +206,10 @@ class RPMChartWidget(QWidget):
                 x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                 painter.drawLine(int(x), chart_rect.top(), int(x), chart_rect.bottom())
         
-        # 水平網格線 (RPM)
+        # 水平網格線 (RPM) - 修正：與速度分析保持一致使用10條線
         rpm_range = current_max_rpm - current_min_rpm
         if rpm_range > 0:
-            num_h_lines = 8
+            num_h_lines = 10  # 修正：改為10條線與速度分析一致
             for i in range(num_h_lines + 1):
                 rpm = current_min_rpm + (rpm_range * i / num_h_lines)
                 y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
@@ -208,11 +234,11 @@ class RPMChartWidget(QWidget):
         current_min_rpm = self.view_min_rpm if self.view_min_rpm is not None else self.min_rpm
         current_max_rpm = self.view_max_rpm if self.view_max_rpm is not None else self.max_rpm
         
-        # X軸標籤 (距離)
+        # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
         distance_range = current_max_distance - current_min_distance
         if distance_range > 0:
-            num_labels = 6
-            for i in range(num_labels + 1):
+            num_labels = 10  # 使用10個間隔
+            for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
                 distance = current_min_distance + (distance_range * i / num_labels)
                 x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                 
@@ -224,11 +250,11 @@ class RPMChartWidget(QWidget):
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
                                Qt.AlignCenter, label)
         
-        # Y軸標籤 (RPM)
+        # Y軸標籤 (RPM) - 修正：與速度分析一致，只顯示偶數刻度
         rpm_range = current_max_rpm - current_min_rpm
         if rpm_range > 0:
-            num_labels = 8
-            for i in range(num_labels + 1):
+            num_labels = 10  # 使用10個間隔
+            for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
                 rpm = current_min_rpm + (rpm_range * i / num_labels)
                 y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
                 
@@ -246,15 +272,15 @@ class RPMChartWidget(QWidget):
         title_font.setBold(True)
         painter.setFont(title_font)
         
-        # X軸標題
-        painter.drawText(chart_rect.center().x() - 50, self.height() - 15, 100, 20,
+        # X軸標題 - 修正：與速度分析一致的位置
+        painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
                         Qt.AlignCenter, "距離 (米)")
         
-        # Y軸標題 (旋轉文字)
+        # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
         painter.save()
-        painter.translate(15, chart_rect.center().y())
+        painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-40, -5, 80, 20, Qt.AlignCenter, "RPM (轉/分)")
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "RPM (轉/分)")
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
@@ -262,7 +288,9 @@ class RPMChartWidget(QWidget):
         if not self.sectors:
             return
             
-        painter.setPen(QPen(self.sector_color, 1, Qt.DashLine))
+        # 使用與速度分析相同的分段線設定
+        sector_pen_color = QColor(120, 120, 120, 200)  # 更不透明的灰色
+        painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))  # 增加線條寬度到2
         
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
@@ -278,7 +306,7 @@ class RPMChartWidget(QWidget):
                 x = chart_rect.left() + (end_distance - current_min_distance) / distance_range * chart_rect.width()
                 painter.drawLine(int(x), chart_rect.top(), int(x), chart_rect.bottom())
                 
-                # 繪製S1, S2, S3標籤 - 移到X軸下方與速度分析一致
+                # 繪製S1, S2, S3標籤 - 與速度分析完全一致
                 if 'sector' in sector:
                     # 使用實線來繪製標籤
                     painter.setPen(QPen(self.sector_color, 1))
@@ -288,7 +316,7 @@ class RPMChartWidget(QWidget):
                                    Qt.AlignCenter, f"S{sector['sector']}")
                     
                     # 恢復虛線樣式給下一條線
-                    painter.setPen(QPen(self.sector_color, 1, Qt.DashLine))
+                    painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
     
     def _draw_rpm_curves(self, painter: QPainter, chart_rect: QRect):
         """繪製RPM曲線"""
@@ -400,15 +428,13 @@ class RPMChartWidget(QWidget):
                     # 動態計算標籤高度：距離信息(15px) + 車手信息數量 * 15px + 邊距(15px)
                     label_height = 30 + len(closest_drivers) * 15
                     
-                    # 繪製背景
+                    # 繪製背景 - 修正：與速度分析一致，非固定線使用白色背景
                     painter.setPen(QPen(self.axis_color, 1))
-                    painter.fillRect(label_x, label_y, 150, label_height, QColor(255, 255, 255, 240))
+                    painter.fillRect(label_x, label_y, 150, label_height, QColor(255, 255, 255, 230))  # 修正透明度為230
                     painter.drawRect(label_x, label_y, 150, label_height)
                     
-                    # 顯示數值
-                    font = QFont()
-                    font.setPointSize(8)
-                    painter.setFont(font)
+                    # 顯示數值 - 修正：與速度分析保持一致的字體設置
+                    painter.setFont(QFont("Arial", 9))  # 修正：改為與速度分析一致的字體大小
                     
                     text_y = label_y + 15
                     painter.drawText(label_x + 5, text_y, f"距離: {distance:.0f}m")
@@ -469,15 +495,15 @@ class RPMChartWidget(QWidget):
             label_x = min(x_pos + 10, self.width() - label_width - 10)
             label_y = max(chart_rect.top() + 10, 10)  # 固定位置
             
-            # 設置固定線標籤背景顏色（淺紅色背景，與紅色固定線對應）
-            bg_color = QColor(255, 240, 240, 230)
+            # 設置固定線標籤背景顏色 - 修正：與速度分析一致
+            bg_color = QColor(255, 240, 240, 230)  # 固定線使用淺紅色背景
             painter.setPen(QPen(QColor(50, 50, 50), 1))
             painter.setBrush(QBrush(bg_color))
             painter.drawRect(label_x, label_y, label_width, label_height)
             
-            # 繪製數值文字
+            # 繪製數值文字 - 修正：與速度分析保持一致的字體設置
             painter.setPen(QPen(QColor(50, 50, 50), 1))
-            painter.setFont(QFont("Arial", 9))
+            painter.setFont(QFont("Arial", 9))  # 與速度分析一致的字體大小
             
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
@@ -486,6 +512,84 @@ class RPMChartWidget(QWidget):
             for i, (driver_name, rpm, color) in enumerate(closest_drivers):
                 painter.setPen(QPen(color, 1))
                 painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {rpm:.0f} RPM")
+    
+    def _draw_linkage_line(self, painter: QPainter, chart_rect: QRect):
+        """繪製連動線 (來自其他圖表的X軸位置)"""
+        if not self.linkage_distance_value:
+            return
+            
+        # 計算連動線的X位置
+        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+        distance_range = current_max_distance - current_min_distance
+        
+        if distance_range <= 0:
+            return
+            
+        # 計算X座標
+        relative_pos = (self.linkage_distance_value - current_min_distance) / distance_range
+        x_pos = chart_rect.left() + int(relative_pos * chart_rect.width())
+        
+        # 檢查是否在圖表範圍內
+        if x_pos < chart_rect.left() or x_pos > chart_rect.right():
+            return
+            
+        # 繪製連動垂直線 (使用滑鼠追蹤線樣式 - 灰色虛線)
+        painter.setPen(QPen(QColor(128, 128, 128), 1, Qt.DashLine))
+        painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
+        
+        # 繪製連動標籤 (使用白色背景，類似滑鼠追蹤)
+        label_width = 160
+        label_height = 60
+        label_x = x_pos + 10
+        
+        # 使用同步的Y軸位置計算標籤位置
+        # linkage_y_relative: 0.0=圖表底部, 1.0=圖表頂部
+        label_y = chart_rect.bottom() - int(self.linkage_y_relative * chart_rect.height()) - label_height // 2
+        
+        # 確保標籤不會超出圖表區域
+        label_y = max(chart_rect.top() + 10, min(label_y, chart_rect.bottom() - label_height - 10))
+        
+        # 如果標籤會超出右邊界，則放在線的左邊
+        if label_x + label_width > chart_rect.right():
+            label_x = x_pos - label_width - 10
+            
+        # 繪製標籤背景 (白色背景，類似滑鼠追蹤)
+        painter.setBrush(QBrush(QColor(255, 255, 255, 230)))  # 白色半透明背景
+        painter.setPen(QPen(QColor(128, 128, 128), 1))
+        painter.drawRect(label_x, label_y, label_width, label_height)
+        
+        # 繪製距離資訊
+        painter.setPen(QPen(QColor(50, 50, 50), 1))
+        painter.setFont(QFont("Arial", 9))
+        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
+        
+        # 顯示當前位置的RPM資訊
+        if self.distance_data and self.driver1_rpm:
+            # 找到最接近的數據點
+            closest_idx = None
+            min_diff = float('inf')
+            for i, dist in enumerate(self.distance_data):
+                diff = abs(dist - self.linkage_distance_value)
+                if diff < min_diff:
+                    min_diff = diff
+                    closest_idx = i
+            
+            if closest_idx is not None:
+                text_y = label_y + 30
+                
+                # 車手1 RPM
+                if closest_idx < len(self.driver1_rpm):
+                    rpm1 = self.driver1_rpm[closest_idx]
+                    painter.setPen(QPen(self.driver1_color, 1))
+                    painter.drawText(label_x + 5, text_y, f"{self.driver1_name}: {rpm1:.0f} RPM")
+                
+                # 車手2 RPM (如果存在)
+                if (self.driver2_rpm and closest_idx < len(self.driver2_rpm) and 
+                    self.driver2_name != self.driver1_name):
+                    rpm2 = self.driver2_rpm[closest_idx]
+                    painter.setPen(QPen(self.driver2_color, 1))
+                    painter.drawText(label_x + 5, text_y + 15, f"{self.driver2_name}: {rpm2:.0f} RPM")
         
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -569,6 +673,32 @@ class RPMChartWidget(QWidget):
             
             self.last_drag_pos = event.pos()
         
+        # 發送X軸連動信號 (僅在滑鼠在圖表區域內時)
+        chart_rect = QRect(
+            self.margin_left, self.margin_top,
+            self.width() - self.margin_left - self.margin_right,
+            self.height() - self.margin_top - self.margin_bottom
+        )
+        
+        if chart_rect.contains(event.pos()) and global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            # 計算當前滑鼠對應的距離值
+            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+            distance_range = current_max_distance - current_min_distance
+            
+            if distance_range > 0:
+                relative_x = event.x() - chart_rect.left()
+                distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+                
+                # 計算Y軸相對位置 (0.0=底部, 1.0=頂部)
+                relative_y = (chart_rect.bottom() - event.y()) / chart_rect.height()
+                relative_y = max(0.0, min(1.0, relative_y))  # 限制範圍
+                
+                # 發送連動信號 (包含Y軸位置)
+                self.is_sending_linkage = True
+                global_signals.lap_analysis_x_linkage.emit(distance_value, relative_y)
+                self.is_sending_linkage = False
+        
         self.update()
     
     def mousePressEvent(self, event: QMouseEvent):
@@ -591,7 +721,27 @@ class RPMChartWidget(QWidget):
                     relative_x = event.x() - chart_rect.left()
                     self.fixed_distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
                     self.show_fixed_line = True
+                    
+                    # 發送點擊連動信號給其他圖表
+                    if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                        self.is_sending_linkage = True
+                        global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
+                        self.is_sending_linkage = False
+                    
                     self.update()
+            
+        elif event.button() == Qt.RightButton:
+            # 右鍵點擊：清除固定線
+            self.show_fixed_line = False
+            self.fixed_distance_value = None
+            
+            # 發送點擊清除連動信號給其他圖表
+            if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                self.is_sending_linkage = True
+                global_signals.lap_analysis_click_clear.emit()
+                self.is_sending_linkage = False
+            
+            self.update()
             
         elif event.button() == Qt.MiddleButton:
             # 中鍵按下：開始拖拉
@@ -655,6 +805,63 @@ class RPMChartWidget(QWidget):
                                   mouse_rpm + new_rpm_range * (1 - mouse_rel_y))
             
             self.update()
+    
+    def leaveEvent(self, event):
+        """滑鼠離開事件"""
+        self.mouse_x = -1
+        self.mouse_y = -1
+        # 發送X軸連動清除信號
+        if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            self.is_sending_linkage = True
+            global_signals.lap_analysis_x_clear.emit()
+            self.is_sending_linkage = False
+        self.update()
+    
+    def on_x_linkage_received(self, distance_value: float, y_relative: float):
+        """接收來自其他圖表的X軸連動信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 根據距離值設置連動線 (使用滑鼠追蹤樣式)
+        self.linkage_distance_value = distance_value
+        self.linkage_y_relative = y_relative
+        self.show_linkage_line = True
+        self.update()
+    
+    def on_x_linkage_clear(self):
+        """接收X軸連動清除信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 清除連動線
+        self.show_linkage_line = False
+        self.linkage_distance_value = None
+        self.linkage_y_relative = 0.5
+        self.update()
+    
+    def set_linkage_enabled(self, enabled: bool):
+        """設置是否啟用X軸連動功能"""
+        self.linkage_enabled = enabled
+    
+    def on_click_linkage_received(self, distance_value: float):
+        """接收來自其他圖表的點擊連動信號 (設置固定線)"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 設置固定線 (紅色背景樣式)
+        self.fixed_distance_value = distance_value
+        self.show_fixed_line = True
+        self.update()
+    
+    def on_click_linkage_clear(self):
+        """接收點擊連動清除信號"""
+        if not self.linkage_enabled or self.is_sending_linkage:
+            return
+        
+        # 清除固定線
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
+        self.update()
 
 
 class RPMAnalysisChartWidget(QWidget):

@@ -44,7 +44,6 @@ class RPMAnalysisDataLoader(QObject):
         
         self._generation_timeout_timer = QTimer(self)
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
-        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
     
     def load_rpm_data(self, year: int, race: str, session: str, 
                      driver1: str, driver2: str = None, 
@@ -519,7 +518,6 @@ class RPMAnalysisDataLoader(QObject):
             
             self.load_progress.emit(90)
             self.status_changed.emit("正在處理數據...")
-            self.status_changed.emit("正在處理數據...")
             
             # 載入JSON檔案
             print(f"[RPM_LOADER] 開始讀取 JSON 內容...")
@@ -548,7 +546,6 @@ class RPMAnalysisDataLoader(QObject):
                     print(f"[RPM_LOADER] 車手2 RPM點數: {len(rpm_data.get('driver2_rpm', []))}")
                 
                 self.load_progress.emit(100)
-                self.status_changed.emit("數據載入完成")
                 self.status_changed.emit("數據載入完成")
                 self._current_data = processed_data
                 self._is_loading = False
@@ -915,7 +912,7 @@ class RPMAnalysisDataLoader(QObject):
             return {}
 
     def _get_current_timestamp(self) -> str:
-        """取得當前時間戳"""
+        """獲取當前時間戳"""
         from datetime import datetime
         return datetime.now().strftime("%Y%m%d_%H%M%S")
     
@@ -977,186 +974,6 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"[ERROR] [RPM_LOADER] 解析Function 13輸出失敗: {e}")
             return None
-    
-    def _load_via_function7(self) -> bool:
-        """使用Function 7載入RPM數據（遙測分析）"""
-        try:
-            print(f"[RPM_LOADER] 🔧 嘗試使用Function 7載入RPM數據...")
-            
-            self.load_progress.emit(30)
-            self.status_changed.emit("正在執行遙測分析...")
-            
-            # 準備CLI參數
-            args = [
-                "python", self.main_script_path,
-                "-f", "7",  # Function 7: 遙測分析
-                "-y", str(self.current_session['year']),
-                "-r", self.current_session['race'],
-                "-s", "R",  # 正賽
-                "-d", self.current_session['driver1'],  # 主要車手
-                "-l", str(self.current_session['lap1'])  # 主要圈數
-            ]
-            
-            print(f"[RPM_LOADER] 🚀 執行命令: {' '.join(args)}")
-            
-            # 執行CLI命令
-            result = subprocess.run(
-                args,
-                capture_output=True,
-                text=True,
-                timeout=120,
-                cwd=os.getcwd(),
-                encoding='utf-8',
-                errors='replace'  # 遇到無法解碼的字符時用替代字符
-            )
-            
-            self.load_progress.emit(70)
-            self.status_changed.emit("正在處理遙測數據...")
-            
-            if result.returncode == 0:
-                # 解析遙測輸出
-                rpm_data = self._parse_function7_output(result.stdout)
-                
-                if rpm_data:
-                    self.load_progress.emit(100)
-                    self.status_changed.emit("RPM遙測數據載入完成")
-                    self.data_loaded.emit(rpm_data)
-                    return True
-                else:
-                    print(f"[WARNING] [RPM_LOADER] Function 7 未返回有效的RPM數據")
-                    return False
-            else:
-                print(f"[WARNING] [RPM_LOADER] Function 7 執行失敗: {result.stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[WARNING] [RPM_LOADER] Function 7 執行超時")
-            return False
-        except Exception as e:
-            print(f"[WARNING] [RPM_LOADER] Function 7 載入失敗: {e}")
-            return False
-    
-    def _parse_function7_output(self, cli_output: str) -> Optional[Dict[str, Any]]:
-        """解析Function 7的CLI輸出"""
-        try:
-            print(f"[RPM_LOADER] 📊 解析Function 7輸出...")
-            
-            # 尋找遙測數據
-            lines = cli_output.split('\n')
-            
-            # 提取RPM相關的遙測數據
-            rpm_telemetry = self._extract_telemetry_rpm(lines)
-            
-            if rpm_telemetry:
-                # 構建RPM數據結構
-                rpm_data = {
-                    'source': 'Function7_Telemetry',
-                    'session_info': self.current_session,
-                    'rpm_telemetry': rpm_telemetry,
-                    'timestamp': self._get_current_timestamp()
-                }
-                
-                return rpm_data
-            else:
-                return None
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 解析Function 7輸出失敗: {e}")
-            return None
-    
-    def _extract_telemetry_rpm(self, lines: List[str]) -> Optional[Dict[str, Any]]:
-        """從遙測輸出中提取RPM數據"""
-        import re
-        
-        try:
-            rpm_data = {
-                'driver1_rpm_data': [],
-                'driver2_rpm_data': [],
-                'track_info': {},
-                'engine_info': {}
-            }
-            
-            current_driver = None
-            
-            for line in lines:
-                line = line.strip()
-                
-                # 識別車手標記
-                if '車手' in line or 'Driver' in line:
-                    if self.current_session['driver1'] in line:
-                        current_driver = 'driver1'
-                    elif self.current_session['driver2'] in line:
-                        current_driver = 'driver2'
-                
-                # 提取RPM數據點
-                rpm_match = re.search(r'RPM[:\s]*(\d+)', line, re.IGNORECASE)
-                dist_match = re.search(r'距離[:\s]*(\d+\.?\d*)', line)
-                
-                if rpm_match and current_driver:
-                    rpm_value = int(rpm_match.group(1))
-                    distance = 0
-                    
-                    if dist_match:
-                        distance = float(dist_match.group(1))
-                    
-                    data_point = {
-                        'distance': distance,
-                        'rpm': rpm_value
-                    }
-                    
-                    rpm_data[f'{current_driver}_rpm_data'].append(data_point)
-                
-                # 提取賽道信息
-                track_match = re.search(r'賽道長度[:\s]*(\d+\.?\d*)', line)
-                if track_match:
-                    rpm_data['track_info']['total_distance'] = float(track_match.group(1))
-            
-            # 如果有數據就返回
-            if rpm_data['driver1_rpm_data'] or rpm_data['driver2_rpm_data']:
-                return rpm_data
-            else:
-                return None
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 提取遙測RPM數據失敗: {e}")
-            return None
-    
-    def _load_from_cache(self) -> bool:
-        """從緩存載入RPM數據"""
-        try:
-            print(f"[RPM_LOADER] 💾 嘗試從緩存載入RPM數據...")
-            
-            self.load_progress.emit(40)
-            self.status_changed.emit("正在搜尋緩存數據...")
-            
-            # 構建緩存檔案名稱
-            cache_filename = self._build_cache_filename()
-            cache_path = os.path.join(self.cache_dir, cache_filename)
-            
-            if os.path.exists(cache_path):
-                print(f"[RPM_LOADER] 📂 找到緩存檔案: {cache_path}")
-                
-                with open(cache_path, 'rb') as f:
-                    cached_data = pickle.load(f)
-                
-                # 轉換緩存數據為RPM格式
-                rpm_data = self._convert_cached_to_rpm(cached_data)
-                
-                if rpm_data:
-                    self.load_progress.emit(100)
-                    self.status_changed.emit("緩存RPM數據載入完成")
-                    self.data_loaded.emit(rpm_data)
-                    return True
-                else:
-                    print(f"[WARNING] [RPM_LOADER] 緩存數據無法轉換為RPM格式")
-                    return False
-            else:
-                print(f"[INFO] [RPM_LOADER] 未找到緩存檔案: {cache_path}")
-                return False
-                
-        except Exception as e:
-            print(f"[WARNING] [RPM_LOADER] 緩存載入失敗: {e}")
-            return False
     
     def _build_cache_filename(self) -> str:
         """構建緩存檔案名稱"""
@@ -1434,62 +1251,6 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"[ERROR] [RPM_LOADER] 統計生成RPM數據失敗: {e}")
             return []
-    
-    def _extract_rpm_from_raw_data(self, raw_data: Any) -> Optional[Dict[str, Any]]:
-        """從原始數據中提取RPM信息"""
-        try:
-            # 嘗試處理不同類型的原始數據
-            if hasattr(raw_data, 'telemetry'):
-                # FastF1 telemetry對象
-                return self._extract_from_fastf1_telemetry(raw_data)
-            elif isinstance(raw_data, dict):
-                # 字典格式數據
-                return self._extract_from_dict_data(raw_data)
-            else:
-                # 其他格式，返回空
-                return None
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 原始數據RPM提取失敗: {e}")
-            return None
-    
-    def _extract_from_fastf1_telemetry(self, telemetry_obj: Any) -> Optional[Dict[str, Any]]:
-        """從FastF1遙測對象中提取RPM數據"""
-        try:
-            # 這裡應該根據實際的FastF1 API進行調整
-            print(f"[RPM_LOADER] 🔍 處理FastF1遙測對象...")
-            
-            # TODO: 實現真實的FastF1 API提取邏輯
-            print(f"[ERROR] [RPM_LOADER] FastF1遙測提取功能尚未實現")
-            return None
-            
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] FastF1遙測提取失敗: {e}")
-            return None
-    
-    def _extract_from_dict_data(self, dict_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """從字典數據中提取RPM信息"""
-        try:
-            # 檢查是否包含RPM相關鍵值
-            if 'rpm' in str(dict_data).lower():
-                # 嘗試直接使用字典數據
-                return {
-                    'source': 'DictExtraction',
-                    'session_info': self.current_session,
-                    'rpm_telemetry': dict_data,
-                    'timestamp': self._get_current_timestamp()
-                }
-            else:
-                return None
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 字典數據RPM提取失敗: {e}")
-            return None
-    
-    def _get_current_timestamp(self) -> str:
-        """獲取當前時間戳"""
-        from datetime import datetime
-        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     def cache_rpm_data(self, rpm_data: Dict[str, Any]) -> bool:
         """緩存RPM數據"""
