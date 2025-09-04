@@ -67,21 +67,88 @@ class TrackAnalysisCacheManager:
     
     def find_latest_track_json(self, year, race, session):
         """查找最新的賽道分析JSON檔案"""
-        # 搜索模式：raw_data_track_position_YEAR_RACE_*.json
         import glob
-        pattern = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race}_*.json")
-        files = glob.glob(pattern)
         
-        # 如果沒有找到完全匹配的，嘗試搜索包含關鍵字的檔案
-        if not files:
-            pattern = os.path.join(self.cache_dir, f"raw_data_track_position_*{year}*.json")
+        # 建立可能的賽事名稱變化列表
+        possible_race_names = [race]
+        
+        # 處理常見的賽事名稱變化
+        if race == "Japan":
+            possible_race_names.extend(["Japan Grand Prix", "Japanese Grand Prix"])
+        elif race == "Australia":
+            possible_race_names.extend(["Australia Grand Prix", "Australian Grand Prix"])
+        elif race == "China":
+            possible_race_names.extend(["China Grand Prix", "Chinese Grand Prix"])
+        elif race == "Bahrain":
+            possible_race_names.extend(["Bahrain Grand Prix", "Bahraini Grand Prix"])
+        elif race == "Saudi Arabia":
+            possible_race_names.extend(["Saudi Arabia Grand Prix", "Saudi Arabian Grand Prix"])
+        elif race == "Miami":
+            possible_race_names.extend(["Miami Grand Prix"])
+        elif race == "Emilia Romagna":
+            possible_race_names.extend(["Emilia Romagna Grand Prix", "Emilia-Romagna Grand Prix"])
+        elif race == "Monaco":
+            possible_race_names.extend(["Monaco Grand Prix", "Monaco GP"])
+        elif race == "Spain":
+            possible_race_names.extend(["Spain Grand Prix", "Spanish Grand Prix"])
+        elif race == "Canada":
+            possible_race_names.extend(["Canada Grand Prix", "Canadian Grand Prix"])
+        elif race == "Austria":
+            possible_race_names.extend(["Austria Grand Prix", "Austrian Grand Prix"])
+        elif race == "Great Britain":
+            possible_race_names.extend(["Great Britain Grand Prix", "British Grand Prix"])
+        elif race == "Hungary":
+            possible_race_names.extend(["Hungary Grand Prix", "Hungarian Grand Prix"])
+        elif race == "Belgium":
+            possible_race_names.extend(["Belgium Grand Prix", "Belgian Grand Prix"])
+        elif race == "Netherlands":
+            possible_race_names.extend(["Netherlands Grand Prix", "Dutch Grand Prix"])
+        elif race == "Italy":
+            possible_race_names.extend(["Italy Grand Prix", "Italian Grand Prix"])
+        elif race == "Azerbaijan":
+            possible_race_names.extend(["Azerbaijan Grand Prix", "Azerbaijani Grand Prix"])
+        elif race == "Singapore":
+            possible_race_names.extend(["Singapore Grand Prix"])
+        elif race == "United States":
+            possible_race_names.extend(["United States Grand Prix", "US Grand Prix", "USA Grand Prix"])
+        elif race == "Mexico":
+            possible_race_names.extend(["Mexico Grand Prix", "Mexican Grand Prix"])
+        elif race == "Brazil":
+            possible_race_names.extend(["Brazil Grand Prix", "Brazilian Grand Prix"])
+        elif race == "Qatar":
+            possible_race_names.extend(["Qatar Grand Prix", "Qatari Grand Prix"])
+        elif race == "Abu Dhabi":
+            possible_race_names.extend(["Abu Dhabi Grand Prix"])
+        elif race == "Las Vegas":
+            possible_race_names.extend(["Las Vegas Grand Prix"])
+        # 反向處理：如果輸入的是完整名稱，也加入簡化版本
+        elif "Grand Prix" in race:
+            simple_name = race.replace(" Grand Prix", "").replace("Grand Prix", "").strip()
+            if simple_name not in possible_race_names:
+                possible_race_names.append(simple_name)
+        
+        # 搜索所有可能的賽事名稱（僅使用精確搜尋）
+        found_files = []
+        
+        for race_name in possible_race_names:
+            # 精確搜尋：年份_賽事_賽段
+            pattern = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}_*.json")
             files = glob.glob(pattern)
+            found_files.extend(files)
+            
+            # 也嘗試沒有額外後綴的格式
+            pattern2 = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}.json")
+            files2 = glob.glob(pattern2)
+            found_files.extend(files2)
         
-        if files:
+        if found_files:
             # 按修改時間排序，返回最新的
-            latest_file = max(files, key=os.path.getmtime)
+            latest_file = max(found_files, key=os.path.getmtime)
+            print(f"[CACHE] 找到賽道分析檔案: {latest_file}")
             return latest_file
         
+        print(f"[CACHE] 未找到賽道分析檔案: {year} {race} {session}")
+        print(f"[CACHE] 搜尋的賽事名稱: {possible_race_names}")
         return None
     
     def is_cache_valid(self, file_path):
@@ -151,16 +218,16 @@ class TrackAnalysisWorkerThread(QThread):
             self.analysis_failed.emit(f"分析執行錯誤: {str(e)}")
     
     def run_cli_analysis(self):
-        """執行CLI賽道位置分析"""
+        """執行CLI賽道路線分析"""
         try:
             cli_script = os.path.join(project_root, "f1_analysis_modular_main.py")
             command = [
                 "python", cli_script,
-                "-f", "2",  # 功能2: 賽道位置分析
+                "-f", "2",  # 功能2: 賽道路線分析
                 "-y", str(self.year),
                 "-r", self.race,
-                "-s", self.session,
-                "-d", self.driver  # 添加車手參數
+                "-s", self.session
+                # 注意：功能2不需要車手參數，因為是分析整個賽道路線
             ]
             
             result = subprocess.run(
@@ -513,6 +580,9 @@ class TrackMapWidget(QWidget):
 class TrackAnalysisModule(QWidget):
     """賽道分析主模組"""
     
+    # 定義信號
+    module_error = pyqtSignal(str)  # 模組錯誤信號
+    
     def __init__(self, year=2025, race="Japan", session="R", driver="VER"):
         super().__init__()
         self.year = year
@@ -794,6 +864,8 @@ class TrackAnalysisModule(QWidget):
         # self.status_label.setText(f"狀態: 分析失敗 - {error_message}")
         
         print(f"[TRACK] 分析失敗: {error_message}")
+        # 發射模組錯誤信號
+        self.module_error.emit(error_message)
         # QMessageBox.warning(self, "賽道分析失敗", f"分析執行失敗:\n{error_message}")
     
     def update_track_info_display(self):
@@ -1007,22 +1079,50 @@ class TrackAnalysisModule(QWidget):
     
     def set_analysis_parameters(self, parameters):
         """設定分析參數 - 用於參數同步"""
-        year = parameters.get('year', self.year)
-        race = parameters.get('race', self.race)
-        session = parameters.get('session', self.session)
-        
-        # 檢查參數是否有變化
-        if (str(year) != str(self.year) or 
-            str(race) != str(self.race) or 
-            str(session) != str(self.session)):
+        try:
+            year = parameters.get('year', self.year)
+            race = parameters.get('race', self.race)
+            session = parameters.get('session', self.session)
             
-            print(f"[TRACK] 更新分析參數: {year} {race} {session}")
-            self.year = year
-            self.race = race
-            self.session = session
-            
-            # 重新開始分析
-            self.start_analysis_workflow()
+            # 檢查參數是否有變化
+            if (str(year) != str(self.year) or 
+                str(race) != str(self.race) or 
+                str(session) != str(self.session)):
+                
+                print(f"[TRACK] 更新分析參數: {year} {race} {session}")
+                self.year = year
+                self.race = race
+                self.session = session
+                
+                # 重新開始分析
+                self.start_analysis_workflow()
+                return True
+            else:
+                # 參數沒有變化，不需要重新分析
+                print(f"[TRACK] 參數未變化，跳過分析: {year} {race} {session}")
+                return True
+                
+        except Exception as e:
+            print(f"[ERROR] [TRACK] 設定分析參數失敗: {e}")
+            self.module_error.emit(f"設定分析參數失敗: {str(e)}")
+            return False
+    
+    def update_parameters(self, year, race, session) -> bool:
+        """更新參數 - 與 PopoutSubWindow 兼容的方法"""
+        try:
+            return self.set_analysis_parameters({
+                'year': year,
+                'race': race,
+                'session': session
+            })
+        except Exception as e:
+            print(f"[ERROR] [TRACK] 更新參數失敗: {e}")
+            self.module_error.emit(f"更新參數失敗: {str(e)}")
+            return False
+    
+    def get_window_title(self, year, race, session):
+        """獲取視窗標題"""
+        return f"賽道_{year}_{race}_{session}"
     
     def reload_analysis(self):
         """重新載入分析"""

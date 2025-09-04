@@ -21,21 +21,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
-try:
-    from ...base.base_analysis_module import IAnalysisModule
-except ImportError:
-    # 如果相對導入失敗，嘗試絕對導入
-    try:
-        from modules.gui.base.base_analysis_module import IAnalysisModule
-    except ImportError:
-        try:
-            from modules.interfaces.analysis_module import IAnalysisModule
-        except ImportError:
-            # 如果都失敗，定義一個基本的接口
-            from PyQt5.QtCore import QObject
-            class IAnalysisModule(QObject):
-                def __init__(self, parent=None):
-                    super().__init__(parent)
+from modules.gui.interfaces.analysis_module import IAnalysisModule
 
 class SpeedDataManager(QObject):
     """速度數據管理器 - 負責JSON緩存和CLI備援"""
@@ -309,6 +295,34 @@ class SpeedAnalysisModule(IAnalysisModule):
             
             # 設置主界面
             self._setup_ui()
+            
+            # 註冊到分析模組管理器
+            try:
+                from ..analysis_module_manager import get_analysis_module_manager
+                manager = get_analysis_module_manager()
+                
+                # 註冊模組
+                module_id = f"speed_analysis_{id(self)}"
+                manager.register_module(module_id, self, "speed_analysis")
+                
+                # 註冊圖表組件
+                if self.speed_chart_widget:
+                    manager.register_chart_widget(self.speed_chart_widget)
+                
+                # 保存管理器引用和模組ID
+                self._analysis_manager = manager
+                self._module_id = module_id
+                
+                print(f"[SPEED_MDI] ✅ 已註冊到分析模組管理器: {module_id}")
+                
+            except ImportError as e:
+                print(f"[WARNING] [SPEED_MDI] 無法導入分析模組管理器: {e}")
+                self._analysis_manager = None
+                self._module_id = None
+            except Exception as e:
+                print(f"[ERROR] [SPEED_MDI] 註冊到分析模組管理器失敗: {e}")
+                self._analysis_manager = None
+                self._module_id = None
             
             self._initialized = True
             print(f"[OK] [SPEED_MDI] 速度分析模組初始化完成")
@@ -764,6 +778,55 @@ class SpeedAnalysisModule(IAnalysisModule):
         """獲取預設尺寸"""
         return (900, 600)
     
+    def get_title(self) -> str:
+        """返回模組標題 - 實現抽象方法"""
+        return f"速度分析 - {self.current_year} {self.current_race} {self.current_session}"
+    
+    def supports_sync(self) -> bool:
+        """是否支援主程式同步 - 實現抽象方法"""
+        return True
+    
+    def get_parameter_interface(self) -> Optional[QWidget]:
+        """返回參數設定介面 - 實現抽象方法"""
+        # 速度分析模組暫時不提供參數設定介面
+        return None
+    
+    def cleanup(self):
+        """清理資源 - 實現抽象方法"""
+        try:
+            # 從分析模組管理器解除註冊
+            if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
+                try:
+                    # 解除註冊圖表組件
+                    if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
+                        self._analysis_manager.unregister_chart_widget(self.speed_chart_widget)
+                    
+                    # 解除註冊模組
+                    self._analysis_manager.unregister_module(self._module_id)
+                    print(f"[SPEED_MDI] ✅ 已從分析模組管理器解除註冊: {self._module_id}")
+                    
+                except Exception as e:
+                    print(f"[ERROR] [SPEED_MDI] 從分析模組管理器解除註冊失敗: {e}")
+            
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
+                    
+            if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
+                # 清理圖表組件
+                if hasattr(self.speed_chart_widget, 'cleanup'):
+                    self.speed_chart_widget.cleanup()
+                self.speed_chart_widget.deleteLater()
+                
+            if hasattr(self, 'main_widget') and self.main_widget:
+                # 清理主要組件
+                self.main_widget.deleteLater()
+                
+            print(f"[CLEANUP] 速度分析模組資源清理完成")
+        except Exception as e:
+            print(f"[ERROR] 速度分析模組清理失敗: {e}")
+    
     def load_data(self, **kwargs) -> bool:
         """載入數據 - 實現抽象方法"""
         try:
@@ -1141,3 +1204,11 @@ class SpeedAnalysisModule(IAnalysisModule):
         except Exception as e:
             print(f"[ERROR] [SPEED_MDI] export_data 失敗: {e}")
             return False
+
+# 註冊速度分析模組到工廠
+try:
+    from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
+    ModuleFactory.register_module(ModuleTypes.TELEMETRY_SPEED, SpeedAnalysisModule)
+    print(f"[OK] [MODULE_FACTORY] 速度分析模組已註冊")
+except ImportError as e:
+    print(f"[WARNING] [MODULE_FACTORY] 速度分析模組註冊失敗: {e}")

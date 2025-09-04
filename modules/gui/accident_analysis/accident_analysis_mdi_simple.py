@@ -25,7 +25,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 try:
-    from modules.interfaces.analysis_module import IAnalysisModule
+    from modules.gui.interfaces.analysis_module import IAnalysisModule
 except ImportError:
     # 如果都失敗，定義一個基本的接口
     from PyQt5.QtCore import QObject

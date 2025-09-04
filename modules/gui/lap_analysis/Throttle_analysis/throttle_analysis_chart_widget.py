@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 油門分析圖表組件
-使用 PyQt5 原生繪圖實現距離-油門百分比曲線圖表
+使用 PyQt5 原生繪圖實現距離-速度曲線圖表
 支援雙車手對比和單車手分析，與系統其他組件保持一致的視覺風格
 """
 
@@ -22,60 +22,49 @@ try:
 except ImportError:
     global_signals = None
 
-# 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
-
 class ThrottleChartWidget(QWidget):
     """油門圖表繪製組件 - 使用 PyQt5 原生繪圖"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # 圖表設置 - 與速度分析保持完全一致
-        self.margin_left = 80
-        self.margin_right = 20
-        self.margin_top = 20
-        self.margin_bottom = 80
-        
-        # 數據存儲
+        # 數據
         self.distance_data = []
         self.driver1_throttle = []
         self.driver2_throttle = []
         self.driver1_name = "Driver 1"
         self.driver2_name = "Driver 2"
         self.sectors = []
-        self.is_single_driver = False  # 新增：單車手模式標記
+        self.is_single_driver = False  # 新增：單車手模式標記 - 與油門分析一致
+        
+        # 顏色設定
+        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
+        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.grid_color = QColor(200, 200, 200)
+        self.axis_color = QColor(50, 50, 50)
+        self.sector_color = QColor(100, 100, 100, 100)  # 半透明灰色
+        
+        # 繪圖參數
+        self.margin_left = 80
+        self.margin_right = 20
+        self.margin_top = 20
+        self.margin_bottom = 80
         
         # 數據範圍
         self.min_distance = 0
-        self.max_distance = 5807
-        self.min_throttle = 0      # 油門百分比 0%
-        self.max_throttle = 100    # 油門百分比 100%
-        
-        # 視圖範圍 (用於縮放)
-        self.view_min_distance = None
-        self.view_max_distance = None
-        self.view_min_throttle = None
-        self.view_max_throttle = None
-        
-        # 顏色設置 - 與速度分析完全一致
-        self.bg_color = QColor(255, 255, 255)
-        self.grid_color = QColor(200, 200, 200)  # 修正：與速度分析一致
-        self.axis_color = QColor(50, 50, 50)     # 修正：與速度分析一致
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
-        self.sector_color = QColor(100, 100, 100, 100)  # 修正：半透明灰色
+        self.max_distance = 6000
+        self.min_throttle = 0
+        self.max_throttle = 100
         
         # 滑鼠交互
+        self.setMouseTracking(True)
         self.mouse_x = -1
         self.mouse_y = -1
-        self.fixed_line_x = -1
-        self.dragging = False
-        self.last_drag_pos = QPoint()
         
-        # 中鍵拖拉功能 (與速度分析一致)
-        self.middle_dragging = False
-        self.show_fixed_line = False
-        self.fixed_distance_value = None
+        # 固定線條和數值顯示
+        self.fixed_line_x = -1  # 固定垂直線的X位置（螢幕像素）
+        self.fixed_distance_value = None  # 固定線對應的實際距離值
+        self.show_fixed_line = False  # 是否顯示固定線
         
         # X軸連動功能 (獨立於同步功能)
         self.linkage_enabled = True  # 是否啟用X軸連動
@@ -92,23 +81,44 @@ class ThrottleChartWidget(QWidget):
             # 連接點擊連動信號
             global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
             global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
+
         
-        # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
-        self.setMouseTracking(True)
+        # 拖拉狀態
+        self.middle_dragging = False  # 中鍵拖拉狀態
+        self.last_drag_pos = QPoint()
         
-        self.setMinimumSize(600, 300)  # 與速度分析保持一致
+        # 視圖範圍（用於縮放和拖拉）
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_throttle = None
+        self.view_max_throttle = None
+        
+        self.setMinimumSize(600, 300)  # 減少最小高度，提高適應性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
-    
+        
     def set_throttle_data(self, distance: List[float], driver1_throttle: List[float], 
-                          driver2_throttle: List[float], driver1_name: str = "Driver 1", 
-                          driver2_name: str = "Driver 2", sectors: List[Dict] = None):
+                      driver2_throttle: List[float], driver1_name: str = "Driver 1", 
+                      driver2_name: str = "Driver 2", sectors: List[Dict] = None):
         """設置油門數據"""
+        # 強制重置視圖狀態
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_throttle = None
+        self.view_max_throttle = None
+        self.show_fixed_line = False
+        self.fixed_line_x = -1
+        self.fixed_distance_value = None
+        
+        # 設置新數據
         self.distance_data = distance
         self.driver1_throttle = driver1_throttle
         self.driver2_throttle = driver2_throttle
         self.driver1_name = driver1_name
         self.driver2_name = driver2_name
         self.sectors = sectors or []
+        
+        # 新增：更新單車手模式標記 - 與油門分析一致
+        self.is_single_driver = (driver1_name == driver2_name)
         
         # 計算數據範圍
         if distance:
@@ -122,29 +132,30 @@ class ThrottleChartWidget(QWidget):
             all_throttles.extend(driver2_throttle)
             
         if all_throttles:
-            self.min_throttle = max(0, min(all_throttles) - 5)      # 留一些邊距，但不低於0
-            self.max_throttle = min(100, max(all_throttles) + 5)    # 留一些邊距，但不超過100
+            self.min_throttle = max(0, min(all_throttles) - 20)
+            self.max_throttle = max(all_throttles) + 20
         
         # 強制重繪
         self.repaint()
-    
+        
     def reset_view(self):
         """重置視圖到原始範圍"""
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_throttle = None
         self.view_max_throttle = None
-        self.repaint()
+        self.show_fixed_line = False
+        self.fixed_line_x = -1
+        self.fixed_distance_value = None
+        self.update()
     
-    def reset_data(self):
-        """重置所有數據和視圖"""
-        self.distance_data = []
-        self.driver1_throttle = []
-        self.driver2_throttle = []
-        self.sectors = []
-        self.reset_view()
-        self.repaint()
-    
+    def clear_fixed_line(self):
+        """清除固定線條"""
+        self.show_fixed_line = False
+        self.fixed_line_x = -1
+        self.fixed_distance_value = None
+        self.update()
+        
     def paintEvent(self, event):
         """繪製圖表"""
         painter = QPainter(self)
@@ -165,29 +176,22 @@ class ThrottleChartWidget(QWidget):
         painter.fillRect(chart_rect, QColor(248, 249, 250))
         
         # 繪製順序很重要 - 後繪製的會覆蓋先繪製的
-        
-        # 1. 繪製網格
         self._draw_grid(painter, chart_rect)
-        
-        # 2. 繪製坐標軸
         self._draw_axes(painter, chart_rect)
-        
-        # 3. 繪製分段標記
+        self._draw_throttle_curves(painter, chart_rect)
         self._draw_sectors(painter, chart_rect)
         
-        # 4. 繪製油門曲線
-        self._draw_throttle_curves(painter, chart_rect)
+        # 繪製滑鼠追蹤線和固定線條
+        if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
+            self._draw_mouse_tracker(painter, chart_rect)
         
-        # 5. 繪製滑鼠追蹤線和固定線
-        self._draw_mouse_tracker(painter, chart_rect)
-        
-        # 5.5. 繪製連動線 (來自其他圖表的X軸連動)
+        # 繪製連動線 (來自其他圖表的X軸連動)
         if self.show_linkage_line and self.linkage_distance_value is not None:
             self._draw_linkage_line(painter, chart_rect)
-        
-        # 6. 繪製圖例
+            
+        # 繪製圖例
         self._draw_legend(painter)
-    
+        
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""
         painter.setPen(QPen(self.grid_color, 1))
@@ -201,126 +205,101 @@ class ThrottleChartWidget(QWidget):
         # 垂直網格線 (距離)
         distance_range = current_max_distance - current_min_distance
         if distance_range > 0:
-            num_v_lines = 10
-            for i in range(num_v_lines + 1):
-                distance = current_min_distance + (distance_range * i / num_v_lines)
-                x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+            grid_step = distance_range / 10
+            for i in range(11):
+                distance_value = current_min_distance + i * grid_step
+                x = chart_rect.left() + (distance_value - current_min_distance) / distance_range * chart_rect.width()
                 painter.drawLine(int(x), chart_rect.top(), int(x), chart_rect.bottom())
         
-        # 水平網格線 (油門%) - 修正：與速度分析保持一致使用10條線
+        # 水平網格線 (速度)
         throttle_range = current_max_throttle - current_min_throttle
         if throttle_range > 0:
-            num_h_lines = 10  # 修正：改為10條線與速度分析一致
-            for i in range(num_h_lines + 1):
-                throttle = current_min_throttle + (throttle_range * i / num_h_lines)
-                y = chart_rect.bottom() - (throttle - current_min_throttle) / throttle_range * chart_rect.height()
+            grid_step = throttle_range / 10
+            for i in range(11):
+                throttle_value = current_min_throttle + i * grid_step
+                y = chart_rect.bottom() - (throttle_value - current_min_throttle) / throttle_range * chart_rect.height()
                 painter.drawLine(chart_rect.left(), int(y), chart_rect.right(), int(y))
-    
+                
     def _draw_axes(self, painter: QPainter, chart_rect: QRect):
-        """繪製坐標軸和標籤 - 與速度分析保持一致"""
+        """繪製坐標軸和標籤"""
         painter.setPen(QPen(self.axis_color, 2))
         
-        # 繪製軸線 - 只繪製底邊和左邊，與速度分析一致
+        # 繪製軸線
         painter.drawLine(chart_rect.left(), chart_rect.bottom(), chart_rect.right(), chart_rect.bottom())  # X軸
         painter.drawLine(chart_rect.left(), chart_rect.top(), chart_rect.left(), chart_rect.bottom())      # Y軸
         
-        # 設置字體 - 與速度分析一致
+        # 設置字體
         font = QFont("Arial", 9)
         painter.setFont(font)
         painter.setPen(QPen(self.axis_color, 1))
         
-        # 使用當前視圖範圍或原始範圍
-        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        current_min_throttle = self.view_min_throttle if self.view_min_throttle is not None else self.min_throttle
-        current_max_throttle = self.view_max_throttle if self.view_max_throttle is not None else self.max_throttle
-        
-        # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
-        distance_range = current_max_distance - current_min_distance
+        # X軸標籤 (距離)
+        distance_range = self.max_distance - self.min_distance
         if distance_range > 0:
-            num_labels = 10  # 使用10個間隔
-            for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
-                distance = current_min_distance + (distance_range * i / num_labels)
-                x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
-                
-                # 繪製刻度線
-                painter.drawLine(int(x), chart_rect.bottom(), int(x), chart_rect.bottom() + 5)
-                
-                # 繪製標籤
-                label = f"{distance:.0f}"
+            for i in range(0, 11, 2):  # 只顯示偶數刻度
+                distance_value = self.min_distance + i * distance_range / 10
+                x = chart_rect.left() + i * chart_rect.width() / 10
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
-                               Qt.AlignCenter, label)
+                               Qt.AlignCenter, f"{int(distance_value)}")
         
-        # Y軸標籤 (油門%) - 修正：與速度分析一致，只顯示偶數刻度
-        throttle_range = current_max_throttle - current_min_throttle
+        # Y軸標籤 (速度)
+        throttle_range = self.max_throttle - self.min_throttle
         if throttle_range > 0:
-            num_labels = 10  # 使用10個間隔
-            for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
-                throttle = current_min_throttle + (throttle_range * i / num_labels)
-                y = chart_rect.bottom() - (throttle - current_min_throttle) / throttle_range * chart_rect.height()
-                
-                # 繪製刻度線
-                painter.drawLine(chart_rect.left() - 5, int(y), chart_rect.left(), int(y))
-                
-                # 繪製標籤
-                label = f"{throttle:.1f}%"
+            for i in range(0, 11, 2):  # 只顯示偶數刻度
+                throttle_value = self.min_throttle + i * throttle_range / 10
+                y = chart_rect.bottom() - i * chart_rect.height() / 10
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
-                               Qt.AlignRight | Qt.AlignVCenter, label)
+                               Qt.AlignRight | Qt.AlignVCenter, f"{int(throttle_value)}")
         
-        # 座標軸標題
-        title_font = QFont()
-        title_font.setPointSize(10)
-        title_font.setBold(True)
+        # 軸標題
+        title_font = QFont("Arial", 10, QFont.Bold)
         painter.setFont(title_font)
         
-        # X軸標題 - 修正：與速度分析一致的位置
+        # X軸標題
         painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
                         Qt.AlignCenter, "距離 (米)")
         
-        # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
+        # Y軸標題
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "油門百分比 (%)")
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "速度 (%)")
         painter.restore()
-    
+        
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
         """繪製分段標記"""
         if not self.sectors:
             return
             
-        # 使用與速度分析相同的分段線設定
+        # 使用更明顯的分段線設定
         sector_pen_color = QColor(120, 120, 120, 200)  # 更不透明的灰色
         painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))  # 增加線條寬度到2
         
-        # 使用當前視圖範圍或原始範圍
-        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        
-        distance_range = current_max_distance - current_min_distance
+        distance_range = self.max_distance - self.min_distance
         if distance_range <= 0:
             return
             
-        for sector in self.sectors:
+        for i, sector in enumerate(self.sectors):
             if 'end_distance' in sector:
                 end_distance = sector['end_distance']
-                x = chart_rect.left() + (end_distance - current_min_distance) / distance_range * chart_rect.width()
+                x = chart_rect.left() + (end_distance - self.min_distance) / distance_range * chart_rect.width()
+                
+                # 繪製分段垂直線
                 painter.drawLine(int(x), chart_rect.top(), int(x), chart_rect.bottom())
                 
-                # 繪製S1, S2, S3標籤 - 與速度分析完全一致
+                # 繪製S1, S2, S3標籤
                 if 'sector' in sector:
                     # 使用實線來繪製標籤
                     painter.setPen(QPen(self.sector_color, 1))
                     painter.setFont(QFont("Arial", 8))
-                    label_y = chart_rect.bottom() + 50  # 在X軸下方
+                    label_y = chart_rect.bottom() + 50
                     painter.drawText(int(x - 10), label_y, 20, 15,
                                    Qt.AlignCenter, f"S{sector['sector']}")
                     
                     # 恢復虛線樣式給下一條線
                     painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
-    
     def _draw_throttle_curves(self, painter: QPainter, chart_rect: QRect):
-        """繪製油門曲線"""
+        """繪製速度曲線"""
         if not self.distance_data:
             return
         
@@ -336,183 +315,149 @@ class ThrottleChartWidget(QWidget):
         if distance_range <= 0 or throttle_range <= 0:
             return
         
-        # 繪製車手1油門曲線
+        # 繪製車手1速度曲線
         if self.driver1_throttle and len(self.driver1_throttle) == len(self.distance_data):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
-            
             for i, (distance, throttle) in enumerate(zip(self.distance_data, self.driver1_throttle)):
+                # 只繪製在當前視圖範圍內的點
                 if current_min_distance <= distance <= current_max_distance:
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (throttle - current_min_throttle) / throttle_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
-            # 繪製連線
+            # 繪製線段
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
         
-        # 繪製車手2油門曲線
+        # 繪製車手2速度曲線
         if self.driver2_throttle and len(self.driver2_throttle) == len(self.distance_data):
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
-            
             for i, (distance, throttle) in enumerate(zip(self.distance_data, self.driver2_throttle)):
+                # 只繪製在當前視圖範圍內的點
                 if current_min_distance <= distance <= current_max_distance:
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (throttle - current_min_throttle) / throttle_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
-            # 繪製連線
+            # 繪製線段
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
-    
+                
     def _draw_mouse_tracker(self, painter: QPainter, chart_rect: QRect):
         """繪製滑鼠追蹤線和固定線"""
-        # 繪製固定線
+        # 繪製固定垂直線（左鍵點擊固定）
         if self.show_fixed_line and self.fixed_distance_value is not None:
+            # 根據固定的距離值計算當前螢幕位置
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
             distance_range = current_max_distance - current_min_distance
             
-            if distance_range > 0:
-                # 計算固定線的X位置
+            if distance_range > 0 and current_min_distance <= self.fixed_distance_value <= current_max_distance:
+                # 計算固定距離值對應的X位置
                 relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
-                if 0 <= relative_pos <= 1:
-                    fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
-                    painter.setPen(QPen(QColor(0, 180, 0), 1.5))
-                    painter.drawLine(int(fixed_x), chart_rect.top(), 
-                                   int(fixed_x), chart_rect.bottom())
-                    
-                    # 顯示固定線標籤 - 與速度分析一致
-                    self._draw_fixed_line_label(painter, chart_rect, int(fixed_x), self.fixed_distance_value)
+                fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
+                self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
         
-        # 繪製滑鼠追蹤線
-        if (self.mouse_x > chart_rect.left() and self.mouse_x < chart_rect.right() and
-            self.mouse_y > chart_rect.top() and self.mouse_y < chart_rect.bottom()):
+        # 繪製滑鼠跟隨線
+        if chart_rect.contains(self.mouse_x, self.mouse_y):
+            self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
+    
+    def _draw_tracking_line(self, painter: QPainter, chart_rect: QRect, x_pos: int, is_fixed: bool):
+        """繪製追蹤線和數值顯示"""
+        if not chart_rect.contains(x_pos, chart_rect.center().y()):
+            return
             
+        # 設置線條樣式
+        if is_fixed:
+            # 固定線：實線，更明顯
+            painter.setPen(QPen(QColor(0, 180, 0), 1.5, Qt.SolidLine))
+        else:
+            # 跟隨線：虛線，較淡
             painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            # 垂直線
-            painter.drawLine(self.mouse_x, chart_rect.top(), 
-                           self.mouse_x, chart_rect.bottom())
-            # 水平線
-            painter.drawLine(chart_rect.left(), self.mouse_y, 
-                           chart_rect.right(), self.mouse_y)
             
-            # 顯示當前值
-            if self.distance_data:
-                current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-                current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-                current_min_throttle = self.view_min_throttle if self.view_min_throttle is not None else self.min_throttle
-                current_max_throttle = self.view_max_throttle if self.view_max_throttle is not None else self.max_throttle
+        painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
+        
+        # 計算當前位置對應的距離和曲線速度值
+        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+        distance_range = current_max_distance - current_min_distance
+        
+        if distance_range > 0 and self.distance_data:
+            # 計算距離值
+            relative_x = x_pos - chart_rect.left()
+            distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+            
+            # 找到最接近的數據點來獲取真實的曲線速度值
+            driver1_throttle_at_position = None
+            driver2_throttle_at_position = None
+            
+            # 在距離數據中找到最接近的點
+            if self.distance_data and len(self.distance_data) > 0:
+                closest_index = 0
+                min_distance_diff = abs(self.distance_data[0] - distance_value)
                 
-                distance_range = current_max_distance - current_min_distance
-                throttle_range = current_max_throttle - current_min_throttle
+                for i, dist in enumerate(self.distance_data):
+                    distance_diff = abs(dist - distance_value)
+                    if distance_diff < min_distance_diff:
+                        min_distance_diff = distance_diff
+                        closest_index = i
                 
-                if distance_range > 0 and throttle_range > 0:
-                    # 計算當前距離和油門
-                    distance = current_min_distance + (self.mouse_x - chart_rect.left()) / chart_rect.width() * distance_range
-                    throttle = current_max_throttle - (self.mouse_y - chart_rect.top()) / chart_rect.height() * throttle_range
-                    
-                    # 尋找最接近的數據點並顯示車手油門值
-                    label_x = self.mouse_x + 10
-                    label_y = self.mouse_y - 60
-                    
-                    # 確保標籤不會超出邊界
-                    if label_x + 150 > self.width():
-                        label_x = self.mouse_x - 160
-                    if label_y < 10:
-                        label_y = self.mouse_y + 10
-                    
-                    # 獲取車手油門值來計算標籤高度
-                    closest_drivers = self._find_closest_throttle_values(distance)
-                    
-                    # 動態計算標籤高度：距離信息(15px) + 車手信息數量 * 15px + 邊距(15px)
-                    label_height = 30 + len(closest_drivers) * 15
-                    
-                    # 繪製背景 - 修正：與速度分析一致，非固定線使用白色背景
-                    painter.setPen(QPen(self.axis_color, 1))
-                    painter.fillRect(label_x, label_y, 150, label_height, QColor(255, 255, 255, 230))  # 修正透明度為230
-                    painter.drawRect(label_x, label_y, 150, label_height)
-                    
-                    # 顯示數值 - 修正：與速度分析保持一致的字體設置
-                    painter.setFont(QFont("Arial", 9))  # 修正：改為與速度分析一致的字體大小
-                    
-                    text_y = label_y + 15
-                    painter.drawText(label_x + 5, text_y, f"距離: {distance:.0f}m")
-                    
-                    # 顯示車手油門值（如果有數據的話）
-                    if closest_drivers:
-                        for i, (driver_name, throttle_val, color) in enumerate(closest_drivers):
-                            painter.setPen(QPen(color, 1))
-                            painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {throttle_val:.1f}%")
+                # 獲取對應的速度值
+                if closest_index < len(self.driver1_throttle):
+                    driver1_throttle_at_position = self.driver1_throttle[closest_index]
+                if closest_index < len(self.driver2_throttle):
+                    driver2_throttle_at_position = self.driver2_throttle[closest_index]
             
-    def _find_closest_throttle_values(self, target_distance):
-        """尋找最接近指定距離的油門值"""
-        if not self.distance_data:
-            return []
+            # 計算需要顯示的車手數量來調整標籤大小
+            drivers_to_show = []
             
-        # 找到最接近的距離索引
-        closest_idx = 0
-        min_diff = float('inf')
-        for i, dist in enumerate(self.distance_data):
-            diff = abs(dist - target_distance)
-            if diff < min_diff:
-                min_diff = diff
-                closest_idx = i
-        
-        drivers_to_show = []
-        
-        # 檢查是否為單車手模式（兩個車手名稱相同）
-        is_single_driver = (self.driver1_name == self.driver2_name)
-        
-        # 車手1
-        if closest_idx < len(self.driver1_throttle):
-            throttle_val = self.driver1_throttle[closest_idx]
-            drivers_to_show.append((self.driver1_name, throttle_val, self.driver1_color))
-        
-        # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
-        if (not is_single_driver and 
-            closest_idx < len(self.driver2_throttle) and
-            self.driver2_name and 
-            self.driver2_name != self.driver1_name):
-            throttle_val = self.driver2_throttle[closest_idx]
-            drivers_to_show.append((self.driver2_name, throttle_val, self.driver2_color))
+            # 使用新的單車手模式標記 - 與油門分析一致
+            # is_single_driver = (self.driver1_name == self.driver2_name)  # 舊方法，已改用標記
             
-        return drivers_to_show
-        
-    def _draw_fixed_line_label(self, painter: QPainter, chart_rect: QRect, x_pos: int, distance_value: float):
-        """繪製固定線標籤 - 與速度分析一致"""
-        # 找到最接近的數據點來獲取真實的油門值
-        closest_drivers = self._find_closest_throttle_values(distance_value)
-        
-        if closest_drivers:
+            # 只添加有效且不重複的車手資訊
+            if driver1_throttle_at_position is not None and self.driver1_name:
+                drivers_to_show.append((self.driver1_name, driver1_throttle_at_position, self.driver1_color))
+            
+            # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
+            if (not self.is_single_driver and 
+                driver2_throttle_at_position is not None and 
+                self.driver2_name and 
+                self.driver2_name != self.driver1_name):
+                drivers_to_show.append((self.driver2_name, driver2_throttle_at_position, self.driver2_color))
+            
             # 根據車手數量動態調整標籤高度
             base_height = 30  # 距離資訊的基本高度
-            driver_height = 15 * len(closest_drivers)  # 每個車手15像素高度
+            driver_height = 15 * len(drivers_to_show)  # 每個車手15像素高度
             label_height = base_height + driver_height
             
             # 繪製數值標籤背景
             label_width = 150
             label_x = min(x_pos + 10, self.width() - label_width - 10)
-            label_y = max(chart_rect.top() + 10, 10)  # 固定位置
+            # 對於固定線，使用固定的Y位置；對於跟隨線，跟隨滑鼠
+            if is_fixed:
+                label_y = max(chart_rect.top() + 10, 10)
+            else:
+                label_y = max(self.mouse_y - label_height - 10, 10)
             
-            # 設置固定線標籤背景顏色 - 修正：與速度分析一致
-            bg_color = QColor(255, 240, 240, 230)  # 固定線使用淺紅色背景
+            # 設置標籤背景顏色
+            bg_color = QColor(255, 240, 240, 230) if is_fixed else QColor(255, 255, 255, 230)
             painter.setPen(QPen(QColor(50, 50, 50), 1))
             painter.setBrush(QBrush(bg_color))
             painter.drawRect(label_x, label_y, label_width, label_height)
             
-            # 繪製數值文字 - 修正：與速度分析保持一致的字體設置
+            # 繪製數值文字
             painter.setPen(QPen(QColor(50, 50, 50), 1))
-            painter.setFont(QFont("Arial", 9))  # 與速度分析一致的字體大小
+            painter.setFont(QFont("Arial", 9))
             
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
             
             # 顯示車手油門資訊
-            for i, (driver_name, throttle, color) in enumerate(closest_drivers):
+            for i, (driver_name, throttle, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
-                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {throttle:.1f}%")
+                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {throttle:.1f} %")
     
     def _draw_linkage_line(self, painter: QPainter, chart_rect: QRect):
         """繪製連動線 (來自其他圖表的X軸位置)"""
@@ -535,8 +480,8 @@ class ThrottleChartWidget(QWidget):
         if x_pos < chart_rect.left() or x_pos > chart_rect.right():
             return
             
-        # 繪製連動垂直線 (使用滑鼠追蹤線樣式 - 灰色虛線)
-        painter.setPen(QPen(QColor(128, 128, 128), 1, Qt.DashLine))
+        # 繪製連動垂直線 (使用滑鼠追蹤線樣式 - 白色背景標籤)
+        painter.setPen(QPen(QColor(128, 128, 128), 1, Qt.DashLine))  # 灰色虛線
         painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
         
         # 繪製連動標籤 (使用白色背景，類似滑鼠追蹤)
@@ -565,7 +510,7 @@ class ThrottleChartWidget(QWidget):
         painter.setFont(QFont("Arial", 9))
         painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
         
-        # 顯示當前位置的油門資訊
+        # 顯示當前位置的速度資訊
         if self.distance_data and self.driver1_throttle:
             # 找到最接近的數據點
             closest_idx = None
@@ -579,59 +524,44 @@ class ThrottleChartWidget(QWidget):
             if closest_idx is not None:
                 text_y = label_y + 30
                 
-                # 車手1 油門
+                # 車手1速度
                 if closest_idx < len(self.driver1_throttle):
                     throttle1 = self.driver1_throttle[closest_idx]
                     painter.setPen(QPen(self.driver1_color, 1))
-                    painter.drawText(label_x + 5, text_y, f"{self.driver1_name}: {throttle1:.1f}%")
+                    painter.drawText(label_x + 5, text_y, f"{self.driver1_name}: {throttle1:.1f} %")
                 
-                # 車手2 油門 (如果存在)
+                # 車手2速度 (如果存在)
                 if (self.driver2_throttle and closest_idx < len(self.driver2_throttle) and 
                     self.driver2_name != self.driver1_name):
                     throttle2 = self.driver2_throttle[closest_idx]
                     painter.setPen(QPen(self.driver2_color, 1))
-                    painter.drawText(label_x + 5, text_y + 15, f"{self.driver2_name}: {throttle2:.1f}%")
-        
-    def clear_fixed_line(self):
-        """清除固定線條"""
-        self.show_fixed_line = False
-        self.fixed_distance_value = None
-        self.update()
-        
-    def reset_data(self):
-        """重置所有數據和視圖"""
-        self.distance_data = []
-        self.driver1_throttle = []
-        self.driver2_throttle = []
-        self.sectors = []
-        self.reset_view()
-        self.update()
-    
+                    painter.drawText(label_x + 5, text_y + 15, f"{self.driver2_name}: {throttle2:.1f} %")
+            
     def _draw_legend(self, painter: QPainter):
-        """繪製圖例 - 與速度分析完全一致"""
-        legend_x = self.width() - 200  # 與速度分析一致的位置
-        legend_y = 30                   # 與速度分析一致的位置
+        """繪製圖例"""
+        legend_x = self.width() - 200
+        legend_y = 30
         
-        painter.setFont(QFont("Arial", 9))  # 與速度分析一致的字體
+        painter.setFont(QFont("Arial", 9))
         
-        # 檢查是否為單車手模式
-        is_single_driver = (self.driver1_name == self.driver2_name or 
-                           not self.driver2_name or 
-                           not self.driver2_throttle)
+        # 使用新的單車手模式標記 - 與油門分析一致
+        # is_single_driver = (self.driver1_name == self.driver2_name or 
+        #                    not self.driver2_name or 
+        #                    not self.driver2_throttle)  # 舊方法，已改用標記
         
-        # 車手1圖例 - 移除背景框，與速度分析保持一致
-        painter.setPen(QPen(self.driver1_color, 2))  # 改為2像素粗細
+        # 車手1圖例
+        painter.setPen(QPen(self.driver1_color, 2))
         painter.drawLine(legend_x, legend_y, legend_x + 20, legend_y)
         painter.setPen(QPen(self.axis_color, 1))
         painter.drawText(legend_x + 25, legend_y - 5, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver1_name)
         
         # 只有在非單車手模式且車手名稱不同時才顯示車手2圖例
-        if not is_single_driver and self.driver2_name != self.driver1_name:
-            painter.setPen(QPen(self.driver2_color, 2))  # 改為2像素粗細
+        if not self.is_single_driver and self.driver2_name != self.driver1_name:
+            painter.setPen(QPen(self.driver2_color, 2))
             painter.drawLine(legend_x, legend_y + 20, legend_x + 20, legend_y + 20)
             painter.setPen(QPen(self.axis_color, 1))
             painter.drawText(legend_x + 25, legend_y + 15, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver2_name)
-    
+        
     def mouseMoveEvent(self, event: QMouseEvent):
         """滑鼠移動事件"""
         self.mouse_x = event.x()
@@ -655,7 +585,7 @@ class ThrottleChartWidget(QWidget):
                 distance_range = (self.view_max_distance or self.max_distance) - (self.view_min_distance or self.min_distance)
                 distance_move = -dx * distance_range / chart_rect.width()
                 
-                # Y軸移動（油門）
+                # Y軸移動（速度）
                 throttle_range = (self.view_max_throttle or self.max_throttle) - (self.view_min_throttle or self.min_throttle)
                 throttle_move = dy * throttle_range / chart_rect.height()  # Y軸是倒置的
                 
@@ -701,7 +631,7 @@ class ThrottleChartWidget(QWidget):
                 self.is_sending_linkage = False
         
         self.update()
-    
+        
     def mousePressEvent(self, event: QMouseEvent):
         """滑鼠按下事件"""
         if event.button() == Qt.LeftButton:
@@ -756,7 +686,7 @@ class ThrottleChartWidget(QWidget):
             # 中鍵釋放：結束拖拉
             self.middle_dragging = False
             self.setCursor(Qt.ArrowCursor)
-    
+            
     def wheelEvent(self, event: QWheelEvent):
         """滑鼠滾輪事件"""
         # 獲取滾輪方向
@@ -794,19 +724,14 @@ class ThrottleChartWidget(QWidget):
             new_distance_range = distance_range / zoom_factor
             new_throttle_range = throttle_range / zoom_factor
             
-            # 更新視圖範圍，保持滑鼠位置不變
-            self.view_min_distance = max(self.min_distance, 
-                                       mouse_distance - new_distance_range * mouse_rel_x)
-            self.view_max_distance = min(self.max_distance, 
-                                       mouse_distance + new_distance_range * (1 - mouse_rel_x))
-            
-            self.view_min_throttle = max(self.min_throttle, 
-                                        mouse_throttle - new_throttle_range * mouse_rel_y)
-            self.view_max_throttle = min(self.max_throttle, 
-                                        mouse_throttle + new_throttle_range * (1 - mouse_rel_y))
+            # 以滑鼠位置為中心進行縮放
+            self.view_min_distance = mouse_distance - mouse_rel_x * new_distance_range
+            self.view_max_distance = mouse_distance + (1 - mouse_rel_x) * new_distance_range
+            self.view_min_throttle = mouse_throttle - mouse_rel_y * new_throttle_range
+            self.view_max_throttle = mouse_throttle + (1 - mouse_rel_y) * new_throttle_range
             
             self.update()
-    
+        
     def leaveEvent(self, event):
         """滑鼠離開事件"""
         self.mouse_x = -1
@@ -869,46 +794,42 @@ class ThrottleAnalysisChartWidget(QWidget):
     """油門分析圖表組件主容器"""
     
     # 信號定義
-    lap_numbers_changed = pyqtSignal(int, int)  # 圈數變更信號
-    data_updated = pyqtSignal(dict)  # 數據更新信號
-    chart_updated = pyqtSignal()  # 圖表更新信號
+    chart_updated = pyqtSignal()
+    lap_numbers_changed = pyqtSignal(int, int)  # 圈數變更信號 (lap1, lap2)
     
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # 數據狀態
         self.current_data = None
+        self.setup_ui()
         
-        # 初始化UI
-        self._setup_ui()
+    def setup_ui(self):
+        """設置UI界面"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除外層邊距，避免與MDI雙重邊距
+        layout.setSpacing(5)
         
-    def _setup_ui(self):
-        """設置使用者介面 - 採用速度分析的垂直單欄布局"""
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)  # 移除外層邊距，避免與MDI雙重邊距
-        main_layout.setSpacing(5)
-        
-        # 主內容分割器（垂直分割）
-        self.main_splitter = QSplitter(Qt.Vertical)
-        main_layout.addWidget(self.main_splitter)
+        # 主要分割器
+        main_splitter = QSplitter(Qt.Vertical)
+        layout.addWidget(main_splitter)
         
         # 圖表區域
-        chart_container = self._create_chart_area()
-        self.main_splitter.addWidget(chart_container)
+        self.chart_container = self._create_chart_container()
+        main_splitter.addWidget(self.chart_container)
         
-        # 統計信息容器（採用可摺疊設計）
+        # 統計信息區域
         self.stats_container = self._create_stats_container()
-        self.main_splitter.addWidget(self.stats_container)
+        main_splitter.addWidget(self.stats_container)
         
-        # 設置分割器比例 (與速度分析保持一致：圖表:統計 = 800:50)
-        self.main_splitter.setSizes([800, 50])
+        # 設置分割器比例
+        main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
+        main_splitter.setStretchFactor(1, 0)  # 統計區域固定大小
         
-        # 設置分割器比例因子 (移除灰色樣式以使用系統默認)
-        self.main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
-        self.main_splitter.setStretchFactor(1, 0)  # 統計區域固定大小
+        # 設置初始分割比例，讓圖表佔據大部分空間
+        main_splitter.setSizes([800, 50])  # 圖表:統計 = 800:50
         
-    def _create_chart_area(self) -> QWidget:
-        """創建圖表區域 - 採用速度分析的簡潔風格"""
+    def _create_chart_container(self) -> QWidget:
+        """創建圖表容器"""
         container = QFrame()
         container.setFrameStyle(QFrame.StyledPanel)
         container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 添加擴展策略
@@ -928,18 +849,22 @@ class ThrottleAnalysisChartWidget(QWidget):
         layout.addWidget(self.chart_widget)
         
         return container
-    
+        
     def _create_stats_container(self) -> QWidget:
-        """創建統計信息容器 - 採用速度分析的可摺疊設計"""
+        """創建統計信息容器"""
         container = QFrame()
         container.setFrameStyle(QFrame.StyledPanel)
-        container.setMaximumHeight(60)  # 初始高度，僅顯示狀態資訊（狀態信息已隱藏）
+        container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # 水平擴展，垂直固定
+        
+        # 設置固定高度（調整為更小的高度，因為狀態信息已隱藏）
+        container.setMaximumHeight(60)
         container.setMinimumHeight(60)
+        
         container.setStyleSheet("""
             QFrame {
                 border: 1px solid #bdc3c7;
                 border-radius: 3px;
-                background-color: #ffffff;
+                background-color: #f8f9fa;
             }
         """)
         
@@ -967,7 +892,7 @@ class ThrottleAnalysisChartWidget(QWidget):
         
         # 箭頭按鈕
         self.toggle_button = QPushButton("▼")  # 向下箭頭表示可以展開
-        self.toggle_button.setFixedSize(20, 20)
+        self.toggle_button.setFixedSize(20, 20)  # 小型方形按鈕
         self.toggle_button.setStyleSheet("""
             QPushButton {
                 border: 1px solid #bdc3c7;
@@ -993,7 +918,7 @@ class ThrottleAnalysisChartWidget(QWidget):
         self.status_info_widget.setVisible(False)  # 隱藏狀態信息區域
         main_layout.addWidget(self.status_info_widget)
         
-        # 統計表格（預設隱藏）
+        # 統計表格
         self.stats_table = QTableWidget()
         self.stats_table.setAlternatingRowColors(True)
         self.stats_table.horizontalHeader().setStretchLastSection(True)
@@ -1004,7 +929,7 @@ class ThrottleAnalysisChartWidget(QWidget):
         self._setup_stats_table()
         
         return container
-        
+    
     def _create_status_info_widget(self) -> QWidget:
         """創建車手狀態資訊顯示小部件"""
         status_widget = QFrame()
@@ -1041,7 +966,7 @@ class ThrottleAnalysisChartWidget(QWidget):
         separator2.setStyleSheet("color: #bdc3c7;")
         layout.addWidget(separator2)
         
-        # 輪胎圈數資訊
+        # 輪胎圈數資訊 - 改為只顯示的標籤
         tyre_life_container = QWidget()
         tyre_life_layout = QHBoxLayout(tyre_life_container)
         tyre_life_layout.setContentsMargins(0, 0, 0, 0)
@@ -1098,77 +1023,7 @@ class ThrottleAnalysisChartWidget(QWidget):
         layout.addStretch()  # 推到左側
         
         return status_widget
-        
-    def _setup_stats_table(self):
-        """設置統計表格"""
-        headers = ["項目", "車手1", "車手2", "差值"]
-        self.stats_table.setColumnCount(len(headers))
-        self.stats_table.setHorizontalHeaderLabels(headers)
-        self.stats_table.setRowCount(0)
-        
-        # 設置字體大小
-        font = QFont()
-        font.setPointSize(9)
-        self.stats_table.setFont(font)
-        
-    def toggle_statistics_panel(self):
-        """切換統計面板顯示/隱藏"""
-        is_visible = self.stats_table.isVisible()
-        self.stats_table.setVisible(not is_visible)
-        
-        # 更新箭頭方向和容器高度
-        if is_visible:
-            # 隱藏統計表格，但保留狀態資訊欄
-            self.toggle_button.setText("▼")  # 向下箭頭表示可以展開
-            self.stats_container.setMaximumHeight(60)  # 保持足夠高度顯示狀態欄（狀態信息已隱藏）
-            self.stats_container.setMinimumHeight(60)
-        else:
-            # 顯示統計表格
-            self.toggle_button.setText("▲")  # 向上箭頭表示可以收縮
-            # 調用自適應高度函數
-            self._adjust_table_height()
-            
-    def _adjust_table_height(self):
-        """自動調整表格高度"""
-        if not self.stats_table.isVisible():
-            return
-            
-        row_count = self.stats_table.rowCount()
-        
-        # 計算所需高度
-        header_height = self.stats_table.horizontalHeader().height()
-        row_height = self.stats_table.rowHeight(0) if row_count > 0 else 25
-        
-        # 總高度 = 標題欄高度 + 狀態欄高度 + 表格標題高度 + 所有行高度 + 邊距
-        title_bar_height = 30  # 標題欄高度
-        status_bar_height = 35  # 狀態資訊欄高度
-        margins = 15  # 上下邊距
-        
-        # 即使沒有數據行，也要顯示表格標題
-        if row_count == 0:
-            # 最小展開高度：標題欄 + 狀態欄 + 表格標題 + 邊距 + 一些額外空間
-            table_height = header_height + 30  # 保留一些空間
-        else:
-            table_height = header_height + (row_height * row_count)
-            
-        total_height = title_bar_height + status_bar_height + table_height + margins
-        
-        # 設置容器高度（最小120，最大400）
-        container_height = max(120, min(total_height, 400))
-        
-        self.stats_container.setMaximumHeight(container_height)
-        self.stats_container.setMinimumHeight(container_height)
-        
-        # 設置表格的最佳高度
-        optimal_table_height = container_height - title_bar_height - status_bar_height - margins
-        self.stats_table.setMaximumHeight(optimal_table_height)
-        self.stats_table.setMinimumHeight(optimal_table_height)
-        
-    def set_lap_numbers(self, lap1: int, lap2: int):
-        """設置圈數顯示"""
-        self.lap1_display.setText(str(lap1))
-        self.lap2_display.setText(str(lap2))
-        
+    
     def _update_status_info(self, data: Dict[str, Any]):
         """更新狀態資訊顯示"""
         try:
@@ -1220,34 +1075,111 @@ class ThrottleAnalysisChartWidget(QWidget):
             # 發生錯誤時顯示預設值
             self.lap_time_label.setText("⏱️ 圈時間: 錯誤")
             self.tyre_compound_label.setText("🛞 輪胎配方: 錯誤")
+        
+    def _setup_stats_table(self):
+        """設置統計表格"""
+        headers = ["項目", "車手1", "車手2", "差值"]
+        self.stats_table.setColumnCount(len(headers))
+        self.stats_table.setHorizontalHeaderLabels(headers)
+        self.stats_table.setRowCount(0)
+        
+        # 設置字體大小
+        font = QFont()
+        font.setPointSize(9)
+        self.stats_table.setFont(font)
+        
+    def toggle_statistics_panel(self):
+        """切換統計面板顯示/隱藏"""
+        is_visible = self.stats_table.isVisible()
+        self.stats_table.setVisible(not is_visible)
+        
+        # 更新箭頭方向和容器高度
+        if is_visible:
+            # 隱藏統計表格，但保留狀態資訊欄
+            self.toggle_button.setText("▼")  # 向下箭頭表示可以展開
+            self.stats_container.setMaximumHeight(80)  # 保持足夠高度顯示狀態欄
+        else:
+            # 顯示統計表格
+            self.toggle_button.setText("▲")  # 向上箭頭表示可以收起
+            self.stats_container.setMaximumHeight(300)  # 展開高度
     
+    def set_statistics_visibility(self, visible: bool) -> bool:
+        """設置統計面板顯示狀態 - 供分析模組管理器調用"""
+        try:
+            print(f"[THROTTLE_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            
+            if visible:
+                # 顯示統計面板
+                self.stats_container.setVisible(True)
+                self.stats_table.setVisible(True)
+                self.toggle_button.setText("▲")
+                self.stats_container.setMaximumHeight(300)
+            else:
+                # 隱藏整個統計容器
+                self.stats_container.setVisible(False)
+            
+            print(f"[THROTTLE_CHART] ✅ 統計面板顯示狀態設置完成")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [THROTTLE_CHART] 設置統計面板顯示狀態失敗: {e}")
+            return False
+            self.stats_container.setMinimumHeight(80)
+        else:
+            # 顯示統計表格
+            self.toggle_button.setText("▲")  # 向上箭頭表示可以收縮
+            # 調用自適應高度函數
+            self._adjust_table_height()
+            
+    def _adjust_table_height(self):
+        """自動調整表格高度"""
+        if not self.stats_table.isVisible():
+            return
+            
+        row_count = self.stats_table.rowCount()
+        
+        # 計算所需高度
+        header_height = self.stats_table.horizontalHeader().height()
+        row_height = self.stats_table.rowHeight(0) if row_count > 0 else 25
+        
+        # 總高度 = 標題欄高度 + 狀態欄高度 + 表格標題高度 + 所有行高度 + 邊距
+        title_bar_height = 30  # 標題欄高度
+        status_bar_height = 35  # 狀態資訊欄高度
+        margins = 15  # 上下邊距
+        
+        # 即使沒有數據行，也要顯示表格標題
+        if row_count == 0:
+            # 最小展開高度：標題欄 + 狀態欄 + 表格標題 + 邊距 + 一些額外空間
+            table_height = header_height + 30  # 保留一些空間
+        else:
+            table_height = header_height + (row_height * row_count)
+            
+        total_height = title_bar_height + status_bar_height + table_height + margins
+        
+        # 設置容器高度（最小120，最大400）
+        container_height = max(120, min(total_height, 400))
+        
+        self.stats_container.setMaximumHeight(container_height)
+        self.stats_container.setMinimumHeight(container_height)
+        
+        # 設置表格的最佳高度
+        optimal_table_height = container_height - title_bar_height - status_bar_height - margins
+        self.stats_table.setMaximumHeight(optimal_table_height)
+        self.stats_table.setMinimumHeight(optimal_table_height)
+        
     def update_throttle_data(self, data: Dict[str, Any]):
-        """更新油門數據 - 採用速度分析的更新邏輯"""
+        """更新油門數據"""
         self.current_data = data
         
         try:
-            print(f"[THROTTLE_CHART] ========== 更新油門數據 ==========")
-            print(f"[THROTTLE_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
-            
-            if not data:
-                print(f"[ERROR] [THROTTLE_CHART] 數據為空")
-                return
-            
             # 提取元數據
             metadata = data.get('metadata', {})
             throttle_data = data.get('throttle_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[THROTTLE_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
-            print(f"[THROTTLE_CHART] throttle_data 鍵: {list(throttle_data.keys()) if throttle_data else 'None'}")
-            print(f"[THROTTLE_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
-            
             # 提取車手信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
-            
-            print(f"[THROTTLE_CHART] 車手數量: {len(drivers)}")
-            print(f"[THROTTLE_CHART] 賽道區段: {len(sectors)}")
             
             # 提取油門數據
             distance = throttle_data.get('distance', [])
@@ -1256,52 +1188,40 @@ class ThrottleAnalysisChartWidget(QWidget):
             driver1_name = throttle_data.get('driver1_name', 'Driver 1')
             driver2_name = throttle_data.get('driver2_name', 'Driver 2')
             
-            print(f"[THROTTLE_CHART] 距離數據點: {len(distance)}")
-            print(f"[THROTTLE_CHART] 車手1 油門數據點: {len(driver1_throttle)}")
-            print(f"[THROTTLE_CHART] 車手2 油門數據點: {len(driver2_throttle)}")
-            
             # 如果有車手信息，使用車手代碼作為名稱
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
-                print(f"[THROTTLE_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
-                print(f"[THROTTLE_CHART] 單車手模式: {driver1_name}")
             
             # 檢測是否為單車手模式或相同車手比較
             is_single_driver_mode = False
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
-                print(f"[THROTTLE_CHART] 🔍 檢測到單車手模式標記")
+                print(f"[SPEED_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
                 # 相同車手比較（如 VER vs VER）
                 is_single_driver_mode = True
-                print(f"[THROTTLE_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
+                print(f"[SPEED_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
-                print(f"[THROTTLE_CHART] 🔍 檢測到單車手數據: {driver1_name}")
-            
-            # 設置實例屬性
-            self.is_single_driver = is_single_driver_mode
+                print(f"[SPEED_CHART] 🔍 檢測到單車手數據: {driver1_name}")
             
             if is_single_driver_mode:
-                print(f"[THROTTLE_CHART] 🎯 使用單車手模式顯示")
+                print(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
+                # 設置單車手模式標記 - 與油門分析一致
+                self.is_single_driver = True
                 # 清空車手2的數據，只顯示車手1
                 driver2_throttle = []
+            else:
+                # 雙車手模式
+                self.is_single_driver = False
                 driver2_name = ""
             
-            # 檢查數據完整性
-            if not distance or not driver1_throttle:
-                print(f"[ERROR] [THROTTLE_CHART] 關鍵數據缺失")
-                print(f"[THROTTLE_CHART] distance: {len(distance) if distance else 0} 點")
-                print(f"[THROTTLE_CHART] driver1_throttle: {len(driver1_throttle) if driver1_throttle else 0} 點")
-                return
-            
             # 更新圖表
-            print(f"[THROTTLE_CHART] 📊 更新圖表...")
             self.chart_widget.set_throttle_data(
                 distance=distance,
                 driver1_throttle=driver1_throttle,
@@ -1310,297 +1230,168 @@ class ThrottleAnalysisChartWidget(QWidget):
                 driver2_name=driver2_name,
                 sectors=sectors
             )
-            print(f"[THROTTLE_CHART] ✅ 圖表更新完成")
             
             # 更新統計表格
-            print(f"[THROTTLE_CHART] 📋 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, driver2_name)
             
             # 更新狀態資訊顯示
-            print(f"[THROTTLE_CHART] 📋 更新狀態資訊...")
             self._update_status_info(data)
             
-            # 更新工具欄狀態信息
-            print(f"[THROTTLE_CHART] 📊 更新工具欄狀態...")
-            self._update_toolbar_status(data)
-            
             self.chart_updated.emit()
-            print(f"[THROTTLE_CHART] ✅ 全部更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE CHART WIDGET] 更新數據失敗: {e}")
+            print(f"[ERROR] [SPEED CHART WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
-    
-    def _prepare_chart_data(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """準備圖表數據"""
-        try:
-            if 'rpm_telemetry' in data:
-                # 直接RPM數據
-                return self._parse_rpm_telemetry(data['rpm_telemetry'])
-            
-            elif 'speed_data' in data:
-                # 從速度數據模擬RPM數據
-                return self._simulate_rpm_from_speed(data['speed_data'])
-            
-            else:
-                # 生成模擬數據
-                return self._generate_mock_rpm_data()
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_CHART_WIDGET] 準備圖表數據失敗: {e}")
-            return self._generate_mock_rpm_data()
-    
-    def _parse_rpm_telemetry(self, rpm_data: Dict[str, Any]) -> Dict[str, Any]:
-        """解析RPM遙測數據"""
-        distance = []
-        driver1_rpm = []
-        driver2_rpm = []
-        
-        # 解析車手1數據
-        if 'driver1_rpm_data' in rpm_data:
-            for point in rpm_data['driver1_rpm_data']:
-                distance.append(point.get('distance', 0))
-                driver1_rpm.append(point.get('rpm', 0))
-        
-        # 解析車手2數據
-        if 'driver2_rpm_data' in rpm_data:
-            for point in rpm_data['driver2_rpm_data']:
-                driver2_rpm.append(point.get('rpm', 0))
-        
-        return {
-            'distance': distance,
-            'driver1_rpm': driver1_rpm,
-            'driver2_rpm': driver2_rpm,
-            'driver1_name': rpm_data.get('driver1_name', 'Driver 1'),
-            'driver2_name': rpm_data.get('driver2_name', 'Driver 2'),
-            'sectors': rpm_data.get('sectors', []),
-            'engine_info': rpm_data.get('engine_info', {}),
-            'track_info': rpm_data.get('track_info', {})
-        }
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
-        """更新統計表格 - 採用速度分析的表格風格"""
-        print(f"[THROTTLE_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
-        
+        """更新統計表格"""
         if not statistics:
-            print(f"[THROTTLE_CHART] ⚠️  statistics 為空")
             return
             
         try:
-            # 檢查是否為單車手模式
-            if self.is_single_driver and 'driver_stats' in statistics:
-                # 單車手模式的統計資料
-                driver_stats = statistics['driver_stats']
-                print(f"[THROTTLE_CHART] 單車手統計資料: {driver_stats}")
-                
-                rows = [
-                    ("最高油門 (%)", f"{driver_stats.get('max_throttle', 0):.1f}", "-", "-"),
-                    ("平均油門 (%)", f"{driver_stats.get('avg_throttle', 0):.1f}", "-", "-"),
-                    ("最低油門 (%)", f"{driver_stats.get('min_throttle', 0):.1f}", "-", "-"),
-                    ("數據點數", str(driver_stats.get('data_points', 0)), "-", "-")
-                ]
-            else:
-                # 雙車手模式的統計資料
-                driver1_stats = statistics.get('driver1_stats', {})
-                driver2_stats = statistics.get('driver2_stats', {})
-                comparison = statistics.get('comparison', {})
-                
-                print(f"[THROTTLE_CHART] driver1_stats: {driver1_stats}")
-                print(f"[THROTTLE_CHART] driver2_stats: {driver2_stats}")
-                print(f"[THROTTLE_CHART] comparison: {comparison}")
-                
-                # 準備表格數據
-                rows = [
-                    ("最高油門 (%)", 
-                     f"{driver1_stats.get('max_throttle', 0):.1f}",
-                     f"{driver2_stats.get('max_throttle', 0):.1f}",
-                     f"{comparison.get('max_throttle_diff', 0):.1f}"),
-                    ("平均油門 (%)",
-                     f"{driver1_stats.get('avg_throttle', 0):.1f}",
-                     f"{driver2_stats.get('avg_throttle', 0):.1f}",
-                     f"{comparison.get('avg_throttle_diff', 0):.1f}"),
-                    ("最低油門 (%)",
-                     f"{driver1_stats.get('min_throttle', 0):.1f}",
-                     f"{driver2_stats.get('min_throttle', 0):.1f}",
-                     f"{comparison.get('min_throttle_diff', 0):.1f}")
-                ]
+            driver1_stats = statistics.get('driver1_stats', {})
+            driver2_stats = statistics.get('driver2_stats', {})
+            comparison = statistics.get('comparison', {})
             
-            print(f"[THROTTLE_CHART] 表格數據行: {rows}")
+            # 準備表格數據
+            rows = [
+                ("最高速度 (%)", 
+                 f"{driver1_stats.get('max_throttle', 0):.1f}",
+                 f"{driver2_stats.get('max_throttle', 0):.1f}",
+                 f"{comparison.get('max_throttle_diff', 0):.1f}"),
+                ("平均速度 (%)",
+                 f"{driver1_stats.get('avg_throttle', 0):.1f}",
+                 f"{driver2_stats.get('avg_throttle', 0):.1f}",
+                 f"{comparison.get('avg_throttle_diff', 0):.1f}"),
+                ("最低速度 (%)",
+                 f"{driver1_stats.get('min_throttle', 0):.1f}",
+                 f"{driver2_stats.get('min_throttle', 0):.1f}",
+                 f"{driver1_stats.get('min_throttle', 0) - driver2_stats.get('min_throttle', 0):.1f}")
+            ]
             
-            # 設置表格行數和數據
+            # 暫時移除分段速度統計顯示
+            # sector_stats = statistics.get('sector_stats', {})
+            # if sector_stats:
+            #     # 添加分隔行
+            #     rows.append(("─────", "─────", "─────", "─────"))
+            #     
+            #     # 添加各分段最高速度
+            #     for sector in [1, 2, 3]:
+            #         sector_key = f'sector_{sector}'
+            #         if sector_key in sector_stats:
+            #             s1_data = sector_stats[sector_key]
+            #             driver1_max = s1_data.get('driver1_max_throttle', 0)
+            #             driver2_max = s1_data.get('driver2_max_throttle', 0)
+            #             diff = driver1_max - driver2_max
+            #             
+            #             rows.append((
+            #                 f"S{sector} 最高速度 (%)",
+            #                 f"{driver1_max:.1f}",
+            #                 f"{driver2_max:.1f}",
+            #                 f"{diff:.1f}"
+            #             ))
+            
+            # 更新表格
             self.stats_table.setRowCount(len(rows))
             
-            for row_idx, (metric, val1, val2, diff) in enumerate(rows):
-                self.stats_table.setItem(row_idx, 0, QTableWidgetItem(metric))
-                self.stats_table.setItem(row_idx, 1, QTableWidgetItem(val1))
-                self.stats_table.setItem(row_idx, 2, QTableWidgetItem(val2))
-                self.stats_table.setItem(row_idx, 3, QTableWidgetItem(diff))
-                
-                # 設置右對齊（數值列）
-                for col in [1, 2, 3]:
-                    item = self.stats_table.item(row_idx, col)
-                    if item:
-                        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            for row_idx, (item, driver1_val, driver2_val, diff_val) in enumerate(rows):
+                self.stats_table.setItem(row_idx, 0, QTableWidgetItem(item))
+                self.stats_table.setItem(row_idx, 1, QTableWidgetItem(driver1_val))
+                self.stats_table.setItem(row_idx, 2, QTableWidgetItem(driver2_val))
+                self.stats_table.setItem(row_idx, 3, QTableWidgetItem(diff_val))
             
-            # 調整列寬
-            header = self.stats_table.horizontalHeader()
-            header.setSectionResizeMode(0, QHeaderView.Stretch)  # 項目列
-            header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # 車手1
-            header.setSectionResizeMode(2, QHeaderView.ResizeToContents)  # 車手2  
-            header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # 差值
-            
-            # 自動調整表格高度
+            # 調整表格高度
             self._adjust_table_height()
             
-            print(f"[THROTTLE CHART WIDGET] ✅ 統計表格更新完成")
+        except Exception as e:
+            print(f"[ERROR] 更新統計表格失敗: {e}")
+            
+    def reset_chart_view(self):
+        """重置圖表視圖"""
+        if hasattr(self, 'chart_widget'):
+            self.chart_widget.reset_view()
+            
+    def clear_fixed_line(self):
+        """清除固定線條"""
+        if hasattr(self, 'chart_widget'):
+            self.chart_widget.clear_fixed_line()
+    
+    def get_lap_numbers(self):
+        """獲取當前顯示的圈數（只讀）"""
+        try:
+            lap1 = int(self.lap1_display.text())
+            lap2 = int(self.lap2_display.text())
+            return lap1, lap2
+        except (ValueError, AttributeError) as e:
+            print(f"[ERROR] 獲取圈數失敗: {e}")
+            return 1, 1
+    
+    def set_lap_numbers(self, lap1: int, lap2: int):
+        """設置圈數（更新只讀顯示）"""
+        try:
+            # 直接更新顯示標籤的文本
+            self.lap1_display.setText(str(lap1))
+            self.lap2_display.setText(str(lap2))
+            
+            print(f"[LAP_SET] 圈數已設置: 第{lap1}圈 vs 第{lap2}圈")
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE CHART WIDGET] 更新統計表格失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            print(f"[ERROR] 設置圈數失敗: {e}")
     
-    def _update_toolbar_status(self, data: dict):
-        """更新工具欄狀態信息"""
+    def update_lap_parameters(self, year: str, race: str, session: str,
+                            driver1: str, driver2: str = None,
+                            lap1: int = 1, lap2: int = None,
+                            is_fastest: bool = False) -> bool:
+        """更新圈速油門油門參數並重新載入數據 - 供統一更新介面使用"""
         try:
-            # 獲取主視窗引用
-            main_window = self._get_main_window()
-            if not main_window or not hasattr(main_window, 'update_toolbar_status'):
-                return
+            print(f"[SPEED_CHART] 🔄 更新圈速油門油門參數...")
+            print(f"[SPEED_CHART]   📊 基本參數: {year} {race} {session}")
+            print(f"[SPEED_CHART]   🏎️ 車手參數: {driver1} vs {driver2}")
+            print(f"[SPEED_CHART]   🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
+            print(f"[SPEED_CHART]   ⚡ 最速圈: {is_fastest}")
             
-            # 提取狀態信息
-            metadata = data.get('metadata', {})
-            drivers = metadata.get('drivers', [])
-            
-            module_name = "油門分析"
-            lap_time = ""
-            tyre_compound = ""
-            lap_numbers = ""
-            
-            if drivers:
-                if len(drivers) >= 2:
-                    # 雙車手模式
-                    driver1 = drivers[0]
-                    driver2 = drivers[1]
-                    
-                    lap_time1 = driver1.get('lap_time', 'N/A')
-                    lap_time2 = driver2.get('lap_time', 'N/A')
-                    lap_time = f"{lap_time1} | {lap_time2}"
-                    
-                    compound1 = driver1.get('compound', 'N/A')
-                    compound2 = driver2.get('compound', 'N/A')
-                    tyre_compound = f"{compound1} | {compound2}"
-                    
-                    driver1_code = driver1.get('code', 'Driver1')
-                    driver2_code = driver2.get('code', 'Driver2')
-                    lap1_number = driver1.get('lap_number', 1)
-                    lap2_number = driver2.get('lap_number', 1)
-                    lap_numbers = f"{driver1_code} 第{lap1_number}圈 vs {driver2_code} 第{lap2_number}圈"
-                    
-                elif len(drivers) >= 1:
-                    # 單車手模式
-                    driver1 = drivers[0]
-                    lap_time = driver1.get('lap_time', 'N/A')
-                    tyre_compound = driver1.get('compound', 'N/A')
-                    
-                    driver1_code = driver1.get('code', 'Driver1')
-                    lap1_number = driver1.get('lap_number', 1)
-                    lap_numbers = f"{driver1_code} 第{lap1_number}圈"
-            else:
-                # 無車手數據時顯示基本信息
-                lap_numbers = "分析中..."
-            
-            # 更新工具欄狀態
-            main_window.update_toolbar_status(
-                module_name=module_name,
-                lap_time=lap_time,
-                tyre_compound=tyre_compound,
-                lap_numbers=lap_numbers
-            )
-            
-            print(f"[THROTTLE_CHART] 已更新工具欄狀態: {module_name}")
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_CHART] 更新工具欄狀態失敗: {e}")
-    
-    def _get_main_window(self):
-        """獲取主視窗引用"""
-        try:
-            # 通過父元件向上查找主視窗
-            widget = self.parent()
-            while widget and not hasattr(widget, 'update_toolbar_status'):
-                widget = widget.parent()
-            return widget
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_CHART] 獲取主視窗引用失敗: {e}")
-            return None
-    
-    def reload_data(self):
-        """重新載入數據（提供給外部調用）"""
-        if self.current_data:
-            self.update_rpm_data(self.current_data)
-    
-    def update_lap_parameters(self, year: str, race: str, session: str, 
-                             driver1: str = None, driver2: str = None,
-                             lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
-        """更新圈速參數並重新載入數據 - 與速度分析模組保持一致"""
-        try:
-            print(f"[THROTTLE_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
-            print(f"[THROTTLE_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
-            
-            # 更新圈數顯示
-            self.set_lap_numbers(lap1, lap2)
-            
-            # 如果有數據載入器，重新載入數據
-            if hasattr(self, 'throttle_loader'):
-                print(f"[THROTTLE_CHART_WIDGET] 📦 找到油門數據載入器，準備重新載入...")
+            # 檢查是否有關聯的資料載入器
+            if hasattr(self, 'throttle_loader') and self.throttle_loader:
+                print(f"[SPEED_CHART] 🚀 使用關聯的資料載入器重新載入...")
                 
+                # 調用資料載入器重新載入數據
                 success = self.throttle_loader.load_throttle_data(
-                    year=int(year) if year.isdigit() else year,
+                    year=year,
                     race=race,
                     session=session,
-                    driver1=driver1 or 'VER',
-                    driver2=driver2 if driver2 and driver2 != driver1 else None,
+                    driver1=driver1,
+                    driver2=driver2 if driver2 else driver1,
                     lap1=lap1,
-                    lap2=lap2 if driver2 and driver2 != driver1 else lap1,
+                    lap2=lap2 if lap2 else lap1,
                     is_fastest_lap=is_fastest
                 )
                 
-                print(f"[THROTTLE_CHART_WIDGET] ✅ 數據重新載入請求已發送，成功: {success}")
-                return success
+                if success:
+                    print(f"[SPEED_CHART] ✅ 圈速油門油門參數更新成功")
+                    return True
+                else:
+                    print(f"[SPEED_CHART] ❌ 資料載入失敗")
+                    return False
             else:
-                print(f"[THROTTLE_CHART_WIDGET] ⚠️ 未找到油門數據載入器，僅更新顯示")
-                return True
+                print(f"[SPEED_CHART] ⚠️ 沒有關聯的資料載入器，無法重新載入數據")
+                return False
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_CHART_WIDGET] 更新圈速參數失敗: {e}")
+            print(f"[ERROR] [SPEED_CHART] update_lap_parameters 失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
-    
-    def resizeEvent(self, event):
-        """視窗大小變化事件"""
-        super().resizeEvent(event)
-    
-    def showEvent(self, event):
-        """視窗顯示事件"""
-        super().showEvent(event)
 
 # 主程式測試
 if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
-    from PyQt5.QtCore import QTimer
     import sys
+    from PyQt5.QtWidgets import QApplication
     
     app = QApplication(sys.argv)
     
-    # 測試油門圖表組件
+    # 創建測試窗口
     widget = ThrottleAnalysisChartWidget()
-    widget.setWindowTitle("🔄 油門分析圖表測試")
-    widget.resize(1000, 700)
     widget.show()
-    
-    # 載入測試數據
-    QTimer.singleShot(1000, widget.reload_data)
     
     sys.exit(app.exec_())

@@ -1,29 +1,28 @@
 #!/usr/bin/env python3
 """
-F1T 油門分析數據載入器
-完全參考速度分析數據載入器的成功架構
-負責油門數據的獲取、處理和格式化
+油門分析數據載入器模組
+基於進站分析模組的成熟架構實現
+支援雙車手油門對比和單車手油門分析
 """
 
 import sys
 import os
-import json
 import glob
+import json
 import pickle
 import time
 from datetime import datetime
-import threading
-import fastf1
 import pandas as pd
+import fastf1
 import subprocess
-import pickle
+import threading
 from typing import Dict, List, Any, Optional
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
 class ThrottleAnalysisDataLoader(QObject):
-    """油門分析數據載入器 - 完全參考速度分析模組架構"""
+    """油門分析數據載入器 - 基於進站分析模組架構"""
     
-    # 信號定義 (與速度模組一致，但保留油門模組需要的額外信號)
+    # 信號定義
     data_loaded = pyqtSignal(dict)
     load_progress = pyqtSignal(int)
     load_error = pyqtSignal(str)
@@ -31,60 +30,57 @@ class ThrottleAnalysisDataLoader(QObject):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        
-        # 狀態變數
         self._base_path = "json"
-        self._is_loading = False
         self._current_data = None
-        self.current_session = None
+        self._is_loading = False
+        self._generation_params = None
         
-        # 生成監控定時器 - 設置 parent 防止被垃圾回收
-        self._generation_timer = QTimer(self)
+        # 檔案生成監控定時器
+        self._generation_timer = QTimer()
         self._generation_timer.timeout.connect(self._check_generation_progress)
         
-        self._generation_timeout_timer = QTimer(self)
+        self._generation_timeout_timer = QTimer()
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
-    
-    def load_throttle_data(self, year: int, race: str, session: str, 
-                     driver1: str, driver2: str = None, 
-                     lap1: int = 1, lap2: int = None, 
-                     is_fastest_lap: bool = False) -> bool:
-        """
-        載入油門分析數據
         
-        Args:
-            year: 年份
-            race: 賽事名稱
-            session: 會話類型 (R/Q/S)
-            driver1: 車手1代碼
-            driver2: 車手2代碼
-            lap1: 車手1圈數
-            lap2: 車手2圈數
-            is_fastest_lap: 是否為最快圈
-        """
+    def load_throttle_data(self, year: int, race: str, session: str, 
+                       driver1: str, driver2: str = None, 
+                       lap1: int = 1, lap2: int = 1, 
+                       is_fastest_lap: bool = False) -> bool:
+        """載入油門對比數據"""
         try:
-            # 正規化參數，處理 None 值
-            if lap2 is None:
-                lap2 = 1  # 設置預設值
-            if driver2 is None or driver2 == driver1:
-                # 單車手模式
-                driver2 = None
-                
-            print(f"[THROTTLE DEBUG] ========== 油門分析數據載入 ==========")
-            print(f"[THROTTLE DEBUG] 參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
-            print(f"[THROTTLE DEBUG] 分析模式: {'單車手' if driver2 is None else '雙車手對比'}")
+            print(f"[SPEED DEBUG] ========== 開始載入油門數據 ==========")
+            print(f"[SPEED DEBUG] 載入油門數據: {driver1} vs {driver2 or '單車手'}")
+            print(f"[SPEED DEBUG] 詳細參數:")
+            print(f"[SPEED DEBUG]   年份: {year}")
+            print(f"[SPEED DEBUG]   賽站: {race}")
+            print(f"[SPEED DEBUG]   賽段: {session}")
+            print(f"[SPEED DEBUG]   車手1: {driver1}, 圈數: {lap1}")
+            print(f"[SPEED DEBUG]   車手2: {driver2}, 圈數: {lap2}")
+            print(f"[SPEED DEBUG]   最快圈: {is_fastest_lap}")
+            
+            # 檢測同車手同圈數的特殊情況
+            if driver2 and driver1 == driver2 and lap1 == lap2:
+                print(f"[SPEED DEBUG] 🔍 檢測到同車手同圈數特殊情況: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+                print(f"[SPEED DEBUG] ⚠️ 注意：這種情況 CLI -f13 會生成 comparison_type: 'same_driver' 的特殊JSON格式")
+            elif driver2 and driver1 == driver2:
+                print(f"[SPEED DEBUG] 🔍 檢測到同車手不同圈數情況: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            elif driver2:
+                print(f"[SPEED DEBUG] 🔍 標準雙車手比較: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            else:
+                print(f"[SPEED DEBUG] 🔍 單車手分析: {driver1} 第{lap1}圈")
             
             if self._is_loading:
-                print(f"[THROTTLE DEBUG] 已在載入中，忽略重複請求")
+                self.load_error.emit("載入器正忙，請稍後再試")
                 return False
                 
             self._is_loading = True
-            self.load_progress.emit(10)
+            self.load_progress.emit(0)
+            self.status_changed.emit(f"正在載入油門數據...")
             
-            # 儲存當前會話資訊
-            self.current_session = {
+            # 儲存當前參數
+            self._current_params = {
                 'year': year,
-                'race': race, 
+                'race': race,
                 'session': session,
                 'driver1': driver1,
                 'driver2': driver2,
@@ -93,20 +89,18 @@ class ThrottleAnalysisDataLoader(QObject):
                 'is_fastest_lap': is_fastest_lap
             }
             
-            print(f"[THROTTLE DEBUG] 📋 載入參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
-            
             # 尋找對應的 JSON 檔案
             json_file = self._find_throttle_data_file(year, race, session, driver1, driver2, lap1, lap2)
-            print(f"[THROTTLE DEBUG] 搜尋結果: {json_file}")
+            print(f"[SPEED DEBUG] 搜尋結果: {json_file}")
             
             if not json_file:
-                print(f"[THROTTLE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案")
-                print(f"[THROTTLE DEBUG] 呼叫 CLI 生成: {year} {race} {session}")
+                print(f"[SPEED DEBUG] ❌ 找不到現有 JSON，開始生成新檔案")
+                print(f"[SPEED DEBUG] 呼叫 CLI 生成: {year} {race} {session}")
                 # 呼叫 CLI 生成 JSON (異步)
                 self._start_cli_generation(year, race, session, driver1, driver2, lap1, lap2)
                 return True  # 返回 True 表示已啟動生成流程
             else:
-                print(f"[THROTTLE DEBUG] ✅ 找到現有檔案，準備載入")
+                print(f"[SPEED DEBUG] ✅ 找到現有檔案，準備載入")
                 
             # 使用 QTimer 模擬異步載入
             QTimer.singleShot(10, lambda: self._load_json_file(json_file))
@@ -116,42 +110,11 @@ class ThrottleAnalysisDataLoader(QObject):
             self.load_error.emit(f"載入失敗: {str(e)}")
             self._is_loading = False
             return False
-
-    def load_throttle_analysis_data(self, session_info: Dict[str, Any]) -> None:
-        """
-        載入油門分析數據 - 向後兼容的接口
-        
-        Args:
-            session_info: 包含年份、賽事、車手等信息的字典
-                必須包含：year, race, driver1, driver2, lap1, lap2
-        """
-        try:
-            print(f"[THROTTLE DEBUG] 🔄 向後兼容接口：load_throttle_analysis_data")
-            print(f"[THROTTLE DEBUG] 會話資訊: {session_info}")
-            
-            # 提取參數
-            year = session_info.get('year')
-            race = session_info.get('race') 
-            session = session_info.get('session', 'R')
-            driver1 = session_info.get('driver1')
-            driver2 = session_info.get('driver2')
-            lap1 = session_info.get('lap1', 1)
-            lap2 = session_info.get('lap2', 1)
-            is_fastest_lap = session_info.get('is_fastest_lap', False)
-            
-            print(f"[THROTTLE DEBUG] 解析參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
-            
-            # 調用新的載入方法
-            self.load_throttle_data(year, race, session, driver1, driver2, lap1, lap2, is_fastest_lap)
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE] load_throttle_analysis_data 失敗: {str(e)}")
-            self.load_error.emit(f"載入失敗: {str(e)}")
-
+    
     def _find_throttle_data_file(self, year: int, race: str, session: str, 
-                           driver1: str, driver2: str = None, 
-                           lap1: int = 1, lap2: int = 1) -> str:
-        """搜尋油門分析數據檔案 - 使用與速度分析相同的搜尋邏輯"""
+                             driver1: str, driver2: str = None, 
+                             lap1: int = 1, lap2: int = 1) -> Optional[str]:
+        """搜尋油門分析數據檔案"""
         try:
             print(f"[JSON_SEARCH] ========== 搜尋油門分析檔案 ==========")
             print(f"[JSON_SEARCH] 🔍 搜尋條件:")
@@ -161,17 +124,15 @@ class ThrottleAnalysisDataLoader(QObject):
             print(f"[JSON_SEARCH]   🏎️ 車手1: {driver1} (第{lap1}圈)")
             print(f"[JSON_SEARCH]   🏎️ 車手2: {driver2} (第{lap2}圈)")
             
-            # 搜尋目錄 - 與速度分析相同
+            # 搜尋目錄
             search_dirs = ["json", "json_exports", "cache"]
             print(f"[JSON_SEARCH] 📂 搜尋目錄: {search_dirs}")
             
-            # 構建檔案名稱搜尋模式 - 與速度分析完全相同
-            if driver2 and driver2 != driver1:
+            # 構建檔案名稱搜尋模式
+            if driver2:
                 # 雙車手對比檔案 - 只允許精確搜尋模式，避免誤判
-                # 確保 lap2 不是 None
-                lap2_safe = lap2 if lap2 is not None else 1
                 filename_patterns = [
-                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2_safe}.json"   # 只允許模式1：精確匹配
+                    f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json"   # 只允許模式1：精確匹配
                 ]
                 print(f"[JSON_SEARCH] 🔄 雙車手檔案搜尋模式（僅精確搜尋）:")
                 for i, pattern in enumerate(filename_patterns, 1):
@@ -183,11 +144,11 @@ class ThrottleAnalysisDataLoader(QObject):
                     f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
                     f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*.json"
                 ]
-                print(f"[JSON_SEARCH] 🚗 單車手檔案搜尋模式:")
+                print(f"[JSON_SEARCH] 👤 單車手檔案搜尋模式:")
                 for i, pattern in enumerate(filename_patterns, 1):
                     print(f"[JSON_SEARCH]   {i}. {pattern}")
             
-            # 精確搜尋 - 與速度分析相同的邏輯
+            # 精確搜尋
             print(f"[JSON_SEARCH] 🔍 開始精確搜尋...")
             found_file = None
             
@@ -228,22 +189,22 @@ class ThrottleAnalysisDataLoader(QObject):
             return None
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 搜尋檔案時發生錯誤: {str(e)}")
+            print(f"[ERROR] [SPEED] 搜尋檔案時發生錯誤: {str(e)}")
             self.load_error.emit(f"搜尋檔案時發生錯誤: {str(e)}")
             return None
-
+    
     def _start_cli_generation(self, year: int, race: str, session: str,
                              driver1: str, driver2: str = None,
                              lap1: int = 1, lap2: int = 1):
-        """啟動 CLI 生成流程 - 與速度分析完全相同的邏輯"""
+        """啟動 CLI 生成流程"""
         try:
-            print(f"[THROTTLE DEBUG] ========== 啟動 CLI 生成流程 ==========")
-            print(f"[THROTTLE DEBUG] 生成參數:")
-            print(f"[THROTTLE DEBUG]   年份: {year}")
-            print(f"[THROTTLE DEBUG]   賽站: {race}")
-            print(f"[THROTTLE DEBUG]   賽段: {session}")
-            print(f"[THROTTLE DEBUG]   車手1: {driver1}, 圈數: {lap1}")
-            print(f"[THROTTLE DEBUG]   車手2: {driver2}, 圈數: {lap2}")
+            print(f"[SPEED DEBUG] ========== 啟動 CLI 生成流程 ==========")
+            print(f"[SPEED DEBUG] 生成參數:")
+            print(f"[SPEED DEBUG]   年份: {year}")
+            print(f"[SPEED DEBUG]   賽站: {race}")
+            print(f"[SPEED DEBUG]   賽段: {session}")
+            print(f"[SPEED DEBUG]   車手1: {driver1}, 圈數: {lap1}")
+            print(f"[SPEED DEBUG]   車手2: {driver2}, 圈數: {lap2}")
             
             # 儲存參數供後續使用
             self._generation_params = (year, race, session, driver1, driver2, lap1, lap2)
@@ -252,30 +213,30 @@ class ThrottleAnalysisDataLoader(QObject):
             success = self._generate_throttle_data_via_cli(year, race, session, driver1, driver2, lap1, lap2)
             
             if success:
-                print(f"[THROTTLE DEBUG] ✅ CLI 啟動成功，開始監控檔案生成")
+                print(f"[SPEED DEBUG] ✅ CLI 啟動成功，開始監控檔案生成")
                 # 啟動定時器檢查檔案是否生成完成
                 self._start_generation_monitoring()
             else:
-                print(f"[THROTTLE DEBUG] ❌ CLI 啟動失敗")
+                print(f"[SPEED DEBUG] ❌ CLI 啟動失敗")
                 self.load_error.emit(f"啟動 CLI 生成失敗: {year} {race} {session}")
                 self._is_loading = False
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE DEBUG] 啟動生成時發生錯誤: {e}")
+            print(f"[ERROR] [SPEED DEBUG] 啟動生成時發生錯誤: {e}")
             import traceback
             traceback.print_exc()
             self.load_error.emit(f"啟動生成時發生錯誤: {str(e)}")
             self._is_loading = False
     
     def _generate_throttle_data_via_cli(self, year: int, race: str, session: str,
-                                  driver1: str, driver2: str = None,
-                                  lap1: int = 1, lap2: int = 1) -> bool:
-        """透過 CLI 工具生成油門數據 - 與速度分析相同的邏輯"""
+                                   driver1: str, driver2: str = None,
+                                   lap1: int = 1, lap2: int = 1) -> bool:
+        """透過 CLI 工具生成油門數據"""
         try:
-            print(f"[THROTTLE DEBUG] ========== CLI 命令生成 ==========")
-            print(f"[THROTTLE DEBUG] 生成油門數據: {year} {race} {session}")
+            print(f"[SPEED DEBUG] ========== CLI 命令生成 ==========")
+            print(f"[SPEED DEBUG] 生成油門數據: {year} {race} {session}")
             
-            # 構建命令 - 與速度分析相同，使用Function 13
+            # 構建命令
             command = [
                 "python", "f1_analysis_modular_main.py",
                 "-f", "13",  # 功能13: 車手比較分析
@@ -286,29 +247,30 @@ class ThrottleAnalysisDataLoader(QObject):
             ]
             
             # 添加第二位車手參數
+            # 添加第二位車手參數
             if driver2:
                 command.extend(["-d2", driver2])
-                print(f"[THROTTLE DEBUG] 雙車手模式: {driver1} vs {driver2}")
+                print(f"[SPEED DEBUG] 雙車手模式: {driver1} vs {driver2}")
             else:
                 # 單車手模式：設置 driver2 與 driver1 相同
                 command.extend(["-d2", driver1])
-                print(f"[THROTTLE DEBUG] 單車手模式: {driver1} vs {driver1}")
+                print(f"[SPEED DEBUG] 單車手模式: {driver1} vs {driver1}")
             
             # 添加圈數參數 - 始終使用雙參數模式
             command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
             
             if driver2:
-                print(f"[THROTTLE DEBUG] 雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+                print(f"[SPEED DEBUG] 雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
             else:
-                print(f"[THROTTLE DEBUG] 單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
+                print(f"[SPEED DEBUG] 單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
             
-            print(f"[THROTTLE DEBUG] 完整 CLI 命令: {' '.join(command)}")
+            print(f"[SPEED DEBUG] 完整 CLI 命令: {' '.join(command)}")
             self.status_changed.emit(f"正在生成油門數據...")
             
             # 非阻塞執行
             def run_cli():
                 try:
-                    print(f"[THROTTLE DEBUG] 🚀 開始執行 CLI 命令...")
+                    print(f"[SPEED DEBUG] 🚀 開始執行 CLI 命令...")
                     process = subprocess.Popen(
                         command,
                         stdout=subprocess.PIPE,
@@ -322,12 +284,12 @@ class ThrottleAnalysisDataLoader(QObject):
                     stdout, stderr = process.communicate()
                     
                     if process.returncode == 0:
-                        print(f"[OK] [THROTTLE] CLI 執行成功")
+                        print(f"[OK] [SPEED] CLI 執行成功")
                     else:
-                        print(f"[ERROR] [THROTTLE] CLI 執行失敗: {stderr}")
+                        print(f"[ERROR] [SPEED] CLI 執行失敗: {stderr}")
                         
                 except Exception as e:
-                    print(f"[ERROR] [THROTTLE] CLI 執行異常: {e}")
+                    print(f"[ERROR] [SPEED] CLI 執行異常: {e}")
             
             # 在背景執行緒中執行CLI
             import threading
@@ -337,330 +299,225 @@ class ThrottleAnalysisDataLoader(QObject):
             return True
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE] 啟動 CLI 失敗: {e}")
+            print(f"[ERROR] [SPEED] 啟動 CLI 失敗: {e}")
             return False
     
     def _start_generation_monitoring(self):
         """啟動檔案生成監控"""
-        print(f"[RPM_MONITOR] ========== 啟動監控系統 ==========")
-        print(f"[RPM_MONITOR] 檢查計時器狀態...")
-        print(f"[RPM_MONITOR] _generation_timer 存在: {hasattr(self, '_generation_timer')}")
-        print(f"[RPM_MONITOR] _generation_timeout_timer 存在: {hasattr(self, '_generation_timeout_timer')}")
-        
         # 啟動監控 (每5秒檢查一次，最多等待180秒)
-        print(f"[RPM_MONITOR] 啟動主監控計時器 (每5秒檢查)")
         self._generation_timer.start(5000)
-        print(f"[RPM_MONITOR] 計時器是否運行: {self._generation_timer.isActive()}")
-        print(f"[RPM_MONITOR] 計時器間隔: {self._generation_timer.interval()}")
-        
-        print(f"[RPM_MONITOR] 啟動超時計時器 (180秒)")
         self._generation_timeout_timer.start(180000)
-        print(f"[RPM_MONITOR] 超時計時器是否運行: {self._generation_timeout_timer.isActive()}")
-        
-        print(f"[RPM_MONITOR] ✅ 監控系統已啟動")
         self.status_changed.emit("正在生成數據，請稍候...")
-        
-        # 立即執行一次檢查以確認方法可以被調用
-        print(f"[RPM_MONITOR] 🧪 執行立即測試檢查...")
-        QTimer.singleShot(1000, self._check_generation_progress)
-    
-    def _find_telemetry_analysis_file(self, year: int, race: str, session: str) -> str:
-        """尋找遙測分析檔案"""
-        try:
-            # 定義可能的遙測分析檔案名稱格式
-            patterns = [
-                f"all_drivers_telemetry_analysis_{year}_{race}_{session}.json",
-                f"telemetry_analysis_{year}_{race}_{session}.json",
-                f"all_drivers_telemetry_analysis_{year}_{race}.json",
-                f"driver_comparison_analysis_{year}_{race}_{session}.json"
-            ]
-            
-            # 搜尋目錄
-            search_dirs = ["json", "json_exports", "cache"]
-            
-            for directory in search_dirs:
-                if os.path.exists(directory):
-                    for pattern in patterns:
-                        file_path = os.path.join(directory, pattern)
-                        if os.path.exists(file_path):
-                            print(f"[RPM_LOADER] 🎯 找到遙測分析檔案: {file_path}")
-                            return file_path
-            
-            print(f"[RPM_LOADER] ❌ 未找到遙測分析檔案")
-            return None
-            
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 搜尋遙測分析檔案失敗: {e}")
-            return None
-    
-    def _extract_rpm_from_telemetry(self, telemetry_file: str, driver1: str, driver2: str, lap1: int, lap2: int):
-        """從遙測分析數據提取 RPM 數據"""
-        try:
-            print(f"[RPM_LOADER] 🔧 從遙測分析提取 RPM 數據...")
-            
-            with open(telemetry_file, 'r', encoding='utf-8') as f:
-                telemetry_data = json.load(f)
-            
-            # 構建 RPM 數據結構
-            rpm_data = {
-                "metadata": {
-                    "drivers": [
-                        {"code": driver1, "lap_number": lap1},
-                        {"code": driver2, "lap_number": lap2}
-                    ],
-                    "sectors": [],
-                    "year": telemetry_data.get("year", 2025),
-                    "race": telemetry_data.get("race", "Unknown"),
-                    "session": telemetry_data.get("session", "R")
-                },
-                "rpm_data": {
-                    "distance": [],
-                    "driver1_rpm": [],
-                    "driver2_rpm": [],
-                    "driver1_name": driver1,
-                    "driver2_name": driver2
-                },
-                "statistics": {
-                    "driver1": {"max_rpm": 0, "avg_rpm": 0},
-                    "driver2": {"max_rpm": 0, "avg_rpm": 0}
-                }
-            }
-            
-            print(f"[RPM_LOADER] 📊 基本 RPM 數據結構已建立")
-            print(f"[RPM_LOADER] ⚠️ 注意: 當前提供模擬數據，實際 RPM 提取功能需要進一步開發")
-            
-            # 生成模擬 RPM 數據
-            distance_points = list(range(0, 5808, 10))  # 每10米一個點
-            driver1_rpm = [8000 + (i % 1000) for i in range(len(distance_points))]  # 模擬 RPM 數據
-            driver2_rpm = [8200 + (i % 1200) for i in range(len(distance_points))]  # 模擬 RPM 數據
-            
-            rpm_data["rpm_data"]["distance"] = distance_points
-            rpm_data["rpm_data"]["driver1_rpm"] = driver1_rpm
-            rpm_data["rpm_data"]["driver2_rpm"] = driver2_rpm
-            rpm_data["statistics"]["driver1"]["max_rpm"] = max(driver1_rpm)
-            rpm_data["statistics"]["driver1"]["avg_rpm"] = sum(driver1_rpm) // len(driver1_rpm)
-            rpm_data["statistics"]["driver2"]["max_rpm"] = max(driver2_rpm)
-            rpm_data["statistics"]["driver2"]["avg_rpm"] = sum(driver2_rpm) // len(driver2_rpm)
-            
-            print(f"[RPM_LOADER] ✅ RPM 數據提取成功 (模擬數據)")
-            
-            # 發射數據載入信號
-            QTimer.singleShot(100, lambda: self.data_loaded.emit(rpm_data))
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 提取 RPM 數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            self.load_error.emit(f"提取 RPM 數據失敗: {str(e)}")
-            self._is_loading = False
         
     def _check_generation_progress(self):
         """檢查檔案生成進度"""
-        try:
-            print(f"[THROTTLE_MONITOR] ========== 監控檢查觸發 ==========")
-            print(f"[THROTTLE_MONITOR] 時間: {datetime.now().strftime('%H:%M:%S')}")
+        if hasattr(self, '_generation_params'):
+            year, race, session, driver1, driver2, lap1, lap2 = self._generation_params
             
-            if hasattr(self, '_generation_params'):
-                year, race, session, driver1, driver2, lap1, lap2 = self._generation_params
-                print(f"[THROTTLE_MONITOR] 檢查參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
+            # 檢查是否有新檔案生成
+            json_file = self._find_throttle_data_file(year, race, session, driver1, driver2, lap1, lap2)
+            
+            if json_file:
+                print(f"[OK] [SPEED] 檔案生成完成: {json_file}")
                 
-                # 檢查是否有新檔案生成
-                print(f"[THROTTLE_MONITOR] 開始搜尋檔案...")
-                json_file = self._find_throttle_data_file(year, race, session, driver1, driver2, lap1, lap2)
-                
-                if json_file:
-                    print(f"[OK] [THROTTLE_LOADER] 檔案生成完成: {json_file}")
-                    print(f"[THROTTLE_MONITOR] 停止監控並載入檔案")
-                    
-                    # 停止監控
-                    self._stop_generation_monitoring()
-                    
-                    # 載入新生成的檔案
-                    QTimer.singleShot(10, lambda: self._load_json_file(json_file))
-                else:
-                    print(f"⏳ [THROTTLE_LOADER] 繼續等待檔案生成...")
-                    print(f"[THROTTLE_MONITOR] 下次檢查將在5秒後進行")
-            else:
-                print(f"[THROTTLE_MONITOR] ❌ 缺少 _generation_params 參數")
-                print(f"[THROTTLE_MONITOR] 停止監控")
+                # 停止監控
                 self._stop_generation_monitoring()
                 
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_MONITOR] 監控檢查異常: {e}")
-            import traceback
-            traceback.print_exc()
-            print(f"[THROTTLE_MONITOR] 嘗試繼續監控...")
+                # 載入新生成的檔案
+                QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+            else:
+                print(f"⏳ [SPEED] 繼續等待檔案生成...")
                 
     def _on_generation_timeout(self):
         """處理生成超時"""
-        print(f"[TIMEOUT] [THROTTLE_LOADER] ========== 監控超時 ==========")
-        print(f"[TIMEOUT] [THROTTLE_LOADER] 檔案生成超時 (180秒)")
-        print(f"[TIMEOUT] [THROTTLE_LOADER] 停止監控系統")
+        print(f"[TIME] [SPEED] 檔案生成超時")
         self._stop_generation_monitoring()
-        self.load_error.emit("數據生成超時，請檢查網路連線或重試")
+        self.load_error.emit("數據生成超時，請檢查網路連線或稍後重試")
         self._is_loading = False
         
     def _stop_generation_monitoring(self):
         """停止檔案生成監控"""
-        print(f"[RPM_MONITOR] ========== 停止監控系統 ==========")
         if hasattr(self, '_generation_timer'):
             self._generation_timer.stop()
-            print(f"[RPM_MONITOR] 主監控計時器已停止")
         if hasattr(self, '_generation_timeout_timer'):
             self._generation_timeout_timer.stop()
-            print(f"[RPM_MONITOR] 超時計時器已停止")
-        print(f"[RPM_MONITOR] ✅ 監控系統已完全停止")
-
+    
     def _load_json_file(self, file_path: str):
         """載入 JSON 檔案"""
         try:
-            print(f"[THROTTLE_LOADER] ========== JSON 檔案載入 ==========")
-            print(f"[THROTTLE_LOADER] 載入檔案: {file_path}")
+            print(f"[SPEED DEBUG] ========== JSON 檔案載入 ==========")
+            print(f"[SPEED DEBUG] 載入檔案: {file_path}")
             
             # 檢查檔案狀態
             if not os.path.exists(file_path):
-                print(f"[THROTTLE_LOADER] ❌ 檔案不存在: {file_path}")
+                print(f"[SPEED DEBUG] ❌ 檔案不存在: {file_path}")
                 self.load_error.emit(f"檔案不存在: {file_path}")
                 return
                 
             file_size = os.path.getsize(file_path)
-            print(f"[THROTTLE_LOADER] 檔案大小: {file_size} bytes")
+            print(f"[SPEED DEBUG] 檔案大小: {file_size} bytes")
             
             self.load_progress.emit(90)
             self.status_changed.emit("正在處理數據...")
             
             # 載入JSON檔案
-            print(f"[THROTTLE_LOADER] 開始讀取 JSON 內容...")
+            print(f"[SPEED DEBUG] 開始讀取 JSON 內容...")
             with open(file_path, 'r', encoding='utf-8') as f:
                 raw_data = json.load(f)
             
-            print(f"[THROTTLE_LOADER] JSON 載入成功")
-            print(f"[THROTTLE_LOADER] 頂層鍵值: {list(raw_data.keys()) if isinstance(raw_data, dict) else 'Not a dict'}")
+            print(f"[SPEED DEBUG] JSON 載入成功")
+            print(f"[SPEED DEBUG] 頂層鍵值: {list(raw_data.keys()) if isinstance(raw_data, dict) else 'Not a dict'}")
             
             # 驗證數據格式
-            print(f"[THROTTLE_LOADER] 開始驗證數據格式...")
+            print(f"[SPEED DEBUG] 開始驗證數據格式...")
             if self._validate_throttle_data(raw_data):
-                print(f"[THROTTLE_LOADER] ✅ 數據格式驗證通過")
+                print(f"[SPEED DEBUG] ✅ 數據格式驗證通過")
                 # 處理為油門分析格式
                 processed_data = self._process_throttle_data(raw_data)
                 
-                print(f"[THROTTLE_LOADER] ========== 即將發送數據 ==========")
-                print(f"[THROTTLE_LOADER] 處理後數據類型: {type(processed_data)}")
-                print(f"[THROTTLE_LOADER] 處理後數據鍵值: {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
+                print(f"[SPEED DEBUG] ========== 即將發送數據 ==========")
+                print(f"[SPEED DEBUG] 處理後數據類型: {type(processed_data)}")
+                print(f"[SPEED DEBUG] 處理後數據鍵值: {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
                 
                 if 'throttle_data' in processed_data:
                     throttle_data = processed_data['throttle_data']
-                    print(f"[THROTTLE_LOADER] 油門數據鍵值: {list(throttle_data.keys())}")
-                    print(f"[THROTTLE_LOADER] 距離數據點數: {len(throttle_data.get('distance', []))}")
-                    print(f"[THROTTLE_LOADER] 車手1 油門點數: {len(throttle_data.get('driver1_throttle', []))}")
-                    print(f"[THROTTLE_LOADER] 車手2 油門點數: {len(throttle_data.get('driver2_throttle', []))}")
+                    print(f"[SPEED DEBUG] 油門數據鍵值: {list(throttle_data.keys())}")
+                    print(f"[SPEED DEBUG] 距離數據點數: {len(throttle_data.get('distance', []))}")
+                    print(f"[SPEED DEBUG] 車手1速度點數: {len(throttle_data.get('driver1_throttle', []))}")
+                    print(f"[SPEED DEBUG] 車手2速度點數: {len(throttle_data.get('driver2_throttle', []))}")
                 
                 self.load_progress.emit(100)
                 self.status_changed.emit("數據載入完成")
                 self._current_data = processed_data
-                self._is_loading = False
                 
-                print(f"[THROTTLE_LOADER] 🚀 即將發送 data_loaded 信號...")
+                print(f"[SPEED DEBUG] 🚀 即將發送 data_loaded 信號...")
                 self.data_loaded.emit(processed_data)
-                print(f"[THROTTLE_LOADER] ✅ data_loaded 信號已發送")
+                print(f"[SPEED DEBUG] ✅ data_loaded 信號已發送")
+                print(f"[OK] [SPEED DEBUG] 檔案載入並處理完成: {file_path}")
+            else:
+                print(f"[SPEED DEBUG] ❌ 數據格式驗證失敗")
+                self.load_error.emit("載入的數據格式無效")
+                
+        except json.JSONDecodeError as e:
+            print(f"[ERROR] [SPEED DEBUG] JSON 解析錯誤: {e}")
+            self.load_error.emit(f"JSON 解析錯誤: {str(e)}")
+        except Exception as e:
+            print(f"[ERROR] [SPEED DEBUG] 檔案載入失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            self.load_error.emit(f"檔案載入失敗: {str(e)}")
+        
+        finally:
+            self._is_loading = False
+    
+    def _validate_throttle_data(self, data: dict) -> bool:
+        """驗證油門數據格式 - 支援新舊兩種格式"""
+        try:
+            print(f"[SPEED DEBUG] ========== 數據格式驗證 ==========")
+            print(f"[SPEED DEBUG] 數據類型: {type(data)}")
+            
+            if not isinstance(data, dict):
+                print(f"[SPEED DEBUG] ❌ 數據不是字典格式")
+                return False
+                
+            print(f"[SPEED DEBUG] 數據鍵值: {list(data.keys())}")
+            
+            # 檢查數據格式類型
+            if 'analysis_type' in data and data.get('analysis_type') == 'two_driver_telemetry_comparison':
+                # 新格式：comparison_telemetry JSON
+                print(f"[SPEED DEBUG] 📊 檢測到新格式：遙測比較數據")
+                required_fields = ['analysis_type', 'metadata', 'results']
+                
+                for field in required_fields:
+                    if field not in data:
+                        print(f"[SPEED DEBUG] ❌ 缺少必要欄位: {field}")
+                        return False
+                    else:
+                        print(f"[SPEED DEBUG] ✅ 找到欄位: {field}")
+                
+                # 檢查 results 結構
+                results = data.get('results', {})
+                if 'telemetry_comparison' not in results:
+                    print(f"[SPEED DEBUG] ❌ 缺少遙測比較數據")
+                    return False
+                
+                telemetry_data = results.get('telemetry_comparison', {})
+                if 'Throttle' not in telemetry_data:
+                    print(f"[SPEED DEBUG] ❌ 缺少油門數據")
+                    return False
+                    
+                print(f"[SPEED DEBUG] ✅ 新格式驗證通過")
+                return True
                 
             else:
-                print(f"[THROTTLE_LOADER] ❌ 數據格式驗證失敗")
-                self.load_error.emit("數據格式驗證失敗")
-                self._is_loading = False
+                # 舊格式：function 13 直接輸出
+                print(f"[SPEED DEBUG] 📊 檢測到舊格式：功能13輸出")
+                required_fields = ['function_id', 'analysis_type', 'data']
                 
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] JSON 檔案載入失敗: {str(e)}")
-            self.load_error.emit(f"載入失敗: {str(e)}")
-            self._is_loading = False
-
-    def _validate_throttle_data(self, raw_data: dict) -> bool:
-        """驗證油門數據格式"""
-        try:
-            print(f"[THROTTLE_LOADER] 🔍 驗證數據格式...")
-            
-            # 檢查基本結構
-            if not isinstance(raw_data, dict):
-                print(f"[THROTTLE_LOADER] ❌ 數據不是字典格式")
-                return False
-            
-            # 檢查是否有遙測比較數據
-            if 'results' not in raw_data:
-                print(f"[THROTTLE_LOADER] ❌ 缺少 results 字段")
-                return False
+                for field in required_fields:
+                    if field not in data:
+                        print(f"[SPEED DEBUG] ❌ 缺少必要欄位: {field}")
+                        return False
+                    else:
+                        print(f"[SPEED DEBUG] ✅ 找到欄位: {field}")
                 
-            results = raw_data['results']
-            if 'telemetry_comparison' not in results:
-                print(f"[THROTTLE_LOADER] ❌ 缺少 telemetry_comparison 字段")
-                return False
-                
-            telemetry_comp = results['telemetry_comparison']
-            if 'Throttle' not in telemetry_comp:
-                print(f"[THROTTLE_LOADER] ❌ 缺少 Throttle 字段")
-                return False
-            
-            throttle_data = telemetry_comp['Throttle']
-            required_fields = ['driver1_data', 'driver2_data', 'distance']
-            
-            for field in required_fields:
-                if field not in throttle_data:
-                    print(f"[THROTTLE_LOADER] ❌ 油門數據缺少必需字段: {field}")
+                # 檢查功能ID
+                function_id = data.get('function_id')
+                print(f"[SPEED DEBUG] 功能ID: {function_id}")
+                if function_id != 13:
+                    print(f"[SPEED DEBUG] ❌ 功能ID不正確，期望: 13, 實際: {function_id}")
                     return False
                 
-                if not isinstance(throttle_data[field], list):
-                    print(f"[THROTTLE_LOADER] ❌ {field} 不是列表格式")
-                    return False
-            
-            # 檢查數據長度一致性
-            driver1_len = len(throttle_data['driver1_data'])
-            driver2_len = len(throttle_data['driver2_data'])
-            distance_len = len(throttle_data['distance'])
-            
-            print(f"[THROTTLE_LOADER] 數據長度檢查: driver1={driver1_len}, driver2={driver2_len}, distance={distance_len}")
-            
-            if not (driver1_len == driver2_len == distance_len):
-                print(f"[THROTTLE_LOADER] ⚠️ 數據長度不一致，但仍可嘗試處理")
-            
-            print(f"[THROTTLE_LOADER] ✅ 數據格式驗證通過")
-            return True
+                # 檢查分析類型
+                analysis_type = data.get('analysis_type')
+                print(f"[SPEED DEBUG] 分析類型: {analysis_type}")
+                
+                # 檢查數據結構
+                data_section = data.get('data', {})
+                print(f"[SPEED DEBUG] 數據段鍵值: {list(data_section.keys()) if isinstance(data_section, dict) else 'Not a dict'}")
+                
+                print(f"[SPEED DEBUG] ✅ 舊格式驗證通過")
+                return True
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 數據格式驗證失敗: {str(e)}")
+            print(f"[ERROR] [SPEED DEBUG] 數據驗證異常: {e}")
+            import traceback
+            traceback.print_exc()
             return False
-
+    
     def _process_throttle_data(self, raw_data: dict) -> dict:
-        """處理原始數據為油門分析格式"""
+        """處理原始數據為油門分析格式 - 支援新舊兩種格式"""
         try:
-            print(f"[THROTTLE_LOADER] ========== 數據處理 ==========")
-            print(f"[THROTTLE_LOADER] 開始處理原始數據...")
+            print(f"[SPEED DEBUG] ========== 數據處理 ==========")
+            print(f"[SPEED DEBUG] 開始處理原始數據...")
             
             # 檢查數據格式類型
             if raw_data.get('analysis_type') == 'two_driver_telemetry_comparison':
                 # 新格式：comparison_telemetry JSON
-                print(f"[THROTTLE_LOADER] 📊 處理新格式數據")
-                return self._process_new_format_throttle_data(raw_data)
+                print(f"[SPEED DEBUG] 📊 處理新格式數據")
+                return self._process_new_format_data(raw_data)
             else:
                 # 舊格式：function 13 直接輸出
-                print(f"[THROTTLE_LOADER] 📊 處理舊格式數據")
-                return self._process_old_format_throttle_data(raw_data)
+                print(f"[SPEED DEBUG] 📊 處理舊格式數據")
+                return self._process_old_format_data(raw_data)
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 數據處理失敗: {str(e)}")
+            print(f"[ERROR] 數據處理失敗: {str(e)}")
             raise
-
-    def _process_new_format_throttle_data(self, raw_data: dict) -> dict:
+    
+    def _process_new_format_data(self, raw_data: dict) -> dict:
         """處理新格式的遙測比較數據"""
         try:
-            print(f"[THROTTLE_LOADER] ========== 解析新格式遙測數據 ==========")
+            print(f"[SPEED DEBUG] ========== 解析新格式遙測數據 ==========")
             
             metadata = raw_data.get('metadata', {})
             results = raw_data.get('results', {})
             comparison_info = results.get('comparison_info', {})
             telemetry_comparison = results.get('telemetry_comparison', {})
             
-            print(f"[THROTTLE_LOADER] 元數據: {metadata}")
-            print(f"[THROTTLE_LOADER] 比較信息: {comparison_info}")
-            print(f"[THROTTLE_LOADER] 遙測比較鍵值: {list(telemetry_comparison.keys())}")
+            print(f"[SPEED DEBUG] 元數據: {metadata}")
+            print(f"[SPEED DEBUG] 比較信息: {comparison_info}")
+            print(f"[SPEED DEBUG] 遙測比較鍵值: {list(telemetry_comparison.keys())}")
             
             # 提取油門數據
             throttle_data = telemetry_comparison.get('Throttle', {})
@@ -668,23 +525,24 @@ class ThrottleAnalysisDataLoader(QObject):
             driver2_throttle = throttle_data.get('driver2_data', [])
             distance_data = throttle_data.get('distance', [])
             
-            print(f"[THROTTLE_LOADER] 車手1 油門數據點數: {len(driver1_throttle)}")
-            print(f"[THROTTLE_LOADER] 車手2 油門數據點數: {len(driver2_throttle)}")
-            print(f"[THROTTLE_LOADER] 距離數據點數: {len(distance_data)}")
+            print(f"[SPEED DEBUG] 車手1油門數據點數: {len(driver1_throttle)}")
+            print(f"[SPEED DEBUG] 車手2油門數據點數: {len(driver2_throttle)}")
+            print(f"[SPEED DEBUG] 距離數據點數: {len(distance_data)}")
             
             # 顯示一些樣本數據
             if driver1_throttle:
-                print(f"[THROTTLE_LOADER] 車手1 油門樣本: {driver1_throttle[:5]} ... {driver1_throttle[-5:]}")
+                print(f"[SPEED DEBUG] 車手1速度樣本: {driver1_throttle[:5]} ... {driver1_throttle[-5:]}")
             if driver2_throttle:
-                print(f"[THROTTLE_LOADER] 車手2 油門樣本: {driver2_throttle[:5]} ... {driver2_throttle[-5:]}")
+                print(f"[SPEED DEBUG] 車手2速度樣本: {driver2_throttle[:5]} ... {driver2_throttle[-5:]}")
             if distance_data:
-                print(f"[THROTTLE_LOADER] 距離樣本: {distance_data[:5]} ... {distance_data[-5:]}")
+                print(f"[SPEED DEBUG] 距離樣本: {distance_data[:5]} ... {distance_data[-5:]}")
             
             # 檢查是否為單車手模式
-            is_single_driver = (self.current_session and 
-                              self.current_session.get('driver2') is None)
+            is_single_driver = (hasattr(self, '_current_params') and 
+                              self._current_params and 
+                              self._current_params.get('driver2') is None)
             
-            print(f"[THROTTLE_LOADER] 單車手模式: {is_single_driver}")
+            print(f"[SPEED DEBUG] 單車手模式: {is_single_driver}")
             
             # 構建處理後的數據結構
             processed = {
@@ -701,7 +559,7 @@ class ThrottleAnalysisDataLoader(QObject):
                     'driver1_name': comparison_info.get('driver1', 'Driver 1')
                 },
                 'statistics': {},
-                'timestamp': self._get_current_timestamp()
+                'raw_data': raw_data
             }
             
             # 根據模式添加車手信息和數據
@@ -718,7 +576,7 @@ class ThrottleAnalysisDataLoader(QObject):
                     }
                 ]
                 processed['statistics'] = self._calculate_throttle_statistics_single(driver1_throttle, distance_data)
-                print(f"[THROTTLE_LOADER] ✅ 單車手模式數據處理完成")
+                print(f"[SPEED DEBUG] ✅ 單車手模式數據處理完成")
             else:
                 # 雙車手模式：添加兩個車手
                 processed['metadata']['drivers'] = [
@@ -738,683 +596,371 @@ class ThrottleAnalysisDataLoader(QObject):
                 processed['throttle_data']['driver2_throttle'] = driver2_throttle
                 processed['throttle_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
                 processed['statistics'] = self._calculate_throttle_statistics_new(driver1_throttle, driver2_throttle, distance_data)
-                print(f"[THROTTLE_LOADER] ✅ 雙車手模式數據處理完成")
+                print(f"[SPEED DEBUG] ✅ 雙車手模式數據處理完成")
             
-            
-            print(f"[THROTTLE_LOADER] ✅ 新格式數據處理完成")
-            return processed
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 新格式數據處理失敗: {str(e)}")
-            raise
-
-    def _process_old_format_rpm_data(self, raw_data: dict) -> dict:
-        """處理舊格式數據 (直接從results.telemetry_comparison.RPM)"""
-        try:
-            print(f"[RPM_LOADER] ========== 解析舊格式數據 ==========")
-            
-            # 直接從results結構提取
-            results = raw_data.get('results', {})
-            telemetry_comparison = results.get('telemetry_comparison', {})
-            comparison_info = results.get('comparison_info', {})
-            
-            # 提取RPM數據
-            rpm_data = telemetry_comparison.get('RPM', {})
-            driver1_rpm = rpm_data.get('driver1_data', [])
-            driver2_rpm = rpm_data.get('driver2_data', [])
-            distance_data = rpm_data.get('distance', [])
-            
-            print(f"[RPM_LOADER] 舊格式 RPM數據點數: {len(driver1_rpm)}, {len(driver2_rpm)}, {len(distance_data)}")
-            
-            # 檢查是否為單車手模式
-            is_single_driver = (self.current_session and 
-                              self.current_session.get('driver2') is None)
-            
-            print(f"[RPM_LOADER] 單車手模式: {is_single_driver}")
-            
-            # 構建處理後的數據結構
-            processed = {
-                'metadata': {
-                    'analysis_type': 'rpm_comparison',
-                    'is_single_driver': is_single_driver,
-                    'drivers': [],
-                    'track_length': max(distance_data) if distance_data else 5807.0,
-                    'sectors': self._generate_sector_data(distance_data)
-                },
-                'rpm_data': {
-                    'distance': distance_data,
-                    'driver1_rpm': driver1_rpm,
-                    'driver1_name': comparison_info.get('driver1', 'Driver 1')
-                },
-                'statistics': {},
-                'timestamp': self._get_current_timestamp()
-            }
-            
-            # 根據模式添加車手信息和數據
-            if is_single_driver:
-                # 單車手模式：只添加一個車手，但保持數據結構一致
-                processed['rpm_data']['driver2_rpm'] = []  # 空的車手2數據
-                processed['rpm_data']['driver2_name'] = ""   # 空的車手2名稱
-                processed['metadata']['drivers'] = [
-                    {
-                        'code': comparison_info.get('driver1', 'Driver 1'),
-                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                        'compound': comparison_info.get('compound1', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life1', 0)
-                    }
-                ]
-                processed['statistics'] = self._calculate_rpm_statistics_single(driver1_rpm, distance_data)
-                print(f"[RPM_LOADER] ✅ 單車手舊格式數據處理完成")
+            print(f"[SPEED DEBUG] ========== 處理結果摘要 ==========")
+            print(f"[SPEED DEBUG] 處理後數據鍵值: {list(processed.keys())}")
+            print(f"[SPEED DEBUG] 油門數據鍵值: {list(processed['throttle_data'].keys())}")
+            print(f"[SPEED DEBUG] 車手1名稱: {processed['throttle_data']['driver1_name']}")
+            # 只有在存在 driver2_name 時才輸出
+            if 'driver2_name' in processed['throttle_data']:
+                print(f"[SPEED DEBUG] 車手2名稱: {processed['throttle_data']['driver2_name']}")
             else:
-                # 雙車手模式：添加兩個車手
-                processed['metadata']['drivers'] = [
-                    {
-                        'code': comparison_info.get('driver1', 'Driver 1'),
-                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                        'compound': comparison_info.get('compound1', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life1', 0)
-                    },
-                    {
-                        'code': comparison_info.get('driver2', 'Driver 2'),
-                        'lap_time': comparison_info.get('lap_time2', 'N/A'),
-                        'compound': comparison_info.get('compound2', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life2', 0)
-                    }
-                ]
-                processed['rpm_data']['driver2_rpm'] = driver2_rpm
-                processed['rpm_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
-                processed['statistics'] = self._calculate_rpm_statistics_new(driver1_rpm, driver2_rpm, distance_data)
-                print(f"[RPM_LOADER] ✅ 雙車手舊格式數據處理完成")
+                print(f"[SPEED DEBUG] 車手2名稱: 無 (單車手模式)")
+            print(f"[SPEED DEBUG] ✅ 新格式數據處理完成")
             
-            print(f"[RPM_LOADER] ✅ 舊格式數據處理完成")
             return processed
             
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 舊格式數據處理失敗: {str(e)}")
+            print(f"[ERROR] 新格式數據處理失敗: {str(e)}")
             raise
-
-    def _generate_sector_data(self, distance_data: List[float]) -> List[Dict[str, Any]]:
-        """生成賽道分段數據"""
+    
+    def _process_old_format_data(self, raw_data: dict) -> dict:
+        """處理舊格式的功能13輸出數據"""
         try:
-            if not distance_data:
-                return []
+            print(f"[SPEED DEBUG] 解析舊格式數據...")
             
-            max_distance = max(distance_data)
-            sector_length = max_distance / 3
+            # 從現有JSON結構提取基本信息
+            data_section = raw_data.get('data', {})
+            analysis_result = data_section.get('analysis_result', {})
+            driver_comparison = analysis_result.get('driver_comparison', {})
             
-            sectors = []
-            for i in range(3):
-                start_dist = i * sector_length
-                end_dist = (i + 1) * sector_length
-                sectors.append({
-                    'sector': i + 1,
-                    'start_distance': start_dist,
-                    'end_distance': end_dist,
-                    'length': sector_length
-                })
+            print(f"[SPEED DEBUG] 數據段結構:")
+            print(f"[SPEED DEBUG]   data 鍵值: {list(data_section.keys()) if isinstance(data_section, dict) else 'Not a dict'}")
+            print(f"[SPEED DEBUG]   analysis_result 鍵值: {list(analysis_result.keys()) if isinstance(analysis_result, dict) else 'Not a dict'}")
+            print(f"[SPEED DEBUG]   driver_comparison 鍵值: {list(driver_comparison.keys()) if isinstance(driver_comparison, dict) else 'Not a dict'}")
             
-            return sectors
+            # 提取車手資訊
+            drivers_info = []
+            if 'drivers' in driver_comparison:
+                drivers_info = driver_comparison['drivers']
+                print(f"[SPEED DEBUG] 找到車手資訊: {len(drivers_info)} 位車手")
+            else:
+                print(f"[SPEED DEBUG] ⚠️ 未找到車手資訊，使用預設值")
             
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 生成分段數據失敗: {str(e)}")
-            return []
-
-    def _calculate_throttle_statistics_new(self, driver1_throttle: List[float], driver2_throttle: List[float], distance_data: List[float]) -> Dict[str, Any]:
-        """計算油門統計數據"""
-        try:
-            driver1_stats = {
-                'max_throttle': max(driver1_throttle) if driver1_throttle else 0,
-                'min_throttle': min(driver1_throttle) if driver1_throttle else 0,
-                'avg_throttle': sum(driver1_throttle) / len(driver1_throttle) if driver1_throttle else 0,
-                'data_points': len(driver1_throttle)
-            }
-            
-            driver2_stats = {
-                'max_throttle': max(driver2_throttle) if driver2_throttle else 0,
-                'min_throttle': min(driver2_throttle) if driver2_throttle else 0,
-                'avg_throttle': sum(driver2_throttle) / len(driver2_throttle) if driver2_throttle else 0,
-                'data_points': len(driver2_throttle)
-            }
-            
-            # 計算差值比較
-            comparison = {
-                'max_throttle_diff': driver1_stats['max_throttle'] - driver2_stats['max_throttle'],
-                'avg_throttle_diff': driver1_stats['avg_throttle'] - driver2_stats['avg_throttle'],
-                'min_throttle_diff': driver1_stats['min_throttle'] - driver2_stats['min_throttle'],
-                'total_data_points': len(distance_data),
-                'track_coverage': max(distance_data) if distance_data else 0
-            }
-            
-            stats = {
-                'driver1_stats': driver1_stats,
-                'driver2_stats': driver2_stats,
-                'comparison': comparison
-            }
-            
-            return stats
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 計算統計數據失敗: {str(e)}")
-            return {}
-
-    def _calculate_throttle_statistics_single(self, driver_throttle: List[float], distance_data: List[float]) -> Dict[str, Any]:
-        """計算單車手油門統計數據"""
-        try:
-            driver_stats = {
-                'max_throttle': max(driver_throttle) if driver_throttle else 0,
-                'min_throttle': min(driver_throttle) if driver_throttle else 0,
-                'avg_throttle': sum(driver_throttle) / len(driver_throttle) if driver_throttle else 0,
-                'data_points': len(driver_throttle)
-            }
-            
-            stats = {
-                'driver_stats': driver_stats,
-                'track_info': {
-                    'total_data_points': len(distance_data),
-                    'track_coverage': max(distance_data) if distance_data else 0
-                }
-            }
-            
-            return stats
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 計算單車手統計數據失敗: {str(e)}")
-            return {}
-
-    def _process_old_format_throttle_data(self, raw_data: dict) -> dict:
-        """處理舊格式數據 (直接從results.telemetry_comparison.Throttle)"""
-        try:
-            print(f"[THROTTLE_LOADER] ========== 解析舊格式數據 ==========")
-            
-            # 直接從results結構提取
-            results = raw_data.get('results', {})
-            telemetry_comparison = results.get('telemetry_comparison', {})
-            comparison_info = results.get('comparison_info', {})
-            
-            # 提取油門數據
-            throttle_data = telemetry_comparison.get('Throttle', {})
-            driver1_throttle = throttle_data.get('driver1_data', [])
-            driver2_throttle = throttle_data.get('driver2_data', [])
-            distance_data = throttle_data.get('distance', [])
-            
-            print(f"[THROTTLE_LOADER] 舊格式 油門數據點數: {len(driver1_throttle)}, {len(driver2_throttle)}, {len(distance_data)}")
-            
-            # 檢查是否為單車手模式
-            is_single_driver = (self.current_session and 
-                              self.current_session.get('driver2') is None)
-            
-            print(f"[THROTTLE_LOADER] 單車手模式: {is_single_driver}")
-            
-            # 構建處理後的數據結構
+            # 生成處理後的數據結構
             processed = {
                 'metadata': {
                     'analysis_type': 'throttle_comparison',
-                    'is_single_driver': is_single_driver,
-                    'drivers': [],
-                    'track_length': max(distance_data) if distance_data else 5807.0,
-                    'sectors': self._generate_sector_data(distance_data)
+                    'drivers': drivers_info,
+                    'track_length': 5807.0,  # 預設賽道長度(可根據賽道調整)
+                    'sectors': [
+                        {'sector': 1, 'start_distance': 0.0, 'end_distance': 1935.0},
+                        {'sector': 2, 'start_distance': 1935.0, 'end_distance': 4129.0},
+                        {'sector': 3, 'start_distance': 4129.0, 'end_distance': 5807.0}
+                    ]
                 },
-                'throttle_data': {
-                    'distance': distance_data,
-                    'driver1_throttle': driver1_throttle,
-                    'driver1_name': comparison_info.get('driver1', 'Driver 1')
-                },
-                'statistics': {},
-                'timestamp': self._get_current_timestamp()
+                'throttle_data': self._generate_mock_throttle_data(driver_comparison),
+                'statistics': self._calculate_throttle_statistics(driver_comparison),
+                'raw_data': raw_data  # 保留原始數據供參考
             }
             
-            # 根據模式添加車手信息和數據
-            if is_single_driver:
-                # 單車手模式：只添加一個車手，但保持數據結構一致
-                processed['throttle_data']['driver2_throttle'] = []  # 空的車手2數據
-                processed['throttle_data']['driver2_name'] = ""   # 空的車手2名稱
-                processed['metadata']['drivers'] = [
-                    {
-                        'code': comparison_info.get('driver1', 'Driver 1'),
-                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                        'compound': comparison_info.get('compound1', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life1', 0)
-                    }
-                ]
-                processed['statistics'] = self._calculate_throttle_statistics_single(driver1_throttle, distance_data)
-                print(f"[THROTTLE_LOADER] ✅ 單車手舊格式數據處理完成")
-            else:
-                # 雙車手模式：添加兩個車手
-                processed['metadata']['drivers'] = [
-                    {
-                        'code': comparison_info.get('driver1', 'Driver 1'),
-                        'lap_time': comparison_info.get('lap_time1', 'N/A'),
-                        'compound': comparison_info.get('compound1', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life1', 0)
-                    },
-                    {
-                        'code': comparison_info.get('driver2', 'Driver 2'),
-                        'lap_time': comparison_info.get('lap_time2', 'N/A'),
-                        'compound': comparison_info.get('compound2', 'Unknown'),
-                        'tyre_life': comparison_info.get('tyre_life2', 0)
-                    }
-                ]
-                processed['throttle_data']['driver2_throttle'] = driver2_throttle
-                processed['throttle_data']['driver2_name'] = comparison_info.get('driver2', 'Driver 2')
-                processed['statistics'] = self._calculate_throttle_statistics_new(driver1_throttle, driver2_throttle, distance_data)
-                print(f"[THROTTLE_LOADER] ✅ 雙車手舊格式數據處理完成")
+            # 填入車手信息
+            if 'driver1' in driver_comparison:
+                processed['metadata']['drivers'].append(
+                    driver_comparison['driver1'].get('driver_code', 'Unknown')
+                )
+            if 'driver2' in driver_comparison:
+                processed['metadata']['drivers'].append(
+                    driver_comparison['driver2'].get('driver_code', 'Unknown')
+                )
             
-            print(f"[THROTTLE_LOADER] ✅ 舊格式數據處理完成")
             return processed
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_LOADER] 舊格式數據處理失敗: {str(e)}")
-            raise
+            print(f"[ERROR] [SPEED] 處理油門數據失敗: {str(e)}")
+            return {}
     
-    def _get_current_timestamp(self) -> str:
-        """獲取當前時間戳"""
-        from datetime import datetime
-        return datetime.now().strftime("%Y%m%d_%H%M%S")
-        """獲取當前時間戳"""
-        from datetime import datetime
-        return datetime.now().strftime("%Y%m%d_%H%M%S")
-    
-    def _validate_session_info(self, session_info: Dict[str, Any]) -> bool:
-        """驗證會話信息"""
-        required_fields = ['year', 'race', 'driver1', 'driver2', 'lap1', 'lap2']
-        
-        for field in required_fields:
-            if field not in session_info:
-                error_msg = f"缺少必要參數: {field}"
-                print(f"[ERROR] [RPM_LOADER] {error_msg}")
-                self.load_error.emit(error_msg)
-                return False
-        
-        return True
-
-
-# 主程式測試（已移除模擬數據功能）
-if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
-    import sys
-    
-    app = QApplication(sys.argv)
-    
-    # 測試油門數據載入器
-    loader = ThrottleAnalysisDataLoader()
-    
-    print("[TEST] 油門分析數據載入器已完全重構，移除所有模擬數據功能")
-    print("[TEST] 現在只會從真實JSON檔案載入數據")
-    
-    sys.exit(0)
-    
-    def _parse_function13_output(self, cli_output: str) -> Optional[Dict[str, Any]]:
-        """解析Function 13的CLI輸出"""
+    def _generate_mock_throttle_data(self, driver_comparison: dict) -> dict:
+        """生成模擬油門數據 (開發階段使用)"""
         try:
-            print(f"[RPM_LOADER] 📊 解析Function 13輸出...")
+            import numpy as np
             
-            # 尋找JSON輸出
-            lines = cli_output.split('\n')
-            json_data = None
+            # 生成距離點 (每50米一個點)
+            distances = np.arange(0, 5807, 50)
             
-            for line in lines:
-                line = line.strip()
-                if line.startswith('{') and 'rpm' in line.lower():
-                    try:
-                        json_data = json.loads(line)
-                        break
-                    except json.JSONDecodeError:
-                        continue
-            
-            if json_data:
-                # 轉換為RPM分析格式
-                rpm_data = self._convert_to_rpm_format(json_data)
-                return rpm_data
-            else:
-                # 從文字輸出中提取RPM信息
-                return self._extract_rpm_from_text(cli_output)
+            # 生成模擬速度曲線
+            def generate_throttle_curve(base_throttle=250, variation=0):
+                throttles = []
+                for dist in distances:
+                    # 模擬賽道特性: 直線高速、彎道低速
+                    if 0 <= dist < 800:  # 起/終點直線
+                        throttle = base_throttle + (dist / 800) * 70 + variation
+                    elif 800 <= dist < 1200:  # 第一彎角區
+                        throttle = base_throttle - 80 + np.sin((dist - 800) / 100) * 20 + variation
+                    elif 1200 <= dist < 2800:  # 中段高速區
+                        throttle = base_throttle + 60 + np.sin(dist / 200) * 15 + variation
+                    elif 2800 <= dist < 1000:  # 複合彎角
+                        throttle = base_throttle - 60 + np.cos(dist / 150) * 25 + variation
+                    elif 1000 <= dist < 4800:  # 高速直線
+                        throttle = base_throttle + 80 + (dist - 1000) / 1300 * 20 + variation
+                    else:  # 最終區間
+                        throttle = base_throttle - 40 + np.sin(dist / 100) * 30 + variation
+                    
+                    # 添加隨機變化
+                    throttle += np.random.normal(0, 3)
+                    throttles.append(max(120, min(100, throttle)))  # 限制在合理範圍
                 
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 解析Function 13輸出失敗: {e}")
-            return None
-    
-    def _build_cache_filename(self) -> str:
-        """構建緩存檔案名稱"""
-        year = self.current_session['year']
-        race = self.current_session['race'].replace(' ', '_')
-        session_type = 'R'  # 正賽
-        
-        filename = f"f1_data_{year}_{race}_{session_type}.pkl"
-        return filename
-    
-    def _convert_cached_to_rpm(self, cached_data: Any) -> Optional[Dict[str, Any]]:
-        """將緩存數據轉換為RPM格式"""
-        try:
-            print(f"[RPM_LOADER] 🔄 轉換緩存數據為RPM格式...")
+                return [{'distance': float(d), 'throttle': float(s)} 
+                       for d, s in zip(distances, throttles)]
             
-            # 檢查緩存數據類型
-            if isinstance(cached_data, dict) and 'session' in cached_data:
-                # FastF1會話數據格式
-                return self._convert_session_to_rpm(cached_data)
-            else:
-                # 嘗試直接使用現有數據
-                return self._extract_rpm_from_raw_data(cached_data)
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 轉換緩存數據失敗: {e}")
-            return None
-    
-    def _convert_session_to_rpm(self, session_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """將會話數據轉換為RPM格式"""
-        try:
-            # 模擬從會話數據中提取RPM信息
-            rpm_data = {
-                'source': 'CachedSession',
-                'session_info': self.current_session,
-                'rpm_telemetry': {
-                    'driver1_rpm_data': self._generate_rpm_points_from_session(session_data, 'driver1'),
-                    'driver2_rpm_data': self._generate_rpm_points_from_session(session_data, 'driver2'),
-                    'track_info': self._extract_track_info_from_session(session_data),
-                    'engine_info': {'max_rpm': 12000, 'idle_rpm': 1500, 'rev_limit': 11500}
-                },
-                'timestamp': self._get_current_timestamp()
+            driver1_code = driver_comparison.get('driver1', {}).get('driver_code', 'VER')
+            driver2_code = driver_comparison.get('driver2', {}).get('driver_code', 'LEC')
+            
+            result = {
+                'driver1': {
+                    'driver_code': driver1_code,
+                    'throttle_data': generate_throttle_curve(248, 2)  # 稍快的基準速度
+                }
             }
             
-            return rpm_data
+            # 如果有第二位車手
+            if 'driver2' in driver_comparison:
+                result['driver2'] = {
+                    'driver_code': driver2_code,
+                    'throttle_data': generate_throttle_curve(246, -1)  # 稍慢的基準速度
+                }
+            
+            return result
             
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 會話數據轉換失敗: {e}")
-            return None
+            print(f"[ERROR] [SPEED] 生成模擬數據失敗: {e}")
+            return {}
     
-    def _generate_rpm_points_from_session(self, session_data: Dict[str, Any], driver: str) -> List[Dict[str, Any]]:
-        """從會話數據生成RPM數據點"""
-        import numpy as np
-        
+    def _calculate_throttle_statistics(self, driver_comparison: dict) -> dict:
+        """計算速度統計信息"""
         try:
-            # 生成基於真實賽道的RPM數據點
-            distances = np.arange(0, 5807, 25)  # 每25米一個點
-            rpm_points = []
+            # 基於模擬數據的統計計算
+            stats = {
+                'driver1_stats': {
+                    'max_throttle': 318.2,
+                    'avg_throttle': 246.8,
+                    'min_throttle': 142.3,
+                    'sector_avg': {
+                        'S1': 198.5,
+                        'S2': 267.8,
+                        'S3': 201.4
+                    }
+                }
+            }
             
-            for i, dist in enumerate(distances):
-                # 模擬真實的RPM變化
-                base_rpm = 3000 + (i % 100) * 80
-                variation = np.sin(dist / 100) * 2000
-                gear_shift = 1000 if i % 20 == 0 else 0  # 模擬換檔
+            # 如果有第二位車手
+            if 'driver2' in driver_comparison:
+                stats['driver2_stats'] = {
+                    'max_throttle': 315.7,
+                    'avg_throttle': 244.3,
+                    'min_throttle': 145.1,
+                    'sector_avg': {
+                        'S1': 196.8,
+                        'S2': 265.2,
+                        'S3': 203.1
+                    }
+                }
                 
-                rpm = max(1500, min(11800, base_rpm + variation + gear_shift))
-                
-                rpm_points.append({
-                    'distance': float(dist),
-                    'rpm': int(rpm)
-                })
+                stats['comparison'] = {
+                    'throttle_advantage': 'driver1',
+                    'max_throttle_diff': 2.5,
+                    'avg_throttle_diff': 2.5,
+                    'sector_diff': {
+                        'S1': 1.7,
+                        'S2': 2.6,
+                        'S3': -1.7
+                    }
+                }
             
-            return rpm_points
+            return stats
             
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 生成RPM數據點失敗: {e}")
-            return []
+            print(f"[ERROR] [SPEED] 計算統計信息失敗: {e}")
+            return {}
     
-    def _extract_track_info_from_session(self, session_data: Dict[str, Any]) -> Dict[str, Any]:
-        """從會話數據提取賽道信息"""
+    def _generate_sector_data(self, distance_data: list) -> list:
+        """根據距離數據生成賽道分段信息"""
         try:
-            # 預設賽道信息（可以根據實際數據調整）
-            track_info = {
-                'total_distance': 5807.0,
-                'sectors': [
+            if not distance_data:
+                # 預設分段（日本鈴鹿賽道）
+                return [
                     {'sector': 1, 'start_distance': 0.0, 'end_distance': 1935.0},
                     {'sector': 2, 'start_distance': 1935.0, 'end_distance': 4129.0},
                     {'sector': 3, 'start_distance': 4129.0, 'end_distance': 5807.0}
                 ]
-            }
             
-            return track_info
-            
+            track_length = max(distance_data)
+            return [
+                {'sector': 1, 'start_distance': 0.0, 'end_distance': track_length / 3},
+                {'sector': 2, 'start_distance': track_length / 3, 'end_distance': 2 * track_length / 3},
+                {'sector': 3, 'start_distance': 2 * track_length / 3, 'end_distance': track_length}
+            ]
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 提取賽道信息失敗: {e}")
-            return {}
-    
-
-    
-    def _convert_to_rpm_format(self, json_data: Dict[str, Any]) -> Dict[str, Any]:
-        """將通用JSON數據轉換為RPM格式"""
-        try:
-            # 從JSON數據中提取RPM資料
-            rpm_telemetry = None
-            distance_data = []
-            driver1_rpm_data = []
-            driver2_rpm_data = []
-            
-            # 檢查 results.telemetry_comparison.RPM 結構
-            if 'results' in json_data and 'telemetry_comparison' in json_data['results']:
-                telemetry_comp = json_data['results']['telemetry_comparison']
-                
-                # 提取RPM資料
-                if 'RPM' in telemetry_comp:
-                    rpm_data = telemetry_comp['RPM']
-                    driver1_rpm_data = rpm_data.get('driver1_data', [])
-                    driver2_rpm_data = rpm_data.get('driver2_data', [])
-                
-                # 提取距離資料 (從speed_difference中取得)
-                if 'speed_difference' in json_data['results'] and 'distance' in json_data['results']['speed_difference']:
-                    distance_data = json_data['results']['speed_difference']['distance']
-                
-                # 如果沒有找到distance，嘗試從Speed資料中的距離
-                elif not distance_data and 'Speed' in telemetry_comp:
-                    speed_data = telemetry_comp['Speed']
-                    distance_data = speed_data.get('distance', [])
-                
-                # 如果還是沒有距離資料，生成基於資料點數量的距離
-                if not distance_data and (driver1_rpm_data or driver2_rpm_data):
-                    data_length = max(len(driver1_rpm_data), len(driver2_rpm_data))
-                    distance_data = list(range(0, data_length * 10, 10))  # 每10米一個點
-            
-            # 構建標準RPM數據格式
-            formatted_data = {
-                'metadata': json_data.get('metadata', {}),
-                'rpm_data': {
-                    'distance': distance_data,
-                    'driver1_rpm': driver1_rpm_data,
-                    'driver2_rpm': driver2_rpm_data,
-                    'driver1_name': json_data.get('metadata', {}).get('driver1', 'Driver 1'),
-                    'driver2_name': json_data.get('metadata', {}).get('driver2', 'Driver 2')
-                },
-                'statistics': {
-                    'driver1_stats': self._calculate_rpm_stats(driver1_rpm_data),
-                    'driver2_stats': self._calculate_rpm_stats(driver2_rpm_data),
-                    'comparison': self._calculate_rpm_comparison(driver1_rpm_data, driver2_rpm_data)
-                },
-                'timestamp': self._get_current_timestamp()
-            }
-            
-            return formatted_data
-            
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] JSON轉RPM格式失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
-    
-    def _calculate_rpm_stats(self, rpm_data: List[float]) -> Dict[str, float]:
-        """計算RPM統計資料"""
-        if not rpm_data:
-            return {'max_rpm': 0, 'min_rpm': 0, 'avg_rpm': 0}
-        
-        return {
-            'max_rpm': max(rpm_data),
-            'min_rpm': min(rpm_data), 
-            'avg_rpm': sum(rpm_data) / len(rpm_data)
-        }
-    
-    def _calculate_rpm_comparison(self, driver1_rpm: List[float], driver2_rpm: List[float]) -> Dict[str, float]:
-        """計算RPM對比統計"""
-        if not driver1_rpm or not driver2_rpm:
-            return {'max_rpm_diff': 0, 'avg_rpm_diff': 0}
-        
-        stats1 = self._calculate_rpm_stats(driver1_rpm)
-        stats2 = self._calculate_rpm_stats(driver2_rpm)
-        
-        return {
-            'max_rpm_diff': stats1['max_rpm'] - stats2['max_rpm'],
-            'avg_rpm_diff': stats1['avg_rpm'] - stats2['avg_rpm']
-        }
-    
-    def _extract_rpm_from_text(self, text_output: str) -> Optional[Dict[str, Any]]:
-        """從文字輸出中提取RPM信息"""
-        import re
-        
-        try:
-            print(f"[RPM_LOADER] 📝 從文字輸出提取RPM信息...")
-            
-            lines = text_output.split('\n')
-            rpm_info = {}
-            
-            # 尋找RPM相關信息
-            for line in lines:
-                # 提取平均RPM
-                avg_match = re.search(r'平均.*RPM[:\s]*(\d+)', line, re.IGNORECASE)
-                if avg_match:
-                    rpm_info['avg_rpm'] = int(avg_match.group(1))
-                
-                # 提取最高RPM
-                max_match = re.search(r'最高.*RPM[:\s]*(\d+)', line, re.IGNORECASE)
-                if max_match:
-                    rpm_info['max_rpm'] = int(max_match.group(1))
-                
-                # 提取最低RPM
-                min_match = re.search(r'最低.*RPM[:\s]*(\d+)', line, re.IGNORECASE)
-                if min_match:
-                    rpm_info['min_rpm'] = int(min_match.group(1))
-            
-            # 如果有基本RPM信息，生成對應的數據
-            if rpm_info:
-                return self._build_rpm_data_from_stats(rpm_info)
-            else:
-                return None
-                
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 文字RPM提取失敗: {e}")
-            return None
-    
-    def _build_rpm_data_from_stats(self, rpm_stats: Dict[str, int]) -> Dict[str, Any]:
-        """根據RPM統計信息構建數據"""
-        try:
-            # 生成基於統計信息的RPM數據
-            avg_rpm = rpm_stats.get('avg_rpm', 8000)
-            max_rpm = rpm_stats.get('max_rpm', 11000)
-            min_rpm = rpm_stats.get('min_rpm', 3000)
-            
-            rpm_data = {
-                'source': 'TextExtraction',
-                'session_info': self.current_session,
-                'rpm_telemetry': {
-                    'driver1_rpm_data': self._generate_rpm_from_stats(avg_rpm, max_rpm, min_rpm, 'driver1'),
-                    'driver2_rpm_data': self._generate_rpm_from_stats(avg_rpm, max_rpm, min_rpm, 'driver2'),
-                    'track_info': {'total_distance': 5807.0},
-                    'engine_info': {'max_rpm': max_rpm, 'idle_rpm': min_rpm, 'rev_limit': max_rpm}
-                },
-                'timestamp': self._get_current_timestamp()
-            }
-            
-            return rpm_data
-            
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 構建RPM數據失敗: {e}")
-            return None
-    
-    def _generate_rpm_from_stats(self, avg_rpm: int, max_rpm: int, min_rpm: int, driver: str) -> List[Dict[str, Any]]:
-        """根據統計信息生成RPM數據點"""
-        import numpy as np
-        
-        try:
-            distances = np.arange(0, 5807, 50)
-            rpm_points = []
-            
-            for dist in distances:
-                # 在統計範圍內生成變化
-                rpm_range = max_rpm - min_rpm
-                normalized_pos = (dist % 1000) / 1000  # 0-1之間的位置
-                
-                # 基於位置和統計生成RPM
-                rpm = min_rpm + (rpm_range * (0.5 + 0.3 * np.sin(normalized_pos * 2 * np.pi)))
-                rpm += np.random.normal(0, rpm_range * 0.1)  # 加入變化
-                
-                # 為不同車手加入差異
-                if driver == 'driver2':
-                    rpm *= 0.98  # 車手2略低一點
-                
-                rpm = max(min_rpm, min(max_rpm, rpm))
-                
-                rpm_points.append({
-                    'distance': float(dist),
-                    'rpm': int(rpm)
-                })
-            
-            return rpm_points
-            
-        except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 統計生成RPM數據失敗: {e}")
+            print(f"[ERROR] 生成分段數據失敗: {e}")
             return []
     
-    def cache_rpm_data(self, rpm_data: Dict[str, Any]) -> bool:
-        """緩存RPM數據"""
+    def _calculate_throttle_statistics_new(self, driver1_throttle: list, driver2_throttle: list, distance_data: list = None) -> dict:
+        """計算新格式速度統計信息，包含分段統計"""
         try:
-            cache_filename = self._build_rpm_cache_filename()
-            cache_path = os.path.join(self.cache_dir, cache_filename)
+            if not driver1_throttle or not driver2_throttle:
+                return {}
             
-            with open(cache_path, 'wb') as f:
-                pickle.dump(rpm_data, f)
+            stats = {
+                'driver1_stats': {
+                    'max_throttle': max(driver1_throttle),
+                    'min_throttle': min(driver1_throttle),
+                    'avg_throttle': sum(driver1_throttle) / len(driver1_throttle)
+                },
+                'driver2_stats': {
+                    'max_throttle': max(driver2_throttle),
+                    'min_throttle': min(driver2_throttle),
+                    'avg_throttle': sum(driver2_throttle) / len(driver2_throttle)
+                }
+            }
             
-            print(f"[RPM_LOADER] 💾 RPM數據已緩存至: {cache_path}")
-            return True
+            # 計算差值
+            stats['comparison'] = {
+                'max_throttle_diff': stats['driver1_stats']['max_throttle'] - stats['driver2_stats']['max_throttle'],
+                'avg_throttle_diff': stats['driver1_stats']['avg_throttle'] - stats['driver2_stats']['avg_throttle']
+            }
+            
+            # 計算分段統計
+            if distance_data and len(distance_data) == len(driver1_throttle) == len(driver2_throttle):
+                sector_stats = self._calculate_sector_statistics(distance_data, driver1_throttle, driver2_throttle)
+                if sector_stats:
+                    stats['sector_stats'] = sector_stats
+            
+            return stats
             
         except Exception as e:
-            print(f"[ERROR] [RPM_LOADER] 緩存RPM數據失敗: {e}")
-            return False
+            print(f"[ERROR] 計算新格式統計信息失敗: {e}")
+            return {}
     
-    def _build_rpm_cache_filename(self) -> str:
-        """構建RPM緩存檔案名稱"""
-        if not self.current_session:
-            return "rpm_data_cache.pkl"
+    def _calculate_sector_statistics(self, distance_data: list, driver1_throttle: list, driver2_throttle: list) -> dict:
+        """計算分段統計信息"""
+        try:
+            if not distance_data or not driver1_throttle or not driver2_throttle:
+                return {}
             
-        year = self.current_session['year']
-        race = self.current_session['race'].replace(' ', '_')
-        driver1 = self.current_session['driver1']
-        driver2 = self.current_session['driver2']
-        
-        filename = f"rpm_analysis_{year}_{race}_{driver1}_vs_{driver2}.pkl"
-        return filename
+            max_distance = max(distance_data)
+            
+            # 定義分段邊界（大約等分三段）
+            sector_boundaries = [
+                max_distance * 0.33,  # S1 結束
+                max_distance * 0.67,  # S2 結束
+                max_distance          # S3 結束
+            ]
+            
+            sector_stats = {}
+            
+            for sector_num in range(1, 4):
+                # 確定分段範圍
+                start_dist = sector_boundaries[sector_num - 2] if sector_num > 1 else 0
+                end_dist = sector_boundaries[sector_num - 1]
+                
+                # 找到該分段內的數據點
+                sector_indices = [
+                    i for i, dist in enumerate(distance_data)
+                    if start_dist <= dist <= end_dist
+                ]
+                
+                if sector_indices:
+                    # 提取該分段的油門數據
+                    sector_driver1_throttles = [driver1_throttle[i] for i in sector_indices]
+                    sector_driver2_throttles = [driver2_throttle[i] for i in sector_indices]
+                    
+                    # 計算該分段統計
+                    sector_stats[f'sector_{sector_num}'] = {
+                        'driver1_max_throttle': max(sector_driver1_throttles),
+                        'driver1_avg_throttle': sum(sector_driver1_throttles) / len(sector_driver1_throttles),
+                        'driver2_max_throttle': max(sector_driver2_throttles),
+                        'driver2_avg_throttle': sum(sector_driver2_throttles) / len(sector_driver2_throttles),
+                        'start_distance': start_dist,
+                        'end_distance': end_dist,
+                        'data_points': len(sector_indices)
+                    }
+                    
+                    print(f"[DEBUG] S{sector_num} 統計: 車手1最高={sector_stats[f'sector_{sector_num}']['driver1_max_throttle']:.1f}, 車手2最高={sector_stats[f'sector_{sector_num}']['driver2_max_throttle']:.1f}")
+            
+            return sector_stats
+            
+        except Exception as e:
+            print(f"[ERROR] 計算分段統計失敗: {e}")
+            return {}
 
-# 主程式測試
-if __name__ == "__main__":
-    from PyQt5.QtWidgets import QApplication
-    import sys
-    
-    app = QApplication(sys.argv)
-    
-    # 測試油門數據載入器
-    loader = ThrottleAnalysisDataLoader()
-    
-    # 測試會話信息
-    test_session = {
-        'year': 2025,
-        'race': 'Japan',
-        'driver1': 'VER',
-        'driver2': 'HAM',
-        'lap1': 15,
-        'lap2': 15
-    }
-    
-    def on_data_loaded(data):
-        print(f"[TEST] ✅ 油門數據載入完成: {len(data)} 個項目")
-        print(f"[TEST] 數據來源: {data.get('source', 'Unknown')}")
-        
-    def on_progress(message, percentage):
-        print(f"[TEST] 📊 載入進度: {message} ({percentage}%)")
-        
-    def on_error(error_msg):
-        print(f"[TEST] ❌ 載入錯誤: {error_msg}")
-    
-    # 連接信號
-    loader.data_loaded.connect(on_data_loaded)
-    loader.load_progress.connect(lambda progress: on_progress(f"載入進度", progress))
-    loader.load_error.connect(on_error)
-    
-    # 開始載入
-    QTimer.singleShot(1000, lambda: loader.load_throttle_analysis_data(test_session))
-    
-    sys.exit(app.exec_())
+    def _calculate_throttle_statistics_single(self, driver_throttle: list, distance_data: list = None) -> dict:
+        """計算單車手油門統計信息"""
+        try:
+            if not driver_throttle:
+                return {}
+            
+            stats = {
+                'driver_stats': {
+                    'max_throttle': max(driver_throttle),
+                    'min_throttle': min(driver_throttle),
+                    'avg_throttle': sum(driver_throttle) / len(driver_throttle),
+                    'data_points': len(driver_throttle)
+                },
+                'track_info': {
+                    'total_data_points': len(distance_data) if distance_data else len(driver_throttle),
+                    'track_coverage': max(distance_data) if distance_data else 0
+                }
+            }
+            
+            # 計算分段統計（如果有距離數據）
+            if distance_data and len(distance_data) == len(driver_throttle):
+                sector_stats = self._calculate_single_driver_sector_statistics(distance_data, driver_throttle)
+                if sector_stats:
+                    stats['sector_stats'] = sector_stats
+            
+            return stats
+            
+        except Exception as e:
+            print(f"[ERROR] 計算單車手統計信息失敗: {e}")
+            return {}
+
+    def _calculate_single_driver_sector_statistics(self, distance_data: list, driver_throttle: list) -> dict:
+        """計算單車手分段統計信息"""
+        try:
+            if not distance_data or not driver_throttle:
+                return {}
+            
+            max_distance = max(distance_data)
+            
+            # 定義分段邊界（大約等分三段）
+            sector_boundaries = [
+                max_distance * 0.33,  # S1 結束
+                max_distance * 0.67,  # S2 結束
+                max_distance          # S3 結束
+            ]
+            
+            sector_stats = {}
+            
+            for sector_num in range(1, 4):
+                # 確定分段範圍
+                start_dist = sector_boundaries[sector_num - 2] if sector_num > 1 else 0
+                end_dist = sector_boundaries[sector_num - 1]
+                
+                # 找到該分段內的數據點
+                sector_indices = [
+                    i for i, dist in enumerate(distance_data)
+                    if start_dist <= dist <= end_dist
+                ]
+                
+                if sector_indices:
+                    # 提取該分段的油門數據
+                    sector_throttles = [driver_throttle[i] for i in sector_indices]
+                    
+                    # 計算該分段統計
+                    sector_stats[f'sector_{sector_num}'] = {
+                        'max_throttle': max(sector_throttles),
+                        'min_throttle': min(sector_throttles),
+                        'avg_throttle': sum(sector_throttles) / len(sector_throttles),
+                        'start_distance': start_dist,
+                        'end_distance': end_dist,
+                        'data_points': len(sector_indices)
+                    }
+                    
+                    print(f"[DEBUG] S{sector_num} 單車手統計: 最高={sector_stats[f'sector_{sector_num}']['max_throttle']:.1f}, 平均={sector_stats[f'sector_{sector_num}']['avg_throttle']:.1f}")
+            
+            return sector_stats
+            
+        except Exception as e:
+            print(f"[ERROR] 計算單車手分段統計失敗: {e}")
+            return {}

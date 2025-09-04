@@ -22,18 +22,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
-try:
-    from ...interfaces import IAnalysisModule
-except ImportError:
-    # 如果相對導入失敗，嘗試絕對導入
-    try:
-        from modules.interfaces import IAnalysisModule
-    except ImportError:
-        # 如果都失敗，定義一個基本的接口
-        from PyQt5.QtCore import QObject
-        class IAnalysisModule(QObject):
-            def __init__(self, parent=None):
-                super().__init__(parent)
+from ..interfaces.analysis_module import IAnalysisModule
 
 # 導入基礎類別
 # from f1t_gui_main import PopoutSubWindow  # 不再直接繼承PopoutSubWindow
@@ -1305,7 +1294,7 @@ class PitstopAnalysisModule(IAnalysisModule):
             return True
             
         except Exception as e:
-            self.emit_error(f"模組初始化失敗: {str(e)}")
+            self.module_error.emit(f"模組初始化失敗: {str(e)}")
             return False
     
     def get_widget(self):
@@ -1358,7 +1347,7 @@ class PitstopAnalysisModule(IAnalysisModule):
         try:
             # 驗證參數
             if not self.validate_parameters(year, race, session):
-                self.emit_error(f"無效的參數: {year}, {race}, {session}")
+                self.module_error.emit(f"無效的參數: {year}, {race}, {session}")
                 return False
                 
             # 檢查參數是否有變化（處理初始 None 值）
@@ -1399,7 +1388,7 @@ class PitstopAnalysisModule(IAnalysisModule):
             return True
             
         except Exception as e:
-            self.emit_error(f"更新參數失敗: {str(e)}")
+            self.module_error.emit(f"更新參數失敗: {str(e)}")
             return False
     
     def load_data(self):
@@ -2310,3 +2299,11 @@ class DriverDetailedPitstopWidget(QWidget):
 
 # 導出模組的主要類別
 __all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager', 'TeamPitstopRankingWidget', 'DriverDetailedPitstopWidget']
+
+# 註冊模組到工廠
+try:
+    from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
+    ModuleFactory.register_module(ModuleTypes.PITSTOP_ANALYSIS, PitstopAnalysisModule)
+    print(f"[OK] [MODULE_FACTORY] 進站分析模組已註冊")
+except ImportError as e:
+    print(f"[WARNING] [MODULE_FACTORY] 進站分析模組註冊失敗: {e}")

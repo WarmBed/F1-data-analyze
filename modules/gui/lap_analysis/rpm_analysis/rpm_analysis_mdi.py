@@ -21,21 +21,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
-try:
-    from ...base.base_analysis_module import IAnalysisModule
-except ImportError:
-    # 如果相對導入失敗，嘗試絕對導入
-    try:
-        from modules.gui.base.base_analysis_module import IAnalysisModule
-    except ImportError:
-        try:
-            from modules.interfaces.analysis_module import IAnalysisModule
-        except ImportError:
-            # 如果都失敗，定義一個基本的接口
-            from PyQt5.QtCore import QObject
-            class IAnalysisModule(QObject):
-                def __init__(self, parent=None):
-                    super().__init__(parent)
+from modules.gui.interfaces.analysis_module import IAnalysisModule
 
 class RPMDataManager(QObject):
     """RPM數據管理器 - 負責JSON緩存和CLI備援"""
@@ -369,6 +355,34 @@ class RPMAnalysisModule(IAnalysisModule):
             # 設置主界面
             self._setup_ui()
             
+            # 註冊到分析模組管理器
+            try:
+                from ..analysis_module_manager import get_analysis_module_manager
+                manager = get_analysis_module_manager()
+                
+                # 註冊模組
+                module_id = f"rpm_analysis_{id(self)}"
+                manager.register_module(module_id, self, "rpm_analysis")
+                
+                # 註冊圖表組件
+                if self.rpm_chart_widget:
+                    manager.register_chart_widget(self.rpm_chart_widget)
+                
+                # 保存管理器引用和模組ID
+                self._analysis_manager = manager
+                self._module_id = module_id
+                
+                print(f"[RPM_MDI] ✅ 已註冊到分析模組管理器: {module_id}")
+                
+            except ImportError as e:
+                print(f"[WARNING] [RPM_MDI] 無法導入分析模組管理器: {e}")
+                self._analysis_manager = None
+                self._module_id = None
+            except Exception as e:
+                print(f"[ERROR] [RPM_MDI] 註冊到分析模組管理器失敗: {e}")
+                self._analysis_manager = None
+                self._module_id = None
+            
             self._initialized = True
             print(f"[OK] [RPM_MDI] RPM分析模組初始化完成")
             return True
@@ -501,7 +515,7 @@ class RPMAnalysisModule(IAnalysisModule):
     def get_default_size(self) -> tuple:
         """獲取預設視窗大小"""
         return (1000, 700)  # RPM分析需要較大的視窗來顯示詳細圖表
-    
+
     def update_lap_parameters(self, year: str, race: str, session: str, 
                             driver1: str, driver2: str = None, 
                             lap1: int = 1, lap2: int = 1, 
@@ -760,6 +774,40 @@ class RPMAnalysisModule(IAnalysisModule):
         except Exception as e:
             print(f"[WARNING] [RPM_MDI] 清理模組時發生警告: {e}")
     
+    def cleanup(self):
+        """清理資源 - 實現抽象方法"""
+        try:
+            # 從分析模組管理器解除註冊
+            if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
+                try:
+                    # 解除註冊圖表組件
+                    if hasattr(self, 'rpm_chart_widget') and self.rpm_chart_widget:
+                        self._analysis_manager.unregister_chart_widget(self.rpm_chart_widget)
+                    
+                    # 解除註冊模組
+                    self._analysis_manager.unregister_module(self._module_id)
+                    print(f"[RPM_MDI] ✅ 已從分析模組管理器解除註冊: {self._module_id}")
+                    
+                except Exception as e:
+                    print(f"[ERROR] [RPM_MDI] 從分析模組管理器解除註冊失敗: {e}")
+            
+            # 調用模組清理
+            self.cleanup_module()
+            
+            if hasattr(self, 'rpm_chart_widget') and self.rpm_chart_widget:
+                # 清理圖表組件
+                if hasattr(self.rpm_chart_widget, 'cleanup'):
+                    self.rpm_chart_widget.cleanup()
+                self.rpm_chart_widget.deleteLater()
+                
+            if hasattr(self, 'main_widget') and self.main_widget:
+                # 清理主要組件
+                self.main_widget.deleteLater()
+                
+            print(f"[CLEANUP] RPM分析模組資源清理完成")
+        except Exception as e:
+            print(f"[ERROR] RPM分析模組清理失敗: {e}")
+    
     # ========== 遙測分析整合功能 ==========
     
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
@@ -883,23 +931,71 @@ class RPMAnalysisModule(IAnalysisModule):
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數更新通知 - 與速度分析相同功能"""
         try:
-            print(f"[RPM_MDI] 📡 收到主視窗參數更新: {param_type} = {value}")
+            print(f"[RPM_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
+            print(f"[RPM_NOTIFICATION_DEBUG] 📡 原始參數:")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - param_type: {param_type}")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - value: {value}")
             
             # 更新內部狀態
             if param_type == "year":
                 self.current_year = str(value)
+                print(f"[UPDATE] 年份更新為: {self.current_year}")
             elif param_type == "race":
                 self.current_race = value
+                print(f"[UPDATE] 賽事更新為: {self.current_race}")
             elif param_type == "session":
                 self.current_session = value
+                print(f"[UPDATE] 場次更新為: {self.current_session}")
+            
+            print(f"[RPM_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - 當前年份: {self.current_year}")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - 當前賽事: {self.current_race}")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - 當前賽段: {self.current_session}")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - 當前車手: {getattr(self, 'driver1', 'VER')} vs {getattr(self, 'driver2', 'VER')}")
+            print(f"[RPM_NOTIFICATION_DEBUG]   - 當前圈數: 第{getattr(self, 'lap1', 1)}圈 vs 第{getattr(self, 'lap2', 1)}圈")
             
             # 更新視窗標題
             self.update_window_title()
             
-            print(f"[RPM_MDI] ✅ 參數更新完成: {self.current_year} {self.current_race} {self.current_session}")
+            # 重新載入數據 - 與速度分析模組保持一致
+            if hasattr(self, 'data_manager') and self.data_manager:
+                print(f"[REFRESH] 重新載入RPM數據...")
+                self.data_manager.load_rpm_data(
+                    year=int(self.current_year),
+                    race=self.current_race,
+                    session=self.current_session,
+                    driver1=getattr(self, 'driver1', 'VER'),
+                    driver2=getattr(self, 'driver2', 'VER'),
+                    lap1=getattr(self, 'lap1', 1),
+                    lap2=getattr(self, 'lap2', 1)
+                )
+            elif not hasattr(self, 'data_manager') or self.data_manager is None:
+                print(f"[WARNING] 數據管理器未初始化，嘗試創建...")
+                try:
+                    self.data_manager = RPMDataManager()
+                    self.data_manager.data_loaded.connect(self._update_chart)
+                    self.data_manager.error_occurred.connect(self._handle_error)
+                    print(f"[OK] 數據管理器創建成功，開始載入數據...")
+                    self.data_manager.load_rpm_data(
+                        year=int(self.current_year),
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=getattr(self, 'driver1', 'VER'),
+                        driver2=getattr(self, 'driver2', 'VER'),
+                        lap1=getattr(self, 'lap1', 1),
+                        lap2=getattr(self, 'lap2', 1)
+                    )
+                except Exception as e:
+                    print(f"[ERROR] 創建數據管理器失敗: {e}")
+            else:
+                print(f"[WARNING] 無法重新載入數據 - 數據管理器狀態異常")
+            
+            print(f"[OK] [NOTIFICATION] ⚡ RPM分析模組內容更新成功")
             
         except Exception as e:
             print(f"[ERROR] [RPM_MDI] receive_main_window_update_notification 失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據 - 實現抽象方法"""
@@ -988,7 +1084,7 @@ class RPMAnalysisModule(IAnalysisModule):
         except Exception as e:
             print(f"[ERROR] [RPM_MDI] clear_data 失敗: {e}")
 
-    def update_parameters(self, year: int, race: str, session: str) -> None:
+    def update_parameters(self, year: int, race: str, session: str) -> bool:
         """更新分析參數 - 實現抽象方法"""
         try:
             print(f"[RPM_PARAMS_DEBUG] ========== RPM參數更新開始 ==========")
@@ -1027,51 +1123,67 @@ class RPMAnalysisModule(IAnalysisModule):
             if params_changed or not hasattr(self, '_data_loaded'):
                 print(f"[RPM_PARAMS_DEBUG] 需要載入數據：參數變化={params_changed}, 未載入過={not hasattr(self, '_data_loaded')}")
                 
-                # 檢查並創建數據管理器
-                if not hasattr(self, 'data_manager') or self.data_manager is None:
-                    print(f"[RPM_PARAMS_DEBUG] 創建數據管理器...")
+                # 重新載入數據 - 與速度分析模組保持一致
+                if hasattr(self, 'data_manager') and self.data_manager:
+                    print(f"[REFRESH] 重新載入RPM數據...")
+                    success = self.data_manager.load_rpm_data(
+                        year=int(self.current_year),
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=getattr(self, 'driver1', 'VER'),
+                        driver2=getattr(self, 'driver2', 'VER'),
+                        lap1=getattr(self, 'lap1', 1),
+                        lap2=getattr(self, 'lap2', 1)
+                    )
+                    
+                    if success:
+                        self._data_loaded = True
+                        print(f"[RPM_PARAMS_DEBUG] ✅ RPM 數據重載成功")
+                        return True
+                    else:
+                        print(f"[RPM_PARAMS_DEBUG] ❌ RPM 數據重載失敗")
+                        return False
+                else:
+                    # 檢查並創建數據管理器
+                    print(f"[RPM_PARAMS_DEBUG] 數據管理器不存在，嘗試創建...")
                     try:
-                        from .rpm_analysis_data_loader import RPMAnalysisDataLoader
-                        self.data_manager = RPMAnalysisDataLoader()
-                        # 連接信號（假設這些方法存在）
-                        if hasattr(self, '_on_data_loaded'):
-                            self.data_manager.data_loaded.connect(self._on_data_loaded)
-                        if hasattr(self, '_on_load_error'):
-                            self.data_manager.load_error.connect(self._on_load_error)
-                        print(f"[RPM_PARAMS_DEBUG] ✅ 數據管理器創建成功")
+                        self.data_manager = RPMDataManager()
+                        self.data_manager.data_loaded.connect(self._update_chart)
+                        self.data_manager.error_occurred.connect(self._handle_error)
+                        print(f"[RPM_PARAMS_DEBUG] ✅ 數據管理器創建成功，開始載入數據...")
+                        
+                        success = self.data_manager.load_rpm_data(
+                            year=int(self.current_year),
+                            race=self.current_race,
+                            session=self.current_session,
+                            driver1=getattr(self, 'driver1', 'VER'),
+                            driver2=getattr(self, 'driver2', 'VER'),
+                            lap1=getattr(self, 'lap1', 1),
+                            lap2=getattr(self, 'lap2', 1)
+                        )
+                        
+                        if success:
+                            self._data_loaded = True
+                            print(f"[RPM_PARAMS_DEBUG] ✅ RPM 數據載入成功")
+                            return True
+                        else:
+                            print(f"[RPM_PARAMS_DEBUG] ❌ RPM 數據載入失敗")
+                            return False
+                            
                     except Exception as e:
                         print(f"[RPM_PARAMS_DEBUG] ❌ 數據管理器創建失敗: {e}")
-                        print(f"[RPM_PARAMS_DEBUG] ✅ 參數更新完成（無數據載入）: {self.current_year} {self.current_race} {self.current_session}")
-                        return
-                
-                # 載入 RPM 數據
-                print(f"[RPM_PARAMS_DEBUG] 🚀 開始載入 RPM 數據...")
-                success = self.data_manager.load_rpm_data(
-                    year=int(self.current_year),
-                    race=self.current_race,
-                    session=self.current_session,
-                    driver1=getattr(self, 'driver1', 'VER'),
-                    driver2=getattr(self, 'driver2', 'VER'),
-                    lap1=getattr(self, 'lap1', 1),
-                    lap2=getattr(self, 'lap2', 1)
-                )
-                
-                print(f"[RPM_PARAMS_DEBUG] 數據載入啟動結果: {success}")
-                
-                if success:
-                    self._data_loaded = True
-                    print(f"[RPM_PARAMS_DEBUG] ✅ RPM 數據載入流程已啟動")
-                else:
-                    print(f"[RPM_PARAMS_DEBUG] ❌ RPM 數據載入失敗")
+                        print(f"[RPM_PARAMS_DEBUG] ⚠️ 參數更新完成（無數據載入）: {self.current_year} {self.current_race} {self.current_session}")
+                        return False
             else:
                 print(f"[RPM_PARAMS_DEBUG] 跳過數據載入：參數無變化且已載入過")
-            
-            print(f"[RPM_PARAMS_DEBUG] ✅ 參數更新完成: {self.current_year} {self.current_race} {self.current_session}")
+                return True
             
         except Exception as e:
             print(f"[ERROR] [RPM_PARAMS_DEBUG] update_parameters 失敗: {e}")
+            print(f"[ERROR] [RPM_PARAMS_DEBUG] update_parameters 失敗: {e}")
             import traceback
             traceback.print_exc()
+            return False
 
     def refresh_analysis(self) -> None:
         """重新分析 - 實現抽象方法"""
@@ -1103,3 +1215,11 @@ if __name__ == "__main__":
     else:
         print("模組初始化失敗")
         sys.exit(1)
+
+# 註冊RPM分析模組到工廠
+try:
+    from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
+    ModuleFactory.register_module(ModuleTypes.TELEMETRY_RPM, RPMAnalysisModule)
+    print(f"[OK] [MODULE_FACTORY] RPM分析模組已註冊")
+except ImportError as e:
+    print(f"[WARNING] [MODULE_FACTORY] RPM分析模組註冊失敗: {e}")

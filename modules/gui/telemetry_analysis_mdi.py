@@ -25,7 +25,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 try:
-    from modules.interfaces.analysis_module import IAnalysisModule
+    from modules.gui.interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
 except ImportError:
     # 如果都失敗，定義一個基本的接口
     from PyQt5.QtCore import QObject
@@ -1556,3 +1556,16 @@ class TelemetryAnalysisModule(IAnalysisModule):
             print(f"⚠️ [TELEMETRY_MODULE] 刷新分析時發生錯誤: {e}")
             self.emit_status_update(f"刷新失敗: {str(e)}")
             return False
+
+
+# === ModuleFactory 註冊 ===
+def create_telemetry_analysis_module() -> TelemetryAnalysisModule:
+    """創建遙測分析模組實例"""
+    return TelemetryAnalysisModule()
+
+# 註冊到模組工廠
+try:
+    ModuleFactory.register_module(ModuleTypes.TELEMETRY_ANALYSIS, create_telemetry_analysis_module)
+    print("✅ [MODULE_FACTORY] 遙測分析模組已註冊")
+except Exception as e:
+    print(f"⚠️ [MODULE_FACTORY] 遙測分析模組註冊失敗: {e}")

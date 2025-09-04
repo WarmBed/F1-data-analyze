@@ -26,7 +26,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 try:
-    from modules.interfaces.analysis_module import IAnalysisModule
+    from modules.gui.interfaces.analysis_module import IAnalysisModule
 except ImportError:
     # 如果都失敗，定義一個基本的接口
     from PyQt5.QtCore import QObject
@@ -2425,6 +2425,15 @@ class AccidentKeyEventsWidget(QWidget):
         layout.addWidget(consequence_label)
         
         return card
+
+
+# 註冊模組到工廠
+try:
+    from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
+    ModuleFactory.register_module(ModuleTypes.ACCIDENT_ANALYSIS, AccidentAnalysisModule)
+    print(f"[OK] [MODULE_FACTORY] 事故分析模組已註冊")
+except ImportError as e:
+    print(f"[WARNING] [MODULE_FACTORY] 事故分析模組註冊失敗: {e}")
 
 
 if __name__ == "__main__":

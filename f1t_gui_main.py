@@ -2010,7 +2010,8 @@ class PopoutSubWindow(QMdiSubWindow):
     resized = pyqtSignal()  # 尺寸調整信號
     window_closed = pyqtSignal()  # 視窗關閉信號
     
-    def __init__(self, title="", parent_mdi=None, analysis_module=None):
+    def __init__(self, title="", parent_mdi=None, analysis_module=None, 
+                 sync_enabled=True, parameter_provider=None, global_signal_manager=None, **kwargs):
         super().__init__()
         #print(f"[START] DEBUG: Creating PopoutSubWindow '{title}'")
         self.parent_mdi = parent_mdi
@@ -2020,7 +2021,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         # [TOOL] 新增：模組支援
         self.analysis_module = analysis_module
-        self._parameter_provider = None
+        self._parameter_provider = parameter_provider
         
         # [TOOL] 新增：本地參數存儲 (用於非同步狀態)
         self.local_year = "2025"
@@ -2034,7 +2035,7 @@ class PopoutSubWindow(QMdiSubWindow):
         self.setObjectName("ProfessionalSubWindow")
         
         # 初始化同步設定狀態
-        self.sync_enabled = True  # 預設開啟同步功能
+        self.sync_enabled = sync_enabled  # 使用傳入的同步設定
         
         # 嘗試獲取主視窗引用
         self.main_window = None
@@ -2044,8 +2045,9 @@ class PopoutSubWindow(QMdiSubWindow):
             while current_parent:
                 if hasattr(current_parent, 'year_combo') and hasattr(current_parent, 'race_combo'):
                     self.main_window = current_parent
-                    # [TOOL] 新增：設置參數提供者
-                    self._parameter_provider = MainWindowParameterProvider(current_parent)
+                    # [TOOL] 新增：設置參數提供者（如果沒有傳入的話）
+                    if not self._parameter_provider:
+                        self._parameter_provider = MainWindowParameterProvider(current_parent)
                     print(f"[LINK] [INIT] {title} 已找到主視窗引用")
                     break
                 current_parent = current_parent.parent()
@@ -3665,8 +3667,13 @@ class ContextMenuTreeWidget(QTreeWidget):
         #print(f"[分析] 執行功能: {function_name}")
         
         if self.main_window:
-            # 創建新的分析視窗並添加到當前活動的分頁中
-            self.main_window.create_analysis_window(function_name)
+            # 特殊處理：賽道分析使用專門的方法
+            if function_name == "賽道分析":
+                print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
+                self.main_window.open_track_analysis_window()
+            else:
+                # 創建新的分析視窗並添加到當前活動的分頁中
+                self.main_window.create_analysis_window(function_name)
         
     def export_function(self, function_name):
         #print(f"[匯出] 匯出功能數據: {function_name}")
@@ -5014,7 +5021,12 @@ class StyleHMainWindow(QMainWindow):
                 # 獲取視窗標題用於日誌
                 window_title = "未知視窗"
                 if hasattr(analysis_module, 'get_window_title'):
-                    window_title = analysis_module.get_window_title()
+                    # 傳遞必要的參數給 get_window_title
+                    try:
+                        window_title = analysis_module.get_window_title(year, race, session)
+                    except TypeError:
+                        # 如果新版方法需要參數但舊版不需要，使用備用方案
+                        window_title = f"{getattr(analysis_module, 'display_name', '分析模組')} - {year} {race} {session}"
                 elif hasattr(analysis_module, '_sub_window') and hasattr(analysis_module._sub_window, 'windowTitle'):
                     window_title = analysis_module._sub_window.windowTitle()
                 
@@ -6444,8 +6456,17 @@ class StyleHMainWindow(QMainWindow):
             analysis_window = PopoutSubWindow(window_title, mdi_area)
             
             # 舊版內容創建邏輯
-            content_widget = self._create_legacy_content(function_name)
-            analysis_window.setWidget(content_widget)
+            legacy_result = self._create_legacy_content(function_name)
+            
+            # 檢查是否返回了模組實例（進站分析等新版模組）
+            if isinstance(legacy_result, tuple) and len(legacy_result) == 2:
+                content_widget, analysis_module = legacy_result
+                analysis_window.setWidget(content_widget)
+                analysis_window.analysis_module = analysis_module  # 設置模組引用
+                print(f"[OK] [LEGACY] 設置分析模組到視窗: {analysis_module.__class__.__name__}")
+            else:
+                content_widget = legacy_result
+                analysis_window.setWidget(content_widget)
             
             # 舊版尺寸設定
             if "降雨分析" in function_name:
@@ -6486,43 +6507,31 @@ class StyleHMainWindow(QMainWindow):
     def _create_analysis_module(self, function_name):
         """創建分析模組實例"""
         try:
-            # 導入模組工廠
-            from modules.gui.base import ModuleFactory, ModuleTypes
+            # 導入模組工廠和類型定義
+            from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
             
-            # 確保所有模組都被註冊
-            import modules.gui.telemetry_modules  # 遙測模組
-            import modules.gui.rain_analysis.rain_analysis_module  # 降雨分析模組 - 會自動註冊適配器
+            # 確保所有模組都被導入
+            import modules.gui.rain_analysis.rain_analysis_module  # 降雨分析模組
+            import modules.gui.accident_analysis.accident_analysis_mdi  # 事故分析模組
             
             # 賽道分析模組導入與註冊
             try:
                 from modules.gui.track_analysis import TrackAnalysisModule
-                # 注意：新版本的TrackAnalysisModule不需要register函數
-                
                 TRACK_ANALYSIS_AVAILABLE = True
                 print("[OK] [MODULE_IMPORT] TrackAnalysisModule 載入完成")
             except ImportError as e:
                 TRACK_ANALYSIS_AVAILABLE = False
                 print(f"警告: TrackAnalysisModule 不可用: {e}")
             
-            # 根據功能名稱映射到模組類型 - 注意：更具體的匹配必須放在前面
+            # 根據功能名稱映射到模組類型
             module_mapping = {
-                "降雨分析": ModuleTypes.RAIN_ANALYSIS,
-                "遙測分析": "telemetry_analysis",  # 遙測分析映射 - 必須在"遙測"之前
-                "賽道分析": ModuleTypes.TRACK_MAP,  # 賽道分析映射
-                "位置分析": ModuleTypes.TRACK_MAP,  # 位置分析也映射到賽道
                 "進站分析": "pitstop_analysis",  # 進站分析映射
                 "事故分析": "accident_analysis",  # 事故分析映射
-                "速度分析": "speed_analysis",  # 速度分析映射
-                "遙測": "telemetry_analysis",  # 遙測也使用新版模組
-                "煞車": ModuleTypes.TELEMETRY_BRAKE,
-                "制動": ModuleTypes.TELEMETRY_BRAKE,
-                "油門": ModuleTypes.TELEMETRY_THROTTLE,
-                "節流": ModuleTypes.TELEMETRY_THROTTLE,
-                "轉向": ModuleTypes.TELEMETRY_STEERING,
-                "方向盤": ModuleTypes.TELEMETRY_STEERING,
-                "統計": ModuleTypes.STATISTICS,
-                "賽道": ModuleTypes.TRACK_MAP,
-                "圈速": ModuleTypes.LAP_ANALYSIS
+                "速度分析": "speed_analysis",     # 速度分析映射
+                "油門分析": "throttle_analysis",  # 油門分析映射
+                "RPM分析": "rpm_analysis",       # RPM分析映射
+                "降雨分析": "rain_analysis",     # 降雨分析映射
+                "遙測分析": "telemetry_analysis", # 遙測分析映射
             }
             
             # 尋找匹配的模組類型
@@ -6532,22 +6541,21 @@ class StyleHMainWindow(QMainWindow):
                     module_type = mod_type
                     break
             
-            if module_type and (ModuleFactory.module_exists(module_type) or module_type == "pitstop_analysis" or module_type == "accident_analysis" or module_type == "telemetry_analysis" or module_type == "speed_analysis"):
+            if module_type:
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
                 
-                # 特殊處理進站分析模組
+                # 處理進站分析模組
                 if module_type == "pitstop_analysis":
-                    # 修正：也使用 ModuleFactory 來創建，確保一致性
                     try:
-                        from modules.gui.pitstop_analysis import PitstopAnalysisModule
+                        from modules.gui.pitstop_analysis.pitstop_analysis_mdi import PitstopAnalysisModule
                         print(f"[OK] [MODULE_FACTORY] 創建進站分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = PitstopAnalysisModule()
                         module.parameter_provider = parameter_provider
                         
-                        # 修正：在初始化前先設置當前參數
+                        # 在初始化前先設置當前參數
                         if parameter_provider:
                             current_year = int(parameter_provider.get_current_year())
                             current_race = parameter_provider.get_current_race() 
@@ -6569,12 +6577,14 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 進站分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return None
                 
-                # 特殊處理事故分析模組
+                # 處理事故分析模組
                 elif module_type == "accident_analysis":
                     try:
-                        from modules.gui.accident_analysis import AccidentAnalysisModule
+                        from modules.gui.accident_analysis.accident_analysis_mdi import AccidentAnalysisModule
                         print(f"[OK] [MODULE_FACTORY] 創建事故分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
@@ -6603,9 +6613,11 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 事故分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return None
                 
-                # 特殊處理遙測分析模組
+                # 處理遙測分析模組
                 elif module_type == "telemetry_analysis":
                     try:
                         from modules.gui.telemetry_analysis_mdi import TelemetryAnalysisModule
@@ -6637,44 +6649,12 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return None
                 
-                # 特殊處理速度分析模組
-                elif module_type == "speed_analysis":
-                    try:
-                        from modules.gui.lap_analysis.speed_analysis.speed_analysis_mdi import SpeedAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建速度分析模組實例")
-                        
-                        # 創建模組實例並設置參數提供者
-                        module = SpeedAnalysisModule()
-                        module.parameter_provider = parameter_provider
-                        
-                        # 在初始化前先設置當前參數
-                        if parameter_provider:
-                            current_year = int(parameter_provider.get_current_year())
-                            current_race = parameter_provider.get_current_race() 
-                            current_session = parameter_provider.get_current_session()
-                            
-                            # 直接設置模組參數，避免Unknown標題
-                            module.current_year = str(current_year)
-                            module.current_race = current_race
-                            module.current_session = current_session
-                            
-                            print(f"[INIT] [MODULE_FACTORY] 速度分析模組參數預設為: {current_year} {current_race} {current_session}")
-                        
-                        # 初始化模組
-                        if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 速度分析模組初始化成功")
-                            return module
-                        else:
-                            print(f"[ERROR] [MODULE_FACTORY] 速度分析模組初始化失敗")
-                            return None
-                    except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 速度分析模組創建失敗: {e}")
-                        return None
-                
-                # 特殊處理油門分析模組
-                elif module_type == ModuleTypes.TELEMETRY_THROTTLE:
+                # 處理油門分析模組
+                elif module_type == "throttle_analysis":
                     try:
                         from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_mdi import ThrottleAnalysisModule
                         print(f"[OK] [MODULE_FACTORY] 創建油門分析模組實例")
@@ -6705,25 +6685,21 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 油門分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
                         return None
+                
+                # 處理其他模組類型...
                 else:
-                    # 創建模組
-                    module = ModuleFactory.create_module(module_type, parameter_provider=parameter_provider)
-                    
-                    if module:
-                        print(f"[OK] [MODULE_FACTORY] 成功創建模組: {module_type} ({function_name})")
-                        return module
-                    else:
-                        print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {module_type}")
-            else:
-                print(f"[WARNING] [MODULE_FACTORY] 未找到模組類型: {function_name} -> {module_type}")
-                print(f"   可用模組: {ModuleFactory.get_available_modules()}")
+                    print(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
+                    return None
             
-        except ImportError as e:
-            print(f"[WARNING] [MODULE_FACTORY] 模組導入失敗: {e}")
+            print(f"[INFO] [MODULE_FACTORY] 無法找到匹配的模組類型: {function_name}")
+            return None
+            
         except Exception as e:
-            print(f"[ERROR] [MODULE_FACTORY] 模組創建異常: {e}")
-        
+            print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {e}")
+            return None
         return None
     
     def _extract_module_name(self, function_name):
@@ -6805,7 +6781,7 @@ class StyleHMainWindow(QMainWindow):
                 # 初始化模組
                 if module.initialize_module():
                     print(f"[OK] [LEGACY] 進站分析模組初始化成功")
-                    return module.get_widget()  # 返回內容 widget
+                    return module.get_widget(), module  # 返回 (widget, module) tuple
                 else:
                     print(f"[ERROR] [LEGACY] 進站分析模組初始化失敗")
                     raise Exception("模組初始化失敗")
@@ -7286,16 +7262,21 @@ class StyleHMainWindow(QMainWindow):
                 try:
                     print(f"[CREATE_DEBUG] 📦 正在導入RPM分析模組...")
                     from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_mdi import RPMAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ RPM分析模組導入成功")
                     
                     print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = RPMAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ RPM模組實例創建成功")
+                    
                     analysis_module.parameter_provider = self
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -7370,8 +7351,11 @@ class StyleHMainWindow(QMainWindow):
                         print(f"[ERROR] RPM分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] RPM分析模組創建失敗: {e}，回退到舊版模式")
+                    print(f"[ERROR] ❌ RPM分析模組創建失敗: {e}")
+                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    print(f"[ERROR] 回退到舊版模式")
                     import traceback
+                    print(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
                 print(f"[CREATE_DEBUG] ⚠️ 回退到舊版RPM分析模式")
@@ -7422,50 +7406,112 @@ class StyleHMainWindow(QMainWindow):
                     chart_widget = self.create_placeholder_telemetry_widget('rpm')
                 
             elif chart_type == 'throttle':
-                # 油門分析 - 使用新版模組
-                print(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組...")
+                # 油門分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組架構")
                 
+                # 使用新版模組化架構創建油門分析
                 try:
-                    from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_chart_widget import ThrottleAnalysisChartWidget
-                    from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_data_loader import ThrottleAnalysisDataLoader
+                    print(f"[CREATE_DEBUG] 📦 正在導入油門分析模組...")
+                    from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_mdi import ThrottleAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ 油門分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 📦 創建油門分析組件...")
-                    chart_widget = ThrottleAnalysisChartWidget()
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = ThrottleAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ 油門模組實例創建成功")
                     
-                    # 創建油門資料載入器
-                    print(f"[CREATE_DEBUG] ⚡ 創建油門資料載入器...")
-                    throttle_loader = ThrottleAnalysisDataLoader()
-                    throttle_loader.data_loaded.connect(chart_widget.update_throttle_data)
-                    throttle_loader.load_error.connect(lambda error: print(f"[ERROR] 油門資料載入失敗: {error}"))
+                    analysis_module.parameter_provider = self
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
-                    # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入油門資料: {driver1} vs {driver2}")
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
-                    # 調用載入方法
-                    throttle_loader.load_throttle_data(
-                        year=int(params['year']),
-                        race=params['race'],
-                        session=params['session'],
-                        driver1=driver1 if driver1 else 'VER',
-                        driver2=driver2 if driver2 and driver2 != driver1 else None,
-                        lap1=lap1_number,
-                        lap2=lap2_number if driver2 and driver2 != driver1 else None,
-                        is_fastest_lap=is_fastest_lap
-                    )
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
                     
-                    # 將載入器保存到widget以避免被回收
-                    chart_widget.throttle_loader = throttle_loader
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
                     
-                    print(f"[OK] 油門分析組件創建成功")
-                    
-                except ImportError as e:
-                    print(f"[ERROR] 無法導入油門分析模組: {e}")
-                    chart_widget = self.create_placeholder_telemetry_widget('throttle')
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化油門分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=str(params['year']), 
+                            race=params['race'], 
+                            session=params['session']
+                        )
+                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        
+                        # 創建帶有模組的視窗
+                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 連接視窗關閉信號
+                        sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(analysis_module))
+                        
+                        # 設置視窗大小
+                        sub_window.resize(1200, 800)
+                        
+                        # *** 關鍵修復：添加視窗到MDI區域 ***
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 油門分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "throttle")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）- 與速度分析完全一致
+                        print(f"[CREATE_DEBUG] 🚀 自動載入油門分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 油門分析模組初始化失敗，回退到舊版模式")
+                        
                 except Exception as e:
-                    print(f"[ERROR] 油門分析組件創建失敗: {e}")
+                    print(f"[ERROR] 油門分析模組創建失敗: {e}，回退到舊版模式")
                     import traceback
                     traceback.print_exc()
-                    chart_widget = self.create_placeholder_telemetry_widget('throttle')
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版油門分析模式")
+                
+                # 回退：特殊處理油門分析（舊版模式）
+                if driver2 is None:
+                    driver2 = driver1
+                    lap2_number = lap1_number
+                    print(f"[THROTTLE] 油門分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
                 
             elif chart_type in ['speed', 'brake', 'steering']:
                 # 這些是現有的TelemetryChartWidget支援的類型
@@ -7621,6 +7667,9 @@ class StyleHMainWindow(QMainWindow):
     def open_track_analysis_window(self):
         """開啟賽道分析視窗"""
         try:
+            # 檢查是否為首次使用分析功能
+            self.check_and_remove_welcome_page()
+            
             # 檢查模組是否可用
             try:
                 from modules.gui.track_analysis import TrackAnalysisModule
@@ -7632,33 +7681,50 @@ class StyleHMainWindow(QMainWindow):
                 QMessageBox.warning(self, "警告", "賽道分析模組不可用")
                 return
                 
-            # 創建賽道分析模組實例
-            track_module = TrackAnalysisModule()
+            # 創建參數提供者
+            parameter_provider = MainWindowParameterProvider(self)
+            
+            # 獲取當前參數
+            current_year = parameter_provider.get_current_year()
+            current_race = parameter_provider.get_current_race()
+            current_session = parameter_provider.get_current_session()
+            
+            # 創建賽道分析模組實例，使用當前參數
+            track_module = TrackAnalysisModule(
+                year=current_year,
+                race=current_race,
+                session=current_session
+            )
             
             # 生成視窗標題
-            current_year = self.main_window_parameter_provider.get_current_year()
-            current_race = self.main_window_parameter_provider.get_current_race()
-            current_session = self.main_window_parameter_provider.get_current_session()
-            
             window_title = track_module.get_window_title(current_year, current_race, current_session)
+            
+            # 獲取當前 MDI 區域
+            current_mdi_area = self.get_current_mdi_area()
+            if not current_mdi_area:
+                QMessageBox.warning(self, "警告", "無法找到當前 MDI 區域")
+                return
             
             # 創建 PopoutSubWindow
             sub_window = PopoutSubWindow(
-                parent=self,
                 title=window_title,
+                parent_mdi=current_mdi_area,  # 使用當前 MDI 區域
                 analysis_module=track_module,  # 傳遞分析模組
                 sync_enabled=True,  # 預設使用同步模式
-                parameter_provider=self.main_window_parameter_provider,
-                global_signal_manager=self.global_signal_manager
+                parameter_provider=parameter_provider,
+                global_signal_manager=getattr(self, 'global_signal_manager', None)
             )
             
+            # 設置賽道分析模組為視窗內容
+            sub_window.setWidget(track_module)
+            
             # 添加到 MDI 區域
-            self.mdi_area.addSubWindow(sub_window)
+            current_mdi_area.addSubWindow(sub_window)
             sub_window.show()
             
             # 連接信號
             sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
-            track_module.module_error.connect(lambda msg: self.show_error_message(f"賽道分析錯誤: {msg}"))
+            track_module.module_error.connect(lambda msg: self.show_error_message("賽道分析錯誤", msg))
             
             # 記錄視窗
             self.active_subwindows.append(sub_window)

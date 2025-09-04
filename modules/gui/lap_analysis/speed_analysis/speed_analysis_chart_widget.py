@@ -35,6 +35,7 @@ class SpeedChartWidget(QWidget):
         self.driver1_name = "Driver 1"
         self.driver2_name = "Driver 2"
         self.sectors = []
+        self.is_single_driver = False  # 新增：單車手模式標記 - 與油門分析一致
         
         # 顏色設定
         self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
@@ -115,6 +116,9 @@ class SpeedChartWidget(QWidget):
         self.driver1_name = driver1_name
         self.driver2_name = driver2_name
         self.sectors = sectors or []
+        
+        # 新增：更新單車手模式標記 - 與油門分析一致
+        self.is_single_driver = (driver1_name == driver2_name)
         
         # 計算數據範圍
         if distance:
@@ -409,15 +413,15 @@ class SpeedChartWidget(QWidget):
             # 計算需要顯示的車手數量來調整標籤大小
             drivers_to_show = []
             
-            # 檢查是否為單車手模式（兩個車手名稱相同）
-            is_single_driver = (self.driver1_name == self.driver2_name)
+            # 使用新的單車手模式標記 - 與油門分析一致
+            # is_single_driver = (self.driver1_name == self.driver2_name)  # 舊方法，已改用標記
             
             # 只添加有效且不重複的車手資訊
             if driver1_speed_at_position is not None and self.driver1_name:
                 drivers_to_show.append((self.driver1_name, driver1_speed_at_position, self.driver1_color))
             
             # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
-            if (not is_single_driver and 
+            if (not self.is_single_driver and 
                 driver2_speed_at_position is not None and 
                 self.driver2_name and 
                 self.driver2_name != self.driver1_name):
@@ -540,10 +544,10 @@ class SpeedChartWidget(QWidget):
         
         painter.setFont(QFont("Arial", 9))
         
-        # 檢查是否為單車手模式
-        is_single_driver = (self.driver1_name == self.driver2_name or 
-                           not self.driver2_name or 
-                           not self.driver2_speed)
+        # 使用新的單車手模式標記 - 與油門分析一致
+        # is_single_driver = (self.driver1_name == self.driver2_name or 
+        #                    not self.driver2_name or 
+        #                    not self.driver2_speed)  # 舊方法，已改用標記
         
         # 車手1圖例
         painter.setPen(QPen(self.driver1_color, 2))
@@ -552,7 +556,7 @@ class SpeedChartWidget(QWidget):
         painter.drawText(legend_x + 25, legend_y - 5, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, self.driver1_name)
         
         # 只有在非單車手模式且車手名稱不同時才顯示車手2圖例
-        if not is_single_driver and self.driver2_name != self.driver1_name:
+        if not self.is_single_driver and self.driver2_name != self.driver1_name:
             painter.setPen(QPen(self.driver2_color, 2))
             painter.drawLine(legend_x, legend_y + 20, legend_x + 20, legend_y + 20)
             painter.setPen(QPen(self.axis_color, 1))
@@ -1094,6 +1098,32 @@ class SpeedAnalysisChartWidget(QWidget):
             # 隱藏統計表格，但保留狀態資訊欄
             self.toggle_button.setText("▼")  # 向下箭頭表示可以展開
             self.stats_container.setMaximumHeight(80)  # 保持足夠高度顯示狀態欄
+        else:
+            # 顯示統計表格
+            self.toggle_button.setText("▲")  # 向上箭頭表示可以收起
+            self.stats_container.setMaximumHeight(300)  # 展開高度
+    
+    def set_statistics_visibility(self, visible: bool) -> bool:
+        """設置統計面板顯示狀態 - 供分析模組管理器調用"""
+        try:
+            print(f"[SPEED_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            
+            if visible:
+                # 顯示統計面板
+                self.stats_container.setVisible(True)
+                self.stats_table.setVisible(True)
+                self.toggle_button.setText("▲")
+                self.stats_container.setMaximumHeight(300)
+            else:
+                # 隱藏整個統計容器
+                self.stats_container.setVisible(False)
+            
+            print(f"[SPEED_CHART] ✅ 統計面板顯示狀態設置完成")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEED_CHART] 設置統計面板顯示狀態失敗: {e}")
+            return False
             self.stats_container.setMinimumHeight(80)
         else:
             # 顯示統計表格
@@ -1182,8 +1212,13 @@ class SpeedAnalysisChartWidget(QWidget):
             
             if is_single_driver_mode:
                 print(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
+                # 設置單車手模式標記 - 與油門分析一致
+                self.is_single_driver = True
                 # 清空車手2的數據，只顯示車手1
                 driver2_speed = []
+            else:
+                # 雙車手模式
+                self.is_single_driver = False
                 driver2_name = ""
             
             # 更新圖表

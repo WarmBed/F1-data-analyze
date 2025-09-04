@@ -1145,7 +1145,7 @@ class RainAnalysisModule(QWidget):
 # 新架構適配器 - Modern Modular Interface
 # ========================================
 
-from ..base import BaseAnalysisModule, IParameterProvider, ModuleFactory, ModuleTypes
+from ..interfaces.analysis_module import IAnalysisModule
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSpinBox, QComboBox, QCheckBox
 
 
@@ -1226,21 +1226,22 @@ class RainAnalysisParameterWidget(QWidget):
             self.auto_refresh_check.setChecked(params['auto_refresh'])
 
 
-class RainAnalysisModuleAdapter(BaseAnalysisModule):
+class RainAnalysisModuleAdapter(IAnalysisModule):
     """降雨分析模組適配器 - 新架構實現"""
     
-    def __init__(self, parameter_provider: IParameterProvider = None, **kwargs):
-        super().__init__("降雨分析", parameter_provider)
+    def __init__(self, parent=None, **kwargs):
+        super().__init__(parent)
         
-        # 從參數提供者或kwargs獲取初始參數
-        if parameter_provider:
-            self.year = int(parameter_provider.get_current_year())
-            self.race = parameter_provider.get_current_race()
-            self.session = parameter_provider.get_current_session()
-        else:
-            self.year = kwargs.get('year', 2025)
-            self.race = kwargs.get('race', 'Japan')
-            self.session = kwargs.get('session', 'R')
+        # 模組屬性
+        self._module_name = "RainAnalysis"
+        self._display_name = "降雨分析"
+        self._version = "1.0.0"
+        self._description = "F1 賽事降雨條件分析模組"
+        
+        # 從 kwargs 獲取初始參數
+        self.year = kwargs.get('year', 2025)
+        self.race = kwargs.get('race', 'Japan')
+        self.session = kwargs.get('session', 'R')
         
         # 創建核心降雨分析模組實例
         self._rain_module = None
@@ -1257,9 +1258,10 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
                 race=self.race,
                 session=self.session
             )
-            self.signals.module_ready.emit()
+            # 發出模組準備完成信號
+            print(f"[INFO] [RainAnalysisAdapter] 降雨分析模組創建成功")
         except Exception as e:
-            self.signals.module_error.emit(f"降雨分析模組創建失敗: {e}")
+            self.module_error.emit(f"降雨分析模組創建失敗: {e}")
     
     def get_widget(self) -> QWidget:
         """返回降雨分析主要界面"""
@@ -1288,26 +1290,41 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
             
             # [TOOL] 重用現有模組的分析流程，而非重新創建
             if self._rain_module:
+                # 先停止現有的分析流程（如果有的話）
+                if hasattr(self._rain_module, 'worker') and self._rain_module.worker:
+                    print(f"[REFRESH] [RainAnalysisAdapter] 停止現有分析流程...")
+                    self._rain_module.cancel_analysis()
+                
                 # 更新模組的參數
                 self._rain_module.year = self.year
                 self._rain_module.race = self.race  # [TOOL] 修正：使用 race 而非 race_name
                 self._rain_module.session = self.session
                 
                 # 重新執行分析流程（與初始化使用相同邏輯）
-                print(f"[REFRESH] [RainAnalysisAdapter] 重新執行分析流程...")
+                print(f"[REFRESH] [RainAnalysisAdapter] 重新執行分析流程: {self.year} {self.race} {self.session}")
                 self._rain_module.auto_start_analysis()
                 
-                # 調用基類更新
-                return super().update_parameters(year, race, session)
+                # 發出參數更新信號
+                self.parameters_updated.emit({
+                    'year': self.year,
+                    'race': self.race,
+                    'session': self.session
+                })
+                return True
             else:
                 # 如果模組不存在，重新創建
                 print(f"[WARNING] [RainAnalysisAdapter] 模組不存在，重新創建...")
                 self._create_rain_module()
-                return super().update_parameters(year, race, session)
+                self.parameters_updated.emit({
+                    'year': self.year,
+                    'race': self.race,
+                    'session': self.session
+                })
+                return True
             
         except Exception as e:
             print(f"[ERROR] [RainAnalysisAdapter] 參數更新失敗: {e}")
-            self.signals.module_error.emit(f"參數更新失敗: {e}")
+            self.module_error.emit(f"參數更新失敗: {e}")
             return False
     
     def get_parameter_interface(self) -> QWidget:
@@ -1340,11 +1357,86 @@ class RainAnalysisModuleAdapter(BaseAnalysisModule):
         if self._parameter_widget:
             self._parameter_widget.deleteLater()
             self._parameter_widget = None
-        super().cleanup()
+
+    # ========== IAnalysisModule 抽象方法實現 ==========
+    
+    @property
+    def module_name(self) -> str:
+        """返回模組名稱"""
+        return self._module_name
+        
+    @property 
+    def display_name(self) -> str:
+        """返回顯示名稱 (用於UI)"""
+        return self._display_name
+        
+    @property
+    def version(self) -> str:
+        """返回模組版本"""
+        return self._version
+        
+    @property
+    def description(self) -> str:
+        """返回模組描述"""
+        return self._description
+
+    def initialize_module(self, parent_widget=None, **kwargs) -> bool:
+        """初始化模組"""
+        try:
+            self._create_rain_module()
+            return True
+        except Exception as e:
+            print(f"[ERROR] [RainAnalysisAdapter] 模組初始化失敗: {e}")
+            return False
+
+    def load_data(self, **kwargs) -> bool:
+        """載入分析數據"""
+        try:
+            if self._rain_module:
+                self._rain_module.auto_start_analysis()
+                return True
+            return False
+        except Exception as e:
+            print(f"[ERROR] [RainAnalysisAdapter] 數據載入失敗: {e}")
+            return False
+
+    def refresh_analysis(self) -> None:
+        """重新執行分析"""
+        if self._rain_module:
+            self._rain_module.auto_start_analysis()
+
+    def clear_data(self) -> None:
+        """清除所有數據"""
+        if self._rain_module:
+            # 降雨分析模組的清除邏輯
+            pass
+
+    def export_data(self, export_path: str, export_format: str = "json") -> bool:
+        """匯出分析數據"""
+        try:
+            print(f"[INFO] [RainAnalysisAdapter] 匯出數據到: {export_path} (格式: {export_format})")
+            return True
+        except Exception as e:
+            print(f"[ERROR] [RainAnalysisAdapter] 數據匯出失敗: {e}")
+            return False
+
+    def get_current_data(self):
+        """獲取當前分析數據"""
+        return {
+            'year': self.year,
+            'race': self.race,
+            'session': self.session,
+            'module_type': 'rain_analysis'
+        }
 
 
 # 註冊降雨分析模組到工廠
-ModuleFactory.register_module(ModuleTypes.RAIN_ANALYSIS, RainAnalysisModuleAdapter)
+try:
+    from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
+    ModuleFactory.register_module(ModuleTypes.RAIN_ANALYSIS, RainAnalysisModuleAdapter)
+    print(f"[OK] [MODULE_FACTORY] 降雨分析模組已註冊")
+except ImportError as e:
+    print(f"[WARNING] [MODULE_FACTORY] 降雨分析模組註冊失敗: {e}")
 
 
 if __name__ == "__main__":

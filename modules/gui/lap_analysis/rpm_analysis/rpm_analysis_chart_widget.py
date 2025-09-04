@@ -1126,6 +1126,28 @@ class RPMAnalysisChartWidget(QWidget):
             self.toggle_button.setText("▲")  # 向上箭頭表示可以收縮
             # 調用自適應高度函數
             self._adjust_table_height()
+    
+    def set_statistics_visibility(self, visible: bool) -> bool:
+        """設置統計面板顯示狀態 - 供分析模組管理器調用"""
+        try:
+            print(f"[RPM_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            
+            if visible:
+                # 顯示統計面板
+                self.stats_container.setVisible(True)
+                self.stats_table.setVisible(True)
+                self.toggle_button.setText("▲")
+                self._adjust_table_height()
+            else:
+                # 隱藏整個統計容器
+                self.stats_container.setVisible(False)
+            
+            print(f"[RPM_CHART] ✅ 統計面板顯示狀態設置完成")
+            return True
+            
+        except Exception as e:
+            print(f"[ERROR] [RPM_CHART] 設置統計面板顯示狀態失敗: {e}")
+            return False
             
     def _adjust_table_height(self):
         """自動調整表格高度"""
