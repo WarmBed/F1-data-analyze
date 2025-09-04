@@ -290,8 +290,23 @@ class GlobalSignalManager(QObject):
     lap_analysis_click_linkage = pyqtSignal(float)  # 圈速分析點擊連動信號 (距離值)
     lap_analysis_click_clear = pyqtSignal()  # 圈速分析點擊清除信號
     
+    # 新增：圈速分析連動控制信號
+    lap_analysis_master_linkage_changed = pyqtSignal(bool)  # 總開關狀態變更信號
+    
     def __init__(self):
         super().__init__()
+        # 圈速分析連動總開關狀態
+        self.lap_analysis_linkage_master_enabled = True
+        
+    def set_lap_linkage_enabled(self, enabled: bool):
+        """設置圈速分析連動總開關狀態"""
+        self.lap_analysis_linkage_master_enabled = enabled
+        self.lap_analysis_master_linkage_changed.emit(enabled)
+        print(f"[GLOBAL_SIGNALS] 圈速分析連動總開關: {'啟用' if enabled else '停用'}")
+    
+    def is_lap_linkage_enabled(self) -> bool:
+        """檢查圈速分析連動總開關是否啟用"""
+        return self.lap_analysis_linkage_master_enabled
         
 # 創建全域信號管理器實例
 global_signals = GlobalSignalManager()
@@ -1789,6 +1804,16 @@ class DraggableTitleBar(QWidget):
         self.sync_btn.clicked.connect(self.toggle_x_sync)
         layout.addWidget(self.sync_btn)
         
+        # [LINKAGE] 個別連動控制按鈕
+        self.linkage_btn = QPushButton("🔗")
+        self.linkage_btn.setObjectName("LinkageButton")
+        self.linkage_btn.setFixedSize(16, 16)
+        self.linkage_btn.setToolTip("個別連動：啟用 / 停用")
+        self.linkage_btn.setCheckable(True)
+        self.linkage_btn.setChecked(True)  # 預設啟用
+        self.linkage_btn.clicked.connect(self.toggle_individual_linkage)
+        layout.addWidget(self.linkage_btn)
+        
         # 初始化顏色狀態 - 確保預設綠色正確顯示
         print(f"[GREEN] 接收同步初始化為啟動狀態")
         
@@ -1983,21 +2008,35 @@ class DraggableTitleBar(QWidget):
             # [TOOL] 新增：立即更新標題（同步狀態改變時）
             if hasattr(self.parent_window, 'update_window_title'):
                 self.parent_window.update_window_title()
+    
+    def toggle_individual_linkage(self):
+        """切換個別連動狀態"""
+        is_enabled = self.linkage_btn.isChecked()
         
-        # 找到對應的圖表小部件並設置同步狀態（用於X軸連動）
-        content_widget = self.parent_window.content_widget
-        if content_widget:
-            # 如果內容是圖表小部件
-            if hasattr(content_widget, 'set_sync_enabled'):
-                content_widget.set_sync_enabled(is_enabled)
-                #print(f"[LINK] {'啟用' if is_enabled else '停用'} X軸連動 - {self.parent_window.windowTitle()}")
-            # 如果內容是容器，查找其中的圖表小部件
-            elif hasattr(content_widget, 'findChildren'):
-                charts = content_widget.findChildren(TelemetryChartWidget)
-                for chart in charts:
-                    if hasattr(chart, 'set_sync_enabled'):
-                        chart.set_sync_enabled(is_enabled)
-                        #print(f"[LINK] {'啟用' if is_enabled else '停用'} 圖表X軸連動 - {self.parent_window.windowTitle()}")
+        # 更新按鈕外觀和提示
+        if is_enabled:
+            self.linkage_btn.setText("🔗")
+            self.linkage_btn.setToolTip("個別連動：啟用")
+            print(f"[LINKAGE] 個別連動已啟用")
+        else:
+            self.linkage_btn.setText("🔗❌")
+            self.linkage_btn.setToolTip("個別連動：停用")
+            print(f"[LINKAGE] 個別連動已停用")
+        
+        # 強制重新應用樣式確保顏色更新
+        self.linkage_btn.style().unpolish(self.linkage_btn)
+        self.linkage_btn.style().polish(self.linkage_btn)
+        self.linkage_btn.update()
+        
+        # 通知分析模組更新連動狀態
+        if hasattr(self.parent_window, 'set_linkage_enabled'):
+            self.parent_window.set_linkage_enabled(is_enabled)
+            print(f"[LINKAGE] 視窗 '{self.parent_window.windowTitle()}' 個別連動狀態已更新: {is_enabled}")
+    
+    def set_linkage_button_state(self, enabled: bool):
+        """設置連動按鈕狀態（由主視窗總開關調用）"""
+        self.linkage_btn.setChecked(enabled)
+        self.toggle_individual_linkage()  # 觸發狀態更新
     
     def get_sync_status(self):
         """取得當前X軸連動狀態"""
@@ -2343,6 +2382,30 @@ class PopoutSubWindow(QMdiSubWindow):
             }
             #SyncButton:checked:hover {
                 background-color: #00FF00;  /* 綠色懸停 */
+            }
+            
+            /* 個別連動按鈕 - 藍色主題 */
+            #LinkageButton {
+                background-color: #2196F3;  /* 藍色 - 連動啟用 */
+                color: white;
+                border: 1px solid #1976D2;
+                border-radius: 3px;
+                font-size: 8px;
+                font-weight: bold;
+                text-align: center;
+            }
+            #LinkageButton:hover {
+                background-color: #42A5F5;  /* 藍色懸停 */
+            }
+            #LinkageButton:pressed {
+                background-color: #1565C0;  /* 藍色按下 */
+            }
+            #LinkageButton:!checked {
+                background-color: #9E9E9E;  /* 灰色 - 連動停用 */
+                border: 1px solid #757575;
+            }
+            #LinkageButton:!checked:hover {
+                background-color: #BDBDBD;  /* 灰色懸停 */
             }
             
             /* 視窗控制按鈕 - 與主視窗保持一致 */
@@ -4809,6 +4872,17 @@ class StyleHMainWindow(QMainWindow):
                     self.update_all_action = self.main_toolbar.insertAction(next_action, update_action)
                 else:
                     self.update_all_action = self.main_toolbar.addAction(update_action)
+                
+                # 添加圈速分析連動總開關
+                self.lap_linkage_action = QAction("🔗 圈速連動", self)
+                self.lap_linkage_action.setCheckable(True)
+                self.lap_linkage_action.setChecked(True)  # 預設啟用
+                self.lap_linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
+                
+                if next_action:
+                    self.main_toolbar.insertAction(next_action, self.lap_linkage_action)
+                else:
+                    self.main_toolbar.addAction(self.lap_linkage_action)
                 
                 print("[LAP_CONTROL] ✅ 圈速分析控件成功添加到工具欄")
                 print(f"[LAP_CONTROL] 📊 工具欄狀態檢查:")
@@ -8290,7 +8364,94 @@ class StyleHMainWindow(QMainWindow):
         pass
     
     def toggle_lap_analysis_linkage(self, checked):
-        """切換圈速分析X軸連動功能"""
+        """切換圈速分析連動功能總開關"""
+        try:
+            print(f"[LAP_LINKAGE] 圈速分析連動總開關: {'啟用' if checked else '停用'}")
+            
+            # 更新全域信號管理器的連動狀態
+            if hasattr(global_signals, 'set_lap_linkage_enabled'):
+                global_signals.set_lap_linkage_enabled(checked)
+            
+            # 通知所有圈速分析模組更新連動狀態
+            for analysis_module in self.lap_analysis_windows:
+                try:
+                    if hasattr(analysis_module, 'speed_chart_widget') and analysis_module.speed_chart_widget:
+                        analysis_module.speed_chart_widget.set_master_linkage_enabled(checked)
+                    elif hasattr(analysis_module, 'rpm_chart_widget') and analysis_module.rpm_chart_widget:
+                        analysis_module.rpm_chart_widget.set_master_linkage_enabled(checked)
+                    elif hasattr(analysis_module, 'throttle_chart_widget') and analysis_module.throttle_chart_widget:
+                        analysis_module.throttle_chart_widget.set_master_linkage_enabled(checked)
+                    
+                    print(f"[LAP_LINKAGE] 已通知模組 {type(analysis_module).__name__} 更新連動狀態")
+                except Exception as e:
+                    print(f"[ERROR] [LAP_LINKAGE] 通知模組時發生錯誤: {e}")
+            
+            # 通知所有MDI子視窗的個別連動按鈕更新狀態
+            mdi_windows = self.mdi_area.subWindowList()
+            for window in mdi_windows:
+                # 檢查是否為圈速分析相關的MDI子視窗
+                widget = window.widget()
+                if hasattr(widget, 'windowTitle') and any(analysis_type in widget.windowTitle() 
+                    for analysis_type in ['速度分析', 'RPM分析', '油門分析']):
+                    # 獲取MDI子視窗的標題欄
+                    if hasattr(window, 'title_bar_widget') and hasattr(window.title_bar_widget, 'set_linkage_button_state'):
+                        window.title_bar_widget.set_linkage_button_state(checked)
+                        print(f"[LAP_LINKAGE] 已通知MDI子視窗 '{widget.windowTitle()}' 更新個別連動按鈕狀態")
+            
+        except Exception as e:
+            print(f"[ERROR] [LAP_LINKAGE] 切換連動總開關失敗: {e}")
+    
+    def get_lap_linkage_enabled(self):
+        """獲取圈速分析連動總開關狀態"""
+        if hasattr(self, 'lap_linkage_action'):
+            return self.lap_linkage_action.isChecked()
+        return True  # 預設啟用
+        print(f"[LINKAGE_MASTER] 🔗 圈速分析連動總開關: {'啟用' if checked else '停用'}")
+        
+        # 更新全域連動狀態
+        if hasattr(global_signals, 'lap_analysis_linkage_master_enabled'):
+            global_signals.lap_analysis_linkage_master_enabled = checked
+        else:
+            # 如果沒有這個屬性，添加它
+            global_signals.lap_analysis_linkage_master_enabled = checked
+        
+        # 通知所有圈速分析模組總開關狀態變更
+        updated_count = 0
+        for analysis_module in self.lap_analysis_windows:
+            try:
+                # 檢查模組是否有連動控制方法
+                if hasattr(analysis_module, 'set_master_linkage_enabled'):
+                    analysis_module.set_master_linkage_enabled(checked)
+                    updated_count += 1
+                    print(f"[LINKAGE_MASTER] ✅ 已更新 {type(analysis_module).__name__} 總開關狀態")
+                elif hasattr(analysis_module, 'speed_chart_widget'):
+                    # 速度分析模組
+                    if hasattr(analysis_module.speed_chart_widget, 'set_master_linkage_enabled'):
+                        analysis_module.speed_chart_widget.set_master_linkage_enabled(checked)
+                        updated_count += 1
+                        print(f"[LINKAGE_MASTER] ✅ 已更新速度分析模組總開關狀態")
+                elif hasattr(analysis_module, 'rpm_chart_widget'):
+                    # RPM分析模組
+                    if hasattr(analysis_module.rpm_chart_widget, 'set_master_linkage_enabled'):
+                        analysis_module.rpm_chart_widget.set_master_linkage_enabled(checked)
+                        updated_count += 1
+                        print(f"[LINKAGE_MASTER] ✅ 已更新RPM分析模組總開關狀態")
+                elif hasattr(analysis_module, 'throttle_chart_widget'):
+                    # 油門分析模組
+                    if hasattr(analysis_module.throttle_chart_widget, 'set_master_linkage_enabled'):
+                        analysis_module.throttle_chart_widget.set_master_linkage_enabled(checked)
+                        updated_count += 1
+                        print(f"[LINKAGE_MASTER] ✅ 已更新油門分析模組總開關狀態")
+                else:
+                    print(f"[LINKAGE_MASTER] ⚠️ {type(analysis_module).__name__} 不支援連動控制")
+                    
+            except Exception as e:
+                print(f"[LINKAGE_MASTER] ❌ 更新 {type(analysis_module).__name__} 總開關狀態失敗: {e}")
+        
+        print(f"[LINKAGE_MASTER] 📊 總開關狀態更新完成: {updated_count}/{len(self.lap_analysis_windows)} 個模組")
+    
+    def toggle_lap_analysis_x_linkage(self, checked):
+        """切換圈速分析X軸連動功能（保留舊版相容性）"""
         print(f"[連動] 圈速分析X軸連動功能: {'啟用' if checked else '停用'}")
         
         # 更新所有活躍的圖表組件的連動狀態
@@ -9143,6 +9304,30 @@ class StyleHMainWindow(QMainWindow):
         }
         #SyncButton:checked:hover {
             background-color: #00FF00;  /* 綠色懸停 */
+        }
+        
+        /* 個別連動按鈕 - 藍色主題 */
+        #LinkageButton {
+            background-color: #2196F3;  /* 藍色 - 連動啟用 */
+            color: white;
+            border: 1px solid #1976D2;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #LinkageButton:hover {
+            background-color: #42A5F5;  /* 藍色懸停 */
+        }
+        #LinkageButton:pressed {
+            background-color: #1565C0;  /* 藍色按下 */
+        }
+        #LinkageButton:!checked {
+            background-color: #9E9E9E;  /* 灰色 - 連動停用 */
+            border: 1px solid #757575;
+        }
+        #LinkageButton:!checked:hover {
+            background-color: #BDBDBD;  /* 灰色懸停 */
         }
         
         /* 設定按鈕 */

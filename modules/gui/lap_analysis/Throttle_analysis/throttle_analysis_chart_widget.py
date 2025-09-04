@@ -66,8 +66,9 @@ class ThrottleChartWidget(QWidget):
         self.fixed_distance_value = None  # 固定線對應的實際距離值
         self.show_fixed_line = False  # 是否顯示固定線
         
-        # X軸連動功能 (獨立於同步功能)
-        self.linkage_enabled = True  # 是否啟用X軸連動
+        # X軸連動功能 (獨立於同步功能) - 雙層控制
+        self.linkage_enabled = True  # 模組本地連動開關
+        self.master_linkage_enabled = True  # 主視窗總開關狀態
         self.is_sending_linkage = False  # 避免循環信號發送
         self.linkage_distance_value = None  # 連動接收的距離值
         self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
@@ -81,6 +82,10 @@ class ThrottleChartWidget(QWidget):
             # 連接點擊連動信號
             global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
             global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
+            
+            # 連接總開關狀態變更信號
+            if hasattr(global_signals, 'lap_analysis_master_linkage_changed'):
+                global_signals.lap_analysis_master_linkage_changed.connect(self.on_master_linkage_changed)
 
         
         # 拖拉狀態
@@ -654,7 +659,7 @@ class ThrottleChartWidget(QWidget):
                     self.show_fixed_line = True
                     
                     # 發送點擊連動信號給其他圖表
-                    if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                    if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
                         self.is_sending_linkage = True
                         global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
                         self.is_sending_linkage = False
@@ -667,7 +672,7 @@ class ThrottleChartWidget(QWidget):
             self.fixed_distance_value = None
             
             # 發送點擊清除連動信號給其他圖表
-            if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
                 self.is_sending_linkage = True
                 global_signals.lap_analysis_click_clear.emit()
                 self.is_sending_linkage = False
@@ -788,6 +793,41 @@ class ThrottleChartWidget(QWidget):
         self.show_fixed_line = False
         self.fixed_distance_value = None
         self.update()
+    
+    def _is_linkage_fully_enabled(self):
+        """檢查連動功能是否完全啟用（主開關和個別開關都要開啟）"""
+        return self.linkage_enabled and self.master_linkage_enabled
+    
+    def _create_linkage_toolbar(self, toolbar):
+        """建立連動功能工具列"""
+        toolbar.addSeparator()
+        
+        # 個別連動開關
+        self.linkage_button = QPushButton("🔗 個別連動")
+        self.linkage_button.setCheckable(True)
+        self.linkage_button.setChecked(True)  # 預設開啟
+        self.linkage_button.clicked.connect(self.toggle_linkage)
+        toolbar.addWidget(self.linkage_button)
+    
+    def toggle_linkage(self):
+        """切換個別連動狀態"""
+        self.linkage_enabled = not self.linkage_enabled
+        self.linkage_button.setText("🔗 個別連動" if self.linkage_enabled else "🔗❌ 個別連動")
+        self.linkage_button.setChecked(self.linkage_enabled)
+    
+    def set_master_linkage_enabled(self, enabled: bool):
+        """設置主視窗連動總開關狀態"""
+        self.master_linkage_enabled = enabled
+        
+    def on_master_linkage_changed(self, enabled: bool):
+        """響應主視窗連動總開關變更"""
+        self.set_master_linkage_enabled(enabled)
+        if not enabled:
+            # 當總開關關閉時，清除所有連動線
+            self.show_linkage_line = False
+            self.linkage_distance_value = None
+            self.linkage_y_relative = 0.5
+            self.update()
 
 
 class ThrottleAnalysisChartWidget(QWidget):
@@ -1378,10 +1418,20 @@ class ThrottleAnalysisChartWidget(QWidget):
                 return False
                 
         except Exception as e:
-            print(f"[ERROR] [SPEED_CHART] update_lap_parameters 失敗: {e}")
+            print(f"[ERROR] [THROTTLE_CHART] update_lap_parameters 失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
+    
+    def set_master_linkage_enabled(self, enabled: bool):
+        """設置主視窗連動總開關狀態 - 轉發給圖表組件"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_master_linkage_enabled(enabled)
+    
+    def set_linkage_enabled(self, enabled: bool):
+        """設置個別連動狀態 - 轉發給圖表組件"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_linkage_enabled(enabled)
 
 # 主程式測試
 if __name__ == "__main__":

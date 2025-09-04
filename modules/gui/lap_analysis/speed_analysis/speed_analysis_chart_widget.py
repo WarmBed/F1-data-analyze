@@ -66,8 +66,9 @@ class SpeedChartWidget(QWidget):
         self.fixed_distance_value = None  # 固定線對應的實際距離值
         self.show_fixed_line = False  # 是否顯示固定線
         
-        # X軸連動功能 (獨立於同步功能)
-        self.linkage_enabled = True  # 是否啟用X軸連動
+        # X軸連動功能 (獨立於同步功能) - 雙層控制
+        self.linkage_enabled = True  # 模組本地連動開關
+        self.master_linkage_enabled = True  # 主視窗總開關狀態
         self.is_sending_linkage = False  # 避免循環信號發送
         self.linkage_distance_value = None  # 連動接收的距離值
         self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
@@ -81,6 +82,13 @@ class SpeedChartWidget(QWidget):
             # 連接點擊連動信號
             global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
             global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
+            
+            # 連接總開關狀態變更信號
+            global_signals.lap_analysis_master_linkage_changed.connect(self.on_master_linkage_changed)
+            
+            # 連接總開關狀態變更信號
+            if hasattr(global_signals, 'lap_analysis_master_linkage_changed'):
+                global_signals.lap_analysis_master_linkage_changed.connect(self.on_master_linkage_changed)
 
         
         # 拖拉狀態
@@ -611,7 +619,7 @@ class SpeedChartWidget(QWidget):
             self.height() - self.margin_top - self.margin_bottom
         )
         
-        if chart_rect.contains(event.pos()) and global_signals and self.linkage_enabled and not self.is_sending_linkage:
+        if chart_rect.contains(event.pos()) and global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
             # 計算當前滑鼠對應的距離值
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -654,7 +662,7 @@ class SpeedChartWidget(QWidget):
                     self.show_fixed_line = True
                     
                     # 發送點擊連動信號給其他圖表
-                    if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+                    if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
                         self.is_sending_linkage = True
                         global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
                         self.is_sending_linkage = False
@@ -667,7 +675,7 @@ class SpeedChartWidget(QWidget):
             self.fixed_distance_value = None
             
             # 發送點擊清除連動信號給其他圖表
-            if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+            if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
                 self.is_sending_linkage = True
                 global_signals.lap_analysis_click_clear.emit()
                 self.is_sending_linkage = False
@@ -737,7 +745,7 @@ class SpeedChartWidget(QWidget):
         self.mouse_x = -1
         self.mouse_y = -1
         # 發送X軸連動清除信號
-        if global_signals and self.linkage_enabled and not self.is_sending_linkage:
+        if global_signals and self.linkage_enabled and self.master_linkage_enabled and not self.is_sending_linkage:
             self.is_sending_linkage = True
             global_signals.lap_analysis_x_clear.emit()
             self.is_sending_linkage = False
@@ -745,7 +753,7 @@ class SpeedChartWidget(QWidget):
     
     def on_x_linkage_received(self, distance_value: float, y_relative: float):
         """接收來自其他圖表的X軸連動信號"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
             return
         
         # 根據距離值設置連動線 (使用滑鼠追蹤樣式)
@@ -756,7 +764,7 @@ class SpeedChartWidget(QWidget):
     
     def on_x_linkage_clear(self):
         """接收X軸連動清除信號"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
             return
         
         # 清除連動線
@@ -766,12 +774,61 @@ class SpeedChartWidget(QWidget):
         self.update()
     
     def set_linkage_enabled(self, enabled: bool):
-        """設置是否啟用X軸連動功能"""
+        """設置是否啟用X軸連動功能 (模組本地開關)"""
         self.linkage_enabled = enabled
+        
+    def set_master_linkage_enabled(self, enabled: bool):
+        """設置主視窗連動總開關狀態"""
+        self.master_linkage_enabled = enabled
+        
+    def on_master_linkage_changed(self, enabled: bool):
+        """響應主視窗連動總開關變更"""
+        self.set_master_linkage_enabled(enabled)
+        if not enabled:
+            # 當總開關關閉時，清除所有連動線
+            self.show_linkage_line = False
+            self.linkage_distance_value = None
+            self.linkage_y_relative = 0.5
+            self.update()
+    
+    def set_master_linkage_enabled(self, enabled: bool):
+        """設置主視窗連動總開關狀態"""
+        self.master_linkage_enabled = enabled
+        
+    def on_master_linkage_changed(self, enabled: bool):
+        """響應主視窗連動總開關變更"""
+        self.set_master_linkage_enabled(enabled)
+        if not enabled:
+            # 當總開關關閉時，清除所有連動線
+            self.show_linkage_line = False
+            self.linkage_distance_value = None
+            self.linkage_y_relative = 0.5
+            self.update()
+    
+    def _is_linkage_fully_enabled(self):
+        """檢查連動功能是否完全啟用（主開關和個別開關都要開啟）"""
+        return self.linkage_enabled and self.master_linkage_enabled
+    
+    def _create_linkage_toolbar(self, toolbar):
+        """建立連動功能工具列"""
+        toolbar.addSeparator()
+        
+        # 個別連動開關
+        self.linkage_button = QPushButton("🔗 個別連動")
+        self.linkage_button.setCheckable(True)
+        self.linkage_button.setChecked(True)  # 預設開啟
+        self.linkage_button.clicked.connect(self.toggle_linkage)
+        toolbar.addWidget(self.linkage_button)
+    
+    def toggle_linkage(self):
+        """切換個別連動狀態"""
+        self.linkage_enabled = not self.linkage_enabled
+        self.linkage_button.setText("🔗 個別連動" if self.linkage_enabled else "🔗❌ 個別連動")
+        self.linkage_button.setChecked(self.linkage_enabled)
     
     def on_click_linkage_received(self, distance_value: float):
         """接收來自其他圖表的點擊連動信號 (設置固定線)"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
             return
         
         # 設置固定線 (紅色背景樣式)
@@ -781,7 +838,7 @@ class SpeedChartWidget(QWidget):
     
     def on_click_linkage_clear(self):
         """接收點擊連動清除信號"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
             return
         
         # 清除固定線
@@ -1382,6 +1439,16 @@ class SpeedAnalysisChartWidget(QWidget):
             import traceback
             traceback.print_exc()
             return False
+    
+    def set_master_linkage_enabled(self, enabled: bool):
+        """設置主視窗連動總開關狀態 - 轉發給圖表組件"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_master_linkage_enabled(enabled)
+    
+    def set_linkage_enabled(self, enabled: bool):
+        """設置個別連動狀態 - 轉發給圖表組件"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_linkage_enabled(enabled)
 
 # 主程式測試
 if __name__ == "__main__":
