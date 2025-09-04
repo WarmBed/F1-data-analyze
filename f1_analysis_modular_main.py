@@ -328,7 +328,7 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 關鍵事件分析模組未找到: {e}")
             # 後備方案：使用原始方法
             try:
-                from modules.accident_analysis_complete import F1AccidentAnalysisComplete
+                from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalysisComplete
                 accident_analyzer = F1AccidentAnalysisComplete(self.data_loader, f1_analysis_instance=self)
                 if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
                     accident_analyzer.dynamic_team_mapping = self.dynamic_team_mapping.copy()
@@ -354,7 +354,7 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 特殊事件分析模組未找到: {e}")
             # 後備方案：使用原始方法
             try:
-                from modules.accident_analysis_complete import F1AccidentAnalysisComplete
+                from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalysisComplete
                 accident_analyzer = F1AccidentAnalysisComplete(self.data_loader, f1_analysis_instance=self)
                 if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
                     accident_analyzer.dynamic_team_mapping = self.dynamic_team_mapping.copy()
@@ -380,7 +380,7 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 車手嚴重程度分析模組未找到: {e}")
             # 後備方案：使用原始方法
             try:
-                from modules.accident_analysis_complete import F1AccidentAnalysisComplete
+                from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalysisComplete
                 accident_analyzer = F1AccidentAnalysisComplete(self.data_loader, f1_analysis_instance=self)
                 if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
                     accident_analyzer.dynamic_team_mapping = self.dynamic_team_mapping.copy()
@@ -406,7 +406,7 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 車隊風險分析模組未找到: {e}")
             # 後備方案：使用原始方法
             try:
-                from modules.accident_analysis_complete import F1AccidentAnalysisComplete
+                from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalysisComplete
                 accident_analyzer = F1AccidentAnalysisComplete(self.data_loader, f1_analysis_instance=self)
                 if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
                     accident_analyzer.dynamic_team_mapping = self.dynamic_team_mapping.copy()
@@ -432,7 +432,7 @@ class F1AnalysisModularCLI:
             print(f"[ERROR] 所有事件分析模組未找到: {e}")
             # 後備方案：使用原始方法
             try:
-                from modules.accident_analysis_complete import F1AccidentAnalysisComplete
+                from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalysisComplete
                 accident_analyzer = F1AccidentAnalysisComplete(self.data_loader, f1_analysis_instance=self)
                 if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
                     accident_analyzer.dynamic_team_mapping = self.dynamic_team_mapping.copy()
@@ -695,8 +695,8 @@ class F1AnalysisModularCLI:
             elif function_id == 4:
                 print(f"[DEBUG] 執行 function_id == 4 分支 - 獨立事故分析")
                 try:
-                    print(f"[DEBUG] 嘗試導入 modules.accident_analysis")
-                    from modules.accident_analysis import run_accident_analysis_json
+                    print(f"[DEBUG] 嘗試導入 modules.gui.accident_analysis.accident_analysis")
+                    from modules.gui.accident_analysis.accident_analysis import run_accident_analysis_json
                     print(f"[DEBUG] 成功導入事故分析模組")
                     print("\n💥 執行獨立事故分析 (功能4)...")
                     

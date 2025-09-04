@@ -12,7 +12,7 @@ import json
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
-from modules.gui.rain_analysis_module import RainAnalysisModule
+from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModule
 
 class TestRainMarkersWindow(QMainWindow):
     """測試降雨標記的主視窗"""

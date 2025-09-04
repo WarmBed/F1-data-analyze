@@ -21,7 +21,7 @@ from prettytable import PrettyTable
 # 添加模組路徑
 sys.path.append(str(Path(__file__).parent.parent))
 from modules.race_pitstop_statistics_enhanced import RacePitstopStatisticsEnhanced
-from modules.accident_analysis_complete import F1AccidentAnalyzer
+from modules.gui.accident_analysis.accident_analysis_complete import F1AccidentAnalyzer
 
 class SingleDriverCornerAnalysisIntegrated:
     """單一車手詳細彎道分析 - 集成進站與事件版本"""

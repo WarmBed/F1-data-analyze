@@ -71,7 +71,7 @@ class F1AnalysisModuleManager:
             name="降雨強度分析",
             description="分析比賽期間的降雨強度和天氣變化",
             category="weather",
-            module_file="rain_intensity_analyzer_json_fixed",
+            module_file="gui.rain_analysis.rain_intensity_analyzer_json_fixed",
             class_name="RainIntensityAnalyzer",
             parameters=["year", "race", "session"]
         )

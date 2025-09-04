@@ -275,7 +275,7 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
-            from modules.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
+            from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
             print("[RAIN] 執行降雨強度分析 (JSON輸出版)...")
             result = run_rain_intensity_analysis_json(
                 self.data_loader, 
@@ -2316,7 +2316,7 @@ class F1AnalysisFunctionMapper:
     def _execute_driver_statistics_overview(self, **kwargs):
         """執行車手數據統計總覽"""
         try:
-            from modules.driver_statistics_overview import run_driver_statistics_overview
+            from modules.gui.driver_analysis.driver_statistics_overview import run_driver_statistics_overview
             print("[STATS] 執行車手數據統計總覽...")
             run_driver_statistics_overview(
                 self.data_loader,
@@ -2330,7 +2330,7 @@ class F1AnalysisFunctionMapper:
     def _execute_driver_telemetry_statistics(self, **kwargs):
         """執行車手遙測資料統計"""
         try:
-            from modules.driver_telemetry_statistics import run_driver_telemetry_statistics
+            from modules.gui.driver_analysis.driver_telemetry_statistics import run_driver_telemetry_statistics
             print("[TOOL] 執行車手遙測資料統計...")
             run_driver_telemetry_statistics(
                 self.data_loader,
@@ -2372,7 +2372,7 @@ class F1AnalysisFunctionMapper:
     def _execute_all_drivers_comprehensive_full(self, **kwargs):
         """執行完整綜合分析"""
         try:
-            from modules.driver_comprehensive_full import run_driver_comprehensive_full
+            from modules.gui.driver_analysis.driver_comprehensive_full import run_driver_comprehensive_full
             print("👥 執行完整綜合分析...")
             run_driver_comprehensive_full(
                 self.data_loader,

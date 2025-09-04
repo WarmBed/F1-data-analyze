@@ -6,7 +6,7 @@ Telemetry Module - Implementation based on universal interface
 
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QComboBox
 from PyQt5.QtCore import Qt
-from .base_analysis_module import BaseAnalysisModule, IParameterProvider, ModuleTypes, ModuleFactory
+from .base import BaseAnalysisModule, IParameterProvider, ModuleTypes, ModuleFactory
 
 
 class TelemetryModule(BaseAnalysisModule):
