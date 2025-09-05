@@ -3274,6 +3274,9 @@ class PopoutSubWindow(QMdiSubWindow):
             elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
                 print(f"[RPM UPDATE] 檢測到RPM分析視窗，使用專用更新邏輯")
                 self._update_rpm_analysis_chart(json_data)
+            elif '檔位分析' in window_title or 'Gear Analysis' in window_title:
+                print(f"[GEAR UPDATE] 檢測到檔位分析視窗，使用專用更新邏輯")
+                self._update_gear_analysis_chart(json_data)
             else:
                 # 更新遙測圖表
                 if 'telemetry' in json_data:
@@ -3532,6 +3535,84 @@ class PopoutSubWindow(QMdiSubWindow):
             import traceback
             traceback.print_exc()
     
+    def _update_gear_analysis_chart(self, json_data):
+        """更新檔位分析圖表的專用方法"""
+        print(f"[GEAR UPDATE] ========== 開始更新檔位分析圖表 ==========")
+        
+        try:
+            # 尋找檔位分析圖表組件
+            from modules.gui.lap_analysis.gear_analysis.gear_analysis_chart_widget import GearAnalysisChartWidget
+            
+            def find_gear_widgets(widget):
+                """遞歸查找 GearAnalysisChartWidget"""
+                widgets = []
+                if isinstance(widget, GearAnalysisChartWidget):
+                    widgets.append(widget)
+                
+                # 遞歸檢查子組件
+                if hasattr(widget, 'findChildren'):
+                    for child in widget.findChildren(GearAnalysisChartWidget):
+                        widgets.append(child)
+                elif hasattr(widget, 'children'):
+                    for child in widget.children():
+                        widgets.extend(find_gear_widgets(child))
+                        
+                return widgets
+            
+            gear_widgets = find_gear_widgets(self)
+            print(f"[GEAR UPDATE] 找到 {len(gear_widgets)} 個檔位分析圖表組件")
+            
+            if gear_widgets:
+                for i, widget in enumerate(gear_widgets):
+                    print(f"[GEAR UPDATE] 更新第 {i+1} 個檔位分析圖表")
+                    
+                    # 檢查是否有數據載入器
+                    if hasattr(widget, 'gear_loader'):
+                        print(f"[GEAR UPDATE] 找到數據載入器，觸發重新載入")
+                        
+                        # 獲取當前參數
+                        year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
+                        race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
+                        session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
+                        
+                        # 獲取當前選擇的車手和圈數（而不是硬編碼）
+                        driver1 = self.driver1_combo.currentText()
+                        driver2 = self.driver2_combo.currentText() if self.driver2_combo.currentText() != "無" else driver1
+                        lap1 = self.lap1_spinbox.value()
+                        lap2 = self.lap2_spinbox.value()
+                        is_fastest = self.fastest_lap_checkbox.isChecked()
+                        
+                        print(f"[GEAR UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        
+                        # 重新載入數據（使用實際選擇的車手）
+                        widget.gear_loader.load_gear_data(
+                            year=int(year),
+                            race=race,
+                            session=session,
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1,
+                            lap2=lap2,
+                            is_fastest_lap=is_fastest
+                        )
+                        print(f"[GEAR UPDATE] ✅ 已觸發數據重新載入")
+                    else:
+                        print(f"[GEAR UPDATE] ⚠️ 未找到數據載入器")
+                        
+                        # 嘗試直接更新數據（使用JSON數據）
+                        if json_data:
+                            print(f"[GEAR UPDATE] 嘗試直接使用JSON數據更新")
+                            widget.update_gear_data(json_data)
+            else:
+                print(f"[GEAR UPDATE] ⚠️ 未找到檔位分析圖表組件")
+                
+            print(f"[GEAR UPDATE] ========== 檔位分析圖表更新完成 ==========")
+            
+        except Exception as e:
+            print(f"[ERROR] [GEAR UPDATE] 檔位分析圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
     def update_telemetry_chart(self, telemetry_data):
         """更新遙測圖表"""
         print(f"[CHART] 更新遙測圖表資料")
@@ -5343,6 +5424,9 @@ class StyleHMainWindow(QMainWindow):
             elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
                 print("[LAP_CONTROL] 🔧 檢測到RPM分析視窗，觸發專用更新")
                 self._update_rpm_analysis_chart({})
+            elif '檔位分析' in window_title or 'Gear Analysis' in window_title:
+                print("[LAP_CONTROL] ⚙️ 檢測到檔位分析視窗，觸發專用更新")
+                self._update_gear_analysis_chart({})
             else:
                 print(f"[LAP_CONTROL] ℹ️ 未識別的視窗類型: {window_title}")
                 
@@ -6793,6 +6877,8 @@ class StyleHMainWindow(QMainWindow):
             # 確保所有模組都被導入
             import modules.gui.rain_analysis.rain_analysis_module  # 降雨分析模組
             import modules.gui.accident_analysis.accident_analysis_mdi  # 事故分析模組
+            import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
+            import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
             
             # 賽道分析模組導入與註冊
             try:
@@ -6810,6 +6896,8 @@ class StyleHMainWindow(QMainWindow):
                 "速度分析": "speed_analysis",     # 速度分析映射
                 "油門分析": "throttle_analysis",  # 油門分析映射
                 "RPM分析": "rpm_analysis",       # RPM分析映射
+                "檔位分析": "gear_analysis",     # 檔位分析映射
+                "煞車分析": "brake_analysis",    # 煞車分析映射
                 "降雨分析": "rain_analysis",     # 降雨分析映射
                 "遙測分析": "telemetry_analysis", # 遙測分析映射
             }
@@ -6969,6 +7057,78 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 處理檔位分析模組
+                elif module_type == "gear_analysis":
+                    try:
+                        from modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi import GearAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建檔位分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = GearAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 檔位分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 檔位分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 檔位分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 檔位分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理煞車分析模組
+                elif module_type == "brake_analysis":
+                    try:
+                        from modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi import BrakeAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建煞車分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = BrakeAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 煞車分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 煞車分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 煞車分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
                 # 處理其他模組類型...
                 else:
                     print(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
@@ -7008,7 +7168,44 @@ class StyleHMainWindow(QMainWindow):
         elif "遙測" in function_name:
             return TelemetryChartWidget("speed")
         elif "煞車" in function_name or "制動" in function_name:
-            return TelemetryChartWidget("brake")
+            # 使用新的煞車分析模組
+            try:
+                from modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi import BrakeAnalysisModule
+                
+                # 創建參數提供者
+                parameter_provider = MainWindowParameterProvider(self)
+                
+                # 創建模組實例並設置參數提供者
+                module = BrakeAnalysisModule()
+                module.parameter_provider = parameter_provider
+                
+                # 在初始化前先設置當前參數
+                if parameter_provider:
+                    current_year = int(parameter_provider.get_current_year())
+                    current_race = parameter_provider.get_current_race() 
+                    current_session = parameter_provider.get_current_session()
+                    
+                    # 直接設置模組參數
+                    module.current_year = str(current_year)
+                    module.current_race = current_race
+                    module.current_session = current_session
+                    
+                    print(f"[INIT] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
+                
+                # 初始化模組
+                if module.initialize_module():
+                    print(f"[OK] 煞車分析模組初始化成功")
+                    return module
+                else:
+                    print(f"[ERROR] 煞車分析模組初始化失敗")
+                    return TelemetryChartWidget("brake")  # 後備方案
+                    
+            except ImportError as e:
+                print(f"[ERROR] 煞車分析模組導入失敗: {e}")
+                return TelemetryChartWidget("brake")  # 後備方案
+            except Exception as e:
+                print(f"[ERROR] 煞車分析模組創建失敗: {e}")
+                return TelemetryChartWidget("brake")  # 後備方案
         elif "油門" in function_name or "節流" in function_name:
             return TelemetryChartWidget("throttle")
         elif "轉向" in function_name or "方向盤" in function_name:
@@ -7685,6 +7882,156 @@ class StyleHMainWindow(QMainWindow):
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('rpm')
                 
+            elif chart_type == 'gear':
+                # 檔位分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] 🔄 檢測到檔位分析請求，嘗試新版模組架構")
+                
+                # 使用新版模組化架構創建檔位分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入檔位分析模組...")
+                    from modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi import GearAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ 檔位分析模組導入成功")
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = GearAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ 檔位模組實例創建成功")
+                    
+                    analysis_module.parameter_provider = self
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化檔位分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=str(params['year']), 
+                            race=params['race'], 
+                            session=params['session']
+                        )
+                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        
+                        # 創建帶有模組的視窗
+                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 連接視窗關閉信號
+                        sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(analysis_module))
+                        
+                        # 設置視窗大小
+                        width, height = analysis_module.get_default_size()
+                        sub_window.resize(width, height)
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 檔位分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "gear")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入檔位分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 檔位分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] ❌ 檔位分析模組創建失敗: {e}")
+                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    print(f"[ERROR] 回退到舊版模式")
+                    import traceback
+                    print(f"[ERROR] 詳細錯誤追踪:")
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版檔位分析模式")
+                
+                # 回退：舊版檔位分析模式
+                try:
+                    from modules.gui.lap_analysis.gear_analysis.gear_analysis_chart_widget import GearAnalysisChartWidget
+                    from modules.gui.lap_analysis.gear_analysis.gear_analysis_data_loader import GearAnalysisDataLoader
+                    
+                    print(f"[CREATE_DEBUG] 📦 創建檔位分析組件...")
+                    chart_widget = GearAnalysisChartWidget()
+                    
+                    # 創建檔位資料載入器
+                    print(f"[CREATE_DEBUG] 📊 創建檔位資料載入器...")
+                    gear_loader = GearAnalysisDataLoader()
+                    gear_loader.data_loaded.connect(chart_widget.update_gear_data)
+                    gear_loader.load_error.connect(lambda error: print(f"[ERROR] 檔位資料載入失敗: {error}"))
+                    
+                    # 開始載入資料
+                    print(f"[CREATE_DEBUG] 🚀 開始載入檔位資料: {driver1} vs {driver2}")
+                    
+                    session_info = {
+                        'year': params['year'],
+                        'race': params['race'],
+                        'session': params['session'],
+                        'driver1': driver1 if driver1 else 'VER',
+                        'driver2': driver2 if driver2 else 'VER',
+                        'lap1': lap1_number,
+                        'lap2': lap2_number,
+                        'is_fastest_lap': is_fastest_lap
+                    }
+                    
+                    gear_loader.load_gear_analysis_data(session_info)
+                    
+                    # 將載入器保存到widget以避免被回收
+                    chart_widget.gear_loader = gear_loader
+                    
+                    print(f"[OK] 檔位分析組件創建成功")
+                    
+                except ImportError as e:
+                    print(f"[ERROR] 無法導入檔位分析模組: {e}")
+                    chart_widget = self.create_placeholder_telemetry_widget('gear')
+                except Exception as e:
+                    print(f"[ERROR] 檔位分析組件創建失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    chart_widget = self.create_placeholder_telemetry_widget('gear')
+
             elif chart_type == 'throttle':
                 # 油門分析 - 使用新版模組架構
                 print(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組架構")
@@ -7793,7 +8140,106 @@ class StyleHMainWindow(QMainWindow):
                     lap2_number = lap1_number
                     print(f"[THROTTLE] 油門分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
                 
-            elif chart_type in ['speed', 'brake', 'steering']:
+            elif chart_type == 'brake':
+                # 使用新的煞車分析模組
+                print(f"[CREATE_DEBUG] 🎯 檢測到煞車分析請求，嘗試新版模組架構")
+                
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入煞車分析模組...")
+                    from modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi import BrakeAnalysisModule
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = BrakeAnalysisModule()
+                    analysis_module.parameter_provider = self
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化煞車分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=str(params['year']), 
+                            race=params['race'], 
+                            session=params['session']
+                        )
+                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        
+                        # 創建帶有模組的視窗
+                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 連接視窗關閉信號
+                        sub_window.window_closed.connect(lambda: self.on_lap_analysis_window_closed(analysis_module))
+                        
+                        # 設置視窗大小
+                        width, height = analysis_module.get_default_size()
+                        sub_window.resize(width, height)
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 煞車分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "brake")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入煞車分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版煞車模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 煞車分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] 煞車分析模組創建失敗: {e}，回退到舊版模式")
+                    import traceback
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版煞車分析模式")
+                # 回退到舊版
+                chart_widget = TelemetryChartWidget(chart_type)
+                
+            elif chart_type in ['speed', 'steering']:
                 # 這些是現有的TelemetryChartWidget支援的類型
                 chart_widget = TelemetryChartWidget(chart_type)
             else:
