@@ -22,13 +22,25 @@ try:
 except ImportError:
     global_signals = None
 
+# 導入新的連動管理器
+try:
+    from modules.gui.lap_analysis.linkage import LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin, linkage_manager
+except ImportError:
+    LapAnalysisLinkageMixin = object
+    LapAnalysisLinkageDrawingMixin = object
+    linkage_manager = None
+    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+
 # 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
 
-class RPMChartWidget(QWidget):
+class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
     """RPM圖表繪製組件 - 使用 PyQt5 原生繪圖"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # 初始化連動混入類
+        self.__init_linkage__()
         
         # 圖表設置 - 與速度分析保持完全一致
         self.margin_left = 80
@@ -75,27 +87,6 @@ class RPMChartWidget(QWidget):
         self.middle_dragging = False
         self.show_fixed_line = False
         self.fixed_distance_value = None
-        
-        # X軸連動功能 (獨立於同步功能) - 雙層控制
-        self.linkage_enabled = True  # 模組本地連動開關
-        self.master_linkage_enabled = True  # 主視窗總開關狀態
-        self.is_sending_linkage = False  # 避免循環信號發送
-        self.linkage_distance_value = None  # 連動接收的距離值
-        self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
-        self.show_linkage_line = False  # 是否顯示連動線
-        
-        # 連接X軸連動信號
-        if global_signals:
-            global_signals.lap_analysis_x_linkage.connect(self.on_x_linkage_received)
-            global_signals.lap_analysis_x_clear.connect(self.on_x_linkage_clear)
-            
-            # 連接點擊連動信號
-            global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
-            global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
-            
-            # 連接總開關狀態變更信號
-            if hasattr(global_signals, 'lap_analysis_master_linkage_changed'):
-                global_signals.lap_analysis_master_linkage_changed.connect(self.on_master_linkage_changed)
         
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
@@ -182,12 +173,34 @@ class RPMChartWidget(QWidget):
         # 4. 繪製RPM曲線
         self._draw_rpm_curves(painter, chart_rect)
         
-        # 5. 繪製滑鼠追蹤線和固定線
-        self._draw_mouse_tracker(painter, chart_rect)
+        # 5. 繪製固定線
+        if self.show_fixed_line and self.fixed_distance_value is not None:
+            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+            distance_range = current_max_distance - current_min_distance
+            
+            if distance_range > 0 and current_min_distance <= self.fixed_distance_value <= current_max_distance:
+                # 計算固定距離值對應的X位置
+                relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
+                fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
+                self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
         
-        # 5.5. 繪製連動線 (來自其他圖表的X軸連動)
-        if self.show_linkage_line and self.linkage_distance_value is not None:
-            self._draw_linkage_line(painter, chart_rect)
+        # 繪製滑鼠跟隨線
+        if chart_rect.contains(self.mouse_x, self.mouse_y):
+            self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
+        
+        # 5.5. 繪製連動線 (使用混入類方法)
+        if hasattr(self, 'distance_data') and self.distance_data is not None:
+            self.draw_linkage_line(
+                painter, 
+                chart_rect, 
+                self.distance_data,
+                getattr(self, 'driver1_name', 'Driver1'),
+                getattr(self, 'driver2_name', 'Driver2'),
+                getattr(self, 'driver1_rpm', []),
+                getattr(self, 'driver2_rpm', []),
+                "RPM"
+            )
         
         # 6. 繪製圖例
         self._draw_legend(painter)
@@ -370,232 +383,98 @@ class RPMChartWidget(QWidget):
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
     
-    def _draw_mouse_tracker(self, painter: QPainter, chart_rect: QRect):
-        """繪製滑鼠追蹤線和固定線"""
-        # 繪製固定線
-        if self.show_fixed_line and self.fixed_distance_value is not None:
-            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-            distance_range = current_max_distance - current_min_distance
+    def _draw_tracking_line(self, painter: QPainter, chart_rect: QRect, x_pos: int, is_fixed: bool):
+        """繪製追蹤線和數值顯示"""
+        if not chart_rect.contains(x_pos, chart_rect.center().y()):
+            return
             
-            if distance_range > 0:
-                # 計算固定線的X位置
-                relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
-                if 0 <= relative_pos <= 1:
-                    fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
-                    painter.setPen(QPen(QColor(0, 180, 0), 1.5))
-                    painter.drawLine(int(fixed_x), chart_rect.top(), 
-                                   int(fixed_x), chart_rect.bottom())
-                    
-                    # 顯示固定線標籤 - 與速度分析一致
-                    self._draw_fixed_line_label(painter, chart_rect, int(fixed_x), self.fixed_distance_value)
-        
-        # 繪製滑鼠追蹤線
-        if (self.mouse_x > chart_rect.left() and self.mouse_x < chart_rect.right() and
-            self.mouse_y > chart_rect.top() and self.mouse_y < chart_rect.bottom()):
-            
+        # 設置線條樣式
+        if is_fixed:
+            # 固定線：實線，更明顯
+            painter.setPen(QPen(QColor(0, 180, 0), 1.5, Qt.SolidLine))
+        else:
+            # 跟隨線：虛線，較淡
             painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
-            # 垂直線
-            painter.drawLine(self.mouse_x, chart_rect.top(), 
-                           self.mouse_x, chart_rect.bottom())
-            # 水平線
-            painter.drawLine(chart_rect.left(), self.mouse_y, 
-                           chart_rect.right(), self.mouse_y)
             
-            # 顯示當前值
-            if self.distance_data:
-                current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-                current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-                current_min_rpm = self.view_min_rpm if self.view_min_rpm is not None else self.min_rpm
-                current_max_rpm = self.view_max_rpm if self.view_max_rpm is not None else self.max_rpm
+        painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
+        
+        # 計算當前位置對應的距離和RPM值
+        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+        distance_range = current_max_distance - current_min_distance
+        
+        if distance_range > 0 and self.distance_data:
+            # 計算距離值
+            relative_x = x_pos - chart_rect.left()
+            distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+            
+            # 找到最接近的數據點來獲取真實的RPM值
+            driver1_rpm_at_position = None
+            driver2_rpm_at_position = None
+            
+            # 在距離數據中找到最接近的點
+            if self.distance_data and len(self.distance_data) > 0:
+                closest_index = 0
+                min_distance_diff = abs(self.distance_data[0] - distance_value)
                 
-                distance_range = current_max_distance - current_min_distance
-                rpm_range = current_max_rpm - current_min_rpm
+                for i, dist in enumerate(self.distance_data):
+                    distance_diff = abs(dist - distance_value)
+                    if distance_diff < min_distance_diff:
+                        min_distance_diff = distance_diff
+                        closest_index = i
                 
-                if distance_range > 0 and rpm_range > 0:
-                    # 計算當前距離和RPM
-                    distance = current_min_distance + (self.mouse_x - chart_rect.left()) / chart_rect.width() * distance_range
-                    rpm = current_max_rpm - (self.mouse_y - chart_rect.top()) / chart_rect.height() * rpm_range
-                    
-                    # 尋找最接近的數據點並顯示車手RPM值
-                    label_x = self.mouse_x + 10
-                    label_y = self.mouse_y - 60
-                    
-                    # 確保標籤不會超出邊界
-                    if label_x + 150 > self.width():
-                        label_x = self.mouse_x - 160
-                    if label_y < 10:
-                        label_y = self.mouse_y + 10
-                    
-                    # 獲取車手RPM值來計算標籤高度
-                    closest_drivers = self._find_closest_rpm_values(distance)
-                    
-                    # 動態計算標籤高度：距離信息(15px) + 車手信息數量 * 15px + 邊距(15px)
-                    label_height = 30 + len(closest_drivers) * 15
-                    
-                    # 繪製背景 - 修正：與速度分析一致，非固定線使用白色背景
-                    painter.setPen(QPen(self.axis_color, 1))
-                    painter.fillRect(label_x, label_y, 150, label_height, QColor(255, 255, 255, 230))  # 修正透明度為230
-                    painter.drawRect(label_x, label_y, 150, label_height)
-                    
-                    # 顯示數值 - 修正：與速度分析保持一致的字體設置
-                    painter.setFont(QFont("Arial", 9))  # 修正：改為與速度分析一致的字體大小
-                    
-                    text_y = label_y + 15
-                    painter.drawText(label_x + 5, text_y, f"距離: {distance:.0f}m")
-                    
-                    # 顯示車手RPM值（如果有數據的話）
-                    if closest_drivers:
-                        for i, (driver_name, rpm_val, color) in enumerate(closest_drivers):
-                            painter.setPen(QPen(color, 1))
-                            painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {rpm_val:.0f} RPM")
+                # 獲取對應的RPM值
+                if closest_index < len(self.driver1_rpm):
+                    driver1_rpm_at_position = self.driver1_rpm[closest_index]
+                if closest_index < len(self.driver2_rpm):
+                    driver2_rpm_at_position = self.driver2_rpm[closest_index]
             
-    def _find_closest_rpm_values(self, target_distance):
-        """尋找最接近指定距離的RPM值"""
-        if not self.distance_data:
-            return []
+            # 計算需要顯示的車手數量來調整標籤大小
+            drivers_to_show = []
             
-        # 找到最接近的距離索引
-        closest_idx = 0
-        min_diff = float('inf')
-        for i, dist in enumerate(self.distance_data):
-            diff = abs(dist - target_distance)
-            if diff < min_diff:
-                min_diff = diff
-                closest_idx = i
-        
-        drivers_to_show = []
-        
-        # 檢查是否為單車手模式（兩個車手名稱相同）
-        is_single_driver = (self.driver1_name == self.driver2_name)
-        
-        # 車手1
-        if closest_idx < len(self.driver1_rpm):
-            rpm_val = self.driver1_rpm[closest_idx]
-            drivers_to_show.append((self.driver1_name, rpm_val, self.driver1_color))
-        
-        # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
-        if (not is_single_driver and 
-            closest_idx < len(self.driver2_rpm) and
-            self.driver2_name and 
-            self.driver2_name != self.driver1_name):
-            rpm_val = self.driver2_rpm[closest_idx]
-            drivers_to_show.append((self.driver2_name, rpm_val, self.driver2_color))
+            # 只添加有效且不重複的車手資訊
+            if driver1_rpm_at_position is not None and self.driver1_name:
+                drivers_to_show.append((self.driver1_name, driver1_rpm_at_position, self.driver1_color))
             
-        return drivers_to_show
-        
-    def _draw_fixed_line_label(self, painter: QPainter, chart_rect: QRect, x_pos: int, distance_value: float):
-        """繪製固定線標籤 - 與速度分析一致"""
-        # 找到最接近的數據點來獲取真實的RPM值
-        closest_drivers = self._find_closest_rpm_values(distance_value)
-        
-        if closest_drivers:
+            # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
+            if (not getattr(self, 'is_single_driver', False) and 
+                driver2_rpm_at_position is not None and 
+                self.driver2_name and 
+                self.driver2_name != self.driver1_name):
+                drivers_to_show.append((self.driver2_name, driver2_rpm_at_position, self.driver2_color))
+            
             # 根據車手數量動態調整標籤高度
             base_height = 30  # 距離資訊的基本高度
-            driver_height = 15 * len(closest_drivers)  # 每個車手15像素高度
+            driver_height = 15 * len(drivers_to_show)  # 每個車手15像素高度
             label_height = base_height + driver_height
             
             # 繪製數值標籤背景
             label_width = 150
             label_x = min(x_pos + 10, self.width() - label_width - 10)
-            label_y = max(chart_rect.top() + 10, 10)  # 固定位置
+            # 對於固定線，使用固定的Y位置；對於跟隨線，跟隨滑鼠
+            if is_fixed:
+                label_y = max(chart_rect.top() + 10, 10)
+            else:
+                label_y = max(self.mouse_y - label_height - 10, 10)
             
-            # 設置固定線標籤背景顏色 - 修正：與速度分析一致
-            bg_color = QColor(255, 240, 240, 230)  # 固定線使用淺紅色背景
+            # 設置標籤背景顏色
+            bg_color = QColor(255, 240, 240, 230) if is_fixed else QColor(255, 255, 255, 230)
             painter.setPen(QPen(QColor(50, 50, 50), 1))
             painter.setBrush(QBrush(bg_color))
             painter.drawRect(label_x, label_y, label_width, label_height)
             
-            # 繪製數值文字 - 修正：與速度分析保持一致的字體設置
+            # 繪製數值文字
             painter.setPen(QPen(QColor(50, 50, 50), 1))
-            painter.setFont(QFont("Arial", 9))  # 與速度分析一致的字體大小
+            painter.setFont(QFont("Arial", 9))
             
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
             
             # 顯示車手RPM資訊
-            for i, (driver_name, rpm, color) in enumerate(closest_drivers):
+            for i, (driver_name, rpm, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
                 painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {rpm:.0f} RPM")
     
-    def _draw_linkage_line(self, painter: QPainter, chart_rect: QRect):
-        """繪製連動線 (來自其他圖表的X軸位置)"""
-        if not self.linkage_distance_value:
-            return
-            
-        # 計算連動線的X位置
-        current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-        current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        distance_range = current_max_distance - current_min_distance
-        
-        if distance_range <= 0:
-            return
-            
-        # 計算X座標
-        relative_pos = (self.linkage_distance_value - current_min_distance) / distance_range
-        x_pos = chart_rect.left() + int(relative_pos * chart_rect.width())
-        
-        # 檢查是否在圖表範圍內
-        if x_pos < chart_rect.left() or x_pos > chart_rect.right():
-            return
-            
-        # 繪製連動垂直線 (使用滑鼠追蹤線樣式 - 灰色虛線)
-        painter.setPen(QPen(QColor(128, 128, 128), 1, Qt.DashLine))
-        painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
-        
-        # 繪製連動標籤 (使用白色背景，類似滑鼠追蹤)
-        label_width = 160
-        label_height = 60
-        label_x = x_pos + 10
-        
-        # 使用同步的Y軸位置計算標籤位置
-        # linkage_y_relative: 0.0=圖表底部, 1.0=圖表頂部
-        label_y = chart_rect.bottom() - int(self.linkage_y_relative * chart_rect.height()) - label_height // 2
-        
-        # 確保標籤不會超出圖表區域
-        label_y = max(chart_rect.top() + 10, min(label_y, chart_rect.bottom() - label_height - 10))
-        
-        # 如果標籤會超出右邊界，則放在線的左邊
-        if label_x + label_width > chart_rect.right():
-            label_x = x_pos - label_width - 10
-            
-        # 繪製標籤背景 (白色背景，類似滑鼠追蹤)
-        painter.setBrush(QBrush(QColor(255, 255, 255, 230)))  # 白色半透明背景
-        painter.setPen(QPen(QColor(128, 128, 128), 1))
-        painter.drawRect(label_x, label_y, label_width, label_height)
-        
-        # 繪製距離資訊
-        painter.setPen(QPen(QColor(50, 50, 50), 1))
-        painter.setFont(QFont("Arial", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
-        
-        # 顯示當前位置的RPM資訊
-        if self.distance_data and self.driver1_rpm:
-            # 找到最接近的數據點
-            closest_idx = None
-            min_diff = float('inf')
-            for i, dist in enumerate(self.distance_data):
-                diff = abs(dist - self.linkage_distance_value)
-                if diff < min_diff:
-                    min_diff = diff
-                    closest_idx = i
-            
-            if closest_idx is not None:
-                text_y = label_y + 30
-                
-                # 車手1 RPM
-                if closest_idx < len(self.driver1_rpm):
-                    rpm1 = self.driver1_rpm[closest_idx]
-                    painter.setPen(QPen(self.driver1_color, 1))
-                    painter.drawText(label_x + 5, text_y, f"{self.driver1_name}: {rpm1:.0f} RPM")
-                
-                # 車手2 RPM (如果存在)
-                if (self.driver2_rpm and closest_idx < len(self.driver2_rpm) and 
-                    self.driver2_name != self.driver1_name):
-                    rpm2 = self.driver2_rpm[closest_idx]
-                    painter.setPen(QPen(self.driver2_color, 1))
-                    painter.drawText(label_x + 5, text_y + 15, f"{self.driver2_name}: {rpm2:.0f} RPM")
-        
     def clear_fixed_line(self):
         """清除固定線條"""
         self.show_fixed_line = False
@@ -678,14 +557,14 @@ class RPMChartWidget(QWidget):
             
             self.last_drag_pos = event.pos()
         
-        # 發送X軸連動信號 (僅在滑鼠在圖表區域內時)
+        # 發送X軸連動信號 (使用混入類方法)
         chart_rect = QRect(
             self.margin_left, self.margin_top,
             self.width() - self.margin_left - self.margin_right,
             self.height() - self.margin_top - self.margin_bottom
         )
         
-        if chart_rect.contains(event.pos()) and global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
+        if chart_rect.contains(event.pos()):
             # 計算當前滑鼠對應的距離值
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -699,10 +578,9 @@ class RPMChartWidget(QWidget):
                 relative_y = (chart_rect.bottom() - event.y()) / chart_rect.height()
                 relative_y = max(0.0, min(1.0, relative_y))  # 限制範圍
                 
-                # 發送連動信號 (包含Y軸位置)
-                self.is_sending_linkage = True
-                global_signals.lap_analysis_x_linkage.emit(distance_value, relative_y)
-                self.is_sending_linkage = False
+                # 使用連動管理器發送連動信號
+                if linkage_manager and self._is_linkage_fully_enabled():
+                    linkage_manager.send_x_linkage(distance_value, relative_y, self)
         
         self.update()
     
@@ -727,11 +605,8 @@ class RPMChartWidget(QWidget):
                     self.fixed_distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
                     self.show_fixed_line = True
                     
-                    # 發送點擊連動信號給其他圖表
-                    if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
-                        self.is_sending_linkage = True
-                        global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
-                        self.is_sending_linkage = False
+                    # 使用連動管理器發送點擊連動信號
+                    linkage_manager.send_click_linkage(self.fixed_distance_value, sender=self)
                     
                     self.update()
             
@@ -740,11 +615,9 @@ class RPMChartWidget(QWidget):
             self.show_fixed_line = False
             self.fixed_distance_value = None
             
-            # 發送點擊清除連動信號給其他圖表
-            if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
-                self.is_sending_linkage = True
-                global_signals.lap_analysis_click_clear.emit()
-                self.is_sending_linkage = False
+            # 使用連動管理器發送清除信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
             
             self.update()
             
@@ -815,96 +688,13 @@ class RPMChartWidget(QWidget):
         """滑鼠離開事件"""
         self.mouse_x = -1
         self.mouse_y = -1
-        # 發送X軸連動清除信號
-        if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
-            self.is_sending_linkage = True
-            global_signals.lap_analysis_x_clear.emit()
-            self.is_sending_linkage = False
-        self.update()
-    
-    def on_x_linkage_received(self, distance_value: float, y_relative: float):
-        """接收來自其他圖表的X軸連動信號"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 根據距離值設置連動線 (使用滑鼠追蹤樣式)
-        self.linkage_distance_value = distance_value
-        self.linkage_y_relative = y_relative
-        self.show_linkage_line = True
-        self.update()
-    
-    def on_x_linkage_clear(self):
-        """接收X軸連動清除信號"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 清除連動線
-        self.show_linkage_line = False
-        self.linkage_distance_value = None
-        self.linkage_y_relative = 0.5
-        self.update()
-    
-    def set_linkage_enabled(self, enabled: bool):
-        """設置是否啟用X軸連動功能 (模組本地開關)"""
-        self.linkage_enabled = enabled
-        
-    def _is_linkage_fully_enabled(self):
-        """檢查連動功能是否完全啟用（主開關和個別開關都要開啟）"""
-        return self.linkage_enabled and self.master_linkage_enabled
-    
-    def _create_linkage_toolbar(self, toolbar):
-        """建立連動功能工具列"""
-        toolbar.addSeparator()
-        
-        # 個別連動開關
-        self.linkage_button = QPushButton("🔗 個別連動")
-        self.linkage_button.setCheckable(True)
-        self.linkage_button.setChecked(True)  # 預設開啟
-        self.linkage_button.clicked.connect(self.toggle_linkage)
-        toolbar.addWidget(self.linkage_button)
-    
-    def toggle_linkage(self):
-        """切換個別連動狀態"""
-        self.linkage_enabled = not self.linkage_enabled
-        self.linkage_button.setText("🔗 個別連動" if self.linkage_enabled else "🔗❌ 個別連動")
-        self.linkage_button.setChecked(self.linkage_enabled)
-    
-    def set_master_linkage_enabled(self, enabled: bool):
-        """設置主視窗連動總開關狀態"""
-        self.master_linkage_enabled = enabled
-        
-    def on_master_linkage_changed(self, enabled: bool):
-        """響應主視窗連動總開關變更"""
-        self.set_master_linkage_enabled(enabled)
-        if not enabled:
-            # 當總開關關閉時，清除所有連動線
-            self.show_linkage_line = False
-            self.linkage_distance_value = None
-            self.linkage_y_relative = 0.5
-            self.update()
-    
-    def on_click_linkage_received(self, distance_value: float):
-        """接收來自其他圖表的點擊連動信號 (設置固定線)"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 設置固定線 (紅色背景樣式)
-        self.fixed_distance_value = distance_value
-        self.show_fixed_line = True
-        self.update()
-    
-    def on_click_linkage_clear(self):
-        """接收點擊連動清除信號"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 清除固定線
-        self.show_fixed_line = False
-        self.fixed_distance_value = None
+        # 使用連動管理器發送連動清除信號
+        if linkage_manager and self._is_linkage_fully_enabled():
+            linkage_manager.send_x_linkage_clear(self)
         self.update()
 
 
-class RPMAnalysisChartWidget(QWidget):
+class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
     """RPM分析圖表組件主容器"""
     
     # 信號定義
@@ -915,11 +705,21 @@ class RPMAnalysisChartWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # 初始化連動混入類
+        self.__init_linkage__()
+        
+        # 設置更新回調
+        self.set_update_callback(self.update)
+        
         # 數據狀態
         self.current_data = None
         
         # 初始化UI
         self._setup_ui()
+        
+        # 註冊到連動管理器
+        if linkage_manager:
+            linkage_manager.register_module(self, "rpm_analysis")
         
     def _setup_ui(self):
         """設置使用者介面 - 採用速度分析的垂直單欄布局"""
@@ -965,6 +765,10 @@ class RPMAnalysisChartWidget(QWidget):
         # 創建圖表組件
         self.chart_widget = RPMChartWidget()
         layout.addWidget(self.chart_widget)
+        
+        # 確保內部圖表組件也註冊到連動管理器
+        if linkage_manager:
+            linkage_manager.register_module(self.chart_widget, "rpm_analysis_chart")
         
         return container
     

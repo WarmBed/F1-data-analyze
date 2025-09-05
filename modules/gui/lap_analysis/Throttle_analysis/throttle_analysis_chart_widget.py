@@ -22,11 +22,23 @@ try:
 except ImportError:
     global_signals = None
 
-class ThrottleChartWidget(QWidget):
+# 導入新的連動管理器
+try:
+    from modules.gui.lap_analysis.linkage import LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin, linkage_manager
+except ImportError:
+    LapAnalysisLinkageMixin = object
+    LapAnalysisLinkageDrawingMixin = object
+    linkage_manager = None
+    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+
+class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
     """油門圖表繪製組件 - 使用 PyQt5 原生繪圖"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # 初始化連動混入類
+        self.__init_linkage__()
         
         # 數據
         self.distance_data = []
@@ -66,27 +78,18 @@ class ThrottleChartWidget(QWidget):
         self.fixed_distance_value = None  # 固定線對應的實際距離值
         self.show_fixed_line = False  # 是否顯示固定線
         
-        # X軸連動功能 (獨立於同步功能) - 雙層控制
+        # 初始化連動混入類屬性
         self.linkage_enabled = True  # 模組本地連動開關
         self.master_linkage_enabled = True  # 主視窗總開關狀態
         self.is_sending_linkage = False  # 避免循環信號發送
         self.linkage_distance_value = None  # 連動接收的距離值
         self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
         self.show_linkage_line = False  # 是否顯示連動線
+        self.update_callback = None  # 連動回調函數
         
-        # 連接X軸連動信號
-        if global_signals:
-            global_signals.lap_analysis_x_linkage.connect(self.on_x_linkage_received)
-            global_signals.lap_analysis_x_clear.connect(self.on_x_linkage_clear)
-            
-            # 連接點擊連動信號
-            global_signals.lap_analysis_click_linkage.connect(self.on_click_linkage_received)
-            global_signals.lap_analysis_click_clear.connect(self.on_click_linkage_clear)
-            
-            # 連接總開關狀態變更信號
-            if hasattr(global_signals, 'lap_analysis_master_linkage_changed'):
-                global_signals.lap_analysis_master_linkage_changed.connect(self.on_master_linkage_changed)
-
+        # 註冊到連動管理器
+        if linkage_manager:
+            linkage_manager.register_module(self, "throttle_analysis")
         
         # 拖拉狀態
         self.middle_dragging = False  # 中鍵拖拉狀態
@@ -191,8 +194,13 @@ class ThrottleChartWidget(QWidget):
             self._draw_mouse_tracker(painter, chart_rect)
         
         # 繪製連動線 (來自其他圖表的X軸連動)
-        if self.show_linkage_line and self.linkage_distance_value is not None:
-            self._draw_linkage_line(painter, chart_rect)
+        if hasattr(self, 'show_linkage_line') and self.show_linkage_line and self.linkage_distance_value is not None:
+            # 調用混入類的連動線繪製方法
+            self.draw_linkage_line(painter, chart_rect, 
+                                 self.distance_data, 
+                                 self.driver1_name, self.driver2_name,
+                                 self.driver1_throttle, self.driver2_throttle, 
+                                 "%")
             
         # 繪製圖例
         self._draw_legend(painter)
@@ -616,7 +624,7 @@ class ThrottleChartWidget(QWidget):
             self.height() - self.margin_top - self.margin_bottom
         )
         
-        if chart_rect.contains(event.pos()) and global_signals and self.linkage_enabled and not self.is_sending_linkage:
+        if chart_rect.contains(event.pos()) and linkage_manager and self.linkage_enabled:
             # 計算當前滑鼠對應的距離值
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -630,10 +638,9 @@ class ThrottleChartWidget(QWidget):
                 relative_y = (chart_rect.bottom() - event.y()) / chart_rect.height()
                 relative_y = max(0.0, min(1.0, relative_y))  # 限制範圍
                 
-                # 發送連動信號 (包含Y軸位置)
-                self.is_sending_linkage = True
-                global_signals.lap_analysis_x_linkage.emit(distance_value, relative_y)
-                self.is_sending_linkage = False
+                # 使用連動管理器發送連動信號
+                if linkage_manager and self.linkage_enabled:
+                    linkage_manager.send_x_linkage(distance_value, relative_y, self)
         
         self.update()
         
@@ -658,11 +665,9 @@ class ThrottleChartWidget(QWidget):
                     self.fixed_distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
                     self.show_fixed_line = True
                     
-                    # 發送點擊連動信號給其他圖表
-                    if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
-                        self.is_sending_linkage = True
-                        global_signals.lap_analysis_click_linkage.emit(self.fixed_distance_value)
-                        self.is_sending_linkage = False
+                    # 使用連動管理器發送點擊連動信號
+                    if linkage_manager and self.linkage_enabled:
+                        linkage_manager.send_click_linkage(self.fixed_distance_value, sender=self)
                     
                     self.update()
             
@@ -671,11 +676,9 @@ class ThrottleChartWidget(QWidget):
             self.show_fixed_line = False
             self.fixed_distance_value = None
             
-            # 發送點擊清除連動信號給其他圖表
-            if global_signals and self._is_linkage_fully_enabled() and not self.is_sending_linkage:
-                self.is_sending_linkage = True
-                global_signals.lap_analysis_click_clear.emit()
-                self.is_sending_linkage = False
+            # 使用連動管理器發送清除信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
             
             self.update()
             
@@ -742,10 +745,8 @@ class ThrottleChartWidget(QWidget):
         self.mouse_x = -1
         self.mouse_y = -1
         # 發送X軸連動清除信號
-        if global_signals and self.linkage_enabled and not self.is_sending_linkage:
-            self.is_sending_linkage = True
-            global_signals.lap_analysis_x_clear.emit()
-            self.is_sending_linkage = False
+        if linkage_manager and self.linkage_enabled:
+            linkage_manager.send_x_linkage_clear(self)
         self.update()
     
     def on_x_linkage_received(self, distance_value: float, y_relative: float):
@@ -776,7 +777,7 @@ class ThrottleChartWidget(QWidget):
     
     def on_click_linkage_received(self, distance_value: float):
         """接收來自其他圖表的點擊連動信號 (設置固定線)"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled:
             return
         
         # 設置固定線 (紅色背景樣式)
@@ -786,7 +787,7 @@ class ThrottleChartWidget(QWidget):
     
     def on_click_linkage_clear(self):
         """接收點擊連動清除信號"""
-        if not self.linkage_enabled or self.is_sending_linkage:
+        if not self.linkage_enabled:
             return
         
         # 清除固定線
@@ -794,31 +795,6 @@ class ThrottleChartWidget(QWidget):
         self.fixed_distance_value = None
         self.update()
     
-    def _is_linkage_fully_enabled(self):
-        """檢查連動功能是否完全啟用（主開關和個別開關都要開啟）"""
-        return self.linkage_enabled and self.master_linkage_enabled
-    
-    def _create_linkage_toolbar(self, toolbar):
-        """建立連動功能工具列"""
-        toolbar.addSeparator()
-        
-        # 個別連動開關
-        self.linkage_button = QPushButton("🔗 個別連動")
-        self.linkage_button.setCheckable(True)
-        self.linkage_button.setChecked(True)  # 預設開啟
-        self.linkage_button.clicked.connect(self.toggle_linkage)
-        toolbar.addWidget(self.linkage_button)
-    
-    def toggle_linkage(self):
-        """切換個別連動狀態"""
-        self.linkage_enabled = not self.linkage_enabled
-        self.linkage_button.setText("🔗 個別連動" if self.linkage_enabled else "🔗❌ 個別連動")
-        self.linkage_button.setChecked(self.linkage_enabled)
-    
-    def set_master_linkage_enabled(self, enabled: bool):
-        """設置主視窗連動總開關狀態"""
-        self.master_linkage_enabled = enabled
-        
     def on_master_linkage_changed(self, enabled: bool):
         """響應主視窗連動總開關變更"""
         self.set_master_linkage_enabled(enabled)
@@ -830,7 +806,7 @@ class ThrottleChartWidget(QWidget):
             self.update()
 
 
-class ThrottleAnalysisChartWidget(QWidget):
+class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
     """油門分析圖表組件主容器"""
     
     # 信號定義
@@ -840,8 +816,18 @@ class ThrottleAnalysisChartWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # 初始化連動混入類
+        self.__init_linkage__()
+        
+        # 設置更新回調
+        self.set_update_callback(self.update)
+        
         self.current_data = None
         self.setup_ui()
+        
+        # 註冊到連動管理器
+        if linkage_manager:
+            linkage_manager.register_module(self, "throttle_analysis")
         
     def setup_ui(self):
         """設置UI界面"""
@@ -887,6 +873,10 @@ class ThrottleAnalysisChartWidget(QWidget):
         # 創建圖表組件
         self.chart_widget = ThrottleChartWidget()
         layout.addWidget(self.chart_widget)
+        
+        # 確保內部圖表組件也註冊到連動管理器
+        if linkage_manager:
+            linkage_manager.register_module(self.chart_widget, "throttle_analysis_chart")
         
         return container
         

@@ -26,6 +26,9 @@ import subprocess
 import sys
 import os
 
+# 導入連動管理器
+from modules.gui.lap_analysis.linkage import linkage_manager
+
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
     """自定義MDI區域，強制執行子視窗最小尺寸限制並啟用內建功能"""
@@ -4308,6 +4311,11 @@ class StyleHMainWindow(QMainWindow):
         print("[INIT] 🎨 開始應用樣式...")
         self.apply_style_h()
         
+        # 整合連動管理器
+        print("[INIT] 🔗 開始整合連動管理器...")
+        self.integrate_linkage_manager()
+        print("[INIT] ✅ 連動管理器整合完成")
+        
         print("[INIT] ✅ 主視窗初始化完成！")
         
         # 延遲檢查標籤欄隱藏狀態和圈速控件狀態
@@ -8368,11 +8376,18 @@ class StyleHMainWindow(QMainWindow):
         try:
             print(f"[LAP_LINKAGE] 圈速分析連動總開關: {'啟用' if checked else '停用'}")
             
-            # 更新全域信號管理器的連動狀態
+            # 優先使用新的連動管理器
+            linkage_manager.set_master_linkage_enabled(checked)
+            
+            # 更新全域信號管理器的連動狀態（向後相容）
             if hasattr(global_signals, 'set_lap_linkage_enabled'):
                 global_signals.set_lap_linkage_enabled(checked)
             
-            # 通知所有圈速分析模組更新連動狀態
+            # 獲取連動管理器統計資訊
+            stats = linkage_manager.get_module_stats()
+            print(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
+            
+            # 兼容舊系統：通知現有的分析模組（在它們遷移到新系統之前）
             for analysis_module in self.lap_analysis_windows:
                 try:
                     if hasattr(analysis_module, 'speed_chart_widget') and analysis_module.speed_chart_widget:
@@ -8387,16 +8402,20 @@ class StyleHMainWindow(QMainWindow):
                     print(f"[ERROR] [LAP_LINKAGE] 通知模組時發生錯誤: {e}")
             
             # 通知所有MDI子視窗的個別連動按鈕更新狀態
-            mdi_windows = self.mdi_area.subWindowList()
-            for window in mdi_windows:
-                # 檢查是否為圈速分析相關的MDI子視窗
-                widget = window.widget()
-                if hasattr(widget, 'windowTitle') and any(analysis_type in widget.windowTitle() 
-                    for analysis_type in ['速度分析', 'RPM分析', '油門分析']):
-                    # 獲取MDI子視窗的標題欄
-                    if hasattr(window, 'title_bar_widget') and hasattr(window.title_bar_widget, 'set_linkage_button_state'):
-                        window.title_bar_widget.set_linkage_button_state(checked)
-                        print(f"[LAP_LINKAGE] 已通知MDI子視窗 '{widget.windowTitle()}' 更新個別連動按鈕狀態")
+            current_mdi_area = self.get_current_mdi_area()
+            if current_mdi_area:
+                mdi_windows = current_mdi_area.subWindowList()
+                for window in mdi_windows:
+                    # 檢查是否為圈速分析相關的MDI子視窗
+                    widget = window.widget()
+                    if hasattr(widget, 'windowTitle') and any(analysis_type in widget.windowTitle() 
+                        for analysis_type in ['速度分析', 'RPM分析', '油門分析']):
+                        # 獲取MDI子視窗的標題欄
+                        if hasattr(window, 'title_bar_widget') and hasattr(window.title_bar_widget, 'set_linkage_button_state'):
+                            window.title_bar_widget.set_linkage_button_state(checked)
+                            print(f"[LAP_LINKAGE] 已通知MDI子視窗 '{widget.windowTitle()}' 更新個別連動按鈕狀態")
+            else:
+                print(f"[LAP_LINKAGE] ⚠️ 未找到當前MDI區域，跳過MDI視窗連動按鈕更新")
             
         except Exception as e:
             print(f"[ERROR] [LAP_LINKAGE] 切換連動總開關失敗: {e}")
@@ -8474,6 +8493,46 @@ class StyleHMainWindow(QMainWindow):
         # 如果停用連動，發送清除信號
         if not checked:
             global_signals.lap_analysis_x_clear.emit()
+    
+    def integrate_linkage_manager(self):
+        """整合新的連動管理器到主程式"""
+        try:
+            # 將現有的全域信號與新連動管理器連接
+            if hasattr(global_signals, 'lap_analysis_master_linkage_changed'):
+                global_signals.lap_analysis_master_linkage_changed.connect(
+                    linkage_manager.set_master_linkage_enabled
+                )
+                print("[LINKAGE_INTEGRATION] ✅ 全域信號已連接到連動管理器")
+            
+            # 確保主開關狀態同步
+            if hasattr(self, 'lap_linkage_action'):
+                current_state = self.lap_linkage_action.isChecked()
+                linkage_manager.set_master_linkage_enabled(current_state)
+                print(f"[LINKAGE_INTEGRATION] ✅ 主開關狀態已同步: {'啟用' if current_state else '停用'}")
+            
+            # 設置連動管理器的信號回調
+            linkage_manager.master_linkage_changed.connect(self.on_linkage_manager_state_changed)
+            
+            print("[LINKAGE_INTEGRATION] ✅ 連動管理器整合完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [LINKAGE_INTEGRATION] 連動管理器整合失敗: {e}")
+    
+    def on_linkage_manager_state_changed(self, enabled: bool):
+        """處理連動管理器狀態變更"""
+        try:
+            # 更新主視窗的連動按鈕狀態
+            if hasattr(self, 'lap_linkage_action'):
+                self.lap_linkage_action.setChecked(enabled)
+            
+            # 獲取連動管理器統計
+            stats = linkage_manager.get_module_stats()
+            print(f"[LINKAGE_MANAGER] 狀態更新: {'啟用' if enabled else '停用'}")
+            print(f"[LINKAGE_MANAGER] 已註冊模組: {stats['total_modules']} 個")
+            print(f"[LINKAGE_MANAGER] 模組類型: {stats['module_types']}")
+            
+        except Exception as e:
+            print(f"[ERROR] [LINKAGE_MANAGER] 狀態變更處理失敗: {e}")
         
     def apply_style_h(self):
         """應用風格H樣式 - 專業賽車分析工作站 (白色主題)"""
