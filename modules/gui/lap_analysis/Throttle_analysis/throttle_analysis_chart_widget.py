@@ -316,6 +316,9 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         if not self.distance_data:
             return
         
+        # 設置裁剪區域，防止曲線繪製到圖表邊界之外
+        painter.setClipRect(chart_rect)
+        
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -687,6 +690,18 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
             self.middle_dragging = True
             self.last_drag_pos = event.pos()
             self.setCursor(Qt.ClosedHandCursor)
+            
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """滑鼠雙擊事件 - 清除固定線"""
+        if event.button() == Qt.LeftButton:
+            self.show_fixed_line = False
+            self.fixed_distance_value = None
+            
+            # 使用連動管理器發送清除信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
+            
+            self.update()
             
     def mouseReleaseEvent(self, event: QMouseEvent):
         """滑鼠釋放事件"""

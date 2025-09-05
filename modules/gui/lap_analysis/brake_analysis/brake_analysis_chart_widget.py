@@ -132,6 +132,9 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.view_max_distance = None
         self.view_min_brake = None
         self.view_max_brake = None
+        # 清除固定線 - 與速度分析保持一致
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
         self.repaint()
     
     def reset_data(self):
@@ -343,6 +346,9 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         """繪製brake曲線"""
         if not self.distance_data:
             return
+        
+        # 設置裁剪區域，確保曲線不會繪製到圖表區域外
+        painter.setClipRect(chart_rect)
         
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
@@ -614,15 +620,9 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                     self.update()
             
         elif event.button() == Qt.RightButton:
-            # 右鍵點擊：清除固定線
-            self.show_fixed_line = False
-            self.fixed_distance_value = None
-            
-            # 使用連動管理器發送清除信號
-            if linkage_manager and self.linkage_enabled:
-                linkage_manager.send_click_linkage_clear(sender=self)
-            
-            self.update()
+            # 右鍵點擊：預留給右鍵選單功能
+            # 清除功能改用雙擊實現
+            pass
             
         elif event.button() == Qt.MiddleButton:
             # 中鍵按下：開始拖拉
@@ -636,6 +636,19 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             # 中鍵釋放：結束拖拉
             self.middle_dragging = False
             self.setCursor(Qt.ArrowCursor)
+    
+    def mouseDoubleClickEvent(self, event):
+        """滑鼠雙擊事件"""
+        if event.button() == Qt.LeftButton:
+            # 左鍵雙擊：清除所有固定線
+            self.show_fixed_line = False
+            self.fixed_distance_value = None
+            
+            # 使用連動管理器發送清除信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
+            
+            self.update()
     
     def wheelEvent(self, event: QWheelEvent):
         """滑鼠滾輪事件"""
@@ -674,16 +687,37 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             new_distance_range = distance_range / zoom_factor
             new_brake_range = brake_range / zoom_factor
             
-            # 更新視圖範圍，保持滑鼠位置不變
-            self.view_min_distance = max(self.min_distance, 
-                                       mouse_distance - new_distance_range * mouse_rel_x)
-            self.view_max_distance = min(self.max_distance, 
-                                       mouse_distance + new_distance_range * (1 - mouse_rel_x))
+            # 更新視圖範圍，保持滑鼠位置不變，並確保不超出原始範圍
+            new_min_distance = mouse_distance - new_distance_range * mouse_rel_x
+            new_max_distance = mouse_distance + new_distance_range * (1 - mouse_rel_x)
+            new_min_brake = mouse_brake - new_brake_range * mouse_rel_y
+            new_max_brake = mouse_brake + new_brake_range * (1 - mouse_rel_y)
             
-            self.view_min_brake = max(self.min_brake, 
-                                  mouse_brake - new_brake_range * mouse_rel_y)
-            self.view_max_brake = min(self.max_brake, 
-                                  mouse_brake + new_brake_range * (1 - mouse_rel_y))
+            # 確保距離範圍不超出原始數據範圍
+            if new_min_distance < self.min_distance:
+                offset = self.min_distance - new_min_distance
+                new_min_distance = self.min_distance
+                new_max_distance = min(self.max_distance, new_max_distance + offset)
+            elif new_max_distance > self.max_distance:
+                offset = new_max_distance - self.max_distance
+                new_max_distance = self.max_distance
+                new_min_distance = max(self.min_distance, new_min_distance - offset)
+            
+            # 確保煞車範圍不超出原始數據範圍
+            if new_min_brake < self.min_brake:
+                offset = self.min_brake - new_min_brake
+                new_min_brake = self.min_brake
+                new_max_brake = min(self.max_brake, new_max_brake + offset)
+            elif new_max_brake > self.max_brake:
+                offset = new_max_brake - self.max_brake
+                new_max_brake = self.max_brake
+                new_min_brake = max(self.min_brake, new_min_brake - offset)
+            
+            # 應用新的視圖範圍
+            self.view_min_distance = new_min_distance
+            self.view_max_distance = new_max_distance
+            self.view_min_brake = new_min_brake
+            self.view_max_brake = new_max_brake
             
             self.update()
     
@@ -1371,6 +1405,16 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         """設置個別連動狀態 - 轉發給圖表組件"""
         if hasattr(self, 'chart_widget') and self.chart_widget:
             self.chart_widget.set_linkage_enabled(enabled)
+    
+    def reset_chart_view(self):
+        """重置圖表視圖 - 與速度分析保持一致"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.reset_view()
+            
+    def clear_fixed_line(self):
+        """清除固定線條 - 與速度分析保持一致"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.clear_fixed_line()
 
 # 主程式測試
 if __name__ == "__main__":

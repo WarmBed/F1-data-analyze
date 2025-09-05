@@ -132,6 +132,9 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         self.view_max_distance = None
         self.view_min_gear = None
         self.view_max_gear = None
+        # 清除固定線 - 與速度分析保持一致
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
         self.repaint()
     
     def reset_data(self):
@@ -343,6 +346,9 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         """繪製gear曲線"""
         if not self.distance_data:
             return
+        
+        # 設置裁剪區域，防止曲線繪製到圖表邊界之外
+        painter.setClipRect(chart_rect)
         
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
@@ -629,6 +635,18 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
             self.middle_dragging = True
             self.last_drag_pos = event.pos()
             self.setCursor(Qt.ClosedHandCursor)
+            
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """滑鼠雙擊事件 - 清除固定線"""
+        if event.button() == Qt.LeftButton:
+            self.show_fixed_line = False
+            self.fixed_distance_value = None
+            
+            # 使用連動管理器發送清除信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
+            
+            self.update()
             
     def mouseReleaseEvent(self, event: QMouseEvent):
         """滑鼠釋放事件"""
@@ -1371,6 +1389,16 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         """設置個別連動狀態 - 轉發給圖表組件"""
         if hasattr(self, 'chart_widget') and self.chart_widget:
             self.chart_widget.set_linkage_enabled(enabled)
+    
+    def reset_chart_view(self):
+        """重置圖表視圖 - 與速度分析保持一致"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.reset_view()
+            
+    def clear_fixed_line(self):
+        """清除固定線條 - 與速度分析保持一致"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.clear_fixed_line()
 
 # 主程式測試
 if __name__ == "__main__":

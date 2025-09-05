@@ -7360,6 +7360,86 @@ class StyleHMainWindow(QMainWindow):
                 
                 return speed_widgets
             
+            def find_brake_analysis_widgets(widget):
+                """遞歸查找 BrakeAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.brake_analysis.brake_analysis_chart_widget import BrakeAnalysisChartWidget
+                    brake_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, BrakeAnalysisChartWidget):
+                        brake_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                brake_widgets.extend(find_brake_analysis_widgets(child))
+                    
+                    return brake_widgets
+                except ImportError:
+                    return []
+            
+            def find_rpm_analysis_widgets(widget):
+                """遞歸查找 RPMAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_chart_widget import RPMAnalysisChartWidget
+                    rpm_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, RPMAnalysisChartWidget):
+                        rpm_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                rpm_widgets.extend(find_rpm_analysis_widgets(child))
+                    
+                    return rpm_widgets
+                except ImportError:
+                    return []
+            
+            def find_gear_analysis_widgets(widget):
+                """遞歸查找 GearAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.gear_analysis.gear_analysis_chart_widget import GearAnalysisChartWidget
+                    gear_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, GearAnalysisChartWidget):
+                        gear_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                gear_widgets.extend(find_gear_analysis_widgets(child))
+                    
+                    return gear_widgets
+                except ImportError:
+                    return []
+            
+            def find_throttle_analysis_widgets(widget):
+                """遞歸查找 ThrottleAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_chart_widget import ThrottleAnalysisChartWidget
+                    throttle_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, ThrottleAnalysisChartWidget):
+                        throttle_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                throttle_widgets.extend(find_throttle_analysis_widgets(child))
+                    
+                    return throttle_widgets
+                except ImportError:
+                    return []
+            
             for i, subwindow in enumerate(subwindows):
                 if subwindow and subwindow.widget():
                     widget = subwindow.widget()
@@ -7370,10 +7450,15 @@ class StyleHMainWindow(QMainWindow):
                     telemetry_widgets = find_telemetry_widgets(widget)
                     # 遞歸查找所有 UniversalChartWidget
                     universal_widgets = find_universal_chart_widgets(widget)
-                    # 遞歸查找所有 SpeedAnalysisChartWidget
+                    # 遞歸查找所有分析模組組件
                     speed_widgets = find_speed_analysis_widgets(widget)
+                    brake_widgets = find_brake_analysis_widgets(widget)
+                    rpm_widgets = find_rpm_analysis_widgets(widget)
+                    gear_widgets = find_gear_analysis_widgets(widget)
+                    throttle_widgets = find_throttle_analysis_widgets(widget)
                     
-                    print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表, {len(speed_widgets)} 個速度分析圖表")
+                    print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表")
+                    print(f"  分析模組: 速度={len(speed_widgets)}, 煞車={len(brake_widgets)}, RPM={len(rpm_widgets)}, 檔位={len(gear_widgets)}, 油門={len(throttle_widgets)}")
                     
                     if telemetry_widgets:
                         for telemetry_widget in telemetry_widgets:
@@ -7467,6 +7552,47 @@ class StyleHMainWindow(QMainWindow):
                             speed_widget.reset_chart_view()
                             reset_count += 1
                             print(f"[OK] 速度分析圖表重置完成")
+                    
+                    # 處理煞車分析圖表 (BrakeAnalysisChartWidget) 
+                    if brake_widgets:
+                        for brake_widget in brake_widgets:
+                            print(f"[TARGET] 重置煞車分析圖表")
+                            if hasattr(brake_widget, 'reset_chart_view'):
+                                brake_widget.reset_chart_view()
+                            elif hasattr(brake_widget, 'chart_widget') and hasattr(brake_widget.chart_widget, 'reset_view'):
+                                brake_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] 煞車分析圖表重置完成")
+                    
+                    # 處理RPM分析圖表 (RPMAnalysisChartWidget)
+                    if rpm_widgets:
+                        for rpm_widget in rpm_widgets:
+                            print(f"[TARGET] 重置RPM分析圖表")
+                            if hasattr(rpm_widget, 'reset_chart_view'):
+                                rpm_widget.reset_chart_view()
+                            elif hasattr(rpm_widget, 'chart_widget') and hasattr(rpm_widget.chart_widget, 'reset_view'):
+                                rpm_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] RPM分析圖表重置完成")
+                    
+                    # 處理檔位分析圖表 (GearAnalysisChartWidget)
+                    if gear_widgets:
+                        for gear_widget in gear_widgets:
+                            print(f"[TARGET] 重置檔位分析圖表")
+                            if hasattr(gear_widget, 'reset_chart_view'):
+                                gear_widget.reset_chart_view()
+                            elif hasattr(gear_widget, 'chart_widget') and hasattr(gear_widget.chart_widget, 'reset_view'):
+                                gear_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] 檔位分析圖表重置完成")
+                    
+                    # 處理油門分析圖表 (ThrottleAnalysisChartWidget)
+                    if throttle_widgets:
+                        for throttle_widget in throttle_widgets:
+                            print(f"[TARGET] 重置油門分析圖表")
+                            throttle_widget.reset_chart_view()
+                            reset_count += 1
+                            print(f"[OK] 油門分析圖表重置完成")
                     
                     # 檢查是否為其他類型的圖表或可縮放小部件
                     elif hasattr(widget, 'fit_to_view'):
