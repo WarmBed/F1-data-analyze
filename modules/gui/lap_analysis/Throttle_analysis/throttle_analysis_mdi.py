@@ -96,6 +96,11 @@ class ThrottleDataManager(QObject):
             # 保存載入器引用避免被回收
             self._throttle_loader = throttle_loader
             
+            # 將loader設置給chart widget以供直接更新
+            if hasattr(self, 'throttle_chart_widget') and self.throttle_chart_widget:
+                self.throttle_chart_widget.throttle_loader = throttle_loader
+                print(f"[THROTTLE_MDI] ✅ 已將loader設置給chart widget")
+            
             return success
             
         except Exception as e:

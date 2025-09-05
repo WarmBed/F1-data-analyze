@@ -125,8 +125,8 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         self.driver2_name = driver2_name
         self.sectors = sectors or []
         
-        # 新增：更新單車手模式標記 - 與油門分析一致
-        self.is_single_driver = (driver1_name == driver2_name)
+        # 判斷單車手模式：空的 driver2_throttle 或空的 driver2_name 表示單車手模式
+        self.is_single_driver = (not driver2_throttle or driver2_name == "" or driver1_name == driver2_name)
         
         # 計算數據範圍
         if distance:
@@ -1246,10 +1246,11 @@ class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 self.is_single_driver = True
                 # 清空車手2的數據，只顯示車手1
                 driver2_throttle = []
+                driver2_name = ""  # 單車手模式才清空車手2名稱
             else:
-                # 雙車手模式
+                # 雙車手模式 - 保持車手名稱不變
                 self.is_single_driver = False
-                driver2_name = ""
+                print(f"[THROTTLE_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 更新圖表
             self.chart_widget.set_throttle_data(

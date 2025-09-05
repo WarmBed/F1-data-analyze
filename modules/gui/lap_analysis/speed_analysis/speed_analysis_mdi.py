@@ -96,6 +96,11 @@ class SpeedDataManager(QObject):
             # 保存載入器引用避免被回收
             self._speed_loader = speed_loader
             
+            # 將loader設置給chart widget以供直接更新
+            if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
+                self.speed_chart_widget.speed_loader = speed_loader
+                print(f"[SPEED_MDI] ✅ 已將loader設置給chart widget")
+            
             return success
             
         except Exception as e:

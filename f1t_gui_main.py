@@ -752,7 +752,7 @@ class LapAnalysisOptionsDialog(QDialog):
             'speed_analysis': ('⚡ 速度分析 (Speed Analysis)', True),  # 設為預設選中
             # 'speed': ('🏃 速度 (Speed)', True),  # 移除速度選項
             'brake': ('🛑 煞車 (Brake)', False),
-            'throttle': ('⚡油門 (Throttle)', False),
+            'throttle': ('⚡油門 (Throttle)', True),  # 設為預設選中
             'steering': ('🎯 轉向 (Steering)', False),
             'gear': ('⚙️ 檔位 (Gear)', False),
             'rpm': ('🔄 轉速 (RPM)', True),  # 設為預設選中
@@ -3268,6 +3268,12 @@ class PopoutSubWindow(QMdiSubWindow):
             if '速度分析' in window_title or 'Speed Analysis' in window_title:
                 print(f"[SPEED UPDATE] 檢測到速度分析視窗，使用專用更新邏輯")
                 self._update_speed_analysis_chart(json_data)
+            elif '油門分析' in window_title or 'Throttle Analysis' in window_title:
+                print(f"[THROTTLE UPDATE] 檢測到油門分析視窗，使用專用更新邏輯")
+                self._update_throttle_analysis_chart(json_data)
+            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
+                print(f"[RPM UPDATE] 檢測到RPM分析視窗，使用專用更新邏輯")
+                self._update_rpm_analysis_chart(json_data)
             else:
                 # 更新遙測圖表
                 if 'telemetry' in json_data:
@@ -3328,16 +3334,27 @@ class PopoutSubWindow(QMdiSubWindow):
                         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
                         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
                         
-                        # 重新載入數據（使用預設的VER vs VER進行測試）
+                        # 獲取當前選擇的車手和圈數（而不是硬編碼）
+                        driver1 = self.driver1_combo.currentText()
+                        driver2 = self.driver2_combo.currentText() if self.driver2_combo.currentText() != "無" else driver1
+                        lap1 = self.lap1_spinbox.value()
+                        lap2 = self.lap2_spinbox.value()
+                        is_fastest = self.fastest_lap_checkbox.isChecked()
+                        
+                        print(f"[SPEED UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        print(f"[SPEED UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
+                        print(f"[SPEED UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()})")
+                        
+                        # 重新載入數據（使用實際選擇的車手）
                         widget.speed_loader.load_speed_data(
                             year=year,
                             race=race,
                             session=session,
-                            driver1='VER',
-                            driver2='VER',
-                            lap1=1,
-                            lap2=1,
-                            is_fastest_lap=False
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1,
+                            lap2=lap2,
+                            is_fastest_lap=is_fastest
                         )
                         print(f"[SPEED UPDATE] ✅ 已觸發數據重新載入")
                     else:
@@ -3354,6 +3371,164 @@ class PopoutSubWindow(QMdiSubWindow):
             
         except Exception as e:
             print(f"[ERROR] [SPEED UPDATE] 速度分析圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_throttle_analysis_chart(self, json_data):
+        """更新油門分析圖表的專用方法"""
+        print(f"[THROTTLE UPDATE] ========== 開始更新油門分析圖表 ==========")
+        
+        try:
+            # 尋找油門分析圖表組件
+            from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_chart_widget import ThrottleAnalysisChartWidget
+            
+            def find_throttle_widgets(widget):
+                """遞歸查找 ThrottleAnalysisChartWidget"""
+                widgets = []
+                if isinstance(widget, ThrottleAnalysisChartWidget):
+                    widgets.append(widget)
+                
+                # 遞歸檢查子組件
+                if hasattr(widget, 'findChildren'):
+                    for child in widget.findChildren(ThrottleAnalysisChartWidget):
+                        widgets.append(child)
+                elif hasattr(widget, 'children'):
+                    for child in widget.children():
+                        widgets.extend(find_throttle_widgets(child))
+                        
+                return widgets
+            
+            throttle_widgets = find_throttle_widgets(self)
+            print(f"[THROTTLE UPDATE] 找到 {len(throttle_widgets)} 個油門分析圖表組件")
+            
+            if throttle_widgets:
+                for i, widget in enumerate(throttle_widgets):
+                    print(f"[THROTTLE UPDATE] 更新第 {i+1} 個油門分析圖表")
+                    
+                    # 檢查是否有數據載入器
+                    if hasattr(widget, 'throttle_loader'):
+                        print(f"[THROTTLE UPDATE] 找到數據載入器，觸發重新載入")
+                        
+                        # 獲取當前參數
+                        year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
+                        race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
+                        session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
+                        
+                        # 獲取當前選擇的車手和圈數（而不是硬編碼）
+                        driver1 = self.driver1_combo.currentText()
+                        driver2 = self.driver2_combo.currentText() if self.driver2_combo.currentText() != "無" else driver1
+                        lap1 = self.lap1_spinbox.value()
+                        lap2 = self.lap2_spinbox.value()
+                        is_fastest = self.fastest_lap_checkbox.isChecked()
+                        
+                        print(f"[THROTTLE UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        print(f"[THROTTLE UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
+                        print(f"[THROTTLE UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()})")
+                        
+                        # 重新載入數據（使用實際選擇的車手）
+                        widget.throttle_loader.load_throttle_data(
+                            year=year,
+                            race=race,
+                            session=session,
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1,
+                            lap2=lap2,
+                            is_fastest_lap=is_fastest
+                        )
+                        print(f"[THROTTLE UPDATE] ✅ 已觸發數據重新載入")
+                    else:
+                        print(f"[THROTTLE UPDATE] ⚠️ 未找到數據載入器")
+                        
+                        # 嘗試直接更新數據（使用JSON數據）
+                        if json_data:
+                            print(f"[THROTTLE UPDATE] 嘗試直接使用JSON數據更新")
+                            widget.update_throttle_data(json_data)
+            else:
+                print(f"[THROTTLE UPDATE] ⚠️ 未找到油門分析圖表組件")
+                
+            print(f"[THROTTLE UPDATE] ========== 油門分析圖表更新完成 ==========")
+            
+        except Exception as e:
+            print(f"[ERROR] [THROTTLE UPDATE] 油門分析圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_rpm_analysis_chart(self, json_data):
+        """更新RPM分析圖表的專用方法"""
+        print(f"[RPM UPDATE] ========== 開始更新RPM分析圖表 ==========")
+        
+        try:
+            # 尋找RPM分析圖表組件
+            from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_chart_widget import RPMAnalysisChartWidget
+            
+            def find_rpm_widgets(widget):
+                """遞歸查找 RPMAnalysisChartWidget"""
+                widgets = []
+                if isinstance(widget, RPMAnalysisChartWidget):
+                    widgets.append(widget)
+                
+                # 遞歸檢查子組件
+                if hasattr(widget, 'findChildren'):
+                    for child in widget.findChildren(RPMAnalysisChartWidget):
+                        widgets.append(child)
+                elif hasattr(widget, 'children'):
+                    for child in widget.children():
+                        widgets.extend(find_rpm_widgets(child))
+                        
+                return widgets
+            
+            rpm_widgets = find_rpm_widgets(self)
+            print(f"[RPM UPDATE] 找到 {len(rpm_widgets)} 個RPM分析圖表組件")
+            
+            if rpm_widgets:
+                for i, widget in enumerate(rpm_widgets):
+                    print(f"[RPM UPDATE] 更新第 {i+1} 個RPM分析圖表")
+                    
+                    # 檢查是否有數據載入器
+                    if hasattr(widget, 'rpm_loader'):
+                        print(f"[RPM UPDATE] 找到數據載入器，觸發重新載入")
+                        
+                        # 獲取當前參數
+                        year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
+                        race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
+                        session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
+                        
+                        # 獲取當前選擇的車手和圈數（而不是硬編碼）
+                        driver1 = self.driver1_combo.currentText()
+                        driver2 = self.driver2_combo.currentText() if self.driver2_combo.currentText() != "無" else driver1
+                        lap1 = self.lap1_spinbox.value()
+                        lap2 = self.lap2_spinbox.value()
+                        is_fastest = self.fastest_lap_checkbox.isChecked()
+                        
+                        print(f"[RPM UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        
+                        # 重新載入數據（使用實際選擇的車手）
+                        widget.rpm_loader.load_rpm_data(
+                            year=int(year),
+                            race=race,
+                            session=session,
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1,
+                            lap2=lap2,
+                            is_fastest_lap=is_fastest
+                        )
+                        print(f"[RPM UPDATE] ✅ 已觸發數據重新載入")
+                    else:
+                        print(f"[RPM UPDATE] ⚠️ 未找到數據載入器")
+                        
+                        # 嘗試直接更新數據（使用JSON數據）
+                        if json_data:
+                            print(f"[RPM UPDATE] 嘗試直接使用JSON數據更新")
+                            widget.update_rpm_data(json_data)
+            else:
+                print(f"[RPM UPDATE] ⚠️ 未找到RPM分析圖表組件")
+                
+            print(f"[RPM UPDATE] ========== RPM分析圖表更新完成 ==========")
+            
+        except Exception as e:
+            print(f"[ERROR] [RPM UPDATE] RPM分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -4526,15 +4701,15 @@ class StyleHMainWindow(QMainWindow):
         self.update_all_action = None
         
         # 🔄 修改：移除即時連接，改為手動更新模式
-        # 原本：控件變更時立即觸發更新
-        # 現在：只有點擊「更新所有分析」按鈕時才更新
-        # self.driver1_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
-        # self.driver2_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
-        # self.lap1_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
-        # self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
-        # self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
+        # 控件變更時立即觸發更新 - 重新啟用自動更新功能
+        # 現在：車手選擇變更時自動更新所有分析模組
+        self.driver1_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        self.driver2_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        self.lap1_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
         
-        print("[LAP_CONTROL] ✅ 圈速分析控件創建完成（手動更新模式）")
+        print("[LAP_CONTROL] ✅ 圈速分析控件創建完成（自動更新模式已啟用）")
     
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
@@ -5152,6 +5327,29 @@ class StyleHMainWindow(QMainWindow):
                 print(f"[LAP_CONTROL]   📋 錯誤詳情: {traceback.format_exc()}")
         
         print(f"[LAP_CONTROL] ✅ 更新完成，成功更新 {updated_count}/{len(self.lap_analysis_windows)} 個視窗")
+        
+        # 額外觸發專用的圖表更新（為了確保chart widget正確更新）
+        try:
+            print("[LAP_CONTROL] 🔄 觸發專用圖表更新邏輯...")
+            
+            # 檢查當前窗口類型並調用對應的更新方法
+            window_title = self.windowTitle()
+            if '速度分析' in window_title or 'Speed Analysis' in window_title:
+                print("[LAP_CONTROL] 🚗 檢測到速度分析視窗，觸發專用更新")
+                self._update_speed_analysis_chart({})  # 使用空的json_data，讓方法依賴loader
+            elif '油門分析' in window_title or 'Throttle Analysis' in window_title:
+                print("[LAP_CONTROL] ⚡ 檢測到油門分析視窗，觸發專用更新")
+                self._update_throttle_analysis_chart({})
+            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
+                print("[LAP_CONTROL] 🔧 檢測到RPM分析視窗，觸發專用更新")
+                self._update_rpm_analysis_chart({})
+            else:
+                print(f"[LAP_CONTROL] ℹ️ 未識別的視窗類型: {window_title}")
+                
+        except Exception as e:
+            print(f"[LAP_CONTROL] ❌ 專用圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
     def _on_main_fastest_lap_changed(self, checked):
         """主頁面最速圈checkbox變更時的處理 - 自動設置圈數為99"""
@@ -9614,13 +9812,25 @@ class StyleHMainWindow(QMainWindow):
     def closeEvent(self, event):
         """視窗關閉事件處理"""
         try:
+            print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
+            
             # 停止所有正在執行的 CLI 分析
             self.stop_all_analyses()
+            
+            # 確保所有子視窗都關閉
+            self.close_all_subwindows()
+            
+            print("[MAIN] ✅ 資源清理完成，程序即將退出")
             
             # 接受關閉事件
             event.accept()
             
+            # 確保應用程序退出
+            from PyQt5.QtWidgets import QApplication
+            QApplication.instance().quit()
+            
         except Exception as e:
+            print(f"[MAIN] ❌ 關閉事件處理錯誤: {e}")
             event.accept()  # 即使出錯也要關閉
     
     def stop_all_analyses(self):
@@ -9648,6 +9858,29 @@ class StyleHMainWindow(QMainWindow):
                 
         except Exception as e:
             pass
+    
+    def close_all_subwindows(self):
+        """關閉所有子視窗"""
+        try:
+            # 關閉所有MDI子視窗
+            for mdi_area in self.mdi_areas:
+                subwindows = mdi_area.subWindowList()
+                
+                for sub_window in subwindows:
+                    try:
+                        sub_window.close()
+                    except Exception as e:
+                        print(f"[MAIN] ⚠️ 關閉子視窗時發生錯誤: {e}")
+                        
+                # 清除MDI區域
+                mdi_area.closeAllSubWindows()
+            
+            # 清理追蹤列表
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.clear()
+                
+        except Exception as e:
+            print(f"[MAIN] ⚠️ 關閉子視窗過程中發生錯誤: {e}")
     
     def on_subwindow_closed(self, subwindow):
         """處理子視窗關閉事件 - 從追蹤列表中移除"""
@@ -9726,13 +9959,17 @@ def main():
     font = QFont("Arial", 8)
     app.setFont(font)
     
+    # 設置應用程序在最後一個視窗關閉時退出
+    app.setQuitOnLastWindowClosed(True)
+    
     # 創建主視窗
     window = StyleHMainWindow()
     window.show()
     
+    # 執行事件循環
     result = app.exec_()
-    sys.exit(result)
     
+    print("[MAIN] 🛑 F1T 程序正常退出")
     sys.exit(result)
 
 if __name__ == "__main__":

@@ -1153,7 +1153,10 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 print(f"[RPM_CHART] 🎯 使用單車手模式顯示")
                 # 清空車手2的數據，只顯示車手1
                 driver2_rpm = []
-                driver2_name = ""
+                driver2_name = ""  # 單車手模式才清空車手2名稱
+            else:
+                # 雙車手模式 - 保持車手名稱不變
+                print(f"[RPM_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 檢查數據完整性
             if not distance or not driver1_rpm:

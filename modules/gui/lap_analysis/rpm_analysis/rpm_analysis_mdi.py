@@ -93,6 +93,11 @@ class RPMDataManager(QObject):
                 is_fastest_lap=is_fastest
             )
             
+            # 將loader設置給chart widget以供直接更新
+            if hasattr(self, 'rpm_chart_widget') and self.rpm_chart_widget:
+                self.rpm_chart_widget.rpm_loader = self.rpm_loader
+                print(f"[RPM_MDI] ✅ 已將loader設置給chart widget")
+            
             if success:
                 print(f"[RPM_MDI_DATA] ✅ RPM數據載入請求提交成功")
                 self.loading_progress.emit(50)
