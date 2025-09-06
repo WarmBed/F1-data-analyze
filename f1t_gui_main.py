@@ -5735,30 +5735,12 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(basic_group, ["賽道分析"])
         QTreeWidgetItem(basic_group, ["進站分析"])
         QTreeWidgetItem(basic_group, ["事故分析"])
-        QTreeWidgetItem(basic_group, ["單場賽事總攬"])
+        QTreeWidgetItem(basic_group, ["車手排名"])
         
         # 單場賽事車手分析模組
         single_group = QTreeWidgetItem(tree, ["🚗 單場賽事車手分析"])
         single_group.setExpanded(True)
-        QTreeWidgetItem(single_group, ["圈速分析"])
-        QTreeWidgetItem(single_group, ["超車分析"])
-        QTreeWidgetItem(single_group, ["DNF分析"])
-        QTreeWidgetItem(single_group, ["彎道分析"])
-        
-        # 比較分析模組
-        compare_group = QTreeWidgetItem(tree, ["[COMPARE] 比較分析"])
-        compare_group.setExpanded(True)
-        QTreeWidgetItem(compare_group, ["車手比較"])
-        QTreeWidgetItem(compare_group, ["圈速比較"])
-        QTreeWidgetItem(compare_group, ["遙測比較"])
-        QTreeWidgetItem(compare_group, ["扇區比較"])
-        
-        # 進階分析模組
-        advanced_group = QTreeWidgetItem(tree, ["[ANALYSIS] 進階分析"])
-        QTreeWidgetItem(advanced_group, ["輪胎分析"])
-        QTreeWidgetItem(advanced_group, ["燃料分析"])
-        QTreeWidgetItem(advanced_group, ["策略分析"])
-        QTreeWidgetItem(advanced_group, ["氣象分析"])
+        QTreeWidgetItem(single_group, ["遙測分析"])
         
         layout.addWidget(tree)
         
