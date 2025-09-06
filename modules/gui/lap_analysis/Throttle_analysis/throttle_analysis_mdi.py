@@ -619,7 +619,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
             self.current_race = race
             self.current_session = session
             self.driver1 = driver1
-            self.driver2 = driver2  # 保持原始值，支援單車手分析
+            self.driver2 = driver2  # 保持原始值，支援單場賽事車手分析
             self.lap1 = lap1
             self.lap2 = lap2
             self.lap1 = lap1

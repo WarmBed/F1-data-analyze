@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-RPM分析圖表組件
-使用 PyQt5 原生繪圖實現距離-RPM曲線圖表
+acceleration分析圖表組件
+使用 PyQt5 原生繪圖實現距離-acceleration曲線圖表
 支援雙車手對比和單場賽事車手分析，與系統其他組件保持一致的視覺風格
 """
 
 import sys
 import os
+import math
 from typing import Dict, List, Any, Optional
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -33,8 +34,8 @@ except ImportError:
 
 # 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
 
-class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
-    """RPM圖表繪製組件 - 使用 PyQt5 原生繪圖"""
+class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
+    """acceleration圖表繪製組件 - 使用 PyQt5 原生繪圖"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -50,8 +51,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         
         # 數據存儲
         self.distance_data = []
-        self.driver1_rpm = []
-        self.driver2_rpm = []
+        self.driver1_acceleration = []
+        self.driver2_acceleration = []
         self.driver1_name = "Driver 1"
         self.driver2_name = "Driver 2"
         self.sectors = []
@@ -59,14 +60,14 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 數據範圍
         self.min_distance = 0
         self.max_distance = 5807
-        self.min_rpm = 1000
-        self.max_rpm = 12000
+        self.min_acceleration = -6.0  # 加速度範圍：負值表示減速
+        self.max_acceleration = 6.0   # 加速度範圍：正值表示加速
         
         # 視圖範圍 (用於縮放)
         self.view_min_distance = None
         self.view_max_distance = None
-        self.view_min_rpm = None
-        self.view_max_rpm = None
+        self.view_min_acceleration = None
+        self.view_max_acceleration = None
         
         # 顏色設置 - 與速度分析完全一致
         self.bg_color = QColor(255, 255, 255)
@@ -94,13 +95,13 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         self.setMinimumSize(600, 300)  # 與速度分析保持一致
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
     
-    def set_rpm_data(self, distance: List[float], driver1_rpm: List[float], 
-                     driver2_rpm: List[float], driver1_name: str = "Driver 1", 
+    def set_acceleration_data(self, distance: List[float], driver1_acceleration: List[float], 
+                     driver2_acceleration: List[float], driver1_name: str = "Driver 1", 
                      driver2_name: str = "Driver 2", sectors: List[Dict] = None):
-        """設置RPM數據"""
+        """設置acceleration數據"""
         self.distance_data = distance
-        self.driver1_rpm = driver1_rpm
-        self.driver2_rpm = driver2_rpm
+        self.driver1_acceleration = driver1_acceleration
+        self.driver2_acceleration = driver2_acceleration
         self.driver1_name = driver1_name
         self.driver2_name = driver2_name
         self.sectors = sectors or []
@@ -110,15 +111,23 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             self.min_distance = min(distance)
             self.max_distance = max(distance)
         
-        all_rpms = []
-        if driver1_rpm:
-            all_rpms.extend(driver1_rpm)
-        if driver2_rpm:
-            all_rpms.extend(driver2_rpm)
+        all_accelerations = []
+        if driver1_acceleration:
+            all_accelerations.extend(driver1_acceleration)
+        if driver2_acceleration:
+            all_accelerations.extend(driver2_acceleration)
             
-        if all_rpms:
-            self.min_rpm = max(1000, min(all_rpms) - 500)
-            self.max_rpm = max(all_rpms) + 500
+        if all_accelerations:
+            # 加速度數據範圍計算 (單位：m/s²)
+            min_acc = min(all_accelerations)
+            max_acc = max(all_accelerations)
+            
+            # 為圖表顯示添加合理的邊距
+            acc_range = max_acc - min_acc
+            margin = max(0.5, acc_range * 0.1)  # 至少0.5 m/s²的邊距
+            
+            self.min_acceleration = min_acc - margin
+            self.max_acceleration = max_acc + margin
         
         # 強制重繪
         self.repaint()
@@ -127,8 +136,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         """重置視圖到原始範圍"""
         self.view_min_distance = None
         self.view_max_distance = None
-        self.view_min_rpm = None
-        self.view_max_rpm = None
+        self.view_min_acceleration = None
+        self.view_max_acceleration = None
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
@@ -137,8 +146,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
     def reset_data(self):
         """重置所有數據和視圖"""
         self.distance_data = []
-        self.driver1_rpm = []
-        self.driver2_rpm = []
+        self.driver1_acceleration = []
+        self.driver2_acceleration = []
         self.sectors = []
         self.reset_view()
         self.repaint()
@@ -173,8 +182,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 3. 繪製分段標記
         self._draw_sectors(painter, chart_rect)
         
-        # 4. 繪製RPM曲線
-        self._draw_rpm_curves(painter, chart_rect)
+        # 4. 繪製acceleration曲線
+        self._draw_acceleration_curves(painter, chart_rect)
         
         # 5. 繪製固定線
         if self.show_fixed_line and self.fixed_distance_value is not None:
@@ -200,9 +209,9 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                 self.distance_data,
                 getattr(self, 'driver1_name', 'Driver1'),
                 getattr(self, 'driver2_name', 'Driver2'),
-                getattr(self, 'driver1_rpm', []),
-                getattr(self, 'driver2_rpm', []),
-                "RPM"
+                getattr(self, 'driver1_acceleration', []),
+                getattr(self, 'driver2_acceleration', []),
+                "acceleration"
             )
         
         # 6. 繪製圖例
@@ -215,8 +224,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        current_min_rpm = self.view_min_rpm if self.view_min_rpm is not None else self.min_rpm
-        current_max_rpm = self.view_max_rpm if self.view_max_rpm is not None else self.max_rpm
+        current_min_acceleration = self.view_min_acceleration if self.view_min_acceleration is not None else self.min_acceleration
+        current_max_acceleration = self.view_max_acceleration if self.view_max_acceleration is not None else self.max_acceleration
         
         # 垂直網格線 (距離)
         distance_range = current_max_distance - current_min_distance
@@ -227,13 +236,13 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                 x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                 painter.drawLine(int(x), chart_rect.top(), int(x), chart_rect.bottom())
         
-        # 水平網格線 (RPM) - 修正：與速度分析保持一致使用10條線
-        rpm_range = current_max_rpm - current_min_rpm
-        if rpm_range > 0:
+        # 水平網格線 (acceleration) - 修正：與速度分析保持一致使用10條線
+        acceleration_range = current_max_acceleration - current_min_acceleration
+        if acceleration_range > 0:
             num_h_lines = 10  # 修正：改為10條線與速度分析一致
             for i in range(num_h_lines + 1):
-                rpm = current_min_rpm + (rpm_range * i / num_h_lines)
-                y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
+                acceleration = current_min_acceleration + (acceleration_range * i / num_h_lines)
+                y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
                 painter.drawLine(chart_rect.left(), int(y), chart_rect.right(), int(y))
     
     def _draw_axes(self, painter: QPainter, chart_rect: QRect):
@@ -252,8 +261,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        current_min_rpm = self.view_min_rpm if self.view_min_rpm is not None else self.min_rpm
-        current_max_rpm = self.view_max_rpm if self.view_max_rpm is not None else self.max_rpm
+        current_min_acceleration = self.view_min_acceleration if self.view_min_acceleration is not None else self.min_acceleration
+        current_max_acceleration = self.view_max_acceleration if self.view_max_acceleration is not None else self.max_acceleration
         
         # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
         distance_range = current_max_distance - current_min_distance
@@ -271,19 +280,19 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
                                Qt.AlignCenter, label)
         
-        # Y軸標籤 (RPM) - 修正：與速度分析一致，只顯示偶數刻度
-        rpm_range = current_max_rpm - current_min_rpm
-        if rpm_range > 0:
+        # Y軸標籤 (acceleration) - 修正：與速度分析一致，只顯示偶數刻度
+        acceleration_range = current_max_acceleration - current_min_acceleration
+        if acceleration_range > 0:
             num_labels = 10  # 使用10個間隔
             for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
-                rpm = current_min_rpm + (rpm_range * i / num_labels)
-                y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
+                acceleration = current_min_acceleration + (acceleration_range * i / num_labels)
+                y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
                 
                 # 繪製刻度線
                 painter.drawLine(chart_rect.left() - 5, int(y), chart_rect.left(), int(y))
                 
-                # 繪製標籤
-                label = f"{rpm:.0f}"
+                # 繪製標籤 - 加速度使用1位小數精度
+                label = f"{acceleration:.1f}"
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
                                Qt.AlignRight | Qt.AlignVCenter, label)
         
@@ -301,7 +310,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "RPM (轉/分)")
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "加速度 (m/s²)")
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
@@ -339,8 +348,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                     # 恢復虛線樣式給下一條線
                     painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
     
-    def _draw_rpm_curves(self, painter: QPainter, chart_rect: QRect):
-        """繪製RPM曲線"""
+    def _draw_acceleration_curves(self, painter: QPainter, chart_rect: QRect):
+        """繪製acceleration曲線"""
         if not self.distance_data:
             return
         
@@ -350,40 +359,48 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 使用當前視圖範圍或原始範圍
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-        current_min_rpm = self.view_min_rpm if self.view_min_rpm is not None else self.min_rpm
-        current_max_rpm = self.view_max_rpm if self.view_max_rpm is not None else self.max_rpm
+        current_min_acceleration = self.view_min_acceleration if self.view_min_acceleration is not None else self.min_acceleration
+        current_max_acceleration = self.view_max_acceleration if self.view_max_acceleration is not None else self.max_acceleration
             
         distance_range = current_max_distance - current_min_distance
-        rpm_range = current_max_rpm - current_min_rpm
+        acceleration_range = current_max_acceleration - current_min_acceleration
         
-        if distance_range <= 0 or rpm_range <= 0:
+        if distance_range <= 0 or acceleration_range <= 0:
             return
         
-        # 繪製車手1RPM曲線
-        if self.driver1_rpm and len(self.driver1_rpm) == len(self.distance_data):
+        # 繪製車手1acceleration曲線
+        if self.driver1_acceleration and len(self.driver1_acceleration) == len(self.distance_data):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
             
-            for i, (distance, rpm) in enumerate(zip(self.distance_data, self.driver1_rpm)):
-                if current_min_distance <= distance <= current_max_distance:
+            for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver1_acceleration)):
+                # 檢查是否有有效的數值
+                if (current_min_distance <= distance <= current_max_distance and 
+                    not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
-                    y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
-                    points.append(QPoint(int(x), int(y)))
+                    y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
+                    # 再次檢查計算結果是否有效
+                    if not (math.isnan(x) or math.isnan(y) or math.isinf(x) or math.isinf(y)):
+                        points.append(QPoint(int(x), int(y)))
             
             # 繪製連線
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
         
-        # 繪製車手2RPM曲線
-        if self.driver2_rpm and len(self.driver2_rpm) == len(self.distance_data):
+        # 繪製車手2acceleration曲線
+        if self.driver2_acceleration and len(self.driver2_acceleration) == len(self.distance_data):
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
             
-            for i, (distance, rpm) in enumerate(zip(self.distance_data, self.driver2_rpm)):
-                if current_min_distance <= distance <= current_max_distance:
+            for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver2_acceleration)):
+                # 檢查是否有有效的數值
+                if (current_min_distance <= distance <= current_max_distance and 
+                    not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
-                    y = chart_rect.bottom() - (rpm - current_min_rpm) / rpm_range * chart_rect.height()
-                    points.append(QPoint(int(x), int(y)))
+                    y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
+                    # 再次檢查計算結果是否有效
+                    if not (math.isnan(x) or math.isnan(y) or math.isinf(x) or math.isinf(y)):
+                        points.append(QPoint(int(x), int(y)))
             
             # 繪製連線
             for i in range(len(points) - 1):
@@ -404,7 +421,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             
         painter.drawLine(x_pos, chart_rect.top(), x_pos, chart_rect.bottom())
         
-        # 計算當前位置對應的距離和RPM值
+        # 計算當前位置對應的距離和acceleration值
         current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
         distance_range = current_max_distance - current_min_distance
@@ -414,9 +431,9 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             relative_x = x_pos - chart_rect.left()
             distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
             
-            # 找到最接近的數據點來獲取真實的RPM值
-            driver1_rpm_at_position = None
-            driver2_rpm_at_position = None
+            # 找到最接近的數據點來獲取真實的acceleration值
+            driver1_acceleration_at_position = None
+            driver2_acceleration_at_position = None
             
             # 在距離數據中找到最接近的點
             if self.distance_data and len(self.distance_data) > 0:
@@ -429,25 +446,25 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                         min_distance_diff = distance_diff
                         closest_index = i
                 
-                # 獲取對應的RPM值
-                if closest_index < len(self.driver1_rpm):
-                    driver1_rpm_at_position = self.driver1_rpm[closest_index]
-                if closest_index < len(self.driver2_rpm):
-                    driver2_rpm_at_position = self.driver2_rpm[closest_index]
+                # 獲取對應的acceleration值
+                if closest_index < len(self.driver1_acceleration):
+                    driver1_acceleration_at_position = self.driver1_acceleration[closest_index]
+                if closest_index < len(self.driver2_acceleration):
+                    driver2_acceleration_at_position = self.driver2_acceleration[closest_index]
             
             # 計算需要顯示的車手數量來調整標籤大小
             drivers_to_show = []
             
             # 只添加有效且不重複的車手資訊
-            if driver1_rpm_at_position is not None and self.driver1_name:
-                drivers_to_show.append((self.driver1_name, driver1_rpm_at_position, self.driver1_color))
+            if driver1_acceleration_at_position is not None and self.driver1_name:
+                drivers_to_show.append((self.driver1_name, driver1_acceleration_at_position, self.driver1_color))
             
             # 只有在非單車手模式且第二個車手數據不同時才添加第二個車手
             if (not getattr(self, 'is_single_driver', False) and 
-                driver2_rpm_at_position is not None and 
+                driver2_acceleration_at_position is not None and 
                 self.driver2_name and 
                 self.driver2_name != self.driver1_name):
-                drivers_to_show.append((self.driver2_name, driver2_rpm_at_position, self.driver2_color))
+                drivers_to_show.append((self.driver2_name, driver2_acceleration_at_position, self.driver2_color))
             
             # 根據車手數量動態調整標籤高度
             base_height = 30  # 距離資訊的基本高度
@@ -476,10 +493,10 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
             
-            # 顯示車手RPM資訊
-            for i, (driver_name, rpm, color) in enumerate(drivers_to_show):
+            # 顯示車手acceleration資訊
+            for i, (driver_name, acceleration, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
-                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {rpm:.0f} RPM")
+                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {acceleration:.1f} m/s²")
     
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -490,8 +507,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
     def reset_data(self):
         """重置所有數據和視圖"""
         self.distance_data = []
-        self.driver1_rpm = []
-        self.driver2_rpm = []
+        self.driver1_acceleration = []
+        self.driver2_acceleration = []
         self.sectors = []
         self.reset_view()
         self.update()
@@ -506,7 +523,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 檢查是否為單車手模式
         is_single_driver = (self.driver1_name == self.driver2_name or 
                            not self.driver2_name or 
-                           not self.driver2_rpm)
+                           not self.driver2_acceleration)
         
         # 車手1圖例 - 移除背景框，與速度分析保持一致
         painter.setPen(QPen(self.driver1_color, 2))  # 改為2像素粗細
@@ -544,22 +561,22 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                 distance_range = (self.view_max_distance or self.max_distance) - (self.view_min_distance or self.min_distance)
                 distance_move = -dx * distance_range / chart_rect.width()
                 
-                # Y軸移動（RPM）
-                rpm_range = (self.view_max_rpm or self.max_rpm) - (self.view_min_rpm or self.min_rpm)
-                rpm_move = dy * rpm_range / chart_rect.height()  # Y軸是倒置的
+                # Y軸移動（acceleration）
+                acceleration_range = (self.view_max_acceleration or self.max_acceleration) - (self.view_min_acceleration or self.min_acceleration)
+                acceleration_move = dy * acceleration_range / chart_rect.height()  # Y軸是倒置的
                 
                 # 更新視圖範圍
                 if self.view_min_distance is None:
                     self.view_min_distance = self.min_distance
                     self.view_max_distance = self.max_distance
-                if self.view_min_rpm is None:
-                    self.view_min_rpm = self.min_rpm
-                    self.view_max_rpm = self.max_rpm
+                if self.view_min_acceleration is None:
+                    self.view_min_acceleration = self.min_acceleration
+                    self.view_max_acceleration = self.max_acceleration
                 
                 self.view_min_distance += distance_move
                 self.view_max_distance += distance_move
-                self.view_min_rpm += rpm_move
-                self.view_max_rpm += rpm_move
+                self.view_min_acceleration += acceleration_move
+                self.view_max_acceleration += acceleration_move
             
             self.last_drag_pos = event.pos()
         
@@ -674,20 +691,20 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             if self.view_min_distance is None:
                 self.view_min_distance = self.min_distance
                 self.view_max_distance = self.max_distance
-            if self.view_min_rpm is None:
-                self.view_min_rpm = self.min_rpm
-                self.view_max_rpm = self.max_rpm
+            if self.view_min_acceleration is None:
+                self.view_min_acceleration = self.min_acceleration
+                self.view_max_acceleration = self.max_acceleration
             
             # 計算當前滑鼠對應的數據值
             distance_range = self.view_max_distance - self.view_min_distance
-            rpm_range = self.view_max_rpm - self.view_min_rpm
+            acceleration_range = self.view_max_acceleration - self.view_min_acceleration
             
             mouse_distance = self.view_min_distance + mouse_rel_x * distance_range
-            mouse_rpm = self.view_min_rpm + mouse_rel_y * rpm_range
+            mouse_acceleration = self.view_min_acceleration + mouse_rel_y * acceleration_range
             
             # 計算新的範圍
             new_distance_range = distance_range / zoom_factor
-            new_rpm_range = rpm_range / zoom_factor
+            new_acceleration_range = acceleration_range / zoom_factor
             
             # 更新視圖範圍，保持滑鼠位置不變
             self.view_min_distance = max(self.min_distance, 
@@ -695,10 +712,10 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             self.view_max_distance = min(self.max_distance, 
                                        mouse_distance + new_distance_range * (1 - mouse_rel_x))
             
-            self.view_min_rpm = max(self.min_rpm, 
-                                  mouse_rpm - new_rpm_range * mouse_rel_y)
-            self.view_max_rpm = min(self.max_rpm, 
-                                  mouse_rpm + new_rpm_range * (1 - mouse_rel_y))
+            self.view_min_acceleration = max(self.min_acceleration, 
+                                  mouse_acceleration - new_acceleration_range * mouse_rel_y)
+            self.view_max_acceleration = min(self.max_acceleration, 
+                                  mouse_acceleration + new_acceleration_range * (1 - mouse_rel_y))
             
             self.update()
     
@@ -712,8 +729,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         self.update()
 
 
-class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
-    """RPM分析圖表組件主容器"""
+class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
+    """acceleration分析圖表組件主容器"""
     
     # 信號定義
     lap_numbers_changed = pyqtSignal(int, int)  # 圈數變更信號
@@ -737,7 +754,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
         
         # 註冊到連動管理器
         if linkage_manager:
-            linkage_manager.register_module(self, "rpm_analysis")
+            linkage_manager.register_module(self, "acceleration_analysis")
         
     def _setup_ui(self):
         """設置使用者介面 - 採用速度分析的垂直單欄布局"""
@@ -781,12 +798,12 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
         layout.setContentsMargins(0, 0, 0, 0)  # 實驗：移除圖表容器邊距
         
         # 創建圖表組件
-        self.chart_widget = RPMChartWidget()
+        self.chart_widget = accelerationChartWidget()
         layout.addWidget(self.chart_widget)
         
         # 確保內部圖表組件也註冊到連動管理器
         if linkage_manager:
-            linkage_manager.register_module(self.chart_widget, "rpm_analysis_chart")
+            linkage_manager.register_module(self.chart_widget, "acceleration_analysis_chart")
         
         return container
     
@@ -992,7 +1009,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
     def set_statistics_visibility(self, visible: bool) -> bool:
         """設置統計面板顯示狀態 - 供分析模組管理器調用"""
         try:
-            print(f"[RPM_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            print(f"[acceleration_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
             
             if visible:
                 # 顯示統計面板
@@ -1004,11 +1021,11 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 # 隱藏整個統計容器
                 self.stats_container.setVisible(False)
             
-            print(f"[RPM_CHART] ✅ 統計面板顯示狀態設置完成")
+            print(f"[acceleration_CHART] ✅ 統計面板顯示狀態設置完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART] 設置統計面板顯示狀態失敗: {e}")
+            print(f"[ERROR] [acceleration_CHART] 設置統計面板顯示狀態失敗: {e}")
             return False
             
     def _adjust_table_height(self):
@@ -1104,166 +1121,166 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             self.lap_time_label.setText("⏱️ 圈時間: 錯誤")
             self.tyre_compound_label.setText("🛞 輪胎配方: 錯誤")
     
-    def update_rpm_data(self, data: Dict[str, Any]):
-        """更新RPM數據 - 採用速度分析的更新邏輯"""
+    def update_acceleration_data(self, data: Dict[str, Any]):
+        """更新acceleration數據 - 採用速度分析的更新邏輯"""
         self.current_data = data
         
         try:
-            print(f"[RPM_CHART] ========== 更新RPM數據 ==========")
-            print(f"[RPM_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
+            print(f"[acceleration_CHART] ========== 更新acceleration數據 ==========")
+            print(f"[acceleration_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
             
             if not data:
-                print(f"[ERROR] [RPM_CHART] 數據為空")
+                print(f"[ERROR] [acceleration_CHART] 數據為空")
                 return
             
             # 提取元數據
             metadata = data.get('metadata', {})
-            rpm_data = data.get('rpm_data', {})
+            acceleration_data = data.get('acceleration_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[RPM_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
-            print(f"[RPM_CHART] rpm_data 鍵: {list(rpm_data.keys()) if rpm_data else 'None'}")
-            print(f"[RPM_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
+            print(f"[acceleration_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
+            print(f"[acceleration_CHART] acceleration_data 鍵: {list(acceleration_data.keys()) if acceleration_data else 'None'}")
+            print(f"[acceleration_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
             
             # 提取車手信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
             
-            print(f"[RPM_CHART] 車手數量: {len(drivers)}")
-            print(f"[RPM_CHART] 賽道區段: {len(sectors)}")
+            print(f"[acceleration_CHART] 車手數量: {len(drivers)}")
+            print(f"[acceleration_CHART] 賽道區段: {len(sectors)}")
             
-            # 提取RPM數據
-            distance = rpm_data.get('distance', [])
-            driver1_rpm = rpm_data.get('driver1_rpm', [])
-            driver2_rpm = rpm_data.get('driver2_rpm', [])
-            driver1_name = rpm_data.get('driver1_name', 'Driver 1')
-            driver2_name = rpm_data.get('driver2_name', 'Driver 2')
+            # 提取acceleration數據
+            distance = acceleration_data.get('distance', [])
+            driver1_acceleration = acceleration_data.get('driver1_acceleration', [])
+            driver2_acceleration = acceleration_data.get('driver2_acceleration', [])
+            driver1_name = acceleration_data.get('driver1_name', 'Driver 1')
+            driver2_name = acceleration_data.get('driver2_name', 'Driver 2')
             
-            print(f"[RPM_CHART] 距離數據點: {len(distance)}")
-            print(f"[RPM_CHART] 車手1 RPM數據點: {len(driver1_rpm)}")
-            print(f"[RPM_CHART] 車手2 RPM數據點: {len(driver2_rpm)}")
+            print(f"[acceleration_CHART] 距離數據點: {len(distance)}")
+            print(f"[acceleration_CHART] 車手1 acceleration數據點: {len(driver1_acceleration)}")
+            print(f"[acceleration_CHART] 車手2 acceleration數據點: {len(driver2_acceleration)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
-                print(f"[RPM_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
+                print(f"[acceleration_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
-                print(f"[RPM_CHART] 單車手模式: {driver1_name}")
+                print(f"[acceleration_CHART] 單車手模式: {driver1_name}")
             
             # 檢測是否為單車手模式或相同車手比較
             is_single_driver_mode = False
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
-                print(f"[RPM_CHART] 🔍 檢測到單車手模式標記")
+                print(f"[acceleration_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
                 # 相同車手比較（如 VER vs VER）
                 is_single_driver_mode = True
-                print(f"[RPM_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
+                print(f"[acceleration_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
-                print(f"[RPM_CHART] 🔍 檢測到單車手數據: {driver1_name}")
+                print(f"[acceleration_CHART] 🔍 檢測到單車手數據: {driver1_name}")
             
             if is_single_driver_mode:
-                print(f"[RPM_CHART] 🎯 使用單車手模式顯示")
+                print(f"[acceleration_CHART] 🎯 使用單車手模式顯示")
                 # 清空車手2的數據，只顯示車手1
-                driver2_rpm = []
+                driver2_acceleration = []
                 driver2_name = ""  # 單車手模式才清空車手2名稱
             else:
                 # 雙車手模式 - 保持車手名稱不變
-                print(f"[RPM_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
+                print(f"[acceleration_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 檢查數據完整性
-            if not distance or not driver1_rpm:
-                print(f"[ERROR] [RPM_CHART] 關鍵數據缺失")
-                print(f"[RPM_CHART] distance: {len(distance) if distance else 0} 點")
-                print(f"[RPM_CHART] driver1_rpm: {len(driver1_rpm) if driver1_rpm else 0} 點")
+            if not distance or not driver1_acceleration:
+                print(f"[ERROR] [acceleration_CHART] 關鍵數據缺失")
+                print(f"[acceleration_CHART] distance: {len(distance) if distance else 0} 點")
+                print(f"[acceleration_CHART] driver1_acceleration: {len(driver1_acceleration) if driver1_acceleration else 0} 點")
                 return
             
             # 更新圖表
-            print(f"[RPM_CHART] 📊 更新圖表...")
-            self.chart_widget.set_rpm_data(
+            print(f"[acceleration_CHART] 📊 更新圖表...")
+            self.chart_widget.set_acceleration_data(
                 distance=distance,
-                driver1_rpm=driver1_rpm,
-                driver2_rpm=driver2_rpm,
+                driver1_acceleration=driver1_acceleration,
+                driver2_acceleration=driver2_acceleration,
                 driver1_name=driver1_name,
                 driver2_name=driver2_name,
                 sectors=sectors
             )
-            print(f"[RPM_CHART] ✅ 圖表更新完成")
+            print(f"[acceleration_CHART] ✅ 圖表更新完成")
             
             # 更新統計表格
-            print(f"[RPM_CHART] 📋 更新統計表格...")
+            print(f"[acceleration_CHART] 📋 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, driver2_name)
             
             # 更新狀態資訊顯示
-            print(f"[RPM_CHART] 📋 更新狀態資訊...")
+            print(f"[acceleration_CHART] 📋 更新狀態資訊...")
             self._update_status_info(data)
             
             self.chart_updated.emit()
-            print(f"[RPM_CHART] ✅ 全部更新完成")
+            print(f"[acceleration_CHART] ✅ 全部更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [RPM CHART WIDGET] 更新數據失敗: {e}")
+            print(f"[ERROR] [acceleration CHART WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _prepare_chart_data(self, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """準備圖表數據"""
         try:
-            if 'rpm_telemetry' in data:
-                # 直接RPM數據
-                return self._parse_rpm_telemetry(data['rpm_telemetry'])
+            if 'acceleration_telemetry' in data:
+                # 直接acceleration數據
+                return self._parse_acceleration_telemetry(data['acceleration_telemetry'])
             
             elif 'speed_data' in data:
-                # 從速度數據模擬RPM數據
-                return self._simulate_rpm_from_speed(data['speed_data'])
+                # 從速度數據模擬acceleration數據
+                return self._simulate_acceleration_from_speed(data['speed_data'])
             
             else:
                 # 生成模擬數據
-                return self._generate_mock_rpm_data()
+                return self._generate_mock_acceleration_data()
                 
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART_WIDGET] 準備圖表數據失敗: {e}")
-            return self._generate_mock_rpm_data()
+            print(f"[ERROR] [acceleration_CHART_WIDGET] 準備圖表數據失敗: {e}")
+            return self._generate_mock_acceleration_data()
     
-    def _parse_rpm_telemetry(self, rpm_data: Dict[str, Any]) -> Dict[str, Any]:
-        """解析RPM遙測數據"""
+    def _parse_acceleration_telemetry(self, acceleration_data: Dict[str, Any]) -> Dict[str, Any]:
+        """解析acceleration遙測數據"""
         distance = []
-        driver1_rpm = []
-        driver2_rpm = []
+        driver1_acceleration = []
+        driver2_acceleration = []
         
         # 解析車手1數據
-        if 'driver1_rpm_data' in rpm_data:
-            for point in rpm_data['driver1_rpm_data']:
+        if 'driver1_acceleration_data' in acceleration_data:
+            for point in acceleration_data['driver1_acceleration_data']:
                 distance.append(point.get('distance', 0))
-                driver1_rpm.append(point.get('rpm', 0))
+                driver1_acceleration.append(point.get('acceleration', 0))
         
         # 解析車手2數據
-        if 'driver2_rpm_data' in rpm_data:
-            for point in rpm_data['driver2_rpm_data']:
-                driver2_rpm.append(point.get('rpm', 0))
+        if 'driver2_acceleration_data' in acceleration_data:
+            for point in acceleration_data['driver2_acceleration_data']:
+                driver2_acceleration.append(point.get('acceleration', 0))
         
         return {
             'distance': distance,
-            'driver1_rpm': driver1_rpm,
-            'driver2_rpm': driver2_rpm,
-            'driver1_name': rpm_data.get('driver1_name', 'Driver 1'),
-            'driver2_name': rpm_data.get('driver2_name', 'Driver 2'),
-            'sectors': rpm_data.get('sectors', []),
-            'engine_info': rpm_data.get('engine_info', {}),
-            'track_info': rpm_data.get('track_info', {})
+            'driver1_acceleration': driver1_acceleration,
+            'driver2_acceleration': driver2_acceleration,
+            'driver1_name': acceleration_data.get('driver1_name', 'Driver 1'),
+            'driver2_name': acceleration_data.get('driver2_name', 'Driver 2'),
+            'sectors': acceleration_data.get('sectors', []),
+            'engine_info': acceleration_data.get('engine_info', {}),
+            'track_info': acceleration_data.get('track_info', {})
         }
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
         """更新統計表格 - 採用速度分析的表格風格"""
-        print(f"[RPM_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
+        print(f"[acceleration_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
         
         if not statistics:
-            print(f"[RPM_CHART] ⚠️  statistics 為空")
+            print(f"[acceleration_CHART] ⚠️  statistics 為空")
             return
             
         try:
@@ -1271,27 +1288,27 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             driver2_stats = statistics.get('driver2_stats', {})
             comparison = statistics.get('comparison', {})
             
-            print(f"[RPM_CHART] driver1_stats: {driver1_stats}")
-            print(f"[RPM_CHART] driver2_stats: {driver2_stats}")
-            print(f"[RPM_CHART] comparison: {comparison}")
+            print(f"[acceleration_CHART] driver1_stats: {driver1_stats}")
+            print(f"[acceleration_CHART] driver2_stats: {driver2_stats}")
+            print(f"[acceleration_CHART] comparison: {comparison}")
             
             # 準備表格數據
             rows = [
-                ("最高轉速 (rpm)", 
-                 f"{driver1_stats.get('max_rpm', 0):.0f}",
-                 f"{driver2_stats.get('max_rpm', 0):.0f}",
-                 f"{comparison.get('max_rpm_diff', 0):.0f}"),
-                ("平均轉速 (rpm)",
-                 f"{driver1_stats.get('avg_rpm', 0):.0f}",
-                 f"{driver2_stats.get('avg_rpm', 0):.0f}",
-                 f"{comparison.get('avg_rpm_diff', 0):.0f}"),
-                ("最低轉速 (rpm)",
-                 f"{driver1_stats.get('min_rpm', 0):.0f}",
-                 f"{driver2_stats.get('min_rpm', 0):.0f}",
-                 f"{comparison.get('min_rpm_diff', 0):.0f}")
+                ("最高轉速 (acceleration)", 
+                 f"{driver1_stats.get('max_acceleration', 0):.0f}",
+                 f"{driver2_stats.get('max_acceleration', 0):.0f}",
+                 f"{comparison.get('max_acceleration_diff', 0):.0f}"),
+                ("平均轉速 (acceleration)",
+                 f"{driver1_stats.get('avg_acceleration', 0):.0f}",
+                 f"{driver2_stats.get('avg_acceleration', 0):.0f}",
+                 f"{comparison.get('avg_acceleration_diff', 0):.0f}"),
+                ("最低轉速 (acceleration)",
+                 f"{driver1_stats.get('min_acceleration', 0):.0f}",
+                 f"{driver2_stats.get('min_acceleration', 0):.0f}",
+                 f"{comparison.get('min_acceleration_diff', 0):.0f}")
             ]
             
-            print(f"[RPM_CHART] 表格數據行: {rows}")
+            print(f"[acceleration_CHART] 表格數據行: {rows}")
             
             # 設置表格行數和數據
             self.stats_table.setRowCount(len(rows))
@@ -1318,32 +1335,32 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             # 自動調整表格高度
             self._adjust_table_height()
             
-            print(f"[RPM CHART WIDGET] ✅ 統計表格更新完成")
+            print(f"[acceleration CHART WIDGET] ✅ 統計表格更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [RPM CHART WIDGET] 更新統計表格失敗: {e}")
+            print(f"[ERROR] [acceleration CHART WIDGET] 更新統計表格失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def reload_data(self):
         """重新載入數據（提供給外部調用）"""
         if self.current_data:
-            self.update_rpm_data(self.current_data)
+            self.update_acceleration_data(self.current_data)
     
     def update_lap_parameters(self, year: str, race: str, session: str, 
                              driver1: str = None, driver2: str = None,
                              lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 與速度分析模組保持一致"""
         try:
-            print(f"[RPM_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
-            print(f"[RPM_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            print(f"[acceleration_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
+            print(f"[acceleration_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
             
             # 更新圈數顯示
             self.set_lap_numbers(lap1, lap2)
             
             # 如果有數據載入器，重新載入數據
-            if hasattr(self, 'rpm_loader'):
-                print(f"[RPM_CHART_WIDGET] 📦 找到RPM數據載入器，準備重新載入...")
+            if hasattr(self, 'acceleration_loader'):
+                print(f"[acceleration_CHART_WIDGET] 📦 找到acceleration數據載入器，準備重新載入...")
                 
                 session_info = {
                     'year': int(year) if year.isdigit() else year,
@@ -1356,15 +1373,15 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                     'is_fastest_lap': is_fastest
                 }
                 
-                self.rpm_loader.load_rpm_analysis_data(session_info)
-                print(f"[RPM_CHART_WIDGET] ✅ 數據重新載入請求已發送")
+                self.acceleration_loader.load_acceleration_analysis_data(session_info)
+                print(f"[acceleration_CHART_WIDGET] ✅ 數據重新載入請求已發送")
                 return True
             else:
-                print(f"[RPM_CHART_WIDGET] ⚠️ 未找到RPM數據載入器，僅更新顯示")
+                print(f"[acceleration_CHART_WIDGET] ⚠️ 未找到acceleration數據載入器，僅更新顯示")
                 return True
                 
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART_WIDGET] 更新圈速參數失敗: {e}")
+            print(f"[ERROR] [acceleration_CHART_WIDGET] 更新圈速參數失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1405,9 +1422,9 @@ if __name__ == "__main__":
     
     app = QApplication(sys.argv)
     
-    # 測試RPM圖表組件
-    widget = RPMAnalysisChartWidget()
-    widget.setWindowTitle("🔄 RPM分析圖表測試")
+    # 測試acceleration圖表組件
+    widget = accelerationAnalysisChartWidget()
+    widget.setWindowTitle("🔄 acceleration分析圖表測試")
     widget.resize(1000, 700)
     widget.show()
     

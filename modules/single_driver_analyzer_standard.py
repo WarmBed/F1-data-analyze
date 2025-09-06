@@ -1,5 +1,5 @@
 """
-單車手分析模組 - 標準化接口
+單場賽事車手分析模組 - 標準化接口
 Single Driver Analysis Module - Standardized Interface
 """
 
@@ -22,11 +22,11 @@ except ImportError:
             self.cache_enabled = True
 
 class SingleDriverAnalyzer(AnalysisModuleBase):
-    """單車手分析器 - 標準化模組接口"""
+    """單場賽事車手分析器 - 標準化模組接口"""
     
     def __init__(self, data_loader=None):
         super().__init__(
-            name="單車手分析",
+            name="單場賽事車手分析",
             description="單一車手的綜合性能分析",
             module_id=11
         )

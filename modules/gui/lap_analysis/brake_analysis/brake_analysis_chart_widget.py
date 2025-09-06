@@ -2,7 +2,7 @@
 """
 brake分析圖表組件
 使用 PyQt5 原生繪圖實現距離-brake曲線圖表
-支援雙車手對比和單車手分析，與系統其他組件保持一致的視覺風格
+支援雙車手對比和單場賽事車手分析，與系統其他組件保持一致的視覺風格
 """
 
 import sys
@@ -304,7 +304,7 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "brake (轉/分)")
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "煞車")
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):

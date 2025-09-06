@@ -295,6 +295,7 @@ class ModuleTypes:
     TELEMETRY_STEERING = "telemetry_steering"
     TELEMETRY_RPM = "telemetry_rpm"
     TELEMETRY_GEAR = "telemetry_gear"
+    TELEMETRY_ACCELERATION = "telemetry_acceleration"
     TELEMETRY_ANALYSIS = "telemetry_analysis"
     TRACK_MAP = "track_map"
     LAP_ANALYSIS = "lap_analysis"

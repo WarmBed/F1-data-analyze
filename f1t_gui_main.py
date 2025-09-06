@@ -285,30 +285,30 @@ class GlobalSignalManager(QObject):
     sync_x_position = pyqtSignal(int)  # X軸位置同步信號 (滑鼠位置)
     sync_x_range = pyqtSignal(float, float)  # X軸範圍同步信號 (偏移, 縮放)
     
-    # 新增：圈速分析模組連動信號 (獨立於同步功能)
-    lap_analysis_x_linkage = pyqtSignal(float, float)  # 圈速分析X軸連動信號 (距離值, Y軸相對位置)
-    lap_analysis_x_clear = pyqtSignal()  # 圈速分析X軸清除信號
+    # 新增：遙測分析模組連動信號 (獨立於同步功能)
+    lap_analysis_x_linkage = pyqtSignal(float, float)  # 遙測分析X軸連動信號 (距離值, Y軸相對位置)
+    lap_analysis_x_clear = pyqtSignal()  # 遙測分析X軸清除信號
     
-    # 新增：圈速分析點擊連動信號
-    lap_analysis_click_linkage = pyqtSignal(float)  # 圈速分析點擊連動信號 (距離值)
-    lap_analysis_click_clear = pyqtSignal()  # 圈速分析點擊清除信號
+    # 新增：遙測分析點擊連動信號
+    lap_analysis_click_linkage = pyqtSignal(float)  # 遙測分析點擊連動信號 (距離值)
+    lap_analysis_click_clear = pyqtSignal()  # 遙測分析點擊清除信號
     
-    # 新增：圈速分析連動控制信號
+    # 新增：遙測分析連動控制信號
     lap_analysis_master_linkage_changed = pyqtSignal(bool)  # 總開關狀態變更信號
     
     def __init__(self):
         super().__init__()
-        # 圈速分析連動總開關狀態
+        # 遙測分析連動總開關狀態
         self.lap_analysis_linkage_master_enabled = True
         
     def set_lap_linkage_enabled(self, enabled: bool):
-        """設置圈速分析連動總開關狀態"""
+        """設置遙測分析連動總開關狀態"""
         self.lap_analysis_linkage_master_enabled = enabled
         self.lap_analysis_master_linkage_changed.emit(enabled)
-        print(f"[GLOBAL_SIGNALS] 圈速分析連動總開關: {'啟用' if enabled else '停用'}")
+        print(f"[GLOBAL_SIGNALS] 遙測分析連動總開關: {'啟用' if enabled else '停用'}")
     
     def is_lap_linkage_enabled(self) -> bool:
-        """檢查圈速分析連動總開關是否啟用"""
+        """檢查遙測分析連動總開關是否啟用"""
         return self.lap_analysis_linkage_master_enabled
         
 # 創建全域信號管理器實例
@@ -523,11 +523,11 @@ class MainWindowParameterProvider:
         return "R"  # 預設值
 
 class LapAnalysisOptionsDialog(QDialog):
-    """圈速分析選項對話框 - 讓使用者選擇要顯示的遙測圖表和車手"""
+    """遙測分析選項對話框 - 讓使用者選擇要顯示的遙測圖表和車手"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("圈速分析選項")
+        self.setWindowTitle("遙測分析選項")
         self.setModal(True)
         self.setFixedSize(420, 520)
         
@@ -1762,7 +1762,7 @@ class SystemLogWidget(QTextEdit):
             "[13:28:48] INFO: 載入Japan 2025 Race數據",
             "[13:28:49] INFO: 數據驗證完成 - 12,540筆記錄",
             "[13:28:50] INFO: 準備分析VER vs LEC",
-            "[13:28:51] INFO: 遙測分析模組就緒"
+            "[13:28:51] INFO: 單場賽事總攬模組就緒"
         ]
         
         for log in logs:
@@ -2144,7 +2144,7 @@ class PopoutSubWindow(QMdiSubWindow):
             elif title.startswith("[COMPARE]"):
                 return "比較分析"
             elif title.startswith("[TELEMETRY]"):
-                return "遙測分析"
+                return "單場賽事總攬"
             elif "_" in title:
                 # 新格式：模組名稱_年份_賽事_賽段
                 module_part = title.split('_')[0]
@@ -3613,6 +3613,85 @@ class PopoutSubWindow(QMdiSubWindow):
             import traceback
             traceback.print_exc()
 
+    def _update_acceleration_analysis_chart(self, json_data):
+        """更新加速度分析圖表的專用方法"""
+        print(f"[ACCELERATION UPDATE] ========== 開始更新加速度分析圖表 ==========")
+        
+        try:
+            # 尋找加速度分析圖表組件
+            from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_chart_widget import accelerationAnalysisChartWidget
+            
+            def find_acceleration_widgets(widget):
+                """遞歸查找 accelerationAnalysisChartWidget"""
+                widgets = []
+                if isinstance(widget, accelerationAnalysisChartWidget):
+                    widgets.append(widget)
+                
+                # 遞歸檢查子組件
+                if hasattr(widget, 'findChildren'):
+                    for child in widget.findChildren(accelerationAnalysisChartWidget):
+                        widgets.append(child)
+                elif hasattr(widget, 'children'):
+                    for child in widget.children():
+                        widgets.extend(find_acceleration_widgets(child))
+                        
+                return widgets
+            
+            acceleration_widgets = find_acceleration_widgets(self)
+            print(f"[ACCELERATION UPDATE] 找到 {len(acceleration_widgets)} 個加速度分析圖表組件")
+            
+            if acceleration_widgets:
+                for i, widget in enumerate(acceleration_widgets):
+                    print(f"[ACCELERATION UPDATE] 更新第 {i+1} 個加速度分析圖表")
+                    
+                    # 檢查是否有數據載入器
+                    if hasattr(widget, 'acceleration_loader'):
+                        print(f"[ACCELERATION UPDATE] 找到數據載入器，觸發重新載入")
+                        
+                        # 獲取當前參數
+                        year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
+                        race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
+                        session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
+                        
+                        # 獲取當前選擇的車手和圈數
+                        driver1 = getattr(self, 'local_driver1', None) or self.get_current_driver1_from_main_window()
+                        driver2 = getattr(self, 'local_driver2', None) or self.get_current_driver2_from_main_window()
+                        lap1 = getattr(self, 'local_lap1', None) or self.get_current_lap1_from_main_window()
+                        lap2 = getattr(self, 'local_lap2', None) or self.get_current_lap2_from_main_window()
+                        is_fastest = getattr(self, 'local_is_fastest', False) or self.get_current_fastest_from_main_window()
+                        
+                        print(f"[ACCELERATION UPDATE] 使用參數: {year} {race} {session}")
+                        print(f"[ACCELERATION UPDATE] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}, 最速圈: {is_fastest}")
+                        
+                        # 觸發數據重新載入
+                        widget.acceleration_loader.load_acceleration_data(
+                            year=int(year),
+                            race=race,
+                            session=session,
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1,
+                            lap2=lap2,
+                            is_fastest_lap=is_fastest
+                        )
+                        print(f"[ACCELERATION UPDATE] ✅ 已觸發數據重新載入")
+                    else:
+                        print(f"[ACCELERATION UPDATE] ⚠️ 未找到數據載入器")
+                        
+                        # 嘗試直接更新數據（使用JSON數據）
+                        if json_data:
+                            print(f"[ACCELERATION UPDATE] 嘗試直接使用JSON數據更新")
+                            widget.update_acceleration_data(json_data)
+            else:
+                print(f"[ACCELERATION UPDATE] ⚠️ 未找到加速度分析圖表組件")
+                
+            print(f"[ACCELERATION UPDATE] ========== 加速度分析圖表更新完成 ==========")
+            
+        except Exception as e:
+            print(f"[ERROR] [ACCELERATION UPDATE] 加速度分析圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
     def update_telemetry_chart(self, telemetry_data):
         """更新遙測圖表"""
         print(f"[CHART] 更新遙測圖表資料")
@@ -4555,12 +4634,12 @@ class StyleHMainWindow(QMainWindow):
         self.mdi_areas = []  # 存儲所有MDI區域的引用
         print("[INIT] ✅ MDI區域引用已初始化")
         
-        # 初始化圈速分析狀態追蹤
-        self.lap_analysis_active = False  # 是否有圈速分析活動
-        self.lap_analysis_windows = set()  # 活動的圈速分析視窗集合
-        self.lap_controls_visible = False  # 圈速控件是否可見
+        # 初始化遙測分析狀態追蹤
+        self.lap_analysis_active = False  # 是否有遙測分析活動
+        self.lap_analysis_windows = set()  # 活動的遙測分析視窗集合
+        self.lap_controls_visible = False  # 遙測控件是否可見
         self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
-        print("[INIT] ✅ 圈速分析狀態追蹤已初始化")
+        print("[INIT] ✅ 遙測分析狀態追蹤已初始化")
         
         print("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
@@ -4581,7 +4660,7 @@ class StyleHMainWindow(QMainWindow):
         # 設置延遲檢查機制，確保標籤隱藏狀態正確
         QTimer.singleShot(1000, self.check_and_hide_tabs)
         
-        # 延遲檢查圈速分析控件狀態 (2秒後執行，確保所有視窗都已初始化)
+        # 延遲檢查遙測分析控件狀態 (2秒後執行，確保所有視窗都已初始化)
         QTimer.singleShot(2000, self.check_and_show_lap_controls_if_needed)
         
     def init_ui(self):
@@ -4638,9 +4717,9 @@ class StyleHMainWindow(QMainWindow):
         analysis_menu.addAction('[RAIN] 降雨分析', self.rain_analysis)
         analysis_menu.addSeparator()
         analysis_menu.addAction('[FINISH] 賽道軌跡分析', self.open_track_analysis_window)
-        analysis_menu.addAction('🏎️ 遙測分析', self.open_telemetry_analysis)
+        analysis_menu.addAction('🏎️ 單場賽事總攬', self.open_telemetry_analysis)
         analysis_menu.addSeparator()
-        analysis_menu.addAction('圈速分析', self.lap_analysis)
+        analysis_menu.addAction('遙測分析', self.lap_analysis)
         analysis_menu.addAction('遙測比較', self.telemetry_comparison)
         analysis_menu.addAction('車手比較', self.driver_comparison)
         analysis_menu.addAction('扇區分析', self.sector_analysis)
@@ -4666,7 +4745,7 @@ class StyleHMainWindow(QMainWindow):
         tools_menu.addSeparator()
         
         # X軸連動功能控制
-        self.linkage_action = QAction('🔗 圈速分析X軸連動', self)
+        self.linkage_action = QAction('🔗 遙測分析X軸連動', self)
         self.linkage_action.setCheckable(True)
         self.linkage_action.setChecked(True)  # 預設啟用
         self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
@@ -4679,7 +4758,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar.setMovable(False)
         toolbar.setFloatable(False)
         toolbar.setToolButtonStyle(Qt.ToolButtonIconOnly)
-        # 修改：增加工具欄高度以容納圈速分析控件
+        # 修改：增加工具欄高度以容納遙測分析控件
         toolbar.setFixedHeight(35)  # 從35增加到50像素
         self.addToolBar(toolbar)
         
@@ -4710,7 +4789,7 @@ class StyleHMainWindow(QMainWindow):
         # 保存工具欄引用以便動態添加/移除控件
         self.main_toolbar = toolbar
         
-        # 建立圈速分析控件但不添加到工具欄（將在需要時動態添加）
+        # 建立遙測分析控件但不添加到工具欄（將在需要時動態添加）
         self._create_lap_analysis_controls()
         
         toolbar.addSeparator()
@@ -4730,10 +4809,10 @@ class StyleHMainWindow(QMainWindow):
         self.on_year_changed(self.year_combo.currentText())
     
     def _create_lap_analysis_controls(self):
-        """創建圈速分析控件（不添加到工具欄）"""
-        print("[LAP_CONTROL] 🏗️ 創建圈速分析控件...")
+        """創建遙測分析控件（不添加到工具欄）"""
+        print("[LAP_CONTROL] 🏗️ 創建遙測分析控件...")
         
-        # 動態圈速分析控件
+        # 動態遙測分析控件
         self.lap_separator = None
         
         # 車手1控件
@@ -4790,7 +4869,7 @@ class StyleHMainWindow(QMainWindow):
         self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
         self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
         
-        print("[LAP_CONTROL] ✅ 圈速分析控件創建完成（自動更新模式已啟用）")
+        print("[LAP_CONTROL] ✅ 遙測分析控件創建完成（自動更新模式已啟用）")
     
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
@@ -4941,13 +5020,13 @@ class StyleHMainWindow(QMainWindow):
         # 同步賽段到MDI子視窗
         self.sync_to_all_mdi_subwindows('session', session)
     
-    # ========== 圈速分析控件管理 ==========
+    # ========== 遙測分析控件管理 ==========
     
     def check_and_show_lap_controls_if_needed(self):
-        """檢查是否有圈速分析視窗，如果有就顯示控件"""
-        print("[LAP_CONTROL] 🔍 檢查是否需要顯示圈速分析控件...")
+        """檢查是否有遙測分析視窗，如果有就顯示控件"""
+        print("[LAP_CONTROL] 🔍 檢查是否需要顯示遙測分析控件...")
         
-        # 檢查MDI區域中是否有圈速分析相關的視窗
+        # 檢查MDI區域中是否有遙測分析相關的視窗
         current_mdi_area = self.get_current_mdi_area()
         if not current_mdi_area:
             print("[LAP_CONTROL] ❌ 無法獲取當前MDI區域")
@@ -4962,10 +5041,10 @@ class StyleHMainWindow(QMainWindow):
                 # 檢查是否為速度分析或RPM分析視窗
                 if any(keyword in window_title for keyword in ["速度分析", "RPM分析", "⚡", "🔄"]):
                     lap_analysis_windows_found.append((sub_window, widget, window_title))
-                    print(f"[LAP_CONTROL] 🎯 發現圈速分析視窗: {window_title}")
+                    print(f"[LAP_CONTROL] 🎯 發現遙測分析視窗: {window_title}")
         
         if lap_analysis_windows_found:
-            print(f"[LAP_CONTROL] 📊 找到 {len(lap_analysis_windows_found)} 個圈速分析視窗")
+            print(f"[LAP_CONTROL] 📊 找到 {len(lap_analysis_windows_found)} 個遙測分析視窗")
             
             # 🔧 修復：不清空現有追蹤，而是進行智能合併
             # 保留已正確追蹤的模組，只添加新發現的
@@ -5005,15 +5084,15 @@ class StyleHMainWindow(QMainWindow):
                     self.lap_analysis_windows.add(sub_window)
                     print(f"[LAP_CONTROL] ✅ 已添加子視窗到追蹤: {window_title}")
             
-            # 強制顯示圈速分析控件
-            print("[LAP_CONTROL] 🚀 強制顯示圈速分析控件...")
+            # 強制顯示遙測分析控件
+            print("[LAP_CONTROL] 🚀 強制顯示遙測分析控件...")
             self.show_lap_controls()
         else:
-            print("[LAP_CONTROL] ℹ️ 未發現圈速分析視窗，不顯示控件")
+            print("[LAP_CONTROL] ℹ️ 未發現遙測分析視窗，不顯示控件")
     
     def force_show_lap_controls(self):
-        """強制顯示圈速分析控件（測試用）"""
-        print("[LAP_CONTROL] 🚨 強制顯示圈速分析控件...")
+        """強制顯示遙測分析控件（測試用）"""
+        print("[LAP_CONTROL] 🚨 強制顯示遙測分析控件...")
         self.show_lap_controls()
     
     def initialize_driver_lists(self):
@@ -5066,12 +5145,12 @@ class StyleHMainWindow(QMainWindow):
             print(f"[ERROR] [LAP_CONTROL] 初始化車手列表失敗: {e}")
     
     def show_lap_controls(self):
-        """顯示圈速分析控件（動態添加到工具欄）"""
-        print("[LAP_CONTROL] � 開始顯示圈速分析控件（動態添加）")
+        """顯示遙測分析控件（動態添加到工具欄）"""
+        print("[LAP_CONTROL] 📊 開始顯示遙測分析控件（動態添加）")
         
         # 檢查是否已經添加到工具欄
         if hasattr(self, '_lap_controls_added') and self._lap_controls_added:
-            print("[LAP_CONTROL] ⚠️ 圈速分析控件已經在工具欄中，跳過重複添加")
+            print("[LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加")
             return
         
         try:
@@ -5100,7 +5179,7 @@ class StyleHMainWindow(QMainWindow):
                 else:
                     self.lap_separator = self.main_toolbar.addSeparator()
                 
-                # 依序添加圈速分析控件
+                # 依序添加遙測分析控件
                 controls_to_add = [
                     self.driver1_label, self.driver1_combo,
                     self.lap1_label, self.lap1_spinbox,
@@ -5137,7 +5216,7 @@ class StyleHMainWindow(QMainWindow):
                 else:
                     self.update_all_action = self.main_toolbar.addAction(update_action)
                 
-                # 添加圈速分析連動總開關
+                # 添加遙測分析連動總開關
                 self.lap_linkage_action = QAction("🔗 圈速連動", self)
                 self.lap_linkage_action.setCheckable(True)
                 self.lap_linkage_action.setChecked(True)  # 預設啟用
@@ -5174,7 +5253,7 @@ class StyleHMainWindow(QMainWindow):
             print(f"[LAP_CONTROL] ❌ 添加圈速分析控件時發生錯誤: {e}")
     
     def hide_lap_controls(self):
-        """隱藏圈速分析控件（從工具欄移除）"""
+        """隱藏遙測分析控件（從工具欄移除）"""
         if len(self.lap_analysis_windows) > 0:
             print("[LAP_CONTROL] ⚠️ 還有圈速分析視窗開啟中，不隱藏控件")
             return
@@ -5187,7 +5266,7 @@ class StyleHMainWindow(QMainWindow):
             return
         
         try:
-            # 移除所有圈速分析控件
+            # 移除所有遙測分析控件
             if hasattr(self, 'lap_separator') and self.lap_separator:
                 self.main_toolbar.removeAction(self.lap_separator)
                 self.lap_separator = None
@@ -5224,7 +5303,7 @@ class StyleHMainWindow(QMainWindow):
         print("[LAP_CONTROL] 🔍 ========== 調試結束 ==========")
     
     def on_lap_analysis_window_opened(self, window_object, analysis_type):
-        """圈速分析視窗開啟時調用"""
+        """遙測分析視窗開啟時調用"""
         window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
         print(f"[LAP_CONTROL] 🚨 CRITICAL: on_lap_analysis_window_opened 被調用!")
         print(f"[LAP_CONTROL] 📊 參數: window_title='{window_title}', analysis_type='{analysis_type}'")
@@ -5244,12 +5323,12 @@ class StyleHMainWindow(QMainWindow):
         print("[LAP_CONTROL] 🎯 即將調用 show_lap_controls()...")
         self.show_lap_controls()
         
-        # 🎯 新增: 統一觸發工具欄狀態更新 - 任何圈速分析模組都會觸發
+        # 🎯 新增: 統一觸發工具欄狀態更新 - 任何遙測分析模組都會觸發
         print(f"[TOOLBAR_TRIGGER] 🚀 圈速分析模組開啟，觸發工具欄狀態更新: {analysis_type}")
         self._trigger_toolbar_status_for_lap_analysis(analysis_type, window_object)
     
     def on_lap_analysis_window_closed(self, window_object):
-        """圈速分析視窗關閉時調用"""
+        """遙測分析視窗關閉時調用"""
         # 從追蹤集合中移除
         self.lap_analysis_windows.discard(window_object)
         
@@ -5274,7 +5353,7 @@ class StyleHMainWindow(QMainWindow):
             self.hide_lap_controls()
     
     def _trigger_toolbar_status_for_lap_analysis(self, analysis_type, window_object):
-        """統一觸發工具欄狀態更新 - 任何圈速分析模組都會觸發"""
+        """統一觸發工具欄狀態更新 - 任何遙測分析模組都會觸發"""
         try:
             print(f"[TOOLBAR_TRIGGER] 🎯 開始為 {analysis_type} 分析模組觸發工具欄狀態更新")
             
@@ -5293,7 +5372,7 @@ class StyleHMainWindow(QMainWindow):
             
             module_name = module_name_mapping.get(analysis_type, f"{analysis_type}分析")
             
-            # 獲取當前圈速分析設置
+            # 獲取當前遙測分析設置
             driver1 = self.driver1_combo.currentText() if hasattr(self, 'driver1_combo') else "VER"
             driver2 = self.driver2_combo.currentText() if hasattr(self, 'driver2_combo') else "LEC"
             lap1 = self.lap1_spinbox.value() if hasattr(self, 'lap1_spinbox') else 1
@@ -5329,7 +5408,7 @@ class StyleHMainWindow(QMainWindow):
             traceback.print_exc()
 
     def update_all_lap_analysis(self):
-        """更新所有圈速分析視窗"""
+        """更新所有遙測分析視窗"""
         print("[LAP_CONTROL] 🔄 開始更新所有圈速分析視窗...")
         
         if len(self.lap_analysis_windows) == 0:
@@ -5352,7 +5431,7 @@ class StyleHMainWindow(QMainWindow):
         
         print(f"[LAP_CONTROL] 📊 基本設置: {year} {race} {session}")
         
-        # 遍歷所有圈速分析視窗並更新
+        # 遍歷所有遙測分析視窗並更新
         updated_count = 0
         for i, analysis_module in enumerate(list(self.lap_analysis_windows), 1):  # 使用 list() 避免迭代時修改集合
             try:
@@ -5427,6 +5506,9 @@ class StyleHMainWindow(QMainWindow):
             elif '檔位分析' in window_title or 'Gear Analysis' in window_title:
                 print("[LAP_CONTROL] ⚙️ 檢測到檔位分析視窗，觸發專用更新")
                 self._update_gear_analysis_chart({})
+            elif '加速度分析' in window_title or 'Acceleration Analysis' in window_title:
+                print("[LAP_CONTROL] 🚀 檢測到加速度分析視窗，觸發專用更新")
+                self._update_acceleration_analysis_chart({})
             else:
                 print(f"[LAP_CONTROL] ℹ️ 未識別的視窗類型: {window_title}")
                 
@@ -5567,17 +5649,17 @@ class StyleHMainWindow(QMainWindow):
         tree.setRootIsDecorated(True)
         
         # 基礎分析模組
-        basic_group = QTreeWidgetItem(tree, ["[TOOL] 基礎分析"])
+        basic_group = QTreeWidgetItem(tree, ["[TOOL] 單場賽事分析"])
         basic_group.setExpanded(True)
         QTreeWidgetItem(basic_group, ["降雨分析"])
         QTreeWidgetItem(basic_group, ["賽道分析"])
         QTreeWidgetItem(basic_group, ["進站分析"])
         QTreeWidgetItem(basic_group, ["事故分析"])
+        QTreeWidgetItem(basic_group, ["單場賽事總攬"])
         
-        # 單車手分析模組
-        single_group = QTreeWidgetItem(tree, ["🚗 單車手分析"])
+        # 單場賽事車手分析模組
+        single_group = QTreeWidgetItem(tree, ["🚗 單場賽事車手分析"])
         single_group.setExpanded(True)
-        QTreeWidgetItem(single_group, ["遙測分析"])
         QTreeWidgetItem(single_group, ["圈速分析"])
         QTreeWidgetItem(single_group, ["超車分析"])
         QTreeWidgetItem(single_group, ["DNF分析"])
@@ -5688,7 +5770,7 @@ class StyleHMainWindow(QMainWindow):
         # 獲取當前分頁數量以生成新的標題
         count = self.tab_widget.count() + 1
         tab_types = [
-            ("[TELE] 遙測分析", self.create_telemetry_analysis_tab),
+            ("[TELE] 單場賽事總攬", self.create_telemetry_analysis_tab),
             ("[LAP] 圈速比較", self.create_laptime_comparison_tab),
             ("[TRACK] 賽道分析", self.create_track_analysis_tab),
             ("[DATA] 數據總覽", self.create_data_overview_tab)
@@ -6152,7 +6234,7 @@ class StyleHMainWindow(QMainWindow):
         return tab_container
         
     def create_telemetry_analysis_tab(self):
-        """創建遙測分析分頁"""
+        """創建單場賽事總攬分頁"""
         # 創建主容器
         tab_container = QWidget()
         tab_layout = QVBoxLayout(tab_container)
@@ -6192,7 +6274,7 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 標題標籤
-        title_label = QLabel("[CHART] 遙測分析")
+        title_label = QLabel("[CHART] 單場賽事總攬")
         title_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -6228,7 +6310,7 @@ class StyleHMainWindow(QMainWindow):
         speed_window.show()
         
         # 2. 煞車遙測曲線視窗
-        brake_window = PopoutSubWindow("煞車壓力 - 遙測分析", mdi_area)
+        brake_window = PopoutSubWindow("煞車壓力 - 單場賽事總攬", mdi_area)
         brake_chart = TelemetryChartWidget("brake")
         brake_window.setWidget(brake_chart)
         brake_window.resize(500, 250)  # 改為resize
@@ -6899,7 +6981,7 @@ class StyleHMainWindow(QMainWindow):
                 "檔位分析": "gear_analysis",     # 檔位分析映射
                 "煞車分析": "brake_analysis",    # 煞車分析映射
                 "降雨分析": "rain_analysis",     # 降雨分析映射
-                "遙測分析": "telemetry_analysis", # 遙測分析映射
+                "單場賽事總攬": "telemetry_analysis", # 單場賽事總攬映射
             }
             
             # 尋找匹配的模組類型
@@ -6985,11 +7067,11 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
-                # 處理遙測分析模組
+                # 處理單場賽事總攬模組
                 elif module_type == "telemetry_analysis":
                     try:
                         from modules.gui.telemetry_analysis_mdi import TelemetryAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建遙測分析模組實例")
+                        print(f"[OK] [MODULE_FACTORY] 創建單場賽事總攬模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = TelemetryAnalysisModule()
@@ -7006,17 +7088,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 遙測分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            print(f"[INIT] [MODULE_FACTORY] 單場賽事總攬模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 遙測分析模組初始化成功")
+                            print(f"[OK] [MODULE_FACTORY] 單場賽事總攬模組初始化成功")
                             return module
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組初始化失敗")
+                            print(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 遙測分析模組創建失敗: {e}")
+                        print(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -7730,7 +7812,10 @@ class StyleHMainWindow(QMainWindow):
                     print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = SpeedAnalysisModule()
-                    analysis_module.parameter_provider = self
+                    
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
@@ -7872,7 +7957,9 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module = RPMAnalysisModule()
                     print(f"[CREATE_DEBUG] ✅ RPM模組實例創建成功")
                     
-                    analysis_module.parameter_provider = self
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
                     print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
@@ -8023,7 +8110,9 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module = GearAnalysisModule()
                     print(f"[CREATE_DEBUG] ✅ 檔位模組實例創建成功")
                     
-                    analysis_module.parameter_provider = self
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
                     print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
@@ -8158,6 +8247,159 @@ class StyleHMainWindow(QMainWindow):
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('gear')
 
+            elif chart_type == 'acceleration':
+                # 加速度分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] 🔄 檢測到加速度分析請求，嘗試新版模組架構")
+                
+                # 使用新版模組化架構創建加速度分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入加速度分析模組...")
+                    from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi import accelerationAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ 加速度分析模組導入成功")
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = accelerationAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ 加速度模組實例創建成功")
+                    
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化加速度分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=analysis_module.driver1,
+                            driver2=analysis_module.driver2,
+                            lap1=analysis_module.lap1,
+                            lap2=analysis_module.lap2
+                        )
+                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        
+                        # 創建子視窗並設置標題 - 使用與 RPM 分析相同的模式
+                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 設置視窗大小
+                        sub_window.resize(1200, 800)
+                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 加速度分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "acceleration")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入加速度分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 加速度分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] ❌ 加速度分析模組創建失敗: {e}")
+                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    print(f"[ERROR] 回退到舊版模式")
+                    import traceback
+                    print(f"[ERROR] 詳細錯誤追踪:")
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版加速度分析模式")
+                
+                # 回退：舊版加速度分析模式
+                try:
+                    from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_chart_widget import accelerationAnalysisChartWidget
+                    from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_data_loader import accelerationAnalysisDataLoader
+                    
+                    print(f"[CREATE_DEBUG] 📦 創建加速度分析組件...")
+                    chart_widget = accelerationAnalysisChartWidget()
+                    
+                    # 創建加速度資料載入器
+                    print(f"[CREATE_DEBUG] 📊 創建加速度資料載入器...")
+                    acceleration_loader = accelerationAnalysisDataLoader()
+                    acceleration_loader.data_loaded.connect(chart_widget.update_acceleration_data)
+                    acceleration_loader.load_error.connect(lambda error: print(f"[ERROR] 加速度資料載入失敗: {error}"))
+                    
+                    # 開始載入資料
+                    print(f"[CREATE_DEBUG] 🚀 開始載入加速度資料: {driver1} vs {driver2}")
+                    
+                    session_info = {
+                        'year': params['year'],
+                        'race': params['race'],
+                        'session': params['session'],
+                        'driver1': driver1 if driver1 else 'VER',
+                        'driver2': driver2 if driver2 else 'VER',
+                        'lap1': lap1_number,
+                        'lap2': lap2_number,
+                        'is_fastest_lap': is_fastest_lap
+                    }
+                    
+                    acceleration_loader.load_acceleration_analysis_data(session_info)
+                    
+                    # 將載入器保存到widget以避免被回收
+                    chart_widget.acceleration_loader = acceleration_loader
+                    
+                    print(f"[OK] 加速度分析組件創建成功")
+                    
+                except ImportError as e:
+                    print(f"[ERROR] 無法導入加速度分析模組: {e}")
+                    chart_widget = self.create_placeholder_telemetry_widget('acceleration')
+                except Exception as e:
+                    print(f"[ERROR] 加速度分析組件創建失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    chart_widget = self.create_placeholder_telemetry_widget('acceleration')
+
             elif chart_type == 'throttle':
                 # 油門分析 - 使用新版模組架構
                 print(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組架構")
@@ -8173,7 +8415,9 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module = ThrottleAnalysisModule()
                     print(f"[CREATE_DEBUG] ✅ 油門模組實例創建成功")
                     
-                    analysis_module.parameter_provider = self
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
                     print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
@@ -8277,7 +8521,10 @@ class StyleHMainWindow(QMainWindow):
                     print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = BrakeAnalysisModule()
-                    analysis_module.parameter_provider = self
+                    
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
@@ -8629,15 +8876,15 @@ class StyleHMainWindow(QMainWindow):
             self.show_error_message("降雨分析錯誤", f"開啟降雨分析時發生錯誤: {e}")
     
     def open_telemetry_analysis(self):
-        """開啟遙測分析模組"""
+        """開啟單場賽事總攬模組"""
         try:
             # 移除歡迎頁面（如果存在）
             self.remove_welcome_tab()
             
             params = self.get_current_parameters()
-            print(f"[分析] [TELEMETRY] 遙測分析 - {params['year']} {params['race']} {params['session']}")
+            print(f"[分析] [TELEMETRY] 單場賽事總攬 - {params['year']} {params['race']} {params['session']}")
             
-            # 導入遙測分析模組
+            # 導入單場賽事總攬模組
             from modules.gui.telemetry_analysis_mdi import TelemetryAnalysisModule
             
             # 創建模組實例
@@ -8654,7 +8901,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 初始化模組
             if telemetry_module.initialize_module():
-                print(f"[OK] 遙測分析模組初始化成功")
+                print(f"[OK] 單場賽事總攬模組初始化成功")
                 
                 # 創建子視窗
                 subwindow = QMdiSubWindow()
@@ -8675,20 +8922,20 @@ class StyleHMainWindow(QMainWindow):
                 # 觸發參數更新以載入數據
                 telemetry_module.update_parameters(params['year'], params['race'], params['session'])
                 
-                print(f"[OK] 遙測分析視窗已開啟: {window_title}")
+                print(f"[OK] 單場賽事總攬視窗已開啟: {window_title}")
                 
             else:
-                print(f"[ERROR] 遙測分析模組初始化失敗")
-                self.show_error_message("模組錯誤", "遙測分析模組初始化失敗")
+                print(f"[ERROR] 單場賽事總攬模組初始化失敗")
+                self.show_error_message("模組錯誤", "單場賽事總攬模組初始化失敗")
             
         except ImportError as e:
-            print(f"[ERROR] 遙測分析模組導入失敗: {e}")
-            self.show_error_message("模組錯誤", f"無法載入遙測分析模組: {e}")
+            print(f"[ERROR] 單場賽事總攬模組導入失敗: {e}")
+            self.show_error_message("模組錯誤", f"無法載入單場賽事總覽模組: {e}")
         except Exception as e:
-            print(f"[ERROR] 遙測分析開啟失敗: {e}")
+            print(f"[ERROR] 單場賽事總覽開啟失敗: {e}")
             import traceback
             traceback.print_exc()
-            self.show_error_message("遙測分析錯誤", f"開啟遙測分析時發生錯誤: {e}")
+            self.show_error_message("單場賽事總覽錯誤", f"開啟單場賽事總覽時發生錯誤: {e}")
             
     def telemetry_comparison(self): 
         params = self.get_current_parameters()

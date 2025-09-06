@@ -125,10 +125,10 @@ class F1AnalysisModuleManager:
         # 🏎️ 車手分析模組
         # =========================
         
-        # Function 11: 單車手分析
+        # Function 11: 單場賽事車手分析
         self.register_module(
             module_id=11,
-            name="單車手分析",
+            name="單場賽事車手分析",
             description="分析單一車手的詳細表現",
             category="driver",
             module_file="single_driver_analysis",
