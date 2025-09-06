@@ -179,22 +179,6 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         # 4. 繪製gear曲線
         self._draw_gear_curves(painter, chart_rect)
         
-        # 5. 繪製固定線
-        if self.show_fixed_line and self.fixed_distance_value is not None:
-            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
-            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
-            distance_range = current_max_distance - current_min_distance
-            
-            if distance_range > 0 and current_min_distance <= self.fixed_distance_value <= current_max_distance:
-                # 計算固定距離值對應的X位置
-                relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
-                fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
-                self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
-        
-        # 繪製滑鼠跟隨線
-        if chart_rect.contains(self.mouse_x, self.mouse_y):
-            self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
-        
         # 5.5. 繪製連動線 (使用混入類方法)
         if hasattr(self, 'distance_data') and self.distance_data is not None:
             self.draw_linkage_line(
@@ -210,6 +194,23 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         
         # 6. 繪製圖例
         self._draw_legend(painter)
+        
+        # 7. 繪製垂直線在最頂層（最後繪製，確保可見性）
+        # 繪製固定線
+        if self.show_fixed_line and self.fixed_distance_value is not None:
+            current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
+            current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
+            distance_range = current_max_distance - current_min_distance
+            
+            if distance_range > 0 and current_min_distance <= self.fixed_distance_value <= current_max_distance:
+                # 計算固定距離值對應的X位置
+                relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
+                fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
+                self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
+        
+        # 繪製滑鼠跟隨線
+        if chart_rect.contains(self.mouse_x, self.mouse_y):
+            self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""

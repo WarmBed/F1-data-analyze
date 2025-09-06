@@ -185,7 +185,24 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 4. 繪製acceleration曲線
         self._draw_acceleration_curves(painter, chart_rect)
         
-        # 5. 繪製固定線
+        # 5.5. 繪製連動線 (使用混入類方法)
+        if hasattr(self, 'distance_data') and self.distance_data is not None:
+            self.draw_linkage_line(
+                painter, 
+                chart_rect, 
+                self.distance_data,
+                getattr(self, 'driver1_name', 'Driver1'),
+                getattr(self, 'driver2_name', 'Driver2'),
+                getattr(self, 'driver1_acceleration', []),
+                getattr(self, 'driver2_acceleration', []),
+                "m/s²"
+            )
+        
+        # 6. 繪製圖例
+        self._draw_legend(painter)
+        
+        # 7. 繪製垂直線在最頂層（最後繪製，確保可見性）
+        # 繪製固定線
         if self.show_fixed_line and self.fixed_distance_value is not None:
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -200,22 +217,6 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 繪製滑鼠跟隨線
         if chart_rect.contains(self.mouse_x, self.mouse_y):
             self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
-        
-        # 5.5. 繪製連動線 (使用混入類方法)
-        if hasattr(self, 'distance_data') and self.distance_data is not None:
-            self.draw_linkage_line(
-                painter, 
-                chart_rect, 
-                self.distance_data,
-                getattr(self, 'driver1_name', 'Driver1'),
-                getattr(self, 'driver2_name', 'Driver2'),
-                getattr(self, 'driver1_acceleration', []),
-                getattr(self, 'driver2_acceleration', []),
-                "acceleration"
-            )
-        
-        # 6. 繪製圖例
-        self._draw_legend(painter)
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""

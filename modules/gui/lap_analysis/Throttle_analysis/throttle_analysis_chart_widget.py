@@ -189,10 +189,6 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         self._draw_throttle_curves(painter, chart_rect)
         self._draw_sectors(painter, chart_rect)
         
-        # 繪製滑鼠追蹤線和固定線條
-        if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
-            self._draw_mouse_tracker(painter, chart_rect)
-        
         # 繪製連動線 (來自其他圖表的X軸連動)
         if hasattr(self, 'show_linkage_line') and self.show_linkage_line and self.linkage_distance_value is not None:
             # 調用混入類的連動線繪製方法
@@ -204,6 +200,10 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
             
         # 繪製圖例
         self._draw_legend(painter)
+        
+        # 繪製垂直線在最頂層（最後繪製，確保可見性）
+        if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
+            self._draw_mouse_tracker(painter, chart_rect)
         
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""

@@ -194,7 +194,24 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 4. 繪製distancediff曲線
         self._draw_distancediff_curves(painter, chart_rect)
         
-        # 5. 繪製固定線
+        # 5. 繪製連動線 (使用混入類方法)
+        if hasattr(self, 'distance_data') and self.distance_data is not None:
+            self.draw_linkage_line(
+                painter, 
+                chart_rect, 
+                self.distance_data,
+                getattr(self, 'driver1_name', 'Driver1'),
+                getattr(self, 'driver2_name', 'Driver2'),
+                getattr(self, 'driver1_distancediff', []),
+                getattr(self, 'driver2_distancediff', []),
+                "m"
+            )
+        
+        # 6. 繪製圖例
+        self._draw_legend(painter)
+        
+        # 7. 繪製垂直標籤線 (置頂層) - 確保標籤不被遮擋
+        # 7.1 繪製固定線
         if self.show_fixed_line and self.fixed_distance_value is not None:
             current_min_distance = self.view_min_distance if self.view_min_distance is not None else self.min_distance
             current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
@@ -206,25 +223,9 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
                 self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
         
-        # 繪製滑鼠跟隨線
+        # 7.2 繪製滑鼠跟隨線
         if chart_rect.contains(self.mouse_x, self.mouse_y):
             self._draw_tracking_line(painter, chart_rect, self.mouse_x, is_fixed=False)
-        
-        # 5.5. 繪製連動線 (使用混入類方法)
-        if hasattr(self, 'distance_data') and self.distance_data is not None:
-            self.draw_linkage_line(
-                painter, 
-                chart_rect, 
-                self.distance_data,
-                getattr(self, 'driver1_name', 'Driver1'),
-                getattr(self, 'driver2_name', 'Driver2'),
-                getattr(self, 'driver1_distancediff', []),
-                getattr(self, 'driver2_distancediff', []),
-                "distancediff"
-            )
-        
-        # 6. 繪製圖例
-        self._draw_legend(painter)
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""
