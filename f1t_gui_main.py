@@ -758,7 +758,7 @@ class LapAnalysisOptionsDialog(QDialog):
             'rpm': ('🔄 轉速 (RPM)', True),  # 設為預設選中
             'acceleration': ('📈 加速度 (Acceleration)', False),
             'speed_diff': ('📊 速度差 (Speed Difference)', False),
-            'distance_diff': ('📏 累積距離差 (Distance Difference)', False)
+            'distancediff': ('📏 累積距離差 (Distance Difference)', False)
         }
         
         # 添加選項到列表
@@ -5367,7 +5367,7 @@ class StyleHMainWindow(QMainWindow):
                 "gear": "檔位分析",
                 "acceleration": "加速度分析",
                 "speed_diff": "速度差分析",
-                "distance_diff": "距離差分析"
+                "distancediff": "累積距離差分析"
             }
             
             module_name = module_name_mapping.get(analysis_type, f"{analysis_type}分析")
@@ -8509,6 +8509,159 @@ class StyleHMainWindow(QMainWindow):
                     driver2 = driver1
                     lap2_number = lap1_number
                     print(f"[THROTTLE] 油門分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
+
+            elif chart_type == 'distancediff':
+                # 距離差分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] 🔄 檢測到距離差分析請求，嘗試新版模組架構")
+
+                # 使用新版模組化架構創建距離差分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入距離差分析模組...")
+                    from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi import distancediffAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ 距離差分析模組導入成功")
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = distancediffAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ 距離差模組實例創建成功")
+                    
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化距離差分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=analysis_module.driver1,
+                            driver2=analysis_module.driver2,
+                            lap1=analysis_module.lap1,
+                            lap2=analysis_module.lap2
+                        )
+                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        
+                        # 創建子視窗並設置標題 - 使用與 RPM 分析相同的模式
+                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 設置視窗大小
+                        sub_window.resize(1200, 800)
+                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 距離差分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟（傳遞分析模組而不是子視窗）
+                        self.on_lap_analysis_window_opened(analysis_module, "distancediff")
+                        
+                        # 🔧 修復：自動載入數據（包含最速圈參數）
+                        print(f"[CREATE_DEBUG] 🚀 自動載入距離差分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 距離差分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] ❌ 距離差分析模組創建失敗: {e}")
+                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    print(f"[ERROR] 回退到舊版模式")
+                    import traceback
+                    print(f"[ERROR] 詳細錯誤追踪:")
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版距離差分析模式")
+                
+                # 回退：舊版距離差分析模式
+                try:
+                    from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_chart_widget import distancediffAnalysisChartWidget
+                    from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_data_loader import distancediffAnalysisDataLoader
+                    
+                    print(f"[CREATE_DEBUG] 📦 創建距離差分析組件...")
+                    chart_widget = distancediffAnalysisChartWidget()
+                    
+                    # 創建距離差資料載入器
+                    print(f"[CREATE_DEBUG] 📊 創建距離差資料載入器...")
+                    distancediff_loader = distancediffAnalysisDataLoader()
+                    distancediff_loader.data_loaded.connect(chart_widget.update_distancediff_data)
+                    distancediff_loader.load_error.connect(lambda error: print(f"[ERROR] 距離差資料載入失敗: {error}"))
+                    
+                    # 開始載入資料
+                    print(f"[CREATE_DEBUG] 🚀 開始載入距離差資料: {driver1} vs {driver2}")
+                    
+                    session_info = {
+                        'year': params['year'],
+                        'race': params['race'],
+                        'session': params['session'],
+                        'driver1': driver1 if driver1 else 'VER',
+                        'driver2': driver2 if driver2 else 'VER',
+                        'lap1': lap1_number,
+                        'lap2': lap2_number,
+                        'is_fastest_lap': is_fastest_lap
+                    }
+                    
+                    distancediff_loader.load_distancediff_analysis_data(session_info)
+                    
+                    # 將載入器保存到widget以避免被回收
+                    chart_widget.distancediff_loader = distancediff_loader
+                    
+                    print(f"[OK] 距離差分析組件創建成功")
+                    
+                except ImportError as e:
+                    print(f"[ERROR] 無法導入距離差分析模組: {e}")
+                    chart_widget = self.create_placeholder_telemetry_widget('distancediff')
+                except Exception as e:
+                    print(f"[ERROR] 距離差分析組件創建失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    chart_widget = self.create_placeholder_telemetry_widget('distancediff')
                 
             elif chart_type == 'brake':
                 # 使用新的煞車分析模組
@@ -8673,7 +8826,7 @@ class StyleHMainWindow(QMainWindow):
                 'rpm',             # RPM分析模組
                 'acceleration',    # 加速度分析
                 'speed_diff',      # 速度差分析
-                'distance_diff'    # 累積距離差分析
+                'distancediff'     # 累積距離差分析
             ]
             if chart_type in lap_analysis_types:
                 print(f"[LAP_CONTROL] 🎯 檢測到圈速分析類型: {chart_type} - 觸發工具欄控件")
@@ -8758,7 +8911,7 @@ class StyleHMainWindow(QMainWindow):
             'rpm': {'name': '轉速圖表', 'icon': '🔄'},
             'acceleration': {'name': '加速度圖表', 'icon': '📈'},
             'speed_diff': {'name': '速度差圖表', 'icon': '📊'},
-            'distance_diff': {'name': '累積距離差圖表', 'icon': '📏'}
+            'distancediff': {'name': '累積距離差圖表', 'icon': '📏'}
         }
         
         return chart_info_map.get(chart_type, {'name': '未知圖表', 'icon': '❓'})

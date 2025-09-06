@@ -296,6 +296,7 @@ class ModuleTypes:
     TELEMETRY_RPM = "telemetry_rpm"
     TELEMETRY_GEAR = "telemetry_gear"
     TELEMETRY_ACCELERATION = "telemetry_acceleration"
+    TELEMETRY_DISTANCEDIFF = "telemetry_distancediff"
     TELEMETRY_ANALYSIS = "telemetry_analysis"
     TRACK_MAP = "track_map"
     LAP_ANALYSIS = "lap_analysis"
