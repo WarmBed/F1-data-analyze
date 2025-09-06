@@ -751,14 +751,14 @@ class LapAnalysisOptionsDialog(QDialog):
         self.telemetry_options = {
             'speed_analysis': ('⚡ 速度分析 (Speed Analysis)', True),  # 設為預設選中
             # 'speed': ('🏃 速度 (Speed)', True),  # 移除速度選項
-            'brake': ('🛑 煞車 (Brake)', False),
+            'brake': ('🛑 煞車 (Brake)', True),  # 設為預設選中
             'throttle': ('⚡油門 (Throttle)', True),  # 設為預設選中
-            'steering': ('🎯 轉向 (Steering)', False),
-            'gear': ('⚙️ 檔位 (Gear)', False),
+            # 'steering': ('🎯 轉向 (Steering)', False),  # 移除轉向選項
+            'gear': ('⚙️ 檔位 (Gear)', True),  # 設為預設選中
             'rpm': ('🔄 轉速 (RPM)', True),  # 設為預設選中
-            'acceleration': ('📈 加速度 (Acceleration)', False),
-            'speed_diff': ('📊 速度差 (Speed Difference)', False),
-            'distancediff': ('📏 累積距離差 (Distance Difference)', False)
+            'acceleration': ('📈 加速度 (Acceleration)', True),  # 設為預設選中
+            'speed_diff': ('📊 速度差 (Speed Difference)', True),  # 設為預設選中
+            'distancediff': ('📏 累積距離差 (Distance Difference)', True)  # 設為預設選中
         }
         
         # 添加選項到列表
@@ -4032,39 +4032,117 @@ class PopoutSubWindow(QMdiSubWindow):
             event.accept()  # 即使出錯也要關閉
 
 class ContextMenuTreeWidget(QTreeWidget):
-    """支援右鍵選單的功能樹"""
+    """支援右鍵選單和多選功能的功能樹"""
     
     def __init__(self, main_window=None):
         super().__init__()
         self.main_window = main_window
+        
+        # 啟用多選功能
+        self.setSelectionMode(QTreeWidget.ExtendedSelection)  # 支援 Ctrl 和 Shift 多選
+        
+        # 設置右鍵選單
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
         
+        # 連接項目點擊事件
+        self.itemClicked.connect(self.on_item_clicked)
+        
+    def on_item_clicked(self, item, column):
+        """處理項目點擊事件 - 僅用於選擇，不觸發分析"""
+        # 檢查是否為葉節點（可分析的項目）
+        if item.childCount() == 0:
+            # 檢查是否為多選狀態
+            selected_items = self.selectedItems()
+            
+            if len(selected_items) > 1:
+                # 多選模式：顯示選中的項目數量
+                print(f"[MULTI_SELECT] 已選擇 {len(selected_items)} 個分析模組")
+                for selected_item in selected_items:
+                    if selected_item.childCount() == 0:  # 確保是葉節點
+                        print(f"  - {selected_item.text(0)}")
+                print(f"[MULTI_SELECT] 💡 提示：右鍵點擊可執行批量分析")
+            else:
+                # 單選模式：僅顯示選中項目，不直接執行分析
+                print(f"[SINGLE_SELECT] 已選擇分析模組: {item.text(0)}")
+                print(f"[SINGLE_SELECT] 💡 提示：右鍵點擊可執行分析")
+    
     def show_context_menu(self, position):
         """顯示右鍵選單"""
         item = self.itemAt(position)
         if item is None:
             return
-            
-        # 檢查是否為葉節點（可分析的項目）
-        if item.childCount() == 0:
-            menu = QMenu(self)
-            menu.setObjectName("ContextMenu")
-            
-            analyze_action = menu.addAction("[ANALYSIS] 分析")
-            analyze_action.triggered.connect(lambda: self.analyze_function(item.text(0)))
-            
-            export_action = menu.addAction("[STATS] 匯出數據")
-            export_action.triggered.connect(lambda: self.export_function(item.text(0)))
+        
+        selected_items = self.selectedItems()
+        
+        # 過濾出葉節點（可分析的項目）
+        analyzable_items = [item for item in selected_items if item.childCount() == 0]
+        
+        if not analyzable_items:
+            return
+        
+        menu = QMenu(self)
+        menu.setObjectName("ContextMenu")
+        
+        if len(analyzable_items) == 1:
+            # 單選選單
+            analyze_action = menu.addAction(f"🚀 執行分析 - {analyzable_items[0].text(0)}")
+            analyze_action.triggered.connect(lambda: self.analyze_function(analyzable_items[0].text(0)))
             
             menu.addSeparator()
             
-            help_action = menu.addAction("❓ 說明")
-            help_action.triggered.connect(lambda: self.show_help(item.text(0)))
+            export_action = menu.addAction(f"📊 匯出數據 - {analyzable_items[0].text(0)}")
+            export_action.triggered.connect(lambda: self.export_function(analyzable_items[0].text(0)))
             
-            menu.exec_(self.mapToGlobal(position))
+            menu.addSeparator()
+            
+            help_action = menu.addAction(f"❓ 說明 - {analyzable_items[0].text(0)}")
+            help_action.triggered.connect(lambda: self.show_help(analyzable_items[0].text(0)))
+            
+        else:
+            # 多選選單
+            analyze_action = menu.addAction(f"🚀 批量執行分析 ({len(analyzable_items)} 個模組)")
+            analyze_action.triggered.connect(lambda: self.analyze_multiple_functions(analyzable_items))
+            
+            menu.addSeparator()
+            
+            export_action = menu.addAction(f"📊 批量匯出數據 ({len(analyzable_items)} 個模組)")
+            export_action.triggered.connect(lambda: self.export_multiple_functions(analyzable_items))
+            
+            menu.addSeparator()
+            
+            # 顯示選中的項目列表
+            selected_submenu = menu.addMenu(f"已選擇的模組 ({len(analyzable_items)} 個)")
+            for item in analyzable_items:
+                item_action = selected_submenu.addAction(f"• {item.text(0)}")
+                item_action.setEnabled(False)  # 僅用於顯示，不可點擊
+        
+        menu.exec_(self.mapToGlobal(position))
+    
+    def analyze_multiple_functions(self, items):
+        """批量分析多個功能"""
+        print(f"[BATCH_ANALYSIS] 開始批量分析 {len(items)} 個模組")
+        
+        for item in items:
+            function_name = item.text(0)
+            print(f"[BATCH_ANALYSIS] 正在創建: {function_name}")
+            self.analyze_function(function_name)
+            
+        print(f"[BATCH_ANALYSIS] 批量分析完成，共創建了 {len(items)} 個分析視窗")
+    
+    def export_multiple_functions(self, items):
+        """批量匯出多個功能的數據"""
+        print(f"[BATCH_EXPORT] 開始批量匯出 {len(items)} 個模組的數據")
+        
+        for item in items:
+            function_name = item.text(0)
+            print(f"[BATCH_EXPORT] 正在匯出: {function_name}")
+            self.export_function(function_name)
+            
+        print(f"[BATCH_EXPORT] 批量匯出完成")
     
     def analyze_function(self, function_name):
+        """分析單個功能"""
         #print(f"[分析] 執行功能: {function_name}")
         
         if self.main_window:
@@ -4077,10 +4155,12 @@ class ContextMenuTreeWidget(QTreeWidget):
                 self.main_window.create_analysis_window(function_name)
         
     def export_function(self, function_name):
+        """匯出單個功能的數據"""
         #print(f"[匯出] 匯出功能數據: {function_name}")
         pass
         
     def show_help(self, function_name):
+        """顯示功能說明"""
         #print(f"[說明] 顯示功能說明: {function_name}")
         pass
 
@@ -6048,6 +6128,26 @@ class StyleHMainWindow(QMainWindow):
             }
         """)
         
+        # 關閉所有視窗按鈕
+        close_all_btn = QPushButton("關閉所有視窗")
+        close_all_btn.setFixedSize(120, 25)
+        close_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFE6E6;
+                color: #CC0000;
+                border: 1px solid #FFAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #FFCCCC;
+                border: 1px solid #FF6666;
+            }
+            QPushButton:pressed {
+                background: #FFB3B3;
+            }
+        """)
+        
         # 重置按鈕
         reset_btn = QPushButton("顯示所有資料")
         reset_btn.setFixedSize(120, 25)
@@ -6070,6 +6170,7 @@ class StyleHMainWindow(QMainWindow):
         
         toolbar_layout.addWidget(title_label)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(close_all_btn)
         toolbar_layout.addWidget(reset_btn)
         
         # 添加工具欄到主布局
@@ -6118,7 +6219,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.addWidget(subtitle_label)
         
         # 歡迎信息
-        info_label = QLabel("請使用左側功能樹開啟所需的分析模組 • 支援多視窗同時分析 • Version 13.0")
+        info_label = QLabel("💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 13.0")
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setStyleSheet("""
             QLabel {
@@ -6139,6 +6240,9 @@ class StyleHMainWindow(QMainWindow):
         
         # 強制設置白色背景
         self.force_white_background(mdi_area)
+        
+        # 連接關閉所有視窗按鈕到關閉功能
+        close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
         
         # 連接重置按鈕到重置功能
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -6202,14 +6306,58 @@ class StyleHMainWindow(QMainWindow):
             }
         """)
         
+        # 關閉所有視窗按鈕
+        close_all_btn = QPushButton("關閉所有視窗")
+        close_all_btn.setFixedSize(120, 25)
+        close_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFE6E6;
+                color: #CC0000;
+                border: 1px solid #FFAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #FFCCCC;
+                border: 1px solid #FF6666;
+            }
+            QPushButton:pressed {
+                background: #FFB3B3;
+            }
+        """)
+        
+        # 顯示所有資料按鈕
+        reset_btn = QPushButton("顯示所有資料")
+        reset_btn.setFixedSize(120, 25)
+        reset_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFFFFF;
+                color: #333333;
+                border: 1px solid #AAAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #F0F0F0;
+                border-color: #999999;
+            }
+            QPushButton:pressed {
+                background: #E0E0E0;
+            }
+        """)
+        
         toolbar_layout.addWidget(title_label)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(close_all_btn)
         toolbar_layout.addWidget(reset_btn)
         
         # 創建MDI區域
         mdi_area = CustomMdiArea()
         mdi_area.setObjectName("OverviewMDIArea")
         mdi_area.setViewMode(QMdiArea.SubWindowView)
+        
+        # 連接關閉所有視窗按鈕
+        close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
         
         # 連接重置按鈕
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -6284,12 +6432,36 @@ class StyleHMainWindow(QMainWindow):
             }
         """)
         
+        # 關閉所有視窗按鈕
+        close_all_btn = QPushButton("關閉所有視窗")
+        close_all_btn.setFixedSize(120, 25)
+        close_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFE6E6;
+                color: #CC0000;
+                border: 1px solid #FFAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #FFCCCC;
+                border: 1px solid #FF6666;
+            }
+            QPushButton:pressed {
+                background: #FFB3B3;
+            }
+        """)
+        
         toolbar_layout.addWidget(title_label)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(close_all_btn)
         toolbar_layout.addWidget(reset_btn)
         
         # 創建 MDI 區域（使用新的註冊方法）
         mdi_area = self.create_and_register_mdi_area("TelemetryAnalysisMDI")
+        
+        # 連接關閉所有視窗按鈕
+        close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
         
         # 連接重置按鈕
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -6393,14 +6565,38 @@ class StyleHMainWindow(QMainWindow):
             }
         """)
         
+        # 關閉所有視窗按鈕
+        close_all_btn = QPushButton("關閉所有視窗")
+        close_all_btn.setFixedSize(120, 25)
+        close_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFE6E6;
+                color: #CC0000;
+                border: 1px solid #FFAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #FFCCCC;
+                border: 1px solid #FF6666;
+            }
+            QPushButton:pressed {
+                background: #FFB3B3;
+            }
+        """)
+        
         toolbar_layout.addWidget(title_label)
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(close_all_btn)
         toolbar_layout.addWidget(reset_btn)
         
         # 創建 MDI 區域
         mdi_area = CustomMdiArea()
         mdi_area.setObjectName("ProfessionalMDIArea")
         mdi_area.setViewMode(QMdiArea.SubWindowView)
+        
+        # 連接關閉所有視窗按鈕
+        close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
         
         # 連接重置按鈕
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -6665,6 +6861,26 @@ class StyleHMainWindow(QMainWindow):
             }
         """)
         
+        # 關閉所有視窗按鈕
+        close_all_btn = QPushButton("關閉所有視窗")
+        close_all_btn.setFixedSize(120, 25)
+        close_all_btn.setStyleSheet("""
+            QPushButton {
+                background: #FFE6E6;
+                color: #CC0000;
+                border: 1px solid #FFAAAA;
+                border-radius: 3px;
+                font-size: 11px;
+            }
+            QPushButton:hover {
+                background: #FFCCCC;
+                border: 1px solid #FF6666;
+            }
+            QPushButton:pressed {
+                background: #FFB3B3;
+            }
+        """)
+        
         # 顯示所有資料按鈕
         reset_btn = QPushButton("顯示所有資料")
         reset_btn.setFixedSize(120, 25)
@@ -6697,6 +6913,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar_layout.addWidget(self.toolbar_status_widget)
         
         toolbar_layout.addStretch()
+        toolbar_layout.addWidget(close_all_btn)
         toolbar_layout.addWidget(reset_btn)
         
         # 創建空白的MDI區域
@@ -6707,6 +6924,9 @@ class StyleHMainWindow(QMainWindow):
         # [TOOL] 修復: 註冊MDI區域到主視窗
         self.register_mdi_area(mdi_area)
         print(f"[OK] [MDI] 已註冊分析MDI區域: {mdi_area.objectName()}")
+        
+        # 連接關閉所有視窗按鈕
+        close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
         
         # 連接重置按鈕
         reset_btn.clicked.connect(lambda: self.reset_all_charts(mdi_area))
@@ -7381,6 +7601,120 @@ class StyleHMainWindow(QMainWindow):
             # 預設創建速度遙測圖表
             return TelemetryChartWidget("speed")
     
+    def close_all_mdi_windows(self, mdi_area):
+        """關閉指定MDI區域中的所有子視窗並徹底清理所有相關註冊"""
+        try:
+            print(f"[CLOSE] 開始關閉 MDI 區域中的所有視窗...")
+            
+            # 獲取所有子視窗
+            subwindows = mdi_area.subWindowList()
+            window_count = len(subwindows)
+            
+            print(f"[STATS] MDI區域中共有 {window_count} 個子視窗")
+            
+            if window_count > 0:
+                # 1. 在關閉視窗前，先從連動管理器中取消註冊所有相關模組
+                linkage_unregister_count = 0
+                
+                for subwindow in subwindows[:]:  # 使用切片創建副本
+                    if subwindow and subwindow.widget():
+                        widget = subwindow.widget()
+                        
+                        # 遞歸查找所有可能的連動模組並取消註冊
+                        modules_to_unregister = self._find_linkage_modules_in_widget(widget)
+                        
+                        for module in modules_to_unregister:
+                            try:
+                                linkage_manager.unregister_module(module)
+                                linkage_unregister_count += 1
+                                print(f"[CLEANUP] 已從連動管理器取消註冊模組: {type(module).__name__}")
+                            except Exception as e:
+                                print(f"[WARNING] 取消註冊連動模組失敗: {e}")
+                
+                # 2. 逐一關閉並刪除子視窗
+                closed_count = 0
+                for subwindow in subwindows[:]:  # 使用切片創建副本
+                    try:
+                        # 獲取視窗標題以供日誌
+                        title = subwindow.windowTitle() if subwindow else "Unknown"
+                        
+                        # 關閉視窗
+                        if subwindow:
+                            subwindow.close()
+                            # 強制從MDI區域移除
+                            mdi_area.removeSubWindow(subwindow)
+                            # 刪除對象
+                            subwindow.deleteLater()
+                            closed_count += 1
+                            print(f"[CLEANUP] 已關閉並清理視窗: {title}")
+                            
+                    except Exception as e:
+                        print(f"[WARNING] 關閉視窗時發生錯誤: {e}")
+                
+                # 3. 強制清理MDI區域
+                try:
+                    mdi_area.closeAllSubWindows()  # 確保所有視窗都被關閉
+                    
+                    # 強制刷新MDI區域狀態
+                    mdi_area.update()
+                    mdi_area.repaint()
+                    
+                except Exception as e:
+                    print(f"[WARNING] MDI區域清理時發生錯誤: {e}")
+                
+                # 4. 強制Qt事件處理和垃圾回收
+                try:
+                    from PyQt5.QtWidgets import QApplication
+                    QApplication.processEvents()  # 處理所有待處理的事件
+                    
+                    import gc
+                    gc.collect()  # 強制垃圾回收
+                    
+                except Exception as e:
+                    print(f"[WARNING] 事件處理和垃圾回收時發生錯誤: {e}")
+                
+                # 5. 驗證清理結果
+                final_subwindows = mdi_area.subWindowList()
+                final_count = len(final_subwindows)
+                
+                print(f"[OK] 關閉完成統計:")
+                print(f"    原始視窗數: {window_count}")
+                print(f"    已關閉視窗: {closed_count}")
+                print(f"    連動模組取消註冊: {linkage_unregister_count}")
+                print(f"    清理後剩餘視窗: {final_count}")
+                
+                if final_count > 0:
+                    print(f"[WARNING] 仍有 {final_count} 個視窗未完全清理")
+                    for i, remaining in enumerate(final_subwindows):
+                        title = remaining.windowTitle() if remaining else "Unknown"
+                        print(f"    剩餘視窗 {i+1}: {title}")
+                else:
+                    print(f"[OK] ✅ 所有視窗已完全清理")
+                    
+            else:
+                print(f"[INFO] 沒有需要關閉的視窗")
+                
+        except Exception as e:
+            print(f"[ERROR] 關閉視窗時發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _find_linkage_modules_in_widget(self, widget):
+        """遞歸查找 widget 中所有實現了連動功能的模組"""
+        linkage_modules = []
+        
+        # 檢查當前 widget 是否實現了連動功能
+        if hasattr(widget, 'on_x_linkage_received') or hasattr(widget, 'on_click_linkage_received'):
+            linkage_modules.append(widget)
+        
+        # 遞歸檢查所有子 widget
+        if hasattr(widget, 'children'):
+            for child in widget.children():
+                if hasattr(child, '__class__') and hasattr(child, 'parent'):
+                    linkage_modules.extend(self._find_linkage_modules_in_widget(child))
+        
+        return linkage_modules
+
     def reset_all_charts(self, mdi_area):
         """重置MDI區域中所有圖表以顯示完整數據範圍"""
         try:
@@ -9627,7 +9961,7 @@ class StyleHMainWindow(QMainWindow):
         #print(f"[OK] 成功還原 {count} 個視窗")
         
     def close_all_windows(self):
-        """關閉所有視窗"""
+        """關閉所有視窗並清理相關註冊"""
         #print("[檢視] 關閉所有視窗")
         
         # 獲取當前活動的MDI區域
@@ -9649,22 +9983,8 @@ class StyleHMainWindow(QMainWindow):
             #print("[ERROR] 當前分頁中沒有找到MDI區域")
             return
             
-        # 獲取所有子視窗並關閉
-        subwindows = mdi_area.subWindowList()
-        if not subwindows:
-            #print("[ERROR] MDI區域中沒有子視窗")
-            return
-            
-        count = 0
-        # 創建副本列表，因為關閉視窗會修改原列表
-        windows_to_close = subwindows.copy()
-        for subwindow in windows_to_close:
-            title = subwindow.windowTitle()
-            subwindow.close()
-            count += 1
-            #print(f"[ERROR] 關閉視窗: '{title}'")
-            
-        #print(f"[OK] 成功關閉 {count} 個視窗")
+        # 使用改進的關閉方法
+        self.close_all_mdi_windows(mdi_area)
     def toggle_fullscreen(self):
         """切換全螢幕模式"""
         #print("[檢視] 全螢幕切換")
