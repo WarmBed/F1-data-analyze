@@ -7036,12 +7036,16 @@ class StyleHMainWindow(QMainWindow):
         
     def create_analysis_window(self, function_name):
         """為功能樹的分析項目創建新視窗 - 升級支援模組化架構"""
+        print(f"[DEBUG] [CREATE_WINDOW] =============== 開始創建分析視窗 ===============")
+        print(f"[DEBUG] [CREATE_WINDOW] 功能名稱: '{function_name}'")
+        print(f"[DEBUG] [CREATE_WINDOW] 將嘗試調用 _create_analysis_module...")
+        
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
         
-        # 特殊處理：圈速分析直接調用 lap_analysis 方法
-        if "圈速" in function_name:
-            print(f"[圈速分析] 檢測到圈速分析請求: {function_name}")
+        # 特殊處理：遙測分析直接調用 lap_analysis 方法
+        if "圈速" in function_name or "遙測分析" in function_name:
+            print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
             return
 
@@ -7183,19 +7187,29 @@ class StyleHMainWindow(QMainWindow):
                 "檔位分析": "gear_analysis",     # 檔位分析映射
                 "煞車分析": "brake_analysis",    # 煞車分析映射
                 "降雨分析": "rain_analysis",     # 降雨分析映射
-                "單場賽事總攬": "telemetry_analysis", # 單場賽事總攬映射
+                "車手排名": "telemetry_analysis", # 車手排名映射 (原單場賽事總攬)
+                "遙測分析": "telemetry_analysis", # 遙測分析映射 (圈速分析)
             }
             
             # 尋找匹配的模組類型
             module_type = None
+            print(f"[DEBUG] [MODULE_FACTORY] 開始尋找匹配的模組類型，功能名稱: '{function_name}'")
+            print(f"[DEBUG] [MODULE_FACTORY] 可用的映射關鍵字: {list(module_mapping.keys())}")
+            
             for keyword, mod_type in module_mapping.items():
+                print(f"[DEBUG] [MODULE_FACTORY] 檢查關鍵字: '{keyword}' 是否在 '{function_name}' 中")
                 if keyword in function_name:
                     module_type = mod_type
+                    print(f"[DEBUG] [MODULE_FACTORY] ✅ 找到匹配! 關鍵字: '{keyword}' -> 模組類型: '{mod_type}'")
                     break
+                else:
+                    print(f"[DEBUG] [MODULE_FACTORY] ❌ 未匹配: '{keyword}' 不在 '{function_name}' 中")
             
             if module_type:
+                print(f"[DEBUG] [MODULE_FACTORY] 最終確定的模組類型: {module_type}")
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
+                print(f"[DEBUG] [MODULE_FACTORY] 開始處理模組類型: {module_type} (來自功能: {function_name})")
                 
                 # 處理進站分析模組
                 if module_type == "pitstop_analysis":
@@ -7409,6 +7423,41 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 煞車分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理降雨分析模組
+                elif module_type == "rain_analysis":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建降雨分析模組...")
+                        from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
+                        print(f"[OK] [MODULE_FACTORY] 降雨分析適配器導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 降雨分析模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            print(f"[DEBUG] [MODULE_FACTORY] 正在創建 RainAnalysisModuleAdapter 實例...")
+                            module = RainAnalysisModuleAdapter(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            print(f"[DEBUG] [MODULE_FACTORY] RainAnalysisModuleAdapter 實例創建完成")
+                            
+                            print(f"[OK] [MODULE_FACTORY] 降雨分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 降雨分析模組創建失敗：無參數提供者")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 降雨分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

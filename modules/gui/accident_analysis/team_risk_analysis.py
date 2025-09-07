@@ -396,7 +396,8 @@ def display_team_risk_table(analysis_result):
                 incident_breakdown = team_data.get('incident_breakdown', {})
                 main_incidents = [(k, v) for k, v in incident_breakdown.items() if v > 0]
                 if main_incidents:
-                    print(f"   主要事件類型: {', '.join([f'{k.replace('_', ' ')}: {v}' for k, v in main_incidents])}")
+                    incident_text = ', '.join([f'{k.replace("_", " ")}: {v}' for k, v in main_incidents])
+                    print(f"   主要事件類型: {incident_text}")
 
 
 def save_team_risk_raw_data(analysis_result, data_loader):

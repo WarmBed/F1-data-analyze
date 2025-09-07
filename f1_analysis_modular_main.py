@@ -28,30 +28,36 @@ if sys.platform.startswith('win'):
         # 如果失敗，使用預設編碼
         pass
 
-# 確保 modules 目錄在 Python 路徑中
+# 確保 modules 和 CLI_modules 目錄在 Python 路徑中
 current_dir = os.path.dirname(os.path.abspath(__file__))
 modules_dir = os.path.join(current_dir, 'modules')
+cli_modules_dir = os.path.join(current_dir, 'CLI_modules')
+
 if modules_dir not in sys.path:
     sys.path.insert(0, modules_dir)
+if cli_modules_dir not in sys.path:
+    sys.path.insert(0, cli_modules_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
 # 導入所有分析模組
 try:
     # 使用統一函數映射器
-    from modules.function_mapper import F1AnalysisFunctionMapper
-    from modules.compatible_data_loader import CompatibleF1DataLoader
-    from modules.compatible_f1_analysis_instance import create_f1_analysis_instance
+    from CLI_modules.cli.core.function_mapper import F1AnalysisFunctionMapper
+    from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
+    from CLI_modules.cli.core.compatible_f1_analysis_instance import create_f1_analysis_instance
     
     print("[OK] 統一函數映射器導入成功！")
     has_function_mapper = True
     
     # 向後兼容：保留部分重要模組的直接導入
     try:
-        from modules.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
+        from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
         has_rain_analysis = True
     except ImportError:
         print("[WARNING] 降雨分析模組未找到")
         has_rain_analysis = False
-    from modules.all_drivers_overtaking_trends_analysis import run_all_drivers_overtaking_trends_analysis
+    from CLI_modules.cli.analyzer.all_drivers_overtaking_trends_analysis import run_all_drivers_overtaking_trends_analysis
     
     # 導入其他模組
     try:
@@ -74,12 +80,12 @@ try:
         )
         
         # 導入新拆分的模組
-        from modules.speed_gap_analysis import run_speed_gap_analysis
-        from modules.distance_gap_analysis import run_distance_gap_analysis
+        from CLI_modules.cli.analyzer.speed_gap_analysis import run_speed_gap_analysis
+        from CLI_modules.cli.analyzer.distance_gap_analysis import run_distance_gap_analysis
         
         # 導入新的彎道分析子模組 (集成版本 - 包含進站與事件資料)
-        from modules.single_driver_corner_analysis_integrated import run_single_driver_corner_analysis_integrated
-        from modules.team_drivers_corner_comparison_integrated import run_team_drivers_corner_comparison_integrated
+        from CLI_modules.cli.analyzer.single_driver_corner_analysis_integrated import run_single_driver_corner_analysis_integrated
+        from CLI_modules.cli.analyzer.team_drivers_corner_comparison_integrated import run_team_drivers_corner_comparison_integrated
         
     except ImportError as e:
         print(f"[WARNING] 部分模組導入失敗: {e}")
@@ -100,7 +106,7 @@ try:
     
     # 導入兼容數據載入器
     try:
-        from modules.compatible_data_loader import CompatibleF1DataLoader
+        from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
         print("[OK] 兼容數據載入器導入成功！")
     except ImportError as e:
         print(f"[ERROR] 兼容數據載入器導入失敗: {e}")
@@ -155,8 +161,8 @@ class F1AnalysisModularCLI:
     """F1分析模組化命令行介面"""
     
     def __init__(self, args=None):
-        self.version = "5.3"
-        self.title = "F1 Analysis CLI - 模組化版本 (增強賽事顯示版)"
+        self.version = "5.4"
+        self.title = "F1 Analysis CLI - 模組化版本 (映射表同步版)"
         self.data_loader = None
         self.session_loaded = False
         self.dynamic_team_mapping = None
@@ -170,7 +176,7 @@ class F1AnalysisModularCLI:
     def _initialize_f1_analysis_instance(self):
         """初始化F1分析實例"""
         try:
-            from modules.compatible_f1_analysis_instance import create_f1_analysis_instance
+            from CLI_modules.cli.core.compatible_f1_analysis_instance import create_f1_analysis_instance
             self.f1_analysis_instance = create_f1_analysis_instance(self.data_loader)
             if self.f1_analysis_instance:
                 print("[OK] F1分析實例初始化成功")
@@ -200,7 +206,7 @@ class F1AnalysisModularCLI:
     def _initialize_open_analyzer(self):
         """初始化 OpenF1 分析器"""
         try:
-            from modules.compatible_data_loader import F1OpenDataAnalyzer
+            from CLI_modules.cli.core.compatible_data_loader import F1OpenDataAnalyzer
             self.open_analyzer = F1OpenDataAnalyzer()
             print("[OK] OpenF1 分析器初始化成功")
         except ImportError as e:
@@ -303,8 +309,8 @@ class F1AnalysisModularCLI:
         """執行降雨強度分析 - 專門的天氣數據分析"""
         try:
             print("\n[RAIN] 執行降雨強度分析...")
-            from modules.rain_intensity_analysis import run_rain_intensity_analysis
-            run_rain_intensity_analysis(self.data_loader)
+            from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
+            run_rain_intensity_analysis_json(self.data_loader)
         except ImportError as e:
             print(f"[ERROR] 降雨分析模組導入失敗: {e}")
             print("正在創建基礎降雨分析...")
@@ -318,7 +324,7 @@ class F1AnalysisModularCLI:
     def run_accident_key_events_summary(self):
         """執行關鍵事件摘要分析 - 新版本無車隊映射錯誤"""
         try:
-            from modules.key_events_analysis import run_key_events_summary_analysis
+            from CLI_modules.cli.analyzer.key_events_analysis import run_key_events_summary_analysis
             print("\n[CHECK] 執行關鍵事件摘要分析...")
             
             # 使用新的關鍵事件分析模組
@@ -344,7 +350,7 @@ class F1AnalysisModularCLI:
     def run_accident_special_incidents(self):
         """執行特殊事件報告分析 - 新版本無車隊映射錯誤"""
         try:
-            from modules.special_incidents_analysis import run_special_incidents_analysis
+            from modules.gui.accident_analysis.special_incidents_analysis import run_special_incidents_analysis
             print("\n[ALERT] 執行特殊事件報告分析...")
             
             # 使用新的特殊事件分析模組
@@ -370,7 +376,7 @@ class F1AnalysisModularCLI:
     def run_accident_driver_severity_scores(self):
         """執行車手嚴重程度分數統計 - 新版本無車隊映射錯誤"""
         try:
-            from modules.driver_severity_analysis import run_driver_severity_analysis
+            from CLI_modules.cli.analyzer.driver_severity_analysis import run_driver_severity_analysis
             print("\n🏆 執行車手嚴重程度分數統計...")
             
             # 使用新的車手嚴重程度分析模組
@@ -396,7 +402,7 @@ class F1AnalysisModularCLI:
     def run_accident_team_risk_scores(self):
         """執行車隊風險分數統計 - 新版本無車隊映射錯誤"""
         try:
-            from modules.team_risk_analysis import run_team_risk_analysis
+            from modules.gui.accident_analysis.team_risk_analysis import run_team_risk_analysis
             print("\n[FINISH] 執行車隊風險分數統計...")
             
             # 使用新的車隊風險分析模組
@@ -422,7 +428,7 @@ class F1AnalysisModularCLI:
     def run_accident_all_incidents_summary(self):
         """執行所有事件詳細列表分析 - 新版本無車隊映射錯誤"""
         try:
-            from modules.all_incidents_analysis import run_all_incidents_analysis
+            from modules.gui.accident_analysis.all_incidents_analysis import run_all_incidents_analysis
             print("\n[INFO] 執行所有事件詳細列表分析...")
             
             # 使用新的所有事件分析模組
@@ -528,7 +534,7 @@ class F1AnalysisModularCLI:
         """
         try:
             # 導入統一功能映射器
-            from modules.function_mapper import F1AnalysisFunctionMapper
+            from CLI_modules.cli.core.function_mapper import F1AnalysisFunctionMapper
             
             # 創建映射器
             mapper = F1AnalysisFunctionMapper(
@@ -595,7 +601,7 @@ class F1AnalysisModularCLI:
             # 功能 1: 降雨強度分析
             if function_id == 1:
                 try:
-                    from modules.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
+                    from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
                     print("\n[RAIN]  執行降雨強度分析 (JSON輸出版)...")
                     
                     # 執行JSON版本的降雨分析
@@ -792,7 +798,7 @@ class F1AnalysisModularCLI:
             # 功能 7: 單一車手詳細遙測分析
             elif function_id == 7:
                 try:
-                    from modules.single_driver_analysis import run_single_driver_telemetry_json
+                    from CLI_modules.cli.analyzer.single_driver_analysis import run_single_driver_telemetry_json
                     print("\n📡 執行單一車手詳細遙測分析 (JSON輸出版)...")
                     
                     # 執行JSON版本的單一車手詳細遙測分析
@@ -1131,7 +1137,7 @@ class F1AnalysisModularCLI:
         print("• [STATS] 更清晰的表格化賽事列表")
         print("• 🌍 支援2024-2025年完整賽季日程")
         
-        print("\n[RAIN]  基礎分析模組 (選項1-4)")
+        print("\n[RAIN]  基礎分析模組 (功能1-10)")
         print("=" * 80)
         
         print("1.  [RAIN] 降雨強度分析 (Rain Intensity Analysis)")
@@ -1163,56 +1169,83 @@ class F1AnalysisModularCLI:
         print("        • racing_line_heatmap.png (賽車線熱力圖)")
         print("        • speed_zones_visualization.png (速度區域視覺化)")
         
-        print("\n3.  [PIT] 進站策略分析 (Pitstop Strategy Analysis)")
-        print("    ├── 3.1 [CHECK] 關鍵事件摘要           (Key Events Summary)")
-        print("    ├── 3.2 [ALERT] 特殊事件報告           (Special Incident Reports)")
-        print("    ├── 3.3 🏆 車手嚴重程度分數統計   (Driver Severity Scores)")
-        print("    ├── 3.4 [FINISH] 車隊風險分數統計       (Team Risk Scores)")
-        print("    └── 3.5 [INFO] 所有事件詳細列表       (All Incidents Summary)")
-        print("    功能描述：詳細分析各車手的進站策略和效果")
+        print("\n3.  [PIT] 車手最快進站時間排行榜 (Driver Fastest Pitstop Ranking)")
+        print("    功能描述：統計各車手最快的進站時間表現")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
-        print("        • Pitstop_Summary (進站摘要表)")
-        print("          - Columns: Driver, PitstopNumber, LapNumber, Duration, TyreCompound")
-        print("        • Strategy_Effectiveness (策略效果分析表)")
-        print("          - Columns: Driver, Strategy, PositionGain/Loss, TimeGain/Loss")
-        print("      [CHART] Figure輸出：")
-        print("        • pitstop_timeline.png (進站時間軸)")
-        print("        • strategy_comparison.png (策略對比圖)")
-        print("        • tire_degradation_analysis.png (輪胎衰退分析)")
+        print("        • Pitstop_Time_Ranking (進站時間排行表)")
+        print("          - Columns: Driver, FastestPitstop, AveragePitstop, PitstopCount")
         
-        print("\n4.  💥 獨立事故分析 (Independent Accident Analysis)")
-        print("    功能描述：檢測和分析比賽中的事故事件")
+        print("\n4.  [PIT] 車隊進站時間排行榜 (Team Pitstop Ranking)")
+        print("    功能描述：統計各車隊的進站時間表現")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
-        print("        • Incident_Log (事故記錄表)")
-        print("          - Columns: LapNumber, Time, IncidentType, DriversInvolved, Location")
-        print("        • Safety_Car_Analysis (安全車分析表)")
-        print("          - Columns: Period, Duration, Reason, ImpactOnRace")
-        print("      [CHART] Figure輸出：")
-        print("        • incident_timeline.png (事故時間軸)")
-        print("        • accident_location_map.png (事故位置圖)")
+        print("        • Team_Pitstop_Ranking (車隊進站排行表)")
+        print("          - Columns: Team, AveragePitstop, BestPitstop, PitstopCount")
         
-        print("\n[F1] 單車手單圈分析模組 (選項5-10)")
+        print("\n5.  [PIT] 車手進站詳細記錄 (Driver Detailed Pitstop Records)")
+        print("    功能描述：詳細記錄指定車手的進站情況")
+        print("    輸入參數：年份、賽事、賽段類型、車手縮寫")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Pitstop_Details (進站詳細記錄表)")
+        print("          - Columns: LapNumber, PitstopTime, TyreCompound, PositionChange")
+        
+        print("\n6.  💥 事故統計摘要分析 (Accident Statistics Summary)")
+        print("    功能描述：統計比賽中的事故事件總覽")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Accident_Summary (事故摘要表)")
+        print("          - Columns: TotalAccidents, DriversInvolved, Locations, SeverityLevels")
+        
+        print("\n7.  💥 嚴重程度分佈分析 (Severity Distribution Analysis)")
+        print("    功能描述：分析事故嚴重程度的分布情況")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Severity_Distribution (嚴重程度分布表)")
+        print("          - Columns: SeverityLevel, Count, Percentage, MostCommonLocation")
+        
+        print("\n8.  💥 所有事件詳細列表分析 (All Incidents Summary)")
+        print("    功能描述：列出所有比賽事件的詳細信息")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • All_Incidents_List (所有事件列表)")
+        print("          - Columns: Time, IncidentType, Drivers, Location, Details")
+        
+        print("\n9.  💥 特殊事件報告分析 (Special Incident Reports)")
+        print("    功能描述：分析特殊的比賽事件")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Special_Incidents (特殊事件表)")
+        print("          - Columns: IncidentType, Time, Drivers, Impact, Details")
+        
+        print("\n10. 💥 關鍵事件摘要分析 (Key Events Summary)")
+        print("    功能描述：總結比賽中的關鍵事件")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Key_Events_Summary (關鍵事件摘要表)")
+        print("          - Columns: EventType, Time, Description, RaceImpact")
+        
+        print("\n[F1] 單車手分析模組 (功能11-20)")
         print("=" * 80)
         
-        print("5.  [F1] 單一車手綜合分析 (Single Driver Comprehensive Analysis)")
+        print("11. [F1] 單一車手綜合分析 (Single Driver Comprehensive Analysis)")
+        print("    ⚠️  狀態：已棄用 (DEPRECATED)")
         print("    功能描述：指定車手的詳細賽事表現分析")
-        print("    輸入參數：年份、賽事、賽段類型、車手縮寫(如:VER)")
+        print("    輸入參數：年份、賽事、賽段類型、車手縮寫")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
         print("        • Driver_Performance_Summary (車手表現摘要)")
-        print("          - Columns: LapNumber, LapTime, Position, Sector1/2/3Times, Speed")
-        print("        • Session_Statistics (賽段統計表)")
-        print("          - Columns: Metric, Value, Rank, BestLap, AverageLap")
-        print("      [CHART] Figure輸出：")
-        print("        • lap_time_progression.png (圈速進步圖)")
-        print("        • position_changes.png (位置變化圖)")
-        print("        • sector_time_analysis.png (分段時間分析)")
+        print("          - Columns: LapNumber, LapTime, Position, SectorTimes, Speed")
         
-        print("\n6.  📡 單一車手詳細遙測分析 (Single Driver Detailed Telemetry)")
+        print("\n12. 📡 單一車手詳細遙測分析 (Single Driver Detailed Telemetry)")
         print("    功能描述：深度分析單一車手的遙測數據")
         print("    輸入參數：年份、賽事、賽段類型、車手縮寫、圈數選擇")
         print("    主要輸出：")
@@ -1226,7 +1259,7 @@ class F1AnalysisModularCLI:
         print("        • throttle_brake_analysis.png (油門煞車分析)")
         print("        • gear_shift_patterns.png (換檔模式圖)")
         
-        print("\n7.  [BALANCE] 車手對比分析 (Driver Comparison)")
+        print("\n13. [BALANCE] 雙車手比較分析 (Driver Comparison)")
         print("    功能描述：比較兩位車手的詳細表現")
         print("    輸入參數：年份、賽事、賽段類型、兩位車手縮寫")
         print("    主要輸出：")
@@ -1239,7 +1272,23 @@ class F1AnalysisModularCLI:
         print("        • lap_time_comparison.png (圈速對比圖)")
         print("        • telemetry_overlay.png (遙測數據疊加圖)")
         
-        print("\n8.  [FINISH] 單一車手超車分析 (Single Driver Overtaking)")
+        print("\n14. [CHART] 賽事位置變化圖 (Race Position Changes)")
+        print("    ⚠️  狀態：已棄用 (DEPRECATED)")
+        print("    功能描述：顯示賽事中位置變化的圖表")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [CHART] Figure輸出：")
+        print("        • position_changes_chart.png (位置變化圖)")
+        
+        print("\n15. [START] 賽事超車統計分析 (Race Overtaking Statistics)")
+        print("    功能描述：統計賽事中的超車事件")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Overtaking_Statistics (超車統計表)")
+        print("          - Columns: TotalOvertakes, Successful, Failed, KeyMoments")
+        
+        print("\n16. [FINISH] 單一車手超車分析 (Single Driver Overtaking)")
         print("    功能描述：分析指定車手的超車和被超車情況")
         print("    輸入參數：年份、賽事、賽段類型、車手縮寫")
         print("    主要輸出：")
@@ -1252,8 +1301,30 @@ class F1AnalysisModularCLI:
         print("        • overtaking_timeline.png (超車時間軸)")
         print("        • track_overtaking_zones.png (賽道超車區域圖)")
         
-        print("\n9.  [TOOL] 獨立單一車手DNF分析 (Independent Single Driver DNF)")
-        print("    功能描述：深度分析特定車手的DNF情況")
+        print("\n17. [TARGET] 動態彎道檢測分析 (Dynamic Corner Detection)")
+        print("    ⭐ 狀態：新增功能 (NEW)")
+        print("    功能描述：動態檢測和分析賽道彎道")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Corner_Detection_Results (彎道檢測結果表)")
+        print("          - Columns: CornerNumber, StartPoint, EndPoint, Radius, Speed")
+        
+        print("\n18. [TARGET] 彎道詳細分析 (Corner Detailed Analysis)")
+        print("    功能描述：詳細分析指定彎道的表現")
+        print("    輸入參數：年份、賽事、賽段類型、彎道編號")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • Corner_Performance (彎道表現表)")
+        print("          - Columns: LapNumber, Entry_Speed, Apex_Speed, Exit_Speed, Time_Through_Corner")
+        print("        • Corner_Statistics (彎道統計表)")
+        print("          - Columns: Best_Speed, Average_Speed, Consistency, Improvement_Rate")
+        print("      [CHART] Figure輸出：")
+        print("        • corner_speed_progression.png (彎道速度進步圖)")
+        print("        • racing_line_corner.png (彎道賽車線分析)")
+        
+        print("\n19. [TOOL] 單一車手DNF分析 (Single Driver DNF Analysis)")
+        print("    功能描述：分析指定車手的DNF情況")
         print("    輸入參數：年份、賽事、賽段類型、車手縮寫")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
@@ -1265,51 +1336,21 @@ class F1AnalysisModularCLI:
         print("        • performance_before_dnf.png (DNF前表現圖)")
         print("        • failure_analysis.png (故障分析圖)")
         
-        print("\n10. [TARGET] 單賽事指定彎道詳細分析 (Single Race Specific Corner Detailed Analysis)")
-        print("    功能描述：單一車手詳細彎道分析，指定車手在特定彎道的每圈表現")
-        print("    輸入參數：年份、賽事、賽段類型、車手縮寫、彎道編號")
-        print("    主要輸出：")
-        print("      [STATS] Table格式：")
-        print("        • Corner_Performance (彎道表現表)")
-        print("          - Columns: LapNumber, Entry_Speed, Apex_Speed, Exit_Speed, Time_Through_Corner")
-        print("        • Corner_Statistics (彎道統計表)")
-        print("          - Columns: Best_Speed, Average_Speed, Consistency, Improvement_Rate")
-        print("      [CHART] Figure輸出：")
-        print("        • corner_speed_progression.png (彎道速度進步圖)")
-        print("        • racing_line_corner.png (彎道賽車線分析)")
-        print("      [WARNING]  注意：自動排除LAP1 T1數據，避免起跑線影響")
-        
-        print("\n11. [STATS] 單一車手指定賽事全部彎道詳細分析 (Single Driver All Corners Detailed Analysis)")
-        print("    功能描述：綜合分析指定車手在整場賽事中所有彎道的表現與穩定性")
+        print("\n20. [TARGET] 單一車手全部彎道分析 (Single Driver All Corners)")
+        print("    功能描述：分析指定車手在所有彎道的表現")
         print("    輸入參數：年份、賽事、賽段類型、車手縮寫")
-        print("    分析項目：")
-        print("      [TARGET] 所有彎道的速度表現分布 (>= 50 km/h)")
-        print("      [CHART] 入彎/出彎表現穩定性")
-        print("      [FINISH] 與理想賽車線對比分析")
-        print("      [STATS] 跨圈數的彎道表現一致性")
-        print("      [STAR] 彎道表現評分與排名")
-        print("      [STATS] Box-and-Whisker Plot 速度分布分析")
-        print("      [TARGET] 雷達圖顯示所有彎道編號")
-        print("      [CHART] 速度分布與穩定度複合圖")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
-        print("        • All_Corners_Performance_Summary (全彎道表現摘要表)")
-        print("          - Columns: Corner_Number, Avg_Entry_Speed, Avg_Apex_Speed, Avg_Exit_Speed, Consistency_Score")
-        print("        • Corner_Stability_Analysis (彎道穩定性分析表)")
-        print("          - Columns: Corner_Number, Speed_Variance, Time_Variance, Performance_Rating, Improvement_Trend")
-        print("        • Racing_Line_Comparison (賽車線對比表)")
-        print("          - Columns: Corner_Number, Optimal_Line_Deviation, Speed_Loss, Performance_Gap")
-        print("      [STATS] Figure輸出：")
-        print("        • all_corners_heatmap.png (全彎道表現熱力圖)")
+        print("        • All_Corners_Performance (全彎道表現表)")
+        print("          - Columns: Corner_Number, Entry_Speed, Apex_Speed, Exit_Speed, Consistency")
+        print("      [CHART] Figure輸出：")
+        print("        • all_corners_heatmap.png (全彎道熱力圖)")
         print("        • corner_consistency_radar.png (彎道一致性雷達圖)")
-        print("        • racing_line_deviation_map.png (賽車線偏差地圖)")
-        print("        • corner_performance_trends.png (彎道表現趨勢圖)")
-        print("      [NOTE] 分析報告：完整的彎道表現評估報告")
         
-        print("\n👥 全部車手單圈分析模組 (選項12-13)")
+        print("\n👥 全部車手分析模組 (功能21-24)")
         print("=" * 80)
         
-        print("12. 👥 所有車手綜合分析 (All Drivers Comprehensive Analysis)")
+        print("21. 👥 所有車手綜合分析 (All Drivers Comprehensive Analysis)")
         print("    功能描述：全賽事20位車手的綜合表現分析")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
@@ -1322,18 +1363,42 @@ class F1AnalysisModularCLI:
         print("        • drivers_performance_comparison.png (車手表現對比圖)")
         print("        • championship_standings.png (冠軍積分榜)")
         
-        print("\n13. [F1] 彎道速度分析 (Corner Speed Analysis)")
+        print("\n22. [F1] 彎道速度分析 (Corner Speed Analysis)")
+        print("    ⚠️  狀態：已棄用 (DEPRECATED)")
         print("    功能描述：分析賽道各彎道的速度表現")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
         print("      [STATS] Table格式：")
         print("        • Corner_Speed_Ranking (彎道速度排名表)")
         print("          - Columns: Corner, FastestDriver, Speed, AverageSpeed, SpeedVariation")
-        print("        • Track_Sector_Analysis (賽道分段分析表)")
-        print("          - Columns: Sector, BestTime, Driver, AverageTime, Difficulty_Rating")
+        
+        print("\n23. [START] 全部車手超車分析 (All Drivers Overtaking)")
+        print("    功能描述：全賽事所有超車事件的綜合分析")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • All_Overtaking_Events (全部超車事件表)")
+        print("          - Columns: LapNumber, Driver1, Driver2, Location, Type, Success")
+        print("        • Overtaking_Statistics (超車統計表)")
+        print("          - Columns: Driver, Total_Overtakes, Success_Rate, Best_Overtaking_Zone")
         print("      [CHART] Figure輸出：")
-        print("        • corner_speed_heatmap.png (彎道速度熱力圖)")
-        print("        • track_difficulty_analysis.png (賽道難度分析)")
+        print("        • race_overtaking_map.png (賽事超車地圖)")
+        print("        • overtaking_statistics.png (超車統計圖)")
+        print("      [SAVE] 暫存檔案：overtaking_cache/目錄中的JSON檔案")
+        
+        print("\n24. [STATS] 全部車手DNF分析 (All Drivers DNF Analysis)")
+        print("    功能描述：分析所有未完賽車手的退賽原因")
+        print("    輸入參數：年份、賽事、賽段類型")
+        print("    主要輸出：")
+        print("      [STATS] Table格式：")
+        print("        • DNF_Summary (DNF摘要表)")
+        print("          - Columns: Driver, DNF_Reason, LapNumber, Position_Lost, Impact_Score")
+        print("        • Reliability_Analysis (可靠性分析表)")
+        print("          - Columns: Team, DNF_Count, Main_Issues, Reliability_Rating")
+        print("      [CHART] Figure輸出：")
+        print("        • dnf_reasons_distribution.png (DNF原因分布圖)")
+        print("        • team_reliability_ranking.png (車隊可靠性排名)")
+        print("      [SAVE] 暫存檔案：dnf_analysis_cache/目錄中的TXT和PNG檔案")
         
         print("\n🏆 全部車手全年分析模組 (選項14-15)")
         print("=" * 80)
@@ -1366,33 +1431,33 @@ class F1AnalysisModularCLI:
         print("        • team_reliability_ranking.png (車隊可靠性排名)")
         print("      [SAVE] 暫存檔案：dnf_analysis_cache/目錄中的TXT和PNG檔案")
         
-        print("\n[TOOL] 系統功能 (選項16-20)")
+        print("\n[TOOL] 系統功能 (功能49-53)")
         print("=" * 80)
         
-        print("16. [REFRESH] 重新載入賽事數據 (Reload Race Data)")
-        print("    功能描述：使用新參數重新載入賽事數據")
-        print("    輸入參數：年份、賽事、賽段參數")
-        print("    主要輸出：資料載入狀態確認訊息")
+        print("49. [REFRESH] 數據匯出管理器 (Data Export Manager)")
+        print("    功能描述：管理數據匯出功能")
+        print("    輸入參數：匯出選項")
+        print("    主要輸出：匯出的數據檔案")
         
-        print("\n17. [PACKAGE] 顯示模組狀態 (Show Module Status)")
-        print("    功能描述：檢查所有分析模組的載入狀態")
-        print("    輸入參數：無")
-        print("    主要輸出：各模組載入狀態列表和系統診斷資訊")
+        print("\n50. [CACHE] 快取優化 (Cache Optimization)")
+        print("    功能描述：優化系統快取性能")
+        print("    輸入參數：優化參數")
+        print("    主要輸出：優化報告")
         
-        print("\n18. 📖 顯示幫助信息 (Show Help)")
-        print("    功能描述：顯示所有功能的詳細說明")
-        print("    輸入參數：無")
-        print("    主要輸出：完整的功能說明文件（即本文件）")
+        print("\n51. [DIAG] 系統診斷 (System Diagnostics)")
+        print("    功能描述：檢查系統狀態和診斷問題")
+        print("    輸入參數：診斷選項")
+        print("    主要輸出：診斷報告")
         
-        print("\n19. [SAVE] 超車暫存管理 (Overtaking Cache Management)")
-        print("    功能描述：管理超車分析的暫存檔案")
-        print("    輸入參數：管理選項（列出、清除等）")
-        print("    主要輸出：暫存檔案狀態和管理操作結果")
+        print("\n52. [PERF] 性能基準測試 (Performance Benchmarking)")
+        print("    功能描述：測試系統性能")
+        print("    輸入參數：測試參數")
+        print("    主要輸出：性能報告")
         
-        print("\n20. [ARCHIVE] DNF暫存管理 (DNF Cache Management)")
-        print("    功能描述：管理DNF分析的暫存檔案")
-        print("    輸入參數：管理選項（列出、清除等）")
-        print("    主要輸出：DNF暫存檔案狀態和管理操作結果")
+        print("\n53. [CHECK] 數據完整性檢查 (Data Integrity Check)")
+        print("    功能描述：檢查數據完整性")
+        print("    輸入參數：檢查參數")
+        print("    主要輸出：完整性報告")
         
         print("\n[SETTINGS]  設定功能 (字母選項)")
         print("=" * 80)
@@ -1435,8 +1500,8 @@ class F1AnalysisModularCLI:
         print("• 暫存管理：定期清理暫存檔案以節省磁碟空間")
         
         print("=" * 80)
-        print("💡 快速開始：輸入功能編號(1-19)、字母選項(S/L/C/D)開始分析，輸入0退出")
-        print("[REFRESH] 更新日期：2025年8月1日 | 版本：v5.3 (增強賽事顯示版)")
+        print("💡 快速開始：輸入功能編號(1-24, 49-53)或子功能編號開始分析，輸入0退出")
+        print("[REFRESH] 更新日期：2025年9月6日 | 版本：v5.4 (映射表同步版)")
         print("=" * 80)
 
     # 移除了大量的互動式模式方法，包括：
@@ -1524,7 +1589,7 @@ class F1AnalysisModularCLI:
 def create_argument_parser():
     """創建命令行參數解析器"""
     parser = argparse.ArgumentParser(
-        description='F1 Analysis CLI - 參數化模式專用版本 v6.0',
+        description='F1 Analysis CLI - 參數化模式專用版本 v5.4 (映射表同步版)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog='''
 使用範例 (僅支援參數化模式):
@@ -1547,34 +1612,46 @@ def create_argument_parser():
   python f1_analysis_modular_main.py --help
 
 功能編號對照:
-  [RAIN]  基礎分析模組:
-  1  [RAIN] 降雨強度分析              3  [PIT] 進站策略分析
-  2  [TRACK] 賽道路線分析                 ├── 3.1 [CHECK] 關鍵事件摘要
-                                    ├── 3.2 [ALERT] 特殊事件報告
-                                    ├── 3.3 🏆 車手嚴重程度分數統計
-                                    ├── 3.4 [FINISH] 車隊風險分數統計
-                                    └── 3.5 [INFO] 所有事件詳細列表
-  4  💥 獨立事故分析
+  [RAIN]  基礎分析模組 (1-10):
+  1  [RAIN] 降雨強度分析              2  [TRACK] 賽道路線分析
+  3  [PIT] 車手最快進站時間排行榜      4  [PIT] 車隊進站時間排行榜
+  5  [PIT] 車手進站詳細記錄            6  💥 事故統計摘要分析
+  7  💥 嚴重程度分佈分析              8  💥 所有事件詳細列表分析
+  9  💥 特殊事件報告分析              10 💥 關鍵事件摘要分析
   
-  👤 單車手單圈分析模組:
-  5  [F1] 單一車手綜合分析          8  [FINISH] 單一車手超車分析
-  6  📡 單一車手詳細遙測分析      9  [TOOL] 獨立單一車手DNF分析
-  7  [BALANCE] 車手對比分析            10 [TARGET] 單賽事指定彎道詳細分析
-                                 11 [STATS] 單一車手指定賽事全部彎道詳細分析
+  👤 單車手分析模組 (11-20):
+  11 [F1] 單一車手綜合分析 ⚠️棄用     12 📡 單一車手詳細遙測分析
+  13 [BALANCE] 雙車手比較分析         14 [CHART] 賽事位置變化圖 ⚠️棄用
+  15 [START] 賽事超車統計分析         16 [FINISH] 單一車手超車分析
+  17 [TARGET] 動態彎道檢測分析 ⭐新增  18 [TARGET] 彎道詳細分析
+  19 [TOOL] 單一車手DNF分析           20 [TARGET] 單一車手全部彎道分析
   
-  👥 全部車手單圈分析模組:
-  12 👥 所有車手綜合分析         15 [F1] 彎道速度分析
-  14.1 [STATS] 車手數據統計總覽       14.2 [TOOL] 車手遙測資料統計
+  👥 全部車手分析模組 (21-24):
+  21 👥 所有車手綜合分析             22 [F1] 彎道速度分析 ⚠️棄用
+  23 [START] 全部車手超車分析         24 [STATS] 全部車手DNF分析
+  
+  [TOOL] 系統功能 (49-53):
+  49 [REFRESH] 數據匯出管理器         50 [CACHE] 快取優化
+  51 [DIAG] 系統診斷                 52 [PERF] 性能基準測試
+  53 [CHECK] 數據完整性檢查
+  
+  子功能模組:
+  4.1 💥 事故關鍵事件                4.2 💥 事故特殊事件
+  4.3 � 事故車手嚴重程度            4.4 💥 事故車隊風險
+  4.5 💥 事故所有事件                6.1 📡 遙測完整圈分析
+  6.2 📡 遙測輪胎策略                6.3 📡 遙測輪胎性能
+  6.4 📡 遙測進站記錄                6.5 📡 遙測特殊事件
+  6.6 📡 遙測最快圈                  6.7 � 遙測指定圈
+  7.1 [BALANCE] 速度差距分析         7.2 [BALANCE] 距離差距分析
+  11.1 [TOOL] 詳細DNF分析            11.2 [TOOL] 年度DNF統計
+  12.1 [TARGET] 單一車手彎道整合     12.2 [TARGET] 車隊彎道比較
+  14.1 [STATS] 車手統計總覽          14.2 [TOOL] 車手遙測統計
   14.3 [START] 車手超車分析          14.9 👥 所有車手綜合分析
-  
-  🏆 全部車手全年分析模組:
-  16 [START] 全部車手超車分析         17 [STATS] 獨立全部車手DNF分析
-      ├── 16.1 [STATS] 年度超車統計
-      ├── 16.2 [FINISH] 表現比較分析
-      ├── 16.3 [CHART] 視覺化分析
-      └── 16.4 [CHART] 趨勢分析
+  16.1 [START] 年度超車統計          16.2 [FINISH] 超車表現比較
+  16.3 [CHART] 超車視覺化分析        16.4 [CHART] 超車趨勢分析
 
 💡 注意：本版本僅支援參數化模式，所有功能都需要透過命令行參數指定
+        功能編號完全對應映射表，棄用功能可能無法正常使用
         '''
     )
     

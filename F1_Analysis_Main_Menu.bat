@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 setlocal enabledelayedexpansion
-title F1 Analysis CLI - 模組化版本 v5.5 - Function 17 動態彎道檢測升級版 (53個功能)
+title F1 Analysis CLI - 模組化版本 v5.4 - 映射表同步版 (53個功能)
 
 REM 設定工作目錄為批次檔案所在目錄
 cd /d "%~dp0"
@@ -9,13 +9,13 @@ cd /d "%~dp0"
 REM ================================================================================
 REM F1 Analysis CLI - 模組化主程式批次版本
 REM F1 Analysis CLI - Modular Main Program Batch Version
-REM 版本: 5.5 - Function 17 動態彎道檢測升級版 (新增動態彎道檢測功能)
+REM 版本: 5.4 - 映射表同步版 (功能編號與映射器完全同步)
 REM 作者: F1 Analysis Team
 REM
 REM 專用模組化主程式，負責呼叫各個獨立分析模組
-REM 新增: Function 17 動態彎道檢測、Function 18-24 功能重新編號
-REM 增強: AI動態彎道檢測、Function 18整合Function 17結果、完整53功能支援
-REM 功能統計: 基礎功能10個 + 進階功能14個 + 分拆功能4個 + 預留功能19個 + 系統功能5個 = 總計53個功能
+REM 同步: 功能編號完全對應映射表，棄用功能標記清楚
+REM 增強: 53個功能完整支援，參數化模式專用
+REM 功能統計: 基礎功能10個 + 單車手功能10個 + 全部車手功能4個 + 系統功能5個 = 總計29個主要功能
 REM ================================================================================
 
 REM 初始化變數，不設定預設值
@@ -26,13 +26,13 @@ set DEFAULT_SESSION=
 :main_menu
 cls
 echo ================================================================================
-echo                F1 Analysis CLI - 模組化版本 v5.5 - Function 17 動態彎道檢測升級版
-echo                F1 Telemetry Analysis - Dynamic Corner Detection Enhanced Edition
+echo                F1 Analysis CLI - 模組化版本 v5.4 - 映射表同步版
+echo                F1 Telemetry Analysis - Function Mapping Synchronized Edition
 echo ================================================================================
 echo  🏎️  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
 echo  📊  完全模組化設計，支援2024-2025年賽季數據  
-echo  🎯  新增: Function 17 動態彎道檢測、AI驅動彎道分析
-echo  ✅  53個功能完整支援，Function 18整合Function 17結果
+echo  🎯  同步: 功能編號完全對應映射表，棄用功能標記清楚
+echo  ✅  53個功能完整支援，參數化模式專用
 echo ================================================================================
 echo.
 echo 🔧 初始化系統 - 請選擇要分析的賽事
@@ -76,7 +76,7 @@ if "%DEFAULT_SESSION%"=="" (
 
 cls
 echo ================================================================================
-echo                🏎️  F1 賽事分析 CLI 模組化版本 v5.5 - 共53個分析功能
+echo                🏎️  F1 賽事分析 CLI 模組化版本 v5.4 - 共53個分析功能
 echo ================================================================================
 if "%session_loaded%"=="true" (
     echo 📊 數據狀態: ✅ 已載入賽事數據
@@ -87,12 +87,13 @@ echo 當前設定: %DEFAULT_YEAR% 年 %DEFAULT_RACE% 站 %DEFAULT_SESSION% 賽�
 echo ================================================================================
 echo.
 echo 🎯 功能統計摘要:
-echo    📊 基礎功能: 10 個 (1-10)
-echo    🔧 進階功能: 14 個 (11-24) ⭐ 包含新Function 17動態彎道檢測
-echo    🏎️ 分拆功能: 4 個 (25-28) 
-echo    🚀 預留功能: 19 個 (29-47)
+echo    📊 基礎分析模組: 10 個 (1-10)
+echo    � 單車手分析模組: 10 個 (11-20)
+echo    👥 全部車手分析模組: 4 個 (21-24)
+echo    🏎️ 分拆單車手功能: 4 個 (25-28)
+echo    🚀 預留擴展功能: 19 個 (29-47)
 echo    ✅ 系統功能: 5 個 (49-53)
-echo    🏆 總功能數: 53 個整數化功能 (新增動態彎道檢測)
+echo    🏆 總功能數: 53 個功能 (映射表完全同步)
 echo ================================================================================ 
 echo.
 echo 基礎分析模組 (1-10)
@@ -107,17 +108,19 @@ echo 8.  📋 所有事件詳細列表分析         (All Incidents Summary)
 echo 9.  🚨 特殊事件報告分析             (Special Incident Reports)
 echo 10. 🔑 關鍵事件摘要分析             (Key Events Summary)
 echo.
-echo 進階分析模組 (11-24) ⭐ 新增Function 17
-echo 11. 🏎️ 單一車手綜合分析             (Single Driver Comprehensive Analysis) ⚠️ DEPRECATED
+echo 單車手分析模組 (11-20)
+echo 11. 🏎️ 單一車手綜合分析             (Single Driver Comprehensive) ⚠️ DEPRECATED
 echo 12. 📡 單一車手詳細遙測分析         (Single Driver Detailed Telemetry)
 echo 13. 🤝 雙車手比較分析               (Two Driver Comparison)
-echo 14. 📈 賽事位置變化圖               (Race Position Changes Chart) ⚠️ DEPRECATED
-echo 15. � 賽事超車統計分析             (Race Overtaking Statistics)
+echo 14. 📈 賽事位置變化圖               (Race Position Changes) ⚠️ DEPRECATED
+echo 15. 🏁 賽事超車統計分析             (Race Overtaking Statistics)
 echo 16. 🏁 單一車手超車分析             (Single Driver Overtaking Analysis)
-echo 17. 🎯 動態彎道檢測分析 ⭐ 新功能   (Dynamic Corner Detection Analysis)
-echo 18. � 彎道詳細分析                 (Corner Detailed Analysis - 整合F17)
-echo 19. � 單一車手DNF分析              (Single Driver DNF Analysis)
-echo 20. �📊 單一車手全部彎道詳細分析     (Single Driver All Corners Analysis)
+echo 17. 🎯 動態彎道檢測分析 ⭐ 新增     (Dynamic Corner Detection Analysis)
+echo 18. 🏹 彎道詳細分析                 (Corner Detailed Analysis)
+echo 19. 🛑 單一車手DNF分析              (Single Driver DNF Analysis)
+echo 20. 📊 單一車手全部彎道分析         (Single Driver All Corners Analysis)
+echo.
+echo 全部車手分析模組 (21-24)
 echo 21. 👥 所有車手綜合分析             (All Drivers Comprehensive Analysis)
 echo 22. 🚀 彎道速度分析                 (Corner Speed Analysis) ⚠️ DEPRECATED
 echo 23. 🏎️ 全部車手超車分析             (All Drivers Overtaking Analysis)
@@ -130,9 +133,9 @@ echo 27. ⚡ 車手最速圈速分析             (Driver Fastest Lap Analysis)
 echo 28. ⏱️ 車手每圈圈速分析             (Driver Lap Time Analysis)
 echo.
 echo 系統功能 (49-53)
-echo 49. � 數據導出管理                 (Data Export Management)
-echo 50. � 暫存優化                     (Cache Optimization)
-echo 51. � 系統診斷                     (System Diagnostics)
+echo 49. 📤 數據匯出管理器               (Data Export Manager)
+echo 50. 💾 快取優化                     (Cache Optimization)
+echo 51. 🔧 系統診斷                     (System Diagnostics)
 echo 52. ⚡ 性能基準測試                 (Performance Benchmarking)
 echo 53. 🛡️ 數據完整性檢查               (Data Integrity Check)
 echo.
@@ -146,11 +149,11 @@ echo.
 echo 0.  退出程式 (Exit)
 echo.
 echo ================================================================================
-echo 🎯 Function 17 動態彎道檢測: AI驅動的智能彎道識別，支援18彎道精確檢測
-echo 📋 可用功能編號: 1-28 (基礎+進階+分拆), 29-47 (預留), 49-53 (系統)
+echo 🎯 映射表同步: 功能編號完全對應映射器，棄用功能標記清楚
+echo 📋 可用功能編號: 1-28 (主要功能), 49-53 (系統功能)
 echo 🔧 新增參數支援: -d VER (車手), -d2 LEC (第二車手), --lap 1 (圈數), --show-detailed-output (詳細模式)
 echo ✅ 系統功能: S(重新設定) L(列出賽事) C(檢查暫存) D(檢查DNF暫存) E(使用範例) 0(退出)
-echo ⭐ Function 18 已整合 Function 17 結果，實現智能彎道分析
+echo ⭐ 功能編號與映射表完全同步，參數化模式專用
 echo ================================================================================
 echo.
 
@@ -1965,10 +1968,10 @@ echo ===========================================================================
 echo 感謝使用 F1 Analysis CLI - 模組化版本 v5.5 - Function 15 標準升級版
 echo ================================================================================
 echo.
-echo 🏎️  F1 Telemetry Analysis - Enhanced Parameters & Output Control
+echo 🏎️  F1 Telemetry Analysis - Function Mapping Synchronized Edition
 echo 📊  完全模組化設計，支援2024-2025年賽季數據
-echo 🎯  新增: Function 17 動態彎道偵測、詳細輸出控制
-echo ✅  26個功能已升級到 Function 15 標準 (49.1% 完成)
+echo 🎯  同步: 功能編號完全對應映射表，棄用功能標記清楚
+echo ✅  53個功能完整支援，參數化模式專用
 echo 🚀  支援智能緩存管理和用戶體驗控制
 echo.
 echo 程式已安全退出！
