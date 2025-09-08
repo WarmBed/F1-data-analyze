@@ -105,6 +105,12 @@ class TelemetryDataLoader(QObject):
             'data_field': 'speed_difference',
             'unit': 'km/h',
             'debug_prefix': 'SPEEDDIFF'
+        },
+        'rain': {
+            'display_name': '降雨分析',
+            'data_field': 'rain_intensity',
+            'unit': 'mm/h',
+            'debug_prefix': 'RAIN'
         }
     }
     

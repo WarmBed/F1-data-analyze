@@ -65,14 +65,14 @@ class F1AnalysisModuleManager:
         # 🌧️ 天氣分析模組
         # =========================
         
-        # Function 1: 降雨強度分析
+        # Function 1: 增強版降雨分析
         self.register_module(
             module_id=1,
-            name="降雨強度分析",
-            description="分析比賽期間的降雨強度和天氣變化",
+            name="增強版降雨分析",
+            description="基於FastF1直接數據的圈數vs天氣分析，輸出簡化JSON格式",
             category="weather",
-            module_file="gui.rain_analysis.rain_intensity_analyzer_json_fixed",
-            class_name="RainIntensityAnalyzer",
+            module_file="cli.analyzer.weather.rain_analyzer",
+            class_name="EnhancedRainAnalyzer",
             parameters=["year", "race", "session"]
         )
         

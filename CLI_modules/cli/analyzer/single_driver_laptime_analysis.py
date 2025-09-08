@@ -595,8 +595,8 @@ class SingleDriverLaptimeAnalysis:
             
             # 保存JSON
             json_file = f"fastest_lap_analysis_{self.year}_{self.race}_{self.session}_{driver}.json"
-            json_path = os.path.join("json", json_file)
-            os.makedirs("json", exist_ok=True)
+            json_path = os.path.join("json_exports", json_file)
+            os.makedirs("json_exports", exist_ok=True)
             
             with open(json_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, ensure_ascii=False, indent=2, default=str)

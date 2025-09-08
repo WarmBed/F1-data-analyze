@@ -23,18 +23,26 @@ class SingleDriverDetailedLaptimeAnalysis:
         self.session = session
         self.cache_enabled = True
         
-    def analyze_every_lap(self, driver, show_detailed_output=True, **kwargs):
-        """Function 27: 分析車手的每一圈詳細數據
+    def analyze_every_lap(self, driver=None, show_detailed_output=True, **kwargs):
+        """Function 28: 分析車手的每一圈詳細數據
         
         Args:
-            driver: 車手代碼
+            driver: 車手代碼 (如 'VER', 'LEC')，如果為 None 則分析全部車手
             show_detailed_output: 是否顯示詳細輸出，即使使用緩存也顯示完整表格
         """
         try:
-            print(f"⏱️ 開始執行 {driver} 的每圈圈速詳細分析...")
+            if driver:
+                print(f"⏱️ 開始執行 {driver} 的每圈圈速詳細分析...")
+                analysis_mode = "single"
+            else:
+                print("⏱️ 開始執行全部車手的每圈圈速詳細分析...")
+                analysis_mode = "all"
             
             # 生成緩存鍵值
-            cache_key = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_{driver}"
+            if analysis_mode == "single":
+                cache_key = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_{driver}"
+            else:
+                cache_key = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_all_drivers"
             
             # 檢查緩存
             if self.cache_enabled:
@@ -46,7 +54,10 @@ class SingleDriverDetailedLaptimeAnalysis:
                 elif cached_result and show_detailed_output:
                     print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
                     # 重新顯示詳細輸出
-                    self._display_cached_detailed_output(cached_result, driver)
+                    if analysis_mode == "single":
+                        self._display_cached_detailed_output(cached_result, driver)
+                    else:
+                        self._display_cached_all_drivers_output(cached_result)
                     return cached_result
             
             print("🔄 重新計算 - 開始數據分析...")
@@ -62,15 +73,31 @@ class SingleDriverDetailedLaptimeAnalysis:
             weather_data = data.get('weather_data')
             results = data['results']
             
-            # 獲取車手數據
-            driver_laps = laps[laps['Driver'] == driver].copy()
-            
-            if driver_laps.empty:
-                print(f"❌ 找不到車手 {driver} 的數據")
-                return None
-            
-            # 執行詳細分析
-            result = self._perform_detailed_analysis(driver, driver_laps, session, weather_data, results)
+            # 根據分析模式獲取車手數據
+            if analysis_mode == "single":
+                # 單一車手分析
+                driver_laps = laps[laps['Driver'] == driver].copy()
+                
+                if driver_laps.empty:
+                    print(f"❌ 找不到車手 {driver} 的數據")
+                    return None
+                
+                # 執行詳細分析
+                result = self._perform_detailed_analysis(driver, driver_laps, session, weather_data, results)
+                
+            else:
+                # 全部車手分析
+                all_drivers = laps['Driver'].unique().tolist()
+                drivers_to_analyze = [d for d in all_drivers if d]
+                
+                if not drivers_to_analyze:
+                    print("❌ 找不到任何車手的數據")
+                    return None
+                
+                print(f"📊 將分析 {len(drivers_to_analyze)} 位車手的每圈圈速")
+                
+                # 執行全部車手分析
+                result = self._perform_all_drivers_detailed_analysis(drivers_to_analyze, laps, session, weather_data, results)
             
             # 結果驗證和反饋
             if not self._report_analysis_results(result, "車手每圈圈速詳細分析"):
@@ -82,7 +109,10 @@ class SingleDriverDetailedLaptimeAnalysis:
                 print("💾 分析結果已緩存")
             
             # 保存JSON輸出
-            self._save_json_output(result, driver)
+            if analysis_mode == "single":
+                self._save_json_output(result, driver)
+            else:
+                self._save_json_output_all_drivers(result)
             
             return result
             
@@ -216,18 +246,111 @@ class SingleDriverDetailedLaptimeAnalysis:
             return "N/A"
         
         try:
-            # 簡化的天氣判斷
+            # 嘗試獲取特定圈數的天氣數據
+            lap_weather = None
+            
+            # 方法1: 直接查找對應圈數的天氣數據
+            if hasattr(weather_data, 'index') and hasattr(weather_data.index, 'get_level_values'):
+                # 如果是多層索引，嘗試根據圈數查找
+                try:
+                    lap_weather = weather_data[weather_data.index.get_level_values('LapNumber') == lap_number]
+                except:
+                    pass
+            
+            # 方法2: 如果有 LapNumber 欄位，直接篩選
+            if lap_weather is None or lap_weather.empty:
+                if 'LapNumber' in weather_data.columns:
+                    lap_weather = weather_data[weather_data['LapNumber'] == lap_number]
+            
+            # 方法3: 根據時間順序估算（如果weather_data按時間排序）
+            if lap_weather is None or lap_weather.empty:
+                # 假設weather_data按時間排序，根據圈數比例估算位置
+                total_laps_estimated = 60  # 假設大約60圈
+                weather_index = min(int((lap_number / total_laps_estimated) * len(weather_data)), len(weather_data) - 1)
+                lap_weather = weather_data.iloc[weather_index:weather_index+1]
+            
+            # 如果找到對應的天氣數據，進行詳細分析
+            if lap_weather is not None and not lap_weather.empty:
+                # 獲取賽道溫度
+                track_temp = None
+                air_temp = None
+                humidity = None
+                rainfall = None
+                
+                # 賽道溫度
+                if 'TrackTemp' in lap_weather.columns:
+                    track_temp = lap_weather['TrackTemp'].iloc[0]
+                
+                # 空氣溫度
+                if 'AirTemp' in lap_weather.columns:
+                    air_temp = lap_weather['AirTemp'].iloc[0]
+                
+                # 濕度
+                if 'Humidity' in lap_weather.columns:
+                    humidity = lap_weather['Humidity'].iloc[0]
+                
+                # 降雨
+                if 'Rainfall' in lap_weather.columns:
+                    rainfall = lap_weather['Rainfall'].iloc[0]
+                
+                # 基於實際數據生成天氣描述
+                return self._generate_weather_description(track_temp, air_temp, humidity, rainfall)
+            
+            # 如果無法找到特定圈數數據，使用整體平均值作為備選
             if 'TrackTemp' in weather_data.columns:
                 avg_temp = weather_data['TrackTemp'].mean()
-                if avg_temp > 40:
-                    return "🌡️熱"
-                elif avg_temp < 25:
-                    return "❄️涼"
-                else:
-                    return "🌤️適中"
+                return self._generate_simple_weather_description(avg_temp)
+            
             return "☀️乾"
-        except:
+            
+        except Exception as e:
+            print(f"⚠️ 天氣數據處理錯誤: {e}")
             return "N/A"
+    
+    def _generate_weather_description(self, track_temp, air_temp, humidity, rainfall):
+        """基於真實數據生成詳細天氣描述"""
+        try:
+            # 檢查降雨
+            if rainfall is not None and pd.notna(rainfall) and rainfall > 0:
+                if rainfall > 0.5:
+                    return "🌧️大雨"
+                else:
+                    return "🌦️小雨"
+            
+            # 檢查濕度（高濕度可能表示潮濕條件）
+            if humidity is not None and pd.notna(humidity) and humidity > 85:
+                return "�️潮濕"
+            
+            # 主要基於溫度判斷
+            temp_to_use = track_temp if pd.notna(track_temp) else air_temp
+            
+            if pd.notna(temp_to_use):
+                if temp_to_use > 45:
+                    return f"🔥極熱({temp_to_use:.1f}°C)"
+                elif temp_to_use > 35:
+                    return f"🌡️熱({temp_to_use:.1f}°C)"
+                elif temp_to_use > 25:
+                    return f"🌤️適中({temp_to_use:.1f}°C)"
+                elif temp_to_use > 15:
+                    return f"❄️涼({temp_to_use:.1f}°C)"
+                else:
+                    return f"🧊冷({temp_to_use:.1f}°C)"
+            
+            return "☀️乾燥"
+            
+        except Exception as e:
+            return "N/A"
+    
+    def _generate_simple_weather_description(self, avg_temp):
+        """基於平均溫度生成簡單天氣描述"""
+        if pd.notna(avg_temp):
+            if avg_temp > 40:
+                return f"🌡️熱(~{avg_temp:.1f}°C)"
+            elif avg_temp < 25:
+                return f"❄️涼(~{avg_temp:.1f}°C)"
+            else:
+                return f"🌤️適中(~{avg_temp:.1f}°C)"
+        return "☀️乾"
     
     def _get_speed_data(self, lap):
         """獲取速度數據"""
@@ -425,17 +548,31 @@ class SingleDriverDetailedLaptimeAnalysis:
     
     def _save_json_output(self, result, driver):
         """保存JSON輸出"""
-        json_dir = "json"
+        json_dir = "json_exports"
         os.makedirs(json_dir, exist_ok=True)
         
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        json_filename = f"detailed_laptime_analysis_{driver}_{self.year}_{timestamp}.json"
+        # 修正檔名格式：detailed_laptime_analysis_YYYY_賽事_賽段_車手.json
+        json_filename = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_{driver}.json"
         json_path = os.path.join(json_dir, json_filename)
         
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(result, f, ensure_ascii=False, indent=2, default=str)
         
         print(f"📄 JSON 分析報告已保存: {json_path}")
+    
+    def _save_json_output_all_drivers(self, result):
+        """保存全部車手的JSON輸出"""
+        json_dir = "json_exports"
+        os.makedirs(json_dir, exist_ok=True)
+        
+        # 修正檔名格式：detailed_laptime_analysis_YYYY_賽事_賽段_all_drivers.json
+        json_filename = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_all_drivers.json"
+        json_path = os.path.join(json_dir, json_filename)
+        
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+        
+        print(f"📄 全部車手 JSON 分析報告已保存: {json_path}")
     
     def _report_analysis_results(self, data, analysis_type="analysis"):
         """報告分析結果狀態"""
@@ -450,6 +587,45 @@ class SingleDriverDetailedLaptimeAnalysis:
         
         print(f"✅ {analysis_type}分析完成！")
         return True
+    
+    def _perform_all_drivers_detailed_analysis(self, drivers_to_analyze, laps, session, weather_data, results):
+        """執行全部車手的詳細每圈分析"""
+        
+        all_drivers_data = {}
+        
+        for driver in drivers_to_analyze:
+            print(f"🔄 分析車手 {driver}...")
+            
+            driver_laps = laps[laps['Driver'] == driver].copy()
+            
+            if driver_laps.empty:
+                print(f"⚠️ 車手 {driver} 無數據，跳過")
+                continue
+            
+            # 執行單一車手的詳細分析
+            driver_result = self._perform_detailed_analysis(driver, driver_laps, session, weather_data, results)
+            
+            if driver_result:
+                all_drivers_data[driver] = driver_result
+        
+        if not all_drivers_data:
+            print("❌ 沒有任何車手的有效數據")
+            return None
+        
+        # 構建全部車手分析結果
+        result = {
+            "success": True,
+            "drivers_analyzed": list(all_drivers_data.keys()),
+            "year": self.year,
+            "race": self.race,
+            "session": self.session,
+            "analysis_mode": "all",
+            "analysis_timestamp": pd.Timestamp.now().isoformat(),
+            "all_drivers_detailed_laptime": all_drivers_data
+        }
+        
+        print(f"✅ 完成 {len(all_drivers_data)} 位車手的詳細圈速分析")
+        return result
     
     def _display_cached_detailed_output(self, cached_result, driver):
         """顯示緩存數據的詳細輸出"""
@@ -499,3 +675,63 @@ class SingleDriverDetailedLaptimeAnalysis:
             
         except Exception as e:
             print(f"❌ 顯示緩存詳細輸出失敗: {e}")
+    
+    def _display_cached_all_drivers_output(self, cached_result):
+        """顯示全部車手的緩存詳細輸出"""
+        try:
+            all_drivers_data = cached_result.get('all_drivers_detailed_laptime', {})
+            
+            if not all_drivers_data:
+                print("⚠️ 緩存數據中無全部車手詳細圈速資料")
+                return
+            
+            for driver, driver_data in all_drivers_data.items():
+                print(f"\n{'='*60}")
+                print(f"🏁 車手 {driver} 詳細圈速分析")
+                print(f"{'='*60}")
+                
+                detailed_data = driver_data.get('detailed_lap_data', [])
+                
+                if not detailed_data:
+                    print(f"⚠️ 車手 {driver} 無詳細圈速資料")
+                    continue
+                
+                # 創建詳細分析表格
+                table = PrettyTable()
+                table.field_names = ["圈數", "圈速", "輪胎", "胎齡", "進站", "天氣", "I1速度", "I2速度", "終點速", "備註"]
+                table.align = "l"
+                
+                for lap_data in detailed_data:
+                    table.add_row([
+                        lap_data.get('lap_number', 'N/A'),
+                        lap_data.get('lap_time', 'N/A'),
+                        lap_data.get('compound', 'N/A'),
+                        lap_data.get('tire_age', 'N/A'),
+                        lap_data.get('pit_info', ''),
+                        lap_data.get('weather', 'N/A'),
+                        lap_data.get('speed_i1', 'N/A'),
+                        lap_data.get('speed_i2', 'N/A'),
+                        lap_data.get('speed_fl', 'N/A'),
+                        lap_data.get('remarks', '')
+                    ])
+                
+                # 顯示表格
+                print(table)
+                
+                # 顯示統計摘要
+                summary_stats = driver_data.get('summary_statistics', {})
+                if summary_stats:
+                    print(f"\n📈 {driver} 圈速統計摘要:")
+                    print(f"   • 最快圈速: {summary_stats.get('fastest_lap_time', 'N/A')}")
+                    print(f"   • 最慢圈速: {summary_stats.get('slowest_lap_time', 'N/A')}")
+                    print(f"   • 平均圈速: {summary_stats.get('average_lap_time', 'N/A')}")
+                    print(f"   • 圈速標準差: {summary_stats.get('lap_time_std', 'N/A')}")
+                    print(f"   • 進站次數: {summary_stats.get('pit_stops', 0)}")
+                    print(f"   • 使用輪胎: {', '.join(summary_stats.get('tire_compounds_used', []))}")
+            
+            print(f"\n{'='*60}")
+            print(f"✅ 全部車手詳細圈速分析顯示完成")
+            print(f"{'='*60}")
+            
+        except Exception as e:
+            print(f"❌ 顯示全部車手緩存詳細輸出失敗: {e}")

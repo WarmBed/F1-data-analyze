@@ -52,10 +52,12 @@ try:
     
     # 向後兼容：保留部分重要模組的直接導入
     try:
-        from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
+        # 使用新的增強版降雨分析模組
+        from CLI_modules.cli.analyzer.weather.rain_analyzer import EnhancedRainAnalyzer
         has_rain_analysis = True
+        print("[OK] 增強版降雨分析模組導入成功！")
     except ImportError:
-        print("[WARNING] 降雨分析模組未找到")
+        print("[WARNING] 增強版降雨分析模組未找到")
         has_rain_analysis = False
     from CLI_modules.cli.analyzer.all_drivers_overtaking_trends_analysis import run_all_drivers_overtaking_trends_analysis
     
@@ -306,18 +308,17 @@ class F1AnalysisModularCLI:
         print("=" * 50)
 
     def run_rain_intensity_analysis(self):
-        """執行降雨強度分析 - 專門的天氣數據分析"""
+        """執行降雨強度分析 - 使用最新增強版模組"""
         try:
-            print("\n[RAIN] 執行降雨強度分析...")
-            from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
-            run_rain_intensity_analysis_json(self.data_loader)
-        except ImportError as e:
-            print(f"[ERROR] 降雨分析模組導入失敗: {e}")
-            print("正在創建基礎降雨分析...")
-            self._create_basic_rain_analysis()
+            print("\n[RAIN] 執行增強版降雨強度分析...")
+            # 使用統一函數映射器執行功能1
+            result = self.run_analysis_direct(1)
+            if result.get("success", False):
+                print("[OK] 增強版降雨強度分析執行成功")
+            else:
+                print(f"[ERROR] 增強版降雨強度分析失敗: {result.get('message', '未知錯誤')}")
         except Exception as e:
             print(f"[ERROR] 降雨分析執行失敗: {e}")
-            self._create_basic_rain_analysis()
 
     # === 獨立事故分析方法 ===
     
@@ -598,41 +599,45 @@ class F1AnalysisModularCLI:
                     "error": "尚未載入賽事數據"
                 }
             
-            # 功能 1: 降雨強度分析
+            # 功能 1: 降雨強度分析 - 使用增強版模組
             if function_id == 1:
                 try:
-                    from modules.gui.rain_analysis.rain_intensity_analyzer_json import run_rain_intensity_analysis_json
-                    print("\n[RAIN]  執行降雨強度分析 (JSON輸出版)...")
+                    # 使用統一函數映射器執行增強版降雨分析
+                    from CLI_modules.cli.core.function_mapper import F1AnalysisFunctionMapper
                     
-                    # 執行JSON版本的降雨分析
-                    json_result = run_rain_intensity_analysis_json(
-                        self.data_loader, 
-                        year=self.year,
-                        race_name=self.race,
-                        session=self.session,
-                        enable_debug=True
+                    mapper = F1AnalysisFunctionMapper(
+                        data_loader=self.data_loader,
+                        dynamic_team_mapping=self.dynamic_team_mapping,
+                        f1_analysis_instance=self.f1_analysis_instance
                     )
                     
-                    if "error" in json_result:
+                    print("\n[RAIN]  執行增強版降雨強度分析 (JSON輸出版)...")
+                    
+                    # 執行增強版降雨分析
+                    result = mapper.execute_function_by_number(1)
+                    
+                    if result.get("success", False):
                         return {
-                            "success": False,
-                            "error": json_result["error"]
+                            "success": True,
+                            "data": result.get("data", {}),
+                            "message": "增強版降雨分析執行成功",
+                            "analysis_type": "enhanced_rain_analysis"
                         }
                     else:
                         return {
-                            "success": True,
-                            "data": json_result
+                            "success": False,
+                            "error": result.get("message", "增強版降雨分析執行失敗")
                         }
                         
                 except ImportError as e:
                     return {
                         "success": False,
-                        "error": f"JSON降雨分析模組未找到: {str(e)}"
+                        "error": f"增強版降雨分析模組未找到: {str(e)}"
                     }
                 except Exception as e:
                     return {
                         "success": False,
-                        "error": f"執行降雨分析時發生錯誤: {str(e)}"
+                        "error": f"執行增強版降雨分析時發生錯誤: {str(e)}"
                     }
             
             # 功能 2: 賽道路線分析 (Track Path Analysis)
@@ -947,48 +952,6 @@ class F1AnalysisModularCLI:
                 "error": f"執行分析功能時發生錯誤: {str(e)}"
             }
 
-    def _create_basic_rain_analysis(self):
-        """創建基礎降雨分析"""
-        try:
-            if not self.data_loader or not hasattr(self.data_loader, 'session'):
-                print("[ERROR] 數據載入器或會話未就緒")
-                return
-            
-            session = self.data_loader.session
-            print("\n[RAIN]  執行基礎降雨分析...")
-            
-            if hasattr(session, 'weather_data') and session.weather_data is not None:
-                weather = session.weather_data
-                
-                print(f"[STATS] 天氣數據概覽:")
-                if 'Rainfall' in weather.columns:
-                    total_rainfall = weather['Rainfall'].sum()
-                    print(f"   [RAIN]  總降雨量: {total_rainfall:.2f} mm")
-                    
-                    if total_rainfall > 0:
-                        print(f"   ☔ 本場比賽有降雨記錄")
-                        rain_laps = weather[weather['Rainfall'] > 0]
-                        print(f"   🕒 降雨持續時間: {len(rain_laps)} 個記錄點")
-                    else:
-                        print(f"   [SUN]  本場比賽無降雨記錄")
-                else:
-                    print("   ❓ 降雨數據不可用")
-                
-                if 'AirTemp' in weather.columns:
-                    avg_temp = weather['AirTemp'].mean()
-                    print(f"   [TEMP]  平均氣溫: {avg_temp:.1f}°C")
-                
-                if 'TrackTemp' in weather.columns:
-                    avg_track_temp = weather['TrackTemp'].mean()
-                    print(f"   [FINISH] 平均賽道溫度: {avg_track_temp:.1f}°C")
-                    
-                print("[OK] 基礎降雨分析完成")
-            else:
-                print("[ERROR] 無法獲取天氣數據")
-                
-        except Exception as e:
-            print(f"[ERROR] 基礎降雨分析失敗: {e}")
-
     def _create_basic_key_events_summary(self):
         """創建基本關鍵事件摘要"""
         try:
@@ -1140,20 +1103,18 @@ class F1AnalysisModularCLI:
         print("\n[RAIN]  基礎分析模組 (功能1-10)")
         print("=" * 80)
         
-        print("1.  [RAIN] 降雨強度分析 (Rain Intensity Analysis)")
-        print("    功能描述：完全復刻原版降雨強度分析功能")
+        print("1.  [RAIN] 增強版降雨強度分析 (Enhanced Rain Intensity Analysis)")
+        print("    功能描述：基於FastF1直接數據，輸出簡化JSON格式的降雨分析")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
-        print("      [STATS] Table格式：")
-        print("        • Weather_Data_Summary (天氣數據摘要表)")
-        print("          - Columns: Time, Rainfall(mm), AirTemp(°C), TrackTemp(°C), Humidity(%)")
-        print("        • Rain_Impact_Analysis (降雨影響分析表)")
-        print("          - Columns: LapNumber, TotalRainfall, WetTyreUsage, LapTimeImpact")
-        print("      [CHART] Figure輸出：")
-        print("        • rainfall_timeline_chart.png (降雨時間線圖)")
-        print("        • weather_conditions_heatmap.png (天氣條件熱力圖)")
-        print("        • tire_strategy_rain_analysis.png (輪胎策略雨天分析)")
-        print("      [NOTE] 文字輸出：降雨強度統計報告")
+        print("      [JSON] 結構化輸出：")
+        print("        • temperature_vs_lap (溫度vs圈數)")
+        print("        • rain_vs_lap (降雨vs圈數)") 
+        print("        • humidity_vs_lap (濕度vs圈數)")
+        print("        • windspeed_vs_lap (風速vs圈數)")
+        print("        • pressure_vs_lap (氣壓vs圈數)")
+        print("      [CACHE] 緩存整合：支援 pickle 快取機制")
+        print("      [NOTE] 使用最新增強版降雨分析模組 (CLI_modules/cli/analyzer/weather/rain_analyzer.py)")
         
         print("\n2.  [TRACK] 賽道路線分析 (Track Path Analysis)")
         print("    功能描述：分析車手在賽道上的行駛路線和最佳賽車線")
