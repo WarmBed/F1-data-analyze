@@ -800,6 +800,15 @@ class RPMAnalysisModule(IAnalysisModule):
             self.cleanup_module()
             
             if hasattr(self, 'rpm_chart_widget') and self.rpm_chart_widget:
+                # 🔧 修復：從連動管理器中取消註冊圖表組件
+                try:
+                    from modules.gui.lap_analysis.linkage import linkage_manager
+                    if linkage_manager:
+                        linkage_manager.unregister_module(self.rpm_chart_widget)
+                        print(f"[RPM_MDI] ✅ 已從連動管理器解除註冊圖表組件")
+                except Exception as e:
+                    print(f"[ERROR] [RPM_MDI] 從連動管理器解除註冊失敗: {e}")
+                
                 # 清理圖表組件
                 if hasattr(self.rpm_chart_widget, 'cleanup'):
                     self.rpm_chart_widget.cleanup()

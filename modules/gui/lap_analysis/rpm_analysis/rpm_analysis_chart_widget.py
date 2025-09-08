@@ -739,6 +739,15 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
         # 註冊到連動管理器
         if linkage_manager:
             linkage_manager.register_module(self, "rpm_analysis")
+            # 🔧 修復：同步當前的主連動開關狀態
+            try:
+                current_master_state = linkage_manager.is_master_linkage_enabled()
+                self.set_master_linkage_enabled(current_master_state)
+                print(f"[RPM_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+            except Exception as e:
+                print(f"[ERROR] [RPM_CHART] 同步連動狀態失敗: {e}")
+        else:
+            print(f"[WARNING] [RPM_CHART] 連動管理器不可用，連動功能將無法使用")
         
     def _setup_ui(self):
         """設置使用者介面 - 採用速度分析的垂直單欄布局"""

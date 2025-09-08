@@ -90,6 +90,15 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         # 註冊到連動管理器
         if linkage_manager:
             linkage_manager.register_module(self, "speed_analysis")
+            # 🔧 修復：同步當前的主連動開關狀態
+            try:
+                current_master_state = linkage_manager.is_master_linkage_enabled()
+                self.set_master_linkage_enabled(current_master_state)
+                print(f"[SPEED_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+            except Exception as e:
+                print(f"[ERROR] [SPEED_CHART] 同步連動狀態失敗: {e}")
+        else:
+            print(f"[WARNING] [SPEED_CHART] 連動管理器不可用，連動功能將無法使用")
         
         # 拖拉狀態
         self.middle_dragging = False  # 中鍵拖拉狀態

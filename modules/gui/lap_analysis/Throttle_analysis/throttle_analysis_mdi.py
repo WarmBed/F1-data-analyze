@@ -819,6 +819,15 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     self.data_manager.cleanup()
                     
             if hasattr(self, 'throttle_chart_widget') and self.throttle_chart_widget:
+                # 🔧 修復：從連動管理器中取消註冊圖表組件
+                try:
+                    from modules.gui.lap_analysis.linkage import linkage_manager
+                    if linkage_manager:
+                        linkage_manager.unregister_module(self.throttle_chart_widget)
+                        print(f"[THROTTLE_MDI] ✅ 已從連動管理器解除註冊圖表組件")
+                except Exception as e:
+                    print(f"[ERROR] [THROTTLE_MDI] 從連動管理器解除註冊失敗: {e}")
+                
                 # 清理圖表組件
                 if hasattr(self.throttle_chart_widget, 'cleanup'):
                     self.throttle_chart_widget.cleanup()

@@ -10053,11 +10053,14 @@ class StyleHMainWindow(QMainWindow):
             # 優先使用新的連動管理器
             linkage_manager.set_master_linkage_enabled(checked)
             
+            # 🔧 修復：獲取連動管理器統計資訊並顯示詳細狀態
+            stats = linkage_manager.get_module_stats()
+            print(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
+            print(f"[LAP_LINKAGE] 模組類型分佈: {stats['module_types']}")
+            
             # 更新全域信號管理器的連動狀態（向後相容）
             if hasattr(global_signals, 'set_lap_linkage_enabled'):
                 global_signals.set_lap_linkage_enabled(checked)
-            
-            # 獲取連動管理器統計資訊
             stats = linkage_manager.get_module_stats()
             print(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
             
