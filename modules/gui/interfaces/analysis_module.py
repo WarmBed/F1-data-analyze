@@ -288,20 +288,20 @@ class ModuleFactory:
 
 class ModuleTypes:
     """模組類型定義"""
-    RAIN_ANALYSIS = "rain_analysis"
-    TELEMETRY_SPEED = "telemetry_speed"
-    TELEMETRY_BRAKE = "telemetry_brake"
-    TELEMETRY_THROTTLE = "telemetry_throttle"
-    TELEMETRY_STEERING = "telemetry_steering"
-    TELEMETRY_RPM = "telemetry_rpm"
-    TELEMETRY_GEAR = "telemetry_gear"
-    TELEMETRY_ACCELERATION = "telemetry_acceleration"
-    TELEMETRY_DISTANCEDIFF = "telemetry_distancediff"
-    TELEMETRY_SPEEDDIFF = "telemetry_speeddiff"
-    TELEMETRY_ANALYSIS = "telemetry_analysis"
-    TRACK_MAP = "track_map"
-    LAP_ANALYSIS = "lap_analysis"
-    PITSTOP_ANALYSIS = "pitstop_analysis"
-    STATISTICS = "statistics"
-    ACCIDENT_ANALYSIS = "accident_analysis"
-    TRACK_ANALYSIS = "track_analysis"
+    RAIN_ANALYSIS = "rain_analysis"                    # 雨天分析
+    TELEMETRY_SPEED = "telemetry_speed"                # 遙測分析 - 速度分析
+    TELEMETRY_BRAKE = "telemetry_brake"                # 遙測分析 - 煞車分析
+    TELEMETRY_THROTTLE = "telemetry_throttle"          # 遙測分析 - 油門分析
+    TELEMETRY_STEERING = "telemetry_steering"          # 遙測分析 - 方向盤分析
+    TELEMETRY_RPM = "telemetry_rpm"                    # 遙測分析 - 轉速分析
+    TELEMETRY_GEAR = "telemetry_gear"                  # 遙測分析 - 檔位分析
+    TELEMETRY_ACCELERATION = "telemetry_acceleration"  # 遙測分析 - 加速度分析
+    TELEMETRY_DISTANCEDIFF = "telemetry_distancediff"  # 遙測分析 - 距離差異分析
+    TELEMETRY_SPEEDDIFF = "telemetry_speeddiff"        # 遙測分析 - 速度差異分析
+    TELEMETRY_ANALYSIS = "telemetry_analysis"          # 遙測分析 - 綜合分析
+    TRACK_MAP = "track_map"                            # 賽道地圖
+    LAP_ANALYSIS = "lap_analysis"                      # 單圈分析
+    PITSTOP_ANALYSIS = "pitstop_analysis"              # 進站分析
+    STATISTICS = "statistics"                          # 統計分析
+    ACCIDENT_ANALYSIS = "accident_analysis"            # 事故分析
+    TRACK_ANALYSIS = "track_analysis"                  # 賽道分析

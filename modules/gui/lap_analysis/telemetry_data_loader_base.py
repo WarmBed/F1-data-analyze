@@ -1,0 +1,966 @@
+#!/usr/bin/env python3
+"""
+TelemetryDataLoader - F1T 遙測數據載入器基類
+======================================================
+
+這個模組提供了所有遙測分析模組共用的數據載入邏輯，
+整合了原本分散在各個 *_analysis_data_loader.py 中的重複代碼。
+
+支援的遙測類型：
+- speed (速度分析)
+- rpm (轉速分析) 
+- gear (檔位分析)
+- throttle (油門分析)
+- brake (煞車分析)
+- acceleration (加速度分析)
+- distancediff (距離差異分析)
+- speeddiff (速度差異分析)
+
+設計原則：
+1. 統一的載入邏輯，消除代碼重複
+2. 保持向後兼容性，不破壞現有API
+3. 模組化設計，支援新增遙測類型
+4. 統一的錯誤處理和監控機制
+
+Author: F1T Team
+Date: 2025-09-09
+Version: 1.0.0
+"""
+
+import sys
+import os
+import json
+import glob
+import pickle
+import time
+from datetime import datetime
+import threading
+import fastf1
+import pandas as pd
+import subprocess
+from typing import Dict, List, Any, Optional, Tuple
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+
+
+class TelemetryDataLoader(QObject):
+    """
+    遙測數據載入器基類
+    
+    所有遙測分析模組的共用載入器，提供統一的數據載入、
+    檔案搜尋、CLI生成和監控機制。
+    """
+    
+    # 標準信號定義 (所有遙測模組共用)
+    data_loaded = pyqtSignal(dict)      # 數據載入完成
+    load_progress = pyqtSignal(int)     # 載入進度 (0-100)
+    load_error = pyqtSignal(str)        # 載入錯誤
+    status_changed = pyqtSignal(str)    # 狀態變更
+    
+    # 支援的遙測類型映射
+    TELEMETRY_TYPES = {
+        'speed': {
+            'display_name': '速度分析',
+            'data_field': 'Speed',
+            'unit': 'km/h',
+            'debug_prefix': 'SPEED'
+        },
+        'rpm': {
+            'display_name': 'RPM分析', 
+            'data_field': 'RPM',
+            'unit': 'rpm',
+            'debug_prefix': 'RPM'
+        },
+        'gear': {
+            'display_name': '檔位分析',
+            'data_field': 'nGear', 
+            'unit': 'gear',
+            'debug_prefix': 'GEAR'
+        },
+        'throttle': {
+            'display_name': '油門分析',
+            'data_field': 'Throttle',
+            'unit': '%',
+            'debug_prefix': 'THROTTLE'
+        },
+        'brake': {
+            'display_name': '煞車分析',
+            'data_field': 'Brake',
+            'unit': '%', 
+            'debug_prefix': 'BRAKE'
+        },
+        'acceleration': {
+            'display_name': '加速度分析',
+            'data_field': 'Acceleration',
+            'unit': 'm/s²',
+            'debug_prefix': 'ACCEL'
+        },
+        'distancediff': {
+            'display_name': '距離差異分析',
+            'data_field': 'distance_difference',
+            'unit': 'm',
+            'debug_prefix': 'DISTDIFF'
+        },
+        'speeddiff': {
+            'display_name': '速度差異分析', 
+            'data_field': 'speed_difference',
+            'unit': 'km/h',
+            'debug_prefix': 'SPEEDDIFF'
+        }
+    }
+    
+    def __init__(self, telemetry_type: str, parent=None):
+        """
+        初始化遙測數據載入器
+        
+        Args:
+            telemetry_type: 遙測類型 ('speed', 'rpm', 'gear', 等)
+            parent: 父級 QObject
+        """
+        super().__init__(parent)
+        
+        # 驗證遙測類型
+        if telemetry_type not in self.TELEMETRY_TYPES:
+            raise ValueError(f"不支援的遙測類型: {telemetry_type}")
+            
+        self.telemetry_type = telemetry_type
+        self.config = self.TELEMETRY_TYPES[telemetry_type]
+        
+        # 狀態變數
+        self._base_path = "json"
+        self._is_loading = False
+        self._current_data = None
+        self.current_session = None
+        self._generation_params = None
+        
+        # 監控定時器 - 設置 parent 防止被垃圾回收
+        self._generation_timer = QTimer(self)
+        self._generation_timer.timeout.connect(self._check_generation_progress)
+        
+        self._generation_timeout_timer = QTimer(self)
+        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        
+        self._debug(f"初始化 {self.config['display_name']} 載入器")
+    
+    def _debug(self, message: str):
+        """統一的除錯輸出"""
+        prefix = self.config['debug_prefix']
+        print(f"[{prefix} DEBUG] {message}")
+    
+    def _error(self, message: str):
+        """統一的錯誤輸出"""
+        prefix = self.config['debug_prefix']
+        print(f"[ERROR] [{prefix}] {message}")
+    
+    # ========== 公開API方法 ==========
+    
+    def load_telemetry_data(self, year: int, race: str, session: str,
+                           driver1: str, driver2: str = None,
+                           lap1: int = 1, lap2: int = None,
+                           is_fastest_lap: bool = False) -> bool:
+        """
+        載入遙測分析數據 - 通用載入方法
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 會話類型 (R/Q/S/FP1/FP2/FP3)
+            driver1: 車手1代碼
+            driver2: 車手2代碼 (可選，None表示單車手分析)
+            lap1: 車手1圈數
+            lap2: 車手2圈數 (可選)
+            is_fastest_lap: 是否為最快圈分析
+            
+        Returns:
+            bool: 載入是否成功啟動
+        """
+        try:
+            # 正規化參數，處理 None 值
+            if lap2 is None:
+                lap2 = 1
+            if driver2 is None or driver2 == driver1:
+                driver2 = None  # 明確設為單車手模式
+                
+            self._debug("========== 遙測數據載入 ==========")
+            self._debug(f"類型: {self.config['display_name']}")
+            self._debug(f"參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
+            self._debug(f"分析模式: {'單車手' if driver2 is None else '雙車手對比'}")
+            
+            if self._is_loading:
+                self._debug("已在載入中，忽略重複請求")
+                return False
+                
+            self._is_loading = True
+            self.load_progress.emit(10)
+            
+            # 儲存當前會話資訊
+            self.current_session = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver1': driver1,
+                'driver2': driver2,
+                'lap1': lap1,
+                'lap2': lap2,
+                'is_fastest_lap': is_fastest_lap
+            }
+            
+            # 檢測特殊情況
+            if driver2 and driver1 == driver2 and lap1 == lap2:
+                self._debug(f"🔍 檢測到同車手同圈數特殊情況: {driver1} 第{lap1}圈")
+                self._debug("⚠️ 注意：CLI -f13 會生成 comparison_type: 'same_driver' 的特殊JSON格式")
+            elif driver2 and driver1 == driver2:
+                self._debug(f"🔍 檢測到同車手不同圈數情況: {driver1} 第{lap1}圈 vs 第{lap2}圈")
+            elif driver2:
+                self._debug(f"🔍 標準雙車手比較: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            else:
+                self._debug(f"🔍 單車手分析: {driver1} 第{lap1}圈")
+            
+            # 尋找對應的 JSON 檔案
+            json_file = self._find_telemetry_data_file(year, race, session, driver1, driver2, lap1, lap2)
+            self._debug(f"搜尋結果: {json_file}")
+            
+            if not json_file:
+                self._debug("❌ 找不到現有 JSON，開始生成新檔案")
+                # 呼叫 CLI 生成 JSON (異步)
+                self._start_cli_generation(year, race, session, driver1, driver2, lap1, lap2)
+                return True  # 返回 True 表示已啟動生成流程
+            else:
+                self._debug("✅ 找到現有檔案，準備載入")
+                
+            # 使用 QTimer 模擬異步載入
+            QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+            return True
+            
+        except Exception as e:
+            self._error(f"載入失敗: {str(e)}")
+            self.load_error.emit(f"載入失敗: {str(e)}")
+            self._is_loading = False
+            return False
+    
+    def get_current_data(self) -> Optional[Dict[str, Any]]:
+        """獲取當前載入的數據"""
+        return self._current_data
+    
+    def is_loading(self) -> bool:
+        """檢查是否正在載入"""
+        return self._is_loading
+    
+    def get_telemetry_type(self) -> str:
+        """獲取遙測類型"""
+        return self.telemetry_type
+    
+    def get_display_name(self) -> str:
+        """獲取顯示名稱"""
+        return self.config['display_name']
+    
+    # ========== 檔案搜尋邏輯 ==========
+    
+    def _find_telemetry_data_file(self, year: int, race: str, session: str,
+                                 driver1: str, driver2: str = None,
+                                 lap1: int = 1, lap2: int = 1) -> Optional[str]:
+        """搜尋遙測分析數據檔案 - 統一搜尋邏輯"""
+        try:
+            self._debug("========== 搜尋遙測分析檔案 ==========")
+            self._debug(f"🔍 搜尋條件:")
+            self._debug(f"   📅 年份: {year}")
+            self._debug(f"   🏁 賽事: {race}")
+            self._debug(f"   🏁 賽段: {session}")
+            self._debug(f"   🏎️ 車手1: {driver1} (第{lap1}圈)")
+            self._debug(f"   🏎️ 車手2: {driver2} (第{lap2}圈)")
+            
+            # 搜尋目錄
+            search_dirs = ["json", "json_exports", "cache"]
+            self._debug(f"📂 搜尋目錄: {search_dirs}")
+            
+            # 構建檔案名稱搜尋模式
+            filename_patterns = self._build_filename_patterns(year, race, session, driver1, driver2, lap1, lap2)
+            
+            # 精確搜尋
+            self._debug("🔍 開始精確搜尋...")
+            found_file = None
+            
+            for search_dir in search_dirs:
+                self._debug(f"📂 搜尋目錄: {search_dir}")
+                
+                for i, filename_pattern in enumerate(filename_patterns, 1):
+                    search_pattern = os.path.join(search_dir, filename_pattern)
+                    self._debug(f"   🔍 模式 {i}: {search_pattern}")
+                    matches = glob.glob(search_pattern)
+                    
+                    if matches:
+                        # 如果有多個匹配，選擇最新的
+                        found_file = max(matches, key=os.path.getmtime)
+                        self._debug(f"✅ 找到檔案: {found_file}")
+                        self._debug(f"📊 匹配檔案數量: {len(matches)}")
+                        if len(matches) > 1:
+                            self._debug("📋 所有匹配檔案:")
+                            for match in matches:
+                                self._debug(f"     - {match}")
+                        break
+                    else:
+                        self._debug(f"   ❌ 模式 {i} 無匹配")
+                
+                # 如果找到檔案就跳出目錄循環
+                if found_file:
+                    break
+                
+                self._debug(f"❌ 目錄 {search_dir} 無匹配檔案")
+            
+            if found_file:
+                self._debug(f"✅ 搜尋成功: {found_file}")
+                return found_file
+            
+            # 精確搜尋失敗，直接生成新檔案
+            self._debug("❌ 未找到符合的JSON檔案，需要生成新檔案")
+            return None
+            
+        except Exception as e:
+            self._error(f"搜尋檔案時發生錯誤: {str(e)}")
+            self.load_error.emit(f"搜尋檔案時發生錯誤: {str(e)}")
+            return None
+    
+    def _build_filename_patterns(self, year: int, race: str, session: str,
+                                driver1: str, driver2: str, lap1: int, lap2: int) -> List[str]:
+        """構建檔案名稱搜尋模式"""
+        if driver2 and driver2 != driver1:
+            # 雙車手對比檔案 - 只允許精確搜尋模式，避免誤判
+            lap2_safe = lap2 if lap2 is not None else 1
+            filename_patterns = [
+                f"comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2_safe}.json"
+            ]
+            self._debug("🔄 雙車手檔案搜尋模式（僅精確搜尋）:")
+            for i, pattern in enumerate(filename_patterns, 1):
+                self._debug(f"   {i}. {pattern}")
+            self._debug("⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判")
+        else:
+            # 單車手檔案 - 使用 comparison_telemetry 格式
+            filename_patterns = [
+                f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
+                f"comparison_telemetry_{driver1}_{driver1}_{year}_{race}_{session}_Lap*.json"
+            ]
+            self._debug("🏎️ 單車手檔案搜尋模式:")
+            for i, pattern in enumerate(filename_patterns, 1):
+                self._debug(f"   {i}. {pattern}")
+        
+        return filename_patterns
+    
+    # ========== CLI 生成邏輯 ==========
+    
+    def _start_cli_generation(self, year: int, race: str, session: str,
+                             driver1: str, driver2: str = None,
+                             lap1: int = 1, lap2: int = 1):
+        """啟動 CLI 生成流程"""
+        try:
+            self._debug("========== 啟動 CLI 生成流程 ==========")
+            self._debug(f"生成參數:")
+            self._debug(f"   年份: {year}")
+            self._debug(f"   賽站: {race}")
+            self._debug(f"   賽段: {session}")
+            self._debug(f"   車手1: {driver1}, 圈數: {lap1}")
+            self._debug(f"   車手2: {driver2}, 圈數: {lap2}")
+            
+            # 儲存參數供後續使用
+            self._generation_params = (year, race, session, driver1, driver2, lap1, lap2)
+            
+            # 啟動 CLI 生成
+            success = self._generate_telemetry_data_via_cli(year, race, session, driver1, driver2, lap1, lap2)
+            
+            if success:
+                self._debug("✅ CLI 啟動成功，開始監控檔案生成")
+                # 啟動定時器檢查檔案是否生成完成
+                self._start_generation_monitoring()
+            else:
+                self._debug("❌ CLI 啟動失敗")
+                self.load_error.emit(f"啟動 CLI 生成失敗: {year} {race} {session}")
+                self._is_loading = False
+                
+        except Exception as e:
+            self._error(f"啟動生成時發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+            self.load_error.emit(f"啟動生成時發生錯誤: {str(e)}")
+            self._is_loading = False
+    
+    def _generate_telemetry_data_via_cli(self, year: int, race: str, session: str,
+                                        driver1: str, driver2: str = None,
+                                        lap1: int = 1, lap2: int = 1) -> bool:
+        """透過 CLI 工具生成遙測數據"""
+        try:
+            self._debug("========== CLI 命令生成 ==========")
+            self._debug(f"生成{self.config['display_name']}數據: {year} {race} {session}")
+            
+            # 構建命令 - 使用Function 13: 車手比較分析
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "13",  # 功能13: 車手比較分析
+                "-y", str(year),
+                "-r", race,
+                "-s", session,
+                "-d", driver1
+            ]
+            
+            # 添加第二位車手參數
+            if driver2:
+                command.extend(["-d2", driver2])
+                self._debug(f"雙車手模式: {driver1} vs {driver2}")
+            else:
+                # 單車手模式：設置 driver2 與 driver1 相同
+                command.extend(["-d2", driver1])
+                self._debug(f"單車手模式: {driver1} vs {driver1}")
+            
+            # 添加圈數參數 - 始終使用雙參數模式
+            command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
+            
+            if driver2:
+                self._debug(f"雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
+            else:
+                self._debug(f"單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
+            
+            self._debug(f"完整 CLI 命令: {' '.join(command)}")
+            self.status_changed.emit(f"正在生成{self.config['display_name']}數據...")
+            
+            # 非阻塞執行
+            def run_cli():
+                try:
+                    self._debug("🚀 開始執行 CLI 命令...")
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',  # 遇到無法解碼的字符時用替代字符
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        self._debug("CLI 執行成功")
+                    else:
+                        self._error(f"CLI 執行失敗: {stderr}")
+                        
+                except Exception as e:
+                    self._error(f"CLI 執行異常: {e}")
+            
+            # 在背景執行緒中執行CLI
+            thread = threading.Thread(target=run_cli, daemon=True)
+            thread.start()
+            
+            return True
+            
+        except Exception as e:
+            self._error(f"啟動 CLI 失敗: {e}")
+            return False
+    
+    # ========== 監控系統 ==========
+    
+    def _start_generation_monitoring(self):
+        """啟動檔案生成監控"""
+        self._debug("========== 啟動監控系統 ==========")
+        self._debug("檢查計時器狀態...")
+        self._debug(f"_generation_timer 存在: {hasattr(self, '_generation_timer')}")
+        self._debug(f"_generation_timeout_timer 存在: {hasattr(self, '_generation_timeout_timer')}")
+        
+        # 啟動監控 (每5秒檢查一次，最多等待180秒)
+        self._debug("啟動主監控計時器 (每5秒檢查)")
+        self._generation_timer.start(5000)
+        self._debug(f"計時器是否運行: {self._generation_timer.isActive()}")
+        self._debug(f"計時器間隔: {self._generation_timer.interval()}")
+        
+        self._debug("啟動超時計時器 (180秒)")
+        self._generation_timeout_timer.start(180000)
+        self._debug(f"超時計時器是否運行: {self._generation_timeout_timer.isActive()}")
+        
+        self._debug("✅ 監控系統已啟動")
+        self.status_changed.emit("正在生成數據，請稍候...")
+        
+        # 立即執行一次檢查以確認方法可以被調用
+        self._debug("🧪 執行立即測試檢查...")
+        QTimer.singleShot(1000, self._check_generation_progress)
+    
+    def _check_generation_progress(self):
+        """檢查檔案生成進度"""
+        try:
+            self._debug("========== 監控檢查觸發 ==========")
+            self._debug(f"時間: {datetime.now().strftime('%H:%M:%S')}")
+            
+            if hasattr(self, '_generation_params'):
+                year, race, session, driver1, driver2, lap1, lap2 = self._generation_params
+                self._debug(f"檢查參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
+                
+                # 檢查是否有新檔案生成
+                self._debug("開始搜尋檔案...")
+                json_file = self._find_telemetry_data_file(year, race, session, driver1, driver2, lap1, lap2)
+                
+                if json_file:
+                    self._debug(f"檔案生成完成: {json_file}")
+                    self._debug("停止監控並載入檔案")
+                    
+                    # 停止監控
+                    self._stop_generation_monitoring()
+                    
+                    # 載入新生成的檔案
+                    QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+                else:
+                    self._debug("繼續等待檔案生成...")
+                    self._debug("下次檢查將在5秒後進行")
+            else:
+                self._debug("❌ 缺少 _generation_params 參數")
+                self._debug("停止監控")
+                self._stop_generation_monitoring()
+                
+        except Exception as e:
+            self._error(f"監控檢查異常: {e}")
+            import traceback
+            traceback.print_exc()
+            self._debug("嘗試繼續監控...")
+    
+    def _on_generation_timeout(self):
+        """處理生成超時"""
+        self._debug("========== 監控超時 ==========")
+        self._debug("檔案生成超時 (180秒)")
+        self._debug("停止監控系統")
+        self._stop_generation_monitoring()
+        self.load_error.emit("數據生成超時，請檢查網路連線或重試")
+        self._is_loading = False
+    
+    def _stop_generation_monitoring(self):
+        """停止檔案生成監控"""
+        self._debug("========== 停止監控系統 ==========")
+        if hasattr(self, '_generation_timer'):
+            self._generation_timer.stop()
+            self._debug("主監控計時器已停止")
+        if hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer.stop()
+            self._debug("超時計時器已停止")
+        self._debug("✅ 監控系統已完全停止")
+    
+    # ========== JSON 載入和處理 ==========
+    
+    def _load_json_file(self, file_path: str):
+        """載入 JSON 檔案"""
+        try:
+            self._debug("========== JSON 檔案載入 ==========")
+            self._debug(f"載入檔案: {file_path}")
+            
+            # 檢查檔案狀態
+            if not os.path.exists(file_path):
+                self._debug(f"❌ 檔案不存在: {file_path}")
+                self.load_error.emit(f"檔案不存在: {file_path}")
+                return
+                
+            file_size = os.path.getsize(file_path)
+            self._debug(f"檔案大小: {file_size} bytes")
+            
+            self.load_progress.emit(90)
+            self.status_changed.emit("正在處理數據...")
+            
+            # 載入JSON檔案
+            self._debug("開始讀取 JSON 內容...")
+            with open(file_path, 'r', encoding='utf-8') as f:
+                raw_data = json.load(f)
+            
+            self._debug("JSON 載入成功")
+            self._debug(f"頂層鍵值: {list(raw_data.keys()) if isinstance(raw_data, dict) else 'Not a dict'}")
+            
+            # 驗證數據格式
+            self._debug("開始驗證數據格式...")
+            if self._validate_telemetry_data(raw_data):
+                self._debug("✅ 數據格式驗證通過")
+                # 處理為遙測分析格式
+                processed_data = self._process_telemetry_data(raw_data)
+                
+                self._debug("========== 即將發送數據 ==========")
+                self._debug(f"處理後數據類型: {type(processed_data)}")
+                self._debug(f"處理後數據鍵值: {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
+                
+                # 檢查特定數據結構
+                data_key = f"{self.telemetry_type}_data"
+                if data_key in processed_data:
+                    telemetry_data = processed_data[data_key]
+                    self._debug(f"{self.telemetry_type}數據鍵值: {list(telemetry_data.keys())}")
+                    self._debug(f"距離數據點數: {len(telemetry_data.get('distance', []))}")
+                    self._debug(f"車手1數據點數: {len(telemetry_data.get(f'driver1_{self.telemetry_type}', []))}")
+                    self._debug(f"車手2數據點數: {len(telemetry_data.get(f'driver2_{self.telemetry_type}', []))}")
+                
+                self.load_progress.emit(100)
+                self.status_changed.emit("數據載入完成")
+                self._current_data = processed_data
+                self._is_loading = False
+                
+                self._debug("🚀 即將發送 data_loaded 信號...")
+                self.data_loaded.emit(processed_data)
+                self._debug("✅ data_loaded 信號已發送")
+                
+            else:
+                self._debug("❌ 數據格式驗證失敗")
+                self.load_error.emit("數據格式驗證失敗")
+                self._is_loading = False
+                
+        except Exception as e:
+            self._error(f"JSON 檔案載入失敗: {str(e)}")
+            self.load_error.emit(f"載入失敗: {str(e)}")
+            self._is_loading = False
+    
+    def _validate_telemetry_data(self, raw_data: dict) -> bool:
+        """驗證遙測數據格式"""
+        try:
+            self._debug("🔍 驗證數據格式...")
+            
+            # 檢查基本結構
+            if not isinstance(raw_data, dict):
+                self._debug("❌ 數據不是字典格式")
+                return False
+            
+            # 檢查是否有遙測比較數據
+            if 'results' not in raw_data:
+                self._debug("❌ 缺少 results 字段")
+                return False
+                
+            results = raw_data['results']
+            data_field = self.config['data_field']
+            
+            # 根據遙測類型選擇不同的數據路徑
+            if self.telemetry_type in ['speeddiff', 'distancediff']:
+                # 速度差和距離差數據直接在 results 下
+                if data_field not in results:
+                    self._debug(f"❌ 缺少 {data_field} 字段")
+                    return False
+                
+                telemetry_data = results[data_field]
+                
+                # 檢查差異分析的數據結構 - 根據類型使用不同的驗證邏輯
+                if self.telemetry_type == 'speeddiff':
+                    # 速度差：期望 'distance' 和 'speed_difference'
+                    required_fields = ['distance', data_field]
+                elif self.telemetry_type == 'distancediff':
+                    # 距離差：期望 'reference_distance' 和 'cumulative_distance_difference'
+                    required_fields = ['reference_distance', 'cumulative_distance_difference']
+                else:
+                    # 其他差異分析：使用默認邏輯
+                    required_fields = ['distance', data_field]
+                
+                for field in required_fields:
+                    if field not in telemetry_data:
+                        self._debug(f"❌ 缺少必要欄位: {field}")
+                        return False
+                
+            else:
+                # 常規遙測數據在 telemetry_comparison 下
+                if 'telemetry_comparison' not in results:
+                    self._debug("❌ 缺少 telemetry_comparison 字段")
+                    return False
+                    
+                telemetry_comp = results['telemetry_comparison']
+                
+                if data_field not in telemetry_comp:
+                    self._debug(f"❌ 缺少 {data_field} 字段")
+                    return False
+                
+                telemetry_data = telemetry_comp[data_field]
+                
+                # 檢查常規遙測數據欄位
+                required_fields = ['distance', 'driver1_data', 'driver2_data']
+                for field in required_fields:
+                    if field not in telemetry_data:
+                        self._debug(f"❌ 缺少必要欄位: {field}")
+                        return False
+            
+            # 驗證數據長度一致性
+            if self.telemetry_type == 'speeddiff':
+                # 速度差：檢查 distance 和 speed_difference
+                distance_data = telemetry_data.get('distance', [])
+                diff_data = telemetry_data.get('speed_difference', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("❌ 距離數據為空")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("❌ 速度差數據為空")
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"❌ 數據長度不一致: distance={len(distance_data)}, speed_difference={len(diff_data)}")
+                    return False
+                    
+            elif self.telemetry_type == 'distancediff':
+                # 距離差：檢查 reference_distance 和 cumulative_distance_difference
+                distance_data = telemetry_data.get('reference_distance', [])
+                diff_data = telemetry_data.get('cumulative_distance_difference', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("❌ 參考距離數據為空")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("❌ 累積距離差數據為空")
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"❌ 數據長度不一致: reference_distance={len(distance_data)}, cumulative_distance_difference={len(diff_data)}")
+                    return False
+                    
+            elif self.telemetry_type in ['speeddiff', 'distancediff']:
+                # 其他差異分析：使用默認邏輯  
+                distance_data = telemetry_data.get('distance', [])
+                diff_data = telemetry_data.get(data_field, [])
+                
+                if len(distance_data) == 0:
+                    self._debug("❌ 距離數據為空")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("❌ 差異數據為空")
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"❌ 數據長度不一致: distance={len(distance_data)}, {data_field}={len(diff_data)}")
+                    return False
+            else:
+                # 常規遙測數據驗證
+                distance_data = telemetry_data.get('distance', [])
+                driver1_data = telemetry_data.get('driver1_data', [])
+                driver2_data = telemetry_data.get('driver2_data', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("❌ 距離數據為空")
+                    return False
+                
+                if len(driver1_data) == 0:
+                    self._debug("❌ 車手1數據為空")
+                    return False
+                    
+                if len(driver2_data) == 0:
+                    self._debug("❌ 車手2數據為空")
+                    return False
+                
+                if len(distance_data) != len(driver1_data) or len(distance_data) != len(driver2_data):
+                    self._debug(f"❌ 數據長度不一致: distance={len(distance_data)}, driver1={len(driver1_data)}, driver2={len(driver2_data)}")
+                    return False
+            
+            self._debug("✅ 數據格式驗證通過")
+            return True
+            
+        except Exception as e:
+            self._debug(f"❌ 數據格式驗證失敗: {str(e)}")
+            return False
+    
+    def _process_telemetry_data(self, raw_data: dict) -> dict:
+        """處理遙測數據為標準格式"""
+        try:
+            self._debug("🔧 處理遙測數據...")
+            
+            results = raw_data['results']
+            data_field = self.config['data_field']
+            
+            # 根據遙測類型選擇不同的數據路徑
+            if self.telemetry_type in ['speeddiff', 'distancediff']:
+                # 速度差和距離差數據直接在 results 下
+                telemetry_raw = results[data_field]
+                self._debug(f"差異分析原始數據鍵值: {list(telemetry_raw.keys())}")
+                self._debug(f"距離數據點數: {len(telemetry_raw.get('distance', []))}")
+                self._debug(f"{data_field}數據點數: {len(telemetry_raw.get(data_field, []))}")
+            else:
+                # 常規遙測數據在 telemetry_comparison 下
+                telemetry_comp = results['telemetry_comparison']
+                telemetry_raw = telemetry_comp[data_field]
+                self._debug(f"常規遙測原始數據鍵值: {list(telemetry_raw.keys())}")
+                self._debug(f"距離數據點數: {len(telemetry_raw.get('distance', []))}")
+                self._debug(f"車手1數據點數: {len(telemetry_raw.get('driver1_data', []))}")
+                self._debug(f"車手2數據點數: {len(telemetry_raw.get('driver2_data', []))}")
+            
+            # 提取基本資訊
+            metadata = raw_data.get('metadata', {})
+            
+            # 從 comparison_info 提取更詳細的車手資訊
+            comparison_info = results.get('comparison_info', {})
+            
+            # 構建標準化數據結構
+            processed_data = {
+                "metadata": {
+                    "drivers": [
+                        {
+                            "code": metadata.get('driver1', comparison_info.get('driver1', 'UNK')), 
+                            "lap_number": metadata.get('lap_number1', comparison_info.get('act_lap1_number', 1)),
+                            "lap_time": comparison_info.get('lap_time1', 'N/A'),
+                            "compound": comparison_info.get('compound1', 'N/A'),
+                            "tyre_life": comparison_info.get('tyre_life1', 0)
+                        },
+                        {
+                            "code": metadata.get('driver2', comparison_info.get('driver2', 'UNK')), 
+                            "lap_number": metadata.get('lap_number2', comparison_info.get('act_lap2_number', 1)),
+                            "lap_time": comparison_info.get('lap_time2', 'N/A'),
+                            "compound": comparison_info.get('compound2', 'N/A'),
+                            "tyre_life": comparison_info.get('tyre_life2', 0)
+                        }
+                    ],
+                    "sectors": metadata.get('sectors', []),
+                    "year": metadata.get('year', 2025),
+                    "race": metadata.get('race', 'Unknown'),
+                    "session": metadata.get('session', 'R'),
+                    "telemetry_type": self.telemetry_type,
+                    "display_name": self.config['display_name'],
+                    "unit": self.config['unit'],
+                    "analysis_timestamp": metadata.get('analysis_timestamp', '')
+                }
+            }
+            
+            # 構建遙測數據結構 - 根據類型處理
+            data_key = f"{self.telemetry_type}_data"
+            
+            if self.telemetry_type in ['speeddiff', 'distancediff']:
+                # 差異分析數據結構 - 需要匹配前端期望的鍵名
+                if self.telemetry_type == 'speeddiff':
+                    # 速度差分析：前端期望 'speed' 和 'cumulative_speed_difference'
+                    processed_data[data_key] = {
+                        "speed": telemetry_raw.get('distance', []),  # 前端期望 'speed' 作為距離數據
+                        "cumulative_speed_difference": telemetry_raw.get(data_field, []),  # 前端期望這個鍵名
+                        "distance": telemetry_raw.get('distance', []),  # 保留原始鍵名以備用
+                        "speeddiff": telemetry_raw.get(data_field, []),  # 保留原始鍵名以備用
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', '')  # 添加參考信息
+                    }
+                elif self.telemetry_type == 'distancediff':
+                    # 距離差分析：JSON結構與速度差不同，需要特殊處理
+                    processed_data[data_key] = {
+                        "distance": telemetry_raw.get('reference_distance', []),  # 使用 reference_distance 作為距離數據
+                        "cumulative_distance_difference": telemetry_raw.get('cumulative_distance_difference', []),  # 前端期望這個鍵名
+                        "reference_distance": telemetry_raw.get('reference_distance', []),  # 保留原始鍵名以備用
+                        "position_difference": telemetry_raw.get('position_difference', []),  # 保留原始數據
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', '')  # 添加參考信息
+                    }
+                else:
+                    # 其他差異分析：保持原有結構
+                    processed_data[data_key] = {
+                        "distance": telemetry_raw.get('distance', []),
+                        f"{self.telemetry_type}": telemetry_raw.get(data_field, []),
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK')
+                    }
+                
+                self._debug(f"構建差異分析數據結構:")
+                self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 點")
+                if self.telemetry_type == 'speeddiff':
+                    self._debug(f"  speed: {len(processed_data[data_key]['speed'])} 點")
+                    self._debug(f"  cumulative_speed_difference: {len(processed_data[data_key]['cumulative_speed_difference'])} 點")
+                elif self.telemetry_type == 'distancediff':
+                    self._debug(f"  cumulative_distance_difference: {len(processed_data[data_key]['cumulative_distance_difference'])} 點")
+                else:
+                    self._debug(f"  {self.telemetry_type}: {len(processed_data[data_key][self.telemetry_type])} 點")
+            else:
+                # 常規遙測數據結構
+                processed_data[data_key] = {
+                    "distance": telemetry_raw.get('distance', []),
+                    f"driver1_{self.telemetry_type}": telemetry_raw.get('driver1_data', []),
+                    f"driver2_{self.telemetry_type}": telemetry_raw.get('driver2_data', []),
+                    "driver1_name": metadata.get('driver1', comparison_info.get('driver1', 'UNK')),
+                    "driver2_name": metadata.get('driver2', comparison_info.get('driver2', 'UNK'))
+                }
+            
+            # 計算統計數據 - 根據類型選擇不同的數據源
+            distance_data = telemetry_raw.get('distance', [])
+            
+            if self.telemetry_type in ['speeddiff', 'distancediff']:
+                # 差異分析統計
+                diff_data = telemetry_raw.get(data_field, [])
+                processed_data["statistics"] = {
+                    "difference": self._calculate_statistics(diff_data),
+                    "distance": {
+                        "min": min(distance_data) if distance_data else 0,
+                        "max": max(distance_data) if distance_data else 0,
+                        "total_points": len(distance_data)
+                    }
+                }
+                
+                self._debug(f"✅ {self.config['display_name']}數據處理完成")
+                self._debug(f"   距離點數: {len(distance_data)}")
+                self._debug(f"   差異數據點數: {len(diff_data)}")
+                
+            else:
+                # 常規遙測統計
+                driver1_data = telemetry_raw.get('driver1_data', [])
+                driver2_data = telemetry_raw.get('driver2_data', [])
+                
+                processed_data["statistics"] = {
+                    "driver1": self._calculate_statistics(driver1_data),
+                    "driver2": self._calculate_statistics(driver2_data),
+                    "distance": {
+                        "min": min(distance_data) if distance_data else 0,
+                        "max": max(distance_data) if distance_data else 0,
+                        "total_points": len(distance_data)
+                    }
+                }
+                
+                self._debug(f"✅ {self.config['display_name']}數據處理完成")
+                self._debug(f"   距離點數: {len(distance_data)}")
+                self._debug(f"   車手1數據點數: {len(driver1_data)}")
+                self._debug(f"   車手2數據點數: {len(driver2_data)}")
+            
+            return processed_data
+            
+        except Exception as e:
+            self._error(f"數據處理失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            # 返回空數據結構避免錯誤
+            return self._get_empty_data_structure()
+    
+    def _calculate_statistics(self, data: List[float]) -> dict:
+        """計算統計數據"""
+        if not data:
+            return {"max": 0, "min": 0, "avg": 0, "count": 0}
+        
+        return {
+            "max": max(data),
+            "min": min(data),
+            "avg": sum(data) / len(data),
+            "count": len(data)
+        }
+    
+    def _get_empty_data_structure(self) -> dict:
+        """獲取空的數據結構"""
+        data_key = f"{self.telemetry_type}_data"
+        return {
+            "metadata": {
+                "drivers": [],
+                "sectors": [],
+                "year": 2025,
+                "race": "Unknown", 
+                "session": "R",
+                "telemetry_type": self.telemetry_type,
+                "display_name": self.config['display_name'],
+                "unit": self.config['unit']
+            },
+            data_key: {
+                "distance": [],
+                f"driver1_{self.telemetry_type}": [],
+                f"driver2_{self.telemetry_type}": [],
+                "driver1_name": "UNK",
+                "driver2_name": "UNK"
+            },
+            "statistics": {
+                "driver1": {"max": 0, "min": 0, "avg": 0, "count": 0},
+                "driver2": {"max": 0, "min": 0, "avg": 0, "count": 0}
+            }
+        }
+
+
+# ========== 向後兼容的輔助方法 ==========
+
+def create_telemetry_loader(telemetry_type: str, parent=None) -> TelemetryDataLoader:
+    """
+    創建遙測數據載入器的工廠函數
+    
+    Args:
+        telemetry_type: 遙測類型
+        parent: 父級 QObject
+        
+    Returns:
+        TelemetryDataLoader: 遙測數據載入器實例
+    """
+    return TelemetryDataLoader(telemetry_type, parent)
