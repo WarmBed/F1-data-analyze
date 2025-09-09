@@ -621,10 +621,21 @@ class UniversalAnalysisMDI(IAnalysisModule):
         """更新圖表數據"""
         try:
             self._debug("📊 更新圖表數據")
+            self._debug(f"🔍 圖表組件詳細信息:")
+            self._debug(f"   - 組件類型: {type(self.chart_widget)}")
+            self._debug(f"   - 組件模組: {type(self.chart_widget).__module__}")
+            self._debug(f"   - 有 update_data: {hasattr(self.chart_widget, 'update_data')}")
+            self._debug(f"   - 有 set_data: {hasattr(self.chart_widget, 'set_data')}")
             
             if hasattr(self.chart_widget, 'update_data'):
+                self._debug(f"✅ 使用 update_data 方法")
+                self._debug(f"   - update_data 方法來源: {type(self.chart_widget).update_data}")
                 self.chart_widget.update_data(data)
             elif hasattr(self.chart_widget, 'set_data'):
+                self._debug(f"⚠️ 使用 set_data 方法")
+                self._debug(f"   - set_data 方法來源: {type(self.chart_widget).set_data}")
+                self._debug(f"   - 數據類型: {type(data)}")
+                self._debug(f"   - 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
                 self.chart_widget.set_data(data)
             else:
                 self._debug("⚠️  圖表組件沒有數據更新方法")

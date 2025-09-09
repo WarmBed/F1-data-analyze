@@ -375,6 +375,15 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
     def _start_generation_monitoring(self):
         """啟動檔案生成監控"""
         self._debug("========== 啟動監控系統 ==========")
+        self._debug(f"生成參數: {self._generation_params}")
+        
+        # 檢查預期生成的檔案路徑
+        if self._generation_params:
+            expected_patterns = []
+            for pattern in self.config.file_patterns:
+                formatted_pattern = pattern.format(**self._generation_params)
+                expected_patterns.append(formatted_pattern)
+            self._debug(f"📋 預期檔案模式: {expected_patterns}")
         
         # 啟動監控 (每5秒檢查一次，最多等待180秒)
         self._debug("啟動主監控計時器 (每5秒檢查)")

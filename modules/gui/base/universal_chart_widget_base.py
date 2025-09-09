@@ -46,6 +46,7 @@ class ChartTheme:
     # 背景顏色配置
     MAIN_BACKGROUND = QColor(255, 255, 255)     # 主背景：純白色
     CHART_BACKGROUND = QColor(248, 249, 250)    # 圖表區域：淺灰色
+    BACKGROUND = QColor(255, 255, 255)          # 預設背景：純白色
     
     # 網格和座標軸顏色
     GRID_COLOR = QColor(200, 200, 200)          # 淺灰網格
@@ -496,6 +497,9 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             series_names: 系列顯示名稱 {'series1': '車手1', 'series2': '車手2'}
             series_colors: 系列顏色 {'series1': QColor, 'series2': QColor}
         """
+        # 基類的 set_data 方法不應該被直接調用
+        print(f"⚠️ [BASE_CHART] TelemetryChartWidgetBase.set_data 被調用 - 這通常表示子類沒有正確覆寫方法")
+        print(f"   - 調用者類型: {type(self)}")
         
         self.series_list.clear()
         
@@ -730,7 +734,7 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 # 發送連動信號
                 if self.linkage_enabled and not self.is_sending_linkage and linkage_manager:
                     self.is_sending_linkage = True
-                    linkage_manager.broadcast_distance_update(self.fixed_distance_value, self)
+                    linkage_manager.send_click_linkage(self.fixed_distance_value, self)
                     self.is_sending_linkage = False
             
             self.update()

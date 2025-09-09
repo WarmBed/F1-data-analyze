@@ -308,15 +308,18 @@ class F1AnalysisModularCLI:
         print("=" * 50)
 
     def run_rain_intensity_analysis(self):
-        """執行降雨強度分析 - 使用最新增強版模組"""
+        """執行降雨狀況分析 - 簡化版只顯示有雨/無雨"""
         try:
-            print("\n[RAIN] 執行增強版降雨強度分析...")
+            print("\n[RAIN] 執行降雨狀況分析 (有雨/無雨)...")
             # 使用統一函數映射器執行功能1
             result = self.run_analysis_direct(1)
             if result.get("success", False):
-                print("[OK] 增強版降雨強度分析執行成功")
+                print("[OK] 降雨狀況分析執行成功")
+                # 顯示降雨結論
+                if 'rain_status' in result:
+                    print(f"🌧️ 降雨結論: {result['rain_status']}")
             else:
-                print(f"[ERROR] 增強版降雨強度分析失敗: {result.get('message', '未知錯誤')}")
+                print(f"[ERROR] 降雨狀況分析失敗: {result.get('message', '未知錯誤')}")
         except Exception as e:
             print(f"[ERROR] 降雨分析執行失敗: {e}")
 
@@ -1103,18 +1106,17 @@ class F1AnalysisModularCLI:
         print("\n[RAIN]  基礎分析模組 (功能1-10)")
         print("=" * 80)
         
-        print("1.  [RAIN] 增強版降雨強度分析 (Enhanced Rain Intensity Analysis)")
-        print("    功能描述：基於FastF1直接數據，輸出簡化JSON格式的降雨分析")
+        print("1.  [RAIN] 降雨狀況分析 (Simplified Rain Status Analysis)")
+        print("    功能描述：基於FastF1直接數據，分析降雨狀況 (簡化為有雨/無雨)")
         print("    輸入參數：年份、賽事、賽段類型")
         print("    主要輸出：")
         print("      [JSON] 結構化輸出：")
-        print("        • temperature_vs_lap (溫度vs圈數)")
-        print("        • rain_vs_lap (降雨vs圈數)") 
-        print("        • humidity_vs_lap (濕度vs圈數)")
-        print("        • windspeed_vs_lap (風速vs圈數)")
-        print("        • pressure_vs_lap (氣壓vs圈數)")
+        print("        • lap_weather_data (各圈天氣狀況)")
+        print("        • summary.rain_laps (有雨圈數)")
+        print("        • summary.rain_percentage (降雨百分比)") 
+        print("        • rain_status (總結: 有雨/無雨)")
         print("      [CACHE] 緩存整合：支援 pickle 快取機制")
-        print("      [NOTE] 使用最新增強版降雨分析模組 (CLI_modules/cli/analyzer/weather/rain_analyzer.py)")
+        print("      [NOTE] 簡化版降雨分析，不顯示強度只顯示有無降雨")
         
         print("\n2.  [TRACK] 賽道路線分析 (Track Path Analysis)")
         print("    功能描述：分析車手在賽道上的行駛路線和最佳賽車線")
