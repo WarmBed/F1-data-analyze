@@ -2724,31 +2724,58 @@ class F1AnalysisFunctionMapper:
             return {"success": False, "error": str(e), "function_id": "24"}
 
     def _execute_driver_tire_strategy(self, year, race, session, driver, **kwargs):
-        """Function 26: 車手輪胎策略分析"""
-        print("[START] 開始執行車手輪胎策略分析...")
+        """Function 26: 輪胎更換時機推算分析 (解決 stint_analysis 缺失問題)"""
+        print("[TIRE_TIMING] 開始執行輪胎更換時機推算分析...")
+        print("🎯 目標：解決 STR、ALO 等車手的輪胎使用時序問題")
+        print("🔧 方法：OpenF1 進站數據 + FastF1 輪胎配方 = 完整時間線")
         
         try:
-            from CLI_modules.cli.analyzer.single_driver_tire_analysis import SingleDriverTireAnalysis
+            # 🎯 使用輪胎更換時機推算模組
+            from CLI_modules.cli.analyzer.tire_change_timing_inference import run_tire_change_timing_inference
             
-            analyzer = SingleDriverTireAnalysis(
-                data_loader=self.data_loader,
-                year=year,
-                race=race,
-                session=session
+            print("✅ 載入輪胎更換時機推算分析模組")
+            
+            # 傳遞所有參數
+            analysis_params = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver': driver,
+                **kwargs
+            }
+            
+            return run_tire_change_timing_inference(
+                data_loader=self.data_loader, 
+                **analysis_params
             )
             
-            # 根據是否有指定車手來決定分析模式
-            if driver:
-                return analyzer.analyze_tire_strategy(driver=driver, **kwargs)
-            else:
-                return analyzer.analyze_tire_strategy(**kwargs)
-            
         except ImportError as e:
-            print(f"[WARNING] 車手輪胎策略分析模組導入失敗: {e}")
-            print("[FALLBACK] 使用基礎輪胎策略分析替代")
-            return self._execute_basic_tire_strategy_fallback(year, race, session, driver, **kwargs)
+            print(f"[WARNING] 增強版輪胎策略分析模組導入失敗: {e}")
+            print("[FALLBACK] 使用原始車手輪胎策略分析")
+            
+            try:
+                from CLI_modules.cli.analyzer.single_driver_tire_analysis import SingleDriverTireAnalysis
+                
+                analyzer = SingleDriverTireAnalysis(
+                    data_loader=self.data_loader,
+                    year=year,
+                    race=race,
+                    session=session
+                )
+                
+                if driver:
+                    return analyzer.analyze_tire_strategy(driver=driver, **kwargs)
+                else:
+                    return analyzer.analyze_tire_strategy(**kwargs)
+                    
+            except ImportError:
+                print("[FALLBACK] 使用基礎輪胎策略分析")
+                return self._execute_basic_tire_strategy_fallback(year, race, session, driver, **kwargs)
+                
         except Exception as e:
-            print(f"[ERROR] 車手輪胎策略分析執行失敗: {e}")
+            print(f"[ERROR] 輪胎策略分析執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
             return {"success": False, "error": str(e), "function_id": "26"}
 
     def _execute_driver_fastest_lap_analysis(self, year, race, session, driver, **kwargs):

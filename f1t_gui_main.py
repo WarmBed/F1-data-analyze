@@ -5771,6 +5771,7 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(basic_group, ["進站分析"])
         QTreeWidgetItem(basic_group, ["事故分析"])
         QTreeWidgetItem(basic_group, ["車手排名"])
+        QTreeWidgetItem(basic_group, ["輪胎策略分析"])
         
         # 單場賽事車手分析模組
         single_group = QTreeWidgetItem(tree, ["🚗 單場賽事車手分析"])
@@ -7199,6 +7200,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 確保所有模組都被導入
             import modules.gui.rain_analysis.rain_analysis_module  # 降雨分析模組
+            import modules.gui.tire_analysis.tire_analysis_module  # 輪胎策略分析模組
             import modules.gui.accident_analysis.accident_analysis_mdi  # 事故分析模組
             import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
@@ -7224,6 +7226,7 @@ class StyleHMainWindow(QMainWindow):
                 "降雨分析": "rain_analysis",     # 降雨分析映射
                 "車手排名": "telemetry_analysis", # 車手排名映射 (原單場賽事總攬)
                 "遙測分析": "telemetry_analysis", # 遙測分析映射 (圈速分析)
+                "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
             }
             
             # 尋找匹配的模組類型
@@ -7490,6 +7493,38 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] 降雨分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理輪胎策略分析模組
+                elif module_type == "tire_analysis":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建輪胎策略分析模組...")
+                        from modules.gui.tire_analysis.tire_analysis_module import TireAnalysisModuleAdapter
+                        print(f"[OK] [MODULE_FACTORY] 輪胎策略分析適配器導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 輪胎策略分析模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = TireAnalysisModuleAdapter(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            print(f"[OK] 輪胎策略分析模組初始化成功")
+                            return module
+                        else:
+                            print(f"[ERROR] 輪胎策略分析模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] 輪胎策略分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

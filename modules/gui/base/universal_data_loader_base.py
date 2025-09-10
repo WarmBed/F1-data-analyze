@@ -112,19 +112,30 @@ class CliAnalysisWorker(QThread):
             env['PYTHONIOENCODING'] = 'utf-8'
             env['PYTHONLEGACYWINDOWSFS'] = '0'
             
-            # 啟動進程，使用 UTF-8 編碼避免編碼問題
-            self.process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                errors='replace',  # 遇到無法解碼的字符時替換為 ?
-                env=env,  # 使用自定義環境變數
-                cwd=os.getcwd(),
-                bufsize=1,
-                universal_newlines=True
-            )
+            # 嘗試不同編碼方案來啟動進程
+            encodings_to_try = ['utf-8', 'cp950', 'gbk', 'big5']
+            
+            for encoding in encodings_to_try:
+                try:
+                    print(f"[CLI_WORKER] 嘗試使用編碼: {encoding}")
+                    self.process = subprocess.Popen(
+                        cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding=encoding,
+                        errors='replace',  # 遇到無法解碼的字符時替換為 ?
+                        env=env,  # 使用自定義環境變數
+                        cwd=os.getcwd(),
+                        bufsize=1,
+                        universal_newlines=True
+                    )
+                    print(f"[CLI_WORKER] 成功使用編碼: {encoding}")
+                    break
+                except Exception as e:
+                    print(f"[CLI_WORKER] 編碼 {encoding} 失敗: {str(e)}")
+                    if encoding == encodings_to_try[-1]:  # 最後一個編碼也失敗
+                        raise Exception(f"所有編碼方案都失敗: {str(e)}")
             
             print(f"[CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
             self.progress_updated.emit(f"CLI 分析已啟動 (PID: {self.process.pid})")
@@ -525,9 +536,23 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
         if self._generation_params:
             expected_patterns = []
             for pattern in self.config.file_patterns:
-                formatted_pattern = pattern.format(**self._generation_params)
-                expected_patterns.append(formatted_pattern)
-            self._debug(f"📋 預期檔案模式: {expected_patterns}")
+                try:
+                    # 嘗試使用現有參數格式化
+                    formatted_pattern = pattern.format(**self._generation_params)
+                    expected_patterns.append(formatted_pattern)
+                except KeyError as e:
+                    # 如果缺少參數，使用自定義的檔案名稱模式生成方法
+                    self._debug(f"⚠️ 檔案模式缺少參數 {e}，使用自定義格式化方法")
+                    try:
+                        custom_patterns = self._build_filename_patterns(**self._generation_params)
+                        expected_patterns.extend(custom_patterns)
+                        break  # 使用自定義方法後跳出循環
+                    except Exception as custom_error:
+                        self._debug(f"❌ 自定義格式化也失敗: {custom_error}")
+                        expected_patterns.append(f"<格式化失敗: {pattern}>")
+            
+            if expected_patterns:
+                self._debug(f"📋 預期檔案模式: {expected_patterns}")
         
         # 啟動監控 (每5秒檢查一次，最多等待180秒)
         self._debug("啟動主監控計時器 (每5秒檢查)")
