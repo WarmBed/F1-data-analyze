@@ -99,6 +99,8 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                      driver2_acceleration: List[float], driver1_name: str = "Driver 1", 
                      driver2_name: str = "Driver 2", sectors: List[Dict] = None):
         """設置acceleration數據"""
+        print(f"[ACC_CHART_SET] 接收數據: distance={len(distance) if distance else 0}, acc1={len(driver1_acceleration) if driver1_acceleration else 0}, acc2={len(driver2_acceleration) if driver2_acceleration else 0}")
+        print(f"[ACC_CHART_SET] 車手: {driver1_name} vs {driver2_name}")
         self.distance_data = distance
         self.driver1_acceleration = driver1_acceleration
         self.driver2_acceleration = driver2_acceleration
@@ -118,18 +120,29 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             all_accelerations.extend(driver2_acceleration)
             
         if all_accelerations:
-            # 加速度數據範圍計算 (單位：m/s²)
-            min_acc = min(all_accelerations)
-            max_acc = max(all_accelerations)
+            # 過濾掉NaN和無限值
+            valid_accelerations = [acc for acc in all_accelerations 
+                                   if not (math.isnan(acc) or math.isinf(acc))]
             
-            # 為圖表顯示添加合理的邊距
-            acc_range = max_acc - min_acc
-            margin = max(0.5, acc_range * 0.1)  # 至少0.5 m/s²的邊距
-            
-            self.min_acceleration = min_acc - margin
-            self.max_acceleration = max_acc + margin
+            if valid_accelerations:
+                # 加速度數據範圍計算 (單位：m/s²)
+                min_acc = min(valid_accelerations)
+                max_acc = max(valid_accelerations)
+                
+                # 為圖表顯示添加合理的邊距
+                acc_range = max_acc - min_acc
+                margin = max(0.5, acc_range * 0.1)  # 至少0.5 m/s²的邊距
+                
+                self.min_acceleration = min_acc - margin
+                self.max_acceleration = max_acc + margin
+            else:
+                # 如果所有數據都是無效的，使用默認範圍
+                print("[ACCEL_DEBUG] ⚠️ 所有加速度數據都是無效的，使用預設範圍")
+                self.min_acceleration = -6.0
+                self.max_acceleration = 6.0
         
-        # 強制重繪
+        # 強制重繪和更新
+        self.update()
         self.repaint()
     
     def reset_view(self):
@@ -150,6 +163,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.driver2_acceleration = []
         self.sectors = []
         self.reset_view()
+        self.update()
         self.repaint()
     
     def paintEvent(self, event):
@@ -378,7 +392,15 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         distance_range = current_max_distance - current_min_distance
         acceleration_range = current_max_acceleration - current_min_acceleration
         
+        # 調試信息：檢查Y軸範圍
+        print(f"[ACCEL_DEBUG] 繪製曲線:")
+        print(f"  距離範圍: {current_min_distance:.1f} - {current_max_distance:.1f} (範圍: {distance_range:.1f})")
+        print(f"  加速度範圍: {current_min_acceleration:.2f} - {current_max_acceleration:.2f} (範圍: {acceleration_range:.2f})")
+        print(f"  圖表區域: {chart_rect.width()} x {chart_rect.height()}")
+        print(f"  車手1數據點: {len(self.driver1_acceleration)}, 車手2數據點: {len(self.driver2_acceleration)}")
+        
         if distance_range <= 0 or acceleration_range <= 0:
+            print(f"[ACCEL_DEBUG] ❌ 範圍無效，跳過繪製曲線")
             return
         
         # 繪製車手1acceleration曲線
@@ -1372,8 +1394,9 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
             self.set_lap_numbers(lap1, lap2)
             
             # 如果有數據載入器，重新載入數據
-            if hasattr(self, 'acceleration_loader'):
-                print(f"[acceleration_CHART_WIDGET] 📦 找到acceleration數據載入器，準備重新載入...")
+            if hasattr(self, 'acceleration_loader') and self.acceleration_loader:
+                print(f"[acceleration_CHART_WIDGET] 📦 找到acceleration數據載入器: {type(self.acceleration_loader)}")
+                print(f"[acceleration_CHART_WIDGET] 準備重新載入數據...")
                 
                 session_info = {
                     'year': int(year) if year.isdigit() else year,
@@ -1386,11 +1409,22 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
                     'is_fastest_lap': is_fastest
                 }
                 
-                self.acceleration_loader.load_acceleration_analysis_data(session_info)
-                print(f"[acceleration_CHART_WIDGET] ✅ 數據重新載入請求已發送")
-                return True
+                print(f"[acceleration_CHART_WIDGET] 調用載入器: session_info = {session_info}")
+                
+                try:
+                    self.acceleration_loader.load_acceleration_analysis_data(session_info)
+                    print(f"[acceleration_CHART_WIDGET] ✅ 數據重新載入請求已發送")
+                    return True
+                except Exception as e:
+                    print(f"[ERROR] [acceleration_CHART_WIDGET] 載入器調用失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    return False
             else:
                 print(f"[acceleration_CHART_WIDGET] ⚠️ 未找到acceleration數據載入器，僅更新顯示")
+                print(f"[acceleration_CHART_WIDGET] hasattr result: {hasattr(self, 'acceleration_loader')}")
+                if hasattr(self, 'acceleration_loader'):
+                    print(f"[acceleration_CHART_WIDGET] loader value: {getattr(self, 'acceleration_loader', 'None')}")
                 return True
                 
         except Exception as e:

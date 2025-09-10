@@ -167,11 +167,11 @@ class TireAnalysisModule(IAnalysisModule):
         year = self.current_year or "2025"
         race = self.current_race or "Unknown"
         session = self.current_session or "R"
-        return f"降雨分析_{year}_{race}_{session}"
+        return f"輪胎策略分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"🌧️ 降雨分析_{year}_{race}_{session}"
+        return f"輪胎策略分析_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""
@@ -187,11 +187,11 @@ class TireAnalysisModule(IAnalysisModule):
                 success = self.data_manager.load_data(year=year, race=race, session=session)
                 
                 if success:
-                    self._debug(f"成功載入降雨分析數據: {year} {race} {session}")
+                    self._debug(f"成功載入輪胎策略分析數據: {year} {race} {session}")
                     # 更新 UI 參數
                     self.update_parameters(str(year), race, session)
                 else:
-                    self._debug(f"無法載入降雨分析數據: {year} {race} {session}")
+                    self._debug(f"無法載入輪胎策略分析數據: {year} {race} {session}")
             else:
                 self._debug("數據管理器尚未初始化，將延遲載入數據")
                 # 保存參數供後續載入

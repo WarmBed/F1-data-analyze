@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 """
-TireAnalysisChartWidget - F1T 輪胎策略分析圖表組件
-================================================
+TireAnalysisChartWidget - F1T 輪胎策略分析圖表組件        # 佈局參數
+        self.left_margin = 60   # 左邊距：車手標籤需要的空間
+        self.right_margin = 20  # 右邊距：最小留白
+        self.top_margin = 40    # 頂部邊距：座標軸標籤
+        self.bottom_margin = 50 # 底部邊距：圖例空間
+        self.driver_height = 40
+        self.stint_margin = 2=============================================
 
 專門用於輪胎策略分析的圖表組件，支援：
 - 橫向長條圖顯示 Stint
@@ -51,6 +56,7 @@ class TireChartTheme:
     # Stint 相關顏色
     STINT_TEXT_COLOR = QColor(33, 37, 41)
     FASTEST_LAP_COLOR = QColor(220, 53, 69)
+    FASTEST_LAP_TEXT_COLOR = QColor(0, 123, 255)  # 藍色：用於顯示最快圈速
 
 
 class TireAnalysisChartWidget(QWidget):
@@ -86,8 +92,8 @@ class TireAnalysisChartWidget(QWidget):
         self.min_lap = 1
         self.max_lap = 60
         
-        # 設置最小尺寸
-        self.setMinimumSize(800, 400)
+        # 設置最小尺寸 - 與降雨分析一致
+        self.setMinimumSize(200, 100)
         
         print("[TIRE_CHART] 輪胎策略圖表組件初始化完成")
     
@@ -125,9 +131,10 @@ class TireAnalysisChartWidget(QWidget):
             for driver in drivers_analyzed:
                 if driver in tire_analysis:
                     driver_data = tire_analysis[driver]
-                    # 支援多種 stint 分析格式
-                    driver_stints = (driver_data.get('stint_analysis', []) or 
-                                   driver_data.get('corrected_stint_analysis', []) or 
+                    # 支援多種 stint 分析格式，優先使用修正後的數據
+                    driver_stints = (driver_data.get('corrected_stint_analysis', []) or 
+                                   driver_data.get('original_stint_analysis', []) or 
+                                   driver_data.get('stint_analysis', []) or 
                                    driver_data.get('stints', []))
                     
                     # 為每個 Stint 添加 stint_number（如果沒有的話）
@@ -142,6 +149,14 @@ class TireAnalysisChartWidget(QWidget):
                     
                     self.all_drivers_stint_data[driver] = driver_stints
                     print(f"  {driver}: {len(driver_stints)} 個 Stint")
+                    
+                    # 調試：檢查數據來源和品質
+                    if len(driver_stints) > 0:
+                        first_stint = driver_stints[0]
+                        compound = first_stint.get('compound') or first_stint.get('tire_compound')
+                        print(f"    [{driver}] 第一個Stint配方: {compound}, 圈數: {first_stint.get('start_lap', '?')}-{first_stint.get('end_lap', '?')}")
+                    else:
+                        print(f"    ⚠️ [{driver}] 沒有有效的Stint數據")
             
             # 為了向後相容性，設定第一個車手的數據為主要顯示數據
             if selected_driver and selected_driver in self.all_drivers_stint_data:
@@ -219,12 +234,12 @@ class TireAnalysisChartWidget(QWidget):
         # 清空背景
         painter.fillRect(self.rect(), TireChartTheme.BACKGROUND)
         
-        # 計算圖表區域
+        # 計算圖表區域 - 優化邊距
         chart_rect = QRect(
-            self.margin,
-            self.margin,
-            self.width() - 2 * self.margin,
-            self.height() - 2 * self.margin
+            35,  # 左邊距：車手標籤需要空間
+            15,  # 上邊距：減少不必要的空白
+            self.width() - 45,  # 右邊距：只留10px
+            self.height() - 70  # 下邊距：為X軸標籤和標題預留空間
         )
         
         # 繪製圖表背景
@@ -242,8 +257,8 @@ class TireAnalysisChartWidget(QWidget):
         # 繪製 Stint 長條
         self._draw_stints(painter, chart_rect)
         
-        # 繪製圖例
-        self._draw_legend(painter)
+        # 繪製圖例 (已取消顯示)
+        # self._draw_legend(painter)
     
     def _draw_axes(self, painter: QPainter, chart_rect: QRect):
         """繪製座標軸"""
@@ -285,8 +300,11 @@ class TireAnalysisChartWidget(QWidget):
         if num_drivers == 0:
             return
         
+        # 預先計算每種輪胎配方的最快車手
+        fastest_per_compound = self._calculate_fastest_per_compound()
+        
         # 計算每個車手行的高度
-        available_height = chart_rect.height() - 60  # 留出空間給標籤
+        available_height = chart_rect.height() - 20  # 減少預留空間
         driver_row_height = available_height // num_drivers
         stint_height = min(25, driver_row_height - 5)  # 限制最大高度並留出間距
         
@@ -298,11 +316,16 @@ class TireAnalysisChartWidget(QWidget):
         # 為每位車手繪製一行
         for driver_index, driver in enumerate(drivers):
             driver_stints = self.all_drivers_stint_data[driver]
-            y_base = chart_rect.top() + 30 + driver_index * driver_row_height
+            y_base = chart_rect.top() + 10 + driver_index * driver_row_height  # 減少頂部偏移
             
-            # 繪製車手名稱標籤
+            # 繪製車手名稱標籤 - 統一字體設置
             painter.setPen(QPen(TireChartTheme.LABEL_COLOR))
-            painter.drawText(chart_rect.left() - 50, y_base + stint_height // 2, driver)
+            font = QFont()
+            font.setPointSize(8)   # 統一車手名稱字體大小
+            painter.setFont(font)
+            # 計算車手名稱的垂直中心位置，與 stint 矩形中心對齊
+            name_y = y_base + stint_height // 2 + 3  # 微調字體基準線位置
+            painter.drawText(chart_rect.left() - 30, name_y, driver)
             
             # 為該車手的每個 Stint 繪製長條
             for stint in driver_stints:
@@ -374,24 +397,116 @@ class TireAnalysisChartWidget(QWidget):
                     painter.setPen(QPen(TireChartTheme.DEFAULT_BORDER_COLOR, 1))
                 painter.drawRect(stint_rect)
                 
-                # 在長條中間顯示輪胎配方縮寫
-                if width > 30:  # 只有長條夠寬才顯示文字
-                    painter.setPen(QPen(TireChartTheme.STINT_TEXT_COLOR))
+                # 在長條中間顯示該輪胎配方的最佳圈速
+                # 智能顯示邏輯：根據視窗大小和stint尺寸決定是否顯示文字
+                min_width_for_text = 50  # 最小寬度需求
+                min_height_for_text = 15  # 最小高度需求
+                
+                if width > min_width_for_text and stint_height > min_height_for_text:
+                    # 檢查此車手是否為該配方最快車手
+                    is_fastest = fastest_per_compound.get(compound) == driver
+                    
+                    # 根據是否最快選擇顏色
+                    if is_fastest:
+                        painter.setPen(QPen(TireChartTheme.FASTEST_LAP_TEXT_COLOR))  # 藍色高亮
+                        print(f"[TIRE_CHART] 藍色高亮顯示 {driver} 在 {compound} 配方的最佳圈速")
+                    else:
+                        painter.setPen(QPen(TireChartTheme.STINT_TEXT_COLOR))  # 普通黑色
+                    
+                    # 根據可用空間調整字體大小
                     font = QFont()
-                    font.setPointSize(7)
+                    if stint_height < 20:
+                        font_size = 5  # 非常小的字體
+                    elif stint_height < 25:
+                        font_size = 6  # 小字體
+                    else:
+                        font_size = 7  # 正常字體
+                    
+                    font.setPointSize(font_size)
                     font.setBold(True)
                     painter.setFont(font)
                     
-                    # 使用輪胎配方的縮寫
-                    compound_short = {'SOFT': 'S', 'MEDIUM': 'M', 'HARD': 'H', 
-                                    'INTERMEDIATE': 'I', 'WET': 'W'}.get(compound, compound[:1])
-                    text_rect = QRect(int(x_start), y_base, int(width), stint_height)
-                    painter.drawText(text_rect, Qt.AlignCenter, compound_short)
+                    # 獲取該車手該輪胎配方的最佳圈速
+                    best_lap_time = self._get_best_lap_time(driver, compound)
+                    if best_lap_time:
+                        # 轉換為 M:SS.00 格式
+                        lap_time_text = self._format_lap_time(best_lap_time)
+                        # 調整文字位置，稍微向下偏移以獲得更好的視覺中心
+                        text_rect = QRect(int(x_start), y_base + 2, int(width), stint_height - 4)
+                        painter.drawText(text_rect, Qt.AlignCenter, lap_time_text)
     
+    def _calculate_fastest_per_compound(self) -> Dict[str, str]:
+        """計算每種輪胎配方的最快車手"""
+        fastest_per_compound = {}
+        
+        try:
+            if not self.all_drivers_data:
+                return fastest_per_compound
+            
+            # 收集每種配方的所有車手最佳圈速
+            compound_times = {}  # {compound: [(driver, best_time), ...]}
+            
+            for driver in self.all_drivers_data:
+                driver_data = self.all_drivers_data[driver]
+                if 'tire_performance' in driver_data:
+                    tire_perf = driver_data['tire_performance']
+                    for compound, perf_data in tire_perf.items():
+                        if 'fastest_lap_time' in perf_data and perf_data['fastest_lap_time'] > 0:
+                            if compound not in compound_times:
+                                compound_times[compound] = []
+                            compound_times[compound].append((driver, perf_data['fastest_lap_time']))
+            
+            # 找出每種配方的最快車手
+            for compound, driver_times in compound_times.items():
+                if driver_times:
+                    fastest_driver = min(driver_times, key=lambda x: x[1])  # 找最快時間
+                    fastest_per_compound[compound] = fastest_driver[0]  # 只保存車手名
+                    print(f"[TIRE_CHART] {compound} 最快車手: {fastest_driver[0]} ({fastest_driver[1]:.3f}s)")
+            
+        except Exception as e:
+            print(f"[TIRE_CHART] 計算最快車手失敗: {e}")
+        
+        return fastest_per_compound
+    
+    def _get_best_lap_time(self, driver: str, compound: str) -> float:
+        """獲取指定車手指定輪胎配方的最佳圈速"""
+        try:
+            if not self.all_drivers_data or driver not in self.all_drivers_data:
+                return None
+                
+            driver_data = self.all_drivers_data[driver]
+            
+            # 檢查 tire_performance 數據
+            if 'tire_performance' in driver_data:
+                tire_perf = driver_data['tire_performance']
+                if compound in tire_perf and 'fastest_lap_time' in tire_perf[compound]:
+                    return tire_perf[compound]['fastest_lap_time']
+            
+            return None
+        except Exception as e:
+            print(f"[TIRE_CHART] 獲取最佳圈速失敗: driver={driver}, compound={compound}, error={e}")
+            return None
+    
+    def _format_lap_time(self, lap_time_seconds: float) -> str:
+        """將圈速秒數格式化為 M:SS.00 格式"""
+        try:
+            if lap_time_seconds is None or lap_time_seconds <= 0:
+                return ""
+            
+            # 計算分鐘和秒數
+            minutes = int(lap_time_seconds // 60)
+            seconds = lap_time_seconds % 60
+            
+            # 格式化為 M:SS.00
+            return f"{minutes}:{seconds:05.2f}"
+        except Exception as e:
+            print(f"[TIRE_CHART] 格式化圈速失敗: {lap_time_seconds}, error={e}")
+            return ""
+
     def _draw_legend(self, painter: QPainter):
         """繪製圖例"""
         legend_y = self.height() - 30
-        legend_x = self.margin
+        legend_x = 35  # 調整圖例位置
         
         painter.setPen(QPen(TireChartTheme.TEXT_COLOR))
         font = QFont()

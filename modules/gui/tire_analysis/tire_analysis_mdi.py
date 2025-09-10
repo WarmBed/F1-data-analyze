@@ -88,6 +88,8 @@ class TireAnalysisDataManager(UniversalDataLoader):
         # 將賽事名稱轉換為完整格式
         if race == "Japan":
             race_full = "Japanese_Grand_Prix"
+        elif race == "Australia":
+            race_full = "Australian_Grand_Prix"
         else:
             # 其他賽事可能需要特殊處理，暫時使用 {race}_Grand_Prix 格式
             race_full = f"{race}_Grand_Prix"
