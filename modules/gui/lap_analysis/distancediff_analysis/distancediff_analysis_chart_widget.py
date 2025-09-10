@@ -31,6 +31,15 @@ except ImportError:
     linkage_manager = None
     print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
 
+# 導入統一圖表基類的主題配置
+try:
+    from modules.gui.base.universal_chart_widget_base import ChartTheme
+except ImportError:
+    print("[WARNING] 統一圖表基類導入失敗，將使用預設配置")
+    class ChartTheme:
+        AXIS_TITLE_FONT = QFont("Microsoft YaHei", 7)
+        TEXT_COLOR = QColor(50, 50, 50)
+
 # 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
 
 class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
@@ -42,11 +51,28 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 初始化連動混入類
         self.__init_linkage__()
         
+        # 🎯 設置統一的座標軸標題
+        self.x_axis_title = "距離 (m)"
+        self.y_axis_title = "距離差距 (m)"
+        self.x_title_position = "bottom-left"
+        self.y_title_position = "left-center"
+        self.show_axis_titles = True
+        
+        # 初始化主題配置
+        try:
+            self.theme = ChartTheme()
+        except:
+            # 備用配置
+            class DefaultTheme:
+                AXIS_TITLE_FONT = QFont("Microsoft YaHei", 7)
+                TEXT_COLOR = QColor(50, 50, 50)
+            self.theme = DefaultTheme()
+        
         # 圖表設置 - 與速度分析保持完全一致
         self.margin_left = 80
         self.margin_right = 20
         self.margin_top = 20
-        self.margin_bottom = 80
+        self.margin_bottom = 20
         
         # 數據存儲
         self.distance_data = []
@@ -91,7 +117,7 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
         
-        self.setMinimumSize(600, 300)  # 與速度分析保持一致
+        self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
     
     def set_distancediff_data(self, distance: List[float], driver1_distancediff: List[float], 
@@ -306,22 +332,9 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
                                Qt.AlignRight | Qt.AlignVCenter, label)
         
-        # 座標軸標題
-        title_font = QFont()
-        title_font.setPointSize(10)
-        title_font.setBold(True)
-        painter.setFont(title_font)
-        
-        # X軸標題 - 修正：與速度分析一致的位置
-        painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
-                        Qt.AlignCenter, "距離 (米)")
-        
-        # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
-        painter.save()
-        painter.translate(20, chart_rect.center().y())
-        painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "累積距離差異 (米)")
-        painter.restore()
+        # 🎯 使用統一的座標軸標題繪製 
+        if self.show_axis_titles:
+            self._draw_axis_titles(painter, chart_rect)
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
         """繪製分段標記"""
@@ -521,6 +534,41 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.sectors = []
         self.reset_view()
         self.update()
+    
+    def _draw_axis_titles(self, painter: QPainter, rect: QRect):
+        """繪製座標軸標題 - 統一配置位置"""
+        painter.setFont(self.theme.AXIS_TITLE_FONT)
+        painter.setPen(QPen(self.theme.TEXT_COLOR))
+        
+        # X軸標題
+        if self.x_axis_title:
+            if self.x_title_position == "bottom-left":
+                # 🎯 位置在X軸0點左邊（水平顯示）
+                x_title_rect = QRect(
+                    rect.left() - 40,           # 在X軸0點左邊
+                    rect.bottom() + 5,          # X軸下方一點點
+                    80, 20                      # 寬度足夠顯示標題
+                )
+                painter.drawText(x_title_rect, Qt.AlignLeft | Qt.AlignVCenter, self.x_axis_title)
+            else:  # "bottom-center" (預設)
+                # 位置在圖表底部中央
+                x_title_rect = QRect(
+                    rect.center().x() - 50,     # 圖表中央
+                    rect.bottom() + 5,          # 圖表下方一點點
+                    100, 20
+                )
+                painter.drawText(x_title_rect, Qt.AlignCenter, self.x_axis_title)
+        
+        # Y軸標題
+        if self.y_axis_title:
+            painter.save()
+            # 🎯 Y軸標題始終在Y軸中間（垂直顯示）
+            y_center = rect.center().y()
+            painter.translate(30, y_center)            # Y軸左側，確保可見
+            painter.rotate(-90)                        # 逆時針旋轉90度
+            y_title_rect = QRect(-50, -10, 100, 20)    # 更寬的矩形容納標題
+            painter.drawText(y_title_rect, Qt.AlignCenter, self.y_axis_title)
+            painter.restore()
     
     def _draw_legend(self, painter: QPainter):
         """繪製圖例 - 顯示累積距離差異的含義"""

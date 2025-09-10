@@ -60,7 +60,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         self.margin_left = 80
         self.margin_right = 20
         self.margin_top = 20
-        self.margin_bottom = 80
+        self.margin_bottom = 20
         
         # 數據範圍
         self.min_distance = 0
@@ -110,7 +110,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         self.view_min_throttle = None
         self.view_max_throttle = None
         
-        self.setMinimumSize(600, 300)  # 減少最小高度，提高適應性
+        self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
         
     def set_throttle_data(self, distance: List[float], driver1_throttle: List[float], 
@@ -251,7 +251,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         painter.drawLine(chart_rect.left(), chart_rect.top(), chart_rect.left(), chart_rect.bottom())      # Y軸
         
         # 設置字體
-        font = QFont("Arial", 9)
+        font = QFont("Microsoft YaHei", 9)
         painter.setFont(font)
         painter.setPen(QPen(self.axis_color, 1))
         
@@ -273,19 +273,20 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
                                Qt.AlignRight | Qt.AlignVCenter, f"{int(throttle_value)}")
         
-        # 軸標題
-        title_font = QFont("Arial", 10, QFont.Bold)
+        # 軸標題 - 使用統一字體
+        title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題
-        painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
-                        Qt.AlignCenter, "距離 (米)")
+        # X軸標題 - 放在"0"刻度左邊
+        x_title_x = chart_rect.left() - 60  # 0刻度左邊60像素
+        x_title_y = chart_rect.bottom() + 5   # X軸下方5像素（調整以適應新的下邊距20px）
+        painter.drawText(x_title_x, x_title_y, 55, 20, Qt.AlignRight, "距離 (m)")
         
         # Y軸標題
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "速度 (%)")
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "油門 (%)")
         painter.restore()
         
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
@@ -313,7 +314,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
                 if 'sector' in sector:
                     # 使用實線來繪製標籤
                     painter.setPen(QPen(self.sector_color, 1))
-                    painter.setFont(QFont("Arial", 8))
+                    painter.setFont(QFont("Microsoft YaHei", 8))
                     label_y = chart_rect.bottom() + 50
                     painter.drawText(int(x - 10), label_y, 20, 15,
                                    Qt.AlignCenter, f"S{sector['sector']}")
@@ -474,7 +475,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
             
             # 繪製數值文字
             painter.setPen(QPen(QColor(50, 50, 50), 1))
-            painter.setFont(QFont("Arial", 9))
+            painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
@@ -532,7 +533,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         
         # 繪製距離資訊
         painter.setPen(QPen(QColor(50, 50, 50), 1))
-        painter.setFont(QFont("Arial", 9))
+        painter.setFont(QFont("Microsoft YaHei", 9))
         painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的速度資訊
@@ -567,7 +568,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         legend_x = self.width() - 200
         legend_y = 30
         
-        painter.setFont(QFont("Arial", 9))
+        painter.setFont(QFont("Microsoft YaHei", 9))
         
         # 使用新的單車手模式標記 - 與油門分析一致
         # is_single_driver = (self.driver1_name == self.driver2_name or 

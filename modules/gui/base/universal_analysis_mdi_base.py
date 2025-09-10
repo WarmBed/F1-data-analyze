@@ -545,10 +545,8 @@ class UniversalAnalysisMDI(IAnalysisModule):
         
         layout.addWidget(main_splitter)
         
-        # 狀態列
-        self.status_bar = QStatusBar()
-        self.status_bar.showMessage(self.get_status_info())
-        layout.addWidget(self.status_bar)
+        # 狀態列已隱藏 - 提供更簡潔的界面
+        self.status_bar = None
         
         # 設置預設比例（圖表佔大部分空間）
         if main_splitter.count() > 1:
@@ -643,6 +641,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
             # 發送數據載入完成信號
             self.data_loaded.emit(data)
             
+            # 更新工具欄狀態信息
+            self._update_toolbar_status(data)
+            
             # 更新狀態
             self._update_status("數據載入完成")
             
@@ -657,12 +658,14 @@ class UniversalAnalysisMDI(IAnalysisModule):
         self._update_status(f"錯誤: {error_message}")
     
     def _update_progress(self, progress: int):
-        """更新進度"""
+        """更新進度（狀態列已隱藏）"""
+        # 狀態列已隱藏，不顯示進度訊息
         if self.status_bar:
             self.status_bar.showMessage(f"載入中... {progress}%")
     
     def _update_status(self, message: str):
-        """更新狀態"""
+        """更新狀態（狀態列已隱藏）"""
+        # 狀態列已隱藏，不顯示狀態訊息
         if self.status_bar:
             self.status_bar.showMessage(message)
     
@@ -690,27 +693,183 @@ class UniversalAnalysisMDI(IAnalysisModule):
         if parent_window:
             self.update_window_title()
     
-    def update_window_title(self):
-        """更新視窗標題"""
-        if self.parent_window:
-            title = self.get_window_title()
-            self.parent_window.setWindowTitle(title)
+    def update_window_title(self) -> None:
+        """更新視窗標題 - 參照速度分析模組增強版"""
+        try:
+            # 檢查 parent_window 屬性（MDI 子視窗引用）
+            parent = getattr(self, 'parent_window', None)
+            
+            if parent and hasattr(parent, 'setWindowTitle'):
+                new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                parent.setWindowTitle(new_title)
+                
+                # 強制刷新視窗顯示
+                parent.update()
+                parent.repaint()
+                
+                self._debug(f"🏷️ 視窗標題已更新為: {new_title}")
+        except Exception as e:
+            self._error(f"更新視窗標題失敗: {e}")
+            import traceback
+            traceback.print_exc()
     
     def cleanup(self):
-        """清理資源"""
+        """清理資源 - 參照速度分析模組增強版"""
         try:
-            # 從分析模組管理器取消註冊
-            if self._analysis_manager and self._module_id:
-                self._analysis_manager.unregister_module(self._module_id)
+            # 從分析模組管理器解除註冊
+            if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
+                try:
+                    # 解除註冊圖表組件
+                    if hasattr(self, 'chart_widget') and self.chart_widget:
+                        self._analysis_manager.unregister_chart_widget(self.chart_widget)
+                    
+                    # 解除註冊模組
+                    self._analysis_manager.unregister_module(self._module_id)
+                    self._debug(f"✅ 已從分析模組管理器解除註冊: {self._module_id}")
+                    
+                except Exception as e:
+                    self._error(f"從分析模組管理器解除註冊失敗: {e}")
             
-            # 停止數據載入（如果正在進行）
-            if hasattr(self.data_manager, 'stop_loading'):
-                self.data_manager.stop_loading()
-            
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 停止數據載入（如果正在進行）
+                if hasattr(self.data_manager, 'stop_loading'):
+                    self.data_manager.stop_loading()
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
+                    
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                # 🔧 修復：從連動管理器中取消註冊圖表組件
+                try:
+                    from modules.gui.lap_analysis.linkage import linkage_manager
+                    if linkage_manager:
+                        linkage_manager.unregister_module(self.chart_widget)
+                        self._debug("✅ 已從連動管理器解除註冊圖表組件")
+                except Exception as e:
+                    self._error(f"從連動管理器解除註冊失敗: {e}")
+                
+                # 清理圖表組件
+                if hasattr(self.chart_widget, 'cleanup'):
+                    self.chart_widget.cleanup()
+                self.chart_widget.deleteLater()
+                
+            if hasattr(self, 'main_widget') and self.main_widget:
+                # 清理主要組件
+                self.main_widget.deleteLater()
+                
             self._debug("✅ 資源清理完成")
             
         except Exception as e:
             self._error(f"資源清理失敗: {e}")
+    
+    # ========== IAnalysisModule 額外方法實現 ==========
+    
+    def get_title(self) -> str:
+        """返回模組標題 - 實現 IAnalysisModule 抽象方法"""
+        return f"{self.config.display_name} - {self.current_year} {self.current_race} {self.current_session}"
+    
+    def supports_sync(self) -> bool:
+        """是否支援主程式同步 - 實現 IAnalysisModule 抽象方法"""
+        return True
+    
+    def get_parameter_interface(self) -> Optional[QWidget]:
+        """返回參數設定介面 - 實現 IAnalysisModule 抽象方法"""
+        # 預設不提供參數設定介面，子類可覆寫
+        return None
+    
+    # ========== 工具欄狀態管理 ==========
+    
+    def _update_toolbar_status(self, data: dict):
+        """更新工具欄狀態信息 - 參照速度分析模組"""
+        try:
+            # 獲取主視窗引用
+            main_window = self._get_main_window()
+            if not main_window or not hasattr(main_window, 'update_toolbar_status'):
+                return
+            
+            # 提取狀態信息
+            metadata = data.get('metadata', {})
+            drivers = metadata.get('drivers', [])
+            
+            module_name = self.config.display_name
+            lap_time = ""
+            tyre_compound = ""
+            lap_numbers = ""
+            
+            if drivers:
+                if len(drivers) >= 2 and self.config.requires_driver_params:
+                    # 雙車手模式
+                    driver1 = drivers[0]
+                    driver2 = drivers[1]
+                    
+                    lap_time1 = driver1.get('lap_time', 'N/A')
+                    lap_time2 = driver2.get('lap_time', 'N/A')
+                    lap_time = f"{lap_time1} | {lap_time2}"
+                    
+                    compound1 = driver1.get('compound', 'N/A')
+                    compound2 = driver2.get('compound', 'N/A')
+                    tyre_compound = f"{compound1} | {compound2}"
+                    
+                    driver1_code = driver1.get('code', getattr(self, 'driver1', 'VER'))
+                    driver2_code = driver2.get('code', getattr(self, 'driver2', 'VER'))
+                    
+                    if self.config.requires_lap_params:
+                        lap1 = getattr(self, 'lap1', 1)
+                        lap2 = getattr(self, 'lap2', 1)
+                        lap_numbers = f"{driver1_code} 第{lap1}圈 vs {driver2_code} 第{lap2}圈"
+                    else:
+                        lap_numbers = f"{driver1_code} vs {driver2_code}"
+                    
+                elif len(drivers) >= 1 and self.config.requires_driver_params:
+                    # 單車手模式
+                    driver1 = drivers[0]
+                    lap_time = driver1.get('lap_time', 'N/A')
+                    tyre_compound = driver1.get('compound', 'N/A')
+                    
+                    driver1_code = driver1.get('code', getattr(self, 'driver1', 'VER'))
+                    
+                    if self.config.requires_lap_params:
+                        lap1 = getattr(self, 'lap1', 1)
+                        lap_numbers = f"{driver1_code} 第{lap1}圈"
+                    else:
+                        lap_numbers = f"{driver1_code}"
+                        
+            else:
+                # 無車手數據時顯示基本信息
+                if self.config.requires_lap_params:
+                    lap1 = getattr(self, 'lap1', 1)
+                    lap2 = getattr(self, 'lap2', 1)
+                    lap_numbers = f"第{lap1}圈 vs 第{lap2}圈"
+            
+            # 更新工具欄狀態
+            main_window.update_toolbar_status(
+                module_name=module_name,
+                lap_time=lap_time,
+                tyre_compound=tyre_compound,
+                lap_numbers=lap_numbers
+            )
+            
+            self._debug(f"已更新工具欄狀態: {module_name}")
+            
+        except Exception as e:
+            self._error(f"更新工具欄狀態失敗: {e}")
+    
+    def _get_main_window(self):
+        """獲取主視窗引用 - 參照速度分析模組"""
+        try:
+            # 通過MDI子視窗獲取主視窗
+            if self.parent_window:
+                mdi_area = self.parent_window.parent()
+                if mdi_area:
+                    # 查找主視窗
+                    widget = mdi_area
+                    while widget and not hasattr(widget, 'update_toolbar_status'):
+                        widget = widget.parent()
+                    return widget
+            return None
+        except Exception as e:
+            self._error(f"獲取主視窗失敗: {e}")
+            return None
 
 
 # ========== 預設 MDI 模組類型註冊 ==========
@@ -766,6 +925,118 @@ UniversalAnalysisMDI.register_mdi_module_type(
         default_size=(1100, 700),
         requires_driver_params=True,
         requires_lap_params=False,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊速度分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'speed',
+    AnalysisMDIConfig(
+        analysis_type='speed',
+        display_name='速度分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊煞車分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'brake',
+    AnalysisMDIConfig(
+        analysis_type='brake',
+        display_name='煞車分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊齒輪分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'gear',
+    AnalysisMDIConfig(
+        analysis_type='gear',
+        display_name='齒輪分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊RPM分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'rpm',
+    AnalysisMDIConfig(
+        analysis_type='rpm',
+        display_name='RPM分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊節流閥分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'throttle',
+    AnalysisMDIConfig(
+        analysis_type='throttle',
+        display_name='節流閥分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊加速度分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'acceleration',
+    AnalysisMDIConfig(
+        analysis_type='acceleration',
+        display_name='加速度分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊速度差分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'speeddiff',
+    AnalysisMDIConfig(
+        analysis_type='speeddiff',
+        display_name='速度差分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊距離差分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'distancediff',
+    AnalysisMDIConfig(
+        analysis_type='distancediff',
+        display_name='距離差分析',
+        default_size=(900, 600),
+        requires_driver_params=True,
+        requires_lap_params=True,
         supports_single_driver=True,
         supports_dual_driver=True
     )

@@ -65,13 +65,14 @@ class ChartTheme:
     # 字體配置
     AXIS_FONT = QFont("Arial", 10)
     TITLE_FONT = QFont("Arial", 12, QFont.Bold)
+    AXIS_TITLE_FONT = QFont("Microsoft YaHei", 7)  # 座標軸標題字體 - 改為7號字體，不使用Bold
     VALUE_FONT = QFont("Arial", 9)
     
     # 邊距配置
     MARGIN_LEFT = 80
     MARGIN_RIGHT = 20
     MARGIN_TOP = 20
-    MARGIN_BOTTOM = 80
+    MARGIN_BOTTOM = 20  # 下邊距從80改為20
 
 
 class ChartDataPoint:
@@ -444,6 +445,13 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.renderer = ChartRendererFactory.create_renderer(chart_type)
         self.theme = ChartTheme()
         
+        # 座標軸標題配置
+        self.x_axis_title = "距離 (m)"              # X軸標題
+        self.y_axis_title = ""                      # Y軸標題  
+        self.x_title_position = "bottom-center"     # X軸標題位置: "bottom-center", "bottom-left"
+        self.y_title_position = "left-center"       # Y軸標題位置: "left-center", "left-bottom"
+        self.show_axis_titles = True                # 是否顯示座標軸標題
+        
         # 數據存儲
         self.series_list: List[ChartSeries] = []
         self.sectors: List[Dict[str, Any]] = []
@@ -461,6 +469,12 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.show_fixed_line = False
         self.fixed_distance_value = None
         
+        # 增強交互功能
+        self.middle_dragging = False
+        self.last_drag_pos = QPoint()
+        self.show_value_tooltip = True  # 是否顯示數值提示
+        self.tooltip_precision = 1      # 數值提示精度
+        
         # 連動狀態
         self.linkage_enabled = True
         self.master_linkage_enabled = True
@@ -471,7 +485,7 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         
         # UI 設置
         self.setMouseTracking(True)
-        self.setMinimumSize(600, 300)
+        self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
         # 註冊到連動管理器
@@ -483,6 +497,58 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         if chart_type in ChartRendererFactory.get_available_types():
             self.chart_type = chart_type
             self.renderer = ChartRendererFactory.create_renderer(chart_type)
+            self.update()
+    
+    # ========== 座標軸標題配置方法 ==========
+    
+    def set_axis_titles(self, x_title: str, y_title: str):
+        """設定座標軸標題"""
+        self.x_axis_title = x_title
+        self.y_axis_title = y_title
+        self.update()
+    
+    def set_axis_title_positions(self, x_position: str, y_position: str):
+        """
+        設定座標軸標題位置
+        
+        Args:
+            x_position: X軸標題位置 ("bottom-center", "bottom-left")
+            y_position: Y軸標題位置 ("left-center", "left-bottom")
+        """
+        valid_x_positions = ["bottom-center", "bottom-left"]
+        valid_y_positions = ["left-center", "left-bottom"]
+        
+        if x_position in valid_x_positions:
+            self.x_title_position = x_position
+        else:
+            print(f"⚠️ 無效的X軸標題位置: {x_position}. 可用選項: {valid_x_positions}")
+            
+        if y_position in valid_y_positions:
+            self.y_title_position = y_position
+        else:
+            print(f"⚠️ 無效的Y軸標題位置: {y_position}. 可用選項: {valid_y_positions}")
+            
+        self.update()
+    
+    def set_show_axis_titles(self, show: bool):
+        """設定是否顯示座標軸標題"""
+        self.show_axis_titles = show
+        self.update()
+    
+    def set_x_axis_title(self, title: str, position: str = None):
+        """設定X軸標題和位置"""
+        self.x_axis_title = title
+        if position:
+            self.set_axis_title_positions(position, self.y_title_position)
+        else:
+            self.update()
+    
+    def set_y_axis_title(self, title: str, position: str = None):
+        """設定Y軸標題和位置"""
+        self.y_axis_title = title
+        if position:
+            self.set_axis_title_positions(self.x_title_position, position)
+        else:
             self.update()
     
     def set_data(self, x_data: List[float], series_data: Dict[str, List[float]], 
@@ -573,6 +639,13 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         
         # 繪製交互元素
         self._draw_interaction_elements(painter, plot_rect, current_x_range)
+        
+        # 繪製數值追蹤線和提示
+        self._draw_tracking_elements(painter, plot_rect, current_x_range, current_y_range)
+        
+        # 繪製座標軸標題
+        if self.show_axis_titles:
+            self._draw_axis_titles(painter, plot_rect)
     
     def _calculate_data_ranges(self):
         """計算數據範圍"""
@@ -669,13 +742,7 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             painter.drawRect(sector_rect)
     
     def _draw_interaction_elements(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float]):
-        """繪製交互元素"""
-        
-        # 繪製固定線
-        if self.show_fixed_line and self.fixed_line_x >= 0:
-            pen = QPen(QColor(255, 255, 0), 2)  # 黃色
-            painter.setPen(pen)
-            painter.drawLine(self.fixed_line_x, rect.top(), self.fixed_line_x, rect.bottom())
+        """繪製基礎交互元素"""
         
         # 繪製連動線
         if self.show_linkage_line and self.linkage_distance_value is not None:
@@ -685,12 +752,324 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             painter.setPen(pen)
             painter.drawLine(linkage_x, rect.top(), linkage_x, rect.bottom())
     
+    def _draw_tracking_elements(self, painter: QPainter, rect: QRect, 
+                               x_range: Tuple[float, float], y_range: Tuple[float, float]):
+        """繪製追蹤元素（固定線、跟隨線、數值提示）"""
+        
+        # 繪製固定線（如果有的話）
+        if self.show_fixed_line and self.fixed_distance_value is not None:
+            if x_range[0] <= self.fixed_distance_value <= x_range[1]:
+                fixed_x = rect.left() + int((self.fixed_distance_value - x_range[0]) / 
+                                          (x_range[1] - x_range[0]) * rect.width())
+                self._draw_tracking_line(painter, rect, fixed_x, x_range, y_range, is_fixed=True)
+        
+        # 繪製滑鼠跟隨線
+        if rect.contains(self.mouse_x, self.mouse_y) and self.show_value_tooltip:
+            self._draw_tracking_line(painter, rect, self.mouse_x, x_range, y_range, is_fixed=False)
+    
+    def _draw_tracking_line(self, painter: QPainter, rect: QRect, x_pos: int, 
+                           x_range: Tuple[float, float], y_range: Tuple[float, float], is_fixed: bool):
+        """繪製追蹤線和數值顯示 - 仿照 DistanceDiff 實現"""
+        if not rect.contains(x_pos, rect.center().y()):
+            return
+            
+        # 設置線條樣式
+        if is_fixed:
+            # 固定線：綠色實線
+            painter.setPen(QPen(QColor(0, 180, 0), 2, Qt.SolidLine))
+        else:
+            # 跟隨線：灰色虛線
+            painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))
+            
+        painter.drawLine(x_pos, rect.top(), x_pos, rect.bottom())
+        
+        # 計算當前位置對應的數據值
+        x_range_size = x_range[1] - x_range[0]
+        if x_range_size <= 0 or not self.series_list:
+            return
+            
+        # 計算X軸數據值
+        relative_x = x_pos - rect.left()
+        x_value = x_range[0] + (relative_x / rect.width()) * x_range_size
+        
+        # 獲取對應位置的數據值
+        values_at_position = self.renderer.get_value_at_position(x_pos, rect, self.series_list, x_range)
+        
+        if not values_at_position:
+            return
+            
+        # 準備顯示的數據
+        series_values = values_at_position.get("series_values", {})
+        if not series_values:
+            return
+            
+        # 計算標籤尺寸
+        base_height = 25  # X值顯示的基本高度
+        series_height = 20 * len(series_values)  # 每個系列20像素高度
+        label_height = base_height + series_height + 10  # 額外邊距
+        
+        # 繪製數值標籤背景
+        label_width = 180
+        label_x = min(x_pos + 15, self.width() - label_width - 10)
+        
+        # 根據線條類型決定標籤位置
+        if is_fixed:
+            label_y = max(rect.top() + 10, 10)
+        else:
+            label_y = max(self.mouse_y - label_height - 10, 10)
+        
+        # 確保標籤在可視區域內
+        label_y = min(label_y, self.height() - label_height - 10)
+        
+        # 設置標籤背景顏色
+        bg_color = QColor(255, 240, 240, 240) if is_fixed else QColor(255, 255, 255, 240)
+        border_color = QColor(0, 180, 0) if is_fixed else QColor(150, 150, 150)
+        
+        painter.setPen(QPen(border_color, 1))
+        painter.setBrush(QBrush(bg_color))
+        painter.drawRect(label_x, label_y, label_width, label_height)
+        
+        # 繪製數值文字
+        painter.setPen(QPen(self.theme.TEXT_COLOR, 1))
+        painter.setFont(QFont("Arial", 9))
+        
+        text_y = label_y + 18
+        
+        # 顯示X軸數值
+        x_label = self.x_axis_title if self.x_axis_title else "X"
+        painter.drawText(label_x + 8, text_y, f"{x_label}: {x_value:.{self.tooltip_precision}f}")
+        
+        # 顯示各系列的Y值
+        for i, (series_name, value_info) in enumerate(series_values.items()):
+            y_value = value_info.get("value", 0)
+            
+            # 根據系列選擇顏色
+            series_color = self.theme.DRIVER1_COLOR if i == 0 else self.theme.DRIVER2_COLOR
+            if len(self.series_list) > i:
+                series_color = self.series_list[i].color
+                
+            painter.setPen(QPen(series_color, 1))
+            painter.drawText(label_x + 8, text_y + 20 + (i * 20), 
+                           f"{series_name}: {y_value:.{self.tooltip_precision}f}")
+            
+            # 如果是差異圖表，添加額外信息
+            if hasattr(value_info, 'get') and "difference_type" in value_info:
+                diff_type = value_info["difference_type"]
+                status = "領先" if diff_type == "positive" else "落後"
+                painter.setPen(QPen(self.theme.TEXT_COLOR, 1))
+                painter.drawText(label_x + 100, text_y + 20 + (i * 20), f"({status})")
+    
+    def _draw_axis_titles(self, painter: QPainter, rect: QRect):
+        """繪製座標軸標題 - 統一配置位置"""
+        print(f"[BASE_CHART] 🎨 _draw_axis_titles 開始繪製")
+        print(f"  rect: {rect}")
+        print(f"  X軸標題: '{self.x_axis_title}' 位置: {self.x_title_position}")
+        print(f"  Y軸標題: '{self.y_axis_title}' 位置: {self.y_title_position}")
+        
+        painter.setFont(self.theme.AXIS_TITLE_FONT)
+        painter.setPen(QPen(self.theme.TEXT_COLOR))
+        
+        # X軸標題
+        if self.x_axis_title:
+            print(f"[BASE_CHART] 繪製X軸標題: '{self.x_axis_title}'")
+            if self.x_title_position == "bottom-left":
+                # 🎯 位置在X軸0點左邊（水平顯示）- 確保在可見區域內
+                x_title_rect = QRect(
+                    rect.left() - 40,           # 在X軸0點左邊，但不要太遠
+                    rect.bottom() + 5,          # X軸下方一點點
+                    80, 20                      # 寬度足夠顯示標題
+                )
+                painter.drawText(x_title_rect, Qt.AlignLeft | Qt.AlignVCenter, self.x_axis_title)
+                print(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
+            else:  # "bottom-center" (預設)
+                # 位置在圖表底部中央
+                x_title_rect = QRect(
+                    rect.center().x() - 50,     # 圖表中央
+                    rect.bottom() + 5,          # 圖表下方一點點
+                    100, 20
+                )
+                painter.drawText(x_title_rect, Qt.AlignCenter, self.x_axis_title)
+                print(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
+        
+        # Y軸標題
+        if self.y_axis_title:
+            print(f"[BASE_CHART] 繪製Y軸標題: '{self.y_axis_title}'")
+            painter.save()
+            # 🎯 Y軸標題始終在Y軸中間（垂直顯示）
+            y_center = rect.center().y()
+            painter.translate(30, y_center)            # Y軸左側，確保可見
+            painter.rotate(-90)                        # 逆時針旋轉90度
+            y_title_rect = QRect(-40, -10, 80, 20)    # 更寬的矩形容納標題
+            painter.drawText(y_title_rect, Qt.AlignCenter, self.y_axis_title)
+            painter.restore()
+            print(f"[BASE_CHART] ✅ Y軸標題繪製完成: center_y={y_center}, x=30")
+    
     def mouseMoveEvent(self, event: QMouseEvent):
-        """滑鼠移動事件"""
+        """滑鼠移動事件 - 增強版本"""
         self.mouse_x = event.x()
         self.mouse_y = event.y()
         
-        # 計算數據值
+        # 計算圖表區域
+        plot_rect = QRect(
+            self.theme.MARGIN_LEFT,
+            self.theme.MARGIN_TOP,
+            self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
+            self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
+        )
+        
+        # 處理中鍵拖拽
+        if self.middle_dragging and not self.last_drag_pos.isNull():
+            self._handle_middle_drag(event, plot_rect)
+        
+        # 處理連動和數據計算
+        if plot_rect.contains(event.pos()):
+            current_x_range = self.view_x_range or self.x_range
+            current_y_range = self.view_y_range or self.y_range
+            
+            # 計算當前滑鼠對應的數據值
+            x_range_size = current_x_range[1] - current_x_range[0]
+            if x_range_size > 0:
+                relative_x = event.x() - plot_rect.left()
+                x_value = current_x_range[0] + (relative_x / plot_rect.width()) * x_range_size
+                
+                # 計算Y軸相對位置
+                relative_y = (plot_rect.bottom() - event.y()) / plot_rect.height()
+                relative_y = max(0.0, min(1.0, relative_y))
+                
+                # 發送連動信號
+                if linkage_manager and self.linkage_enabled and not self.is_sending_linkage:
+                    linkage_manager.send_x_linkage(x_value, relative_y, self)
+                
+                # 獲取數據值
+                values = self.renderer.get_value_at_position(self.mouse_x, plot_rect, 
+                                                           self.series_list, current_x_range)
+                if values:
+                    # 發送位置變更信號
+                    y_value = 0
+                    series_values = values.get("series_values", {})
+                    if series_values:
+                        first_series = next(iter(series_values.values()))
+                        y_value = first_series.get("value", 0)
+                    
+                    self.mouse_position_changed.emit(x_value, y_value)
+        
+        self.update()
+        super().mouseMoveEvent(event)
+    
+    def _handle_middle_drag(self, event: QMouseEvent, plot_rect: QRect):
+        """處理中鍵拖拽移動"""
+        # 計算移動距離
+        dx = event.x() - self.last_drag_pos.x()
+        dy = event.y() - self.last_drag_pos.y()
+        
+        if plot_rect.width() > 0 and plot_rect.height() > 0:
+            # 初始化視圖範圍
+            if self.view_x_range is None:
+                self.view_x_range = list(self.x_range)
+            if self.view_y_range is None:
+                self.view_y_range = list(self.y_range)
+            
+            # X軸移動
+            x_range_size = self.view_x_range[1] - self.view_x_range[0]
+            x_move = -dx * x_range_size / plot_rect.width()
+            
+            # Y軸移動（Y軸是倒置的）
+            y_range_size = self.view_y_range[1] - self.view_y_range[0]
+            y_move = dy * y_range_size / plot_rect.height()
+            
+            # 更新視圖範圍
+            self.view_x_range[0] += x_move
+            self.view_x_range[1] += x_move
+            self.view_y_range[0] += y_move
+            self.view_y_range[1] += y_move
+            
+            # 限制在原始範圍內（可選）
+            # self._clamp_view_ranges()
+        
+        self.last_drag_pos = event.pos()
+    
+    def mousePressEvent(self, event: QMouseEvent):
+        """滑鼠按下事件 - 增強版本"""
+        plot_rect = QRect(
+            self.theme.MARGIN_LEFT,
+            self.theme.MARGIN_TOP,
+            self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
+            self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
+        )
+        
+        if event.button() == Qt.LeftButton:
+            # 左鍵點擊：設置固定線
+            if plot_rect.contains(event.pos()):
+                current_x_range = self.view_x_range or self.x_range
+                x_range_size = current_x_range[1] - current_x_range[0]
+                
+                if x_range_size > 0:
+                    relative_x = event.x() - plot_rect.left()
+                    self.fixed_distance_value = current_x_range[0] + (relative_x / plot_rect.width()) * x_range_size
+                    self.show_fixed_line = True
+                    
+                    # 發送連動信號
+                    if self.linkage_enabled and not self.is_sending_linkage and linkage_manager:
+                        self.is_sending_linkage = True
+                        linkage_manager.send_click_linkage(self.fixed_distance_value, self)
+                        self.is_sending_linkage = False
+                    
+                    self.update()
+                    
+        elif event.button() == Qt.RightButton:
+            # 右鍵點擊：清除固定線
+            self.clear_fixed_line()
+            
+            # 發送清除連動信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
+            
+        elif event.button() == Qt.MiddleButton:
+            # 中鍵按下：開始拖拽
+            if plot_rect.contains(event.pos()):
+                self.middle_dragging = True
+                self.last_drag_pos = event.pos()
+                self.setCursor(Qt.ClosedHandCursor)
+        
+        super().mousePressEvent(event)
+    
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """滑鼠雙擊事件 - 清除固定線"""
+        if event.button() == Qt.LeftButton:
+            self.clear_fixed_line()
+            
+            # 發送清除連動信號
+            if linkage_manager and self.linkage_enabled:
+                linkage_manager.send_click_linkage_clear(sender=self)
+    
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """滑鼠釋放事件"""
+        if event.button() == Qt.MiddleButton:
+            # 中鍵釋放：結束拖拽
+            self.middle_dragging = False
+            self.setCursor(Qt.ArrowCursor)
+        
+        super().mouseReleaseEvent(event)
+    
+    def leaveEvent(self, event):
+        """滑鼠離開事件"""
+        self.mouse_x = -1
+        self.mouse_y = -1
+        
+        # 發送連動清除信號
+        if linkage_manager and self.linkage_enabled:
+            linkage_manager.send_x_linkage_clear(self)
+        
+        self.update()
+        super().leaveEvent(event)
+    
+    def wheelEvent(self, event: QWheelEvent):
+        """滾輪縮放事件 - 增強版本"""
+        # 獲取滾輪方向
+        delta = event.angleDelta().y()
+        zoom_factor = 1.15 if delta > 0 else 1.0 / 1.15
+        
+        # 計算圖表區域
         plot_rect = QRect(
             self.theme.MARGIN_LEFT,
             self.theme.MARGIN_TOP,
@@ -699,60 +1078,79 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         )
         
         if plot_rect.contains(event.pos()):
-            current_x_range = self.view_x_range or self.x_range
-            values = self.renderer.get_value_at_position(self.mouse_x, plot_rect, 
-                                                       self.series_list, current_x_range)
+            # 計算滑鼠位置對應的數據值比例
+            mouse_rel_x = (event.x() - plot_rect.left()) / plot_rect.width()
+            mouse_rel_y = (plot_rect.bottom() - event.y()) / plot_rect.height()
             
-            if values:
-                self.mouse_position_changed.emit(values["x_value"], 0)  # Y值由具體實現決定
-        
-        self.update()
-        super().mouseMoveEvent(event)
-    
-    def mousePressEvent(self, event: QMouseEvent):
-        """滑鼠按下事件"""
-        if event.button() == Qt.LeftButton:
-            # 設置固定線
-            self.fixed_line_x = event.x()
-            self.show_fixed_line = True
+            # 限制比例範圍
+            mouse_rel_x = max(0.0, min(1.0, mouse_rel_x))
+            mouse_rel_y = max(0.0, min(1.0, mouse_rel_y))
             
-            # 計算對應的數據值
-            plot_rect = QRect(
-                self.theme.MARGIN_LEFT,
-                self.theme.MARGIN_TOP,
-                self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
-                self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
-            )
+            # 初始化視圖範圍
+            if self.view_x_range is None:
+                self.view_x_range = list(self.x_range)
+            if self.view_y_range is None:
+                self.view_y_range = list(self.y_range)
             
-            current_x_range = self.view_x_range or self.x_range
-            values = self.renderer.get_value_at_position(self.fixed_line_x, plot_rect, 
-                                                       self.series_list, current_x_range)
-            
-            if values:
-                self.fixed_distance_value = values["x_value"]
-                
-                # 發送連動信號
-                if self.linkage_enabled and not self.is_sending_linkage and linkage_manager:
-                    self.is_sending_linkage = True
-                    linkage_manager.send_click_linkage(self.fixed_distance_value, self)
-                    self.is_sending_linkage = False
+            # 執行雙軸縮放
+            self._zoom_at_position(zoom_factor, mouse_rel_x, mouse_rel_y)
             
             self.update()
         
-        super().mousePressEvent(event)
-    
-    def wheelEvent(self, event: QWheelEvent):
-        """滾輪縮放事件"""
-        # 簡單的縮放實現
-        if event.angleDelta().y() > 0:
-            # 放大
-            self._zoom(1.1, event.x())
-        else:
-            # 縮小
-            self._zoom(0.9, event.x())
-        
-        self.update()
         super().wheelEvent(event)
+    
+    def _zoom_at_position(self, zoom_factor: float, rel_x: float, rel_y: float):
+        """在指定相對位置進行縮放"""
+        # X軸縮放
+        x_range_size = self.view_x_range[1] - self.view_x_range[0]
+        mouse_x_value = self.view_x_range[0] + rel_x * x_range_size
+        
+        new_x_range_size = x_range_size / zoom_factor
+        self.view_x_range[0] = mouse_x_value - rel_x * new_x_range_size
+        self.view_x_range[1] = mouse_x_value + (1 - rel_x) * new_x_range_size
+        
+        # Y軸縮放
+        y_range_size = self.view_y_range[1] - self.view_y_range[0]
+        mouse_y_value = self.view_y_range[0] + rel_y * y_range_size
+        
+        new_y_range_size = y_range_size / zoom_factor
+        self.view_y_range[0] = mouse_y_value - rel_y * new_y_range_size
+        self.view_y_range[1] = mouse_y_value + (1 - rel_y) * new_y_range_size
+        
+        # 限制縮放範圍（避免過度縮放）
+        self._clamp_view_ranges()
+    
+    def _clamp_view_ranges(self):
+        """限制視圖範圍在合理區間內"""
+        # X軸範圍限制
+        original_x_size = self.x_range[1] - self.x_range[0]
+        min_x_size = original_x_size * 0.01  # 最小1%
+        max_x_size = original_x_size * 2.0   # 最大200%
+        
+        current_x_size = self.view_x_range[1] - self.view_x_range[0]
+        if current_x_size < min_x_size:
+            center_x = (self.view_x_range[0] + self.view_x_range[1]) / 2
+            self.view_x_range[0] = center_x - min_x_size / 2
+            self.view_x_range[1] = center_x + min_x_size / 2
+        elif current_x_size > max_x_size:
+            center_x = (self.view_x_range[0] + self.view_x_range[1]) / 2
+            self.view_x_range[0] = center_x - max_x_size / 2
+            self.view_x_range[1] = center_x + max_x_size / 2
+        
+        # Y軸範圍限制
+        original_y_size = self.y_range[1] - self.y_range[0]
+        min_y_size = original_y_size * 0.01  # 最小1%
+        max_y_size = original_y_size * 2.0   # 最大200%
+        
+        current_y_size = self.view_y_range[1] - self.view_y_range[0]
+        if current_y_size < min_y_size:
+            center_y = (self.view_y_range[0] + self.view_y_range[1]) / 2
+            self.view_y_range[0] = center_y - min_y_size / 2
+            self.view_y_range[1] = center_y + min_y_size / 2
+        elif current_y_size > max_y_size:
+            center_y = (self.view_y_range[0] + self.view_y_range[1]) / 2
+            self.view_y_range[0] = center_y - max_y_size / 2
+            self.view_y_range[1] = center_y + max_y_size / 2
     
     def _zoom(self, factor: float, center_x: int):
         """縮放功能"""
@@ -790,6 +1188,47 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.view_x_range = None
         self.view_y_range = None
         self.update()
+    
+    def reset_view(self):
+        """重置視圖到原始狀態 - 包含縮放和固定線"""
+        self.view_x_range = None
+        self.view_y_range = None
+        self.clear_fixed_line()
+        self.update()
+    
+    def clear_fixed_line(self):
+        """清除固定線"""
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
+        self.update()
+    
+    def set_tooltip_enabled(self, enabled: bool):
+        """設置數值提示開關"""
+        self.show_value_tooltip = enabled
+        self.update()
+    
+    def set_tooltip_precision(self, precision: int):
+        """設置數值提示精度"""
+        self.tooltip_precision = max(0, min(precision, 6))  # 限制在0-6位小數
+        self.update()
+    
+    def get_mouse_data_value(self) -> Optional[Dict[str, Any]]:
+        """獲取當前滑鼠位置對應的數據值"""
+        if self.mouse_x < 0 or self.mouse_y < 0:
+            return None
+            
+        plot_rect = QRect(
+            self.theme.MARGIN_LEFT,
+            self.theme.MARGIN_TOP,
+            self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
+            self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
+        )
+        
+        if not plot_rect.contains(self.mouse_x, self.mouse_y):
+            return None
+            
+        current_x_range = self.view_x_range or self.x_range
+        return self.renderer.get_value_at_position(self.mouse_x, plot_rect, self.series_list, current_x_range)
     
     # 連動功能方法
     def set_linkage_enabled(self, enabled: bool):

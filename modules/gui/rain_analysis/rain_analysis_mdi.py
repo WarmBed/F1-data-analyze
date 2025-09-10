@@ -69,6 +69,9 @@ class RainAnalysisDataManager(UniversalDataLoader):
         self.lap_weather_mapping = {}
         self.summary_stats = {}
         
+        print(f"[RAIN_DATA_MANAGER] 初始化完成, 搜索目錄: {self.config.search_directories}")
+        print(f"[RAIN_DATA_MANAGER] 文件模式: {self.config.file_patterns}")
+        
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
         year = params.get('year')
@@ -420,10 +423,12 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
     """
     
     def __init__(self, parent=None):
+        print(f"[RAIN_MDI] RainAnalysisUniversal 開始初始化...")
+        
         # 註冊下雨分析模組類型
-        if "rain" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
+        if "rain_weather" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
             rain_config = AnalysisMDIConfig(
-                analysis_type="rain",
+                analysis_type="rain_weather",
                 display_name="下雨分析",
                 default_size=(1400, 900),
                 requires_driver_params=False,  # 下雨分析不需要車手參數
@@ -432,9 +437,23 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
                 supports_dual_driver=False,
                 chart_types=["primary", "temperature", "humidity_wind", "pressure"]
             )
-            UniversalAnalysisMDI.register_mdi_module_type("rain", rain_config)
+            UniversalAnalysisMDI.register_mdi_module_type("rain_weather", rain_config)
             
-        super().__init__("rain", parent)
+        super().__init__("rain_weather", parent)
+        print(f"[RAIN_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
+        
+        # 初始化模組組件
+        print(f"[RAIN_MDI] 開始初始化模組組件...")
+        if not self.initialize_module():
+            print(f"[RAIN_MDI] ❌ 模組組件初始化失敗")
+            return
+        
+        print(f"[RAIN_MDI] ✅ 模組組件初始化完成")
+        print(f"[RAIN_MDI] 數據管理器: {self.data_manager}")
+        print(f"[RAIN_MDI] 圖表組件: {self.chart_widget}")
+        
+        # 參照遙測分析：設置響應式佈局
+        self.set_responsive_layout()
         
     def create_data_manager(self) -> RainAnalysisDataManager:
         """創建下雨分析數據管理器"""
@@ -454,6 +473,117 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         
         return control_widget
         
+    def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
+        """更新降雨分析參數"""
+        try:
+            print(f"[RAIN_MDI] ========== 降雨參數更新 ==========")
+            print(f"[RAIN_MDI] 收到參數: {year} {race} {session}")
+            
+            # 更新當前參數
+            self.current_year = int(year) if isinstance(year, str) else year
+            self.current_race = race
+            self.current_session = session
+            
+            # 更新數據管理器參數
+            if hasattr(self, 'data_manager') and self.data_manager:
+                print(f"[RAIN_MDI] 更新數據管理器參數...")
+                self.data_manager.year = self.current_year
+                self.data_manager.race = self.current_race
+                self.data_manager.session = self.current_session
+                
+                # 載入數據 - 傳遞正確的參數
+                print(f"[RAIN_MDI] 開始載入數據...")
+                result = self.data_manager.load_data(
+                    year=self.current_year,
+                    race=self.current_race,
+                    session=self.current_session
+                )
+                print(f"[RAIN_MDI] 數據載入結果: {result}")
+                
+                # 如果有數據，更新圖表
+                if result and hasattr(self, 'chart_widget') and self.chart_widget:
+                    data = self.data_manager._prepare_chart_data()
+                    if data:
+                        print(f"[RAIN_MDI] 更新圖表數據...")
+                        # 包裝數據格式以符合圖表組件的期望
+                        chart_data = {"charts_data": data}
+                        self.chart_widget.update_data(chart_data)
+            
+            print(f"[RAIN_MDI] 參數更新完成")
+            return True
+            
+        except Exception as e:
+            print(f"[RAIN_MDI] 參數更新失敗: {str(e)}")
+            import traceback
+            print(f"[RAIN_MDI] 錯誤詳情:")
+            traceback.print_exc()
+            return False
+    
+    def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
+        """更新分析參數"""
+        try:
+            # 更新當前參數
+            self.update_lap_parameters(
+                year=int(year) if isinstance(year, str) else year,
+                race=race,
+                session=session
+            )
+            
+            # 觸發數據重新載入
+            if hasattr(self, 'data_manager') and self.data_manager:
+                return self.data_manager.load_data(
+                    year=self.current_year,
+                    race=self.current_race,
+                    session=self.current_session
+                )
+            
+            return True
+            
+        except Exception as e:
+            self._debug(f"更新分析參數失敗: {str(e)}")
+            return False
+    
+    def resizeEvent(self, event):
+        """參照遙測分析：MDI視窗大小調整時的響應邏輯"""
+        try:
+            # 調用基類的 resizeEvent
+            super().resizeEvent(event)
+            
+            # 記錄尺寸變化
+            old_size = event.oldSize()
+            new_size = event.size()
+            
+            print(f"[RAIN_MDI] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+            
+            # 通知圖表組件更新佈局
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                if hasattr(self.chart_widget, 'update_chart_layout'):
+                    print("[RAIN_MDI] resizeEvent: 觸發圖表重新佈局")
+                    self.chart_widget.update_chart_layout()
+                else:
+                    print("[RAIN_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
+            else:
+                print("[RAIN_MDI] resizeEvent: 圖表組件尚未初始化")
+                
+        except Exception as e:
+            print(f"[ERROR] [RAIN_MDI] resizeEvent 處理失敗: {e}")
+    
+    def set_responsive_layout(self):
+        """參照遙測分析：設置響應式佈局"""
+        try:
+            # 設置大小策略
+            from PyQt5.QtWidgets import QSizePolicy
+            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            
+            # 確保圖表組件也有正確的大小策略
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                self.chart_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                
+            print("[RAIN_MDI] 響應式佈局已設置")
+            
+        except Exception as e:
+            print(f"[ERROR] [RAIN_MDI] 設置響應式佈局失敗: {e}")
+
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組信息"""
         return {

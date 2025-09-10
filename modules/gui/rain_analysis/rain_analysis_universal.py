@@ -419,7 +419,51 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         control_widget.parameter_changed.connect(self._on_parameter_changed)
         
         return control_widget
+    
+    def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
+        """更新降雨分析參數"""
+        try:
+            print(f"[RAIN_UNIVERSAL] ========== 降雨參數更新 ==========")
+            print(f"[RAIN_UNIVERSAL] 收到參數: {year} {race} {session}")
+            
+            # 更新當前參數
+            self.current_year = int(year) if isinstance(year, str) else year
+            self.current_race = race
+            self.current_session = session
+            
+            # 更新數據管理器參數
+            if hasattr(self, 'data_manager') and self.data_manager:
+                self.data_manager.year = self.current_year
+                self.data_manager.race = self.current_race
+                self.data_manager.session = self.current_session
+            
+            print(f"[RAIN_UNIVERSAL] 參數更新完成")
+            return True
+            
+        except Exception as e:
+            print(f"[RAIN_UNIVERSAL] 參數更新失敗: {str(e)}")
+            return False
         
+    def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
+        """更新分析參數"""
+        try:
+            # 更新當前參數
+            self.update_lap_parameters(
+                year=int(year) if isinstance(year, str) else year,
+                race=race,
+                session=session
+            )
+            
+            # 觸發數據重新載入
+            if hasattr(self, 'data_manager') and self.data_manager:
+                return self.data_manager.load_data()
+            
+            return True
+            
+        except Exception as e:
+            self._debug(f"更新分析參數失敗: {str(e)}")
+            return False
+
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組信息"""
         return {

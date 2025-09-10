@@ -1041,6 +1041,12 @@ class TelemetryChartWidget(QWidget):
         self.x_offset = 0   # X軸偏移
         self.x_scale = 1.0  # X軸縮放倍率
         
+        # 視圖範圍參數 (參照Speed/Brake分析)
+        self.view_min_x = None
+        self.view_max_x = None
+        self.view_min_y = None
+        self.view_max_y = None
+        
         # 拖拉狀態
         self.dragging = False
         self.last_drag_pos = QPoint()
@@ -1194,42 +1200,72 @@ class TelemetryChartWidget(QWidget):
         super().mouseReleaseEvent(event)
         
     def wheelEvent(self, event):
-        """滑鼠滾輪事件 - 智能縮放"""
+        """滑鼠滾輪事件 - 參照Speed/Brake分析的視圖範圍縮放"""
         chart_area = self.get_chart_area()
         if chart_area.contains(event.pos()):
-            # 獲取滾輪滾動量
+            # 獲取滾輪方向（統一使用1.1縮放因子）
             delta = event.angleDelta().y()
+            zoom_factor = 1.1 if delta > 0 else 1.0 / 1.1
             
-            # 檢查修飾鍵
-            modifiers = event.modifiers()
+            # 計算滑鼠在圖表中的相對位置
+            mouse_rel_x = (event.x() - chart_area.left()) / chart_area.width()
+            mouse_rel_y = (chart_area.bottom() - event.y()) / chart_area.height()
             
-            if modifiers & Qt.ControlModifier:
-                # Ctrl + 滾輪: X軸縮放
-                zoom_factor = 1.2 if delta > 0 else 0.8
-                self.x_scale *= zoom_factor
-                self.x_scale = max(0.1, min(10.0, self.x_scale))
-                #print(f"[SEARCH] X軸縮放: {self.x_scale:.2f}")
-                
-            elif modifiers & Qt.ShiftModifier:
-                # Shift + 滾輪: 同步X+Y軸縮放
-                zoom_factor = 1.2 if delta > 0 else 0.8
-                self.x_scale *= zoom_factor
-                self.y_scale *= zoom_factor
-                self.x_scale = max(0.1, min(10.0, self.x_scale))
-                # Y軸可以是負數，允許更大範圍
-                self.y_scale = max(-10.0, min(10.0, self.y_scale))
-                #print(f"[SEARCH] 同步縮放: X={self.x_scale:.2f}, Y={self.y_scale:.2f}")
-                
-            else:
-                # 純滾輪: Y軸縮放 (允許負數縮放以顯示負數數據)
-                zoom_factor = 1.3 if delta > 0 else 0.7
-                self.y_scale *= zoom_factor
-                # Y軸縮放範圍: -10.0 到 +10.0 (負數可以顯示負數數據)
-                self.y_scale = max(-10.0, min(10.0, self.y_scale))
-                # 避免過小的正數或負數
-                if abs(self.y_scale) < 0.1:
-                    self.y_scale = 0.1 if self.y_scale >= 0 else -0.1
-                #print(f"[SEARCH] Y軸縮放: {self.y_scale:.2f}")
+            # 初始化視圖範圍（如果尚未設定）
+            if not hasattr(self, 'view_min_x') or self.view_min_x is None:
+                self.view_min_x = 0
+                self.view_max_x = len(self.chart_data) if hasattr(self, 'chart_data') and self.chart_data else 1000
+            if not hasattr(self, 'view_min_y') or self.view_min_y is None:
+                # 根據圖表類型設定Y軸範圍
+                if self.chart_type == "speed":
+                    self.view_min_y = 0
+                    self.view_max_y = 350
+                elif self.chart_type == "brake":
+                    self.view_min_y = 0
+                    self.view_max_y = 1.2
+                elif self.chart_type == "throttle":
+                    self.view_min_y = 0
+                    self.view_max_y = 1.2
+                elif self.chart_type == "steering":
+                    self.view_min_y = -180
+                    self.view_max_y = 180
+                else:
+                    self.view_min_y = -100
+                    self.view_max_y = 100
+            
+            # 計算當前滑鼠對應的數據值
+            x_range = self.view_max_x - self.view_min_x
+            y_range = self.view_max_y - self.view_min_y
+            
+            mouse_x = self.view_min_x + mouse_rel_x * x_range
+            mouse_y = self.view_min_y + mouse_rel_y * y_range
+            
+            # 計算新的範圍
+            new_x_range = x_range / zoom_factor
+            new_y_range = y_range / zoom_factor
+            
+            # 更新視圖範圍，保持滑鼠位置不變
+            new_min_x = mouse_x - new_x_range * mouse_rel_x
+            new_max_x = mouse_x + new_x_range * (1 - mouse_rel_x)
+            new_min_y = mouse_y - new_y_range * mouse_rel_y
+            new_max_y = mouse_y + new_y_range * (1 - mouse_rel_y)
+            
+            # 確保X軸範圍不超出數據範圍
+            data_max_x = len(self.chart_data) if hasattr(self, 'chart_data') and self.chart_data else 1000
+            if new_min_x < 0:
+                offset = 0 - new_min_x
+                new_min_x = 0
+                new_max_x = min(data_max_x, new_max_x + offset)
+            elif new_max_x > data_max_x:
+                offset = new_max_x - data_max_x
+                new_max_x = data_max_x
+                new_min_x = max(0, new_min_x - offset)
+            
+            # 應用新的視圖範圍
+            self.view_min_x = new_min_x
+            self.view_max_x = new_max_x
+            self.view_min_y = new_min_y
+            self.view_max_y = new_max_y
             
             self.update()
             event.accept()
@@ -7485,9 +7521,9 @@ class StyleHMainWindow(QMainWindow):
         if "降雨分析" in function_name:
             # 使用新的雨量分析模組 (通用圖表系統)
             try:
-                from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModule
+                from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
                 params = self.get_current_parameters()
-                content = RainAnalysisModule(
+                content = RainAnalysisModuleAdapter(
                     year=params['year'],
                     race=params['race'],
                     session=params['session']
@@ -9516,10 +9552,10 @@ class StyleHMainWindow(QMainWindow):
             print(f"[分析] [RAIN] 降雨分析 - {params['year']} {params['race']} {params['session']}")
             
             # 導入新的雨量分析模組 (使用通用圖表)
-            from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModule
+            from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
             
             # 創建雨量分析模組
-            rain_widget = RainAnalysisModule(
+            rain_widget = RainAnalysisModuleAdapter(
                 year=params['year'],
                 race=params['race'], 
                 session=params['session']

@@ -47,7 +47,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.margin_left = 80
         self.margin_right = 20
         self.margin_top = 20
-        self.margin_bottom = 80
+        self.margin_bottom = 20
         
         # 數據存儲
         self.distance_data = []
@@ -92,7 +92,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
         
-        self.setMinimumSize(600, 300)  # 與速度分析保持一致
+        self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
     
     def set_acceleration_data(self, distance: List[float], driver1_acceleration: List[float], 
@@ -255,7 +255,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         painter.drawLine(chart_rect.left(), chart_rect.top(), chart_rect.left(), chart_rect.bottom())      # Y軸
         
         # 設置字體 - 與速度分析一致
-        font = QFont("Arial", 9)
+        font = QFont("Microsoft YaHei", 9)
         painter.setFont(font)
         painter.setPen(QPen(self.axis_color, 1))
         
@@ -297,21 +297,33 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
                                Qt.AlignRight | Qt.AlignVCenter, label)
         
-        # 座標軸標題
-        title_font = QFont()
-        title_font.setPointSize(10)
-        title_font.setBold(True)
-        painter.setFont(title_font)
+        # 使用統一的座標軸標題繪製方法
+        self._draw_axis_titles(painter, chart_rect)
+    
+    def _draw_axis_titles(self, painter, rect):
+        """統一的座標軸標題繪製方法 - 與其他分析模組保持一致"""
+        try:
+            from modules.gui.base.universal_chart_widget_base import ChartTheme
+            axis_font = ChartTheme.AXIS_TITLE_FONT
+            text_color = ChartTheme.TEXT_COLOR
+        except ImportError:
+            from PyQt5.QtGui import QFont, QColor
+            axis_font = QFont("Microsoft YaHei", 7)
+            text_color = QColor(50, 50, 50)
         
-        # X軸標題 - 修正：與速度分析一致的位置
-        painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
-                        Qt.AlignCenter, "距離 (米)")
+        painter.setFont(axis_font)
+        painter.setPen(text_color)
         
-        # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
+        # X軸標題 - 左下角位置 (bottom-left)
+        x_title_x = rect.left() - 40
+        x_title_y = rect.bottom() + 5
+        painter.drawText(x_title_x, x_title_y, 60, 15, Qt.AlignLeft, "距離 (m)")
+        
+        # Y軸標題 - 垂直文字 (左側中央)  
         painter.save()
-        painter.translate(20, chart_rect.center().y())
+        painter.translate(15, rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "加速度 (m/s²)")
+        painter.drawText(-30, -5, 60, 15, Qt.AlignCenter, "加速度 (m/s²)")
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):
@@ -341,7 +353,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 if 'sector' in sector:
                     # 使用實線來繪製標籤
                     painter.setPen(QPen(self.sector_color, 1))
-                    painter.setFont(QFont("Arial", 8))
+                    painter.setFont(QFont("Microsoft YaHei", 8))
                     label_y = chart_rect.bottom() + 50  # 在X軸下方
                     painter.drawText(int(x - 10), label_y, 20, 15,
                                    Qt.AlignCenter, f"S{sector['sector']}")
@@ -489,7 +501,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             
             # 繪製數值文字
             painter.setPen(QPen(QColor(50, 50, 50), 1))
-            painter.setFont(QFont("Arial", 9))
+            painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
@@ -519,7 +531,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         legend_x = self.width() - 200  # 與速度分析一致的位置
         legend_y = 30                   # 與速度分析一致的位置
         
-        painter.setFont(QFont("Arial", 9))  # 與速度分析一致的字體
+        painter.setFont(QFont("Microsoft YaHei", 9))  # 與速度分析一致的字體
         
         # 檢查是否為單車手模式
         is_single_driver = (self.driver1_name == self.driver2_name or 

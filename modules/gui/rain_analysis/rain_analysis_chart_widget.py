@@ -22,7 +22,7 @@ import math
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
-from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics
+from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics, QMouseEvent
 
 # 導入基礎圖表組件
 try:
@@ -82,6 +82,19 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         self.current_chart_type = "primary"
         self.chart_data = {}
         
+        # 🆕 使用基類的統一座標軸標題配置
+        self.set_axis_titles("圈數", "溫度 (°C)")
+        # 🎯 X軸標題在0點左邊水平顯示，Y軸標題在中間垂直顯示
+        self.set_axis_title_positions("bottom-left", "left-center")
+        
+        # 🔍 除錯：確認座標軸標題設定
+        print(f"[RAIN_AXIS_DEBUG] 座標軸標題設定:")
+        print(f"  X軸標題: '{self.x_axis_title}'")
+        print(f"  Y軸標題: '{self.y_axis_title}'") 
+        print(f"  X軸位置: {self.x_title_position}")
+        print(f"  Y軸位置: {self.y_title_position}")
+        print(f"  顯示標題: {self.show_axis_titles}")
+        
         # 圖表繪製區域
         self.chart_rect = QRect()
         self.left_y_axis_rect = QRect()
@@ -111,6 +124,37 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         # 滑鼠追蹤
         self.setMouseTracking(True)
         
+        # 圖表邊距 (優化間距配置)
+        self.margin_left = 65   # 左邊距 (Y軸標籤) - 增加空間避免數值貼近曲線
+        self.margin_bottom = 50 # 下邊距 (X軸標籤+標題) - 保持50px給座標軸標題
+        self.margin_top = 20    # 上邊距 - 保持20px給圖例
+        self.margin_right = 20  # 右邊距 - 保持20px給雙Y軸設計
+        
+        # 滑鼠位置追蹤（用於同步）
+        self.mouse_x = -1
+        self.mouse_y = -1
+        
+        # 參照遙測分析：視圖範圍控制
+        self.view_min_lap = None
+        self.view_max_lap = None
+        self.view_min_rain = None
+        self.view_max_rain = None
+        self.view_min_temp = None
+        self.view_max_temp = None
+        
+        # 參照遙測分析：數據範圍
+        self.min_lap = 0
+        self.max_lap = 100
+        self.min_rain = 0
+        self.max_rain = 100
+        self.min_temp = 0
+        self.max_temp = 50
+        
+        # 參照遙測分析：拖拉狀態
+        self.middle_dragging = False
+        self.show_fixed_line = False
+        self.fixed_lap_value = None
+        
         # 工具提示
         self.tooltip_visible = False
         self.tooltip_data = {}
@@ -121,7 +165,12 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         
     def setup_rain_chart_style(self):
         """設定下雨分析圖表樣式"""
-        self.setMinimumSize(800, 400)
+        # 設定極小最小尺寸，提高視窗靈活性
+        self.setMinimumSize(200, 100)  # 調整為200x100，提供更高的佈局靈活性
+        # 參照遙測分析：設置擴展策略
+        from PyQt5.QtWidgets import QSizePolicy
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
         self.setStyleSheet("""
             RainAnalysisChartWidget {
                 background-color: white;
@@ -185,15 +234,21 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
     def _calculate_data_ranges(self):
         """計算數據範圍"""
         if not self.chart_data or self.current_chart_type not in self.chart_data:
+            print(f"[RAIN_RANGE_DEBUG] ❌ 無圖表數據或類型不匹配")
             return
             
         chart_info = self.chart_data[self.current_chart_type]
+        print(f"[RAIN_RANGE_DEBUG] 計算範圍，圖表類型: {self.current_chart_type}")
+        print(f"[RAIN_RANGE_DEBUG] 可用數據鍵: {list(chart_info.keys())}")
         
         # X軸範圍（圈數）
         if "x_data" in chart_info:
             x_data = chart_info["x_data"]
             if x_data:
                 self.x_range = (min(x_data), max(x_data))
+                self.min_lap = min(x_data)
+                self.max_lap = max(x_data)
+                print(f"[RAIN_RANGE_DEBUG] X軸範圍(圈數): {self.x_range}")
                 
         # 左Y軸範圍（現在用於溫度顯示，使用y2_data）
         if "y2_data" in chart_info:
@@ -201,8 +256,17 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             if temp_data:
                 min_val = min(temp_data)
                 max_val = max(temp_data)
-                margin = (max_val - min_val) * 0.1 if max_val > min_val else 1
+                margin = (max_val - min_val) * 0.15 if max_val > min_val else 1  # 增加邊距到15%
                 self.left_y_range = (min_val - margin, max_val + margin)
+                print(f"[RAIN_RANGE_DEBUG] 溫度數據: min={min_val:.3f}, max={max_val:.3f}")
+                print(f"[RAIN_RANGE_DEBUG] 左Y軸範圍(溫度): {self.left_y_range}")
+                print(f"[RAIN_RANGE_DEBUG] 邊距: {margin:.3f}")
+                
+                # 檢查是否有異常值
+                for i, temp in enumerate(temp_data):
+                    if temp < self.left_y_range[0] or temp > self.left_y_range[1]:
+                        print(f"[RAIN_RANGE_DEBUG] ⚠️ 異常溫度值在圈{x_data[i] if i < len(x_data) else i}: {temp:.3f}")
+                        
                 
         # 取消右Y軸範圍計算
         # if "y2_data" in chart_info:
@@ -242,6 +306,10 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         # 繪製數據
         self._draw_data(painter)
         
+        # 參照遙測分析：繪製固定線
+        if self.show_fixed_line and self.fixed_lap_value is not None:
+            self._draw_fixed_line(painter)
+        
         # 繪製圖例
         if self.show_legend:
             self._draw_legend(painter)
@@ -250,28 +318,40 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         if self.tooltip_visible:
             self._draw_tooltip(painter)
             
+        # 🆕 繪製基類的統一座標軸標題
+        if self.show_axis_titles:
+            print(f"[RAIN_AXIS_DEBUG] 🎨 開始繪製座標軸標題")
+            print(f"  chart_rect: {self.chart_rect}")
+            print(f"  X軸標題: '{self.x_axis_title}' 位置: {self.x_title_position}")
+            print(f"  Y軸標題: '{self.y_axis_title}' 位置: {self.y_title_position}")
+            super()._draw_axis_titles(painter, self.chart_rect)
+            print(f"[RAIN_AXIS_DEBUG] ✅ 座標軸標題繪製完成")
+        else:
+            print(f"[RAIN_AXIS_DEBUG] ❌ 座標軸標題被停用 (show_axis_titles={self.show_axis_titles})")
+            
     def _calculate_chart_areas(self):
-        """計算圖表區域"""
+        """計算圖表區域（與遙測分析一致）"""
         width = self.width()
         height = self.height()
         
-        # 邊距
-        left_margin = 80
-        right_margin = 80
-        top_margin = 40
-        bottom_margin = 60
-        
-        # 主圖表區域
+        # 主圖表區域 - 使用標準邊距
         self.chart_rect = QRect(
-            left_margin, top_margin,
-            width - left_margin - right_margin,
-            height - top_margin - bottom_margin
+            self.margin_left,
+            self.margin_top,
+            width - self.margin_left - self.margin_right,
+            height - self.margin_top - self.margin_bottom
         )
         
+        # 確保最小尺寸 - 適應極小視窗
+        if self.chart_rect.width() < 50:  # 降低最小寬度要求
+            self.chart_rect.setWidth(50)
+        if self.chart_rect.height() < 30:  # 降低最小高度要求
+            self.chart_rect.setHeight(30)
+        
         # 座標軸區域
-        self.left_y_axis_rect = QRect(10, top_margin, 70, self.chart_rect.height())
-        self.right_y_axis_rect = QRect(width - 70, top_margin, 60, self.chart_rect.height())
-        self.x_axis_rect = QRect(left_margin, height - 50, self.chart_rect.width(), 40)
+        self.left_y_axis_rect = QRect(10, self.margin_top, 70, self.chart_rect.height())
+        self.right_y_axis_rect = QRect(width - 70, self.margin_top, 60, self.chart_rect.height())
+        self.x_axis_rect = QRect(self.margin_left, height - 50, self.chart_rect.width(), 40)
         
     def _draw_background(self, painter: QPainter):
         """繪製背景"""
@@ -309,8 +389,9 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         # X軸
         painter.drawLine(self.chart_rect.bottomLeft(), self.chart_rect.bottomRight())
         
-        # 左Y軸
-        painter.drawLine(self.chart_rect.topLeft(), self.chart_rect.bottomLeft())
+        # 左Y軸 - 向右偏移避免與數值標籤重疊
+        y_axis_x = self.chart_rect.left()  # 原本的Y軸位置
+        painter.drawLine(y_axis_x, self.chart_rect.top(), y_axis_x, self.chart_rect.bottom())
         
         # 取消右Y軸繪製
         # if self.current_chart_type in ["primary", "temperature", "humidity_wind"]:
@@ -320,31 +401,49 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         self._draw_axis_labels(painter)
         
     def _draw_axis_labels(self, painter: QPainter):
-        """繪製座標軸標籤"""
+        """繪製座標軸標籤（使用視圖範圍）"""
         painter.setFont(self.label_font)
         painter.setPen(QPen(RainChartTheme.LABEL_COLOR))
         
-        # X軸標籤 (圈數)
-        x_min, x_max = self.x_range
+        # X軸標籤 (圈數) - 使用視圖範圍
+        if self.view_min_lap is not None and self.view_max_lap is not None:
+            x_min, x_max = self.view_min_lap, self.view_max_lap
+        else:
+            x_min, x_max = self.x_range
         x_step = max(1, (x_max - x_min) // 8)
+        
+        print(f"[RAIN_AXIS_DEBUG] 📊 X軸座標軸設置:")
+        print(f"[RAIN_AXIS_DEBUG]   範圍: {x_min:.1f} - {x_max:.1f}")
+        print(f"[RAIN_AXIS_DEBUG]   間距: {x_step}")
+        print(f"[RAIN_AXIS_DEBUG]   標籤數量: {len(range(int(x_min), int(x_max) + 1, int(x_step)))}")
         
         for x_val in range(int(x_min), int(x_max) + 1, int(x_step)):
             x_pos = self._map_x_to_pixel(x_val)
             text_rect = QRect(x_pos - 20, self.chart_rect.bottom() + 5, 40, 20)
             painter.drawText(text_rect, Qt.AlignCenter, str(int(x_val)))
             
-        # 左Y軸標籤
-        y_min, y_max = self.left_y_range
+        # 左Y軸標籤 (溫度) - 使用視圖範圍
+        if self.view_min_temp is not None and self.view_max_temp is not None:
+            y_min, y_max = self.view_min_temp, self.view_max_temp
+        else:
+            y_min, y_max = self.left_y_range
         y_step = (y_max - y_min) / 6
+        
+        print(f"[RAIN_AXIS_DEBUG] 📊 Y軸座標軸設置:")
+        print(f"[RAIN_AXIS_DEBUG]   範圍: {y_min:.3f} - {y_max:.3f}")
+        print(f"[RAIN_AXIS_DEBUG]   間距: {y_step:.3f}")
+        print(f"[RAIN_AXIS_DEBUG]   標籤數量: 7")
         
         for i in range(7):
             y_val = y_min + i * y_step
             y_pos = self._map_left_y_to_pixel(y_val)
-            text_rect = QRect(10, y_pos - 10, 60, 20)
+            # 數值標籤位置：確保完全在Y軸線左側，留出足夠間距
+            y_axis_x = self.chart_rect.left()  # Y軸線位置 (X=70)
+            # 標籤區域：X=5 到 X=60，給Y軸線留出10px間距
+            text_rect = QRect(5, y_pos - 10, 55, 20)  # 寬度固定55px，右邊界在X=60
             painter.drawText(text_rect, Qt.AlignRight | Qt.AlignVCenter, f"{y_val:.1f}")
             
-        # 繪製座標軸標題
-        self._draw_axis_titles(painter)
+        # 🆕 座標軸標題現在由基類統一處理
             
         # 取消右Y軸標籤繪製
         # if self.current_chart_type in ["primary", "temperature", "humidity_wind"]:
@@ -357,26 +456,7 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         #         text_rect = QRect(self.width() - 70, y_pos - 10, 60, 20)
         #         painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, f"{y_val:.1f}")
         
-    def _draw_axis_titles(self, painter: QPainter):
-        """繪製座標軸標題"""
-        painter.setFont(QFont("Microsoft YaHei", 10, QFont.Bold))
-        painter.setPen(QPen(RainChartTheme.LABEL_COLOR))
-        
-        # X軸標題 (圈數)
-        x_title_rect = QRect(
-            self.chart_rect.center().x() - 50, 
-            self.chart_rect.bottom() + 35, 
-            100, 20
-        )
-        painter.drawText(x_title_rect, Qt.AlignCenter, "圈數")
-        
-        # 左Y軸標題 (溫度)
-        painter.save()
-        painter.translate(25, self.chart_rect.center().y())
-        painter.rotate(-90)
-        y_title_rect = QRect(-30, -10, 60, 20)
-        painter.drawText(y_title_rect, Qt.AlignCenter, "溫度 (°C)")
-        painter.restore()
+    # � 座標軸標題繪製方法已移除，現在由基類統一處理
                 
     def _draw_data(self, painter: QPainter):
         """繪製數據"""
@@ -445,11 +525,18 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         for x_val, temp_val in zip(x_data, temp_data):
             x_pos = self._map_x_to_pixel(x_val)
             y_pos = self._map_left_y_to_pixel(temp_val)  # 改用左Y軸
+            
+            # 邊界檢查：確保點在圖表區域內
+            x_pos = max(self.chart_rect.left(), min(self.chart_rect.right(), x_pos))
+            y_pos = max(self.chart_rect.top(), min(self.chart_rect.bottom(), y_pos))
+            
             points.append(QPoint(x_pos, y_pos))
             
-        # 繪製線條
+        # 繪製線條（只繪製在視圖範圍內的點）
+        painter.setClipRect(self.chart_rect)  # 設置裁剪區域
         for i in range(len(points) - 1):
             painter.drawLine(points[i], points[i + 1])
+        painter.setClipping(False)  # 取消裁剪
             
         # 移除數據點繪製以獲得更平滑的曲線
         # painter.setBrush(QBrush(RainChartTheme.AIR_TEMP_COLOR))
@@ -504,7 +591,7 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
                              
     def _draw_line_chart(self, painter: QPainter, x_data: List, y_data: List, 
                         color: QColor, y_axis: str):
-        """繪製線圖"""
+        """繪製線圖（包含邊界保護）"""
         painter.setPen(QPen(color, 2))
         
         points = []
@@ -516,17 +603,56 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             else:
                 y_pos = self._map_right_y_to_pixel(y_val)
                 
+            # 邊界檢查：確保點在圖表區域內
+            x_pos = max(self.chart_rect.left(), min(self.chart_rect.right(), x_pos))
+            y_pos = max(self.chart_rect.top(), min(self.chart_rect.bottom(), y_pos))
+                
             points.append(QPoint(x_pos, y_pos))
             
-        # 繪製線條
+        # 繪製線條（使用裁剪區域）
+        painter.setClipRect(self.chart_rect)  # 設置裁剪區域
         for i in range(len(points) - 1):
             painter.drawLine(points[i], points[i + 1])
+        painter.setClipping(False)  # 取消裁剪
             
         # 移除數據點繪製以獲得更平滑的曲線
         # painter.setBrush(QBrush(color))
         # for point in points:
         #     painter.drawEllipse(point, 3, 3)
             
+    def _draw_fixed_line(self, painter: QPainter):
+        """參照遙測分析：繪製固定垂直線"""
+        if self.fixed_lap_value is None:
+            return
+            
+        # 計算固定線的X座標
+        current_min_lap = self.view_min_lap if self.view_min_lap is not None else self.min_lap
+        current_max_lap = self.view_max_lap if self.view_max_lap is not None else self.max_lap
+        lap_range = current_max_lap - current_min_lap
+        
+        if lap_range <= 0:
+            return
+            
+        # 計算固定線位置
+        relative_pos = (self.fixed_lap_value - current_min_lap) / lap_range
+        line_x = self.chart_rect.left() + relative_pos * self.chart_rect.width()
+        
+        # 檢查是否在圖表範圍內
+        if not (self.chart_rect.left() <= line_x <= self.chart_rect.right()):
+            return
+            
+        # 繪製固定垂直線
+        painter.setPen(QPen(QColor(255, 0, 0), 2, Qt.DashLine))  # 紅色虛線
+        painter.drawLine(int(line_x), self.chart_rect.top(), 
+                        int(line_x), self.chart_rect.bottom())
+        
+        # 繪製圈數標籤
+        painter.setPen(QPen(QColor(0, 0, 0), 1))
+        painter.setFont(QFont("Arial", 9))
+        label = f"Lap {self.fixed_lap_value:.1f}"
+        label_rect = QRect(int(line_x) - 25, self.chart_rect.bottom() + 5, 50, 20)
+        painter.drawText(label_rect, Qt.AlignCenter, label)
+    
     def _draw_legend(self, painter: QPainter):
         """繪製圖例"""
         if self.current_chart_type not in self.chart_data:
@@ -559,27 +685,33 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         pass
         
     def _map_x_to_pixel(self, x_val: float) -> int:
-        """將X值映射到像素座標（支援縮放和偏移）"""
-        x_min, x_max = self.x_range
+        """將X值映射到像素座標（支援視圖範圍縮放）"""
+        # 使用視圖範圍或原始範圍
+        if self.view_min_lap is not None and self.view_max_lap is not None:
+            x_min, x_max = self.view_min_lap, self.view_max_lap
+        else:
+            x_min, x_max = self.x_range
+            
         if x_max == x_min:
             return self.chart_rect.left()
             
-        # 應用縮放和偏移
+        # 映射到像素座標
         ratio = (x_val - x_min) / (x_max - x_min)
-        ratio = ratio * self.x_scale + self.x_offset / 100.0
-        
         return int(self.chart_rect.left() + ratio * self.chart_rect.width())
         
     def _map_left_y_to_pixel(self, y_val: float) -> int:
-        """將左Y值映射到像素座標（支援縮放和偏移）"""
-        y_min, y_max = self.left_y_range
+        """將左Y值映射到像素座標（支援視圖範圍縮放）"""
+        # 使用視圖範圍或原始範圍
+        if self.view_min_temp is not None and self.view_max_temp is not None:
+            y_min, y_max = self.view_min_temp, self.view_max_temp
+        else:
+            y_min, y_max = self.left_y_range
+            
         if y_max == y_min:
             return self.chart_rect.bottom()
             
-        # 應用縮放和偏移
+        # 映射到像素座標
         ratio = (y_val - y_min) / (y_max - y_min)
-        ratio = ratio * self.y_scale + self.y_offset / 100.0
-        
         return int(self.chart_rect.bottom() - ratio * self.chart_rect.height())
         
     def _map_right_y_to_pixel(self, y_val: float) -> int:
@@ -600,76 +732,296 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             self.chart_type_switched.emit(chart_type)
     
     def wheelEvent(self, event):
-        """滑鼠滾輪事件 - 智能縮放"""
-        if self.chart_rect.contains(event.pos()):
-            # 獲取滾輪滾動量
-            delta = event.angleDelta().y()
+        """滑鼠滾輪事件 - 雙Y軸降雨分析專用縮放邏輯"""
+        print(f"[RAIN_WHEEL_DEBUG] ========== 滾輪事件開始 ==========")
+        print(f"[RAIN_WHEEL_DEBUG] 事件位置: {event.pos()}")
+        print(f"[RAIN_WHEEL_DEBUG] 滾輪角度: {event.angleDelta()}")
+        
+        # 獲取滾輪方向
+        delta = event.angleDelta().y()
+        zoom_factor = 1.1 if delta > 0 else 1.0 / 1.1
+        print(f"[RAIN_WHEEL_DEBUG] 滾輪方向: {delta}, 縮放因子: {zoom_factor}")
+        
+        # 獲取滑鼠在圖表中的相對位置
+        chart_rect = QRect(
+            self.margin_left, self.margin_top,
+            self.width() - self.margin_left - self.margin_right,
+            self.height() - self.margin_top - self.margin_bottom
+        )
+        
+        print(f"[RAIN_WHEEL_DEBUG] 圖表區域: {chart_rect}")
+        print(f"[RAIN_WHEEL_DEBUG] 滑鼠在圖表區域內: {chart_rect.contains(event.pos())}")
+        
+        # 輸出當前數據範圍以供調試
+        print(f"[RAIN_WHEEL_DEBUG] 📊 當前數據範圍:")
+        print(f"[RAIN_WHEEL_DEBUG]    圈數: {self.min_lap:.3f} - {self.max_lap:.3f}")
+        print(f"[RAIN_WHEEL_DEBUG]    左Y軸範圍: {self.left_y_range}")
+        print(f"[RAIN_WHEEL_DEBUG]    右Y軸範圍: {self.right_y_range}")
+        print(f"[RAIN_WHEEL_DEBUG]    當前圖表類型: {self.current_chart_type}")
+        
+        if chart_rect.contains(event.pos()):
+            # 計算滑鼠位置對應的數據值
+            mouse_rel_x = (event.x() - chart_rect.left()) / chart_rect.width()
+            mouse_rel_y = (chart_rect.bottom() - event.y()) / chart_rect.height()
+            print(f"[RAIN_WHEEL_DEBUG] 滑鼠相對位置: x={mouse_rel_x:.3f}, y={mouse_rel_y:.3f}")
             
-            # 檢查修飾鍵
-            modifiers = event.modifiers()
+            # 初始化視圖範圍（X軸 - 圈數）
+            if self.view_min_lap is None:
+                self.view_min_lap = self.min_lap
+                self.view_max_lap = self.max_lap
+                print(f"[RAIN_WHEEL_DEBUG] 初始化X軸(圈數)視圖範圍: {self.view_min_lap} - {self.view_max_lap}")
             
-            if modifiers & Qt.ControlModifier:
-                # Ctrl + 滾輪: X軸縮放
-                zoom_factor = 1.2 if delta > 0 else 0.8
-                self.x_scale *= zoom_factor
-                self.x_scale = max(0.1, min(10.0, self.x_scale))
-                
-            elif modifiers & Qt.ShiftModifier:
-                # Shift + 滾輪: 同步X+Y軸縮放
-                zoom_factor = 1.2 if delta > 0 else 0.8
-                self.x_scale *= zoom_factor
-                self.y_scale *= zoom_factor
-                self.x_scale = max(0.1, min(10.0, self.x_scale))
-                self.y_scale = max(-10.0, min(10.0, self.y_scale))
-                
-            else:
-                # 純滾輪: Y軸縮放
-                zoom_factor = 1.3 if delta > 0 else 0.7
-                self.y_scale *= zoom_factor
-                self.y_scale = max(-10.0, min(10.0, self.y_scale))
-                if abs(self.y_scale) < 0.1:
-                    self.y_scale = 0.1 if self.y_scale >= 0 else -0.1
+            # 初始化左Y軸視圖範圍（根據圖表類型）
+            left_y_min, left_y_max = self.left_y_range
+            if self.view_min_temp is None:
+                self.view_min_temp = left_y_min
+                self.view_max_temp = left_y_max
+                print(f"[RAIN_WHEEL_DEBUG] 初始化左Y軸(溫度)視圖範圍: {self.view_min_temp} - {self.view_max_temp}")
+            
+            # 計算當前滑鼠對應的數據值
+            lap_range = self.view_max_lap - self.view_min_lap
+            temp_range = self.view_max_temp - self.view_min_temp
+            print(f"[RAIN_WHEEL_DEBUG] 當前範圍 - X軸(圈數): {lap_range:.3f}, 左Y軸(溫度): {temp_range:.3f}")
+            
+            mouse_lap = self.view_min_lap + mouse_rel_x * lap_range
+            mouse_temp = self.view_min_temp + mouse_rel_y * temp_range
+            print(f"[RAIN_WHEEL_DEBUG] 滑鼠數據位置 - 圈數: {mouse_lap:.3f}, 溫度: {mouse_temp:.3f}")
+            
+            # 計算新的範圍，並添加最小範圍檢查
+            original_lap_range = self.max_lap - self.min_lap
+            original_temp_range = left_y_max - left_y_min
+            
+            new_lap_range = lap_range / zoom_factor
+            new_temp_range = temp_range / zoom_factor
+            
+            # 設定最小縮放範圍限制（防止過度縮放）
+            min_lap_range = original_lap_range * 0.01  # 最小為原始範圍的1%
+            min_temp_range = original_temp_range * 0.01  # 最小為原始範圍的1%
+            
+            # 設定最大縮放範圍限制（防止過度縮小）
+            max_lap_range = original_lap_range * 2.0   # 最大為原始範圍的2倍
+            max_temp_range = original_temp_range * 2.0  # 最大為原始範圍的2倍
+            
+            new_lap_range = max(min_lap_range, min(max_lap_range, new_lap_range))
+            new_temp_range = max(min_temp_range, min(max_temp_range, new_temp_range))
+            
+            print(f"[RAIN_WHEEL_DEBUG] 範圍限制 - 圈數: {min_lap_range:.3f} ~ {max_lap_range:.3f}")
+            print(f"[RAIN_WHEEL_DEBUG] 範圍限制 - 溫度: {min_temp_range:.3f} ~ {max_temp_range:.3f}")
+            print(f"[RAIN_WHEEL_DEBUG] 調整後範圍 - 圈數: {new_lap_range:.3f}, 溫度: {new_temp_range:.3f}")
+            
+            # 更新視圖範圍，保持滑鼠位置不變
+            new_min_lap = mouse_lap - new_lap_range * mouse_rel_x
+            new_max_lap = mouse_lap + new_lap_range * (1 - mouse_rel_x)
+            new_min_temp = mouse_temp - new_temp_range * mouse_rel_y
+            new_max_temp = mouse_temp + new_temp_range * (1 - mouse_rel_y)
+            
+            print(f"[RAIN_WHEEL_DEBUG] 初步計算 - 圈數: {new_min_lap:.3f} ~ {new_max_lap:.3f}")
+            print(f"[RAIN_WHEEL_DEBUG] 初步計算 - 溫度: {new_min_temp:.3f} ~ {new_max_temp:.3f}")
+            
+            # 確保圈數範圍不超出原始數據範圍
+            if new_min_lap < self.min_lap:
+                offset = self.min_lap - new_min_lap
+                new_min_lap = self.min_lap
+                new_max_lap = min(self.max_lap, new_max_lap + offset)
+                print(f"[RAIN_WHEEL_DEBUG] 圈數左邊界修正: offset={offset:.3f}")
+            elif new_max_lap > self.max_lap:
+                offset = new_max_lap - self.max_lap
+                new_max_lap = self.max_lap
+                new_min_lap = max(self.min_lap, new_min_lap - offset)
+                print(f"[RAIN_WHEEL_DEBUG] 圈數右邊界修正: offset={offset:.3f}")
+            
+            # 確保溫度範圍不超出原始數據範圍
+            if new_min_temp < left_y_min:
+                offset = left_y_min - new_min_temp
+                new_min_temp = left_y_min
+                new_max_temp = min(left_y_max, new_max_temp + offset)
+                print(f"[RAIN_WHEEL_DEBUG] 溫度下邊界修正: offset={offset:.3f}")
+            elif new_max_temp > left_y_max:
+                offset = new_max_temp - left_y_max
+                new_max_temp = left_y_max
+                new_min_temp = max(left_y_min, new_min_temp - offset)
+                print(f"[RAIN_WHEEL_DEBUG] 溫度上邊界修正: offset={offset:.3f}")
+            
+            # 最終安全檢查：確保範圍有效
+            if new_max_lap <= new_min_lap:
+                print(f"[RAIN_WHEEL_DEBUG] ⚠️ 圈數範圍無效，恢復原始範圍")
+                new_min_lap = self.view_min_lap
+                new_max_lap = self.view_max_lap
+            if new_max_temp <= new_min_temp:
+                print(f"[RAIN_WHEEL_DEBUG] ⚠️ 溫度範圍無效，恢復原始範圍")
+                new_min_temp = self.view_min_temp
+                new_max_temp = self.view_max_temp
+            
+            # 應用新的視圖範圍
+            self.view_min_lap = new_min_lap
+            self.view_max_lap = new_max_lap
+            self.view_min_temp = new_min_temp
+            self.view_max_temp = new_max_temp
+            
+            print(f"[RAIN_WHEEL_DEBUG] ✅ 最終視圖範圍 - 圈數: {self.view_min_lap:.3f} - {self.view_max_lap:.3f}")
+            print(f"[RAIN_WHEEL_DEBUG] ✅ 最終視圖範圍 - 溫度: {self.view_min_temp:.3f} - {self.view_max_temp:.3f}")
+            print(f"[RAIN_WHEEL_DEBUG] 🎨 觸發重繪")
             
             self.update()
-            event.accept()
-            return
+        else:
+            print(f"[RAIN_WHEEL_DEBUG] ❌ 滑鼠不在圖表區域內，忽略縮放")
+            
+        print(f"[RAIN_WHEEL_DEBUG] ========== 滾輪事件結束 ==========")
         
-        super().wheelEvent(event)
+    def leaveEvent(self, event):
+        """滑鼠離開事件"""
+        # 清除滑鼠追蹤狀態，與其他分析模組保持一致
+        if hasattr(self, 'mouse_x'):
+            self.mouse_x = None
+        if hasattr(self, 'mouse_y'):
+            self.mouse_y = None
+        self.update()
 
-    def mousePressEvent(self, event):
-        """滑鼠按下事件 - 開始拖拉"""
-        if event.button() == Qt.LeftButton and self.chart_rect.contains(event.pos()):
-            self.dragging = True
-            self.last_drag_pos = event.pos()
-            event.accept()
-        super().mousePressEvent(event)
-    
-    def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖拉"""
-        if event.button() == Qt.LeftButton:
-            self.dragging = False
-        super().mouseReleaseEvent(event)
-    
-    def mouseMoveEvent(self, event):
-        """滑鼠移動事件 - 拖拉圖表"""
-        if self.dragging:
-            # 計算拖拉偏移量
-            delta_pos = event.pos() - self.last_drag_pos
-            
-            # 根據圖表區域大小計算相對偏移
-            if self.chart_rect.width() > 0:
-                x_ratio = delta_pos.x() / self.chart_rect.width()
-                self.x_offset += x_ratio * 100  # 調整偏移量
-                
-            if self.chart_rect.height() > 0:
-                y_ratio = -delta_pos.y() / self.chart_rect.height()  # 注意Y軸方向相反
-                self.y_offset += y_ratio * 100  # 調整偏移量
-                
-            self.last_drag_pos = event.pos()
-            self.update()
-            event.accept()
+    def reset_zoom(self):
+        """重置縮放到原始範圍"""
+        print(f"[RAIN_WHEEL_DEBUG] 🔄 重置縮放到原始範圍")
+        self.view_min_lap = None
+        self.view_max_lap = None
+        self.view_min_temp = None
+        self.view_max_temp = None
+        self.update()
+        print(f"[RAIN_WHEEL_DEBUG] ✅ 縮放已重置")
+
+    def mousePressEvent(self, event: QMouseEvent):
+        """參照遙測分析：滑鼠按下事件"""
+        print(f"[RAIN_MOUSE_DEBUG] ========== 滑鼠按下事件 ==========")
+        print(f"[RAIN_MOUSE_DEBUG] 按鍵: {event.button()}")
+        print(f"[RAIN_MOUSE_DEBUG] 位置: {event.pos()}")
         
-        super().mouseMoveEvent(event)
+        if event.button() == Qt.LeftButton:
+            # 左鍵點擊：固定垂直線（如遙測分析）
+            print(f"[RAIN_MOUSE_DEBUG] 🔴 左鍵點擊 - 顯示固定垂直線")
+            chart_rect = QRect(
+                self.margin_left, self.margin_top,
+                self.width() - self.margin_left - self.margin_right,
+                self.height() - self.margin_top - self.margin_bottom
+            )
+            print(f"[RAIN_MOUSE_DEBUG] 圖表區域: {chart_rect}")
+            
+            if chart_rect.contains(event.pos()):
+                # 計算並保存實際的圈數值
+                current_min_lap = self.view_min_lap if self.view_min_lap is not None else self.min_lap
+                current_max_lap = self.view_max_lap if self.view_max_lap is not None else self.max_lap
+                lap_range = current_max_lap - current_min_lap
+                
+                if lap_range > 0:
+                    relative_x = event.x() - chart_rect.left()
+                    self.fixed_lap_value = current_min_lap + (relative_x / chart_rect.width()) * lap_range
+                    self.show_fixed_line = True
+                    
+                    self.update()
+            
+        elif event.button() == Qt.RightButton:
+            # 右鍵點擊：清除固定線並重置縮放（參照遙測分析並增強）
+            print(f"[RAIN_MOUSE_DEBUG] 🔴 右鍵點擊 - 清除固定線並重置縮放")
+            self.show_fixed_line = False
+            self.fixed_lap_value = None
+            self.reset_zoom()  # 添加重置縮放功能
+            
+        elif event.button() == Qt.MiddleButton:
+            # 中鍵按下：開始拖拉（如遙測分析）
+            print(f"[RAIN_MOUSE_DEBUG] 🟡 中鍵按下 - 開始拖拉模式")
+            self.middle_dragging = True
+            self.last_drag_pos = event.pos()
+            self.setCursor(Qt.ClosedHandCursor)
+            print(f"[RAIN_MOUSE_DEBUG] 拖拉起始位置: {self.last_drag_pos}")
+    
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """參照遙測分析：滑鼠釋放事件"""
+        print(f"[RAIN_MOUSE_DEBUG] ========== 滑鼠釋放事件 ==========")
+        print(f"[RAIN_MOUSE_DEBUG] 按鍵: {event.button()}")
+        
+        if event.button() == Qt.MiddleButton:
+            # 中鍵釋放：結束拖拉
+            print(f"[RAIN_MOUSE_DEBUG] 🟡 中鍵釋放 - 結束拖拉模式")
+            self.middle_dragging = False
+            self.setCursor(Qt.ArrowCursor)
+    
+    def mouseMoveEvent(self, event: QMouseEvent):
+        """參照遙測分析：滑鼠移動事件"""
+        self.mouse_x = event.x()
+        self.mouse_y = event.y()
+        
+        # 中鍵拖拉處理
+        if self.middle_dragging and not self.last_drag_pos.isNull():
+            print(f"[RAIN_DRAG_DEBUG] ========== 拖拉移動事件 ==========")
+            # 計算移動距離
+            dx = event.x() - self.last_drag_pos.x()
+            dy = event.y() - self.last_drag_pos.y()
+            print(f"[RAIN_DRAG_DEBUG] 移動距離: dx={dx}, dy={dy}")
+            
+            # 轉換為數據範圍的移動
+            chart_rect = QRect(
+                self.margin_left, self.margin_top,
+                self.width() - self.margin_left - self.margin_right,
+                self.height() - self.margin_top - self.margin_bottom
+            )
+            
+            print(f"[RAIN_DRAG_DEBUG] 圖表區域: {chart_rect}")
+            
+            if chart_rect.width() > 0 and chart_rect.height() > 0:
+                # X軸移動（圈數）
+                lap_range = (self.view_max_lap or self.max_lap) - (self.view_min_lap or self.min_lap)
+                lap_move = -dx * lap_range / chart_rect.width()
+                print(f"[RAIN_DRAG_DEBUG] X軸移動 - 範圍: {lap_range:.3f}, 移動量: {lap_move:.3f}")
+                
+                # Y軸移動（雨量/溫度）
+                rain_range = (self.view_max_rain or self.max_rain) - (self.view_min_rain or self.min_rain)
+                rain_move = dy * rain_range / chart_rect.height()  # Y軸是倒置的
+                print(f"[RAIN_DRAG_DEBUG] Y軸移動 - 範圍: {rain_range:.3f}, 移動量: {rain_move:.3f}")
+                
+                # 更新視圖範圍
+                if self.view_min_lap is None:
+                    self.view_min_lap = self.min_lap
+                    self.view_max_lap = self.max_lap
+                    print(f"[RAIN_DRAG_DEBUG] 初始化圈數視圖: {self.view_min_lap} - {self.view_max_lap}")
+                if self.view_min_rain is None:
+                    self.view_min_rain = self.min_rain
+                    self.view_max_rain = self.max_rain
+                    print(f"[RAIN_DRAG_DEBUG] 初始化雨量視圖: {self.view_min_rain:.3f} - {self.view_max_rain:.3f}")
+                
+                print(f"[RAIN_DRAG_DEBUG] 拖拉前 - 圈數: {self.view_min_lap:.3f} - {self.view_max_lap:.3f}")
+                print(f"[RAIN_DRAG_DEBUG] 拖拉前 - 雨量: {self.view_min_rain:.3f} - {self.view_max_rain:.3f}")
+                
+                self.view_min_lap += lap_move
+                self.view_max_lap += lap_move
+                self.view_min_rain += rain_move
+                self.view_max_rain += rain_move
+                
+                print(f"[RAIN_DRAG_DEBUG] ✅ 拖拉後 - 圈數: {self.view_min_lap:.3f} - {self.view_max_lap:.3f}")
+                print(f"[RAIN_DRAG_DEBUG] ✅ 拖拉後 - 雨量: {self.view_min_rain:.3f} - {self.view_max_rain:.3f}")
+            else:
+                print(f"[RAIN_DRAG_DEBUG] ❌ 圖表區域無效，跳過拖拉")
+            
+            self.last_drag_pos = event.pos()
+            print(f"[RAIN_DRAG_DEBUG] 更新拖拉位置: {self.last_drag_pos}")
+            print(f"[RAIN_DRAG_DEBUG] 🎨 觸發重繪")
+            
+            self.update()
+        else:
+            # 非拖拉狀態的滑鼠移動（可用於懸停效果）
+            pass
+    
+    def leaveEvent(self, event):
+        """滑鼠離開事件 - 參照遙測分析模組"""
+        self.mouse_x = -1
+        self.mouse_y = -1
+        # TODO: 如需要連動功能，在此處添加連動清除信號
+        # if linkage_manager and self._is_linkage_fully_enabled():
+        #     linkage_manager.send_x_linkage_clear(self)
+        self.update()
+    
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """參照遙測分析：滑鼠雙擊事件 - 清除固定線"""
+        if event.button() == Qt.LeftButton:
+            self.show_fixed_line = False
+            self.fixed_lap_value = None
+            self.update()
             
     def update_display_options(self, option: str, value: bool):
         """更新顯示選項"""
@@ -682,57 +1034,11 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             
         self.update()
         
-    def mousePressEvent(self, event):
-        """滑鼠點擊事件 - 處理拖拉和數據點選擇"""
-        if event.button() == Qt.LeftButton:
-            # 檢查是否點擊在圖表區域
-            if self.chart_rect.contains(event.pos()):
-                # 開始拖拉
-                self.dragging = True
-                self.last_drag_pos = event.pos()
-                
-                # 找到對應的數據點
-                self._handle_data_point_click(event.pos())
-                
-        super().mousePressEvent(event)
-    
-    def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖拉"""
-        if event.button() == Qt.LeftButton:
-            self.dragging = False
-        super().mouseReleaseEvent(event)
-        
     def _handle_data_point_click(self, pos: QPoint):
         """處理數據點點擊"""
         # 將像素座標轉換回數據座標
         # 這裡可以實現數據點選擇和詳細信息顯示
         pass
-        
-    def mouseMoveEvent(self, event):
-        """滑鼠移動事件 - 處理拖拉和工具提示"""
-        if self.dragging:
-            # 計算拖拉偏移量
-            delta_pos = event.pos() - self.last_drag_pos
-            
-            # 根據圖表區域大小計算相對偏移
-            if self.chart_rect.width() > 0:
-                x_ratio = delta_pos.x() / self.chart_rect.width()
-                self.x_offset += x_ratio * 100  # 調整偏移量
-                
-            if self.chart_rect.height() > 0:
-                y_ratio = -delta_pos.y() / self.chart_rect.height()  # 注意Y軸方向相反
-                self.y_offset += y_ratio * 100  # 調整偏移量
-                
-            self.last_drag_pos = event.pos()
-            self.update()
-            event.accept()
-            
-        elif self.chart_rect.contains(event.pos()):
-            # 更新工具提示
-            if self.show_tooltips:
-                self._update_tooltip(event.pos())
-                
-        super().mouseMoveEvent(event)
         
     def _update_tooltip(self, pos: QPoint):
         """更新工具提示"""
@@ -748,3 +1054,67 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         
         # 觸發重繪
         self.update()
+        
+    def get_chart_area(self) -> QRect:
+        """獲取圖表區域（與遙測分析一致的方法名稱）"""
+        return self.chart_rect
+    
+    def leaveEvent(self, event):
+        """滑鼠離開事件 - 隱藏動態游標線"""
+        self.mouse_x = -1
+        self.mouse_y = -1
+        self.update()
+        super().leaveEvent(event)
+    
+    def resizeEvent(self, event):
+        """參照遙測分析：視窗大小調整時重新計算佈局"""
+        super().resizeEvent(event)
+        # 重新計算圖表區域和佈局
+        self.update_chart_layout()
+        
+    def update_chart_layout(self):
+        """參照遙測分析：更新圖表佈局以適應新尺寸"""
+        try:
+            # 重新計算圖表區域
+            if hasattr(self, 'chart_rect'):
+                # 根據當前尺寸重新計算圖表區域
+                margin = 60
+                self.chart_rect = QRect(
+                    margin, 
+                    margin, 
+                    self.width() - 2 * margin, 
+                    self.height() - 2 * margin
+                )
+                
+            # 觸發重繪
+            self.update()
+            
+        except Exception as e:
+            print(f"[RAIN_CHART] 佈局更新失敗: {e}")
+    
+    def clear_fixed_line(self):
+        """清除固定垂直線"""
+        self.show_fixed_line = False
+        self.fixed_lap_value = None
+        self.update()
+    
+    def reset_view(self):
+        """參照遙測分析：重置視圖到原始範圍"""
+        self.view_min_lap = None
+        self.view_max_lap = None
+        self.view_min_rain = None
+        self.view_max_rain = None
+        self.view_min_temp = None
+        self.view_max_temp = None
+        
+        # 清除固定線
+        self.show_fixed_line = False
+        self.fixed_lap_value = None
+        
+        self.update()
+        
+    def get_current_lap_range(self) -> Tuple[float, float]:
+        """獲取當前顯示的圈數範圍"""
+        min_lap = self.view_min_lap if self.view_min_lap is not None else self.min_lap
+        max_lap = self.view_max_lap if self.view_max_lap is not None else self.max_lap
+        return min_lap, max_lap

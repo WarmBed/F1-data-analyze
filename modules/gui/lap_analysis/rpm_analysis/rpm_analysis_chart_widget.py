@@ -46,7 +46,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         self.margin_left = 80
         self.margin_right = 20
         self.margin_top = 20
-        self.margin_bottom = 80
+        self.margin_bottom = 20
         
         # 數據存儲
         self.distance_data = []
@@ -91,7 +91,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
         
-        self.setMinimumSize(600, 300)  # 與速度分析保持一致
+        self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
     
     def set_rpm_data(self, distance: List[float], driver1_rpm: List[float], 
@@ -288,15 +288,14 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
                 painter.drawText(10, int(y - 10), self.margin_left - 20, 20, 
                                Qt.AlignRight | Qt.AlignVCenter, label)
         
-        # 座標軸標題
-        title_font = QFont()
-        title_font.setPointSize(10)
-        title_font.setBold(True)
+        # 座標軸標題 - 使用統一字體
+        title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 修正：與速度分析一致的位置
-        painter.drawText(chart_rect.left(), self.height() - 30, chart_rect.width(), 20,
-                        Qt.AlignCenter, "距離 (米)")
+        # X軸標題 - 放在"0"刻度左邊
+        x_title_x = chart_rect.left() - 60  # 0刻度左邊60像素
+        x_title_y = chart_rect.bottom() + 5   # X軸下方5像素（調整以適應新的下邊距20px）
+        painter.drawText(x_title_x, x_title_y, 55, 20, Qt.AlignRight, "距離 (m)")
         
         # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
         painter.save()
