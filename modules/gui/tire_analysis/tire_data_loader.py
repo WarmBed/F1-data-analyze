@@ -52,10 +52,10 @@ class TireUniversalDataLoader(UniversalDataLoader):
         
         patterns = []
         
-        # 為每種組合生成檔案名模式 - 優先順序：tire_timing_inference > tire_strategy
+        # 為每種組合生成檔案名模式 - 優先順序：tire_strategy (新格式) > tire_timing_inference (舊格式)
         file_prefixes = [
-            'tire_timing_inference',
-            'tire_strategy', 
+            'tire_strategy',              # 新的統一格式
+            'tire_timing_inference',      # 舊格式，向下兼容
             'enhanced_tire_analysis',
             'tire_analysis'
         ]

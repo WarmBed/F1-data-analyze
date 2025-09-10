@@ -52,7 +52,8 @@ class TireAnalysisDataManager(UniversalDataLoader):
                 data_source="json",
                 cli_function="26",  # CLI -f26: 輪胎換胎時機推論
                 file_patterns=[
-                    "tire_timing_inference_{year}_{race_full}_None_all_drivers.json"
+                    "tire_strategy_{year}_{race}_{session}_all_drivers.json",
+                    "tire_timing_inference_{year}_{race_full}_None_all_drivers.json"  # 向下兼容舊格式
                 ],
                 search_directories=["json", "json_exports", "cache"],
                 supports_realtime=False,
@@ -82,10 +83,10 @@ class TireAnalysisDataManager(UniversalDataLoader):
         return True
         
     def _build_filename_patterns(self, year: str, race: str, session: str, **kwargs) -> List[str]:
-        """構建檔案名稱模式 - 精確使用 CLI -f26 格式"""
+        """構建檔案名稱模式 - 優先使用新的 CLI 參數格式"""
         patterns = []
         
-        # 將賽事名稱轉換為完整格式
+        # 將賽事名稱轉換為完整格式（用於向下兼容）
         if race == "Japan":
             race_full = "Japanese_Grand_Prix"
         elif race == "Australia":
@@ -96,10 +97,19 @@ class TireAnalysisDataManager(UniversalDataLoader):
         
         for pattern in self.config.file_patterns:
             try:
-                filename = pattern.format(
-                    year=year, 
-                    race_full=race_full
-                )
+                # 嘗試使用新格式（CLI 參數格式）
+                if "race_full" not in pattern:
+                    filename = pattern.format(
+                        year=year, 
+                        race=race,
+                        session=session
+                    )
+                else:
+                    # 向下兼容舊格式
+                    filename = pattern.format(
+                        year=year, 
+                        race_full=race_full
+                    )
                 patterns.append(filename)
                 self._debug(f"生成精確模式: {filename}")
             except KeyError as e:
@@ -110,14 +120,14 @@ class TireAnalysisDataManager(UniversalDataLoader):
         return patterns
 
     def _start_generation_monitoring(self):
-        """重寫監控方法，處理 race_full 參數"""
+        """重寫監控方法，支援新舊格式"""
         self._debug("========== 啟動監控系統 ==========")
         
         if not hasattr(self, '_generation_params') or not self._generation_params:
             self._debug("❌ 沒有生成參數，無法啟動監控")
             return
             
-        # 擴展生成參數，添加 race_full
+        # 擴展生成參數，同時添加新舊格式支援
         expanded_params = self._generation_params.copy()
         race = expanded_params.get('race', '')
         if race == "Japan":
@@ -128,7 +138,7 @@ class TireAnalysisDataManager(UniversalDataLoader):
         self._debug(f"生成參數: {self._generation_params}")
         self._debug(f"擴展參數: {expanded_params}")
         
-        # 檢查預期生成的檔案路徑
+        # 檢查預期生成的檔案路徑（支援多種格式）
         if expanded_params:
             expected_patterns = []
             for pattern in self.config.file_patterns:

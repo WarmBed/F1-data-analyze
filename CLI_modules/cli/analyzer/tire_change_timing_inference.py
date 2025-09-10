@@ -53,9 +53,14 @@ class TireChangeTimingInference:
             # 獲取基本賽事資訊
             session_info = get_session_info(self.data_loader, **kwargs)
             
-            # 生成緩存鍵
-            event_name_clean = session_info.get('event_name', 'Unknown').replace(' ', '_')
-            cache_key = f"tire_timing_inference_{session_info.get('year')}_{event_name_clean}_{session_info.get('session')}_all_drivers"
+            # 🔧 統一使用 CLI 參數格式 (與 -f1 保持一致)
+            # 優先使用 CLI 參數，如果沒有則使用 session_info
+            year = kwargs.get('year', session_info.get('year'))
+            race = kwargs.get('race', 'Japan')  # 預設使用簡潔格式
+            session_type = kwargs.get('session', session_info.get('session'))
+            
+            # 生成簡潔的檔名格式 (與 -f1 統一)
+            cache_key = f"tire_strategy_{year}_{race}_{session_type}_all_drivers"
             json_file = os.path.join("json", f"{cache_key}.json")
             
             # 步驟1: 獲取 FastF1 輪胎配方數據
@@ -306,8 +311,10 @@ class TireChangeTimingInference:
         if len(compounds) <= 1:
             return original_stint
         
-        # 如果原始 stint_analysis 已經完整，且圈數合理，保留原始數據
-        if len(original_stint) >= len(compounds) and self._is_stint_data_complete(original_stint, tire_performance):
+        # 如果原始 stint_analysis 已經完整，且圈數合理，並且沒有進站數據需要校正，保留原始數據
+        if (len(original_stint) >= len(compounds) and 
+            self._is_stint_data_complete(original_stint, tire_performance) and
+            len(pitstops) == 0):  # 只有在沒有進站數據時才跳過重建
             return original_stint
         
         print(f"   🔧 需要重建輪胎時間線: {len(compounds)} 種配方 vs {len(original_stint)} 個 stint")
@@ -341,7 +348,40 @@ class TireChangeTimingInference:
                 reconstructed_stints.append(reconstructed_stint)
                 stint_number += 1
         
-        return reconstructed_stints if reconstructed_stints else original_stint
+        # 後處理：確保最後一個stint延續到比賽結束
+        final_stints = reconstructed_stints if reconstructed_stints else original_stint
+        
+        if final_stints:
+            # 找出比賽的實際結束圈數 - 限制在合理範圍內
+            race_end_lap = 53  # F1標準比賽圈數
+            
+            # 從輪胎性能數據中找最大圈數，但不超過55圈
+            if tire_performance:
+                for perf in tire_performance.values():
+                    if 'last_lap' in perf:
+                        race_end_lap = max(race_end_lap, min(perf['last_lap'], 55))
+            
+            # 從進站數據中估算，但設定上限
+            if pitstops:
+                pit_laps = [stop.get('lap_number', 0) for stop in pitstops if stop.get('lap_number', 0) > 0]
+                if pit_laps:
+                    # 最後進站+5圈作為合理的比賽結束點，最多不超過55圈
+                    estimated_end = max(pit_laps) + 5
+                    race_end_lap = max(race_end_lap, min(estimated_end, 55))
+            
+            # 修正最後一個stint的結束圈數
+            last_stint = final_stints[-1]
+            original_end = last_stint.get('end_lap', 0)
+            
+            if original_end < race_end_lap:
+                print(f"   🔧 修正最後stint結束圈數: {original_end} -> {race_end_lap}")
+                last_stint['end_lap'] = race_end_lap
+                if 'length' in last_stint:
+                    last_stint['length'] = race_end_lap - last_stint.get('start_lap', 1) + 1
+                if 'inference_method' not in last_stint:
+                    last_stint['inference_method'] = 'race_end_extension'
+        
+        return final_stints
     
     def _determine_compound_sequence(self, tire_performance: Dict, pit_laps: List[int]) -> List[Dict]:
         """確定輪胎配方使用順序"""
@@ -376,15 +416,20 @@ class TireChangeTimingInference:
                     method = f'pit_stop_correlation'
                 else:
                     # 最後一個配方使用到比賽結束
-                    # 修正：確保最後一個stint有合理的結束圈數
+                    # 修正：確保最後一個stint延續到比賽結束
                     original_last_lap = compound_info['last_lap']
-                    if original_last_lap <= current_lap:
-                        # 如果原始last_lap不合理，使用估算值
-                        estimated_race_length = max(52, max(pit_laps) + 20)  # 估算比賽長度
-                        end_lap = estimated_race_length
-                    else:
-                        end_lap = original_last_lap
-                    method = 'performance_data'
+                    
+                    # 找出比賽的實際結束圈數 - 限制在合理範圍內
+                    # 優先使用原始數據中的最大圈數，但設定上限
+                    race_end_lap = max(
+                        min(original_last_lap, 55),  # 原始數據的最後一圈，但不超過55
+                        max(pit_laps) + 5 if pit_laps else 53,  # 最後進站 + 5圈
+                        53  # F1 標準比賽圈數
+                    )
+                    
+                    # 確保不超過合理的上限
+                    end_lap = min(race_end_lap, 55)
+                    method = f'race_end_extension'
                 
                 compound_sequence.append({
                     'compound': compound_info['compound'],
@@ -407,6 +452,30 @@ class TireChangeTimingInference:
                     'original_last_lap': compound_info['last_lap'],
                     'method': 'original_data'
                 })
+        
+        # 確保最後一個 stint 延續到比賽結束，但限制在合理範圍內
+        if compound_sequence:
+            # 找出比賽實際結束圈數，設定合理上限
+            race_end_lap = 53  # F1 標準比賽圈數
+            if pit_laps:
+                # 最後進站 + 5圈，最多不超過55圈
+                estimated_end = max(pit_laps) + 5
+                race_end_lap = max(race_end_lap, min(estimated_end, 55))
+            
+            # 檢查所有配方的最後使用圈數，但不超過55圈
+            for compound_info in compounds_by_first_lap:
+                original_last = compound_info.get('last_lap', 53)
+                race_end_lap = max(race_end_lap, min(original_last, 55))
+            
+            # 最終確保不超過55圈
+            race_end_lap = min(race_end_lap, 55)
+            
+            # 修正最後一個 stint 的結束圈數
+            last_stint = compound_sequence[-1]
+            if last_stint['estimated_end_lap'] < race_end_lap:
+                print(f"   🔧 修正最後 stint 結束圈數: {last_stint['estimated_end_lap']} -> {race_end_lap}")
+                last_stint['estimated_end_lap'] = race_end_lap
+                last_stint['method'] = 'race_end_correction'
         
         return compound_sequence
     
