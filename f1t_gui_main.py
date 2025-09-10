@@ -3050,10 +3050,9 @@ class PopoutSubWindow(QMdiSubWindow):
         if os.path.exists(rain_analysis_file):
             try:
                 with open(rain_analysis_file, 'r', encoding='utf-8') as f:
-                    print(f"[FILES] 找到降雨分析JSON檔案: {rain_analysis_file}")
                     return json.load(f)
             except Exception as e:
-                print(f"[ERROR] 降雨分析JSON載入錯誤: {e}")
+                print(f"[ERROR] JSON載入錯誤: {e}")
         
         # 2. 備用搜尋 - 構建JSON檔案搜尋模式
         json_patterns = [
@@ -7479,21 +7478,18 @@ class StyleHMainWindow(QMainWindow):
                             print(f"[INIT] [MODULE_FACTORY] 降雨分析模組參數: {current_year} {current_race} {current_session}")
                             
                             # 創建模組實例
-                            print(f"[DEBUG] [MODULE_FACTORY] 正在創建 RainAnalysisModuleAdapter 實例...")
                             module = RainAnalysisModuleAdapter(
                                 year=current_year,
                                 race=current_race,
                                 session=current_session
                             )
-                            print(f"[DEBUG] [MODULE_FACTORY] RainAnalysisModuleAdapter 實例創建完成")
-                            
-                            print(f"[OK] [MODULE_FACTORY] 降雨分析模組初始化成功")
+                            print(f"[OK] 降雨分析模組初始化成功")
                             return module
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 降雨分析模組創建失敗：無參數提供者")
+                            print(f"[ERROR] 降雨分析模組創建失敗：無參數")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 降雨分析模組創建失敗: {e}")
+                        print(f"[ERROR] 降雨分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -7532,7 +7528,7 @@ class StyleHMainWindow(QMainWindow):
                 return content
                 
             except ImportError as e:
-                print(f"[ERROR] 降雨分析模組導入失敗: {e}")
+                print(f"[ERROR] 模組導入失敗: {e}")
                 return TelemetryChartWidget("speed")  # 後備方案
         elif "遙測" in function_name:
             return TelemetryChartWidget("speed")
@@ -9549,7 +9545,7 @@ class StyleHMainWindow(QMainWindow):
             self.remove_welcome_tab()
             
             params = self.get_current_parameters()
-            print(f"[分析] [RAIN] 降雨分析 - {params['year']} {params['race']} {params['session']}")
+            print(f"[RAIN] {params['year']} {params['race']} {params['session']}")
             
             # 導入新的雨量分析模組 (使用通用圖表)
             from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter

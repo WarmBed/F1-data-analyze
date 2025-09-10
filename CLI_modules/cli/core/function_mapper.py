@@ -293,7 +293,6 @@ class F1AnalysisFunctionMapper:
                 year=year,
                 race=race,
                 session=session,
-                enable_debug=True,
                 show_detailed_output=show_detailed_output
             )
             

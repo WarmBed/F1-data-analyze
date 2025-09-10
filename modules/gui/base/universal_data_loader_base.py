@@ -38,7 +38,7 @@ import threading
 import subprocess
 from typing import Dict, List, Any, Optional, Tuple, Callable
 from abc import ABC, abstractmethod
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
 
 
 class AnalysisConfig:
@@ -67,6 +67,126 @@ class AnalysisConfig:
         # 儲存額外配置
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+
+class CliAnalysisWorker(QThread):
+    """背景執行 CLI 分析的工作執行緒
+    
+    統一的 CLI 調用模組，提供標準的編碼處理和信號機制。
+    支援所有分析類型的 CLI 調用。
+    """
+    
+    # 定義信號
+    progress_updated = pyqtSignal(str)  # 進度更新信號
+    analysis_completed = pyqtSignal(bool, str)  # 分析完成信號 (成功/失敗, 訊息)
+    output_received = pyqtSignal(str)  # 輸出信號
+    
+    def __init__(self, year, race, session, force_mode=1, parent=None):
+        super().__init__(parent)
+        self.year = year
+        self.race = race
+        self.session = session
+        self.force_mode = force_mode
+        self.process = None
+        self.should_stop = False
+        
+    def run(self):
+        """執行 CLI 分析"""
+        try:
+            # 構建CLI命令
+            cmd = [
+                sys.executable,
+                "f1_analysis_modular_main.py",
+                "-f", str(self.force_mode),  # 使用指定的 force_mode
+                "-y", str(self.year),
+                "-r", self.race,
+                "-s", self.session
+            ]
+            
+            print(f"[CLI_WORKER] 準備執行命令: {' '.join(cmd)}")
+            
+            self.progress_updated.emit(f"啟動 CLI 分析: {self.year} {self.race} {self.session}")
+            
+            # 設置環境變數以確保正確的編碼
+            env = os.environ.copy()
+            env['PYTHONIOENCODING'] = 'utf-8'
+            env['PYTHONLEGACYWINDOWSFS'] = '0'
+            
+            # 啟動進程，使用 UTF-8 編碼避免編碼問題
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding='utf-8',
+                errors='replace',  # 遇到無法解碼的字符時替換為 ?
+                env=env,  # 使用自定義環境變數
+                cwd=os.getcwd(),
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            print(f"[CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
+            self.progress_updated.emit(f"CLI 分析已啟動 (PID: {self.process.pid})")
+            
+            # 即時讀取輸出
+            while True:
+                if self.should_stop:
+                    if self.process:
+                        self.process.terminate()
+                    break
+                    
+                # 檢查進程是否完成
+                if self.process.poll() is not None:
+                    break
+                    
+                # 讀取輸出，處理編碼問題
+                try:
+                    output = self.process.stdout.readline()
+                    if output:
+                        self.output_received.emit(output.strip())
+                except UnicodeDecodeError as e:
+                    # 如果遇到編碼錯誤，記錄但不中斷
+                    self.output_received.emit(f"[編碼錯誤] 無法解碼部分輸出: {str(e)}")
+                    
+                # 短暫休息避免CPU占用過高
+                self.msleep(100)
+            
+            # 獲取最終結果
+            if not self.should_stop:
+                return_code = self.process.wait()
+                print(f"[CLI_WORKER] 進程結束，返回碼: {return_code}")
+                
+                if return_code == 0:
+                    print(f"[CLI_WORKER] CLI 分析成功完成")
+                    self.analysis_completed.emit(True, "CLI 分析成功完成")
+                else:
+                    print(f"[CLI_WORKER] CLI 分析失敗，返回碼: {return_code}")
+                    try:
+                        stderr_output = self.process.stderr.read()
+                        print(f"[CLI_WORKER] 錯誤輸出: {stderr_output}")
+                        self.analysis_completed.emit(False, f"CLI 分析失敗: {stderr_output}")
+                    except UnicodeDecodeError as e:
+                        print(f"[CLI_WORKER] 錯誤輸出編碼問題: {str(e)}")
+                        self.analysis_completed.emit(False, f"CLI 分析失敗 (編碼錯誤): {str(e)}")
+            else:
+                print(f"[CLI_WORKER] 分析被用戶取消")
+                self.analysis_completed.emit(False, "分析被用戶取消")
+                
+        except Exception as e:
+            self.analysis_completed.emit(False, f"CLI 分析錯誤: {str(e)}")
+    
+    def stop(self):
+        """停止分析"""
+        self.should_stop = True
+        if self.process and self.process.poll() is None:
+            try:
+                self.process.terminate()
+                # 等待進程結束，如果沒有回應則強制終止
+                self.process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+                self.process.wait()
 
 
 class UniversalDataLoaderMeta(type(QObject), type(ABC)):
@@ -210,6 +330,30 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
     def get_display_name(self) -> str:
         """獲取顯示名稱"""
         return self.config.display_name
+    
+    def create_cli_worker(self, year: int, race: str, session: str, force_mode: int = 1) -> CliAnalysisWorker:
+        """
+        創建 CLI 分析工作執行緒
+        
+        統一的 CLI 調用入口，提供標準的編碼處理和信號機制。
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段類型
+            force_mode: 功能編號 (預設為 1)
+            
+        Returns:
+            CliAnalysisWorker: 配置好的工作執行緒
+            
+        Example:
+            # 創建降雨分析工作執行緒
+            worker = self.create_cli_worker(2025, "Japan", "R", 1)
+            worker.analysis_completed.connect(self.on_analysis_completed)
+            worker.output_received.connect(self.on_output_received)
+            worker.start()
+        """
+        return CliAnalysisWorker(year, race, session, force_mode, parent=self)
     
     # ========== 抽象方法 - 子類必須實現 ==========
     

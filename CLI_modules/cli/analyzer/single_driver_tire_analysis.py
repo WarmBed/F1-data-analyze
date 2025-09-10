@@ -21,9 +21,11 @@ class SingleDriverTireAnalysis:
         self.race = race
         self.session = session
         self.cache_dir = "cache"
+        self.json_dir = "json"
         
-        # 確保緩存目錄存在
+        # 確保緩存和JSON目錄存在
         os.makedirs(self.cache_dir, exist_ok=True)
+        os.makedirs(self.json_dir, exist_ok=True)
     
     def analyze_tire_strategy(self, driver: Optional[str] = None, **kwargs) -> Dict[str, Any]:
         """分析車手輪胎策略
@@ -55,10 +57,13 @@ class SingleDriverTireAnalysis:
                 with open(cache_file, 'rb') as f:
                     cached_result = pickle.load(f)
                 
-                # 顯示對應的 JSON 檔案路徑
-                json_file = cache_file.replace('.pkl', '.json')
-                if os.path.exists(json_file):
-                    print(f"📄 對應 JSON 檔案: {json_file}")
+                # 確保 JSON 檔案存在（每次都重新生成）
+                json_filename = f"{cache_key}.json"
+                json_file = os.path.join(self.json_dir, json_filename)
+                print(f"📄 重新生成 JSON 檔案: {json_file}")
+                with open(json_file, 'w', encoding='utf-8') as f:
+                    json.dump(cached_result, f, ensure_ascii=False, indent=2)
+                print(f"� JSON 分析結果已保存: {json_file}")
                 
                 # 顯示輪胎策略表格
                 self._display_tire_strategy_table(cached_result, driver)
@@ -157,8 +162,9 @@ class SingleDriverTireAnalysis:
             with open(cache_file, 'wb') as f:
                 pickle.dump(result, f)
             
-            # 同時保存為 JSON
-            json_file = cache_file.replace('.pkl', '.json')
+            # 同時保存為 JSON 到 json/ 資料夾
+            json_filename = f"{cache_key}.json"
+            json_file = os.path.join(self.json_dir, json_filename)
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
             

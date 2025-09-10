@@ -16,17 +16,7 @@ import argparse
 from typing import Optional, Union, Dict, Any
 from datetime import datetime
 
-# 設置標準輸出編碼為 UTF-8，避免 Windows 編碼問題
-if sys.platform.startswith('win'):
-    import locale
-    try:
-        # 嘗試設置控制台編碼為 UTF-8
-        import codecs
-        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.detach())
-        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.detach())
-    except:
-        # 如果失敗，使用預設編碼
-        pass
+# 移除編碼設置，避免 traceback 問題
 
 # 確保 modules 和 CLI_modules 目錄在 Python 路徑中
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -47,7 +37,7 @@ try:
     from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
     from CLI_modules.cli.core.compatible_f1_analysis_instance import create_f1_analysis_instance
     
-    print("[OK] 統一函數映射器導入成功！")
+    #print("[OK] 統一函數映射器導入成功！")
     has_function_mapper = True
     
     # 向後兼容：保留部分重要模組的直接導入
@@ -55,9 +45,9 @@ try:
         # 使用新的增強版降雨分析模組
         from CLI_modules.cli.analyzer.weather.rain_analyzer import EnhancedRainAnalyzer
         has_rain_analysis = True
-        print("[OK] 增強版降雨分析模組導入成功！")
+        # print("[OK] 增強版降雨分析模組導入成功！")
     except ImportError:
-        print("[WARNING] 增強版降雨分析模組未找到")
+        # print("[WARNING] 增強版降雨分析模組未找到")
         has_rain_analysis = False
     from CLI_modules.cli.analyzer.all_drivers_overtaking_trends_analysis import run_all_drivers_overtaking_trends_analysis
     
@@ -310,18 +300,17 @@ class F1AnalysisModularCLI:
     def run_rain_intensity_analysis(self):
         """執行降雨狀況分析 - 簡化版只顯示有雨/無雨"""
         try:
-            print("\n[RAIN] 執行降雨狀況分析 (有雨/無雨)...")
+            print("[RAIN] 分析中...")
             # 使用統一函數映射器執行功能1
             result = self.run_analysis_direct(1)
             if result.get("success", False):
-                print("[OK] 降雨狀況分析執行成功")
                 # 顯示降雨結論
                 if 'rain_status' in result:
-                    print(f"🌧️ 降雨結論: {result['rain_status']}")
+                    print(f"🌧️ {result['rain_status']}")
             else:
-                print(f"[ERROR] 降雨狀況分析失敗: {result.get('message', '未知錯誤')}")
+                print(f"[ERROR] 分析失敗: {result.get('message', '未知錯誤')}")
         except Exception as e:
-            print(f"[ERROR] 降雨分析執行失敗: {e}")
+            print(f"[ERROR] 執行失敗: {e}")
 
     # === 獨立事故分析方法 ===
     
@@ -614,7 +603,7 @@ class F1AnalysisModularCLI:
                         f1_analysis_instance=self.f1_analysis_instance
                     )
                     
-                    print("\n[RAIN]  執行增強版降雨強度分析 (JSON輸出版)...")
+                    print("[RAIN] 執行分析...")
                     
                     # 執行增強版降雨分析
                     result = mapper.execute_function_by_number(1)
@@ -1106,17 +1095,8 @@ class F1AnalysisModularCLI:
         print("\n[RAIN]  基礎分析模組 (功能1-10)")
         print("=" * 80)
         
-        print("1.  [RAIN] 降雨狀況分析 (Simplified Rain Status Analysis)")
-        print("    功能描述：基於FastF1直接數據，分析降雨狀況 (簡化為有雨/無雨)")
-        print("    輸入參數：年份、賽事、賽段類型")
-        print("    主要輸出：")
-        print("      [JSON] 結構化輸出：")
-        print("        • lap_weather_data (各圈天氣狀況)")
-        print("        • summary.rain_laps (有雨圈數)")
-        print("        • summary.rain_percentage (降雨百分比)") 
-        print("        • rain_status (總結: 有雨/無雨)")
-        print("      [CACHE] 緩存整合：支援 pickle 快取機制")
-        print("      [NOTE] 簡化版降雨分析，不顯示強度只顯示有無降雨")
+        print("1.  [RAIN] 降雨狀況分析")
+        print("    分析降雨狀況 (有雨/無雨)，輸出 JSON 格式")
         
         print("\n2.  [TRACK] 賽道路線分析 (Track Path Analysis)")
         print("    功能描述：分析車手在賽道上的行駛路線和最佳賽車線")

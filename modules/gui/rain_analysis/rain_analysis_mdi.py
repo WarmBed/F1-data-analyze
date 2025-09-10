@@ -122,87 +122,40 @@ class RainAnalysisDataManager(UniversalDataLoader):
             if not cli_function:
                 self._debug("❌ 配置中沒有 CLI 函數")
                 return False
-                
-            # 建立 CLI 命令
-            import subprocess
-            import sys
-            import os
             
-            # 獲取當前工作目錄
-            current_dir = os.getcwd()
-            self._debug(f"📁 當前工作目錄: {current_dir}")
+            # 使用標準化的 CliAnalysisWorker
+            force_mode = 1  # 功能1: 降雨強度分析
             
-            # 使用 f1_analysis_modular_main.py 來生成降雨數據
-            cli_cmd = [
-                sys.executable, 
-                "f1_analysis_modular_main.py",
-                "-f", "1",  # 功能1: 降雨強度分析
-                "-y", str(year),
-                "-r", str(race),
-                "-s", str(session)
-            ]
+            self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
             
-            self._debug(f"🔧 CLI 命令完整版:")
-            self._debug(f"   Python 執行檔: {sys.executable}")
-            self._debug(f"   主程式路徑: f1_analysis_modular_main.py")
-            self._debug(f"   完整命令: {' '.join(cli_cmd)}")
-            self._debug(f"   參數明細:")
-            self._debug(f"     -f 1 (功能編號)")
-            self._debug(f"     -y {year} (年份)")
-            self._debug(f"     -r {race} (賽事)")
-            self._debug(f"     -s {session} (賽段)")
+            # 創建並啟動 CLI 工作器
+            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
             
-            # 檢查主程式檔案是否存在
-            main_script = "f1_analysis_modular_main.py"
-            if os.path.exists(main_script):
-                self._debug(f"✅ 主程式檔案存在: {os.path.abspath(main_script)}")
-            else:
-                self._debug(f"❌ 主程式檔案不存在: {os.path.abspath(main_script)}")
-                return False
+            # 連接信號
+            def on_cli_finished():
+                self._debug("✅ CLI 工作器執行完成")
+                if hasattr(self, 'cli_worker') and self.cli_worker:
+                    self.cli_worker.deleteLater()
+                    self.cli_worker = None
             
-            # 啟動 CLI 程序（非阻塞）
-            self._debug(f"🚀 正在啟動 CLI 程序...")
-            try:
-                process = subprocess.Popen(
-                    cli_cmd,
-                    stdin=subprocess.PIPE,     # ✅ 加入 stdin 處理
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    cwd=current_dir,
-                    env=os.environ.copy(),     # ✅ 確保環境變數正確
-                    creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-                )
-                
-                self._debug(f"✅ CLI 程序已啟動!")
-                self._debug(f"   PID: {process.pid}")
-                self._debug(f"   返回碼 (初始): {process.poll()}")
-                
-                # 關閉 stdin 避免程序等待輸入
-                process.stdin.close()
-                
-                # 檢查程序是否立即結束
-                import time
-                time.sleep(1.0)  # 延長等待時間到 1 秒
-                return_code = process.poll()
-                if return_code is not None:
-                    self._debug(f"⚠️ CLI 程序快速結束，返回碼: {return_code}")
-                    try:
-                        stdout, stderr = process.communicate(timeout=5)
-                        if stdout:
-                            self._debug(f"📤 CLI 標準輸出: {stdout.decode('utf-8', errors='ignore')}")
-                        if stderr:
-                            self._debug(f"📤 CLI 錯誤輸出: {stderr.decode('utf-8', errors='ignore')}")
-                    except subprocess.TimeoutExpired:
-                        self._debug(f"⚠️ CLI 輸出讀取超時")
-                        process.kill()
-                else:
-                    self._debug(f"✅ CLI 程序正在執行中...")
-                
-                return True
-                
-            except Exception as subprocess_error:
-                self._debug(f"❌ 啟動 CLI 程序時發生異常: {subprocess_error}")
-                return False
+            def on_cli_completed(success, message):
+                self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
+                if hasattr(self, 'cli_worker') and self.cli_worker:
+                    self.cli_worker.deleteLater()
+                    self.cli_worker = None
+            
+            def on_cli_output(output):
+                self._debug(f"📤 CLI 輸出: {output}")
+            
+            self.cli_worker.finished.connect(on_cli_finished)
+            self.cli_worker.analysis_completed.connect(on_cli_completed)
+            self.cli_worker.output_received.connect(on_cli_output)
+            
+            # 啟動工作器
+            self.cli_worker.start()
+            self._debug(f"✅ CLI 工作器已啟動")
+            
+            return True
             
         except Exception as e:
             self._error(f"CLI 生成失敗: {e}")
