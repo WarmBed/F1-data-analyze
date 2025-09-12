@@ -13,6 +13,14 @@ import json
 import pickle
 from datetime import datetime
 
+# 導入統一JSON生成器
+try:
+    from CLI_modules.cli.core.json_generator import save_f1_analysis_json, clean_data_for_json
+    JSON_GENERATOR_AVAILABLE = True
+except ImportError:
+    print("[WARNING] 統一JSON生成器不可用，使用原生JSON保存")
+    JSON_GENERATOR_AVAILABLE = False
+
 class SingleDriverDetailedLaptimeAnalysis:
     """車手每圈圈速詳細分析類"""
     
@@ -50,6 +58,8 @@ class SingleDriverDetailedLaptimeAnalysis:
                 if cached_result and not show_detailed_output:
                     print("📦 使用緩存數據")
                     self._report_analysis_results(cached_result, "車手每圈圈速詳細分析")
+                    # 確保JSON始終被保存
+                    self._ensure_json_output(cached_result, analysis_mode, driver)
                     return cached_result
                 elif cached_result and show_detailed_output:
                     print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
@@ -58,6 +68,8 @@ class SingleDriverDetailedLaptimeAnalysis:
                         self._display_cached_detailed_output(cached_result, driver)
                     else:
                         self._display_cached_all_drivers_output(cached_result)
+                    # 確保JSON始終被保存
+                    self._ensure_json_output(cached_result, analysis_mode, driver)
                     return cached_result
             
             print("🔄 重新計算 - 開始數據分析...")
@@ -108,11 +120,8 @@ class SingleDriverDetailedLaptimeAnalysis:
                 self._save_cache(result, cache_key)
                 print("💾 分析結果已緩存")
             
-            # 保存JSON輸出
-            if analysis_mode == "single":
-                self._save_json_output(result, driver)
-            else:
-                self._save_json_output_all_drivers(result)
+            # 保存JSON輸出 - 使用統一JSON生成器
+            self._ensure_json_output(result, analysis_mode, driver)
             
             return result
             
@@ -159,8 +168,11 @@ class SingleDriverDetailedLaptimeAnalysis:
             i2_speed = speeds.get('i2_speed', 'N/A')
             finish_speed = speeds.get('finish_speed', 'N/A')
             
-            # 特殊事件備註
-            remarks = self._get_lap_remarks_enhanced(lap, lap_number, driver_laps)
+            # 智能標記分析（結構化）
+            smart_markers = self._get_smart_markers(lap, lap_number, driver_laps)
+            
+            # 生成顯示用的備註（保持表格顯示兼容性）
+            display_remarks = self._generate_display_remarks(smart_markers)
             
             # 添加到表格
             table.add_row([
@@ -173,10 +185,10 @@ class SingleDriverDetailedLaptimeAnalysis:
                 i1_speed,
                 i2_speed,
                 finish_speed,
-                remarks
+                display_remarks
             ])
             
-            # 添加到詳細數據
+            # 添加到詳細數據（新的結構化格式）
             detailed_data.append({
                 "lap_number": lap_number,
                 "lap_time": lap_time,
@@ -188,7 +200,8 @@ class SingleDriverDetailedLaptimeAnalysis:
                 "i1_speed": i1_speed,
                 "i2_speed": i2_speed,
                 "finish_speed": finish_speed,
-                "remarks": remarks,
+                "remarks": display_remarks,  # 保持向後兼容
+                "smart_markers": smart_markers,  # 新增：結構化智能標記
                 "sector_1": self._format_time(lap.get('Sector1Time')),
                 "sector_2": self._format_time(lap.get('Sector2Time')),
                 "sector_3": self._format_time(lap.get('Sector3Time'))
@@ -200,7 +213,14 @@ class SingleDriverDetailedLaptimeAnalysis:
         print(table)
         
         # 統計摘要
+        summary_stats = self._calculate_summary_stats(driver_laps)
+        smart_markers_summary = self._calculate_smart_markers_summary(detailed_data)
+        
+        # 顯示傳統統計
         self._print_summary_statistics(driver_laps, driver)
+        
+        # 顯示智能標記統計
+        self._print_smart_markers_statistics(smart_markers_summary, driver)
         
         # 創建分析結果
         result = {
@@ -208,13 +228,19 @@ class SingleDriverDetailedLaptimeAnalysis:
             "driver": driver,
             "total_laps": len(driver_laps),
             "detailed_lap_data": detailed_data,
-            "summary_statistics": self._calculate_summary_stats(driver_laps),
+            "summary_statistics": summary_stats,
+            "smart_markers_summary": smart_markers_summary,  # 新增：智能標記統計
             "analysis_metadata": {
                 "year": self.year,
                 "race": self.race,
                 "session": self.session,
                 "analysis_type": "detailed_laptime_analysis",
-                "generated_at": datetime.now().isoformat()
+                "generated_at": datetime.now().isoformat(),
+                "features": {
+                    "smart_markers_enabled": True,
+                    "structured_events": True,
+                    "detailed_tracking": True
+                }
             }
         }
         
@@ -370,6 +396,132 @@ class SingleDriverDetailedLaptimeAnalysis:
                 'finish_speed': 'N/A'
             }
     
+    def _get_smart_markers(self, lap, lap_number, driver_laps):
+        """獲取結構化的智能標記
+        
+        Returns:
+            Dict: 包含五大類別智能標記的結構化字典
+        """
+        smart_markers = {
+            "pit_stop_detection": {
+                "is_pit_lap": False,
+                "pit_in_time": None,
+                "pit_out_time": None,
+                "pit_type": None  # "pit_in", "pit_out", "both"
+            },
+            "fastest_lap_detection": {
+                "is_fastest_lap": False,
+                "is_personal_best": False,
+                "fastest_type": None  # "absolute", "session", "stint"
+            },
+            "tire_change_detection": {
+                "is_tire_change": False,
+                "tire_change_method": None,  # "tire_life_reset", "compound_change", "both"
+                "previous_compound": None,
+                "new_compound": None,
+                "tire_life_reset": False
+            },
+            "accident_safety_detection": {
+                "has_incident": False,
+                "track_status": None,
+                "incident_type": None,  # "yellow_flag", "safety_car", "red_flag", "vsc"
+                "severity_level": None  # "low", "medium", "high", "critical"
+            },
+            "special_lap_marking": {
+                "is_special_lap": False,
+                "special_type": None,  # "start_lap", "final_lap", "restart_lap"
+                "lap_significance": None  # "race_start", "race_end", "session_start"
+            }
+        }
+        
+        # 1. 🔧 進站檢測
+        pit_in_time = lap.get('PitInTime')
+        pit_out_time = lap.get('PitOutTime')
+        
+        if pd.notna(pit_in_time) or pd.notna(pit_out_time):
+            smart_markers["pit_stop_detection"]["is_pit_lap"] = True
+            smart_markers["pit_stop_detection"]["pit_in_time"] = str(pit_in_time) if pd.notna(pit_in_time) else None
+            smart_markers["pit_stop_detection"]["pit_out_time"] = str(pit_out_time) if pd.notna(pit_out_time) else None
+            
+            if pd.notna(pit_in_time) and pd.notna(pit_out_time):
+                smart_markers["pit_stop_detection"]["pit_type"] = "both"
+            elif pd.notna(pit_in_time):
+                smart_markers["pit_stop_detection"]["pit_type"] = "pit_in"
+            elif pd.notna(pit_out_time):
+                smart_markers["pit_stop_detection"]["pit_type"] = "pit_out"
+        
+        # 2. ⚡ 最快圈檢測
+        if self._is_fastest_lap_of_driver(lap, driver_laps):
+            smart_markers["fastest_lap_detection"]["is_fastest_lap"] = True
+            smart_markers["fastest_lap_detection"]["fastest_type"] = "absolute"
+            smart_markers["fastest_lap_detection"]["is_personal_best"] = True
+        
+        # 3. 🛞 換胎檢測
+        tire_change_info = self._analyze_tire_change(lap, lap_number, driver_laps)
+        if tire_change_info["is_tire_change"]:
+            smart_markers["tire_change_detection"] = tire_change_info
+        
+        # 4. ⚠️ 事故檢測
+        accident_info = self._analyze_accident_status(lap, lap_number)
+        if accident_info["has_incident"]:
+            smart_markers["accident_safety_detection"] = accident_info
+        
+        # 5. 🏁 特殊圈次標記
+        special_lap_info = self._analyze_special_lap(lap, lap_number, driver_laps)
+        if special_lap_info["is_special_lap"]:
+            smart_markers["special_lap_marking"] = special_lap_info
+        
+        return smart_markers
+    
+    def _generate_display_remarks(self, smart_markers):
+        """基於結構化智能標記生成顯示用備註（保持向後兼容性）
+        
+        Args:
+            smart_markers: 結構化智能標記字典
+            
+        Returns:
+            str: 格式化的顯示備註
+        """
+        remarks = []
+        
+        # 進站標記
+        if smart_markers["pit_stop_detection"]["is_pit_lap"]:
+            remarks.append("🔧進站")
+        
+        # 最快圈標記
+        if smart_markers["fastest_lap_detection"]["is_fastest_lap"]:
+            remarks.append("⚡最快圈")
+        
+        # 換胎標記
+        if smart_markers["tire_change_detection"]["is_tire_change"]:
+            remarks.append("🛞換胎")
+        
+        # 事故標記
+        if smart_markers["accident_safety_detection"]["has_incident"]:
+            incident_type = smart_markers["accident_safety_detection"]["incident_type"]
+            if incident_type == "yellow_flag":
+                remarks.append("🟨黃旗")
+            elif incident_type == "safety_car":
+                remarks.append("🚗安全車")
+            elif incident_type == "red_flag":
+                remarks.append("🔴紅旗")
+            elif incident_type == "vsc":
+                remarks.append("🟡VSC")
+            else:
+                remarks.append("⚠️事故")
+        
+        # 特殊圈次標記
+        if smart_markers["special_lap_marking"]["is_special_lap"]:
+            special_type = smart_markers["special_lap_marking"]["special_type"]
+            if special_type == "start_lap":
+                remarks.append("🏁起跑")
+            elif special_type == "final_lap":
+                remarks.append("🏆最後一圈")
+            elif special_type == "restart_lap":
+                remarks.append("🚩重新起跑")
+        
+        return " | ".join(remarks) if remarks else ""
+
     def _get_lap_remarks_enhanced(self, lap, lap_number, driver_laps):
         """獲取增強的圈數備註"""
         remarks = []
@@ -410,6 +562,170 @@ class SingleDriverDetailedLaptimeAnalysis:
         fastest_time = valid_laps['LapTime'].min()
         return current_lap_time == fastest_time
     
+    def _analyze_tire_change(self, lap, lap_number, driver_laps):
+        """詳細分析輪胎更換情況
+        
+        Returns:
+            Dict: 詳細的輪胎更換信息
+        """
+        tire_change_info = {
+            "is_tire_change": False,
+            "tire_change_method": None,
+            "previous_compound": None,
+            "new_compound": None,
+            "tire_life_reset": False,
+            "tire_life_before": None,
+            "tire_life_after": None
+        }
+        
+        if lap_number <= 1:
+            return tire_change_info
+        
+        try:
+            current_tire_life = lap.get('TyreLife')
+            current_compound = lap.get('Compound')
+            
+            # 獲取前一圈資料
+            prev_lap_idx = lap.name - 1
+            if prev_lap_idx >= 0:
+                prev_lap = driver_laps.iloc[prev_lap_idx]
+                prev_tire_life = prev_lap.get('TyreLife')
+                prev_compound = prev_lap.get('Compound')
+                
+                tire_change_info["previous_compound"] = prev_compound
+                tire_change_info["new_compound"] = current_compound
+                tire_change_info["tire_life_before"] = prev_tire_life
+                tire_change_info["tire_life_after"] = current_tire_life
+                
+                # 檢查胎齡重置
+                if pd.notna(current_tire_life) and current_tire_life == 1:
+                    tire_change_info["is_tire_change"] = True
+                    tire_change_info["tire_life_reset"] = True
+                    tire_change_info["tire_change_method"] = "tire_life_reset"
+                
+                # 檢查配方變化
+                if (pd.notna(current_compound) and pd.notna(prev_compound) and 
+                    current_compound != prev_compound):
+                    
+                    if tire_change_info["is_tire_change"]:
+                        tire_change_info["tire_change_method"] = "both"
+                    else:
+                        tire_change_info["is_tire_change"] = True
+                        tire_change_info["tire_change_method"] = "compound_change"
+            
+            return tire_change_info
+            
+        except Exception as e:
+            return tire_change_info
+    
+    def _analyze_accident_status(self, lap, lap_number):
+        """詳細分析事故/安全狀況
+        
+        Returns:
+            Dict: 詳細的事故狀況信息
+        """
+        accident_info = {
+            "has_incident": False,
+            "track_status": None,
+            "track_status_code": None,
+            "incident_type": None,
+            "severity_level": None,
+            "description": None
+        }
+        
+        try:
+            track_status = lap.get('TrackStatus')
+            if pd.notna(track_status):
+                track_status_code = str(track_status)
+                accident_info["track_status_code"] = track_status_code
+                accident_info["track_status"] = track_status
+                
+                # 根據 TrackStatus 編碼分析
+                if track_status_code == '1':
+                    # 綠旗 - 正常狀況
+                    accident_info["incident_type"] = "normal"
+                    accident_info["severity_level"] = "none"
+                    accident_info["description"] = "正常比賽狀況"
+                    
+                elif track_status_code == '2':
+                    # 黃旗
+                    accident_info["has_incident"] = True
+                    accident_info["incident_type"] = "yellow_flag"
+                    accident_info["severity_level"] = "low"
+                    accident_info["description"] = "區域性黃旗警告"
+                    
+                elif track_status_code == '4':
+                    # 安全車
+                    accident_info["has_incident"] = True
+                    accident_info["incident_type"] = "safety_car"
+                    accident_info["severity_level"] = "medium"
+                    accident_info["description"] = "安全車出動"
+                    
+                elif track_status_code == '5':
+                    # 紅旗
+                    accident_info["has_incident"] = True
+                    accident_info["incident_type"] = "red_flag"
+                    accident_info["severity_level"] = "critical"
+                    accident_info["description"] = "比賽暫停 - 嚴重事故"
+                    
+                elif track_status_code == '6':
+                    # 虛擬安全車
+                    accident_info["has_incident"] = True
+                    accident_info["incident_type"] = "vsc"
+                    accident_info["severity_level"] = "medium"
+                    accident_info["description"] = "虛擬安全車限速"
+                
+                else:
+                    # 未知狀況
+                    accident_info["has_incident"] = True
+                    accident_info["incident_type"] = "unknown"
+                    accident_info["severity_level"] = "unknown"
+                    accident_info["description"] = f"未知賽道狀況碼: {track_status_code}"
+            
+            return accident_info
+            
+        except Exception as e:
+            return accident_info
+    
+    def _analyze_special_lap(self, lap, lap_number, driver_laps):
+        """詳細分析特殊圈次
+        
+        Returns:
+            Dict: 詳細的特殊圈次信息
+        """
+        special_lap_info = {
+            "is_special_lap": False,
+            "special_type": None,
+            "lap_significance": None,
+            "description": None,
+            "total_laps": len(driver_laps)
+        }
+        
+        try:
+            total_laps = len(driver_laps)
+            
+            # 起跑圈
+            if lap_number == 1:
+                special_lap_info["is_special_lap"] = True
+                special_lap_info["special_type"] = "start_lap"
+                special_lap_info["lap_significance"] = "race_start"
+                special_lap_info["description"] = "比賽起跑圈"
+            
+            # 最後一圈
+            elif lap_number == total_laps and total_laps > 1:
+                special_lap_info["is_special_lap"] = True
+                special_lap_info["special_type"] = "final_lap"
+                special_lap_info["lap_significance"] = "race_end"
+                special_lap_info["description"] = "比賽最後一圈"
+            
+            # 預留：重新起跑圈檢測（需要事故資料配合）
+            # 可以通過檢測前一圈是否有紅旗來判斷
+            
+            return special_lap_info
+            
+        except Exception as e:
+            return special_lap_info
+
     def _is_tire_change_lap(self, lap, lap_number, driver_laps):
         """檢查是否為換胎圈"""
         if lap_number <= 1:
@@ -511,6 +827,149 @@ class SingleDriverDetailedLaptimeAnalysis:
         
         print(stats_table)
     
+    def _print_smart_markers_statistics(self, smart_markers_summary, driver):
+        """顯示智能標記統計摘要"""
+        try:
+            print(f"\n🧠 {driver} 智能標記事件統計:")
+            print("=" * 80)
+            
+            # 創建智能標記統計表格
+            markers_table = PrettyTable()
+            markers_table.field_names = ["事件類別", "總數", "詳細統計", "相關圈數"]
+            markers_table.align = "l"
+            
+            # 進站檢測統計
+            pit_stats = smart_markers_summary.get('pit_stop_detection', {})
+            pit_total = pit_stats.get('total_pit_laps', 0)
+            pit_details = []
+            if pit_stats.get('pit_in_count', 0) > 0:
+                pit_details.append(f"進站: {pit_stats['pit_in_count']}")
+            if pit_stats.get('pit_out_count', 0) > 0:
+                pit_details.append(f"出站: {pit_stats['pit_out_count']}")
+            if pit_stats.get('both_count', 0) > 0:
+                pit_details.append(f"完整進站: {pit_stats['both_count']}")
+            
+            pit_laps = pit_stats.get('pit_lap_numbers', [])
+            pit_laps_str = ", ".join(map(str, pit_laps[:5]))  # 只顯示前5個
+            if len(pit_laps) > 5:
+                pit_laps_str += f"... (+{len(pit_laps)-5})"
+            
+            markers_table.add_row([
+                "🔧 進站檢測",
+                pit_total,
+                " | ".join(pit_details) if pit_details else "無",
+                pit_laps_str if pit_laps else "無"
+            ])
+            
+            # 最快圈檢測統計
+            fastest_stats = smart_markers_summary.get('fastest_lap_detection', {})
+            fastest_total = fastest_stats.get('fastest_lap_count', 0)
+            fastest_details = []
+            if fastest_stats.get('personal_best_count', 0) > 0:
+                fastest_details.append(f"個人最佳: {fastest_stats['personal_best_count']}")
+            
+            fastest_laps = fastest_stats.get('fastest_lap_numbers', [])
+            fastest_laps_str = ", ".join(map(str, fastest_laps))
+            
+            markers_table.add_row([
+                "⚡ 最快圈檢測",
+                fastest_total,
+                " | ".join(fastest_details) if fastest_details else "絕對最快圈",
+                fastest_laps_str if fastest_laps else "無"
+            ])
+            
+            # 換胎檢測統計
+            tire_stats = smart_markers_summary.get('tire_change_detection', {})
+            tire_total = tire_stats.get('total_tire_changes', 0)
+            tire_details = []
+            if tire_stats.get('tire_life_reset_count', 0) > 0:
+                tire_details.append(f"胎齡重置: {tire_stats['tire_life_reset_count']}")
+            if tire_stats.get('compound_change_count', 0) > 0:
+                tire_details.append(f"配方變化: {tire_stats['compound_change_count']}")
+            if tire_stats.get('both_method_count', 0) > 0:
+                tire_details.append(f"雙重檢測: {tire_stats['both_method_count']}")
+            
+            tire_laps = tire_stats.get('tire_change_lap_numbers', [])
+            tire_laps_str = ", ".join(map(str, tire_laps))
+            
+            markers_table.add_row([
+                "🛞 換胎檢測",
+                tire_total,
+                " | ".join(tire_details) if tire_details else "無",
+                tire_laps_str if tire_laps else "無"
+            ])
+            
+            # 事故檢測統計
+            accident_stats = smart_markers_summary.get('accident_safety_detection', {})
+            accident_total = accident_stats.get('total_incident_laps', 0)
+            accident_details = []
+            if accident_stats.get('yellow_flag_count', 0) > 0:
+                accident_details.append(f"🟨黃旗: {accident_stats['yellow_flag_count']}")
+            if accident_stats.get('safety_car_count', 0) > 0:
+                accident_details.append(f"🚗安全車: {accident_stats['safety_car_count']}")
+            if accident_stats.get('vsc_count', 0) > 0:
+                accident_details.append(f"🟡VSC: {accident_stats['vsc_count']}")
+            if accident_stats.get('red_flag_count', 0) > 0:
+                accident_details.append(f"🔴紅旗: {accident_stats['red_flag_count']}")
+            
+            accident_laps = accident_stats.get('incident_lap_numbers', [])
+            accident_laps_str = ", ".join(map(str, accident_laps[:5]))
+            if len(accident_laps) > 5:
+                accident_laps_str += f"... (+{len(accident_laps)-5})"
+            
+            markers_table.add_row([
+                "⚠️ 事故檢測",
+                accident_total,
+                " | ".join(accident_details) if accident_details else "無",
+                accident_laps_str if accident_laps else "無"
+            ])
+            
+            # 特殊圈次統計
+            special_stats = smart_markers_summary.get('special_lap_marking', {})
+            special_total = special_stats.get('total_special_laps', 0)
+            special_details = []
+            if special_stats.get('start_lap_count', 0) > 0:
+                special_details.append(f"🏁起跑: {special_stats['start_lap_count']}")
+            if special_stats.get('final_lap_count', 0) > 0:
+                special_details.append(f"🏆終點: {special_stats['final_lap_count']}")
+            if special_stats.get('restart_lap_count', 0) > 0:
+                special_details.append(f"🚩重啟: {special_stats['restart_lap_count']}")
+            
+            special_laps = special_stats.get('special_lap_numbers', [])
+            special_laps_str = ", ".join(map(str, special_laps))
+            
+            markers_table.add_row([
+                "🏁 特殊圈次",
+                special_total,
+                " | ".join(special_details) if special_details else "無",
+                special_laps_str if special_laps else "無"
+            ])
+            
+            print(markers_table)
+            
+            # 顯示整體事件統計
+            overall_stats = smart_markers_summary.get('overall_statistics', {})
+            if overall_stats:
+                print(f"\n📊 整體事件密度:")
+                print(f"   • 有事件的圈數: {overall_stats.get('laps_with_events', 0)}")
+                print(f"   • 事件密度: {overall_stats.get('event_density', 0.0):.1f}%")
+                
+                most_common = overall_stats.get('most_common_event')
+                if most_common:
+                    event_names = {
+                        'pit_stop': '進站事件',
+                        'fastest_lap': '最快圈',
+                        'tire_change': '換胎事件', 
+                        'accident': '事故/安全',
+                        'special_lap': '特殊圈次'
+                    }
+                    print(f"   • 最常見事件: {event_names.get(most_common, most_common)}")
+            
+            print("=" * 80)
+            
+        except Exception as e:
+            print(f"❌ 智能標記統計顯示失敗: {e}")
+    
     def _calculate_summary_stats(self, driver_laps):
         """計算統計摘要"""
         valid_laps = driver_laps[driver_laps['LapTime'].notna()]
@@ -530,6 +989,207 @@ class SingleDriverDetailedLaptimeAnalysis:
             "pit_stops": len(driver_laps[driver_laps['PitOutTime'].notna() | driver_laps['PitInTime'].notna()]),
             "tire_compounds_used": list(driver_laps['Compound'].dropna().unique())
         }
+    
+        
+        if valid_laps.empty:
+            return {}
+        
+        lap_times_seconds = valid_laps['LapTime'].dt.total_seconds()
+        
+        return {
+            "total_laps": len(driver_laps),
+            "valid_laps": len(valid_laps),
+            "fastest_lap_time": self._format_lap_time(valid_laps['LapTime'].min()),
+            "slowest_lap_time": self._format_lap_time(valid_laps['LapTime'].max()),
+            "average_lap_time": f"{lap_times_seconds.mean():.3f}s",
+            "lap_time_std": f"{lap_times_seconds.std():.3f}s",
+            "pit_stops": len(driver_laps[driver_laps['PitOutTime'].notna() | driver_laps['PitInTime'].notna()]),
+            "tire_compounds_used": list(driver_laps['Compound'].dropna().unique())
+        }
+    
+    def _calculate_smart_markers_summary(self, detailed_lap_data):
+        """計算智能標記統計摘要
+        
+        Args:
+            detailed_lap_data: 包含智能標記的詳細圈速數據
+            
+        Returns:
+            Dict: 智能標記統計摘要
+        """
+        try:
+            summary = {
+                "pit_stop_detection": {
+                    "total_pit_laps": 0,
+                    "pit_in_count": 0,
+                    "pit_out_count": 0,
+                    "both_count": 0,
+                    "pit_lap_numbers": []
+                },
+                "fastest_lap_detection": {
+                    "fastest_lap_count": 0,
+                    "fastest_lap_numbers": [],
+                    "personal_best_count": 0
+                },
+                "tire_change_detection": {
+                    "total_tire_changes": 0,
+                    "tire_life_reset_count": 0,
+                    "compound_change_count": 0,
+                    "both_method_count": 0,
+                    "tire_change_lap_numbers": [],
+                    "compound_transitions": []
+                },
+                "accident_safety_detection": {
+                    "total_incident_laps": 0,
+                    "yellow_flag_count": 0,
+                    "safety_car_count": 0,
+                    "red_flag_count": 0,
+                    "vsc_count": 0,
+                    "incident_lap_numbers": [],
+                    "severity_distribution": {
+                        "low": 0,
+                        "medium": 0,
+                        "high": 0,
+                        "critical": 0
+                    }
+                },
+                "special_lap_marking": {
+                    "total_special_laps": 0,
+                    "start_lap_count": 0,
+                    "final_lap_count": 0,
+                    "restart_lap_count": 0,
+                    "special_lap_numbers": []
+                },
+                "overall_statistics": {
+                    "total_laps_analyzed": len(detailed_lap_data),
+                    "laps_with_events": 0,
+                    "event_density": 0.0,  # 事件密度百分比
+                    "most_common_event": None
+                }
+            }
+            
+            event_count = 0
+            event_types = []
+            
+            for lap_data in detailed_lap_data:
+                smart_markers = lap_data.get('smart_markers', {})
+                lap_number = lap_data.get('lap_number')
+                
+                has_any_event = False
+                
+                # 進站檢測統計
+                pit_detection = smart_markers.get('pit_stop_detection', {})
+                if pit_detection.get('is_pit_lap', False):
+                    summary["pit_stop_detection"]["total_pit_laps"] += 1
+                    summary["pit_stop_detection"]["pit_lap_numbers"].append(lap_number)
+                    
+                    pit_type = pit_detection.get('pit_type')
+                    if pit_type == "pit_in":
+                        summary["pit_stop_detection"]["pit_in_count"] += 1
+                    elif pit_type == "pit_out":
+                        summary["pit_stop_detection"]["pit_out_count"] += 1
+                    elif pit_type == "both":
+                        summary["pit_stop_detection"]["both_count"] += 1
+                    
+                    has_any_event = True
+                    event_types.append("pit_stop")
+                
+                # 最快圈檢測統計
+                fastest_detection = smart_markers.get('fastest_lap_detection', {})
+                if fastest_detection.get('is_fastest_lap', False):
+                    summary["fastest_lap_detection"]["fastest_lap_count"] += 1
+                    summary["fastest_lap_detection"]["fastest_lap_numbers"].append(lap_number)
+                    
+                    if fastest_detection.get('is_personal_best', False):
+                        summary["fastest_lap_detection"]["personal_best_count"] += 1
+                    
+                    has_any_event = True
+                    event_types.append("fastest_lap")
+                
+                # 換胎檢測統計
+                tire_detection = smart_markers.get('tire_change_detection', {})
+                if tire_detection.get('is_tire_change', False):
+                    summary["tire_change_detection"]["total_tire_changes"] += 1
+                    summary["tire_change_detection"]["tire_change_lap_numbers"].append(lap_number)
+                    
+                    change_method = tire_detection.get('tire_change_method')
+                    if change_method == "tire_life_reset":
+                        summary["tire_change_detection"]["tire_life_reset_count"] += 1
+                    elif change_method == "compound_change":
+                        summary["tire_change_detection"]["compound_change_count"] += 1
+                    elif change_method == "both":
+                        summary["tire_change_detection"]["both_method_count"] += 1
+                    
+                    # 配方轉換記錄
+                    prev_compound = tire_detection.get('previous_compound')
+                    new_compound = tire_detection.get('new_compound')
+                    if prev_compound and new_compound:
+                        transition = f"{prev_compound} → {new_compound}"
+                        summary["tire_change_detection"]["compound_transitions"].append(transition)
+                    
+                    has_any_event = True
+                    event_types.append("tire_change")
+                
+                # 事故檢測統計
+                accident_detection = smart_markers.get('accident_safety_detection', {})
+                if accident_detection.get('has_incident', False):
+                    summary["accident_safety_detection"]["total_incident_laps"] += 1
+                    summary["accident_safety_detection"]["incident_lap_numbers"].append(lap_number)
+                    
+                    incident_type = accident_detection.get('incident_type')
+                    if incident_type == "yellow_flag":
+                        summary["accident_safety_detection"]["yellow_flag_count"] += 1
+                    elif incident_type == "safety_car":
+                        summary["accident_safety_detection"]["safety_car_count"] += 1
+                    elif incident_type == "red_flag":
+                        summary["accident_safety_detection"]["red_flag_count"] += 1
+                    elif incident_type == "vsc":
+                        summary["accident_safety_detection"]["vsc_count"] += 1
+                    
+                    # 嚴重程度統計
+                    severity = accident_detection.get('severity_level')
+                    if severity in summary["accident_safety_detection"]["severity_distribution"]:
+                        summary["accident_safety_detection"]["severity_distribution"][severity] += 1
+                    
+                    has_any_event = True
+                    event_types.append("accident")
+                
+                # 特殊圈次統計
+                special_detection = smart_markers.get('special_lap_marking', {})
+                if special_detection.get('is_special_lap', False):
+                    summary["special_lap_marking"]["total_special_laps"] += 1
+                    summary["special_lap_marking"]["special_lap_numbers"].append(lap_number)
+                    
+                    special_type = special_detection.get('special_type')
+                    if special_type == "start_lap":
+                        summary["special_lap_marking"]["start_lap_count"] += 1
+                    elif special_type == "final_lap":
+                        summary["special_lap_marking"]["final_lap_count"] += 1
+                    elif special_type == "restart_lap":
+                        summary["special_lap_marking"]["restart_lap_count"] += 1
+                    
+                    has_any_event = True
+                    event_types.append("special_lap")
+                
+                if has_any_event:
+                    event_count += 1
+            
+            # 計算整體統計
+            total_laps = len(detailed_lap_data)
+            summary["overall_statistics"]["laps_with_events"] = event_count
+            summary["overall_statistics"]["event_density"] = (event_count / total_laps * 100) if total_laps > 0 else 0.0
+            
+            # 找出最常見的事件類型
+            if event_types:
+                from collections import Counter
+                event_counter = Counter(event_types)
+                most_common = event_counter.most_common(1)
+                summary["overall_statistics"]["most_common_event"] = most_common[0][0] if most_common else None
+            
+            return summary
+            
+        except Exception as e:
+            print(f"⚠️ 智能標記統計計算失敗: {e}")
+            return {}
     
     def _check_cache(self, cache_key):
         """檢查緩存"""
@@ -573,6 +1233,42 @@ class SingleDriverDetailedLaptimeAnalysis:
             json.dump(result, f, ensure_ascii=False, indent=2, default=str)
         
         print(f"📄 全部車手 JSON 分析報告已保存: {json_path}")
+    
+    def _ensure_json_output(self, result, analysis_mode, driver):
+        """確保JSON輸出始終被生成，使用統一JSON生成器或原生方法"""
+        try:
+            if JSON_GENERATOR_AVAILABLE:
+                # 使用統一JSON生成器
+                if analysis_mode == "single":
+                    save_f1_analysis_json(
+                        data=result,
+                        analysis_type="detailed_laptime_analysis",
+                        function_id="28",
+                        data_loader=self.data_loader,
+                        driver=driver
+                    )
+                else:
+                    save_f1_analysis_json(
+                        data=result,
+                        analysis_type="detailed_laptime_analysis", 
+                        function_id="28",
+                        data_loader=self.data_loader,
+                        suffix="all_drivers"
+                    )
+            else:
+                # 使用原生JSON保存方法
+                if analysis_mode == "single":
+                    self._save_json_output(result, driver)
+                else:
+                    self._save_json_output_all_drivers(result)
+                    
+        except Exception as e:
+            print(f"[WARNING] JSON保存失敗: {e}")
+            # 降級到原生方法
+            if analysis_mode == "single":
+                self._save_json_output(result, driver)
+            else:
+                self._save_json_output_all_drivers(result)
     
     def _report_analysis_results(self, data, analysis_type="analysis"):
         """報告分析結果狀態"""

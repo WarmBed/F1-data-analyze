@@ -1,0 +1,2590 @@
+{
+  "success": true,
+  "driver": "VER",
+  "total_laps": 53,
+  "detailed_lap_data": [
+    {
+      "lap_number": 1,
+      "lap_time": "1:34.725",
+      "lap_time_seconds": 94.725,
+      "tire_compound": "MEDIUM",
+      "tire_life": 1.0,
+      "pit_status": "",
+      "weather": "❄️涼(22.8°C)",
+      "i1_speed": "281 km/h",
+      "i2_speed": "295 km/h",
+      "finish_speed": "262 km/h",
+      "remarks": "🏁起跑",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": true,
+          "special_type": "start_lap",
+          "lap_significance": "race_start",
+          "description": "比賽起跑圈",
+          "total_laps": 53
+        }
+      },
+      "sector_1": "N/A",
+      "sector_2": "41.962s",
+      "sector_3": "18.147s"
+    },
+    {
+      "lap_number": 2,
+      "lap_time": "1:33.943",
+      "lap_time_seconds": 93.943,
+      "tire_compound": "MEDIUM",
+      "tire_life": 2.0,
+      "pit_status": "",
+      "weather": "❄️涼(22.9°C)",
+      "i1_speed": "279 km/h",
+      "i2_speed": "296 km/h",
+      "finish_speed": "262 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.894s",
+      "sector_2": "42.026s",
+      "sector_3": "18.023s"
+    },
+    {
+      "lap_number": 3,
+      "lap_time": "1:33.639",
+      "lap_time_seconds": 93.639,
+      "tire_compound": "MEDIUM",
+      "tire_life": 3.0,
+      "pit_status": "",
+      "weather": "❄️涼(22.9°C)",
+      "i1_speed": "282 km/h",
+      "i2_speed": "296 km/h",
+      "finish_speed": "262 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.567s",
+      "sector_2": "42.027s",
+      "sector_3": "18.045s"
+    },
+    {
+      "lap_number": 4,
+      "lap_time": "1:33.744",
+      "lap_time_seconds": 93.744,
+      "tire_compound": "MEDIUM",
+      "tire_life": 4.0,
+      "pit_status": "",
+      "weather": "❄️涼(23.0°C)",
+      "i1_speed": "283 km/h",
+      "i2_speed": "296 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.570s",
+      "sector_2": "42.140s",
+      "sector_3": "18.034s"
+    },
+    {
+      "lap_number": 5,
+      "lap_time": "1:33.776",
+      "lap_time_seconds": 93.776,
+      "tire_compound": "MEDIUM",
+      "tire_life": 5.0,
+      "pit_status": "",
+      "weather": "❄️涼(22.7°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.486s",
+      "sector_2": "42.157s",
+      "sector_3": "18.133s"
+    },
+    {
+      "lap_number": 6,
+      "lap_time": "1:33.646",
+      "lap_time_seconds": 93.646,
+      "tire_compound": "MEDIUM",
+      "tire_life": 6.0,
+      "pit_status": "",
+      "weather": "❄️涼(22.3°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.319s",
+      "sector_2": "42.252s",
+      "sector_3": "18.075s"
+    },
+    {
+      "lap_number": 7,
+      "lap_time": "1:33.526",
+      "lap_time_seconds": 93.526,
+      "tire_compound": "MEDIUM",
+      "tire_life": 7.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.9°C)",
+      "i1_speed": "281 km/h",
+      "i2_speed": "296 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.193s",
+      "sector_2": "42.278s",
+      "sector_3": "18.055s"
+    },
+    {
+      "lap_number": 8,
+      "lap_time": "1:33.536",
+      "lap_time_seconds": 93.536,
+      "tire_compound": "MEDIUM",
+      "tire_life": 8.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.9°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "296 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.130s",
+      "sector_2": "42.336s",
+      "sector_3": "18.070s"
+    },
+    {
+      "lap_number": 9,
+      "lap_time": "1:33.529",
+      "lap_time_seconds": 93.529,
+      "tire_compound": "MEDIUM",
+      "tire_life": 9.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.0°C)",
+      "i1_speed": "282 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "262 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.067s",
+      "sector_2": "42.336s",
+      "sector_3": "18.126s"
+    },
+    {
+      "lap_number": 10,
+      "lap_time": "1:33.555",
+      "lap_time_seconds": 93.555,
+      "tire_compound": "MEDIUM",
+      "tire_life": 10.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.8°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "297 km/h",
+      "finish_speed": "262 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.118s",
+      "sector_2": "42.367s",
+      "sector_3": "18.070s"
+    },
+    {
+      "lap_number": 11,
+      "lap_time": "1:33.498",
+      "lap_time_seconds": 93.498,
+      "tire_compound": "MEDIUM",
+      "tire_life": 11.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.8°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.132s",
+      "sector_2": "42.299s",
+      "sector_3": "18.067s"
+    },
+    {
+      "lap_number": 12,
+      "lap_time": "1:33.643",
+      "lap_time_seconds": 93.643,
+      "tire_compound": "MEDIUM",
+      "tire_life": 12.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.1°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.046s",
+      "sector_2": "42.461s",
+      "sector_3": "18.136s"
+    },
+    {
+      "lap_number": 13,
+      "lap_time": "1:33.640",
+      "lap_time_seconds": 93.64,
+      "tire_compound": "MEDIUM",
+      "tire_life": 13.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.4°C)",
+      "i1_speed": "283 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "33.035s",
+      "sector_2": "42.473s",
+      "sector_3": "18.132s"
+    },
+    {
+      "lap_number": 14,
+      "lap_time": "1:33.380",
+      "lap_time_seconds": 93.38,
+      "tire_compound": "MEDIUM",
+      "tire_life": 14.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.5°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.875s",
+      "sector_2": "42.429s",
+      "sector_3": "18.076s"
+    },
+    {
+      "lap_number": 15,
+      "lap_time": "1:33.368",
+      "lap_time_seconds": 93.368,
+      "tire_compound": "MEDIUM",
+      "tire_life": 15.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.6°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.898s",
+      "sector_2": "42.373s",
+      "sector_3": "18.097s"
+    },
+    {
+      "lap_number": 16,
+      "lap_time": "1:33.431",
+      "lap_time_seconds": 93.431,
+      "tire_compound": "MEDIUM",
+      "tire_life": 16.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.2°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "297 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.825s",
+      "sector_2": "42.538s",
+      "sector_3": "18.068s"
+    },
+    {
+      "lap_number": 17,
+      "lap_time": "1:33.542",
+      "lap_time_seconds": 93.542,
+      "tire_compound": "MEDIUM",
+      "tire_life": 17.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.7°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "298 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.841s",
+      "sector_2": "42.557s",
+      "sector_3": "18.144s"
+    },
+    {
+      "lap_number": 18,
+      "lap_time": "1:33.353",
+      "lap_time_seconds": 93.353,
+      "tire_compound": "MEDIUM",
+      "tire_life": 18.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.7°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "298 km/h",
+      "finish_speed": "263 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.785s",
+      "sector_2": "42.491s",
+      "sector_3": "18.077s"
+    },
+    {
+      "lap_number": 19,
+      "lap_time": "1:33.358",
+      "lap_time_seconds": 93.358,
+      "tire_compound": "MEDIUM",
+      "tire_life": 19.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.3°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "298 km/h",
+      "finish_speed": "264 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.745s",
+      "sector_2": "42.482s",
+      "sector_3": "18.131s"
+    },
+    {
+      "lap_number": 20,
+      "lap_time": "1:33.064",
+      "lap_time_seconds": 93.064,
+      "tire_compound": "MEDIUM",
+      "tire_life": 20.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.5°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "298 km/h",
+      "finish_speed": "264 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.474s",
+      "sector_2": "42.472s",
+      "sector_3": "18.118s"
+    },
+    {
+      "lap_number": 21,
+      "lap_time": "1:35.220",
+      "lap_time_seconds": 95.22,
+      "tire_compound": "MEDIUM",
+      "tire_life": 21.0,
+      "pit_status": "🔧進站",
+      "weather": "❄️涼(21.4°C)",
+      "i1_speed": "281 km/h",
+      "i2_speed": "298 km/h",
+      "finish_speed": "N/A",
+      "remarks": "🔧進站",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": true,
+          "pit_in_time": "0 days 01:28:52.762000",
+          "pit_out_time": null,
+          "pit_type": "pit_in"
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.449s",
+      "sector_2": "42.440s",
+      "sector_3": "20.331s"
+    },
+    {
+      "lap_number": 22,
+      "lap_time": "1:54.078",
+      "lap_time_seconds": 114.078,
+      "tire_compound": "HARD",
+      "tire_life": 1.0,
+      "pit_status": "🔧進站",
+      "weather": "❄️涼(21.3°C)",
+      "i1_speed": "283 km/h",
+      "i2_speed": "302 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "🔧進站 | 🛞換胎",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": true,
+          "pit_in_time": null,
+          "pit_out_time": "0 days 01:29:17.340000",
+          "pit_type": "pit_out"
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": true,
+          "tire_change_method": "both",
+          "previous_compound": "MEDIUM",
+          "new_compound": "HARD",
+          "tire_life_reset": true,
+          "tire_life_before": 21.0,
+          "tire_life_after": 1.0
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "54.295s",
+      "sector_2": "41.802s",
+      "sector_3": "17.981s"
+    },
+    {
+      "lap_number": 23,
+      "lap_time": "1:32.682",
+      "lap_time_seconds": 92.682,
+      "tire_compound": "HARD",
+      "tire_life": 2.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.3°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "306 km/h",
+      "finish_speed": "272 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.736s",
+      "sector_2": "41.867s",
+      "sector_3": "18.079s"
+    },
+    {
+      "lap_number": 24,
+      "lap_time": "1:32.291",
+      "lap_time_seconds": 92.291,
+      "tire_compound": "HARD",
+      "tire_life": 3.0,
+      "pit_status": "",
+      "weather": "❄️涼(21.0°C)",
+      "i1_speed": "282 km/h",
+      "i2_speed": "303 km/h",
+      "finish_speed": "265 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.379s",
+      "sector_2": "41.950s",
+      "sector_3": "17.962s"
+    },
+    {
+      "lap_number": 25,
+      "lap_time": "1:32.506",
+      "lap_time_seconds": 92.506,
+      "tire_compound": "HARD",
+      "tire_life": 4.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.8°C)",
+      "i1_speed": "287 km/h",
+      "i2_speed": "303 km/h",
+      "finish_speed": "265 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.606s",
+      "sector_2": "41.890s",
+      "sector_3": "18.010s"
+    },
+    {
+      "lap_number": 26,
+      "lap_time": "1:32.448",
+      "lap_time_seconds": 92.448,
+      "tire_compound": "HARD",
+      "tire_life": 5.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.9°C)",
+      "i1_speed": "286 km/h",
+      "i2_speed": "301 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.488s",
+      "sector_2": "41.948s",
+      "sector_3": "18.012s"
+    },
+    {
+      "lap_number": 27,
+      "lap_time": "1:32.346",
+      "lap_time_seconds": 92.346,
+      "tire_compound": "HARD",
+      "tire_life": 6.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.6°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "302 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.464s",
+      "sector_2": "41.948s",
+      "sector_3": "17.934s"
+    },
+    {
+      "lap_number": 28,
+      "lap_time": "1:32.463",
+      "lap_time_seconds": 92.463,
+      "tire_compound": "HARD",
+      "tire_life": 7.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.6°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "302 km/h",
+      "finish_speed": "267 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.516s",
+      "sector_2": "41.941s",
+      "sector_3": "18.006s"
+    },
+    {
+      "lap_number": 29,
+      "lap_time": "1:32.148",
+      "lap_time_seconds": 92.148,
+      "tire_compound": "HARD",
+      "tire_life": 8.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.7°C)",
+      "i1_speed": "287 km/h",
+      "i2_speed": "302 km/h",
+      "finish_speed": "267 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.292s",
+      "sector_2": "41.902s",
+      "sector_3": "17.954s"
+    },
+    {
+      "lap_number": 30,
+      "lap_time": "1:32.646",
+      "lap_time_seconds": 92.646,
+      "tire_compound": "HARD",
+      "tire_life": 9.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.7°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "303 km/h",
+      "finish_speed": "270 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.347s",
+      "sector_2": "42.049s",
+      "sector_3": "18.250s"
+    },
+    {
+      "lap_number": 31,
+      "lap_time": "1:31.734",
+      "lap_time_seconds": 91.734,
+      "tire_compound": "HARD",
+      "tire_life": 10.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.6°C)",
+      "i1_speed": "287 km/h",
+      "i2_speed": "301 km/h",
+      "finish_speed": "265 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.854s",
+      "sector_2": "41.932s",
+      "sector_3": "17.948s"
+    },
+    {
+      "lap_number": 32,
+      "lap_time": "1:32.033",
+      "lap_time_seconds": 92.033,
+      "tire_compound": "HARD",
+      "tire_life": 11.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.4°C)",
+      "i1_speed": "286 km/h",
+      "i2_speed": "299 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.143s",
+      "sector_2": "41.921s",
+      "sector_3": "17.969s"
+    },
+    {
+      "lap_number": 33,
+      "lap_time": "1:31.814",
+      "lap_time_seconds": 91.814,
+      "tire_compound": "HARD",
+      "tire_life": 12.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.4°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "299 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.065s",
+      "sector_2": "41.803s",
+      "sector_3": "17.946s"
+    },
+    {
+      "lap_number": 34,
+      "lap_time": "1:31.782",
+      "lap_time_seconds": 91.782,
+      "tire_compound": "HARD",
+      "tire_life": 13.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.3°C)",
+      "i1_speed": "287 km/h",
+      "i2_speed": "299 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.083s",
+      "sector_2": "41.774s",
+      "sector_3": "17.925s"
+    },
+    {
+      "lap_number": 35,
+      "lap_time": "1:32.010",
+      "lap_time_seconds": 92.01,
+      "tire_compound": "HARD",
+      "tire_life": 14.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.9°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "299 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.080s",
+      "sector_2": "41.907s",
+      "sector_3": "18.023s"
+    },
+    {
+      "lap_number": 36,
+      "lap_time": "1:31.758",
+      "lap_time_seconds": 91.758,
+      "tire_compound": "HARD",
+      "tire_life": 15.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.1°C)",
+      "i1_speed": "286 km/h",
+      "i2_speed": "300 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.972s",
+      "sector_2": "41.801s",
+      "sector_3": "17.985s"
+    },
+    {
+      "lap_number": 37,
+      "lap_time": "1:31.739",
+      "lap_time_seconds": 91.739,
+      "tire_compound": "HARD",
+      "tire_life": 16.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.1°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "300 km/h",
+      "finish_speed": "267 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "32.041s",
+      "sector_2": "41.827s",
+      "sector_3": "17.871s"
+    },
+    {
+      "lap_number": 38,
+      "lap_time": "1:31.788",
+      "lap_time_seconds": 91.788,
+      "tire_compound": "HARD",
+      "tire_life": 17.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.0°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "300 km/h",
+      "finish_speed": "266 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.926s",
+      "sector_2": "41.861s",
+      "sector_3": "18.001s"
+    },
+    {
+      "lap_number": 39,
+      "lap_time": "1:31.779",
+      "lap_time_seconds": 91.779,
+      "tire_compound": "HARD",
+      "tire_life": 18.0,
+      "pit_status": "",
+      "weather": "❄️涼(20.0°C)",
+      "i1_speed": "284 km/h",
+      "i2_speed": "300 km/h",
+      "finish_speed": "267 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.910s",
+      "sector_2": "41.900s",
+      "sector_3": "17.969s"
+    },
+    {
+      "lap_number": 40,
+      "lap_time": "1:31.513",
+      "lap_time_seconds": 91.513,
+      "tire_compound": "HARD",
+      "tire_life": 19.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.7°C)",
+      "i1_speed": "285 km/h",
+      "i2_speed": "301 km/h",
+      "finish_speed": "267 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.829s",
+      "sector_2": "41.826s",
+      "sector_3": "17.858s"
+    },
+    {
+      "lap_number": 41,
+      "lap_time": "1:31.580",
+      "lap_time_seconds": 91.58,
+      "tire_compound": "HARD",
+      "tire_life": 20.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.6°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "301 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.773s",
+      "sector_2": "41.884s",
+      "sector_3": "17.923s"
+    },
+    {
+      "lap_number": 42,
+      "lap_time": "1:31.468",
+      "lap_time_seconds": 91.468,
+      "tire_compound": "HARD",
+      "tire_life": 21.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "289 km/h",
+      "i2_speed": "301 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.715s",
+      "sector_2": "41.833s",
+      "sector_3": "17.920s"
+    },
+    {
+      "lap_number": 43,
+      "lap_time": "1:31.441",
+      "lap_time_seconds": 91.441,
+      "tire_compound": "HARD",
+      "tire_life": 22.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.5°C)",
+      "i1_speed": "288 km/h",
+      "i2_speed": "302 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.714s",
+      "sector_2": "41.806s",
+      "sector_3": "17.921s"
+    },
+    {
+      "lap_number": 44,
+      "lap_time": "1:31.601",
+      "lap_time_seconds": 91.601,
+      "tire_compound": "HARD",
+      "tire_life": 23.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.7°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "302 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.765s",
+      "sector_2": "41.892s",
+      "sector_3": "17.944s"
+    },
+    {
+      "lap_number": 45,
+      "lap_time": "1:31.604",
+      "lap_time_seconds": 91.604,
+      "tire_compound": "HARD",
+      "tire_life": 24.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.5°C)",
+      "i1_speed": "290 km/h",
+      "i2_speed": "304 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.840s",
+      "sector_2": "41.816s",
+      "sector_3": "17.948s"
+    },
+    {
+      "lap_number": 46,
+      "lap_time": "1:31.467",
+      "lap_time_seconds": 91.467,
+      "tire_compound": "HARD",
+      "tire_life": 25.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "288 km/h",
+      "i2_speed": "301 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.720s",
+      "sector_2": "41.841s",
+      "sector_3": "17.906s"
+    },
+    {
+      "lap_number": 47,
+      "lap_time": "1:31.377",
+      "lap_time_seconds": 91.377,
+      "tire_compound": "HARD",
+      "tire_life": 26.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "301 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.632s",
+      "sector_2": "41.827s",
+      "sector_3": "17.918s"
+    },
+    {
+      "lap_number": 48,
+      "lap_time": "1:31.358",
+      "lap_time_seconds": 91.358,
+      "tire_compound": "HARD",
+      "tire_life": 27.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.3°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "302 km/h",
+      "finish_speed": "269 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.599s",
+      "sector_2": "41.852s",
+      "sector_3": "17.907s"
+    },
+    {
+      "lap_number": 49,
+      "lap_time": "1:31.275",
+      "lap_time_seconds": 91.275,
+      "tire_compound": "HARD",
+      "tire_life": 28.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.3°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "303 km/h",
+      "finish_speed": "269 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.542s",
+      "sector_2": "41.814s",
+      "sector_3": "17.919s"
+    },
+    {
+      "lap_number": 50,
+      "lap_time": "1:31.364",
+      "lap_time_seconds": 91.364,
+      "tire_compound": "HARD",
+      "tire_life": 29.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.2°C)",
+      "i1_speed": "290 km/h",
+      "i2_speed": "302 km/h",
+      "finish_speed": "269 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.481s",
+      "sector_2": "41.886s",
+      "sector_3": "17.997s"
+    },
+    {
+      "lap_number": 51,
+      "lap_time": "1:31.185",
+      "lap_time_seconds": 91.185,
+      "tire_compound": "HARD",
+      "tire_life": 30.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "302 km/h",
+      "finish_speed": "270 km/h",
+      "remarks": "",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.392s",
+      "sector_2": "41.775s",
+      "sector_3": "18.018s"
+    },
+    {
+      "lap_number": 52,
+      "lap_time": "1:31.041",
+      "lap_time_seconds": 91.041,
+      "tire_compound": "HARD",
+      "tire_life": 31.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "303 km/h",
+      "finish_speed": "269 km/h",
+      "remarks": "⚡最快圈",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": true,
+          "is_personal_best": true,
+          "fastest_type": "absolute"
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": false,
+          "special_type": null,
+          "lap_significance": null
+        }
+      },
+      "sector_1": "31.286s",
+      "sector_2": "41.708s",
+      "sector_3": "18.047s"
+    },
+    {
+      "lap_number": 53,
+      "lap_time": "1:31.548",
+      "lap_time_seconds": 91.548,
+      "tire_compound": "HARD",
+      "tire_life": 32.0,
+      "pit_status": "",
+      "weather": "❄️涼(19.4°C)",
+      "i1_speed": "N/A",
+      "i2_speed": "303 km/h",
+      "finish_speed": "268 km/h",
+      "remarks": "🏆最後一圈",
+      "smart_markers": {
+        "pit_stop_detection": {
+          "is_pit_lap": false,
+          "pit_in_time": null,
+          "pit_out_time": null,
+          "pit_type": null
+        },
+        "fastest_lap_detection": {
+          "is_fastest_lap": false,
+          "is_personal_best": false,
+          "fastest_type": null
+        },
+        "tire_change_detection": {
+          "is_tire_change": false,
+          "tire_change_method": null,
+          "previous_compound": null,
+          "new_compound": null,
+          "tire_life_reset": false
+        },
+        "accident_safety_detection": {
+          "has_incident": false,
+          "track_status": null,
+          "incident_type": null,
+          "severity_level": null
+        },
+        "special_lap_marking": {
+          "is_special_lap": true,
+          "special_type": "final_lap",
+          "lap_significance": "race_end",
+          "description": "比賽最後一圈",
+          "total_laps": 53
+        }
+      },
+      "sector_1": "31.464s",
+      "sector_2": "41.932s",
+      "sector_3": "18.152s"
+    }
+  ],
+  "summary_statistics": {
+    "total_laps": 53,
+    "valid_laps": 53,
+    "fastest_lap_time": "1:31.041",
+    "slowest_lap_time": "1:54.078",
+    "average_lap_time": "92.962s",
+    "lap_time_std": "3.128s",
+    "pit_stops": 2,
+    "tire_compounds_used": [
+      "MEDIUM",
+      "HARD"
+    ]
+  },
+  "smart_markers_summary": {
+    "pit_stop_detection": {
+      "total_pit_laps": 2,
+      "pit_in_count": 1,
+      "pit_out_count": 1,
+      "both_count": 0,
+      "pit_lap_numbers": [
+        21,
+        22
+      ]
+    },
+    "fastest_lap_detection": {
+      "fastest_lap_count": 1,
+      "fastest_lap_numbers": [
+        52
+      ],
+      "personal_best_count": 1
+    },
+    "tire_change_detection": {
+      "total_tire_changes": 1,
+      "tire_life_reset_count": 0,
+      "compound_change_count": 0,
+      "both_method_count": 1,
+      "tire_change_lap_numbers": [
+        22
+      ],
+      "compound_transitions": [
+        "MEDIUM → HARD"
+      ]
+    },
+    "accident_safety_detection": {
+      "total_incident_laps": 0,
+      "yellow_flag_count": 0,
+      "safety_car_count": 0,
+      "red_flag_count": 0,
+      "vsc_count": 0,
+      "incident_lap_numbers": [],
+      "severity_distribution": {
+        "low": 0,
+        "medium": 0,
+        "high": 0,
+        "critical": 0
+      }
+    },
+    "special_lap_marking": {
+      "total_special_laps": 2,
+      "start_lap_count": 1,
+      "final_lap_count": 1,
+      "restart_lap_count": 0,
+      "special_lap_numbers": [
+        1,
+        53
+      ]
+    },
+    "overall_statistics": {
+      "total_laps_analyzed": 53,
+      "laps_with_events": 5,
+      "event_density": 9.433962264150944,
+      "most_common_event": "special_lap"
+    }
+  },
+  "analysis_metadata": {
+    "year": 2025,
+    "race": "Japan",
+    "session": "R",
+    "analysis_type": "detailed_laptime_analysis",
+    "generated_at": "2025-09-12T17:41:49.176126",
+    "features": {
+      "smart_markers_enabled": true,
+      "structured_events": true,
+      "detailed_tracking": true
+    }
+  }
+}

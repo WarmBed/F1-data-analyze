@@ -112,16 +112,18 @@ class TireAnalysisChartWidget(QWidget):
             self.stint_data = []
             
             # 保存完整的車手數據，以便後續修正使用
-            self.all_drivers_data = (data.get('all_drivers_tire_strategy', {}) or 
+            self.all_drivers_data = (data.get('drivers_analysis', {}) or      # 新格式 v2
+                                   data.get('all_drivers_tire_strategy', {}) or 
                                    data.get('tire_timing_corrected', {}) or 
                                    data.get('tire_analysis', {}))
             
             # 從輪胎策略分析數據中提取所有車手的 Stint 數據
-            # 支援多種 JSON 結構格式
-            tire_analysis = (data.get('all_drivers_tire_strategy', {}) or 
+            # 支援多種 JSON 結構格式，優先支援新格式
+            tire_analysis = (data.get('drivers_analysis', {}) or           # 新格式 v2
+                           data.get('all_drivers_tire_strategy', {}) or 
                            data.get('tire_timing_corrected', {}) or 
                            data.get('tire_analysis', {}))
-            drivers_analyzed = data.get('drivers_analyzed', [])
+            drivers_analyzed = data.get('drivers_analyzed', list(tire_analysis.keys()))
             
             print(f"[TIRE_CHART] 可用車手: {drivers_analyzed} (共 {len(drivers_analyzed)} 位)")
             
@@ -397,43 +399,36 @@ class TireAnalysisChartWidget(QWidget):
                     painter.setPen(QPen(TireChartTheme.DEFAULT_BORDER_COLOR, 1))
                 painter.drawRect(stint_rect)
                 
-                # 在長條中間顯示該輪胎配方的最佳圈速
+                # 在長條中間顯示該輪胎配方使用的圈數
                 # 智能顯示邏輯：根據視窗大小和stint尺寸決定是否顯示文字
-                min_width_for_text = 50  # 最小寬度需求
+                min_width_for_text = 30  # 降低最小寬度需求，因為圈數文字較短
                 min_height_for_text = 15  # 最小高度需求
                 
                 if width > min_width_for_text and stint_height > min_height_for_text:
-                    # 檢查此車手是否為該配方最快車手
-                    is_fastest = fastest_per_compound.get(compound) == driver
+                    # 計算該 stint 使用的圈數
+                    laps_used = end_lap - start_lap + 1
                     
-                    # 根據是否最快選擇顏色
-                    if is_fastest:
-                        painter.setPen(QPen(TireChartTheme.FASTEST_LAP_TEXT_COLOR))  # 藍色高亮
-                        print(f"[TIRE_CHART] 藍色高亮顯示 {driver} 在 {compound} 配方的最佳圈速")
-                    else:
-                        painter.setPen(QPen(TireChartTheme.STINT_TEXT_COLOR))  # 普通黑色
+                    # 設置文字顏色
+                    painter.setPen(QPen(TireChartTheme.STINT_TEXT_COLOR))  # 普通黑色
                     
                     # 根據可用空間調整字體大小
                     font = QFont()
                     if stint_height < 20:
-                        font_size = 5  # 非常小的字體
+                        font_size = 7  # 稍微加大字體，因為只顯示數字
                     elif stint_height < 25:
-                        font_size = 6  # 小字體
+                        font_size = 8  # 中等字體
                     else:
-                        font_size = 7  # 正常字體
+                        font_size = 9  # 較大字體
                     
                     font.setPointSize(font_size)
                     font.setBold(True)
                     painter.setFont(font)
                     
-                    # 獲取該車手該輪胎配方的最佳圈速
-                    best_lap_time = self._get_best_lap_time(driver, compound)
-                    if best_lap_time:
-                        # 轉換為 M:SS.00 格式
-                        lap_time_text = self._format_lap_time(best_lap_time)
-                        # 調整文字位置，稍微向下偏移以獲得更好的視覺中心
-                        text_rect = QRect(int(x_start), y_base + 2, int(width), stint_height - 4)
-                        painter.drawText(text_rect, Qt.AlignCenter, lap_time_text)
+                    # 顯示圈數（只顯示數字）
+                    laps_text = str(laps_used)
+                    # 調整文字位置，稍微向下偏移以獲得更好的視覺中心
+                    text_rect = QRect(int(x_start), y_base + 2, int(width), stint_height - 4)
+                    painter.drawText(text_rect, Qt.AlignCenter, laps_text)
     
     def _calculate_fastest_per_compound(self) -> Dict[str, str]:
         """計算每種輪胎配方的最快車手"""

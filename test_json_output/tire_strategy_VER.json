@@ -1,0 +1,58 @@
+{
+  "driver": "VER",
+  "tire_stints": [
+    {
+      "stint": 1,
+      "compound": "SOFT",
+      "laps": [
+        1,
+        2,
+        3
+      ],
+      "lap_times": [
+        85.234,
+        84.567,
+        84.123
+      ],
+      "start_time": "2025-09-12T08:18:14.892225",
+      "duration": "0:04:14.924000"
+    },
+    {
+      "stint": 2,
+      "compound": "MEDIUM",
+      "laps": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "lap_times": [
+        86.789,
+        85.234,
+        84.89,
+        84.567
+      ],
+      "start_time": "2025-09-12T08:18:14.892225",
+      "duration": "0:05:41.480000"
+    }
+  ],
+  "total_laps": 7,
+  "pit_stops": 1,
+  "strategy_effectiveness": 0.85,
+  "analysis_metadata": {
+    "session_info": {
+      "year": 2025,
+      "race": "Japan",
+      "session": "R",
+      "date": "2025-04-13T00:00:00",
+      "track": "Suzuka Circuit"
+    }
+  },
+  "metadata": {
+    "analysis_type": "tire_strategy",
+    "function_id": "26",
+    "generated_at": "2025-09-12T08:18:14.892225",
+    "generator_version": "1.0",
+    "format_version": "F1T_JSON_v1.0"
+  }
+}

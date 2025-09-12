@@ -199,6 +199,56 @@ class F1OpenDataAnalyzer:
         
         return mapping
     
+    def get_race_short_name(self, location: str) -> str:
+        """將賽事地點轉換為短名稱"""
+        location_short_mapping = {
+            # 標準賽道名稱
+            'Bahrain International Circuit': 'Bahrain',
+            'Jeddah Corniche Circuit': 'Saudi',
+            'Albert Park Grand Prix Circuit': 'Australia',
+            'Baku City Circuit': 'Azerbaijan',
+            'Miami International Autodrome': 'Miami',
+            'Circuit de Monaco': 'Monaco',
+            'Circuit de Barcelona-Catalunya': 'Spain',
+            'Circuit Gilles Villeneuve': 'Canada',
+            'Red Bull Ring': 'Austria',
+            'Silverstone Circuit': 'Britain',
+            'Hungaroring': 'Hungary',
+            'Circuit de Spa-Francorchamps': 'Belgium',
+            'Circuit Zandvoort': 'Netherlands',
+            'Autodromo Nazionale di Monza': 'Italy',
+            'Marina Bay Street Circuit': 'Singapore',
+            'Suzuka Circuit': 'Japan',
+            'Losail International Circuit': 'Qatar',
+            'Circuit of the Americas': 'United States',
+            'Autódromo Hermanos Rodríguez': 'Mexico',
+            'Autodromo Jose Carlos Pace': 'Brazil',
+            'Las Vegas Strip Circuit': 'Las Vegas',
+            'Yas Marina Circuit': 'Abu Dhabi',
+            # 地點名稱變體
+            'Sakhir': 'Bahrain',
+            'Jeddah': 'Saudi',
+            'Melbourne': 'Australia',
+            'Baku': 'Azerbaijan',
+            'Monte Carlo': 'Monaco',
+            'Barcelona': 'Spain',
+            'Montreal': 'Canada',
+            'Spielberg': 'Austria',
+            'Silverstone': 'Britain',
+            'Budapest': 'Hungary',
+            'Spa': 'Belgium',
+            'Zandvoort': 'Netherlands',
+            'Monza': 'Italy',
+            'Suzuka': 'Japan',
+            'Doha': 'Qatar',
+            'Austin': 'United States',
+            'Mexico City': 'Mexico',
+            'São Paulo': 'Brazil',
+            'Interlagos': 'Brazil',
+            'Abu Dhabi': 'Abu Dhabi'
+        }
+        return location_short_mapping.get(location, location)
+    
     def get_enhanced_pit_stops(self, session_key: int) -> list:
         """獲取增強進站數據（包含車手信息）"""
         pit_stops = self.get_pit_stops(session_key)
@@ -212,10 +262,15 @@ class F1OpenDataAnalyzer:
             driver_number = stop.get('driver_number')
             driver_info = drivers.get(driver_number, {})
             
+            # 獲取短名稱
+            full_location = session_info.get('location', 'Unknown')
+            short_location = self.get_race_short_name(full_location)
+            
             enhanced_stop = {
                 **stop,
                 'session_info': {
-                    'location': session_info.get('location', 'Unknown'),
+                    'location': short_location,  # 使用短名稱
+                    'location_full': full_location,  # 保留完整名稱供參考
                     'country_name': session_info.get('country_name', 'Unknown'),
                     'session_name': session_info.get('session_name', 'Unknown')
                 },

@@ -2724,59 +2724,81 @@ class F1AnalysisFunctionMapper:
             return {"success": False, "error": str(e), "function_id": "24"}
 
     def _execute_driver_tire_strategy(self, year, race, session, driver, **kwargs):
-        """Function 26: 輪胎更換時機推算分析 (解決 stint_analysis 缺失問題)"""
-        print("[TIRE_TIMING] 開始執行輪胎更換時機推算分析...")
-        print("🎯 目標：解決 STR、ALO 等車手的輪胎使用時序問題")
-        print("🔧 方法：OpenF1 進站數據 + FastF1 輪胎配方 = 完整時間線")
+        """Function 26: 整合輪胎策略分析 (FastF1 + 快取 + JSON)"""
+        print("[TIRE_STRATEGY] 開始執行整合輪胎策略分析...")
+        print("🎯 目標：完整輪胎策略分析 - 快取管理 + FastF1資料 + JSON輸出")
+        print("🔧 方法：新整合模組 - TireStrategyAnalyzer")
         
         try:
-            # 🎯 使用輪胎更換時機推算模組
-            from CLI_modules.cli.analyzer.tire_change_timing_inference import run_tire_change_timing_inference
+            # 使用新的整合輪胎策略分析模組
+            from CLI_modules.cli.analyzer.tire_stragtegy.tire_strategy_cli import run_tire_strategy_analysis
             
-            print("✅ 載入輪胎更換時機推算分析模組")
+            print("✅ 載入整合輪胎策略分析模組")
             
-            # 傳遞所有參數
+            # 準備分析參數
             analysis_params = {
                 'year': year,
                 'race': race,
                 'session': session,
                 'driver': driver,
+                'use_cache': kwargs.get('use_cache', True),
+                'verbose': kwargs.get('show_detailed_output', True),
                 **kwargs
             }
             
-            return run_tire_change_timing_inference(
-                data_loader=self.data_loader, 
-                **analysis_params
-            )
+            # 執行分析
+            result = run_tire_strategy_analysis(**analysis_params)
+            
+            # 檢查結果
+            if result and isinstance(result, dict) and result.get("success"):
+                print("[SUCCESS] 整合輪胎策略分析完成")
+                print(f"[INFO] 分析目標: {result['analysis_params']['driver'] if result['analysis_params'].get('driver') else '所有車手'}")
+                
+                # 確保返回完整信息
+                result.setdefault('function_id', '26')
+                return result
+            else:
+                error_msg = result.get('message', '分析失敗') if isinstance(result, dict) else '未知錯誤'
+                print(f"[ERROR] 分析失敗: {error_msg}")
+                return {
+                    "success": False, 
+                    "message": error_msg, 
+                    "function_id": "26"
+                }
             
         except ImportError as e:
-            print(f"[WARNING] 增強版輪胎策略分析模組導入失敗: {e}")
-            print("[FALLBACK] 使用原始車手輪胎策略分析")
+            print(f"[ERROR] 無法載入整合輪胎策略分析模組: {e}")
+            print("[FALLBACK] 嘗試使用備用 FastF1 模組...")
             
+            # 備用方案：使用原有的 FastF1 模組
             try:
-                from CLI_modules.cli.analyzer.single_driver_tire_analysis import SingleDriverTireAnalysis
+                from CLI_modules.cli.analyzer.fastf1_only_tire_strategy_clean import run_fastf1_tire_strategy_analysis
                 
-                analyzer = SingleDriverTireAnalysis(
-                    data_loader=self.data_loader,
+                result = run_fastf1_tire_strategy_analysis(
+                    f1_data=None,
                     year=year,
                     race=race,
-                    session=session
+                    session=session,
+                    driver=driver,
+                    verbose=kwargs.get('show_detailed_output', False)
                 )
                 
-                if driver:
-                    return analyzer.analyze_tire_strategy(driver=driver, **kwargs)
+                if result and isinstance(result, dict) and result.get("success"):
+                    print("[SUCCESS] 備用 FastF1 輪胎策略分析完成")
+                    result.setdefault('function_id', '26')
+                    return result
                 else:
-                    return analyzer.analyze_tire_strategy(**kwargs)
+                    return {"success": False, "message": "備用分析也失敗", "function_id": "26"}
                     
-            except ImportError:
-                print("[FALLBACK] 使用基礎輪胎策略分析")
-                return self._execute_basic_tire_strategy_fallback(year, race, session, driver, **kwargs)
-                
+            except Exception as fallback_error:
+                print(f"[ERROR] 備用分析也失敗: {fallback_error}")
+                return {"success": False, "message": f"所有分析方法都失敗: {str(e)}, {str(fallback_error)}", "function_id": "26"}
+            
         except Exception as e:
             print(f"[ERROR] 輪胎策略分析執行失敗: {e}")
             import traceback
             traceback.print_exc()
-            return {"success": False, "error": str(e), "function_id": "26"}
+            return {"success": False, "message": str(e), "function_id": "26"}
 
     def _execute_driver_fastest_lap_analysis(self, year, race, session, driver, **kwargs):
         """Function 26: 車手最速圈速分析"""
@@ -2909,62 +2931,6 @@ def execute_function_by_number(function_number, data_loader=None, dynamic_team_m
         f1_analysis_instance=f1_analysis_instance
     )
     return mapper.execute_function(function_number, **kwargs)
-
-    def _execute_basic_tire_strategy_fallback(self, year, race, session, driver, **kwargs):
-        """基礎輪胎策略分析備用函數"""
-        print(f"🛞 [FALLBACK] 執行基礎輪胎策略分析 - 車手: {driver}")
-        
-        try:
-            # 使用現有的 data_loader 獲取基本輪胎資訊
-            if hasattr(self.data_loader, 'data') and self.data_loader.data is not None:
-                session_data = self.data_loader.data
-                
-                if hasattr(session_data, 'laps') and driver:
-                    driver_laps = session_data.laps.pick_driver(driver)
-                    
-                    if not driver_laps.empty:
-                        # 基本輪胎資訊分析
-                        tire_compounds = driver_laps['Compound'].dropna().unique()
-                        total_laps = len(driver_laps)
-                        
-                        result = {
-                            "success": True,
-                            "function_id": "26",
-                            "driver": driver,
-                            "analysis_type": "basic_tire_strategy",
-                            "year": year,
-                            "race": race,
-                            "session": session,
-                            "tire_compounds_used": list(tire_compounds),
-                            "total_laps": total_laps,
-                            "message": f"車手 {driver} 基礎輪胎策略分析完成"
-                        }
-                        
-                        print(f"✅ 分析完成 - 使用輪胎配方: {tire_compounds}")
-                        print(f"📊 總圈數: {total_laps}")
-                        
-                        return result
-                        
-            # 如果無法獲取數據，返回基本結果
-            return {
-                "success": True,
-                "function_id": "26", 
-                "message": f"車手 {driver} 輪胎策略分析 - 數據準備中",
-                "driver": driver,
-                "year": year,
-                "race": race,
-                "session": session
-            }
-            
-        except Exception as e:
-            print(f"[ERROR] 備用輪胎策略分析失敗: {e}")
-            return {
-                "success": False,
-                "function_id": "26",
-                "error": str(e),
-                "message": "輪胎策略分析暫時無法執行"
-            }
-
 
 if __name__ == "__main__":
     # 測試功能

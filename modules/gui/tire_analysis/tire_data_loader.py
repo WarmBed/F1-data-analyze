@@ -54,7 +54,7 @@ class TireUniversalDataLoader(UniversalDataLoader):
         
         # 為每種組合生成檔案名模式 - 優先順序：tire_strategy (新格式) > tire_timing_inference (舊格式)
         file_prefixes = [
-            'tire_strategy',              # 新的統一格式
+            'tire_strategy',              # 新的統一格式 (不含 all_drivers 後綴)
             'tire_timing_inference',      # 舊格式，向下兼容
             'enhanced_tire_analysis',
             'tire_analysis'
@@ -63,10 +63,18 @@ class TireUniversalDataLoader(UniversalDataLoader):
         for race_var in race_variants:
             for session_var in session_variants:
                 for prefix in file_prefixes:
-                    patterns.extend([
-                        f"{prefix}_{year}_{race_var}_{session_var}_all_drivers.json",
-                        f"{prefix}_{year}_{race_var}_{session_var}_{driver}.json"
-                    ])
+                    if prefix == 'tire_strategy':
+                        # 新格式：tire_strategy_{year}_{race}_{session}.json
+                        patterns.extend([
+                            f"{prefix}_{year}_{race_var}_{session_var}.json",
+                            f"{prefix}_{year}_{race_var}_{session_var}_all_drivers.json"  # 變體
+                        ])
+                    else:
+                        # 舊格式保持原樣
+                        patterns.extend([
+                            f"{prefix}_{year}_{race_var}_{session_var}_all_drivers.json",
+                            f"{prefix}_{year}_{race_var}_{session_var}_{driver}.json"
+                        ])
         
         # 移除重複並過濾空的 session 部分
         unique_patterns = []
@@ -131,25 +139,66 @@ class TireUniversalDataLoader(UniversalDataLoader):
             return False
         
         # 檢查必要的輪胎策略數據欄位 - 支援多種格式
-        required_fields = ['all_drivers_tire_strategy', 'tire_timing_corrected', 'drivers_analyzed', 'success']
+        required_fields = [
+            'drivers_analysis',           # 新格式 (CLI -f26 v2)
+            'all_drivers_tire_strategy',  # 舊格式 v1
+            'tire_timing_corrected',      # 舊格式 v1
+            'drivers_analyzed',           # 部分兼容格式
+            'success'                     # 基本成功標記
+        ]
         return any(field in raw_data for field in required_fields)
     
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
         """處理輪胎策略數據為標準格式"""
         if isinstance(raw_data, dict):
+            # 提取分析信息 - 支援新舊格式
+            analysis_info = raw_data.get('analysis_info', {})
+            metadata = raw_data.get('metadata', {})
+            
+            # 合併分析信息和元數據
+            combined_metadata = {
+                'year': analysis_info.get('year') or metadata.get('year'),
+                'race': analysis_info.get('race') or metadata.get('race'), 
+                'session': analysis_info.get('session') or metadata.get('session'),
+                'analysis_timestamp': analysis_info.get('analysis_timestamp') or metadata.get('analysis_timestamp'),
+                'success': raw_data.get('success', True),
+                'total_drivers_analyzed': analysis_info.get('total_drivers_analyzed', 0),
+                'data_source': analysis_info.get('data_source', 'FastF1')
+            }
+            
+            # 獲取車手分析數據 - 支援多種格式
+            tire_strategy_data = {}
+            drivers_analyzed = []
+            
+            if 'drivers_analysis' in raw_data:
+                # 新格式 (CLI -f26 v2)
+                tire_strategy_data = raw_data['drivers_analysis']
+                drivers_analyzed = list(tire_strategy_data.keys())
+                print(f"[TIRE_DATA] 使用新格式 drivers_analysis，車手數量: {len(drivers_analyzed)}")
+            elif 'all_drivers_tire_strategy' in raw_data:
+                # 舊格式 v1
+                tire_strategy_data = raw_data['all_drivers_tire_strategy']
+                drivers_analyzed = raw_data.get('drivers_analyzed', list(tire_strategy_data.keys()))
+                print(f"[TIRE_DATA] 使用舊格式 all_drivers_tire_strategy，車手數量: {len(drivers_analyzed)}")
+            elif 'tire_timing_corrected' in raw_data:
+                # 舊格式 v1
+                tire_strategy_data = raw_data['tire_timing_corrected']
+                drivers_analyzed = raw_data.get('drivers_analyzed', list(tire_strategy_data.keys()))
+                print(f"[TIRE_DATA] 使用舊格式 tire_timing_corrected，車手數量: {len(drivers_analyzed)}")
+            else:
+                print(f"[TIRE_DATA] 警告：無法找到支援的數據格式")
+                tire_strategy_data = {}
+                drivers_analyzed = []
+            
+            # 獲取整體統計（新格式特有）
+            overall_statistics = raw_data.get('overall_statistics', {})
+            
             return {
-                'metadata': {
-                    'year': raw_data.get('year'),
-                    'race': raw_data.get('race'),
-                    'session': raw_data.get('session'),
-                    'analysis_timestamp': raw_data.get('analysis_timestamp'),
-                    'success': raw_data.get('success', False)
-                },
-                'drivers_analyzed': raw_data.get('drivers_analyzed', []),
-                'all_drivers_tire_strategy': (raw_data.get('all_drivers_tire_strategy', {}) or 
-                                            raw_data.get('tire_timing_corrected', {})),
-                'tire_analysis': (raw_data.get('all_drivers_tire_strategy', {}) or 
-                                raw_data.get('tire_timing_corrected', {})),
+                'metadata': combined_metadata,
+                'drivers_analyzed': drivers_analyzed,
+                'all_drivers_tire_strategy': tire_strategy_data,
+                'tire_analysis': tire_strategy_data,
+                'overall_statistics': overall_statistics,  # 新增整體統計
                 'raw_data': raw_data
             }
         return {'raw_data': raw_data}
@@ -230,21 +279,40 @@ class TireDataLoader(QObject):
         """
         processed_data = {
             'metadata': data.get('metadata', {}),
-            'drivers_analyzed': data.get('drivers_analyzed', []),
             'raw_data': data
         }
         
-        # CLI -f26 已經生成了完整的 stint_analysis 數據，直接使用
-        # 支援多種 JSON 格式
-        all_drivers_data = (data.get('all_drivers_tire_strategy', {}) or 
-                          data.get('tire_timing_corrected', {}))
+        # 獲取車手分析數據和車手列表
+        if 'drivers_analysis' in data:
+            # 新格式 v2
+            all_drivers_data = data['drivers_analysis']
+            drivers_analyzed = list(all_drivers_data.keys())
+            print(f"[TIRE_DATA] 新格式：找到 {len(drivers_analyzed)} 個車手")
+        elif 'all_drivers_tire_strategy' in data:
+            # 舊格式 v1
+            all_drivers_data = data['all_drivers_tire_strategy']
+            drivers_analyzed = data.get('drivers_analyzed', list(all_drivers_data.keys()))
+            print(f"[TIRE_DATA] 舊格式：找到 {len(drivers_analyzed)} 個車手")
+        elif 'tire_timing_corrected' in data:
+            # 舊格式 v1
+            all_drivers_data = data['tire_timing_corrected']
+            drivers_analyzed = data.get('drivers_analyzed', list(all_drivers_data.keys()))
+            print(f"[TIRE_DATA] 舊格式：找到 {len(drivers_analyzed)} 個車手")
+        else:
+            all_drivers_data = {}
+            drivers_analyzed = []
+            print(f"[TIRE_DATA] 警告：未找到支援的數據格式")
+        
+        processed_data['drivers_analyzed'] = drivers_analyzed
         processed_data['tire_analysis'] = all_drivers_data
         
         print(f"[TIRE_DATA] 處理完成，車手數量: {len(all_drivers_data)}")
-        if all_drivers_data:
+        if all_drivers_data and len(all_drivers_data) > 0:
             first_driver = list(all_drivers_data.keys())[0]
-            stint_count = len(all_drivers_data[first_driver].get('stint_analysis', []))
-            print(f"[TIRE_DATA] 示例車手 {first_driver} 有 {stint_count} 個 Stint")
+            driver_data = all_drivers_data[first_driver]
+            if isinstance(driver_data, dict):
+                stint_count = len(driver_data.get('stint_analysis', []))
+                print(f"[TIRE_DATA] 示例車手 {first_driver} 有 {stint_count} 個 Stint")
         
         return processed_data
     

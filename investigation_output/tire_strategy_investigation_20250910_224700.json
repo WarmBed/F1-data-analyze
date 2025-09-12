@@ -1,0 +1,680 @@
+{
+  "investigation_info": {
+    "timestamp": "2025-09-10T22:47:28.990789",
+    "target_race": "2025 Japan R",
+    "cli_version": "f1_analysis_modular_main.py"
+  },
+  "cli_execution": {
+    "command": "python f1_analysis_modular_main.py -f 26 -y 2025 -r Japan -s R",
+    "returncode": 1,
+    "stdout": "[WARNING] �����ҲվɤJ����: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)\n[SUCCESS] �W�ߤ��R�ҲվɤJ���\\�I\n[OK] ��¦�̿�]�ɤJ���\\�I\n[OK] �ݮe�ƾڸ��J���ɤJ���\\�I\n[OK] �ݮe�ƾڸ��J���Ыئ��\\�I\n[START] ��l�ƭݮeF1���R���...\n[SUCCESS] F1���R��Ҫ�l�Ƨ���\n   - �W�����R��: [SUCCESS]\n   - DNF���R��: [SUCCESS]\n   - �s�D���R��: [SUCCESS]\n[OK] F1���R��Ҫ�l�Ʀ��\\\n================================================================================\n F1 Analysis CLI - �Ҳդƪ��� (�M�g���P�B��) v5.4\n F1 Telemetry Analysis - Enhanced Race Display Edition\n================================================================================\n [F1]  ��� FastF1 �M OpenF1 ���M�~F1�������R�t��\n [STATS]  �����ҲդƳ]�p�A�䴩2024-2025�~�ɩu�ƾ�\n [CALENDAR]  �s�W�ɨƤ���P����W����ܥ\\��\n================================================================================\n\n[OK] �Ҳդ�F1���R�t�Τw�Ұ� (�ѼƤƼҦ�)\n[FILES] �Ҳեؿ�: C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\modules\n[PYTHON] Python����: 3.13.5\n\n[START] �ѼƼҦ��Ұ�...\n============================================================\n[TOOL] �ѼƤƼҦ� - F1���R�t�ή֤�\n============================================================\n[STATS] ���J�Ѽ�: Year=2025, Race=Japan, Session=R\n\n[STATS] �q�ѼƸ��J 2025 Japan R �ƾ�...\n[OK] �ݮe�ƾڸ��J����l�Ʀ��\\\n[CACHE] �q�֨����J���: f1_analysis_cache/f1_data_2025_Japan_R.pkl\n[SUCCESS] �֨���Ƹ��J���\\\n[OK] �ɨƼƾڸ��J�����I\n[OK] OpenF1 ���R����l�Ʀ��\\\n[OK] F1���R��Ҥw��s\n[TARGET] ����\\��: 26\n[START] ����\\��s��: 26\n[START] �}�l���樮����L�������R...\n[ERROR] ������L�������R���楢��: 'cp950' codec can't encode character '\\U0001f6de' in position 0: illegal multibyte sequence\n[ERROR] �\\�� 26 ���楢��: �������~\n[ERROR] �ѼƤƼҦ��\\����楢��\n[ERROR] ���~�H��: �������~\n[ERROR] ���R���楢��\n",
+    "stderr": "",
+    "success": false,
+    "timestamp": "2025-09-10T22:47:02.737600"
+  },
+  "file_analysis": {
+    "json_files": [
+      {
+        "name": "all_drivers_telemetry_analysis_2025_Japan_R.json",
+        "path": "json\\all_drivers_telemetry_analysis_2025_Japan_R.json",
+        "size": 39960,
+        "modified": "2025-09-10T22:31:11.817142"
+      },
+      {
+        "name": "all_incidents_summary_2025_Japan.json",
+        "path": "json\\all_incidents_summary_2025_Japan.json",
+        "size": 38303,
+        "modified": "2025-09-10T22:31:10.378443"
+      },
+      {
+        "name": "driver_detailed_pitstop_records_2025_Japanese_Grand_Prix.json",
+        "path": "json\\driver_detailed_pitstop_records_2025_Japanese_Grand_Prix.json",
+        "size": 4395,
+        "modified": "2025-09-10T22:27:01.197674"
+      },
+      {
+        "name": "driver_fastest_pitstop_ranking_2025_Japanese_Grand_Prix.json",
+        "path": "json\\driver_fastest_pitstop_ranking_2025_Japanese_Grand_Prix.json",
+        "size": 3439,
+        "modified": "2025-09-10T22:30:46.185302"
+      },
+      {
+        "name": "enhanced_rain_analysis_2025_Australia_R.json",
+        "path": "json\\enhanced_rain_analysis_2025_Australia_R.json",
+        "size": 20645,
+        "modified": "2025-09-10T20:27:22.752128"
+      },
+      {
+        "name": "enhanced_rain_analysis_2025_Japan_R.json",
+        "path": "json\\enhanced_rain_analysis_2025_Japan_R.json",
+        "size": 18763,
+        "modified": "2025-09-10T21:35:29.032078"
+      },
+      {
+        "name": "raw_data_track_position_2025_Japanese Grand Prix.json",
+        "path": "json\\raw_data_track_position_2025_Japanese Grand Prix.json",
+        "size": 7617,
+        "modified": "2025-09-10T22:31:05.929918"
+      },
+      {
+        "name": "team_pitstop_ranking_2025_Japanese_Grand_Prix.json",
+        "path": "json\\team_pitstop_ranking_2025_Japanese_Grand_Prix.json",
+        "size": 2897,
+        "modified": "2025-09-10T22:31:09.912605"
+      },
+      {
+        "name": "tire_strategy_2025_Japan_R_all_drivers.json",
+        "path": "json\\tire_strategy_2025_Japan_R_all_drivers.json",
+        "size": 34291,
+        "modified": "2025-09-10T22:40:09.256872"
+      },
+      {
+        "name": "all_drivers_annual_overtaking_statistics_20250806_001738.json",
+        "path": "json_exports\\all_drivers_annual_overtaking_statistics_20250806_001738.json",
+        "size": 7596,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_annual_overtaking_statistics_20250806_002201.json",
+        "path": "json_exports\\all_drivers_annual_overtaking_statistics_20250806_002201.json",
+        "size": 7596,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_annual_overtaking_statistics_20250806_002306.json",
+        "path": "json_exports\\all_drivers_annual_overtaking_statistics_20250806_002306.json",
+        "size": 7704,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_performance_comparison_20250806_002529.json",
+        "path": "json_exports\\all_drivers_overtaking_performance_comparison_20250806_002529.json",
+        "size": 14244,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_performance_comparison_20250806_004252.json",
+        "path": "json_exports\\all_drivers_overtaking_performance_comparison_20250806_004252.json",
+        "size": 14466,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_003432.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_003432.json",
+        "size": 100816,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_004223.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_004223.json",
+        "size": 55170,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_004921.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_004921.json",
+        "size": 55170,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_010319.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_010319.json",
+        "size": 55170,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_071144.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_071144.json",
+        "size": 56503,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_trends_analysis_20250806_071359.json",
+        "path": "json_exports\\all_drivers_overtaking_trends_analysis_20250806_071359.json",
+        "size": 56503,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_003358.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_003358.json",
+        "size": 424369,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_004244.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_004244.json",
+        "size": 26262,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_004258.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_004258.json",
+        "size": 26262,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_004400.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_004400.json",
+        "size": 26262,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_010017.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_010017.json",
+        "size": 332505,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "all_drivers_overtaking_visualization_analysis_20250806_054148.json",
+        "path": "json_exports\\all_drivers_overtaking_visualization_analysis_20250806_054148.json",
+        "size": 368781,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_fastest_lap_ranking_20250805_220502.json",
+        "path": "json_exports\\driver_fastest_lap_ranking_20250805_220502.json",
+        "size": 10169,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_fastest_lap_ranking_20250805_220823.json",
+        "path": "json_exports\\driver_fastest_lap_ranking_20250805_220823.json",
+        "size": 10169,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_fastest_lap_ranking_20250806_182126.json",
+        "path": "json_exports\\driver_fastest_lap_ranking_20250806_182126.json",
+        "size": 10042,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_overtaking_analysis_20250806_182124.json",
+        "path": "json_exports\\driver_overtaking_analysis_20250806_182124.json",
+        "size": 6377,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_statistics_overview_20250806_114906.json",
+        "path": "json_exports\\driver_statistics_overview_20250806_114906.json",
+        "size": 25028,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_statistics_overview_20250806_123815.json",
+        "path": "json_exports\\driver_statistics_overview_20250806_123815.json",
+        "size": 25028,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_statistics_overview_20250806_182119.json",
+        "path": "json_exports\\driver_statistics_overview_20250806_182119.json",
+        "size": 25028,
+        "modified": "2025-09-04T00:50:45"
+      },
+      {
+        "name": "driver_telemetry_statistics_20250806_182121.json",
+        "path": "json_exports\\driver_telemetry_statistics_20250806_182121.json",
+        "size": 11762,
+        "modified": "2025-09-04T00:50:45"
+      }
+    ],
+    "cache_files": [
+      {
+        "name": "all_incidents_summary_2025_Japanese Grand Prix_Race.pkl",
+        "path": "cache\\all_incidents_summary_2025_Japanese Grand Prix_Race.pkl",
+        "size": 6207,
+        "modified": "2025-09-10T14:04:41"
+      },
+      {
+        "name": "all_incidents_summary_2025_Japan_R.pkl",
+        "path": "cache\\all_incidents_summary_2025_Japan_R.pkl",
+        "size": 6207,
+        "modified": "2025-09-10T14:04:41"
+      },
+      {
+        "name": "comparison_telemetry_2025_Australia_R_VER_LEC_lap1.pkl",
+        "path": "cache\\comparison_telemetry_2025_Australia_R_VER_LEC_lap1.pkl",
+        "size": 105433,
+        "modified": "2025-09-10T02:26:38.618298"
+      },
+      {
+        "name": "comparison_telemetry_2025_Australia_R_VER_VER_lap1.pkl",
+        "path": "cache\\comparison_telemetry_2025_Australia_R_VER_VER_lap1.pkl",
+        "size": 105072,
+        "modified": "2025-09-10T02:26:26.430754"
+      },
+      {
+        "name": "comparison_telemetry_2025_Belgium_R_VER_VER_lap1.pkl",
+        "path": "cache\\comparison_telemetry_2025_Belgium_R_VER_VER_lap1.pkl",
+        "size": 105070,
+        "modified": "2025-09-10T14:14:04"
+      },
+      {
+        "name": "comparison_telemetry_2025_Japan_R_VER_VER_lap1.pkl",
+        "path": "cache\\comparison_telemetry_2025_Japan_R_VER_VER_lap1.pkl",
+        "size": 105062,
+        "modified": "2025-09-10T02:34:17.518551"
+      },
+      {
+        "name": "driver_detailed_pitstops_2025_Japanese_Grand_Prix.pkl",
+        "path": "cache\\driver_detailed_pitstops_2025_Japanese_Grand_Prix.pkl",
+        "size": 1129,
+        "modified": "2025-09-10T14:04:45"
+      },
+      {
+        "name": "driver_fastest_pitstop_2025_Japanese_Grand_Prix.pkl",
+        "path": "cache\\driver_fastest_pitstop_2025_Japanese_Grand_Prix.pkl",
+        "size": 989,
+        "modified": "2025-09-10T14:04:45"
+      },
+      {
+        "name": "fastf1_http_cache.sqlite",
+        "path": "cache\\fastf1_http_cache.sqlite",
+        "size": 24576,
+        "modified": "2025-09-10T02:26:22.164678"
+      },
+      {
+        "name": "team_pitstop_2025_Japanese_Grand_Prix.pkl",
+        "path": "cache\\team_pitstop_2025_Japanese_Grand_Prix.pkl",
+        "size": 883,
+        "modified": "2025-09-10T14:04:45"
+      },
+      {
+        "name": "tire_strategy_2025_China_R_all_drivers.pkl",
+        "path": "cache\\tire_strategy_2025_China_R_all_drivers.pkl",
+        "size": 7394,
+        "modified": "2025-09-10T22:22:17.267592"
+      },
+      {
+        "name": "tire_strategy_2025_Japan_R_all_drivers.pkl",
+        "path": "cache\\tire_strategy_2025_Japan_R_all_drivers.pkl",
+        "size": 7155,
+        "modified": "2025-09-10T18:45:52.477179"
+      },
+      {
+        "name": "tire_strategy_2025_Japan_R_VER.pkl",
+        "path": "cache\\tire_strategy_2025_Japan_R_VER.pkl",
+        "size": 885,
+        "modified": "2025-09-10T20:34:58.308964"
+      },
+      {
+        "name": "track_position_2025_Australian Grand Prix_R.pkl",
+        "path": "cache\\track_position_2025_Australian Grand Prix_R.pkl",
+        "size": 2359,
+        "modified": "2025-09-10T14:13:53"
+      },
+      {
+        "name": "track_position_2025_Belgian Grand Prix_R.pkl",
+        "path": "cache\\track_position_2025_Belgian Grand Prix_R.pkl",
+        "size": 2359,
+        "modified": "2025-09-10T14:13:59"
+      },
+      {
+        "name": "track_position_2025_Japanese Grand Prix_R.pkl",
+        "path": "cache\\track_position_2025_Japanese Grand Prix_R.pkl",
+        "size": 2359,
+        "modified": "2025-09-10T02:22:55.023056"
+      }
+    ],
+    "other_files": [
+      {
+        "name": "comparison_telemetry_VER_LEC_2025_Australia_R_Lap1_20250910_022637.png",
+        "path": "cache\\comparison_telemetry_VER_LEC_2025_Australia_R_Lap1_20250910_022637.png",
+        "size": 1390394,
+        "modified": "2025-09-10T02:26:38.575298"
+      },
+      {
+        "name": "comparison_telemetry_VER_VER_2025_Australia_R_Lap1_20250910_022625.png",
+        "path": "cache\\comparison_telemetry_VER_VER_2025_Australia_R_Lap1_20250910_022625.png",
+        "size": 922792,
+        "modified": "2025-09-10T02:26:26.396753"
+      },
+      {
+        "name": "comparison_telemetry_VER_VER_2025_Belgium_R_Lap1_20250910_141402.png",
+        "path": "cache\\comparison_telemetry_VER_VER_2025_Belgium_R_Lap1_20250910_141402.png",
+        "size": 1077562,
+        "modified": "2025-09-10T14:14:03"
+      },
+      {
+        "name": "comparison_telemetry_VER_VER_2025_Japan_R_Lap1_20250910_023416.png",
+        "path": "cache\\comparison_telemetry_VER_VER_2025_Japan_R_Lap1_20250910_023416.png",
+        "size": 868748,
+        "modified": "2025-09-10T02:34:17.498044"
+      }
+    ],
+    "file_analysis": {}
+  },
+  "json_deep_analysis": {
+    "file_size": 34291,
+    "structure_analysis": {
+      "top_level_keys": [
+        "success",
+        "drivers_analyzed",
+        "year",
+        "race",
+        "session",
+        "analysis_mode",
+        "analysis_timestamp",
+        "all_drivers_tire_strategy"
+      ],
+      "data_type": "dict",
+      "drivers_count": 20,
+      "drivers_list": [
+        "VER",
+        "NOR",
+        "PIA",
+        "LEC",
+        "RUS",
+        "ANT",
+        "HAM",
+        "HAD",
+        "ALB",
+        "BEA",
+        "ALO",
+        "TSU",
+        "GAS",
+        "SAI",
+        "DOO",
+        "HUL",
+        "LAW",
+        "OCO",
+        "BOR",
+        "STR"
+      ],
+      "strategy_drivers": [
+        "VER",
+        "NOR",
+        "PIA",
+        "LEC",
+        "RUS",
+        "ANT",
+        "HAM",
+        "HAD",
+        "ALB",
+        "BEA",
+        "ALO",
+        "TSU",
+        "GAS",
+        "SAI",
+        "DOO",
+        "HUL",
+        "LAW",
+        "OCO",
+        "BOR",
+        "STR"
+      ],
+      "strategy_drivers_count": 20,
+      "driver_data_structure": [
+        "tire_compounds_used",
+        "pit_stops",
+        "tire_performance",
+        "stint_analysis",
+        "tire_degradation",
+        "strategy_effectiveness"
+      ]
+    },
+    "data_validation": {
+      "issues": [],
+      "warnings": [],
+      "summary": {
+        "total_drivers": 20,
+        "consistent_drivers": 20
+      }
+    },
+    "anomaly_detection": {
+      "driver_anomalies": {
+        "BEA": [
+          "使用多種配方但進站次數為0"
+        ],
+        "ALO": [
+          "使用多種配方但進站次數為0"
+        ],
+        "DOO": [
+          "軟胎平均圈速比硬胎慢"
+        ],
+        "STR": [
+          "使用多種配方但進站次數為0",
+          "軟胎平均圈速比硬胎慢"
+        ]
+      },
+      "global_anomalies": [],
+      "statistics": {}
+    },
+    "raw_data_sample": {
+      "VER": {
+        "tire_compounds_used": [
+          "MEDIUM",
+          "HARD"
+        ],
+        "pit_stops": {
+          "total_pit_stops": 1,
+          "pit_stop_details": [
+            {
+              "lap": 22,
+              "from_compound": "MEDIUM",
+              "to_compound": "HARD"
+            }
+          ],
+          "average_pit_window": null
+        },
+        "tire_performance": {
+          "MEDIUM": {
+            "laps_used": 21,
+            "average_lap_time": 93.67219,
+            "best_lap_time": 93.064,
+            "lap_time_range": 2.156000000000006
+          },
+          "HARD": {
+            "laps_used": 32,
+            "average_lap_time": 92.495843,
+            "best_lap_time": 91.041,
+            "lap_time_range": 23.037000000000006
+          }
+        },
+        "stint_analysis": [
+          {
+            "start_lap": 1,
+            "end_lap": 21,
+            "stint_length": 21,
+            "compound": "MEDIUM",
+            "average_lap_time": 93.67219047619048,
+            "positions_gained": 0
+          },
+          {
+            "start_lap": 22,
+            "end_lap": 53,
+            "stint_length": 32,
+            "compound": "HARD",
+            "average_lap_time": 92.49584375,
+            "positions_gained": 4
+          }
+        ],
+        "tire_degradation": {
+          "MEDIUM": {
+            "degradation_seconds": -0.258,
+            "degradation_percentage": -0.2745691499211412
+          },
+          "HARD": {
+            "degradation_seconds": -5.5184,
+            "degradation_percentage": -5.7007675540541936
+          }
+        },
+        "strategy_effectiveness": {
+          "starting_position": 1,
+          "finishing_position": 1,
+          "positions_gained": 0,
+          "strategy_rating": "Average"
+        }
+      },
+      "NOR": {
+        "tire_compounds_used": [
+          "MEDIUM",
+          "HARD"
+        ],
+        "pit_stops": {
+          "total_pit_stops": 1,
+          "pit_stop_details": [
+            {
+              "lap": 22,
+              "from_compound": "MEDIUM",
+              "to_compound": "HARD"
+            }
+          ],
+          "average_pit_window": null
+        },
+        "tire_performance": {
+          "MEDIUM": {
+            "laps_used": 21,
+            "average_lap_time": 93.735476,
+            "best_lap_time": 92.988,
+            "lap_time_range": 2.772999999999996
+          },
+          "HARD": {
+            "laps_used": 32,
+            "average_lap_time": 92.498781,
+            "best_lap_time": 91.116,
+            "lap_time_range": 23.680999999999997
+          }
+        },
+        "stint_analysis": [
+          {
+            "start_lap": 1,
+            "end_lap": 21,
+            "stint_length": 21,
+            "compound": "MEDIUM",
+            "average_lap_time": 93.73547619047619,
+            "positions_gained": 0
+          },
+          {
+            "start_lap": 22,
+            "end_lap": 53,
+            "stint_length": 32,
+            "compound": "HARD",
+            "average_lap_time": 92.49878125,
+            "positions_gained": 4
+          }
+        ],
+        "tire_degradation": {
+          "MEDIUM": {
+            "degradation_seconds": -0.7103999999999999,
+            "degradation_percentage": -0.7536888741772442
+          },
+          "HARD": {
+            "degradation_seconds": -5.6878,
+            "degradation_percentage": -5.863251951393499
+          }
+        },
+        "strategy_effectiveness": {
+          "starting_position": 2,
+          "finishing_position": 2,
+          "positions_gained": 0,
+          "strategy_rating": "Average"
+        }
+      },
+      "PIA": {
+        "tire_compounds_used": [
+          "MEDIUM",
+          "HARD"
+        ],
+        "pit_stops": {
+          "total_pit_stops": 1,
+          "pit_stop_details": [
+            {
+              "lap": 21,
+              "from_compound": "MEDIUM",
+              "to_compound": "HARD"
+            }
+          ],
+          "average_pit_window": null
+        },
+        "tire_performance": {
+          "MEDIUM": {
+            "laps_used": 20,
+            "average_lap_time": 93.90855,
+            "best_lap_time": 93.253,
+            "lap_time_range": 3.228999999999999
+          },
+          "HARD": {
+            "laps_used": 33,
+            "average_lap_time": 92.452757,
+            "best_lap_time": 91.039,
+            "lap_time_range": 21.995999999999995
+          }
+        },
+        "stint_analysis": [
+          {
+            "start_lap": 1,
+            "end_lap": 20,
+            "stint_length": 20,
+            "compound": "MEDIUM",
+            "average_lap_time": 93.90855,
+            "positions_gained": 0
+          },
+          {
+            "start_lap": 21,
+            "end_lap": 53,
+            "stint_length": 33,
+            "compound": "HARD",
+            "average_lap_time": 92.45275757575757,
+            "positions_gained": 6
+          }
+        ],
+        "tire_degradation": {
+          "MEDIUM": {
+            "degradation_seconds": -0.5162,
+            "degradation_percentage": -0.5465047832402375
+          },
+          "HARD": {
+            "degradation_seconds": -5.5834,
+            "degradation_percentage": -5.759870925412797
+          }
+        },
+        "strategy_effectiveness": {
+          "starting_position": 3,
+          "finishing_position": 3,
+          "positions_gained": 0,
+          "strategy_rating": "Average"
+        }
+      }
+    }
+  },
+  "fastf1_comparison": {
+    "fastf1_available": true,
+    "drivers_comparison": {},
+    "lap_count_comparison": {},
+    "compound_usage_comparison": {},
+    "fastf1_drivers": [
+      "VER",
+      "NOR",
+      "PIA",
+      "LEC",
+      "RUS",
+      "ANT",
+      "HAM",
+      "HAD",
+      "ALB",
+      "BEA",
+      "ALO",
+      "TSU",
+      "GAS",
+      "SAI",
+      "DOO",
+      "HUL",
+      "LAW",
+      "OCO",
+      "BOR",
+      "STR"
+    ],
+    "fastf1_total_laps": 1059,
+    "fastf1_compounds": [
+      "MEDIUM",
+      "HARD",
+      "SOFT"
+    ]
+  },
+  "conclusions": [
+    "❌ CLI -f26 執行失敗，需要檢查命令執行環境",
+    "🚨 檢測到 4 個車手數據異常"
+  ]
+}

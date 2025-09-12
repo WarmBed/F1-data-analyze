@@ -52,7 +52,8 @@ class TireAnalysisDataManager(UniversalDataLoader):
                 data_source="json",
                 cli_function="26",  # CLI -f26: 輪胎換胎時機推論
                 file_patterns=[
-                    "tire_strategy_{year}_{race}_{session}_all_drivers.json",
+                    "tire_strategy_{year}_{race}_{session}.json",           # 新格式 (不含 all_drivers)
+                    "tire_strategy_{year}_{race}_{session}_all_drivers.json", # 新格式變體
                     "tire_timing_inference_{year}_{race_full}_None_all_drivers.json"  # 向下兼容舊格式
                 ],
                 search_directories=["json", "json_exports", "cache"],
@@ -169,7 +170,8 @@ class TireAnalysisDataManager(UniversalDataLoader):
         
         # 支援多種 JSON 格式
         valid_formats = [
-            "tire_timing_corrected",      # CLI -f26 新格式
+            "drivers_analysis",           # CLI -f26 v2 新格式
+            "tire_timing_corrected",      # CLI -f26 舊格式
             "all_drivers_tire_strategy",  # 舊格式
             "corrected_stint_analysis"    # 另一種格式
         ]
@@ -252,8 +254,12 @@ class TireAnalysisDataManager(UniversalDataLoader):
             self.data = data
             
             # 支援多種 JSON 格式的數據解析
-            if "tire_timing_corrected" in data:
-                # CLI -f26 新格式
+            if "drivers_analysis" in data:
+                # CLI -f26 v2 新格式
+                self.tire_data = data["drivers_analysis"]
+                self._debug("使用 drivers_analysis 格式 (CLI -f26 v2)")
+            elif "tire_timing_corrected" in data:
+                # CLI -f26 舊格式
                 self.tire_data = data["tire_timing_corrected"]
                 self._debug("使用 tire_timing_corrected 格式")
             elif "all_drivers_tire_strategy" in data:
@@ -270,6 +276,10 @@ class TireAnalysisDataManager(UniversalDataLoader):
             # 獲取摘要數據
             if "summary" in data:
                 self.strategy_stats = data["summary"]
+            elif "overall_statistics" in data:
+                # 新格式的統計數據
+                self.strategy_stats = data["overall_statistics"]
+                self._debug("使用 overall_statistics 作為摘要數據")
             else:
                 self.strategy_stats = {}
                 
@@ -279,7 +289,7 @@ class TireAnalysisDataManager(UniversalDataLoader):
                 "summary": self.strategy_stats,
                 "metadata": data.get("metadata", {}),
                 "analysis_mode": data.get("analysis_mode", "unknown"),
-                "drivers_analyzed": data.get("drivers_analyzed", []),
+                "drivers_analyzed": list(self.tire_data.keys()),  # 修復：使用實際的車手列表
                 "charts_data": self._prepare_tire_chart_data()
             }
             
@@ -339,13 +349,26 @@ class TireAnalysisDataManager(UniversalDataLoader):
         }
         
     def _prepare_tire_chart_data(self) -> Dict[str, Any]:
-        """準備輪胎圖表數據 - 直接返回原始 JSON 數據結構"""
+        """準備輪胎圖表數據 - 構建圖表組件期望的數據結構"""
         if not hasattr(self, 'data') or not self.data:
             return {}
         
-        # 直接返回原始 JSON 數據，讓圖表組件處理
-        # 這樣圖表組件就能正確讀取 drivers_analyzed 和 all_drivers_tire_strategy
-        return self.data
+        # 構建圖表組件期望的數據結構
+        chart_data = {
+            # 原始 JSON 數據的關鍵字段
+            "drivers_analyzed": list(self.tire_data.keys()),
+            "tire_analysis": self.tire_data,  # 新格式使用 drivers_analysis
+            "all_drivers_tire_strategy": self.tire_data,  # 為了兼容性
+            
+            # 保留原始數據供圖表組件使用
+            "analysis_info": self.data.get("analysis_info", {}),
+            "overall_statistics": self.data.get("overall_statistics", {}),
+            "metadata": self.data.get("metadata", {})
+        }
+        
+        self._debug(f"圖表數據已準備：{len(chart_data['drivers_analyzed'])} 個車手")
+        
+        return chart_data
         
     def get_tire_summary(self) -> Dict[str, Any]:
         """獲取輪胎策略摘要統計"""

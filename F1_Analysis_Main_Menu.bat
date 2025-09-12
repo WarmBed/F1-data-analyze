@@ -753,23 +753,39 @@ goto main_menu
 :function_26
 cls
 echo ================================================================================
-echo 功能26: 車手最速圈速分析 (Driver Fastest Lap Analysis)
+echo 功能26: 車手輪胎策略分析 (Driver Tire Strategy Analysis)
 echo ================================================================================
 echo.
-echo 正在執行車手最速圈速分析...
+echo 正在執行車手輪胎策略分析...
 echo 賽事設定: %DEFAULT_YEAR% 年 %DEFAULT_RACE% 站 %DEFAULT_SESSION% 賽段
-echo 車手: %DEFAULT_DRIVER%
 echo.
-echo python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -d %DEFAULT_DRIVER% -f 26
+python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -f 26
 echo.
-python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -d %DEFAULT_DRIVER% -f 26
+echo 車手輪胎策略分析完成！
+echo.
 pause
 goto main_menu
 
 :function_27
 cls
 echo ================================================================================
-echo 功能27: 車手每圈圈速分析 (Driver Lap Time Analysis)
+echo 功能27: 車手最速圈速分析 (Driver Fastest Lap Analysis)
+echo ================================================================================
+echo.
+echo 正在執行車手最速圈速分析...
+echo 賽事設定: %DEFAULT_YEAR% 年 %DEFAULT_RACE% 站 %DEFAULT_SESSION% 賽段
+echo.
+python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -f 27
+echo.
+echo 車手最速圈速分析完成！
+echo.
+pause
+goto main_menu
+
+:function_28
+cls
+echo ================================================================================
+echo 功能28: 車手每圈圈速分析 (Driver Lap Time Analysis)
 echo ================================================================================
 echo 分析內容包含:
 echo • 每一圈的圈速時間
@@ -777,15 +793,16 @@ echo • 使用的輪胎配方和胎齡
 echo • 進站標記和天氣情況
 echo • I1速度、I2速度、終點速度
 echo • 特殊事件備註 (進站、黃旗、安全車等)
+echo • 智能標記：自動識別特殊事件和狀況
 echo ================================================================================
 echo.
 echo 正在執行車手每圈圈速詳細分析...
 echo 賽事設定: %DEFAULT_YEAR% 年 %DEFAULT_RACE% 站 %DEFAULT_SESSION% 賽段
-echo 車手: %DEFAULT_DRIVER%
 echo.
-echo python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -d %DEFAULT_DRIVER% -f 27
+python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -f 28
 echo.
-python f1_analysis_modular_main.py -y %DEFAULT_YEAR% -r %DEFAULT_RACE% -s %DEFAULT_SESSION% -d %DEFAULT_DRIVER% -f 27
+echo 車手每圈圈速詳細分析完成！
+echo.
 pause
 goto main_menu
 
