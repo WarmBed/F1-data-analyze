@@ -348,14 +348,20 @@ class TireStrategyAnalyzer(F1AnalysisBase):
                 continue
             
             compound = stint_data['Compound'].iloc[0] if 'Compound' in stint_data.columns else 'UNKNOWN'
-            start_lap = int(stint_data['LapNumber'].min())
-            end_lap = int(stint_data['LapNumber'].max())
+            
+            # 安全的整數轉換，處理 NaN 值
+            start_lap_val = stint_data['LapNumber'].min()
+            end_lap_val = stint_data['LapNumber'].max()
+            start_lap = int(start_lap_val) if pd.notna(start_lap_val) else 0
+            end_lap = int(end_lap_val) if pd.notna(end_lap_val) else 0
             stint_length = len(stint_data)
             
             # 計算輪胎壽命
             if 'TyreLife' in stint_data.columns:
-                tyre_life_start = int(stint_data['TyreLife'].min())
-                tyre_life_end = int(stint_data['TyreLife'].max())
+                tyre_life_min = stint_data['TyreLife'].min()
+                tyre_life_max = stint_data['TyreLife'].max()
+                tyre_life_start = int(tyre_life_min) if pd.notna(tyre_life_min) else 1
+                tyre_life_end = int(tyre_life_max) if pd.notna(tyre_life_max) else stint_length
             else:
                 tyre_life_start = 1
                 tyre_life_end = stint_length

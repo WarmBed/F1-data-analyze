@@ -308,6 +308,33 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.module_error.emit(f"參數更新失敗: {str(e)}")
             return False
     
+    def receive_main_window_update_notification(self, param_type: str, value):
+        """
+        接收主視窗參數更新通知
+        
+        這個方法被主視窗的同步機制調用，用於響應主視窗參數變更
+        
+        Args:
+            param_type: 參數類型 ('year', 'race', 'session')
+            value: 新的參數值
+        """
+        try:
+            self._debug(f"收到主視窗參數更新通知: {param_type} = {value}")
+            
+            # 根據參數類型更新對應參數
+            if param_type == 'year':
+                self.update_parameters(year=int(value))
+            elif param_type == 'race':
+                self.update_parameters(race=value)
+            elif param_type == 'session':
+                self.update_parameters(session=value)
+            else:
+                self._debug(f"未知的參數類型: {param_type}")
+                
+        except Exception as e:
+            self._error(f"處理主視窗參數更新通知失敗: {e}")
+            self.module_error.emit(f"參數同步失敗: {str(e)}")
+    
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
         """獲取視窗標題"""
         year = year or self.current_year

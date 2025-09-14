@@ -67,14 +67,16 @@ class LaptimeChartWidget(QWidget):
         # 移除固定的白色背景，讓paint事件處理背景色
         self.setStyleSheet("border: 1px solid #ccc;")
         
-        # 標記顏色配置
+        # 標記顏色配置 - 新的旗幟標記系統
         self.marker_colors = {
             'P': QColor(255, 193, 7),    # 黃色 - 進站
             'F': QColor(40, 167, 69),    # 綠色 - 最快圈
             'T': QColor(138, 43, 226),   # 紫羅蘭色 - 輪胎更換
-            'A': QColor(220, 53, 69),    # 紅色 - 事故/危險
-            'S': QColor(75, 85, 95),     # 深灰色 - 特殊圈 (替代突兀的藍色)
-            'R': QColor(30, 144, 255),   # 天藍色 - 降雨 (待實現)
+            'Y': QColor(255, 193, 7),    # 黃色 - 黃旗/雙黃旗
+            'S': QColor(128, 128, 128),  # 灰色 - 安全車/虛擬安全車
+            'R': QColor(220, 53, 69),    # 紅色 - 紅旗
+            # 已停用的標記
+            # 'A': QColor(220, 53, 69),  # 紅色 - 事故/危險 (已拆分為具體類型)
         }
         
         print("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
@@ -103,7 +105,7 @@ class LaptimeChartWidget(QWidget):
                 painter.drawText(self.rect(), Qt.AlignCenter, "請選擇車手以顯示圈速數據")
                 return
             
-            # 計算繪製區域（留出邊距）
+            # 計算繪製區域（圖例重疊模式，不預留空間）
             margin = 60
             chart_rect = QRect(
                 margin, 
@@ -130,7 +132,7 @@ class LaptimeChartWidget(QWidget):
             # 繪製智能標記
             self._draw_smart_markers(painter, chart_rect, (x_min, x_max), (y_min, y_max))
             
-            # 繪製圖例
+            # 繪製圖例 (重疊模式，右上角覆蓋)
             self._draw_legend(painter)
             
         except Exception as e:
@@ -141,6 +143,47 @@ class LaptimeChartWidget(QWidget):
             painter.setPen(QPen(QColor(255, 0, 0), 1))
             painter.setFont(QFont("Arial", 10))
             painter.drawText(self.rect(), Qt.AlignCenter, f"繪製錯誤: {str(e)}")
+    
+    def _calculate_legend_space(self):
+        """智能計算圖例所需空間"""
+        if not self.series_list:
+            return {'width': 0, 'height': 0, 'x': 0, 'y': 0}
+        
+        # 計算內容尺寸
+        driver_count = len(self.series_list)
+        marker_count = 5  # P, F, T, A, S
+        
+        # 寬度計算 (取車手名稱和標記描述的最大寬度)
+        max_driver_width = 54 + 20    # 方塊 + 間距 + 車手名 + 邊距
+        max_marker_width = 110 + 20   # 標記 + 間距 + 文字 + 邊距
+        content_width = max(max_driver_width, max_marker_width)
+        
+        # 高度計算
+        header_height = 22 * 2        # 兩個標題
+        driver_height = driver_count * 20   # 每個車手20px
+        marker_height = marker_count * 24   # 每個標記24px
+        spacing = 30                  # 間距和邊距
+        content_height = header_height + driver_height + marker_height + spacing
+        
+        # 位置計算 (右上角)
+        widget_width = self.width()
+        widget_height = self.height()
+        
+        # 確保不超出邊界
+        safe_width = min(content_width, widget_width * 0.3)  # 最多佔用30%寬度
+        safe_height = min(content_height, widget_height - 40)  # 保留上下邊距
+        
+        legend_x = widget_width - safe_width - 10
+        legend_y = 20
+        
+        return {
+            'width': safe_width,
+            'height': safe_height,
+            'x': legend_x,
+            'y': legend_y,
+            'content_width': content_width,
+            'content_height': content_height
+        }
     
     def _calculate_data_range(self):
         """計算數據範圍"""
@@ -235,6 +278,11 @@ class LaptimeChartWidget(QWidget):
     
     def _draw_smart_markers(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
         """繪製智能標記"""
+        # 防護檢查：確保 series_list 已初始化且不為空
+        if not hasattr(self, 'series_list') or not self.series_list:
+            print(f"[LAPTIME_CHART_WIDGET] ⚠️ series_list 未初始化或為空，跳過智能標記繪製")
+            return
+            
         marker_count = 0
         for series in self.series_list:
             for data_point in series.data:
@@ -264,78 +312,40 @@ class LaptimeChartWidget(QWidget):
             print(f"[LAPTIME_CHART_WIDGET] ⚠️ 沒有找到智能標記數據")
     
     def _draw_marker(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
-        """繪製單個標記 - 增強版本"""
-        # 使用更粗的邊框和更大的尺寸
-        painter.setPen(QPen(QColor(0, 0, 0), 2))
-        painter.setBrush(QBrush(color))
+        """繪製單個標記 - 純文字版本，支援組合標記"""
+        print(f"[MARKER_TEXT] 🎯 繪製文字標記 {marker_type} (純文字版本)")
         
-        if marker_type == 'P':  # 進站 - 正方形 (更大)
-            painter.drawRect(position.x() - 6, position.y() - 6, 12, 12)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 2, "P")
+        # 統一的文字設置 - 使用較大的字體確保可讀性
+        painter.setPen(QPen(color, 2))  # 使用傳入的顏色
+        painter.setFont(QFont("Arial", 12, QFont.Bold))  # 統一較大字體
+        
+        if marker_type == 'P':  # 進站
+            painter.drawText(position.x() - 6, position.y() + 4, "P")
             
-        elif marker_type == 'A':  # 事故 - 三角形 (更大)
-            points = [
-                QPoint(position.x(), position.y() - 8),
-                QPoint(position.x() - 6, position.y() + 4),
-                QPoint(position.x() + 6, position.y() + 4)
-            ]
-            painter.drawPolygon(points)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 1, "A")
+        elif marker_type == 'A':  # 事故
+            painter.drawText(position.x() - 6, position.y() + 4, "A")
             
-        elif marker_type == 'F':  # 最快圈 - 星形 (更大)
-            self._draw_star(painter, position, 8)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 2, "F")
+        elif marker_type == 'F':  # 最快圈
+            painter.drawText(position.x() - 6, position.y() + 4, "F")
             
-        elif marker_type == 'T':  # 輪胎更換 - 菱形 (新增)
-            points = [
-                QPoint(position.x(), position.y() - 6),
-                QPoint(position.x() + 6, position.y()),
-                QPoint(position.x(), position.y() + 6),
-                QPoint(position.x() - 6, position.y())
-            ]
-            painter.drawPolygon(points)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 2, "T")
+        elif marker_type == 'T':  # 輪胎更換
+            painter.drawText(position.x() - 6, position.y() + 4, "T")
             
-        elif marker_type == 'A':  # 事故/危險 - 三角形 (修正)
-            points = [
-                QPoint(position.x(), position.y() - 8),
-                QPoint(position.x() - 6, position.y() + 4),
-                QPoint(position.x() + 6, position.y() + 4)
-            ]
-            painter.drawPolygon(points)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 1, "A")
+        elif marker_type == 'Y':  # 黃旗/雙黃旗
+            painter.drawText(position.x() - 6, position.y() + 4, "Y")
             
-        elif marker_type == 'S':  # 特殊圈 - 圓形 (修正)
-            painter.drawEllipse(position.x() - 6, position.y() - 6, 12, 12)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 2, "S")
+        elif marker_type == 'S':  # 安全車/虛擬安全車
+            painter.drawText(position.x() - 6, position.y() + 4, "S")
             
-        elif marker_type == 'R':  # 降雨 - 圓形 (待實現)
-            painter.drawEllipse(position.x() - 6, position.y() - 6, 12, 12)
-            # 添加文字標籤
-            painter.setPen(QPen(QColor(255, 255, 255), 1))
-            painter.setFont(QFont("Arial", 8, QFont.Bold))
-            painter.drawText(position.x() - 3, position.y() + 2, "R")
+        elif marker_type == 'R':  # 紅旗
+            painter.drawText(position.x() - 6, position.y() + 4, "R")
+            
+        # elif marker_type == 'A':  # 事故/危險 (已停用，拆分為具體類型)
+        #     painter.drawText(position.x() - 6, position.y() + 4, "A")
+            painter.drawText(position.x() - 4, position.y() + 2, "R")
             
         else:  # 未知類型 - 圓形
-            painter.drawEllipse(position.x() - 5, position.y() - 5, 10, 10)
+            painter.drawEllipse(position.x() - 6, position.y() - 6, 12, 12)
     
     def _draw_star(self, painter: QPainter, center: QPoint, radius: int):
         """繪製星形標記"""
@@ -356,164 +366,136 @@ class LaptimeChartWidget(QWidget):
         painter.drawPolygon(points)
     
     def _draw_legend(self, painter: QPainter):
-        """繪製圖例 - 包含車手和智能標記說明"""
+        """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.0]"""
         if not self.series_list:
+            print(f"[LEGEND_DEBUG] ⚠️ 沒有數據系列，跳過圖例繪製")
             return
         
-        # 🎯 動態計算圖例位置和尺寸
-        # 先計算所需寬度
-        max_driver_width = 54 + 20  # 方塊 + 間距 + 車手名 + 邊距
-        max_marker_width = 110 + 20  # 標記 + 間距 + 文字 + 邊距
-        required_width = max(max_driver_width, max_marker_width)
+        print(f"[LEGEND_DEBUG] � 使用圖例版本 3.0 - 強制白色背景調試版")
+        print(f"[LEGEND_DEBUG] 數據系列數量: {len(self.series_list)}")
         
-        # 確保圖例不超出右邊界
-        widget_width = self.width()
-        safe_width = min(required_width, widget_width - 30)  # 保留30像素右邊距
-        legend_x = widget_width - safe_width - 10  # 從右邊算起
-        legend_y = 20
+        # 計算圖例尺寸和位置
+        driver_count = len(self.series_list)
+        marker_count = 6  # P, F, T, Y, S, R (移除了 PT 組合標記)
         
-        painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-        painter.setFont(QFont("Arial", 9))
+        # 內容尺寸計算 - 調整寬度
+        content_width = 140  # 減少寬度，不再需要適應 "進站+換胎"
+        header_height = 22 * 2        # 兩個標題
+        driver_height = driver_count * 20   # 每個車手20px
+        marker_height = marker_count * 22   # 每個標記22px
+        padding = 20                  # 內邊距
+        content_height = header_height + driver_height + marker_height + padding
         
-        # 計算圖例總高度
-        driver_lines = len(self.series_list)
-        marker_lines = 5  # P, F, T, A, S
-        total_lines = driver_lines + marker_lines + 2  # +2 for spacing and headers
-        legend_height = total_lines * 20 + 30  # 增加行距
+        # 位置：右上角，小幅偏移
+        legend_x = self.width() - content_width - 15
+        legend_y = 15
         
-        # 🎯 調試：圖例背景顏色 - 使用強制白色背景
-        # 🔍 詳細調試：Widget和圖例信息
-        widget_width = self.width()
-        widget_height = self.height()
-        actual_legend_x = legend_x - 10
-        actual_legend_y = legend_y - 10
+        print(f"[LEGEND_DEBUG] 圖例位置: ({legend_x}, {legend_y})")
+        print(f"[LEGEND_DEBUG] 圖例尺寸: {content_width} x {content_height}")
         
-        # 圖例背景: 使用淡灰色替代藍色突兀問題
-        background_color = QColor(248, 248, 248, 255)  # 淡灰色，完全不透明
-        border_color = QColor(100, 100, 100)  # 深灰色邊框
+        # 🔥 強制白色背景 - 版本 3.0 加強版
+        white_color = QColor(255, 255, 255, 255)  # 完全不透明的白色
+        print(f"[LEGEND_DEBUG] 🎨 設定背景色為: R{white_color.red()}, G{white_color.green()}, B{white_color.blue()}, A{white_color.alpha()}")
         
-        # 🔍 詳細尺寸分析
-        legend_width = 175  # 當前設定寬度
+        # 多重白色填充確保效果
+        for i in range(3):  # 重複填充3次
+            painter.fillRect(legend_x - 5, legend_y - 5, content_width + 10, content_height + 10, white_color)
+        print(f"[LEGEND_DEBUG] ✅ 白色背景填充完成 (重複3次)")
         
-        # 計算實際需要的寬度
-        # 1. 車手名稱區域: 方塊(16) + 間距(8) + 最長車手名(約30) = 54
-        # 2. 標記區域: 標記(16) + 間距(14) + 文字("T - 輪胎更換"約80) = 110
-        # 3. 邊距: 左右各10 = 20
-        max_driver_width = 54 + 20  # 74
-        max_marker_width = 110 + 20  # 130
-        calculated_width = max(max_driver_width, max_marker_width)  # 130
+        # 黑色邊框
+        border_color = QColor(60, 60, 60)
+        painter.setPen(QPen(border_color, 2))
+        painter.drawRect(legend_x, legend_y, content_width, content_height)
+        print(f"[LEGEND_DEBUG] ✅ 邊框繪製完成")
         
-        print(f"[LEGEND_SIZE] ===== 圖例尺寸分析 =====")
-        print(f"[LEGEND_SIZE] Widget尺寸: {widget_width} x {widget_height}")
-        print(f"[LEGEND_SIZE] 當前圖例寬度設定: {legend_width}")
-        print(f"[LEGEND_SIZE] 計算所需寬度: {calculated_width}")
-        print(f"[LEGEND_SIZE] 圖例高度: {legend_height}")
-        print(f"[LEGEND_SIZE] 圖例位置: x={actual_legend_x}, y={actual_legend_y}")
-        print(f"[LEGEND_SIZE] 圖例右邊界: {actual_legend_x + legend_width}")
-        print(f"[LEGEND_SIZE] Widget右邊界: {widget_width}")
-        print(f"[LEGEND_SIZE] 是否超出: {'是' if actual_legend_x + legend_width > widget_width else '否'}")
-        print(f"[LEGEND_SIZE] 超出距離: {max(0, actual_legend_x + legend_width - widget_width)}")
+        # 內容繪製區域
+        content_x = legend_x + 10
+        current_y = legend_y + 15
         
-        # 使用計算出的寬度，但確保不超出邊界
-        safe_width = min(calculated_width, widget_width - actual_legend_x - 10)
-        print(f"[LEGEND_SIZE] 安全寬度: {safe_width}")
+        print(f"[LEGEND] 圖例重疊模式: 位置=({legend_x}, {legend_y}), 尺寸={content_width}x{content_height}")
         
-        # 圖例背景 - 使用安全寬度
-        for i in range(3):  # 繪製3次確保覆蓋
-            painter.fillRect(legend_x - 10, legend_y - 10, safe_width, legend_height, background_color)
-        painter.setPen(QPen(border_color, 2))  # 粗邊框
-        painter.drawRect(legend_x - 10, legend_y - 10, safe_width, legend_height)
-        
-        current_y = legend_y
-        
-        # 車手圖例標題 - 設置黑色
-        painter.setPen(QPen(QColor(80, 80, 80), 1))
+        # 車手圖例標題
+        painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Arial", 10, QFont.Bold))
-        painter.drawText(legend_x, current_y, "車手")
+        painter.drawText(content_x, current_y, "車手")
         current_y += 22
         
-        # 車手圖例
+        # 車手圖例內容
         painter.setFont(QFont("Arial", 9))
         for i, series in enumerate(self.series_list):
-            # 繪製加大的顏色方塊
+            # 顏色方塊
             painter.setBrush(QBrush(series.color))
-            painter.setPen(QPen(QColor(100, 100, 100), 1))
-            painter.fillRect(legend_x, current_y - 8, 16, 16, series.color)
-            painter.drawRect(legend_x, current_y - 8, 16, 16)
+            painter.setPen(QPen(QColor(80, 80, 80), 1))
+            painter.fillRect(content_x, current_y - 8, 14, 14, series.color)
+            painter.drawRect(content_x, current_y - 8, 14, 14)
             
-            # 繪製車手名稱
-            painter.setPen(QPen(QColor(60, 60, 60), 1))
-            painter.drawText(legend_x + 24, current_y + 4, series.name)
+            # 車手名稱
+            painter.setPen(QPen(QColor(40, 40, 40), 1))
+            painter.drawText(content_x + 22, current_y + 3, series.name)
             current_y += 20
         
         # 分隔線
-        current_y += 8
-        painter.setPen(QPen(QColor(180, 180, 180), 1))
-        painter.drawLine(legend_x, current_y, legend_x + 150, current_y)
-        current_y += 15
+        current_y += 6
+        painter.setPen(QPen(QColor(160, 160, 160), 1))
+        painter.drawLine(content_x, current_y, content_x + content_width - 20, current_y)
+        current_y += 12
         
         # 智能標記圖例標題
-        painter.setPen(QPen(QColor(80, 80, 80), 1))
+        painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Arial", 10, QFont.Bold))
-        painter.drawText(legend_x, current_y, "智能標記")
+        painter.drawText(content_x, current_y, "智能標記")
         current_y += 22
         
-        # 智能標記圖例
+        # 智能標記內容
         painter.setFont(QFont("Arial", 9))
         markers_info = [
             ('P', '進站', self.marker_colors['P']),
             ('F', '最快圈', self.marker_colors['F']),
             ('T', '輪胎更換', self.marker_colors.get('T', QColor(138, 43, 226))),
-            ('A', '事故/危險', self.marker_colors['A']),
-            ('S', '特殊圈', self.marker_colors['S']),
+            ('Y', '黃旗', self.marker_colors.get('Y', QColor(255, 193, 7))),      # 黃色
+            ('S', '安全車', self.marker_colors.get('S', QColor(128, 128, 128))),   # 灰色
+            ('R', '紅旗', self.marker_colors.get('R', QColor(220, 53, 69))),      # 紅色
+            # ('PT', '進站+換胎', self.marker_colors['P']),  # 已移除組合標記
+            # ('A', '事故/危險', self.marker_colors['A']),  # 已停用，拆分為具體類型
         ]
         
         for marker_type, description, color in markers_info:
-            # 繪製加大的標記示例
-            marker_pos = QPoint(legend_x + 10, current_y - 2)
-            painter.setBrush(QBrush(color))
-            painter.setPen(QPen(QColor(80, 80, 80), 2))
+            # 標記示例 - 改進版本，解決文字超出問題
+            marker_pos = QPoint(content_x + 8, current_y - 1)
+            self._draw_legend_marker_improved(painter, marker_pos, marker_type, color)
             
-            # 🔍 調試：標記繪製信息
-            print(f"[MARKER_DEBUG] 繪製標記 {marker_type}: 位置=({marker_pos.x()}, {marker_pos.y()}), 顏色=R{color.red()}G{color.green()}B{color.blue()}")
+            # 標記說明文字 - 只顯示描述，不重複字母
+            painter.setPen(QPen(QColor(40, 40, 40), 1))
+            painter.drawText(content_x + 25, current_y + 3, f"- {description}")
+            current_y += 22  # 調整為22px間距，更緊湊
+    
+    def _draw_legend_marker_improved(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
+        """在圖例中繪製標記示例 - 純文字版本，支援組合標記"""
+        
+        # 統一的文字設置
+        painter.setPen(QPen(color, 2))  # 使用傳入的顏色
+        painter.setFont(QFont("Arial", 10, QFont.Bold))  # 統一字體
+        
+        if marker_type == 'P':  # 進站
+            painter.drawText(position.x() - 5, position.y() + 3, "P")
             
-            if marker_type == 'P':
-                # 進站 - 方形，加大尺寸
-                print(f"[MARKER_DEBUG] {marker_type} - 方形: ({marker_pos.x() - 8}, {marker_pos.y() - 8}, 16, 16)")
-                painter.fillRect(marker_pos.x() - 8, marker_pos.y() - 8, 16, 16, color)
-                painter.drawRect(marker_pos.x() - 8, marker_pos.y() - 8, 16, 16)
-            elif marker_type == 'F':
-                # 最快圈 - 圓形，加大尺寸
-                print(f"[MARKER_DEBUG] {marker_type} - 圓形: ({marker_pos.x() - 8}, {marker_pos.y() - 8}, 16, 16)")
-                painter.drawEllipse(marker_pos.x() - 8, marker_pos.y() - 8, 16, 16)
-            elif marker_type == 'T':
-                # 輪胎更換 - 菱形，加大尺寸
-                points = [
-                    QPoint(marker_pos.x(), marker_pos.y() - 9),
-                    QPoint(marker_pos.x() + 9, marker_pos.y()),
-                    QPoint(marker_pos.x(), marker_pos.y() + 9),
-                    QPoint(marker_pos.x() - 9, marker_pos.y())
-                ]
-                print(f"[MARKER_DEBUG] {marker_type} - 菱形: 4個點")
-                painter.drawPolygon(points)
-            elif marker_type == 'A':
-                # 事故 - 三角形，加大尺寸
-                points = [
-                    QPoint(marker_pos.x(), marker_pos.y() - 10),
-                    QPoint(marker_pos.x() - 9, marker_pos.y() + 6),
-                    QPoint(marker_pos.x() + 9, marker_pos.y() + 6)
-                ]
-                print(f"[MARKER_DEBUG] {marker_type} - 三角形: 3個點")
-                painter.drawPolygon(points)
-            else:  # S - 特殊圈
-                # 圓形，加大尺寸
-                print(f"[MARKER_DEBUG] {marker_type} - 圓形: ({marker_pos.x() - 8}, {marker_pos.y() - 8}, 16, 16)")
-                painter.drawEllipse(marker_pos.x() - 8, marker_pos.y() - 8, 16, 16)
+        elif marker_type == 'F':  # 最快圈
+            painter.drawText(position.x() - 5, position.y() + 3, "F")
             
-            # 繪製標記說明 - 調整位置避免重疊
-            painter.setPen(QPen(QColor(60, 60, 60), 1))
-            painter.drawText(legend_x + 30, current_y + 4, f"{marker_type} - {description}")
-            current_y += 24
+        elif marker_type == 'T':  # 輪胎更換
+            painter.drawText(position.x() - 5, position.y() + 3, "T")
+            
+        elif marker_type == 'Y':  # 黃旗
+            painter.drawText(position.x() - 5, position.y() + 3, "Y")
+            
+        elif marker_type == 'S':  # 安全車
+            painter.drawText(position.x() - 5, position.y() + 3, "S")
+            
+        elif marker_type == 'R':  # 紅旗
+            painter.drawText(position.x() - 5, position.y() + 3, "R")
+            
+        # elif marker_type == 'A':  # 事故/危險 (已停用)
+        #     painter.drawText(position.x() - 5, position.y() + 3, "A")
 
 
 class DriverSelectionWidget(QWidget):
@@ -791,28 +773,32 @@ class driverLapAnalysisChartWidget(QWidget):
         pit_data = smart_markers.get('pit_stop_detection', {})
         if lap_num in pit_data.get('pit_lap_numbers', []):
             markers.append('P')
-        
+
+        # 輪胎更換檢測
+        tire_data = smart_markers.get('tire_change_detection', {})
+        if lap_num in tire_data.get('tire_change_lap_numbers', []):
+            markers.append('T')
+
         # 最快圈檢測
         fastest_data = smart_markers.get('fastest_lap_detection', {})
         if lap_num in fastest_data.get('fastest_lap_numbers', []):
             markers.append('F')
-            
-        # 輪胎更換檢測 (作為進站的補充)
-        tire_data = smart_markers.get('tire_change_detection', {})
-        if lap_num in tire_data.get('tire_change_lap_numbers', []):
-            if 'P' not in markers:  # 避免重複
-                markers.append('T')  # 使用 T 表示輪胎更換
         
-        # 事故/安全車檢測
+        # 賽道狀況檢測 - 根據 smart_markers 中的事故檢測數據
         safety_data = smart_markers.get('accident_safety_detection', {})
         incident_laps = safety_data.get('incident_lap_numbers', [])
+        
+        # 檢查是否在事故圈次列表中
         if lap_num in incident_laps:
-            markers.append('A')  # 事故/危險
+            # 因為目前的數據結構沒有提供具體的 TrackStatus 信息
+            # 我們先使用通用的事故標記，未來可以根據更詳細的數據來區分
+            # TODO: 需要在 CLI 分析中提供更詳細的 TrackStatus 信息
+            markers.append('Y')  # 暫時使用黃旗作為通用事故標記
             
-        # 特殊圈數檢測 (起跑、終點等)
-        special_data = smart_markers.get('special_lap_marking', {})
-        if lap_num in special_data.get('special_lap_numbers', []):
-            markers.append('S')  # 特殊圈
+        # TODO: 未來可以加入特殊圈數檢測 (起跑、終點等)
+        # special_data = smart_markers.get('special_lap_marking', {})
+        # if lap_num in special_data.get('special_lap_numbers', []):
+        #     markers.append('S')  # 特殊圈
             
         # TODO: 未來可以加入降雨檢測 (當數據可用時)
         # rain_data = smart_markers.get('rain_detection', {})

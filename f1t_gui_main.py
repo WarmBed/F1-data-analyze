@@ -11394,24 +11394,76 @@ class StyleHMainWindow(QMainWindow):
         try:
             print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
             
+            # 顯示關閉確認對話框（可選）
+            reply = QMessageBox.question(
+                self, 
+                '確認退出', 
+                '確定要退出 F1T 專業賽車分析工作站嗎？\n\n所有正在執行的分析將被停止。',
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No
+            )
+            
+            if reply == QMessageBox.No:
+                event.ignore()
+                return
+            
             # 停止所有正在執行的 CLI 分析
+            print("[MAIN] 🔄 停止所有分析進程...")
             self.stop_all_analyses()
             
-            # 確保所有子視窗都關閉
+            # 關閉所有子視窗
+            print("[MAIN] 🪟 關閉所有子視窗...")
             self.close_all_subwindows()
+            
+            # 清理分析模組管理器
+            if hasattr(self, 'analysis_module_manager'):
+                try:
+                    self.analysis_module_manager.cleanup_all()
+                    print("[MAIN] 🧹 分析模組管理器已清理")
+                except Exception as e:
+                    print(f"[MAIN] ⚠️ 分析模組管理器清理警告: {e}")
+            
+            # 清理全域 CLI 分析管理器
+            try:
+                cli_analysis_manager.cleanup_all()
+                print("[MAIN] 🔧 CLI 分析管理器已清理")
+            except Exception as e:
+                print(f"[MAIN] ⚠️ CLI 分析管理器清理警告: {e}")
+            
+            # 強制垃圾回收
+            try:
+                import gc
+                gc.collect()
+                print("[MAIN] 🗑️ 垃圾回收完成")
+            except Exception as e:
+                print(f"[MAIN] ⚠️ 垃圾回收警告: {e}")
             
             print("[MAIN] ✅ 資源清理完成，程序即將退出")
             
             # 接受關閉事件
             event.accept()
             
-            # 確保應用程序退出
+            # 確保應用程序完全退出
             from PyQt5.QtWidgets import QApplication
-            QApplication.instance().quit()
+            import sys
+            
+            app = QApplication.instance()
+            if app:
+                app.quit()
+                # 給一點時間讓 Qt 完成清理
+                QTimer.singleShot(100, lambda: sys.exit(0))
             
         except Exception as e:
             print(f"[MAIN] ❌ 關閉事件處理錯誤: {e}")
-            event.accept()  # 即使出錯也要關閉
+            import traceback
+            traceback.print_exc()
+            # 即使出錯也要強制關閉
+            event.accept()
+            try:
+                import sys
+                sys.exit(1)
+            except:
+                pass
     
     def stop_all_analyses(self):
         """停止所有正在執行的分析"""

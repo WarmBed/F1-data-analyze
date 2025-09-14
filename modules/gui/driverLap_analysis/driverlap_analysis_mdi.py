@@ -45,15 +45,23 @@ class driverLapAnalysisDataManager(QObject):
     def load_data(self, **kwargs) -> bool:
         """載入詳細圈速分析數據 - 委託給專門的數據載入器"""
         try:
+            # 檢查是否與上次載入參數相同
+            current_params = (kwargs.get('year'), kwargs.get('race'), kwargs.get('session'))
+            print(f"[LAPTIME_DATA_MANAGER] 🔍 載入檢查: 當前參數={current_params}, 上次參數={self._last_load_params}, 載入中={self._loading}")
+            
+            if self._last_load_params == current_params and not self._loading:
+                print(f"[LAPTIME_DATA_MANAGER] ⚠️ 參數未變化，跳過重複載入: {current_params}")
+                return True
+            
+            # 如果參數有變化，強制重置載入狀態
+            if self._last_load_params != current_params:
+                print(f"[LAPTIME_DATA_MANAGER] 🔄 參數變化檢測: {self._last_load_params} -> {current_params}")
+                self._loading = False  # 強制重置載入狀態
+                print(f"[LAPTIME_DATA_MANAGER] ✅ 載入狀態已重置為: {self._loading}")
+                
             # 檢查是否正在載入中
             if self._loading:
                 print(f"[LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求")
-                return True
-                
-            # 檢查是否與上次載入參數相同
-            current_params = (kwargs.get('year'), kwargs.get('race'), kwargs.get('session'))
-            if self._last_load_params == current_params:
-                print(f"[LAPTIME_DATA_MANAGER] ⚠️ 參數未變化，跳過重複載入: {current_params}")
                 return True
                 
             self._loading = True
@@ -81,6 +89,15 @@ class driverLapAnalysisDataManager(QObject):
                         pass
                     self.data_loader.data_loaded.connect(self._on_data_loaded)
                     print(f"[LAPTIME_DATA_MANAGER] ✅ 已連接數據載入器信號")
+                
+                # 連接錯誤信號
+                if hasattr(self.data_loader, 'load_error'):
+                    try:
+                        self.data_loader.load_error.disconnect()  # 先斷開避免重複連接
+                    except:
+                        pass
+                    self.data_loader.load_error.connect(self._on_load_error)
+                    print(f"[LAPTIME_DATA_MANAGER] ✅ 已連接錯誤處理信號")
                 
                 # 委託給專門載入器
                 self.data_loader.load_from_parameters(
@@ -125,6 +142,21 @@ class driverLapAnalysisDataManager(QObject):
             import traceback
             traceback.print_exc()
             self.error_occurred.emit(str(e))
+            self._loading = False
+    
+    def _on_load_error(self, error_message):
+        """處理專門載入器的載入錯誤信號"""
+        try:
+            print(f"[LAPTIME_DATA_MANAGER] ❌ 載入器報告錯誤: {error_message}")
+            
+            # 重置載入狀態
+            self._loading = False
+            
+            # 轉發錯誤信號給 MDI
+            self.error_occurred.emit(error_message)
+            
+        except Exception as e:
+            print(f"[LAPTIME_DATA_MANAGER] ❌ 錯誤處理失敗: {e}")
             self._loading = False
         
     def set_parameters(self, year: str, race: str, session: str):

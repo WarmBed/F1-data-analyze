@@ -431,8 +431,11 @@ class driverLapDataLoader(QObject):
             print(f"[F28_DATA] 從參數載入數據: {kwargs}")
             
             if hasattr(self.universal_loader, 'load_from_parameters'):
+                print(f"[F28_DATA] 🔄 委託給通用載入器處理")
                 self.universal_loader.load_from_parameters(**kwargs)
+                print(f"[F28_DATA] ✅ 已委託給通用載入器，等待結果...")
             else:
+                print(f"[F28_DATA] ⚠️ 通用載入器沒有 load_from_parameters 方法，使用備用邏輯")
                 # 嘗試直接載入 JSON 文件
                 year = kwargs.get('year')
                 race = kwargs.get('race') 
@@ -444,13 +447,17 @@ class driverLapDataLoader(QObject):
                 json_path = os.path.join("json", json_filename)
                 
                 if os.path.exists(json_path):
+                    print(f"[F28_DATA] 找到現有檔案，直接載入: {json_path}")
                     self.load_from_json(json_path)
                 else:
                     print(f"[F28_DATA] JSON 文件不存在: {json_path}")
+                    print(f"[F28_DATA] ❌ 備用邏輯無法自動生成，發射錯誤信號")
                     self.load_error.emit(f"找不到詳細圈速分析數據文件: {json_filename}")
                     
         except Exception as e:
             print(f"[F28_DATA] 參數載入錯誤: {e}")
+            import traceback
+            traceback.print_exc()
             self.load_error.emit(f"參數載入錯誤: {str(e)}")
     
     def load_from_json(self, json_path: str):
