@@ -20,8 +20,8 @@ class driverLapUniversalDataLoader(UniversalDataLoader):
     """詳細圈速分析專門的通用數據載入器實現 (Function 28)"""
     
     def __init__(self):
-        # 使用 telemetry 類型作為基礎，因為詳細圈速分析也是遙測數據的一部分
-        super().__init__('telemetry')
+        # 使用 laptime 類型初始化（由 driverLapDataLoader 預先註冊）
+        super().__init__('laptime')
     
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
@@ -196,6 +196,9 @@ class driverLapDataLoader(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # 確保 laptime 類型已註冊
+        self._ensure_laptime_registered()
+        
         # 創建專門的通用數據載入器實例
         self.universal_loader = driverLapUniversalDataLoader()
         
@@ -210,6 +213,32 @@ class driverLapDataLoader(QObject):
                 'analysis_types': ['detailed_laptime_analysis', 'intelligent_marking', 'comprehensive_analysis']
             }
         }
+        
+        # 詳細圈速分析特定配置 (Function 28)
+        self.analysis_config = {
+            'detailed_laptime': {
+                'required_data': ['detailed_lap_data', 'smart_markers', 'lap_times'],
+                'optional_data': ['track_status', 'weather', 'tire_data'],
+                'analysis_types': ['detailed_laptime_analysis', 'intelligent_marking', 'comprehensive_analysis']
+            }
+        }
+    
+    def _ensure_laptime_registered(self):
+        """確保 laptime 分析類型已註冊"""
+        from modules.gui.base import UniversalDataLoader, AnalysisConfig
+        
+        if 'laptime' not in UniversalDataLoader.ANALYSIS_TYPES:
+            UniversalDataLoader.register_analysis_type(
+                'laptime',
+                AnalysisConfig(
+                    display_name='詳細圈速分析',
+                    debug_prefix='F28_DATA',
+                    data_source='json',
+                    cli_function='28',  # Function 28: 詳細圈速分析
+                    file_patterns=['detailed_laptime_analysis_*.json']
+                )
+            )
+            print(f"[F28_DATA] 已註冊 laptime 分析類型")
     
     def _connect_universal_loader_signals(self):
         """連接通用載入器信號"""

@@ -121,6 +121,10 @@ class UniversalAnalysisMDI(IAnalysisModule):
         super().__init__(parent)
         
         # 驗證分析類型
+        print(f"🚨 [MDI_INIT] 請求分析類型: {analysis_type}")
+        print(f"🚨 [MDI_INIT] 可用的MDI模組類型: {list(self.MDI_MODULE_TYPES.keys())}")
+        print(f"🚨 [MDI_INIT] laptime是否在MDI_MODULE_TYPES中: {'laptime' in self.MDI_MODULE_TYPES}")
+        
         if analysis_type not in self.MDI_MODULE_TYPES:
             raise ValueError(f"不支援的分析類型: {analysis_type}. 可用類型: {list(self.MDI_MODULE_TYPES.keys())}")
             
@@ -577,7 +581,12 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def _load_data_with_current_parameters(self):
         """使用當前參數載入數據"""
+        print(f"🚨 [BASE_CRITICAL] _load_data_with_current_parameters 被調用")
+        print(f"🚨 [BASE_CRITICAL] self.data_manager = {self.data_manager}")
+        print(f"🚨 [BASE_CRITICAL] type(self.data_manager) = {type(self.data_manager)}")
+        
         if not self.data_manager:
+            print(f"🚨 [BASE_CRITICAL] data_manager 為 None，返回")
             return
         
         try:
@@ -588,28 +597,42 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 'session': self.current_session
             }
             
+            print(f"🚨 [BASE_CRITICAL] 載入參數: {load_params}")
+            
             if self.config.requires_driver_params:
                 load_params.update({
                     'driver1': getattr(self, 'driver1', 'VER'),
                     'driver2': getattr(self, 'driver2', 'VER')
                 })
+                print(f"🚨 [BASE_CRITICAL] 添加車手參數: {load_params}")
             
             if self.config.requires_lap_params:
                 load_params.update({
                     'lap1': getattr(self, 'lap1', 1),
                     'lap2': getattr(self, 'lap2', 1)
                 })
+                print(f"🚨 [BASE_CRITICAL] 添加圈數參數: {load_params}")
             
             # 呼叫數據管理器的載入方法
-            if hasattr(self.data_manager, 'load_data'):
+            has_load_data = hasattr(self.data_manager, 'load_data')
+            print(f"🚨 [BASE_CRITICAL] data_manager 是否有 load_data 方法: {has_load_data}")
+            
+            if has_load_data:
+                print(f"🚨 [BASE_CRITICAL] 調用 data_manager.load_data({load_params})")
                 self.data_manager.load_data(**load_params)
+                print(f"🚨 [BASE_CRITICAL] data_manager.load_data 調用完成")
             elif hasattr(self.data_manager, f'load_{self.analysis_type}_data'):
                 load_method = getattr(self.data_manager, f'load_{self.analysis_type}_data')
+                print(f"🚨 [BASE_CRITICAL] 調用 load_{self.analysis_type}_data 方法")
                 load_method(**load_params)
             else:
+                print(f"🚨 [BASE_CRITICAL] ⚠️ 數據管理器沒有合適的載入方法")
                 self._debug("⚠️  數據管理器沒有合適的載入方法")
             
         except Exception as e:
+            print(f"🚨 [BASE_CRITICAL] 異常: {e}")
+            import traceback
+            traceback.print_exc()
             self._error(f"數據載入失敗: {e}")
             self.module_error.emit(f"數據載入失敗: {str(e)}")
     
@@ -1037,6 +1060,20 @@ UniversalAnalysisMDI.register_mdi_module_type(
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
+        supports_single_driver=True,
+        supports_dual_driver=True
+    )
+)
+
+# 註冊詳細圈速分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'laptime',
+    AnalysisMDIConfig(
+        analysis_type='laptime',
+        display_name='詳細圈速分析',
+        default_size=(1200, 800),
+        requires_driver_params=True,
+        requires_lap_params=False,
         supports_single_driver=True,
         supports_dual_driver=True
     )

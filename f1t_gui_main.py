@@ -5777,6 +5777,7 @@ class StyleHMainWindow(QMainWindow):
         single_group = QTreeWidgetItem(tree, ["🚗 單場賽事車手分析"])
         single_group.setExpanded(True)
         QTreeWidgetItem(single_group, ["遙測分析"])
+        QTreeWidgetItem(single_group, ["詳細圈速分析"])
         
         layout.addWidget(tree)
         
@@ -7079,8 +7080,8 @@ class StyleHMainWindow(QMainWindow):
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
         
-        # 特殊處理：遙測分析直接調用 lap_analysis 方法
-        if "圈速" in function_name or "遙測分析" in function_name:
+        # 特殊處理：遙測分析直接調用 lap_analysis 方法（但排除詳細圈速分析）
+        if ("圈速" in function_name or "遙測分析" in function_name) and "詳細圈速分析" not in function_name:
             print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
             return
@@ -7204,6 +7205,7 @@ class StyleHMainWindow(QMainWindow):
             import modules.gui.accident_analysis.accident_analysis_mdi  # 事故分析模組
             import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
+            import modules.gui.driverLap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
             
             # 賽道分析模組導入與註冊
             try:
@@ -7227,6 +7229,7 @@ class StyleHMainWindow(QMainWindow):
                 "車手排名": "telemetry_analysis", # 車手排名映射 (原單場賽事總攬)
                 "遙測分析": "telemetry_analysis", # 遙測分析映射 (圈速分析)
                 "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
+                "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
             }
             
             # 尋找匹配的模組類型
@@ -7529,6 +7532,37 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 處理詳細圈速分析模組
+                elif module_type == "driverlap_analysis":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建詳細圈速分析模組...")
+                        from modules.gui.driverLap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
+                        print(f"[OK] [MODULE_FACTORY] 詳細圈速分析 MDI 導入成功")
+                        
+                        # 直接創建 MDI 實例，不再需要包裝模組
+                        module = driverLapAnalysisMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 詳細圈速分析 MDI 實例創建成功")
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 詳細圈速分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            # 使用統一的參數更新方法
+                            if hasattr(module, 'update_parameters'):
+                                module.update_parameters(str(current_year), current_race, current_session)
+                        
+                        print(f"[OK] [MODULE_FACTORY] 詳細圈速分析模組初始化成功")
+                        return module
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
                 # 處理其他模組類型...
                 else:
                     print(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
@@ -7644,7 +7678,7 @@ class StyleHMainWindow(QMainWindow):
                 }
             """)
             return placeholder
-        elif "圈速" in function_name:
+        elif "圈速" in function_name and "詳細圈速分析" not in function_name:
             return self.create_lap_analysis_table()
         elif "進站分析" in function_name:
             # 使用新的進站分析模組
