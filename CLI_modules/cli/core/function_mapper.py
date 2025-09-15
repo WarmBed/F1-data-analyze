@@ -263,6 +263,45 @@ class F1AnalysisFunctionMapper:
         # 其他功能需要檢查數據載入
         return self.data_loader is not None and hasattr(self.data_loader, 'session_loaded') and self.data_loader.session_loaded
     
+    def _export_to_json(self, result: Dict[str, Any], function_id: Union[str, int], analysis_name: str) -> bool:
+        """統一的 JSON 導出工具函數
+        
+        Args:
+            result: 分析結果字典
+            function_id: 功能編號
+            analysis_name: 分析名稱 (用於檔案命名)
+            
+        Returns:
+            bool: 導出是否成功
+        """
+        if not result or not result.get('success'):
+            return False
+            
+        try:
+            import json
+            import os
+            
+            json_dir = "json"
+            os.makedirs(json_dir, exist_ok=True)
+            
+            # 獲取年份、賽事和賽段信息
+            year = getattr(self.data_loader, 'year', 'Unknown')
+            race_name = getattr(self.data_loader, 'race_name', 'Unknown')
+            session_type = getattr(self.data_loader, 'session_type', 'Unknown')
+            
+            json_filename = f"{analysis_name}_{year}_{race_name}_{session_type}.json"
+            json_path = os.path.join(json_dir, json_filename)
+            
+            with open(json_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+            
+            print(f"\n📄 JSON 分析報告已保存: {json_path}")
+            return True
+            
+        except Exception as e:
+            print(f"[WARNING] JSON 保存失敗: {str(e)}")
+            return False
+    
     # ===== 基礎分析模組執行函數 (1-10) =====
     
     def _execute_rain_intensity_analysis(self, **kwargs):
@@ -324,13 +363,17 @@ class F1AnalysisFunctionMapper:
             else:
                 return {"success": False, "message": "降雨強度分析執行失敗：無結果數據", "function_id": "1"}
             
-            return {
+            # 保存JSON輸出 (使用統一工具函數)
+            final_result = {
                 "success": True,
                 "message": "降雨強度分析完成",
                 "data": result.get("data") if isinstance(result, dict) else result,
                 "cache_used": result.get("cache_used", False) if isinstance(result, dict) else False,
                 "function_id": "1"
             }
+            self._export_to_json(final_result, "1", "rain_intensity_analysis")
+            
+            return final_result
         except Exception as e:
             print(f"[ERROR] 降雨強度分析失敗: {str(e)}")
             return {"success": False, "message": f"降雨強度分析失敗: {str(e)}", "function_id": "1"}
@@ -346,14 +389,29 @@ class F1AnalysisFunctionMapper:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
             from CLI_modules.cli.analyzer.track_position_analysis import run_track_position_analysis
+            from datetime import datetime
+            
             print("[TRACK] 執行賽道位置分析...")
             result = run_track_position_analysis(
                 self.data_loader,
                 show_detailed_output=show_detailed_output  # 新增參數傳遞
             )
             
+            # 檢查結果是否有效
+            if result is None:
+                print(f"[ERROR] 賽道位置分析返回 None")
+                return {"success": False, "error": "分析返回空值", "function_id": "2"}
+            
+            if isinstance(result, bool):
+                print(f"[ERROR] 賽道位置分析返回布林值: {result}")
+                return {"success": False, "error": "分析返回布林值而非數據字典", "function_id": "2"}
+            
+            if not isinstance(result, dict):
+                print(f"[ERROR] 賽道位置分析返回非字典類型: {type(result)}")
+                return {"success": False, "error": f"分析返回類型錯誤: {type(result)}", "function_id": "2"}
+            
             # 結果反饋 - 根據新返回格式處理
-            if result and isinstance(result, dict) and result.get("success"):
+            if result and result.get("success"):
                 # 新格式：包含成功狀態和緩存信息
                 cache_status = "[OK] 已啟用" if result.get("cache_used") else "[ERROR] 未啟用"
                 print(f"[STATS] 緩存狀態: {cache_status}")
@@ -365,24 +423,28 @@ class F1AnalysisFunctionMapper:
                     "cache_key": result.get("cache_key", ""),
                     "function_id": "2"
                 }
-                if not self._report_analysis_results(analysis_result, "賽道位置分析"):
+                
+                validation_success = self._report_analysis_results(analysis_result, "賽道位置分析")
+                if not validation_success:
                     return {"success": False, "message": "賽道位置分析結果驗證失敗", "function_id": "2"}
-            elif result is not None:
-                # 舊格式兼容性處理
-                analysis_result = {"success": True, "data": result, "cache_used": False}
-                print("[STATS] 緩存狀態: [ERROR] 未啟用 (舊格式)")
-                if not self._report_analysis_results(analysis_result, "賽道位置分析"):
-                    return {"success": False, "message": "賽道位置分析結果驗證失敗", "function_id": "2"}
+                
+                # 保存JSON輸出 (使用統一工具函數)
+                final_result = {
+                    "success": True,
+                    "message": "賽道位置分析完成",
+                    "data": result.get("data") if isinstance(result, dict) else result,
+                    "cache_used": result.get("cache_used", False) if isinstance(result, dict) else False,
+                    "function_id": "2"
+                }
+                self._export_to_json(final_result, "2", "track_position_analysis")
+                print(f"[SUCCESS] 賽道位置分析完成並生成JSON")
+                
+                return result
+                    
             else:
-                return {"success": False, "message": "賽道位置分析執行失敗：無結果數據", "function_id": "2"}
-            
-            return {
-                "success": True,
-                "message": "賽道位置分析完成",
-                "data": result.get("data") if isinstance(result, dict) else result,
-                "cache_used": result.get("cache_used", False) if isinstance(result, dict) else False,
-                "function_id": "2"
-            }
+                print(f"[ERROR] 賽道位置分析標記為失敗: {result}")
+                return {"success": False, "message": "分析執行失敗", "function_id": "2"}
+        
         except Exception as e:
             print(f"[ERROR] 賽道位置分析失敗: {str(e)}")
             return {"success": False, "message": f"賽道位置分析失敗: {str(e)}", "function_id": "2"}
@@ -544,13 +606,17 @@ class F1AnalysisFunctionMapper:
             else:
                 return {"success": False, "message": "車手進站詳細記錄執行失敗：無結果數據", "function_id": "5"}
             
-            return {
+            # 保存JSON輸出 (使用統一工具函數)
+            final_result = {
                 "success": True,
                 "message": "車手進站詳細記錄完成",
                 "data": result.get("data") if isinstance(result, dict) else result,
                 "cache_used": result.get("cache_used", False) if isinstance(result, dict) else False,
                 "function_id": "5"
             }
+            self._export_to_json(final_result, "5", "driver_detailed_pitstop_records")
+            
+            return final_result
         except Exception as e:
             print(f"[ERROR] 車手進站詳細記錄失敗: {str(e)}")
             return {"success": False, "message": f"車手進站詳細記錄失敗: {str(e)}", "function_id": "5"}
@@ -1004,8 +1070,32 @@ class F1AnalysisFunctionMapper:
             # 5. 結果驗證和反饋
             if not self._report_analysis_results(result, f"車手詳細遙測分析 ({analysis_mode} 模式)"):
                 return {"success": False, "message": "結果驗證失敗", "function_id": "12"}
-            
-            # 6. 詳細結果顯示 (詳細輸出模式)
+
+            # 6. 保存JSON輸出 (總是執行，不受詳細輸出模式影響)
+            if result and result.get('success'):
+                json_dir = "json"
+                os.makedirs(json_dir, exist_ok=True)
+                
+                # 獲取年份、賽事和賽段信息
+                year = getattr(self.data_loader, 'year', 'Unknown')
+                race_name = getattr(self.data_loader, 'race_name', 'Unknown')
+                session_type = getattr(self.data_loader, 'session_type', 'Unknown')
+                
+                if analysis_mode == "single":
+                    json_filename = f"single_driver_telemetry_analysis_{year}_{race_name}_{session_type}.json"
+                else:
+                    json_filename = f"all_drivers_telemetry_analysis_{year}_{race_name}_{session_type}.json"
+                
+                json_path = os.path.join(json_dir, json_filename)
+                
+                try:
+                    with open(json_path, 'w', encoding='utf-8') as f:
+                        json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+                    print(f"\n📄 JSON 分析報告已保存: {json_path}")
+                except Exception as e:
+                    print(f"[WARNING] JSON 保存失敗: {str(e)}")
+
+            # 7. 詳細結果顯示 (詳細輸出模式)
             if show_detailed_output and result and result.get('success'):
                 data = result.get('data', {})
                 
@@ -1092,29 +1182,8 @@ class F1AnalysisFunctionMapper:
                     
                     if fastest_overall:
                         print(f"\n🏆 全場最快圈: {fastest_overall} ({fastest_time})")
-                
-                # 保存JSON輸出
-                json_dir = "json"
-                os.makedirs(json_dir, exist_ok=True)
-                
-                # 獲取年份、賽事和賽段信息
-                year = getattr(self.data_loader, 'year', 'Unknown')
-                race_name = getattr(self.data_loader, 'race_name', 'Unknown')
-                session_type = getattr(self.data_loader, 'session_type', 'Unknown')
-                
-                if analysis_mode == "single":
-                    json_filename = f"single_driver_telemetry_analysis_{year}_{race_name}_{session_type}.json"
-                else:
-                    json_filename = f"all_drivers_telemetry_analysis_{year}_{race_name}_{session_type}.json"
-                
-                json_path = os.path.join(json_dir, json_filename)
-                
-                with open(json_path, 'w', encoding='utf-8') as f:
-                    json.dump(result, f, ensure_ascii=False, indent=2, default=str)
-                
-                print(f"\n📄 JSON 分析報告已保存: {json_path}")
-                print(f"[OK] Function 12 遙測分析完成 ({analysis_mode} 模式)！")
             
+            print(f"[OK] Function 12 遙測分析完成 ({analysis_mode} 模式)！")
             return result
             
         except Exception as e:
@@ -2840,11 +2909,15 @@ class F1AnalysisFunctionMapper:
                 session=session
             )
             
+            # 準備參數，確保不顯示詳細輸出
+            analysis_kwargs = kwargs.copy()
+            analysis_kwargs['show_detailed_output'] = False
+            
             # 根據是否有指定車手來決定分析模式
             if driver:
-                result = analyzer.analyze_every_lap(driver=driver, **kwargs)
+                result = analyzer.analyze_every_lap(driver=driver, **analysis_kwargs)
             else:
-                result = analyzer.analyze_every_lap(driver=None, **kwargs)
+                result = analyzer.analyze_every_lap(driver=None, **analysis_kwargs)
             
             # 確保回傳值有 success 字段
             if result and isinstance(result, dict):

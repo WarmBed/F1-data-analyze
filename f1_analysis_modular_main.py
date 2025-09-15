@@ -540,11 +540,11 @@ class F1AnalysisModularCLI:
             
             # 執行分析
             # 處理詳細輸出參數
-            show_detailed_output = True  # 預設啟用
-            if hasattr(self.args, 'no_detailed_output') and self.args.no_detailed_output:
+            show_detailed_output = False  # 預設關閉詳細輸出
+            if hasattr(self.args, 'show_detailed_output') and self.args.show_detailed_output:
+                show_detailed_output = True
+            elif hasattr(self.args, 'no_detailed_output') and self.args.no_detailed_output:
                 show_detailed_output = False
-            elif hasattr(self.args, 'show_detailed_output'):
-                show_detailed_output = self.args.show_detailed_output
             
             result = mapper.execute_function_by_number(
                 function_id,
@@ -1631,10 +1631,10 @@ def create_argument_parser():
     # 額外選項
     parser.add_argument('--list-races', action='store_true',
                        help='列出支援的賽事列表')
-    parser.add_argument('--show-detailed-output', action='store_true', default=True,
-                       help='即使使用緩存數據也顯示詳細的表格輸出 (預設啟用)')
+    parser.add_argument('--show-detailed-output', action='store_true', default=False,
+                       help='顯示詳細的表格輸出，包含每圈詳細數據')
     parser.add_argument('--no-detailed-output', action='store_true', 
-                       help='禁用詳細輸出，緩存模式下只顯示摘要')
+                       help='禁用詳細輸出，緩存模式下只顯示摘要 (預設行為)')
     parser.add_argument('--version', action='version', version='F1 Analysis CLI v5.3')
     
     return parser
@@ -1673,7 +1673,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\n👋 程式已被使用者中斷，再見！")
     except Exception as e:
-        print(f"\n[ERROR] 程式執行錯誤: {e}")
+        
         print("請檢查系統環境或聯繫技術支援")
         sys.exit(1)
 

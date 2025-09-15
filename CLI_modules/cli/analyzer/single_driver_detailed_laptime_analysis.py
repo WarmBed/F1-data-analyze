@@ -267,9 +267,9 @@ class SingleDriverDetailedLaptimeAnalysis:
         return str(time_obj)
     
     def _get_weather_for_lap(self, lap_number, weather_data):
-        """獲取特定圈數的天氣信息"""
+        """獲取特定圈數的天氣信息 - 只返回是否下雨 (true/false)"""
         if weather_data is None or weather_data.empty:
-            return "N/A"
+            return False
         
         try:
             # 嘗試獲取特定圈數的天氣數據
@@ -327,56 +327,33 @@ class SingleDriverDetailedLaptimeAnalysis:
                 avg_temp = weather_data['TrackTemp'].mean()
                 return self._generate_simple_weather_description(avg_temp)
             
-            return "☀️乾"
+            return False
             
         except Exception as e:
             print(f"⚠️ 天氣數據處理錯誤: {e}")
-            return "N/A"
+            return False
     
     def _generate_weather_description(self, track_temp, air_temp, humidity, rainfall):
-        """基於真實數據生成詳細天氣描述"""
+        """基於真實數據生成簡化天氣描述 - 只判斷是否下雨"""
         try:
-            # 檢查降雨
+            # 檢查降雨 - 只要有降雨就返回 true，否則返回 false
             if rainfall is not None and pd.notna(rainfall) and rainfall > 0:
-                if rainfall > 0.5:
-                    return "🌧️大雨"
-                else:
-                    return "🌦️小雨"
+                return True
             
-            # 檢查濕度（高濕度可能表示潮濕條件）
-            if humidity is not None and pd.notna(humidity) and humidity > 85:
-                return "�️潮濕"
+            # 檢查濕度（高濕度可能表示潮濕條件，也視為雨天）
+            if humidity is not None and pd.notna(humidity) and humidity > 90:
+                return True
             
-            # 主要基於溫度判斷
-            temp_to_use = track_temp if pd.notna(track_temp) else air_temp
-            
-            if pd.notna(temp_to_use):
-                if temp_to_use > 45:
-                    return f"🔥極熱({temp_to_use:.1f}°C)"
-                elif temp_to_use > 35:
-                    return f"🌡️熱({temp_to_use:.1f}°C)"
-                elif temp_to_use > 25:
-                    return f"🌤️適中({temp_to_use:.1f}°C)"
-                elif temp_to_use > 15:
-                    return f"❄️涼({temp_to_use:.1f}°C)"
-                else:
-                    return f"🧊冷({temp_to_use:.1f}°C)"
-            
-            return "☀️乾燥"
+            # 沒有降雨
+            return False
             
         except Exception as e:
-            return "N/A"
+            return False
     
     def _generate_simple_weather_description(self, avg_temp):
-        """基於平均溫度生成簡單天氣描述"""
-        if pd.notna(avg_temp):
-            if avg_temp > 40:
-                return f"🌡️熱(~{avg_temp:.1f}°C)"
-            elif avg_temp < 25:
-                return f"❄️涼(~{avg_temp:.1f}°C)"
-            else:
-                return f"🌤️適中(~{avg_temp:.1f}°C)"
-        return "☀️乾"
+        """基於平均溫度生成簡單天氣描述 - 只返回 false（沒有降雨數據時預設為晴天）"""
+        # 沒有降雨數據時，預設為非雨天
+        return False
     
     def _get_speed_data(self, lap):
         """獲取速度數據"""

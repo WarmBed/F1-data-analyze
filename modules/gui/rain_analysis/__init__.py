@@ -23,22 +23,18 @@ try:
     from .rain_analysis_module import RainAnalysisModule
     from .rain_analysis_mdi import RainAnalysisUniversal, RainAnalysisDataManager
     from .rain_analysis_chart_widget import RainAnalysisChartWidget, RainChartTheme
-    from .rain_data_loader import RainDataLoader, create_rain_data_loader
 except ImportError as e:
     print(f"[WARNING] 下雨分析模組導入部分失敗: {str(e)}")
     # 提供向後兼容性
     RainAnalysisModule = None
     RainAnalysisUniversal = None
-    RainDataLoader = None
 
 __all__ = [
     'RainAnalysisModule',
     'RainAnalysisUniversal', 
     'RainAnalysisDataManager',
     'RainAnalysisChartWidget',
-    'RainChartTheme',
-    'RainDataLoader',
-    'create_rain_data_loader'
+    'RainChartTheme'
 ]
 
 # 版本信息
@@ -65,18 +61,16 @@ def create_rain_analysis_module(parent=None):
 
 def create_rain_data_loader_instance(parent=None):
     """
-    創建下雨數據載入器實例
+    創建下雨數據載入器實例 - 已廢棄
     
     Args:
         parent: 父級 QObject
         
     Returns:
-        RainDataLoader: 下雨數據載入器實例
+        None: 此功能已整合到 RainAnalysisDataManager 中
     """
-    if RainDataLoader is not None:
-        return create_rain_data_loader(parent)
-    else:
-        raise ImportError("RainDataLoader 未能正確導入")
+    print("[WARNING] create_rain_data_loader_instance 已廢棄，請使用 RainAnalysisDataManager")
+    return None
 
 def get_module_info():
     """獲取模組信息"""

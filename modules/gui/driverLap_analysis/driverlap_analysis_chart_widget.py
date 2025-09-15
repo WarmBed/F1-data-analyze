@@ -75,6 +75,7 @@ class LaptimeChartWidget(QWidget):
             'Y': QColor(255, 193, 7),    # 黃色 - 黃旗/雙黃旗
             'S': QColor(128, 128, 128),  # 灰色 - 安全車/虛擬安全車
             'R': QColor(220, 53, 69),    # 紅色 - 紅旗
+            'W': QColor(100, 149, 237),  # 矢車菊藍 - 降雨天氣
             # 已停用的標記
             # 'A': QColor(220, 53, 69),  # 紅色 - 事故/危險 (已拆分為具體類型)
         }
@@ -340,9 +341,11 @@ class LaptimeChartWidget(QWidget):
         elif marker_type == 'R':  # 紅旗
             painter.drawText(position.x() - 6, position.y() + 4, "R")
             
+        elif marker_type == 'W':  # 降雨天氣
+            painter.drawText(position.x() - 6, position.y() + 4, "W")
+            
         # elif marker_type == 'A':  # 事故/危險 (已停用，拆分為具體類型)
         #     painter.drawText(position.x() - 6, position.y() + 4, "A")
-            painter.drawText(position.x() - 4, position.y() + 2, "R")
             
         else:  # 未知類型 - 圓形
             painter.drawEllipse(position.x() - 6, position.y() - 6, 12, 12)
@@ -455,6 +458,7 @@ class LaptimeChartWidget(QWidget):
             ('Y', '黃旗', self.marker_colors.get('Y', QColor(255, 193, 7))),      # 黃色
             ('S', '安全車', self.marker_colors.get('S', QColor(128, 128, 128))),   # 灰色
             ('R', '紅旗', self.marker_colors.get('R', QColor(220, 53, 69))),      # 紅色
+            ('W', '降雨', self.marker_colors.get('W', QColor(100, 149, 237))),    # 矢車菊藍
             # ('PT', '進站+換胎', self.marker_colors['P']),  # 已移除組合標記
             # ('A', '事故/危險', self.marker_colors['A']),  # 已停用，拆分為具體類型
         ]
@@ -555,6 +559,10 @@ class DriverSelectionWidget(QWidget):
         print(f"[DRIVER_SELECTION] 🔄 更新車手列表: {drivers}")
         self.available_drivers = drivers
         
+        # 暫停信號發射避免重複觸發
+        for combo in self.driver_combos:
+            combo.blockSignals(True)
+        
         # 更新所有下拉選單
         for i, combo in enumerate(self.driver_combos):
             current_selection = combo.currentText()
@@ -566,7 +574,23 @@ class DriverSelectionWidget(QWidget):
             if current_selection in drivers:
                 combo.setCurrentText(current_selection)
         
+        # 如果沒有預設選擇，自動選擇前3位車手
+        if drivers and all(combo.currentText() == "-- 請選擇 --" for combo in self.driver_combos):
+            print(f"[DRIVER_SELECTION] 🎯 自動選擇前3位車手")
+            for i, driver in enumerate(drivers[:3]):  # 自動選擇前3位車手
+                if i < len(self.driver_combos):
+                    self.driver_combos[i].setCurrentText(driver)
+                    print(f"[DRIVER_SELECTION]   - 車手 {i+1}: {driver}")
+        
+        # 恢復信號發射
+        for combo in self.driver_combos:
+            combo.blockSignals(False)
+        
+        # 觸發一次選擇應用
+        self._apply_selections()
+        
         print(f"[DRIVER_SELECTION] ✅ 車手列表更新完成，總車手數: {len(drivers)}")
+        print(f"[DRIVER_SELECTION] 當前選擇: {self.selected_drivers}")
                 
     def _on_driver_selection_changed(self):
         """車手選擇改變處理"""
@@ -724,7 +748,8 @@ class driverLapAnalysisChartWidget(QWidget):
                     lap_num = lap_info.get('lap_number', 0)
                     lap_time_sec = lap_info.get('lap_time_seconds', 0)
                     
-                    if lap_time_sec > 0:  # 過濾無效圈速
+                    # 檢查數值有效性：不為 None 且大於 0
+                    if lap_time_sec is not None and lap_time_sec > 0:  # 過濾無效圈速
                         # 提取智能標記
                         markers = self._extract_markers(driver_data, lap_num)
                         
@@ -800,10 +825,10 @@ class driverLapAnalysisChartWidget(QWidget):
         # if lap_num in special_data.get('special_lap_numbers', []):
         #     markers.append('S')  # 特殊圈
             
-        # TODO: 未來可以加入降雨檢測 (當數據可用時)
-        # rain_data = smart_markers.get('rain_detection', {})
-        # if lap_num in rain_data.get('rain_lap_numbers', []):
-        #     markers.append('R')
+        # 降雨檢測 - 與降雨分析模組邏輯一致
+        rain_data = smart_markers.get('rain_detection', {})
+        if lap_num in rain_data.get('rain_lap_numbers', []):
+            markers.append('W')  # 降雨標記（Weather）
             
         # 調試：顯示找到的標記
         if markers:
