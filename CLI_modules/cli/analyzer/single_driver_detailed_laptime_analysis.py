@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-車手每圈圈速詳細分析模組 - Function 27
+車手每圈圈速詳細分析模組 - Function 28
 提供單一車手的詳細每圈分析功能，包含圈速、輪胎、胎齡、進站、天氣、速度、特殊事件等
+
+📊 主要輸出內容：
+1. 詳細每圈分析表格 - 包含10個欄位的完整圈數據
+2. 傳統統計摘要表格 - 基礎圈速統計信息 
+3. 智能標記事件統計 - 五大類別事件的進階分析
+4. 整體事件密度分析 - 事件分布和密度計算
+
+🔧 功能特點：
+- 結構化智能標記系統：進站檢測、最快圈檢測、換胎檢測、事故檢測、特殊圈次標記
+- 支援緩存機制：提升重複查詢性能
+- JSON 數據輸出：便於GUI模組整合
+- 雙輸出模式：緩存+詳細顯示，適應不同使用場景
 """
 
 import pandas as pd
@@ -22,7 +34,22 @@ except ImportError:
     JSON_GENERATOR_AVAILABLE = False
 
 class SingleDriverDetailedLaptimeAnalysis:
-    """車手每圈圈速詳細分析類"""
+    """車手每圈圈速詳細分析類
+    
+    📊 Function 28 的核心實現類，提供詳細的每圈分析功能
+    
+    主要功能：
+    - analyze_every_lap(): 核心分析方法，輸出三大表格
+    - _print_summary_statistics(): 傳統圈速統計表格
+    - _print_smart_markers_statistics(): 智能標記事件統計表格
+    - _get_smart_markers(): 五大類別事件檢測系統
+    
+    輸出特點：
+    - 使用 PrettyTable 格式化所有表格輸出
+    - 支援中文顯示和 emoji 圖標
+    - 結構化數據同步保存為 JSON
+    - 智能緩存機制提升性能
+    """
     
     def __init__(self, data_loader=None, year=None, race=None, session='R'):
         self.data_loader = data_loader
@@ -39,12 +66,15 @@ class SingleDriverDetailedLaptimeAnalysis:
             show_detailed_output: 是否顯示詳細輸出，即使使用緩存也顯示完整表格
         """
         try:
-            if driver:
-                print(f"⏱️ 開始執行 {driver} 的每圈圈速詳細分析...")
-                analysis_mode = "single"
-            else:
-                print("⏱️ 開始執行全部車手的每圈圈速詳細分析...")
-                analysis_mode = "all"
+            # ⏱️ Function 28 執行開始提示 - 顯示分析模式 (已隱藏)
+            # if driver:
+            #     print(f"⏱️ 開始執行 {driver} 的每圈圈速詳細分析...")
+            #     analysis_mode = "single"
+            # else:
+            #     print("⏱️ 開始執行全部車手的每圈圈速詳細分析...")
+            #     analysis_mode = "all"
+            
+            analysis_mode = "single" if driver else "all"
             
             # 生成緩存鍵值
             if analysis_mode == "single":
@@ -52,27 +82,34 @@ class SingleDriverDetailedLaptimeAnalysis:
             else:
                 cache_key = f"detailed_laptime_analysis_{self.year}_{self.race}_{self.session}_all_drivers"
             
-            # 檢查緩存
+            # 檢查緩存 - 優先使用已緩存的分析結果以提升性能
             if self.cache_enabled:
                 cached_result = self._check_cache(cache_key)
                 if cached_result and not show_detailed_output:
-                    print("📦 使用緩存數據")
+                    # 📦 使用緩存模式 - 僅顯示簡要結果，不重複輸出詳細表格 (已隱藏)
+                    # print("📦 使用緩存數據")
                     self._report_analysis_results(cached_result, "車手每圈圈速詳細分析")
                     # 確保JSON始終被保存
                     self._ensure_json_output(cached_result, analysis_mode, driver)
                     return cached_result
                 elif cached_result and show_detailed_output:
-                    print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
-                    # 重新顯示詳細輸出
-                    if analysis_mode == "single":
-                        self._display_cached_detailed_output(cached_result, driver)
-                    else:
-                        self._display_cached_all_drivers_output(cached_result)
-                    # 確保JSON始終被保存
+                    # 📦📊 緩存+詳細輸出模式 - 使用緩存數據但重新顯示完整的分析表格 (已隱藏)
+                    # print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
+                    # 重新顯示詳細輸出 - 根據分析模式選擇對應的顯示方法 (已隱藏)
+                    # if analysis_mode == "single":
+                    #     self._display_cached_detailed_output(cached_result, driver)
+                    # else:
+                    #     self._display_cached_all_drivers_output(cached_result)
+                    # 確保JSON始終被保存 - 保證數據持久化
                     self._ensure_json_output(cached_result, analysis_mode, driver)
                     return cached_result
+                elif cached_result:
+                    # 📦 緩存+簡潔模式 - 使用緩存數據但不顯示詳細輸出 (已隱藏)
+                    # print("📦 使用緩存數據（簡潔模式）")
+                    return cached_result
             
-            print("🔄 重新計算 - 開始數據分析...")
+            # 🔄 重新計算模式 - 當沒有緩存或需要強制重新分析時執行 (已隱藏)
+            # print("🔄 重新計算 - 開始數據分析...")
             
             # 獲取數據
             data = self.data_loader.get_loaded_data()
@@ -106,7 +143,7 @@ class SingleDriverDetailedLaptimeAnalysis:
                     print("❌ 找不到任何車手的數據")
                     return None
                 
-                print(f"📊 將分析 {len(drivers_to_analyze)} 位車手的每圈圈速")
+                # print(f"📊 將分析 {len(drivers_to_analyze)} 位車手的每圈圈速")
                 
                 # 執行全部車手分析
                 result = self._perform_all_drivers_detailed_analysis(drivers_to_analyze, laps, session, weather_data, results)
@@ -118,7 +155,7 @@ class SingleDriverDetailedLaptimeAnalysis:
             # 保存緩存
             if self.cache_enabled and result:
                 self._save_cache(result, cache_key)
-                print("💾 分析結果已緩存")
+                # print("💾 分析結果已緩存")
             
             # 保存JSON輸出 - 使用統一JSON生成器
             self._ensure_json_output(result, analysis_mode, driver)
@@ -134,47 +171,49 @@ class SingleDriverDetailedLaptimeAnalysis:
     def _perform_detailed_analysis(self, driver, driver_laps, session, weather_data, results):
         """執行詳細的每圈分析"""
         
-        # 排序圈數
+        # 排序圈數 - 確保表格按圈數順序顯示
         driver_laps = driver_laps.sort_values('LapNumber').reset_index(drop=True)
         
-        # 創建詳細分析表格
+        # 📊 創建詳細分析表格 - Function 28 的核心輸出表格
+        # 包含 10 欄位：圈數、圈速、輪胎、胎齡、進站、天氣、I1速度、I2速度、終點速、備註
         table = PrettyTable()
         table.field_names = ["圈數", "圈速", "輪胎", "胎齡", "進站", "天氣", "I1速度", "I2速度", "終點速", "備註"]
-        table.align = "l"
+        table.align = "l"  # 左對齊顯示
         
-        detailed_data = []
+        detailed_data = []  # 保存結構化數據用於JSON輸出
         
+        # 📋 逐圈數據處理迴圈 - 為每一圈收集並格式化所有必要數據
         for _, lap in driver_laps.iterrows():
             lap_number = int(lap['LapNumber'])
             
-            # 圈速時間
+            # 圈速時間 - 格式化為 M:SS.sss 格式
             lap_time = self._format_lap_time(lap.get('LapTime'))
             
-            # 輪胎信息
+            # 輪胎信息 - 配方和胎齡數據
             tire_compound = lap.get('Compound', 'N/A')
             tire_life = lap.get('TyreLife', 'N/A')
             
-            # 進站檢查
+            # 進站檢查 - 基於 PitOutTime/PitInTime 判斷
             pit_status = ""
             if pd.notna(lap.get('PitOutTime')) or pd.notna(lap.get('PitInTime')):
                 pit_status = "🔧進站"
             
-            # 天氣信息
+            # 天氣信息 - 整合天氣數據分析（簡化為下雨/晴天）
             weather = self._get_weather_for_lap(lap_number, weather_data)
             
-            # 速度信息 (如果有遙測數據)
+            # 速度信息 - 三個測速點的速度數據（如果有遙測數據）
             speeds = self._get_speed_data(lap)
             i1_speed = speeds.get('i1_speed', 'N/A')
             i2_speed = speeds.get('i2_speed', 'N/A')
             finish_speed = speeds.get('finish_speed', 'N/A')
             
-            # 智能標記分析（結構化）
+            # 🧠 智能標記分析 - 五大類別事件的結構化檢測
             smart_markers = self._get_smart_markers(lap, lap_number, driver_laps)
             
-            # 生成顯示用的備註（保持表格顯示兼容性）
+            # 生成顯示用的備註 - 將智能標記轉換為表格顯示格式
             display_remarks = self._generate_display_remarks(smart_markers)
             
-            # 添加到表格
+            # 📝 添加一行數據到表格 - 10 個欄位的完整圈數據
             table.add_row([
                 lap_number,
                 lap_time,
@@ -188,7 +227,8 @@ class SingleDriverDetailedLaptimeAnalysis:
                 display_remarks
             ])
             
-            # 添加到詳細數據（新的結構化格式）
+            # 📄 添加到詳細數據 - 保存結構化數據用於JSON輸出和進階分析
+            # 包含向後兼容的 remarks 和新的 smart_markers 結構化標記
             detailed_data.append({
                 "lap_number": lap_number,
                 "lap_time": lap_time,
@@ -207,20 +247,23 @@ class SingleDriverDetailedLaptimeAnalysis:
                 "sector_3": self._format_time(lap.get('Sector3Time'))
             })
         
-        # 顯示表格
-        print(f"\n📊 {driver} 每圈詳細分析表:")
-        print("=" * 120)
-        print(table)
+        # 顯示表格 - 主要的每圈詳細數據表格輸出 (已隱藏)
+        # 📊 這是 Function 28 的核心輸出：包含圈數、圈速、輪胎、胎齡、進站、天氣、速度等完整資訊
+        # print(f"\n📊 {driver} 每圈詳細分析表:")
+        # print("=" * 120)
+        # print(table)  # PrettyTable 格式化的詳細每圈數據表
         
         # 統計摘要
         summary_stats = self._calculate_summary_stats(driver_laps)
         smart_markers_summary = self._calculate_smart_markers_summary(detailed_data)
         
-        # 顯示傳統統計
-        self._print_summary_statistics(driver_laps, driver)
+        # 顯示傳統統計 - 基礎統計摘要表格 (已隱藏)
+        # 📈 包含：總圈數、有效圈數、最快/最慢圈時間、平均圈速、標準差、進站次數、輪胎類型
+        # self._print_summary_statistics(driver_laps, driver)
         
-        # 顯示智能標記統計
-        self._print_smart_markers_statistics(smart_markers_summary, driver)
+        # 顯示智能標記統計 - 進階事件分析表格 (已隱藏)
+        # 🧠 包含：進站檢測、最快圈檢測、換胎檢測、事故檢測、特殊圈次標記等五大類別
+        # self._print_smart_markers_statistics(smart_markers_summary, driver)
         
         # 創建分析結果
         result = {
@@ -771,17 +814,35 @@ class SingleDriverDetailedLaptimeAnalysis:
         return " | ".join(remarks) if remarks else ""
     
     def _print_summary_statistics(self, driver_laps, driver):
-        """顯示統計摘要"""
+        """顯示統計摘要 - 傳統圈速分析統計表
+        
+        輸出格式：
+        📈 VER 圈速統計摘要:
+        ============================================================
+        | 統計項目   | 數值          |
+        +------------+---------------+
+        | 總圈數     | 53            |
+        | 有效圈數   | 53            |
+        | 最快圈時間 | 1:31.041      |
+        | 最慢圈時間 | 1:54.078      |
+        | 平均圈速   | 92.962s       |
+        | 圈速標準差 | 3.128s        |
+        | 進站次數   | 2             |
+        | 使用輪胎   | MEDIUM | HARD |
+        +------------+---------------+
+        """
         valid_laps = driver_laps[driver_laps['LapTime'].notna()]
         
         if valid_laps.empty:
             return
         
+        # 📈 統計摘要表格標題
         print(f"\n📈 {driver} 圈速統計摘要:")
         print("=" * 60)
         
         lap_times_seconds = valid_laps['LapTime'].dt.total_seconds()
         
+        # 創建統計表格 - 使用 PrettyTable 格式化輸出
         stats_table = PrettyTable()
         stats_table.field_names = ["統計項目", "數值"]
         stats_table.align = "l"
@@ -797,20 +858,40 @@ class SingleDriverDetailedLaptimeAnalysis:
         pit_laps = driver_laps[driver_laps['PitOutTime'].notna() | driver_laps['PitInTime'].notna()]
         stats_table.add_row(["進站次數", len(pit_laps)])
         
-        # 輪胎使用統計
+        # 輪胎使用統計 - 顯示車手使用的所有輪胎配方
         tire_compounds = driver_laps['Compound'].dropna().unique()
         if len(tire_compounds) > 0:
             stats_table.add_row(["使用輪胎", " | ".join(tire_compounds)])
         
+        # 輸出統計表格 - 完整的傳統統計摘要
         print(stats_table)
     
     def _print_smart_markers_statistics(self, smart_markers_summary, driver):
-        """顯示智能標記統計摘要"""
+        """顯示智能標記統計摘要 - 進階事件分析表格
+        
+        輸出格式：
+        🧠 VER 智能標記事件統計:
+        ================================================================================
+        | 事件類別      | 總數 | 詳細統計              | 相關圈數 |
+        +---------------+------+-----------------------+----------+
+        | 🔧 進站檢測   | 2    | 進站: 1 | 出站: 1     | 21, 22   |
+        | ⚡ 最快圈檢測 | 1    | 個人最佳: 1           | 52       |
+        | 🛞 換胎檢測   | 1    | 雙重檢測: 1           | 22       |
+        | ⚠️ 事故檢測   | 0    | 無                    | 無       |
+        | 🏁 特殊圈次   | 2    | 🏁起跑: 1 | 🏆終點: 1 | 1, 53    |
+        +---------------+------+-----------------------+----------+
+        
+        📊 整體事件密度:
+           • 有事件的圈數: 5
+           • 事件密度: 9.4%
+           • 最常見事件: 進站事件
+        """
         try:
+            # 🧠 智能標記統計表格標題
             print(f"\n🧠 {driver} 智能標記事件統計:")
             print("=" * 80)
             
-            # 創建智能標記統計表格
+            # 創建智能標記統計表格 - 五大類別事件分析
             markers_table = PrettyTable()
             markers_table.field_names = ["事件類別", "總數", "詳細統計", "相關圈數"]
             markers_table.align = "l"
@@ -922,9 +1003,10 @@ class SingleDriverDetailedLaptimeAnalysis:
                 special_laps_str if special_laps else "無"
             ])
             
+            # 輸出智能標記統計表格 - 顯示五大類別事件的詳細統計
             print(markers_table)
             
-            # 顯示整體事件統計
+            # 📊 顯示整體事件統計 - 事件密度分析和最常見事件類型
             overall_stats = smart_markers_summary.get('overall_statistics', {})
             if overall_stats:
                 print(f"\n📊 整體事件密度:")
@@ -933,6 +1015,7 @@ class SingleDriverDetailedLaptimeAnalysis:
                 
                 most_common = overall_stats.get('most_common_event')
                 if most_common:
+                    # 事件類型中文對照表
                     event_names = {
                         'pit_stop': '進站事件',
                         'fastest_lap': '最快圈',
@@ -942,6 +1025,7 @@ class SingleDriverDetailedLaptimeAnalysis:
                     }
                     print(f"   • 最常見事件: {event_names.get(most_common, most_common)}")
             
+            # 智能標記統計區段結束分隔線
             print("=" * 80)
             
         except Exception as e:

@@ -1635,6 +1635,8 @@ def create_argument_parser():
                        help='顯示詳細的表格輸出，包含每圈詳細數據')
     parser.add_argument('--no-detailed-output', action='store_true', 
                        help='禁用詳細輸出，緩存模式下只顯示摘要 (預設行為)')
+    parser.add_argument('--silent', action='store_true',
+                       help='靜默模式：隱藏所有表格和統計輸出，僅執行分析並保存結果')
     parser.add_argument('--version', action='version', version='F1 Analysis CLI v5.3')
     
     return parser

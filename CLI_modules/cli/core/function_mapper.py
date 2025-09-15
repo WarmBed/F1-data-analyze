@@ -2892,12 +2892,17 @@ class F1AnalysisFunctionMapper:
             print(f"[ERROR] 車手最速圈速分析執行失敗: {e}")
             return {"success": False, "error": str(e), "function_id": "26"}
 
-    def _execute_driver_lap_time_analysis(self, year, race, session, driver, **kwargs):
-        """Function 28: 車手每圈圈速分析"""
-        if driver:
-            print(f"⏱️ 開始執行車手 {driver} 的每圈圈速分析...")
-        else:
-            print("⏱️ 開始執行全部車手的每圈圈速分析...")
+    def _execute_driver_lap_time_analysis(self, year, race, session, driver, silent_mode=False, **kwargs):
+        """Function 28: 車手每圈圈速分析
+        
+        Args:
+            silent_mode: 是否啟用靜默模式，隱藏詳細表格輸出
+        """
+        # if not silent_mode:
+        #     if driver:
+        #         print(f"⏱️ 開始執行車手 {driver} 的每圈圈速分析...")
+        #     else:
+        #         print("⏱️ 開始執行全部車手的每圈圈速分析...")
         
         try:
             from CLI_modules.cli.analyzer.single_driver_detailed_laptime_analysis import SingleDriverDetailedLaptimeAnalysis
@@ -2909,9 +2914,10 @@ class F1AnalysisFunctionMapper:
                 session=session
             )
             
-            # 準備參數，確保不顯示詳細輸出
+            # 準備參數，支援靜默模式
             analysis_kwargs = kwargs.copy()
-            analysis_kwargs['show_detailed_output'] = False
+            analysis_kwargs['show_detailed_output'] = not silent_mode  # 靜默模式時不顯示詳細輸出
+            analysis_kwargs['silent_mode'] = silent_mode  # 傳遞靜默模式參數
             
             # 根據是否有指定車手來決定分析模式
             if driver:
