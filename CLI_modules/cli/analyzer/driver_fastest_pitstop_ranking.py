@@ -112,6 +112,9 @@ def run_driver_fastest_pitstop_ranking(data_loader, show_detailed_output=True):
             if not report_analysis_results(ranking_data, "車手最快進站排行榜"):
                 return {"success": False, "message": "結果驗證失敗", "function_id": "3"}
             
+            # 保存 JSON 結果（即使使用緩存也要保存）
+            save_json_results(ranking_data, session_info, "driver_fastest_pitstop_ranking")
+            
             print("\n✅ 車手最快進站時間排行榜分析完成！")
             return {
                 "success": True,

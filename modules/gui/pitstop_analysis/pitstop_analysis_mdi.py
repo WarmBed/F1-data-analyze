@@ -378,8 +378,29 @@ class PitstopDataManager(QObject):
             
             # 格式1: 新的標準格式 - data 陣列
             if 'data' in data:
-                records = data['data']
-                print(f"[INFO] [VALIDATE] 檢測到標準格式：data 陣列")
+                records_data = data['data']
+                print(f"[INFO] [VALIDATE] 檢測到標準格式：data 欄位")
+                
+                # 檢查 data 是陣列還是物件
+                if isinstance(records_data, list):
+                    records = records_data
+                    print(f"[INFO] [VALIDATE] data 是陣列格式")
+                elif isinstance(records_data, dict):
+                    # 新格式：data 是物件，車手代碼作為鍵值
+                    print(f"[INFO] [VALIDATE] data 是物件格式，車手鍵值：{list(records_data.keys())[:5]}...")
+                    # 將所有車手的進站記錄合併成一個陣列
+                    records = []
+                    for driver_code, driver_records in records_data.items():
+                        if isinstance(driver_records, list):
+                            for record in driver_records:
+                                # 確保每個記錄都有 driver 欄位
+                                if 'driver' not in record and 'driver_code' not in record:
+                                    record['driver'] = driver_code
+                                records.append(record)
+                    print(f"[INFO] [VALIDATE] 合併後的進站記錄數量：{len(records)}")
+                else:
+                    print(f"[ERROR] [VALIDATE] data 欄位格式不支援：{type(records_data)}")
+                    return False
             # 格式2: 舊格式 - driver_fastest_pitstops
             elif 'driver_fastest_pitstops' in data:
                 records = data['driver_fastest_pitstops']
@@ -419,7 +440,7 @@ class PitstopDataManager(QObject):
                     break
                     
             # 檢查時間欄位  
-            for field in ['fastest_time', 'fastest_pitstop_time', 'pitstop_time', 'time']:
+            for field in ['fastest_time', 'fastest_pitstop_time', 'pitstop_time', 'time', 'pit_duration']:
                 if field in first_record:
                     time_field = field
                     break
@@ -719,6 +740,8 @@ class PitstopDataManager(QObject):
                 f"driver_detailed_pitstop_records_{year}_{race_full_name}.json",
                 f"driver_detailed_pitstops_{year}_{race_full_name}.json",
                 f"driver_detailed_pitstop_records_{year}_{race.replace(' ', '_')}.json",
+                f"driver_detailed_pitstop_records_{year}_{race}_{session}.json",  # 新增：支援 _R 格式
+                f"driver_detailed_pitstops_{year}_{race}_{session}.json",
             ]
             
             # 搜尋多個目錄中的精確匹配
@@ -789,14 +812,21 @@ class PitstopDataManager(QObject):
             if not isinstance(data, dict):
                 return False
             
-            # 檢查 function_id 是否為 5 (車手詳細進站記錄)
-            if data.get("function_id") != 5:
-                print(f"[ERROR] [VALIDATE] 車手詳細數據 function_id 不匹配: {data.get('function_id')}")
+            # 檢查新格式：{ "success": true, "data": {...} }
+            if data.get("success") is True and "data" in data:
+                records = data["data"]
+                print(f"[INFO] [VALIDATE] 檢測到新格式車手詳細數據")
+            # 檢查舊格式：{ "function_id": 5, "data": {...} }
+            elif data.get("function_id") == 5:
+                records = data.get("data", {})
+                print(f"[INFO] [VALIDATE] 檢測到舊格式車手詳細數據")
+            else:
+                print(f"[ERROR] [VALIDATE] 車手詳細數據格式不匹配")
                 return False
             
-            # 提取記錄
-            records = data.get("data", {})
+            # 驗證 data 部分是否為物件（車手代碼為鍵值）
             if not records or not isinstance(records, dict):
+                print(f"[ERROR] [VALIDATE] 車手詳細數據不是物件格式")
                 return False
                 
             # 驗證第一個車手記錄的欄位
@@ -812,7 +842,8 @@ class PitstopDataManager(QObject):
                         print(f"[ERROR] [VALIDATE] 車手詳細數據缺少必要欄位: {field}")
                         return False
                 
-                break  # 只檢查第一個車手的第一次進站
+                print(f"[OK] [VALIDATE] 車手詳細數據驗證通過，記錄數量：{len(records)}")
+                return True
                 
             return True
             

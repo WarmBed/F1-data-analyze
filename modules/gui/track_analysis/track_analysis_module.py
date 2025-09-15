@@ -132,14 +132,18 @@ class TrackAnalysisCacheManager:
         
         for race_name in possible_race_names:
             # 精確搜尋：年份_賽事_賽段
-            pattern = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}_*.json")
+            pattern = os.path.join(self.cache_dir, f"track_position_analysis_{year}_{race_name}_{session}.json")
             files = glob.glob(pattern)
             found_files.extend(files)
             
-            # 也嘗試沒有額外後綴的格式
-            pattern2 = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}.json")
+            # 也嘗試舊格式
+            pattern2 = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}_*.json")
             files2 = glob.glob(pattern2)
             found_files.extend(files2)
+            
+            pattern3 = os.path.join(self.cache_dir, f"raw_data_track_position_{year}_{race_name}.json")
+            files3 = glob.glob(pattern3)
+            found_files.extend(files3)
         
         if found_files:
             # 按修改時間排序，返回最新的
@@ -255,13 +259,29 @@ class TrackAnalysisWorkerThread(QThread):
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-            # 驗證數據格式
-            if (data.get('analysis_type') == 'track_position_analysis' and
+            # 檢查新格式 (track_position_analysis_*.json)
+            if data.get('success') and 'data' in data:
+                track_data = data['data']
+                # 轉換數據格式以符合模組期望
+                if 'position_records' in track_data:
+                    processed_data = {
+                        'analysis_type': 'track_position_analysis',
+                        'detailed_position_records': track_data['position_records'],
+                        'has_position_data': track_data.get('has_position_data', True),
+                        'track_summary': track_data.get('track_summary', {}),
+                        'race_info': track_data.get('race_info', {}),
+                        'raw_data': data  # 保留原始數據
+                    }
+                    return processed_data
+            
+            # 檢查舊格式 (raw_data_track_position_*.json)
+            elif (data.get('analysis_type') == 'track_position_analysis' and
                 'detailed_position_records' in data):
                 return data
-            else:
-                print(f"[WARNING] JSON格式不符合預期: {file_path}")
-                return None
+            
+            print(f"[WARNING] JSON格式不符合預期: {file_path}")
+            print(f"[DEBUG] JSON結構: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            return None
                 
         except Exception as e:
             print(f"[ERROR] 載入JSON失敗: {e}")
@@ -383,13 +403,24 @@ class TrackMapWidget(QWidget):
         # 清空背景
         painter.fillRect(self.rect(), QColor(240, 240, 240))
         
+        # 調試輸出
+        data_count = len(self.position_data) if self.position_data else 0
+        has_bounds = bool(self.track_bounds)
+        print(f"[TRACK_MAP] paintEvent: 數據檢查 - 位置點數={data_count}, 有邊界={has_bounds}")
+        
         if not self.position_data or not self.track_bounds:
             # 顯示提示文字
             painter.setPen(QPen(QColor(100, 100, 100)))
             painter.setFont(QFont("Arial", 12))
-            painter.drawText(self.rect(), Qt.AlignCenter, 
-                           "賽道地圖已載入\n50 個位置點\n(點擊可查看詳細座標)")
-            print("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
+            
+            if data_count > 0:
+                painter.drawText(self.rect(), Qt.AlignCenter, 
+                               f"賽道數據已載入\n{data_count} 個位置點\n等待邊界資訊...")
+                print(f"[TRACK_MAP] paintEvent: 有 {data_count} 個位置點但沒有邊界資訊")
+            else:
+                painter.drawText(self.rect(), Qt.AlignCenter, 
+                               "等待賽道數據載入...")
+                print("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
             return
         
         try:
@@ -950,8 +981,24 @@ class TrackAnalysisModule(QWidget):
         try:
             # 提取位置數據和邊界資訊
             records = self.track_data.get('detailed_position_records', [])
-            position_analysis = self.track_data.get('position_analysis', {})
-            track_bounds = position_analysis.get('track_bounds', {})
+            
+            # 檢查新格式 (來自原始 JSON)
+            if not records and 'raw_data' in self.track_data:
+                raw_data = self.track_data['raw_data']
+                if 'data' in raw_data:
+                    records = raw_data['data'].get('position_records', [])
+                    
+            # 賽道邊界資訊
+            track_bounds = self.track_data.get('track_bounds', {})
+            if not track_bounds and 'raw_data' in self.track_data:
+                raw_data = self.track_data['raw_data']
+                if 'data' in raw_data:
+                    track_bounds = raw_data['data'].get('track_bounds', {})
+            
+            # 備用：從 position_analysis 獲取
+            if not track_bounds:
+                position_analysis = self.track_data.get('position_analysis', {})
+                track_bounds = position_analysis.get('track_bounds', {})
             
             if not records:
                 print("[WARNING] 沒有詳細位置記錄")
