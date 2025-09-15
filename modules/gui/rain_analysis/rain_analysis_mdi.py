@@ -29,6 +29,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入通用基礎類別
 try:
     from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
@@ -264,8 +267,8 @@ class RainAnalysisDataManager(UniversalDataLoader):
                 "y1_data": lap_data["air_temp"],
                 "y2_data": lap_data["track_temp"],
                 "y1_label": "氣溫 (°C)",
-                "y2_label": "賽道溫度 (°C)",
-                "title": "氣溫與賽道溫度對比"
+                "y2_label": tr("track_temperature", "賽道溫度 (°C)"),
+                "title": tr("air_track_temp_comparison", "氣溫與賽道溫度對比")
             },
             
             # 濕度與風速圖表
@@ -323,14 +326,14 @@ class RainAnalysisControlWidget(QWidget):
         
         self.chart_combo = QComboBox()
         self.chart_combo.addItems([
-            "主要圖表 (降雨+氣溫)",
-            "溫度對比 (氣溫vs賽道溫度)",
-            "濕度風速 (濕度+風速)",
-            "氣壓變化"
+            tr("main_chart_rain_temperature", "主要圖表 (降雨+氣溫)"),
+            tr("temperature_comparison_air_track", "溫度對比 (氣溫vs賽道溫度)"),
+            tr("humidity_windspeed", "濕度風速 (濕度+風速)"),
+            tr("pressure_changes", "氣壓變化")
         ])
         self.chart_combo.currentTextChanged.connect(self._on_chart_type_changed)
         
-        chart_layout.addWidget(QLabel("選擇圖表:"), 0, 0)
+        chart_layout.addWidget(QLabel(tr("select_chart", "選擇圖表:")), 0, 0)
         chart_layout.addWidget(self.chart_combo, 0, 1)
         
         layout.addWidget(chart_group)
@@ -357,10 +360,16 @@ class RainAnalysisControlWidget(QWidget):
     def _on_chart_type_changed(self, text: str):
         """圖表類型改變處理"""
         chart_type_map = {
+            # 中文
             "主要圖表 (降雨+氣溫)": "primary",
             "溫度對比 (氣溫vs賽道溫度)": "temperature",
             "濕度風速 (濕度+風速)": "humidity_wind",
-            "氣壓變化": "pressure"
+            "氣壓變化": "pressure",
+            # 英文
+            "Main Chart (Rain+Temperature)": "primary",
+            "Temperature Comparison (Air vs Track)": "temperature", 
+            "Humidity & Wind Speed": "humidity_wind",
+            "Pressure Changes": "pressure"
         }
         
         if text in chart_type_map:

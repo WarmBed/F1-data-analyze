@@ -24,6 +24,9 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics, QMouseEvent
 
+# 導入 GUI 國際化模組
+from core.gui_i18n import tr
+
 # 導入基礎圖表組件
 try:
     from ..base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
@@ -82,8 +85,8 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         self.current_chart_type = "primary"
         self.chart_data = {}
         
-        # 🆕 使用基類的統一座標軸標題配置
-        self.set_axis_titles("圈數", "溫度 (°C)")
+        # 🆕 使用基類的統一座標軸標題配置（使用翻譯）
+        self.set_axis_titles(tr("lap_number_rain", "Lap Number"), tr("temperature_celsius", "Temperature (°C)"))
         # 🎯 X軸標題在0點左邊水平顯示，Y軸標題在中間垂直顯示
         self.set_axis_title_positions("bottom-left", "left-center")
         

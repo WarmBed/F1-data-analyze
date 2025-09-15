@@ -7,6 +7,9 @@ from typing import Dict, Any, List, Optional
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QObject
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入基類
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
@@ -24,7 +27,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         # 註冊 laptime 分析類型（如果尚未註冊）
         if "laptime" not in UniversalDataLoader.ANALYSIS_TYPES:
             laptime_config = AnalysisConfig(
-                display_name="詳細圈速分析",
+                display_name="Detailed Lap Analysis",
                 debug_prefix="[F28_DATA]",
                 data_source="json",
                 cli_function="28",  # CLI -f28: 詳細圈速分析
@@ -635,7 +638,7 @@ class driverLapAnalysisControlWidget(QWidget):
         ])
         self.chart_combo.currentTextChanged.connect(self._on_chart_type_changed)
         
-        chart_layout.addWidget(QLabel("選擇圖表:"), 0, 0)
+        chart_layout.addWidget(QLabel(tr("select_chart", "選擇圖表:")), 0, 0)
         chart_layout.addWidget(self.chart_combo, 0, 1)
         
         layout.addWidget(chart_group)

@@ -21,6 +21,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 from ..interfaces.analysis_module import IAnalysisModule
 
@@ -985,7 +988,7 @@ class PitstopRankingWidget(QWidget):
         table.setObjectName("PitstopRankingTable")
         
         # 設置表格欄位 (根據設計文檔，已移除進站類型和輪胎類型)
-        headers = ["排名", "車手代碼", "車手全名", "最快時間", "與第一名差距", "進站圈數"]
+        headers = ["Rank", "Driver Code", "Driver Name", "Fastest Time", "Gap to 1st", "Pit Lap"]
         table.setColumnCount(len(headers))
         table.setHorizontalHeaderLabels(headers)
         
@@ -1342,7 +1345,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"進站分析_{year}_{race}_{session}"
+        return f"Pitstop Analysis_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小 - GUI系統要求的方法"""
@@ -1509,15 +1512,15 @@ class PitstopAnalysisModule(IAnalysisModule):
         
         # 分頁1: 車手最快進站排行榜 (已實現)
         self.ranking_widget = PitstopRankingWidget(self._main_widget)
-        self.tab_widget.addTab(self.ranking_widget, "🏆 車手最快進站排行榜")
+        self.tab_widget.addTab(self.ranking_widget, tr("driver_fastest_pitstop_ranking", "🏆 車手最快進站排行榜"))
         
         # 分頁2: 車隊進站時間排行榜 (新實現)
         self.team_ranking_widget = TeamPitstopRankingWidget(self._main_widget)
-        self.tab_widget.addTab(self.team_ranking_widget, "🏁 車隊進站統計")
+        self.tab_widget.addTab(self.team_ranking_widget, tr("team_pitstop_statistics", "🏁 車隊進站統計"))
         
         # 分頁3: 車手進站詳細記錄 (新實現)
         self.detailed_widget = DriverDetailedPitstopWidget(self._main_widget)
-        self.tab_widget.addTab(self.detailed_widget, "📋 詳細記錄")
+        self.tab_widget.addTab(self.detailed_widget, tr("detailed_records", "📋 詳細記錄"))
         
         layout.addWidget(self.tab_widget)
         
@@ -1735,7 +1738,7 @@ class TeamPitstopRankingWidget(QWidget):
     def setup_table(self):
         """設置表格結構"""
         # 🔧 修正：設置列數和標題，添加最慢時間欄位
-        headers = ["排名", "車隊名稱", "最快時間", "最慢時間", "進站次數", "一致性分數"]
+        headers = ["Rank", "Team Name", "Fastest Time", "Slowest Time", "Pit Count", "Consistency Score"]
         self.table_widget.setColumnCount(len(headers))
         self.table_widget.setHorizontalHeaderLabels(headers)
         
@@ -1805,7 +1808,7 @@ class TeamPitstopRankingWidget(QWidget):
         self.table_widget.setRowCount(len(self.ranking_data))  # 再設置正確行數
         
         # 🔧 修正：確保表頭正確設置（添加最慢時間欄位）
-        headers = ["排名", "車隊名稱", "最快時間", "最慢時間", "進站次數", "一致性分數"]
+        headers = ["Rank", "Team Name", "Fastest Time", "Slowest Time", "Pit Count", "Consistency Score"]
         self.table_widget.setHorizontalHeaderLabels(headers)
         
         # 🔧 修正：添加防護檢查
@@ -1989,14 +1992,14 @@ class DriverDetailedPitstopWidget(QWidget):
         
     def create_dynamic_headers(self):
         """根據最大進站次數創建動態表格標題"""
-        headers = ["車手", "車隊", "總進站次數"]
+        headers = ["Driver", "Team", "Total Pitstops"]
         
         # 動態添加進站次數欄位
         for i in range(1, self.max_pitstops + 1):
-            headers.extend([f"第{i}次時間", f"第{i}次圈數"])
+            headers.extend([f"#{i} Time", f"#{i} Lap"])
         
         # 添加統計欄位
-        headers.extend(["最快時間", "最慢時間"])
+        headers.extend(["Fastest Time", "Slowest Time"])
         return headers
         
     def calculate_max_pitstops(self):

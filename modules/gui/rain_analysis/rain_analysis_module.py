@@ -170,7 +170,7 @@ class RainAnalysisModule(IAnalysisModule):
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"🌧️ 降雨分析_{year}_{race}_{session}"
+        return f"🌧️ Rain Analysis_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

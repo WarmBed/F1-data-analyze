@@ -23,6 +23,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
@@ -495,10 +498,10 @@ class DriverTelemetryOverviewWidget(QWidget):
         cards_layout = QHBoxLayout()
         
         # 創建統計卡片 - 只顯示最快車手和平均圈速
-        # self.total_drivers_card = self.create_stat_card("總車手數", "0", "👥")  # 隱藏
-        self.fastest_driver_card = self.create_stat_card("最快車手", "N/A", "🏆")
-        self.avg_laptime_card = self.create_stat_card("平均圈速", "N/A", "⏱️")
-        # self.total_pitstops_card = self.create_stat_card("總進站次數", "0", "🛞")  # 隱藏
+        # self.total_drivers_card = self.create_stat_card(tr("total_drivers", "總車手數"), "0", "👥")  # 隱藏
+        self.fastest_driver_card = self.create_stat_card(tr("fastest_driver", "最快車手"), "N/A", "🏆")
+        self.avg_laptime_card = self.create_stat_card(tr("avg_laptime", "平均圈速"), "N/A", "⏱️")
+        # self.total_pitstops_card = self.create_stat_card(tr("total_pitstops", "總進站次數"), "0", "🛞")  # 隱藏
         
         # cards_layout.addWidget(self.total_drivers_card)  # 隱藏
         cards_layout.addWidget(self.fastest_driver_card)
@@ -1267,7 +1270,7 @@ class TelemetryAnalysisModule(IAnalysisModule):
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"🏎️ 遙測分析_{year}_{race}_{session}"
+        return f"🏎️ Telemetry Analysis_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

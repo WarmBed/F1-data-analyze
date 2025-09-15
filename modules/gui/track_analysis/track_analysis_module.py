@@ -1169,7 +1169,7 @@ class TrackAnalysisModule(QWidget):
     
     def get_window_title(self, year, race, session):
         """獲取視窗標題"""
-        return f"賽道_{year}_{race}_{session}"
+        return f"Track_{year}_{race}_{session}"
     
     def reload_analysis(self):
         """重新載入分析"""

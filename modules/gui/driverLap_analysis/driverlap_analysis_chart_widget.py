@@ -25,6 +25,9 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushBut
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 
 class ChartTheme:
     """圖表主題配置"""
@@ -63,7 +66,7 @@ class LaptimeChartWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.series_list = []
-        self.setMinimumSize(800, 600)
+        self.setMinimumSize(200, 100)  # 調整為與 Tire Analysis 一致的最小尺寸
         # 移除固定的白色背景，讓paint事件處理背景色
         self.setStyleSheet("border: 1px solid #ccc;")
         
@@ -102,12 +105,16 @@ class LaptimeChartWidget(QWidget):
             if not self.series_list:
                 # 顯示無數據提示
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                painter.setFont(QFont("Arial", 12))
-                painter.drawText(self.rect(), Qt.AlignCenter, "請選擇車手以顯示圈速數據")
+                font = QFont()
+                font.setPointSize(8)
+                painter.setFont(font)
+                painter.drawText(self.rect(), Qt.AlignCenter, "Please select drivers to display lap time data")
                 return
             
-            # 計算繪製區域（圖例重疊模式，不預留空間）
-            margin = 60
+            # 計算繪製區域（動態邊距，適應小尺寸）
+            # 根據視窗大小動態調整邊距，與 Tire Analysis 一致
+            base_margin = min(self.width(), self.height()) * 0.08  # 8% 動態邊距
+            margin = max(20, min(60, int(base_margin)))  # 最小20px，最大60px
             chart_rect = QRect(
                 margin, 
                 margin, 
@@ -120,8 +127,10 @@ class LaptimeChartWidget(QWidget):
             
             if x_min >= x_max or y_min >= y_max:
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                painter.setFont(QFont("Arial", 12))
-                painter.drawText(self.rect(), Qt.AlignCenter, "數據範圍無效")
+                font = QFont()
+                font.setPointSize(8)
+                painter.setFont(font)
+                painter.drawText(self.rect(), Qt.AlignCenter, "Invalid data range")
                 return
             
             # 繪製網格和軸
@@ -142,8 +151,10 @@ class LaptimeChartWidget(QWidget):
             
             # 顯示錯誤信息
             painter.setPen(QPen(QColor(255, 0, 0), 1))
-            painter.setFont(QFont("Arial", 10))
-            painter.drawText(self.rect(), Qt.AlignCenter, f"繪製錯誤: {str(e)}")
+            font = QFont()
+            font.setPointSize(8)
+            painter.setFont(font)
+            painter.drawText(self.rect(), Qt.AlignCenter, f"Drawing Error: {str(e)}")
     
     def _calculate_legend_space(self):
         """智能計算圖例所需空間"""
@@ -154,28 +165,38 @@ class LaptimeChartWidget(QWidget):
         driver_count = len(self.series_list)
         marker_count = 5  # P, F, T, A, S
         
-        # 寬度計算 (取車手名稱和標記描述的最大寬度)
-        max_driver_width = 54 + 20    # 方塊 + 間距 + 車手名 + 邊距
-        max_marker_width = 110 + 20   # 標記 + 間距 + 文字 + 邊距
+        # 寬度計算 - 響應式尺寸 (基於視窗寬度)
+        widget_width = self.width()
+        base_size = min(widget_width * 0.08, 80)  # 基礎尺寸：視窗8%或最大80px
+        
+        max_driver_width = base_size + 20     # 方塊 + 間距 + 車手名 + 邊距
+        max_marker_width = base_size * 1.5 + 20   # 標記 + 間距 + 文字 + 邊距
         content_width = max(max_driver_width, max_marker_width)
         
-        # 高度計算
-        header_height = 22 * 2        # 兩個標題
-        driver_height = driver_count * 20   # 每個車手20px
-        marker_height = marker_count * 24   # 每個標記24px
-        spacing = 30                  # 間距和邊距
+        # 高度計算 - 響應式尺寸 (基於視窗高度)
+        widget_height = self.height()
+        base_height = min(widget_height * 0.04, 24)  # 基礎高度：視窗4%或最大24px
+        
+        header_height = base_height        # 只有一個標題 ("Drivers")
+        driver_height = driver_count * max(base_height * 0.8, 16)   # 每個車手最小16px
+        marker_height = marker_count * base_height   # 每個標記使用基礎高度
+        spacing = max(base_height * 1.2, 20)         # 間距和邊距，最小20px
         content_height = header_height + driver_height + marker_height + spacing
         
         # 位置計算 (右上角)
         widget_width = self.width()
         widget_height = self.height()
         
-        # 確保不超出邊界
-        safe_width = min(content_width, widget_width * 0.3)  # 最多佔用30%寬度
-        safe_height = min(content_height, widget_height - 40)  # 保留上下邊距
+        # 確保不超出邊界 - 響應式計算
+        max_legend_width_ratio = 0.35 if widget_width < 400 else 0.3  # 小視窗時允許更大比例
+        safe_width = min(content_width, widget_width * max_legend_width_ratio)
         
-        legend_x = widget_width - safe_width - 10
-        legend_y = 20
+        top_margin = max(widget_height * 0.02, 10)  # 上邊距：視窗2%或最小10px
+        bottom_margin = max(widget_height * 0.05, 20)  # 下邊距：視窗5%或最小20px
+        safe_height = min(content_height, widget_height - top_margin - bottom_margin)
+        
+        legend_x = widget_width - safe_width - max(widget_width * 0.01, 5)  # 右邊距響應式
+        legend_y = top_margin
         
         return {
             'width': safe_width,
@@ -217,12 +238,16 @@ class LaptimeChartWidget(QWidget):
             x = rect.left() + i * rect.width() / 5
             painter.drawLine(int(x), rect.top(), int(x), rect.bottom())
             
-            # X軸標籤
+            # X軸標籤 - 響應式字體
             if i < 5:
                 lap = x_range[0] + i * (x_range[1] - x_range[0]) / 5
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                painter.setFont(QFont("Arial", 9))
-                painter.drawText(int(x) - 15, rect.bottom() + 20, f"Lap {int(lap)}")
+                axis_font_size = max(7, min(10, int(min(self.width(), self.height()) * 0.02)))
+                font = QFont()
+                font.setPointSize(8)
+                painter.setFont(font)
+                label_offset = max(15, int(self.height() * 0.025))  # 響應式標籤偏移
+                painter.drawText(int(x) - 15, rect.bottom() + label_offset, f"Lap {int(lap)}")
                 painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
         
         # 水平網格線（圈速）
@@ -230,26 +255,35 @@ class LaptimeChartWidget(QWidget):
             y = rect.top() + i * rect.height() / 5
             painter.drawLine(rect.left(), int(y), rect.right(), int(y))
             
-            # Y軸標籤
+            # Y軸標籤 - 響應式字體
             if i < 5:
                 laptime = y_range[1] - i * (y_range[1] - y_range[0]) / 5
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                painter.setFont(QFont("Arial", 9))
-                painter.drawText(rect.left() - 50, int(y) + 5, f"{laptime:.1f}s")
+                axis_font_size = max(7, min(10, int(min(self.width(), self.height()) * 0.02)))
+                font = QFont()
+                font.setPointSize(8)
+                painter.setFont(font)
+                label_offset = max(30, int(self.width() * 0.04))  # 響應式標籤偏移
+                painter.drawText(rect.left() - label_offset, int(y) + 5, f"{laptime:.1f}s")
                 painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
         
-        # 繪製軸標題
+        # 繪製軸標題 - 響應式字體
         painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-        painter.setFont(QFont("Arial", 10, QFont.Bold))
+        title_font_size = max(8, min(12, int(min(self.width(), self.height()) * 0.025)))
+        font = QFont()
+        font.setPointSize(8)
+        painter.setFont(font)
         
         # X軸標題
-        painter.drawText(rect.center().x() - 30, rect.bottom() + 45, "圈數 (Lap)")
+        x_title_offset = max(20, int(self.height() * 0.04))
+        painter.drawText(rect.center().x() - 30, rect.bottom() + x_title_offset, tr("lap_number_axis", "Lap Number"))
         
         # Y軸標題（旋轉）
         painter.save()
-        painter.translate(rect.left() - 40, rect.center().y())
+        y_title_offset = max(25, int(self.width() * 0.03))
+        painter.translate(rect.left() - y_title_offset, rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-30, 0, "圈速 (秒)")
+        painter.drawText(-30, 0, "Lap Time (sec)")
         painter.restore()
     
     def _draw_data_lines(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
@@ -316,9 +350,12 @@ class LaptimeChartWidget(QWidget):
         """繪製單個標記 - 純文字版本，支援組合標記"""
         print(f"[MARKER_TEXT] 🎯 繪製文字標記 {marker_type} (純文字版本)")
         
-        # 統一的文字設置 - 使用較大的字體確保可讀性
+        # 統一的文字設置 - 響應式字體大小
         painter.setPen(QPen(color, 2))  # 使用傳入的顏色
-        painter.setFont(QFont("Arial", 12, QFont.Bold))  # 統一較大字體
+        marker_font_size = max(8, min(14, int(min(self.width(), self.height()) * 0.03)))
+        font = QFont()
+        font.setPointSize(8)
+        painter.setFont(font)
         
         if marker_type == 'P':  # 進站
             painter.drawText(position.x() - 6, position.y() + 4, "P")
@@ -419,66 +456,77 @@ class LaptimeChartWidget(QWidget):
         
         # 車手圖例標題
         painter.setPen(QPen(QColor(50, 50, 50), 1))
-        painter.setFont(QFont("Arial", 10, QFont.Bold))
-        painter.drawText(content_x, current_y, "車手")
+        title_font = QFont()
+        title_font.setPointSize(8)
+        painter.setFont(title_font)
+        painter.drawText(content_x, current_y, "Drivers")
         current_y += 22
         
+        # 響應式字體和尺寸設定
+        widget_size = min(self.width(), self.height())
+        font_size = max(8, min(12, int(widget_size * 0.025)))  # 基於視窗大小的字體
+        square_size = max(10, min(16, int(widget_size * 0.035)))  # 響應式方塊大小
+        line_spacing = max(16, min(24, int(square_size * 1.4)))  # 行距隨方塊大小調整
+        
         # 車手圖例內容
-        painter.setFont(QFont("Arial", 9))
+        content_font = QFont()
+        content_font.setPointSize(8)
+        painter.setFont(content_font)
         for i, series in enumerate(self.series_list):
             # 顏色方塊
             painter.setBrush(QBrush(series.color))
             painter.setPen(QPen(QColor(80, 80, 80), 1))
-            painter.fillRect(content_x, current_y - 8, 14, 14, series.color)
-            painter.drawRect(content_x, current_y - 8, 14, 14)
+            painter.fillRect(content_x, current_y - square_size//2, square_size, square_size, series.color)
+            painter.drawRect(content_x, current_y - square_size//2, square_size, square_size)
             
             # 車手名稱
             painter.setPen(QPen(QColor(40, 40, 40), 1))
-            painter.drawText(content_x + 22, current_y + 3, series.name)
-            current_y += 20
+            painter.drawText(content_x + square_size + 8, current_y + 3, series.name)
+            current_y += line_spacing
         
         # 分隔線
-        current_y += 6
+        current_y += max(4, font_size//2)
         painter.setPen(QPen(QColor(160, 160, 160), 1))
         painter.drawLine(content_x, current_y, content_x + content_width - 20, current_y)
-        current_y += 12
+        current_y += max(8, font_size)
         
-        # 智能標記圖例標題
-        painter.setPen(QPen(QColor(50, 50, 50), 1))
-        painter.setFont(QFont("Arial", 10, QFont.Bold))
-        painter.drawText(content_x, current_y, "智能標記")
-        current_y += 22
+        # 移除智能標記圖例標題，直接顯示標記內容
+        # current_y += max(18, font_size * 2)  # 移除標題的垂直空間
         
         # 智能標記內容
-        painter.setFont(QFont("Arial", 9))
+        marker_content_font = QFont()
+        marker_content_font.setPointSize(8)
+        painter.setFont(marker_content_font)
         markers_info = [
-            ('P', '進站', self.marker_colors['P']),
-            ('F', '最快圈', self.marker_colors['F']),
-            ('T', '輪胎更換', self.marker_colors.get('T', QColor(138, 43, 226))),
-            ('Y', '黃旗', self.marker_colors.get('Y', QColor(255, 193, 7))),      # 黃色
-            ('S', '安全車', self.marker_colors.get('S', QColor(128, 128, 128))),   # 灰色
-            ('R', '紅旗', self.marker_colors.get('R', QColor(220, 53, 69))),      # 紅色
-            ('W', '降雨', self.marker_colors.get('W', QColor(100, 149, 237))),    # 矢車菊藍
+            ('P', 'Pit Stop', self.marker_colors['P']),
+            ('F', 'Fastest Lap', self.marker_colors['F']),
+            ('T', 'Tire Change', self.marker_colors.get('T', QColor(138, 43, 226))),
+            ('Y', 'Yellow Flag', self.marker_colors.get('Y', QColor(255, 193, 7))),      # 黃色
+            ('S', 'Safety Car', self.marker_colors.get('S', QColor(128, 128, 128))),   # 灰色
+            ('R', 'Red Flag', self.marker_colors.get('R', QColor(220, 53, 69))),      # 紅色
+            ('W', 'Rain', self.marker_colors.get('W', QColor(100, 149, 237))),    # 矢車菊藍
             # ('PT', '進站+換胎', self.marker_colors['P']),  # 已移除組合標記
             # ('A', '事故/危險', self.marker_colors['A']),  # 已停用，拆分為具體類型
         ]
         
         for marker_type, description, color in markers_info:
             # 標記示例 - 改進版本，解決文字超出問題
-            marker_pos = QPoint(content_x + 8, current_y - 1)
-            self._draw_legend_marker_improved(painter, marker_pos, marker_type, color)
+            marker_pos = QPoint(content_x + square_size//2, current_y - 1)
+            self._draw_legend_marker_improved(painter, marker_pos, marker_type, color, font_size)
             
             # 標記說明文字 - 只顯示描述，不重複字母
             painter.setPen(QPen(QColor(40, 40, 40), 1))
-            painter.drawText(content_x + 25, current_y + 3, f"- {description}")
-            current_y += 22  # 調整為22px間距，更緊湊
+            painter.drawText(content_x + square_size + 8, current_y + 3, f"- {description}")
+            current_y += line_spacing  # 使用響應式行距
     
-    def _draw_legend_marker_improved(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
+    def _draw_legend_marker_improved(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor, font_size: int = 10):
         """在圖例中繪製標記示例 - 純文字版本，支援組合標記"""
         
-        # 統一的文字設置
+        # 統一的文字設置 - 響應式字體
         painter.setPen(QPen(color, 2))  # 使用傳入的顏色
-        painter.setFont(QFont("Arial", 10, QFont.Bold))  # 統一字體
+        legend_marker_font = QFont()
+        legend_marker_font.setPointSize(8)
+        painter.setFont(legend_marker_font)  # 使用響應式字體
         
         if marker_type == 'P':  # 進站
             painter.drawText(position.x() - 5, position.y() + 3, "P")
@@ -524,28 +572,29 @@ class DriverSelectionWidget(QWidget):
         driver_layout = QHBoxLayout()
         driver_layout.setSpacing(10)
         
-        # 創建5個車手選擇下拉選單 - 水平排列
+        # 創建5個車手選擇下拉選單 - 響應式寬度
         for i in range(5):
             combo = QComboBox()
             combo.addItem("-- 請選擇 --")
             combo.currentTextChanged.connect(self._on_driver_selection_changed)
-            combo.setMinimumWidth(80)
-            combo.setMaximumWidth(100)
+            # 響應式寬度設定
+            combo.setMinimumWidth(50)  # 小視窗下的最小寬度
+            combo.setMaximumWidth(120)  # 大視窗下的最大寬度
             
             self.driver_combos.append(combo)
             driver_layout.addWidget(combo)
         
-        # 添加一些間距
-        driver_layout.addSpacing(20)
+        # 響應式間距
+        driver_layout.addSpacing(10)  # 減少間距適應小視窗
         
-        # 控制按鈕 - 在同一行
-        self.clear_button = QPushButton("清除選擇")
+        # 控制按鈕 - 響應式寬度
+        self.clear_button = QPushButton("清除")  # 縮短文字
         self.clear_button.clicked.connect(self._clear_selections)
-        self.clear_button.setMaximumWidth(80)
+        self.clear_button.setMaximumWidth(60)  # 縮小按鈕
         
-        self.export_button = QPushButton("匯出圖表")
+        self.export_button = QPushButton("匯出")  # 縮短文字
         self.export_button.clicked.connect(self._export_chart)
-        self.export_button.setMaximumWidth(80)
+        self.export_button.setMaximumWidth(60)  # 縮小按鈕
         
         driver_layout.addWidget(self.export_button)
         driver_layout.addWidget(self.clear_button)
@@ -645,10 +694,11 @@ class driverLapAnalysisChartWidget(QWidget):
         main_layout.setContentsMargins(5, 5, 5, 5)
         main_layout.setSpacing(5)
         
-        # 上方：車手選擇控制區 (水平緊湊布局)
+        # 上方：車手選擇控制區 (響應式高度)
         self.driver_selection = DriverSelectionWidget()
         self.driver_selection.drivers_selected.connect(self._on_drivers_selected)
-        self.driver_selection.setMaximumHeight(80)  # 限制高度
+        self.driver_selection.setMaximumHeight(60)  # 減少高度適應小視窗
+        self.driver_selection.setMinimumHeight(40)  # 設定最小高度
         
         # 下方：專用圖表組件
         self.chart_widget = LaptimeChartWidget()
@@ -661,8 +711,8 @@ class driverLapAnalysisChartWidget(QWidget):
         main_layout.setStretchFactor(self.driver_selection, 0)
         main_layout.setStretchFactor(self.chart_widget, 1)
         
-        # 設置最小尺寸
-        self.setMinimumSize(1000, 600)
+        # 設置最小尺寸 - 與 Tire Analysis 一致
+        self.setMinimumSize(200, 100)
     
     def update_data(self, data: Dict[str, Any], selected_driver: str = None):
         """更新圖表數據"""

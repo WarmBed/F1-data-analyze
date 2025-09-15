@@ -29,6 +29,9 @@ import os
 # 導入連動管理器
 from modules.gui.lap_analysis.linkage import linkage_manager
 
+# 導入 GUI 國際化模組
+from core.gui_i18n import tr, set_gui_language, get_gui_language, get_telemetry_option_text
+
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
     """自定義MDI區域，強制執行子視窗最小尺寸限制並啟用內建功能"""
@@ -83,7 +86,7 @@ class CustomMdiArea(QMdiArea):
             close_action = menu.addAction("關閉視窗 (&X)")
             close_action.triggered.connect(subwindow.close)
             
-            close_all_action = menu.addAction("關閉所有視窗 (&A)")
+            close_all_action = menu.addAction(tr("close_all_windows", "Close All Windows (&A)"))
             close_all_action.triggered.connect(self.closeAllSubWindows)
             
             menu.addSeparator()
@@ -113,7 +116,7 @@ class CustomMdiArea(QMdiArea):
             
             menu.addSeparator()
             
-            close_all_action = menu.addAction("關閉所有視窗 (&A)")
+            close_all_action = menu.addAction(tr("close_all_windows", "Close All Windows (&A)"))
             close_all_action.triggered.connect(self.closeAllSubWindows)
             
             # 顯示選單
@@ -527,7 +530,10 @@ class LapAnalysisOptionsDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("遙測分析選項")
+        # 設定 GUI 語言為英文
+        set_gui_language('en')
+        
+        self.setWindowTitle(tr("telemetry_options_title"))
         self.setModal(True)
         self.setFixedSize(420, 520)
         
@@ -683,50 +689,50 @@ class LapAnalysisOptionsDialog(QDialog):
         layout.setContentsMargins(15, 15, 15, 15)
         
         # 標題
-        title_label = QLabel("請選擇要顯示的遙測圖表")
+        title_label = QLabel(tr("select_telemetry_charts"))
         title_label.setStyleSheet("font-size: 9pt; font-weight: bold; color: #333333; margin-bottom: 5px; font-family: 'Arial', 'Microsoft JhengHei', sans-serif;")
         layout.addWidget(title_label)
         
         # 車手選擇區域
-        driver_group = QGroupBox("車手與圈數選擇")
+        driver_group = QGroupBox(tr("driver_lap_selection"))
         driver_layout = QGridLayout(driver_group)
         driver_layout.setSpacing(8)
         
         # 車手1 (必選)
-        driver1_label = QLabel("車手1 (必選):")
+        driver1_label = QLabel(tr("driver1_required"))
         self.driver1_combo = QComboBox()
         self.driver1_combo.setFixedWidth(100)
         driver_layout.addWidget(driver1_label, 0, 0)
         driver_layout.addWidget(self.driver1_combo, 0, 1)
         
         # 車手1圈數
-        lap1_label = QLabel("圈數:")
+        lap1_label = QLabel(tr("lap_number"))
         self.lap1_input = QLineEdit()
         self.lap1_input.setText("1")
         self.lap1_input.setFixedWidth(50)
-        self.lap1_input.setPlaceholderText("圈數")
+        self.lap1_input.setPlaceholderText("Lap")
         driver_layout.addWidget(lap1_label, 0, 2)
         driver_layout.addWidget(self.lap1_input, 0, 3)
         
         # 車手2 (選用)
-        driver2_label = QLabel("車手2 (選用):")
+        driver2_label = QLabel(tr("driver2_optional"))
         self.driver2_combo = QComboBox()
         self.driver2_combo.setFixedWidth(100)
-        self.driver2_combo.addItem("無")  # 第一個選項為無
+        self.driver2_combo.addItem("None")  # 第一個選項為無
         driver_layout.addWidget(driver2_label, 1, 0)
         driver_layout.addWidget(self.driver2_combo, 1, 1)
         
         # 車手2圈數
-        lap2_label = QLabel("圈數:")
+        lap2_label = QLabel(tr("lap_number"))
         self.lap2_input = QLineEdit()
         self.lap2_input.setText("1")
         self.lap2_input.setFixedWidth(50)
-        self.lap2_input.setPlaceholderText("圈數")
+        self.lap2_input.setPlaceholderText("Lap")
         driver_layout.addWidget(lap2_label, 1, 2)
         driver_layout.addWidget(self.lap2_input, 1, 3)
         
         # 最速圈勾選框
-        self.fastest_lap_checkbox = QCheckBox("最速圈")
+        self.fastest_lap_checkbox = QCheckBox("Fastest Lap")
         self.fastest_lap_checkbox.setChecked(False)
         self.fastest_lap_checkbox.stateChanged.connect(self._on_fastest_lap_changed)
         driver_layout.addWidget(self.fastest_lap_checkbox, 0, 4, 2, 1)  # 跨兩行放在右邊
@@ -740,7 +746,7 @@ class LapAnalysisOptionsDialog(QDialog):
         self._load_available_drivers()
         
         # 創建列表控件 - 更緊湊的設計
-        telemetry_group = QGroupBox("遙測選項")
+        telemetry_group = QGroupBox(tr("telemetry_options"))
         telemetry_layout = QVBoxLayout(telemetry_group)
         
         self.telemetry_list = QListWidget()
@@ -749,16 +755,16 @@ class LapAnalysisOptionsDialog(QDialog):
         
         # 定義遙測選項
         self.telemetry_options = {
-            'speed_analysis': ('⚡ 速度分析 (Speed Analysis)', True),  # 設為預設選中
-            # 'speed': ('🏃 速度 (Speed)', True),  # 移除速度選項
-            'brake': ('🛑 煞車 (Brake)', True),  # 設為預設選中
-            'throttle': ('⚡油門 (Throttle)', True),  # 設為預設選中
-            # 'steering': ('🎯 轉向 (Steering)', False),  # 移除轉向選項
-            'gear': ('⚙️ 檔位 (Gear)', True),  # 設為預設選中
-            'rpm': ('🔄 轉速 (RPM)', True),  # 設為預設選中
-            'acceleration': ('📈 加速度 (Acceleration)', True),  # 設為預設選中
-            'speed_diff': ('📊 速度差 (Speed Difference)', True),  # 設為預設選中
-            'distancediff': ('📏 累積距離差 (Distance Difference)', True)  # 設為預設選中
+            'speed_analysis': ('⚡ Speed Analysis', True),  # 設為預設選中
+            # 'speed': ('🏃 Speed', True),  # 移除速度選項
+            'brake': ('🛑 Brake', True),  # 設為預設選中
+            'throttle': ('⚡ Throttle', True),  # 設為預設選中
+            # 'steering': ('🎯 Steering', False),  # 移除轉向選項
+            'gear': ('⚙️ Gear', True),  # 設為預設選中
+            'rpm': ('🔄 RPM', True),  # 設為預設選中
+            'acceleration': ('📈 Acceleration', True),  # 設為預設選中
+            'speed_diff': ('📊 Speed Difference', True),  # 設為預設選中
+            'distancediff': ('📏 Distance Difference', True)  # 設為預設選中
         }
         
         # 添加選項到列表
@@ -776,18 +782,18 @@ class LapAnalysisOptionsDialog(QDialog):
         quick_select_layout = QHBoxLayout()
         quick_select_layout.setSpacing(8)
         
-        select_all_btn = QPushButton("全選")
-        select_all_btn.setFixedSize(60, 24)
+        select_all_btn = QPushButton(tr("select_all"))
+        select_all_btn.setFixedSize(70, 24)
         select_all_btn.clicked.connect(self.select_all)
         quick_select_layout.addWidget(select_all_btn)
         
-        select_none_btn = QPushButton("全不選")
-        select_none_btn.setFixedSize(60, 24)
+        select_none_btn = QPushButton(tr("select_none"))
+        select_none_btn.setFixedSize(70, 24)
         select_none_btn.clicked.connect(self.select_none)
         quick_select_layout.addWidget(select_none_btn)
         
-        default_btn = QPushButton("恢復預設")
-        default_btn.setFixedSize(70, 24)
+        default_btn = QPushButton(tr("restore_default"))
+        default_btn.setFixedSize(90, 24)
         default_btn.clicked.connect(self.set_default)
         quick_select_layout.addWidget(default_btn)
         
@@ -799,12 +805,12 @@ class LapAnalysisOptionsDialog(QDialog):
         button_layout.setSpacing(8)
         button_layout.addStretch()
         
-        ok_btn = QPushButton("確定")
+        ok_btn = QPushButton(tr("ok"))
         ok_btn.setFixedSize(60, 26)
         ok_btn.clicked.connect(self.accept)
         button_layout.addWidget(ok_btn)
         
-        cancel_btn = QPushButton("取消")
+        cancel_btn = QPushButton(tr("cancel"))
         cancel_btn.setFixedSize(60, 26)
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
@@ -2174,13 +2180,13 @@ class PopoutSubWindow(QMdiSubWindow):
         try:
             # 處理各種可能的標題格式
             if title.startswith("[RAIN]"):
-                return "降雨分析"
+                return "Rain Analysis"
             elif title.startswith("[LAP]"):
-                return "單圈分析" 
+                return "Lap Analysis" 
             elif title.startswith("[COMPARE]"):
-                return "比較分析"
+                return "Comparison Analysis"
             elif title.startswith("[TELEMETRY]"):
-                return "單場賽事總攬"
+                return "Race Overview"
             elif "_" in title:
                 # 新格式：模組名稱_年份_賽事_賽段
                 module_part = title.split('_')[0]
@@ -2856,17 +2862,17 @@ class PopoutSubWindow(QMdiSubWindow):
         control_layout.setSpacing(10)
         
         # 視窗同步名稱勾選框
-        self.sync_windows_checkbox = QCheckBox("[LINK] 同步其他視窗")
+        self.sync_windows_checkbox = QCheckBox("[LINK] Sync Other Windows")
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
         self.sync_windows_checkbox.setChecked(True)
-        self.sync_windows_checkbox.setToolTip("同步其他視窗 (賽事/賽段/年份同步)")
+        self.sync_windows_checkbox.setToolTip("Sync other windows (Race/Session/Year sync)")
         self.sync_windows_checkbox.toggled.connect(self.on_sync_windows_toggled)
         control_layout.addWidget(self.sync_windows_checkbox)
         
         control_layout.addStretch()
         
         # 年份選擇器
-        year_label = QLabel("年:")
+        year_label = QLabel(tr("year"))
         year_label.setObjectName("ControlLabel")
         control_layout.addWidget(year_label)
         
@@ -2879,7 +2885,7 @@ class PopoutSubWindow(QMdiSubWindow):
         control_layout.addWidget(self.year_combo)
         
         # 賽事選擇器
-        race_label = QLabel("賽事:")
+        race_label = QLabel(tr("race"))
         race_label.setObjectName("ControlLabel")
         control_layout.addWidget(race_label)
         
@@ -2894,7 +2900,7 @@ class PopoutSubWindow(QMdiSubWindow):
         control_layout.addWidget(self.race_combo)
         
         # 賽段選擇器
-        session_label = QLabel("賽段:")
+        session_label = QLabel(tr("session"))
         session_label.setObjectName("ControlLabel")
         control_layout.addWidget(session_label)
         
@@ -2910,7 +2916,7 @@ class PopoutSubWindow(QMdiSubWindow):
         reanalyze_btn = QPushButton("R")
         reanalyze_btn.setObjectName("ReanalyzeButton")
         reanalyze_btn.setFixedSize(25, 25)
-        reanalyze_btn.setToolTip("重新分析")
+        reanalyze_btn.setToolTip("Reanalyze")
         reanalyze_btn.clicked.connect(self.perform_reanalysis)
         control_layout.addWidget(reanalyze_btn)
         
@@ -3183,13 +3189,13 @@ class PopoutSubWindow(QMdiSubWindow):
         """顯示分析進度"""
         if not hasattr(self, 'progress_dialog'):
             from PyQt5.QtWidgets import QProgressDialog
-            self.progress_dialog = QProgressDialog("正在執行 F1 數據分析...", "取消", 0, 0, self)
+            self.progress_dialog = QProgressDialog("Executing F1 Data Analysis...", "Cancel", 0, 0, self)
             self.progress_dialog.setWindowModality(Qt.WindowModal)
             self.progress_dialog.setAutoClose(False)
             self.progress_dialog.setAutoReset(False)
             self.progress_dialog.canceled.connect(self.stop_cli_analysis)
         
-        self.progress_dialog.setLabelText("正在啟動 CLI 分析...")
+        self.progress_dialog.setLabelText(tr("starting_cli_analysis"))
         self.progress_dialog.show()
     
     def hide_analysis_progress(self):
@@ -3209,7 +3215,7 @@ class PopoutSubWindow(QMdiSubWindow):
         # 可以在這裡處理特定的輸出訊息來更新進度
         if "下載" in output or "Download" in output.lower():
             if hasattr(self, 'progress_dialog') and self.progress_dialog:
-                self.progress_dialog.setLabelText(f"正在下載數據... {output[:50]}...")
+                self.progress_dialog.setLabelText(f"{tr('downloading_data')} {output[:50]}...")
         elif "分析" in output or "Analysis" in output.lower():
             if hasattr(self, 'progress_dialog') and self.progress_dialog:
                 self.progress_dialog.setLabelText(f"正在分析數據... {output[:50]}...")
@@ -3869,7 +3875,7 @@ class PopoutSubWindow(QMdiSubWindow):
             
             # 創建可調整大小的獨立視窗
             self.standalone_window = ResizableStandaloneWindow()
-            self.standalone_window.setWindowTitle(f"[獨立] {self.windowTitle()}")
+            self.standalone_window.setWindowTitle(f"[Standalone] {self.windowTitle()}")
             self.standalone_window.setObjectName("StandaloneWindow")
             self.standalone_window.setCentralWidget(self.original_widget)
             self.standalone_window.resize(800, 600)  # 調整預設大小更大
@@ -4181,8 +4187,8 @@ class ContextMenuTreeWidget(QTreeWidget):
         #print(f"[分析] 執行功能: {function_name}")
         
         if self.main_window:
-            # 特殊處理：賽道分析使用專門的方法
-            if function_name == "賽道分析":
+            # 特殊處理：賽道分析使用專門的方法（支援中英文）
+            if function_name in ["賽道分析", "Track Analysis"]:
                 print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
                 self.main_window.open_track_analysis_window()
             else:
@@ -4370,7 +4376,7 @@ class WindowSettingsDialog(QDialog):
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window
-        self.setWindowTitle("視窗設定")
+        self.setWindowTitle("Window Settings")
         self.setObjectName("SettingsDialog")
         self.setFixedSize(400, 300)
         self.setModal(True)
@@ -4733,7 +4739,10 @@ class StyleHMainWindow(QMainWindow):
         super().__init__()
         print("[INIT] 🚀 開始初始化 F1T 主視窗...")
         
-        self.setWindowTitle("F1 Professional Racing Analysis Workstation v8.0 - Style H")
+        # 設定 GUI 語言為英文
+        set_gui_language('en')
+        
+        self.setWindowTitle("F1T Professional Racing Analysis Workstation v8.0 - Style H")
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
@@ -4820,47 +4829,71 @@ class StyleHMainWindow(QMainWindow):
         menubar = self.menuBar()
         
         # 檔案菜單
-        file_menu = menubar.addMenu('檔案')
-        file_menu.addAction('開啟會話...', self.open_session)
-        file_menu.addAction('儲存工作區', self.save_workspace)
-        file_menu.addAction('匯出報告...', self.export_report)
+        file_menu = menubar.addMenu(tr('file_menu'))
+        file_menu.addAction('Open Session...', self.open_session)
+        file_menu.addAction('Save Workspace', self.save_workspace)
+        file_menu.addAction('Export Report...', self.export_report)
         file_menu.addSeparator()
-        file_menu.addAction('離開', self.close)
+        file_menu.addAction('Exit', self.close)
         
         # 分析菜單
-        analysis_menu = menubar.addMenu('分析')
-        analysis_menu.addAction('[RAIN] 降雨分析', self.rain_analysis)
+        analysis_menu = menubar.addMenu(tr('analysis_menu'))
+        analysis_menu.addAction('[RAIN] Rain Analysis', self.rain_analysis)
         analysis_menu.addSeparator()
-        analysis_menu.addAction('[FINISH] 賽道軌跡分析', self.open_track_analysis_window)
-        analysis_menu.addAction('🏎️ 單場賽事總攬', self.open_telemetry_analysis)
+        analysis_menu.addAction('[FINISH] Track Analysis', self.open_track_analysis_window)
+        analysis_menu.addAction('🏎️ Race Overview', self.open_telemetry_analysis)
         analysis_menu.addSeparator()
-        analysis_menu.addAction('遙測分析', self.lap_analysis)
-        analysis_menu.addAction('遙測比較', self.telemetry_comparison)
-        analysis_menu.addAction('車手比較', self.driver_comparison)
-        analysis_menu.addAction('扇區分析', self.sector_analysis)
+        analysis_menu.addAction('Telemetry Analysis', self.lap_analysis)
+        analysis_menu.addAction('Telemetry Comparison', self.telemetry_comparison)
+        analysis_menu.addAction('Driver Comparison', self.driver_comparison)
+        analysis_menu.addAction('Sector Analysis', self.sector_analysis)
         
         # 檢視菜單
-        view_menu = menubar.addMenu('檢視')
-        view_menu.addAction('重新排列視窗', self.tile_windows)
-        view_menu.addAction('層疊視窗', self.cascade_windows)
+        view_menu = menubar.addMenu(tr('view_menu'))
+        view_menu.addAction('Tile Windows', self.tile_windows)
+        view_menu.addAction('Cascade Windows', self.cascade_windows)
         view_menu.addSeparator()
-        view_menu.addAction('最小化所有視窗', self.minimize_all_windows)
-        view_menu.addAction('最大化所有視窗', self.maximize_all_windows)
-        view_menu.addAction('還原所有視窗', self.restore_all_windows)
+        view_menu.addAction('Minimize All Windows', self.minimize_all_windows)
+        view_menu.addAction('Maximize All Windows', self.maximize_all_windows)
+        view_menu.addAction('Restore All Windows', self.restore_all_windows)
         view_menu.addSeparator()
-        view_menu.addAction('關閉所有視窗', self.close_all_windows)
+        view_menu.addAction('Close All Windows', self.close_all_windows)
         view_menu.addSeparator()
-        view_menu.addAction('全螢幕', self.toggle_fullscreen)
+        view_menu.addAction('Full Screen', self.toggle_fullscreen)
         
         # 工具菜單
-        tools_menu = menubar.addMenu('工具')
-        tools_menu.addAction('數據驗證', self.data_validation)
-        tools_menu.addAction('系統設定', self.system_settings)
-        tools_menu.addAction('清除日誌', self.clear_log)
+        tools_menu = menubar.addMenu(tr('tools_menu'))
+        tools_menu.addAction('Data Validation', self.data_validation)
+        tools_menu.addAction('System Settings', self.system_settings)
+        tools_menu.addAction('Clear Log', self.clear_log)
+        tools_menu.addSeparator()
+        
+        # 語言切換功能
+        language_menu = tools_menu.addMenu('🌐 Language')
+        
+        # 英文選項
+        self.english_action = QAction('🇺🇸 English', self)
+        self.english_action.setCheckable(True)
+        self.english_action.triggered.connect(lambda: self.set_interface_language('en'))
+        language_menu.addAction(self.english_action)
+        
+        # 中文選項
+        self.chinese_action = QAction('🇹🇼 中文', self)
+        self.chinese_action.setCheckable(True)
+        self.chinese_action.triggered.connect(lambda: self.set_interface_language('zh'))
+        language_menu.addAction(self.chinese_action)
+        
+        # 設定當前語言狀態
+        current_lang = get_gui_language()
+        if current_lang == 'en':
+            self.english_action.setChecked(True)
+        else:
+            self.chinese_action.setChecked(True)
+        
         tools_menu.addSeparator()
         
         # X軸連動功能控制
-        self.linkage_action = QAction('🔗 遙測分析X軸連動', self)
+        self.linkage_action = QAction('🔗 Telemetry X-Axis Linkage', self)
         self.linkage_action.setCheckable(True)
         self.linkage_action.setChecked(True)  # 預設啟用
         self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
@@ -5154,7 +5187,7 @@ class StyleHMainWindow(QMainWindow):
                 window_title = sub_window.windowTitle()
                 
                 # 檢查是否為速度分析或RPM分析視窗
-                if any(keyword in window_title for keyword in ["速度分析", "RPM分析", "⚡", "🔄"]):
+                if any(keyword in window_title for keyword in ["Speed Analysis", "RPM Analysis", "⚡", "🔄"]):
                     lap_analysis_windows_found.append((sub_window, widget, window_title))
                     print(f"[LAP_CONTROL] 🎯 發現遙測分析視窗: {window_title}")
         
@@ -5323,7 +5356,7 @@ class StyleHMainWindow(QMainWindow):
                     print(f"[LAP_CONTROL] 控件 {i+1} 已添加，可見性: {control.isVisible()}, 啟用: {control.isEnabled()}")
                 
                 # 添加更新按鈕
-                update_action = QAction("🔄 更新所有分析", self)
+                update_action = QAction("🔄 Update All Analysis", self)
                 update_action.triggered.connect(self.update_all_lap_analysis)
                 
                 if next_action:
@@ -5474,15 +5507,15 @@ class StyleHMainWindow(QMainWindow):
             
             # 根據分析類型設定模組名稱
             module_name_mapping = {
-                "speed_analysis": "速度分析",
-                "rpm": "RPM分析", 
-                "brake": "煞車分析",
-                "throttle": "油門分析",
-                "steering": "轉向分析",
-                "gear": "檔位分析",
-                "acceleration": "加速度分析",
-                "speed_diff": "速度差分析",
-                "distancediff": "累積距離差分析"
+                "speed_analysis": "Speed Analysis",
+                "rpm": "RPM Analysis", 
+                "brake": "Brake Analysis",
+                "throttle": "Throttle Analysis",
+                "steering": "Steering Analysis",
+                "gear": "Gear Analysis",
+                "acceleration": "Acceleration Analysis",
+                "speed_diff": "Speed Difference Analysis",
+                "distancediff": "Distance Difference Analysis"
             }
             
             module_name = module_name_mapping.get(analysis_type, f"{analysis_type}分析")
@@ -5558,7 +5591,7 @@ class StyleHMainWindow(QMainWindow):
                         window_title = analysis_module.get_window_title(year, race, session)
                     except TypeError:
                         # 如果新版方法需要參數但舊版不需要，使用備用方案
-                        window_title = f"{getattr(analysis_module, 'display_name', '分析模組')} - {year} {race} {session}"
+                        window_title = f"{getattr(analysis_module, 'display_name', 'Analysis Module')} - {year} {race} {session}"
                 elif hasattr(analysis_module, '_sub_window') and hasattr(analysis_module._sub_window, 'windowTitle'):
                     window_title = analysis_module._sub_window.windowTitle()
                 
@@ -5764,20 +5797,20 @@ class StyleHMainWindow(QMainWindow):
         tree.setRootIsDecorated(True)
         
         # 基礎分析模組
-        basic_group = QTreeWidgetItem(tree, ["[TOOL] 單場賽事分析"])
+        basic_group = QTreeWidgetItem(tree, [tr("single_race_analysis", "[TOOL] Single Race Analysis")])
         basic_group.setExpanded(True)
-        QTreeWidgetItem(basic_group, ["降雨分析"])
-        QTreeWidgetItem(basic_group, ["賽道分析"])
-        QTreeWidgetItem(basic_group, ["進站分析"])
-        QTreeWidgetItem(basic_group, ["事故分析"])
-        QTreeWidgetItem(basic_group, ["車手排名"])
-        QTreeWidgetItem(basic_group, ["輪胎策略分析"])
+        QTreeWidgetItem(basic_group, [tr("rain_analysis", "Rain Analysis")])
+        QTreeWidgetItem(basic_group, [tr("track_analysis", "Track Analysis")])
+        QTreeWidgetItem(basic_group, [tr("pitstop_analysis", "Pitstop Analysis")])
+        QTreeWidgetItem(basic_group, [tr("accident_analysis", "Accident Analysis")])
+        QTreeWidgetItem(basic_group, [tr("driver_ranking", "Driver Ranking")])
+        QTreeWidgetItem(basic_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         
         # 單場賽事車手分析模組
-        single_group = QTreeWidgetItem(tree, ["🚗 單場賽事車手分析"])
+        single_group = QTreeWidgetItem(tree, [tr("single_race_driver_analysis", "🚗 Single Race Driver Analysis")])
         single_group.setExpanded(True)
-        QTreeWidgetItem(single_group, ["遙測分析"])
-        QTreeWidgetItem(single_group, ["詳細圈速分析"])
+        QTreeWidgetItem(single_group, [tr("telemetry_analysis", "Telemetry Analysis")])
+        QTreeWidgetItem(single_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
         
         layout.addWidget(tree)
         
@@ -6148,8 +6181,8 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 關閉所有視窗按鈕
-        close_all_btn = QPushButton("關閉所有視窗")
-        close_all_btn.setFixedSize(120, 25)
+        close_all_btn = QPushButton(tr("close_all_windows", "Close All Windows"))
+        close_all_btn.setFixedSize(130, 25)
         close_all_btn.setStyleSheet("""
             QPushButton {
                 background: #FFE6E6;
@@ -6168,7 +6201,7 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 重置按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -6213,7 +6246,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.setSpacing(20)
         
         # 主標題
-        title_label = QLabel("[FINISH] F1T 專業賽車分析工作站")
+        title_label = QLabel(tr("main_title", "[FINISH] F1T Professional Racing Analysis Workstation"))
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("""
             QLabel {
@@ -6226,7 +6259,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.addWidget(title_label)
         
         # 副標題
-        subtitle_label = QLabel("專業級 F1 數據分析平台")
+        subtitle_label = QLabel(tr("subtitle", "Professional F1 Data Analysis Platform"))
         subtitle_label.setAlignment(Qt.AlignCenter)
         subtitle_label.setStyleSheet("""
             QLabel {
@@ -6238,7 +6271,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.addWidget(subtitle_label)
         
         # 歡迎信息
-        info_label = QLabel("💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 13.0")
+        info_label = QLabel(tr("welcome_info", "💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0"))
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setStyleSheet("""
             QLabel {
@@ -6315,7 +6348,7 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 標題標籤
-        title_label = QLabel("[STATS] 數據總覽")
+        title_label = QLabel(tr("data_overview", "[STATS] Data Overview"))
         title_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -6385,8 +6418,8 @@ class StyleHMainWindow(QMainWindow):
         self.force_white_background(mdi_area)
         
         # 添加統計視窗
-        stats_window = PopoutSubWindow("統計數據", mdi_area)
-        stats_content = QLabel("[CHART] 賽季統計數據\n• 總圈數: 1,247\n• 平均圈速: 1:18.456\n• 最快圈速: 1:16.123")
+        stats_window = PopoutSubWindow(tr("statistics_data", "Statistics Data"), mdi_area)
+        stats_content = QLabel(tr("season_statistics", "[CHART] Season Statistics\n• Total Laps: 1,247\n• Average Lap Time: 1:18.456\n• Fastest Lap: 1:16.123"))
         stats_content.setObjectName("StatsContent")
         stats_window.setWidget(stats_content)
         stats_window.resize(300, 200)  # 改為resize，允許調整大小
@@ -7216,8 +7249,9 @@ class StyleHMainWindow(QMainWindow):
                 TRACK_ANALYSIS_AVAILABLE = False
                 print(f"警告: TrackAnalysisModule 不可用: {e}")
             
-            # 根據功能名稱映射到模組類型
+            # 根據功能名稱映射到模組類型 (支援中英文)
             module_mapping = {
+                # 中文映射
                 "進站分析": "pitstop_analysis",  # 進站分析映射
                 "事故分析": "accident_analysis",  # 事故分析映射
                 "速度分析": "speed_analysis",     # 速度分析映射
@@ -7230,6 +7264,19 @@ class StyleHMainWindow(QMainWindow):
                 "遙測分析": "telemetry_analysis", # 遙測分析映射 (圈速分析)
                 "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
                 "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
+                # 英文映射
+                "Pitstop Analysis": "pitstop_analysis",
+                "Accident Analysis": "accident_analysis",
+                "Speed Analysis": "speed_analysis",
+                "Throttle Analysis": "throttle_analysis",
+                "RPM Analysis": "rpm_analysis",
+                "Gear Analysis": "gear_analysis",
+                "Brake Analysis": "brake_analysis",
+                "Rain Analysis": "rain_analysis",
+                "Driver Ranking": "telemetry_analysis",
+                "Telemetry Analysis": "telemetry_analysis",
+                "Tire Strategy Analysis": "tire_analysis",
+                "Detailed Lap Analysis": "driverlap_analysis",
             }
             
             # 尋找匹配的模組類型
@@ -9627,7 +9674,7 @@ class StyleHMainWindow(QMainWindow):
             )
             
             # [TOOL] 修正：使用新的標題格式
-            tab_title = f"降雨分析_{params['year']}_{params['race']}_{params['session']}"
+            tab_title = f"Rain Analysis_{params['year']}_{params['race']}_{params['session']}"
             
             # 添加到主分頁控件 (使用空字串隱藏標題)
             tab_index = self.tab_widget.addTab(rain_widget, "")
@@ -10140,6 +10187,42 @@ class StyleHMainWindow(QMainWindow):
     def system_settings(self): 
         #print("[工具] 系統設定")
         pass
+    
+    def set_interface_language(self, language):
+        """設定介面語言"""
+        try:
+            # 設定語言
+            set_gui_language(language)
+            
+            # 更新選單狀態
+            if language == 'en':
+                self.english_action.setChecked(True)
+                self.chinese_action.setChecked(False)
+                message = "Interface language switched to English. Please restart the application for full effect."
+            else:
+                self.english_action.setChecked(False)
+                self.chinese_action.setChecked(True)
+                message = "介面語言已切換為中文。請重新啟動應用程式以獲得完整效果。"
+            
+            # 更新功能表文字
+            self.refresh_menu_text()
+            
+            # 顯示提示訊息
+            QMessageBox.information(self, "Language / 語言", message)
+            
+            print(f"[LANGUAGE] 介面語言已切換為: {language}")
+            
+        except Exception as e:
+            print(f"[ERROR] 語言切換失敗: {e}")
+    
+    def refresh_menu_text(self):
+        """刷新功能表文字"""
+        try:
+            # 這裡可以添加即時更新功能表文字的邏輯
+            # 目前需要重啟應用程式才能完全生效
+            pass
+        except Exception as e:
+            print(f"[ERROR] 刷新功能表文字失敗: {e}")
         
     def clear_log(self): 
         #print("[工具] 清除日誌")

@@ -27,6 +27,9 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButt
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics, QMouseEvent
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 
 class TireChartTheme:
     """輪胎策略分析專用圖表主題"""
@@ -288,7 +291,7 @@ class TireAnalysisChartWidget(QWidget):
             painter.drawText(int(x - 10), chart_rect.bottom() + 20, str(lap))
         
         # 繪製X軸標題
-        painter.drawText(chart_rect.center().x() - 30, chart_rect.bottom() + 40, "圈數 (Lap)")
+        painter.drawText(chart_rect.center().x() - 30, chart_rect.bottom() + 40, tr("lap_number_axis", "圈數 (Lap)"))
     
     def _draw_stints(self, painter: QPainter, chart_rect: QRect):
         """繪製所有車手的 Stint 長條"""

@@ -29,6 +29,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入通用基礎類別
 try:
     from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
@@ -418,7 +421,7 @@ class TireAnalysisControlWidget(QWidget):
         ])
         self.chart_combo.currentTextChanged.connect(self._on_chart_type_changed)
         
-        chart_layout.addWidget(QLabel("選擇圖表:"), 0, 0)
+        chart_layout.addWidget(QLabel(tr("select_chart", "選擇圖表:")), 0, 0)
         chart_layout.addWidget(self.chart_combo, 0, 1)
         
         layout.addWidget(chart_group)

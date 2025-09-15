@@ -24,6 +24,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入翻譯函數
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -514,36 +517,36 @@ class AccidentStatisticsWidget(QWidget):
         
         # Track Limit 違規卡片
         self.track_limit_card = self.create_stat_card(
-            "⚠️ Track Limit", 
+            tr("track_limit_violations", "⚠️ Track Limit"), 
             "0", 
-            "(違規次數)",
+            tr("violations_count", "(違規次數)"),
             "#FF9800"  # 橙色主題
         )
         cards_layout.addWidget(self.track_limit_card)
         
         # 雙黃旗卡片
         self.double_yellow_card = self.create_stat_card(
-            "�🟡 雙黃旗", 
+            tr("double_yellow_flag", "🟡🟡 雙黃旗"), 
             "0", 
-            "(出示次數)",
+            tr("display_count", "(出示次數)"),
             "#FFC107"  # 黃色主題
         )
         cards_layout.addWidget(self.double_yellow_card)
         
         # 黃旗卡片
         self.yellow_flag_card = self.create_stat_card(
-            "🟡 黃旗", 
+            tr("yellow_flag", "🟡 黃旗"), 
             "0", 
-            "(出示次數)",
+            tr("display_count", "(出示次數)"),
             "#FFEB3B"  # 淺黃色主題
         )
         cards_layout.addWidget(self.yellow_flag_card)
         
         # 紅旗卡片
         self.red_flag_card = self.create_stat_card(
-            "� 紅旗", 
+            tr("red_flag", "🔴 紅旗"), 
             "0", 
-            "(出示次數)",
+            tr("display_count", "(出示次數)"),
             "#F44336"  # 紅色主題
         )
         cards_layout.addWidget(self.red_flag_card)
@@ -1260,7 +1263,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"事故綜合分析_{year}_{race}_{session}"
+        return f"Accident Analysis_{year}_{race}_{session}"
     
     def update_parameters(self, year: int, race: str, session: str) -> None:
         """

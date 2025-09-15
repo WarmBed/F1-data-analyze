@@ -49,9 +49,9 @@ class driverLapAnalysisModule(IAnalysisModule):
         
         # 模組基本資訊
         self._module_name = "detailed_laptime_analysis"
-        self._display_name = "⏱️ 詳細圈速分析"
+        self._display_name = "⏱️ Detailed Lap Analysis"
         self._version = "2.0.0"
-        self._description = "F1 比賽詳細圈速分析模組，提供圈速趨勢分析、智能標記和輪胎策略時間軸"
+        self._description = "F1 Detailed Lap Time Analysis Module - Lap trends, smart markers and tire strategy timeline"
         
         # 狀態追蹤
         self._is_initialized = False
@@ -208,11 +208,11 @@ class driverLapAnalysisModule(IAnalysisModule):
     # 支援方法（保持與原版相容）
     def get_cache_key(self, year: int, race: str, session: str) -> str:
         """生成快取鍵值"""
-        return f"詳細圈速分析_{year}_{race}_{session}"
+        return f"Detailed Lap Analysis_{year}_{race}_{session}"
         
     def get_window_title(self, year: int, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"詳細圈速分析_{year}_{race}_{session}"
+        return f"Detailed Lap Analysis_{year}_{race}_{session}"
         
     def is_data_available(self, year: int, race: str, session: str) -> bool:
         """檢查數據是否可用"""
@@ -328,9 +328,9 @@ def create_detailed_laptime_analysis_module(parent=None, **kwargs) -> driverLapA
 # 模組註冊資訊
 MODULE_INFO = {
     'name': 'detailed_laptime_analysis',
-    'display_name': '⏱️ 詳細圈速分析',
+    'display_name': '⏱️ Detailed Lap Analysis',
     'version': '2.0.0',
-    'description': 'F1 比賽詳細圈速分析模組',
+    'description': 'F1 Detailed Lap Time Analysis Module',
     'author': 'F1T Team',
     'category': 'telemetry',
     'cli_function': 28,
