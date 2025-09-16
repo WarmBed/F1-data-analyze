@@ -301,7 +301,8 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "RPM (轉/分)")
+        from core.gui_i18n import tr
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_rpm', 'RPM'))
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-RainAnalysisModule - F1T 下雨分析模組
-=====================================
+RainAnalysisModule - F1T Rain Analysis Module
+=============================================
 
-基於通用架構的下雨分析模組，提供完整的天氣數據分析功能。
+Comprehensive rain analysis module based on universal architecture.
 
-功能特色：
-- 降雨狀態分析（有雨/無雨）
-- 溫度變化追蹤（氣溫、賽道溫度）
-- 濕度和風速監測
-- 氣壓變化分析
-- 多種圖表類型支援
-- 實時數據更新
+Features:
+- Rainfall status analysis (rain/no rain)
+- Temperature change tracking (air temperature, track temperature)
+- Humidity and wind speed monitoring
+- Atmospheric pressure change analysis
+- Multiple chart type support
+- Real-time data updates
 
 Author: F1T Team
 Date: 2025-09-10
@@ -37,65 +37,65 @@ except ImportError:
 
 class RainAnalysisModule(IAnalysisModule):
     """
-    下雨分析模組主類 - 實現 IAnalysisModule 介面
+    Rain Analysis Module Main Class - Implements IAnalysisModule Interface
     
-    提供與遙測分析模組一致的介面，確保可以完美整合到
-    現有的 PopoutSubWindow 系統中。
+    Provides consistent interface with telemetry analysis module to ensure
+    seamless integration with existing PopoutSubWindow system.
     """
     
     def __init__(self, parent=None, year=None, race=None, session=None):
-        """初始化下雨分析模組"""
+        """Initialize rain analysis module"""
         super().__init__(parent)
         
-        # 模組基本資訊
+        # Module basic information
         self._module_name = "RainAnalysis"
-        self._display_name = "🌧️ 降雨分析"
+        self._display_name = "🌧️ Rain Analysis"
         self._version = "1.0.0"
-        self._description = "F1 比賽天氣降雨分析模組"
+        self._description = "F1 Race Weather and Rain Analysis Module"
         
-        # 參數
+        # Parameters
         self.current_year = str(year) if year else None
         self.current_race = race
         self.current_session = session
         
-        # 同步設定
+        # Sync settings
         self.sync_enabled = True
         
-        # UI 組件
+        # UI components
         self._main_widget = None
         self._is_initialized = False
         
-        # 創建內部的通用下雨分析實例
+        # Create internal universal rain analysis instance
         self._rain_analysis_core = None
         
-        # 初始化模組（創建 UI 組件）
+        # Initialize module (create UI components)
         init_success = self.initialize_module(parent)
         if not init_success:
-            self._debug("模組初始化失敗")
+            self._debug("Module initialization failed")
         
-        # 初始化完成標記
+        # Initialization complete flag
         self._is_initialized = True
     
-    # ===== 實現 IAnalysisModule 抽象方法 =====
+    # ===== Implement IAnalysisModule Abstract Methods =====
     
     @property
     def module_name(self) -> str:
-        """返回模組名稱"""
+        """Return module name"""
         return self._module_name
         
     @property 
     def display_name(self) -> str:
-        """返回顯示名稱 (用於UI)"""
+        """Return display name (for UI)"""
         return self._display_name
         
     @property
     def version(self) -> str:
-        """返回模組版本"""
+        """Return module version"""
         return self._version
         
     @property
     def description(self) -> str:
-        """返回模組描述"""
+        """Return module description"""
         return self._description
         
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
@@ -169,8 +169,13 @@ class RainAnalysisModule(IAnalysisModule):
         return f"降雨分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """生成視窗標題"""
-        return f"🌧️ Rain Analysis_{year}_{race}_{session}"
+        """Generate window title"""
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        if language == 'zh':
+            return f"🌧️ {tr('rain_analysis')}_{year}_{race}_{session}"
+        else:
+            return f"🌧️ Rain Analysis_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

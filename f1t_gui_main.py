@@ -4739,8 +4739,8 @@ class StyleHMainWindow(QMainWindow):
         super().__init__()
         print("[INIT] 🚀 開始初始化 F1T 主視窗...")
         
-        # 設定 GUI 語言為英文
-        set_gui_language('en')
+        # GUI 語言會自動從設定檔載入，不需要強制設定
+        # set_gui_language('en')  # 已移除強制設定
         
         self.setWindowTitle("F1T Professional Racing Analysis Workstation v8.0 - Style H")
         print("[INIT] ✅ 視窗標題已設定")
@@ -7114,7 +7114,8 @@ class StyleHMainWindow(QMainWindow):
         self.check_and_remove_welcome_page()
         
         # 特殊處理：遙測分析直接調用 lap_analysis 方法（但排除詳細圈速分析）
-        if ("圈速" in function_name or "遙測分析" in function_name) and "詳細圈速分析" not in function_name:
+        if (("圈速" in function_name or "遙測分析" in function_name) and "詳細圈速分析" not in function_name) or \
+           (("Telemetry Analysis" in function_name) and "Detailed Lap Analysis" not in function_name):
             print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
             return
@@ -7261,7 +7262,7 @@ class StyleHMainWindow(QMainWindow):
                 "煞車分析": "brake_analysis",    # 煞車分析映射
                 "降雨分析": "rain_analysis",     # 降雨分析映射
                 "車手排名": "telemetry_analysis", # 車手排名映射 (原單場賽事總攬)
-                "遙測分析": "telemetry_analysis", # 遙測分析映射 (圈速分析)
+                # "遙測分析": 通過特殊處理路徑，不使用模組工廠
                 "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
                 "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
                 # 英文映射
@@ -7274,7 +7275,7 @@ class StyleHMainWindow(QMainWindow):
                 "Brake Analysis": "brake_analysis",
                 "Rain Analysis": "rain_analysis",
                 "Driver Ranking": "telemetry_analysis",
-                "Telemetry Analysis": "telemetry_analysis",
+                # "Telemetry Analysis": 通過特殊處理路徑，不使用模組工廠
                 "Tire Strategy Analysis": "tire_analysis",
                 "Detailed Lap Analysis": "driverlap_analysis",
             }

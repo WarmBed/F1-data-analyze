@@ -42,16 +42,16 @@ class AnalysisModuleManager(QObject):
             
             AnalysisModuleManager._initialized = True
             
-            print(f"[ANALYSIS_MANAGER] 圈速分析模組管理器已初始化")
+            print(f"[ANALYSIS_MANAGER] Lap analysis module manager initialized")
     
     def register_module(self, module_id: str, module_instance: object, module_type: str = None):
         """註冊分析模組"""
         try:
-            print(f"[ANALYSIS_MANAGER] 註冊模組: {module_id} (類型: {module_type})")
+            print(f"[ANALYSIS_MANAGER] Registering module: {module_id} (type: {module_type})")
             
             # 檢查是否為圈速分析模組
             if not self._is_lap_analysis_module(module_instance, module_type):
-                print(f"[ANALYSIS_MANAGER] ⚠️ 非圈速分析模組，跳過: {module_id}")
+                print(f"[ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: {module_id}")
                 return False
             
             # 註冊模組
@@ -65,21 +65,21 @@ class AnalysisModuleManager(QObject):
             # 發送信號
             self.module_count_changed.emit(len(self._active_modules))
             
-            print(f"[ANALYSIS_MANAGER] ✅ 模組註冊成功: {module_id}")
-            print(f"[ANALYSIS_MANAGER] 📊 當前活躍模組數: {len(self._active_modules)}")
-            print(f"[ANALYSIS_MANAGER] 📈 活躍模組類型: {list(self._module_types)}")
+            print(f"[ANALYSIS_MANAGER] ✅ Module registered successfully: {module_id}")
+            print(f"[ANALYSIS_MANAGER] 📊 Current active modules: {len(self._active_modules)}")
+            print(f"[ANALYSIS_MANAGER] 📈 Active module types: {list(self._module_types)}")
             
             return True
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 註冊模組失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Module registration failed: {e}")
             return False
     
     def unregister_module(self, module_id: str):
         """解除註冊分析模組"""
         try:
             if module_id in self._active_modules:
-                print(f"[ANALYSIS_MANAGER] 解除註冊模組: {module_id}")
+                print(f"[ANALYSIS_MANAGER] Unregistering module: {module_id}")
                 
                 # 移除模組
                 del self._active_modules[module_id]
@@ -97,16 +97,16 @@ class AnalysisModuleManager(QObject):
                 # 發送信號
                 self.module_count_changed.emit(len(self._active_modules))
                 
-                print(f"[ANALYSIS_MANAGER] ✅ 模組解除註冊成功: {module_id}")
-                print(f"[ANALYSIS_MANAGER] 📊 當前活躍模組數: {len(self._active_modules)}")
+                print(f"[ANALYSIS_MANAGER] ✅ Module unregistered successfully: {module_id}")
+                print(f"[ANALYSIS_MANAGER] 📊 Current active modules: {len(self._active_modules)}")
                 
                 return True
             else:
-                print(f"[ANALYSIS_MANAGER] ⚠️ 模組未註冊，無法解除: {module_id}")
+                print(f"[ANALYSIS_MANAGER] ⚠️ Module not registered, cannot unregister: {module_id}")
                 return False
                 
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 解除註冊模組失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Module unregistration failed: {e}")
             return False
     
     def register_chart_widget(self, chart_widget: object):
@@ -114,7 +114,7 @@ class AnalysisModuleManager(QObject):
         try:
             if chart_widget not in self._registered_chart_widgets:
                 self._registered_chart_widgets.append(chart_widget)
-                print(f"[ANALYSIS_MANAGER] 註冊圖表組件: {type(chart_widget).__name__}")
+                print(f"[ANALYSIS_MANAGER] Registered chart widget: {type(chart_widget).__name__}")
                 
                 # 立即應用當前的統計面板顯示狀態
                 if hasattr(chart_widget, 'set_statistics_visibility'):
@@ -122,7 +122,7 @@ class AnalysisModuleManager(QObject):
                 
                 return True
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 註冊圖表組件失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget registration failed: {e}")
             return False
     
     def unregister_chart_widget(self, chart_widget: object):
@@ -130,10 +130,10 @@ class AnalysisModuleManager(QObject):
         try:
             if chart_widget in self._registered_chart_widgets:
                 self._registered_chart_widgets.remove(chart_widget)
-                print(f"[ANALYSIS_MANAGER] 解除註冊圖表組件: {type(chart_widget).__name__}")
+                print(f"[ANALYSIS_MANAGER] Unregistered chart widget: {type(chart_widget).__name__}")
                 return True
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 解除註冊圖表組件失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget unregistration failed: {e}")
             return False
     
     def _is_lap_analysis_module(self, module_instance: object, module_type: str = None) -> bool:

@@ -1085,10 +1085,10 @@ class TelemetryAnalysisModule(IAnalysisModule):
         super().__init__(parent)
         
         # 模組基本資訊
-        self._module_name = "TelemetryAnalysis"
-        self._display_name = "🏎️ 遙測分析"
+        self._module_name = "DriverRanking"
+        self._display_name = "� Driver Ranking"
         self._version = "1.0.0"
-        self._description = "F1 車手詳細遙測分析 (Function 12)"
+        self._description = "F1 Driver Statistics and Ranking Analysis (Function 12)"
         
         # 參數
         self.current_year = None
@@ -1270,7 +1270,7 @@ class TelemetryAnalysisModule(IAnalysisModule):
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"🏎️ Telemetry Analysis_{year}_{race}_{session}"
+        return f"� Driver Ranking - {year} {race} {session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

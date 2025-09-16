@@ -1234,6 +1234,6 @@ if __name__ == "__main__":
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.TELEMETRY_RPM, RPMAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] RPM分析模組已註冊")
+    print(f"[OK] [MODULE_FACTORY] RPM analysis module registered")
 except ImportError as e:
     print(f"[WARNING] [MODULE_FACTORY] RPM分析模組註冊失敗: {e}")

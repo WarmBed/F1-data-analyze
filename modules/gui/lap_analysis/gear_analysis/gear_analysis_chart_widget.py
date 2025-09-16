@@ -304,7 +304,8 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "檔位")
+        from core.gui_i18n import tr
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_gear', 'Gear'))
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):

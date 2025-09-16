@@ -304,7 +304,8 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, "煞車")
+        from core.gui_i18n import tr
+        painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_brake', 'Brake (%)'))
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):

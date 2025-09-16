@@ -1344,8 +1344,13 @@ class PitstopAnalysisModule(IAnalysisModule):
         return f"進站分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """生成視窗標題"""
-        return f"Pitstop Analysis_{year}_{race}_{session}"
+        """Generate window title"""
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        if language == 'zh':
+            return f"{tr('pitstop_analysis')}_{year}_{race}_{session}"
+        else:
+            return f"Pitstop Analysis_{year}_{race}_{session}"
     
     def get_default_size(self):
         """獲取預設視窗大小 - GUI系統要求的方法"""

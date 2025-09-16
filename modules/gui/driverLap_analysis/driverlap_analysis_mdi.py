@@ -558,6 +558,25 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
         print(f"[LAPTIME_MDI] 創建詳細圈速分析數據管理器")
         return driverLapAnalysisDataManager(parent=self)
         
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """覆蓋基類方法，返回英文標題"""
+        year = year or self.current_year
+        race = race or self.current_race
+        session = session or self.current_session
+        
+        base_title = f"Detailed Lap Analysis - {year} {race} {session}"
+        
+        if hasattr(self, 'driver1') and hasattr(self, 'driver2'):
+            driver1 = getattr(self, 'driver1', 'VER')
+            driver2 = getattr(self, 'driver2', 'VER')
+            
+            if driver1 == driver2:
+                base_title += f" - {driver1}"
+            else:
+                base_title += f" - {driver1} vs {driver2}"
+        
+        return base_title
+
     def create_chart_widget(self):
         """創建圖表組件"""
         try:

@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-driverLapAnalysisModule - F1T 詳細圈速分析模組
-=======================================
+driverLapAnalysisModule - F1T Detailed Lap Analysis Module
+========================================================
 
-基於通用架構的詳細圈速分析模組，提供完整的圈速數據分析功能。
+Comprehensive detailed lap analysis module based on universal architecture.
 
-功能特色：
-- 詳細圈速趨勢分析（每圈秒數顯示）
-- 車手選擇控制區（最多5位車手同時比較）
-- 智能標記系統（事故A、降雨R、進站P、最快圈F等）
-- 輪胎策略時間軸（底部顯示各車手輪胎使用情況）
-- 折線圖視覺化分析
-- 呼叫 CLI -f28 生成數據
+Features:
+- Detailed lap time trend analysis (per lap second display)
+- Driver selection control area (up to 5 drivers simultaneous comparison)
+- Intelligent marking system (accident A, rain R, pitstop P, fastest lap F, etc.)
+- Tire strategy timeline (bottom shows each driver's tire usage)
+- Line chart visualization analysis
+- Calls CLI -f28 for data generation
 
 Author: F1T Team
 Date: 2025-09-12
-Version: 2.0.0 (詳細圈速分析版本)
+Version: 2.0.0 (Detailed Lap Analysis Version)
 """
 
 from typing import Dict, Any, Optional
@@ -37,17 +37,17 @@ except ImportError:
 
 class driverLapAnalysisModule(IAnalysisModule):
     """
-    詳細圈速分析模組主類 - 實現 IAnalysisModule 介面
+    Detailed Lap Analysis Module Main Class - Implements IAnalysisModule Interface
     
-    提供與遙測分析模組一致的介面，確保可以完美整合到
-    現有的 PopoutSubWindow 系統中。
+    Provides consistent interface with telemetry analysis module to ensure
+    seamless integration with existing PopoutSubWindow system.
     """
     
     def __init__(self, parent=None, year=None, race=None, session=None, driver=None):
-        """初始化詳細圈速分析模組"""
+        """Initialize detailed lap analysis module"""
         super().__init__(parent)
         
-        # 模組基本資訊
+        # Module basic information
         self._module_name = "detailed_laptime_analysis"
         self._display_name = "⏱️ Detailed Lap Analysis"
         self._version = "2.0.0"
@@ -207,18 +207,23 @@ class driverLapAnalysisModule(IAnalysisModule):
         
     # 支援方法（保持與原版相容）
     def get_cache_key(self, year: int, race: str, session: str) -> str:
-        """生成快取鍵值"""
+        """Generate cache key"""
         return f"Detailed Lap Analysis_{year}_{race}_{session}"
         
     def get_window_title(self, year: int, race: str, session: str) -> str:
-        """生成視窗標題"""
-        return f"Detailed Lap Analysis_{year}_{race}_{session}"
+        """Generate window title"""
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        if language == 'zh':
+            return f"{tr('detailed_lap_analysis')}_{year}_{race}_{session}"
+        else:
+            return f"Detailed Lap Analysis_{year}_{race}_{session}"
         
     def is_data_available(self, year: int, race: str, session: str) -> bool:
-        """檢查數據是否可用"""
+        """Check if data is available"""
         try:
             if self._detailed_laptime_analysis_core:
-                # 檢查是否有相關的詳細圈速分析數據
+                # Check if detailed lap analysis data is available
                 has_data = self._detailed_laptime_analysis_core.check_data_availability(
                     year=str(year), race=race, session=session
                 )

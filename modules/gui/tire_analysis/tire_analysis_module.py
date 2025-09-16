@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """
-TireAnalysisModule - F1T 輪胎策略分析模組
-=======================================
+TireAnalysisModule - F1T Tire Strategy Analysis Module
+======================================================
 
-基於通用架構的輪胎策略分析模組，提供完整的輪胎數據分析功能。
+Comprehensive tire strategy analysis module based on universal architecture.
 
-功能特色：
-- 輪胎配方策略分析（SOFT/MEDIUM/HARD）
-- Stint 時間分析和比較
-- 輪胎衰退曲線追蹤
-- 最佳換胎窗口計算
-- 橫向長條圖視覺化
-- 呼叫 CLI -f26 生成數據
+Features:
+- Tire compound strategy analysis (SOFT/MEDIUM/HARD)
+- Stint time analysis and comparison
+- Tire degradation curve tracking
+- Optimal pit window calculation
+- Horizontal bar chart visualization
+- Calls CLI -f26 for data generation
 
 Author: F1T Team
 Date: 2025-09-10
@@ -37,123 +37,123 @@ except ImportError:
 
 class TireAnalysisModule(IAnalysisModule):
     """
-    輪胎策略分析模組主類 - 實現 IAnalysisModule 介面
+    Tire Strategy Analysis Module Main Class - Implements IAnalysisModule Interface
     
-    提供與遙測分析模組一致的介面，確保可以完美整合到
-    現有的 PopoutSubWindow 系統中。
+    Provides consistent interface with telemetry analysis module to ensure
+    seamless integration with existing PopoutSubWindow system.
     """
     
     def __init__(self, parent=None, year=None, race=None, session=None, driver=None):
-        """初始化輪胎策略分析模組"""
+        """Initialize tire strategy analysis module"""
         super().__init__(parent)
         
-        # 模組基本資訊
+        # Module basic information
         self._module_name = "TireAnalysis"
-        self._display_name = "🛞 輪胎策略分析"
+        self._display_name = "🛞 Tire Strategy Analysis"
         self._version = "1.0.0"
-        self._description = "F1 比賽輪胎策略分析模組"
+        self._description = "F1 Race Tire Strategy Analysis Module"
         
-        # 參數
+        # Parameters
         self.current_year = str(year) if year else None
         self.current_race = race
         self.current_session = session
-        self.current_driver = driver  # 新增車手參數
+        self.current_driver = driver  # Added driver parameter
         
-        # 同步設定
+        # Sync settings
         self.sync_enabled = True
         
-        # UI 組件
+        # UI components
         self._main_widget = None
         self._is_initialized = False
         
-        # 創建內部的通用輪胎策略分析實例
+        # Create internal universal tire strategy analysis instance
         self._tire_analysis_core = None
         
-        # 初始化模組（創建 UI 組件）
+        # Initialize module (create UI components)
         init_success = self.initialize_module(parent)
         if not init_success:
-            self._debug("模組初始化失敗")
+            self._debug("Module initialization failed")
         
-        # 初始化完成標記
+        # Initialization complete flag
         self._is_initialized = True
     
-    # ===== 實現 IAnalysisModule 抽象方法 =====
+    # ===== Implement IAnalysisModule Abstract Methods =====
     
     @property
     def module_name(self) -> str:
-        """返回模組名稱"""
+        """Return module name"""
         return self._module_name
         
     @property 
     def display_name(self) -> str:
-        """返回顯示名稱 (用於UI)"""
+        """Return display name (for UI)"""
         return self._display_name
         
     @property
     def version(self) -> str:
-        """返回模組版本"""
+        """Return module version"""
         return self._version
         
     @property
     def description(self) -> str:
-        """返回模組描述"""
+        """Return module description"""
         return self._description
         
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
-        """初始化模組"""
+        """Initialize module"""
         try:
             if parent_widget:
                 self._parent_widget = parent_widget
             
-            # 創建內部的通用輪胎策略分析實例
+            # Create internal universal tire strategy analysis instance
             if not self._tire_analysis_core:
                 self._tire_analysis_core = TireAnalysisUniversal(parent_widget)
             
-            # 創建主要 Widget
+            # Create main Widget
             if not self._main_widget:
                 self._main_widget = self._tire_analysis_core.get_widget()
             
             self._is_initialized = True
-            print(f"✅ [tire_MODULE] 模組已初始化")
+            print(f"✅ [tire_MODULE] Module initialized")
             return True
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] 初始化失敗: {e}")
+            print(f"❌ [tire_MODULE] Initialization failed: {e}")
             return False
         
     def get_widget(self):
-        """返回模組的主要 Widget"""
+        """Return module's main Widget"""
         if not self._main_widget:
             self.initialize_module()
         return self._main_widget
         
     def update_parameters(self, year: int, race: str, session: str) -> bool:
-        """更新分析參數"""
+        """Update analysis parameters"""
         try:
-            print(f"🔄 [tire_MODULE] update_parameters 被調用: {year}, {race}, {session}")
+            print(f"🔄 [tire_MODULE] update_parameters called: {year}, {race}, {session}")
             
             self.current_year = str(year)
             self.current_race = race
             self.current_session = session
             
-            # 更新內部實例的參數
+            # Update internal instance parameters
             if self._tire_analysis_core:
                 success = self._tire_analysis_core.update_analysis_parameters(
                     year=str(year), race=race, session=session
                 )
                 if success:
-                    print(f"✅ [tire_MODULE] 參數更新成功")
+                    print(f"✅ [tire_MODULE] Parameters updated successfully")
                     return True
             
-            print(f"⚠️ [tire_MODULE] 參數更新失敗")
+            print(f"⚠️ [tire_MODULE] Parameter update failed")
             return False
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] 參數更新錯誤: {e}")
+            print(f"❌ [tire_MODULE] Parameter update error: {e}")
             return False
             
     def validate_parameters(self, year: int, race: str, session: str) -> bool:
-        """驗證分析參數"""
+        """Validate analysis parameters"""
         if not year or year < 2018 or year > 2030:
             return False
         if not race or not isinstance(race, str):
@@ -163,85 +163,90 @@ class TireAnalysisModule(IAnalysisModule):
         return True
         
     def get_title(self) -> str:
-        """返回模組標題"""
+        """Return module title"""
         year = self.current_year or "2025"
         race = self.current_race or "Unknown"
         session = self.current_session or "R"
-        return f"輪胎策略分析_{year}_{race}_{session}"
-    
-    def get_window_title(self, year: str, race: str, session: str) -> str:
-        """生成視窗標題"""
         return f"Tire Strategy Analysis_{year}_{race}_{session}"
     
+    def get_window_title(self, year: str, race: str, session: str) -> str:
+        """Generate window title"""
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        if language == 'zh':
+            return f"{tr('tire_strategy_analysis')}_{year}_{race}_{session}"
+        else:
+            return f"Tire Strategy Analysis_{year}_{race}_{session}"
+    
     def get_default_size(self):
-        """獲取預設視窗大小"""
-        return (1400, 900)  # 與通用配置一致
+        """Get default window size"""
+        return (1400, 900)  # Consistent with universal configuration
         
     def load_race_data(self, year, race, session):
-        """載入特定賽事的降雨數據"""
+        """Load race data for specific event"""
         try:
-            self._debug(f"正在載入賽事數據: {year} {race} {session}")
+            self._debug(f"Loading race data: {year} {race} {session}")
             
-            # 檢查數據管理器是否已初始化
+            # Check if data manager is initialized
             if hasattr(self, 'data_manager') and self.data_manager is not None:
                 success = self.data_manager.load_data(year=year, race=race, session=session)
                 
                 if success:
-                    self._debug(f"成功載入輪胎策略分析數據: {year} {race} {session}")
-                    # 更新 UI 參數
+                    self._debug(f"Successfully loaded tire strategy analysis data: {year} {race} {session}")
+                    # Update UI parameters
                     self.update_parameters(str(year), race, session)
                 else:
-                    self._debug(f"無法載入輪胎策略分析數據: {year} {race} {session}")
+                    self._debug(f"Failed to load tire strategy analysis data: {year} {race} {session}")
             else:
-                self._debug("數據管理器尚未初始化，將延遲載入數據")
-                # 保存參數供後續載入
+                self._debug("Data manager not yet initialized, will defer data loading")
+                # Save parameters for later loading
                 self._pending_load_params = (year, race, session)
             
         except Exception as e:
-            self._debug(f"載入賽事數據時發生錯誤: {str(e)}")
+            self._debug(f"Error occurred while loading race data: {str(e)}")
             import traceback
             traceback.print_exc()
     
-    # get_widget 方法由基類提供，直接返回 self.main_widget
+    # get_widget method provided by base class, directly returns self.main_widget
         
     def get_display_name(self) -> str:
-        """獲取模組顯示名稱"""
-        return "下雨分析"
+        """Get module display name"""
+        return "Tire Analysis"
         
     def get_module_type(self) -> str:
-        """獲取模組類型"""
+        """Get module type"""
         return "tire"
         
     def is_ready(self) -> bool:
-        """檢查模組是否準備就緒"""
+        """Check if module is ready"""
         return (hasattr(self, 'initialization_completed') and 
                 self.initialization_completed and
                 self.data_manager is not None)
                 
     def cleanup(self):
-        """清理模組資源"""
+        """Clean up module resources"""
         try:
-            # 停止任何執行中的操作
+            # Stop any running operations
             if self.data_manager:
                 self.data_manager.stop_loading()
                 
-            # 清理 UI 組件
+            # Clean up UI components
             if hasattr(self, '_main_widget') and self._main_widget:
                 self._main_widget.deleteLater()
                 self._main_widget = None
                 
-            # 清理數據
+            # Clean up data
             if self.data_manager:
                 self.data_manager.clear_cache()
                 
-            self._debug("下雨分析模組清理完成")
+            self._debug("Tire analysis module cleanup completed")
             
         except Exception as e:
-            self._debug(f"模組清理時發生錯誤: {str(e)}")
+            self._debug(f"Error occurred during module cleanup: {str(e)}")
             
     def export_analysis_data(self, file_path: str = None) -> bool:
         """
-        匯出分析數據
+        Export analysis data
         
         Args:
             file_path: 匯出檔案路徑（可選）

@@ -1076,6 +1076,6 @@ class ThrottleAnalysisModule(IAnalysisModule):
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.TELEMETRY_THROTTLE, ThrottleAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] 油門分析模組已註冊")
+    print(f"[OK] [MODULE_FACTORY] Throttle analysis module registered")
 except ImportError as e:
     print(f"[WARNING] [MODULE_FACTORY] 油門分析模組註冊失敗: {e}")

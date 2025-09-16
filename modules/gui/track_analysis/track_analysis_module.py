@@ -1163,21 +1163,26 @@ class TrackAnalysisModule(QWidget):
                 'session': session
             })
         except Exception as e:
-            print(f"[ERROR] [TRACK] 更新參數失敗: {e}")
-            self.module_error.emit(f"更新參數失敗: {str(e)}")
+            print(f"[ERROR] [TRACK] Parameter update failed: {e}")
+            self.module_error.emit(f"Parameter update failed: {str(e)}")
             return False
     
     def get_window_title(self, year, race, session):
-        """獲取視窗標題"""
-        return f"Track_{year}_{race}_{session}"
+        """Get window title"""
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        if language == 'zh':
+            return f"{tr('track_analysis')}_{year}_{race}_{session}"
+        else:
+            return f"Track Analysis_{year}_{race}_{session}"
     
     def reload_analysis(self):
-        """重新載入分析"""
-        print(f"[TRACK] 重新載入賽道分析: {self.year} {self.race} {self.session}")
+        """Reload analysis"""
+        print(f"[TRACK] Reloading track analysis: {self.year} {self.race} {self.session}")
         self.start_analysis_workflow()
     
     def update_display_options(self):
-        """更新賽道地圖顯示選項 - 固定設置，無複選框控制"""
+        """Update track map display options - fixed settings, no checkbox control"""
         if hasattr(self, 'track_map'):
             # 固定顯示選項：只顯示起始點
             show_start = True    # 始終顯示起始點
