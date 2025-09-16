@@ -164,7 +164,7 @@ class AnalysisModuleManager(QObject):
             return False
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 判斷模組類型失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Module type determination failed: {e}")
             return False
     
     def _get_module_type(self, module_instance: object) -> str:
@@ -184,7 +184,7 @@ class AnalysisModuleManager(QObject):
                 return 'unknown'
                 
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 獲取模組類型失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Getting module type failed: {e}")
             return 'unknown'
     
     def _update_statistics_visibility(self):
@@ -194,9 +194,9 @@ class AnalysisModuleManager(QObject):
             should_show_statistics = active_count < self.HIDE_STATISTICS_THRESHOLD
             
             if self._statistics_visible != should_show_statistics:
-                print(f"[ANALYSIS_MANAGER] 📊 統計面板顯示狀態變更:")
-                print(f"[ANALYSIS_MANAGER]   活躍模組數: {active_count}")
-                print(f"[ANALYSIS_MANAGER]   閾值: {self.HIDE_STATISTICS_THRESHOLD}")
+                print(f"[ANALYSIS_MANAGER] 📊 Statistics panel visibility changed:")
+                print(f"[ANALYSIS_MANAGER]   Active modules: {active_count}")
+                print(f"[ANALYSIS_MANAGER]   Threshold: {self.HIDE_STATISTICS_THRESHOLD}")
                 print(f"[ANALYSIS_MANAGER]   {self._statistics_visible} → {should_show_statistics}")
                 
                 self._statistics_visible = should_show_statistics
@@ -208,26 +208,26 @@ class AnalysisModuleManager(QObject):
                 self.statistics_visibility_changed.emit(should_show_statistics)
         
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 更新統計面板顯示狀態失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Updating statistics panel visibility failed: {e}")
     
     def _notify_chart_widgets_visibility_change(self, visible: bool):
         """通知所有圖表組件統計面板顯示狀態變更"""
         try:
-            action_text = "顯示" if visible else "隱藏"
-            print(f"[ANALYSIS_MANAGER] 📢 通知 {len(self._registered_chart_widgets)} 個圖表組件{action_text}統計面板")
+            action_text = "show" if visible else "hide"
+            print(f"[ANALYSIS_MANAGER] 📢 Notifying {len(self._registered_chart_widgets)} chart widgets to {action_text} statistics panel")
             
             for chart_widget in self._registered_chart_widgets:
                 try:
                     if hasattr(chart_widget, 'set_statistics_visibility'):
                         chart_widget.set_statistics_visibility(visible)
-                        print(f"[ANALYSIS_MANAGER] ✅ {type(chart_widget).__name__} 統計面板{action_text}完成")
+                        print(f"[ANALYSIS_MANAGER] ✅ {type(chart_widget).__name__} statistics panel {action_text} completed")
                     else:
-                        print(f"[ANALYSIS_MANAGER] ⚠️ {type(chart_widget).__name__} 不支援統計面板控制")
+                        print(f"[ANALYSIS_MANAGER] ⚠️ {type(chart_widget).__name__} does not support statistics panel control")
                 except Exception as e:
-                    print(f"[ERROR] [ANALYSIS_MANAGER] 通知圖表組件失敗: {e}")
+                    print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget notification failed: {e}")
                     
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 通知圖表組件統計面板變更失敗: {e}")
+            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget statistics change notification failed: {e}")
     
     # 公共屬性和方法
     @property
