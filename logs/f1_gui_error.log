@@ -1,0 +1,2164 @@
+2025-09-29 12:20:25 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:20:25 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2714933528768
+2025-09-29 12:20:25 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 12:20:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 12:20:25 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 12:20:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 12:25:57 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 12:25:57 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2058908583264
+2025-09-29 12:25:57 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 12:25:57 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Ranking' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-09-29 12:26:00 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2058909506672
+2025-09-29 12:26:00 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 12:26:00 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 12:26:03 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-09-29 12:26:04 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-09-29 12:26:04 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 12:26:04 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 12:26:04 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 12:26:04 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 12:26:04 | WARNING | f1.console | [LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求
+2025-09-29 12:26:04 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 12:26:04 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:41 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 14:27:41 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2610567776736
+2025-09-29 14:27:41 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 14:27:41 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Ranking' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-09-29 14:27:41 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2610568406960
+2025-09-29 14:27:41 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 14:27:41 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 14:27:42 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-09-29 14:27:43 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-09-29 14:27:43 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 14:27:43 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 14:27:43 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 14:27:43 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 14:27:43 | WARNING | f1.console | [LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求
+2025-09-29 14:27:43 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:27:43 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 14:28:01 | ERROR | f1.console | [WARNING] [MODULE] 🌧️ Rain Analysis_2025_Belgium_R 模組更新失敗
+2025-09-29 14:28:01 | WARNING | f1.console | [WARNING] [NOTIFICATION] 🌧️ Rain Analysis_2025_Belgium_R 內容更新完成但可能有問題
+2025-09-29 14:28:01 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...
+2025-09-29 14:28:01 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 目標檔案: json\all_incidents_summary_2025_Belgium.json
+2025-09-29 14:28:01 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 未找到符合的檔案
+2025-09-29 14:28:01 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 搜尋模式: *2025*Belgium*all_incidents_summary*
+2025-09-29 14:28:01 | ERROR | f1.console | [WARNING] [MODULE] Accident Analysis_2025_Belgium_R 模組更新失敗
+2025-09-29 14:28:01 | WARNING | f1.console | [WARNING] [NOTIFICATION] Accident Analysis_2025_Belgium_R 內容更新完成但可能有問題
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 14:28:01 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 14:28:01 | ERROR | f1.console | [WARNING] [MODULE] Tire Strategy Analysis_2025_Belgium_R 模組更新失敗
+2025-09-29 14:28:01 | WARNING | f1.console | [WARNING] [NOTIFICATION] Tire Strategy Analysis_2025_Belgium_R 內容更新完成但可能有問題
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEED DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [BRAKE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [GEAR DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [RPM DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [ACCEL DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 14:28:01 | ERROR | f1.console | [FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:02 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 14:28:04 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 14:28:04 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 14:28:04 | ERROR | f1.console | [[F28_DATA] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 14:28:05 | ERROR | f1.console | 📊 [ACCIDENT_MODULE] CLI輸出: F1 CLI 控制台初始化完成
+[WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+[SUCCESS] 獨立分析模組導入成功！
+[OK] 基礎依賴包導入成功！
+[OK] 兼容數據載入器導入成功！
+[OK] 兼容數據載入器...
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:06 | ERROR | f1.console | [FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...
+2025-09-29 14:28:11 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:11 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:42 | ERROR | f1.console | [CLI_OUTPUT] F1 CLI 控制台初始化完成
+[WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+[SUCCESS] 獨立分析模組導入成功！
+[OK] 基礎依賴包導入成功！
+[OK] 兼容數據載入器導入成功！
+[OK] 兼容數據載入器創建成功！
+[START] 初始化兼容F1分析實例...
+[SUCCESS] F1分析實例初始化完成
+   - 超車分析器: [SUCCESS]
+   - DNF分析器: [SUCCESS]
+   - 彎道分析器: [SUCCESS]
+[OK] F1分析實例初始化成功
+================================================================================
+ F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+ F1 Telemetry Analysis - Enhanced Race Display Edition
+================================================================================
+ [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+ [STATS]  完全模組化設計，支援2024-2025年賽季數據
+ [CALENDAR]  新增賽事日期與完整名稱顯示功能
+================================================================================
+
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+[FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+[PYTHON] Python版本: 3.13.5
+
+[START] 參數模式啟動...
+============================================================
+[TOOL] 參數化模式 - F1分析系統核心
+============================================================
+[STATS] 載入參數: Year=2025, Race=Belgium, Session=R
+
+[STATS] 從參數載入 2025 Belgium R 數據...
+[OK] 兼容數據載入器初始化成功
+[CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_Belgium_R.pkl
+[SUCCESS] 快取資料載入成功
+[OK] 賽事數據載入完成！
+[OK] OpenF1 分析器初始化成功
+[OK] F1分析實例已更新
+[TARGET] 執行功能: 8
+[START] 執行功能編號: 8
+[START] 開始執行所有事件詳細列表分析...
+[PARAMS] 參數檢查 - 年份: 2025, 賽事: Belgium, 賽段: R
+[INFO] 執行所有事件詳細列表分析 (功能8)...
+
+[NEW_MODULE] 執行所有事件詳細列表分析模組 (JSON輸出版)...
+📦 使用緩存數據
+💾 JSON結果已保存到: file:///C:\Users\mike2\OneDrive\Code\F1-data-analyze\json\all_incidents_summary_2025_Belgium.json
+[STATS] 緩存狀態: [OK] 已啟用
+[STATS] 所有事件詳細列表分析結果摘要：
+   • 執行狀態: [OK] 成功
+   • 功能編號: 8
+   • 分析類型: all_incidents_summary
+   • 執行時間: N/A
+   • 緩存狀態: [OK] 已啟用
+   • 緩存鍵值: all_incidents_summary_2025_Belgium_R...
+[OK] 所有事件詳細列表分析分析完成！
+[OK] 功能 8 執行成功
+[OK] 參數化模式功能執行完成
+[INFO] 執行摘要: 所有事件詳細列表分析完成
+[STATS] 結果數據大小: 99948 字元
+
+2025-09-29 14:28:57 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEED DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [RPM DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [ACCEL DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [BRAKE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [GEAR DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:57 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:57 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:28:58 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 14:28:58 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 14:29:02 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 14:29:02 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 15:24:25 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:24:25 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2283985308128
+2025-09-29 15:24:25 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 15:24:25 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-09-29 15:24:25 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...
+2025-09-29 15:24:25 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 目標檔案: json\all_incidents_summary_2025_Japan.json
+2025-09-29 15:24:25 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 未找到符合的檔案
+2025-09-29 15:24:25 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 搜尋模式: *2025*Japan*all_incidents_summary*
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Ranking' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-09-29 15:24:25 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2283986002304
+2025-09-29 15:24:25 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 15:24:25 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 15:24:25 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 15:24:25 | ERROR | f1.console | [FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 15:24:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 15:24:27 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEED DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [BRAKE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-09-29 15:24:27 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [GEAR DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [RPM DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [ACCEL DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:27 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:27 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:27 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:27 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:27 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 15:24:28 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 15:24:28 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 15:24:28 | WARNING | f1.console | [LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求
+2025-09-29 15:24:28 | ERROR | f1.console | 📊 [ACCIDENT_MODULE] CLI輸出: F1 CLI 控制台初始化完成
+[WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+[SUCCESS] 獨立分析模組導入成功！
+[OK] 基礎依賴包導入成功！
+[OK] 兼容數據載入器導入成功！
+[OK] 兼容數據載入器...
+2025-09-29 15:24:28 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE_MDI] ❌ 數據載入失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [acceleration_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [speeddiff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [gear_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED_MDI] ❌ 數據載入失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [distancediff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [brake_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [THROTTLE_MDI] ❌ 數據載入失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [acceleration_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'accelerationAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [acceleration_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [acceleration_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [speeddiff_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'SpeeddiffAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [speeddiff_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [speeddiff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [gear_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'GearAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [gear_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [gear_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEED_MDI] ❌ 數據載入失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [distancediff_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'distancediffAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [distancediff_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER (第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [distancediff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [RPM_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'RPMAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [RPM_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [RPM_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [brake_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'BrakeAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-09-29 15:24:28 | WARNING | f1.console | [brake_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-09-29 15:24:28 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:28 | ERROR | f1.console | [brake_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:28 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 15:24:29 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 15:24:30 | ERROR | f1.console | [[F28_DATA] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 15:24:30 | ERROR | f1.console | [ERROR] 載入錯誤: 載入器正忙，請稍後再試
+2025-09-29 15:24:32 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:24:32 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 15:58:27 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 15:58:27 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_3175785547392
+2025-09-29 15:58:27 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 15:58:27 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 17:10:40 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 17:10:40 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2183677494624
+2025-09-29 17:10:40 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 17:10:40 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 20:22:16 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 20:22:16 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2180879026656
+2025-09-29 20:22:16 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 20:22:16 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 20:22:16 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-09-29 20:22:16 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...
+2025-09-29 20:22:16 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 目標檔案: json\all_incidents_summary_2025_Japan.json
+2025-09-29 20:22:16 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 未找到符合的檔案
+2025-09-29 20:22:16 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 搜尋模式: *2025*Japan*all_incidents_summary*
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Ranking' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-09-29 20:22:17 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2180879737216
+2025-09-29 20:22:17 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 20:22:17 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 20:22:17 | ERROR | f1.console | [FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:17 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 20:22:19 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 20:22:19 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 20:22:20 | ERROR | f1.console | 📊 [ACCIDENT_MODULE] CLI輸出: F1 CLI 控制台初始化完成
+[WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+[SUCCESS] 獨立分析模組導入成功！
+[OK] 基礎依賴包導入成功！
+[OK] 兼容數據載入器導入成功！
+[OK] 兼容數據載入器...
+2025-09-29 20:22:21 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEED DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [BRAKE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-09-29 20:22:21 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-09-29 20:22:21 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [GEAR DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [RPM DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [ACCEL DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER vs LEC (第99圈 vs 第99圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-09-29 20:22:21 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 找不到現有 JSON，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-09-29 20:22:21 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER vs LEC (第99圈 vs 第99圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:21 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 20:22:21 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 20:22:21 | WARNING | f1.console | [LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求
+2025-09-29 20:22:22 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [gear_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER vs LEC (第99圈 vs 第99圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [distancediff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED_MDI] ❌ 數據載入失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER vs LEC (第99圈 vs 第99圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [speeddiff_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE_MDI] ❌ 數據載入失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [brake_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | ERROR | f1.console | [acceleration_MDI] ❌ 圈速參數更新後數據重載失敗
+2025-09-29 20:22:22 | ERROR | f1.console | [LAP_CONTROL]   ❌ 視窗更新失敗
+2025-09-29 20:22:22 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEED DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [BRAKE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [ERROR] 載入錯誤: 載入器正忙，請稍後再試
+2025-09-29 20:22:22 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [THROTTLE DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [GEAR DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [RPM DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [ACCEL DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [SPEEDDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [DISTDIFF DEBUG] ❌ 未找到符合的JSON檔案，需要生成新檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 20:22:22 | ERROR | f1.console | [[F28_DATA] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 20:22:24 | ERROR | f1.console | [[F28_DATA] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 20:22:26 | WARNING | f1.console | [SPEED DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [BRAKE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [THROTTLE DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [GEAR DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [RPM DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [ACCEL DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [SPEEDDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 20:22:26 | WARNING | f1.console | [DISTDIFF DEBUG] ⚠️ 注意：雙車手模式僅使用精確搜尋，避免檔案誤判
+2025-09-29 22:46:25 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-29 22:46:25 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2416271624384
+2025-09-29 22:46:25 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 22:46:25 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Ranking' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-09-29 22:46:25 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2416272270992
+2025-09-29 22:46:25 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-29 22:46:25 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 22:46:29 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-29 22:46:29 | ERROR | f1.console | [WARNING] [MODULE] 🌧️ Rain Analysis_2025_China_R 模組更新失敗
+2025-09-29 22:46:29 | WARNING | f1.console | [WARNING] [NOTIFICATION] 🌧️ Rain Analysis_2025_China_R 內容更新完成但可能有問題
+2025-09-29 22:46:29 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...
+2025-09-29 22:46:29 | WARNING | f1.console | ⚠️ [ACCIDENT_MODULE] 目標檔案: json\all_incidents_summary_2025_China.json
+2025-09-29 22:46:29 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 未找到符合的檔案
+2025-09-29 22:46:29 | ERROR | f1.console | ❌ [ACCIDENT_MODULE] 搜尋模式: *2025*China*all_incidents_summary*
+2025-09-29 22:46:29 | ERROR | f1.console | [WARNING] [MODULE] Accident Analysis_2025_China_R 模組更新失敗
+2025-09-29 22:46:29 | WARNING | f1.console | [WARNING] [NOTIFICATION] Accident Analysis_2025_China_R 內容更新完成但可能有問題
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 22:46:29 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-29 22:46:29 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-09-29 22:46:29 | ERROR | f1.console | [WARNING] [MODULE] Tire Strategy Analysis_2025_China_R 模組更新失敗
+2025-09-29 22:46:29 | WARNING | f1.console | [WARNING] [NOTIFICATION] Tire Strategy Analysis_2025_China_R 內容更新完成但可能有問題
+2025-09-29 22:46:29 | ERROR | f1.console | [FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-29 22:46:30 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-29 22:46:31 | ERROR | f1.console | [[TIRE_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 22:46:31 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-29 22:46:32 | ERROR | f1.console | 📊 [ACCIDENT_MODULE] CLI輸出: F1 CLI 控制台初始化完成
+[WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+[SUCCESS] 獨立分析模組導入成功！
+[OK] 基礎依賴包導入成功！
+[OK] 兼容數據載入器導入成功！
+[OK] 兼容數據載入器...
+2025-09-29 22:46:34 | ERROR | f1.console | [TIRE_CHART] 檢測到錯誤 end_lap: driver=BOR, start=1, end=1
+2025-09-29 22:46:40 | ERROR | f1.console | [TIRE_CHART] 檢測到錯誤 end_lap: driver=BOR, start=1, end=1
+2025-09-29 22:46:55 | ERROR | f1.console | [TIRE_CHART] 檢測到錯誤 end_lap: driver=BOR, start=1, end=1
+2025-09-30 00:12:38 | WARNING | f1.gui.main | API health check failed: ["system: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/system/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0000022193056F90>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))", "analysis: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/analysis/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002219301FB10>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))"]
+2025-09-30 00:12:48 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-30 00:12:48 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2343344054368
+2025-09-30 00:12:48 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-30 00:12:48 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-30 00:13:35 | WARNING | f1.gui.main | API health check failed: ["system: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/system/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002219A2D2E90>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))", "analysis: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/analysis/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002219A2E6190>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))"]
+2025-09-30 01:04:57 | WARNING | f1.gui.main | API health check failed: ["system: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/system/health (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002407FD04050>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))", "analysis: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v2/analysis/status (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002407FB27890>: Failed to establish a new connection: [WinError 10061] 無法連線，因為目標電腦拒絕連線。'))"]
+2025-09-30 01:22:08 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:22:08 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_1914390251856
+2025-09-30 01:22:08 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-30 01:22:08 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-30 01:22:25 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-30 01:22:25 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-30 01:22:25 | ERROR | f1.console | [WARNING] [MODULE] 🌧️ Rain Analysis_2025_China_R 模組更新失敗
+2025-09-30 01:22:25 | WARNING | f1.console | [WARNING] [NOTIFICATION] 🌧️ Rain Analysis_2025_China_R 內容更新完成但可能有問題
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-30 01:22:26 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:25:48 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Rain Analysis' 中
+2025-09-30 01:25:48 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_1671671007136
+2025-09-30 01:25:48 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-30 01:25:48 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 找不到現有數據檔案，開始生成新檔案
+2025-09-30 01:25:48 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json 無匹配檔案
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 json_exports 無匹配檔案
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 1 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 2 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG]    ❌ 模式 3 無匹配
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 目錄 cache 無匹配檔案
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] ❌ 未找到符合的數據檔案，需要生成新檔案
+2025-09-30 01:25:49 | ERROR | f1.console | [[RAIN_ANALYSIS] DEBUG] 📤 CLI 輸出: [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)

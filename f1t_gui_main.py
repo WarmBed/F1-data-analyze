@@ -8,6 +8,7 @@ F1T GUI Main - Professional Racing Analysis Workstation
 import sys
 import os
 import math
+import time
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QComboBox, QCheckBox, QPushButton, QTreeWidget, QTreeWidgetItem,
@@ -23,6 +24,8 @@ import json
 import datetime
 import traceback
 import subprocess
+from pathlib import Path
+import requests
 import sys
 import os
 
@@ -1792,33 +1795,6 @@ class TelemetryChartWidget(QWidget):
         
         #print(f"[STATS] 顯示固定值標籤: {value_text} at ({label_x}, {label_y})")  # Debug
 
-class SystemLogWidget(QTextEdit):
-    """系統日誌小部件"""
-    
-    def __init__(self):
-        super().__init__()
-        self.setObjectName("SystemLog")
-        self.setMaximumHeight(100)  # 合理的最大高度
-        self.setMinimumHeight(80)   # 合理的最小高度  
-        self.setReadOnly(True)
-        
-        # 添加一些示例日誌
-        logs = [
-            "[13:28:45] INFO: 系統啟動完成",
-            "[13:28:46] INFO: 載入F1數據中...",
-            "[13:28:47] INFO: 連接到FastF1 API",
-            "[13:28:48] INFO: 載入Japan 2025 Race數據",
-            "[13:28:49] INFO: 數據驗證完成 - 12,540筆記錄",
-            "[13:28:50] INFO: 準備分析VER vs LEC",
-            "[13:28:51] INFO: 單場賽事總攬模組就緒"
-        ]
-        
-        for log in logs:
-            self.append(log)
-        
-        # 滾動到底部
-        self.moveCursor(self.textCursor().End)
-
 class DraggableTitleBar(QWidget):
     """可拖拽的自定義標題欄"""
     
@@ -2327,6 +2303,8 @@ class PopoutSubWindow(QMdiSubWindow):
         
         print(f"[REFRESH] [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
     
+
+
     def get_current_parameters(self):
         """獲取當前參數"""
         if self.sync_enabled and self._parameter_provider:
@@ -4738,12 +4716,103 @@ class WindowSettingsDialog(QDialog):
         print(f"[WARNING] [SETTING] update_current_window 方法已棄用")
         pass
 
+
+class ApiHealthWorker(QThread):
+    """Background worker to probe API health endpoints without blocking the UI thread."""
+
+    result_ready = pyqtSignal(dict)
+
+    def __init__(self, base_url: str, timeout: float = 5.0, manual: bool = False, parent=None):
+        super().__init__(parent)
+        self.base_url = base_url.rstrip('/')
+        self.timeout = timeout
+        self.manual = manual
+
+    def run(self):
+        summary = {
+            "state": "offline",
+            "details": [],
+            "errors": [],
+            "latency_ms": None,
+            "checked_at": datetime.datetime.now().isoformat(timespec='seconds'),
+            "base_url": self.base_url,
+            "manual": self.manual,
+        }
+
+        endpoints = [
+            ("system", f"{self.base_url}/api/v2/system/health"),
+            ("analysis", f"{self.base_url}/api/v2/analysis/status"),
+        ]
+
+        success_count = 0
+        latencies = []
+        degrade_flag = False
+
+        for name, url in endpoints:
+            try:
+                start = time.perf_counter()
+                response = requests.get(url, timeout=self.timeout)
+                latency = (time.perf_counter() - start) * 1000.0
+                latencies.append(latency)
+
+                if response.status_code == 200:
+                    success_count += 1
+                    try:
+                        payload = response.json()
+                    except ValueError:
+                        summary["errors"].append(f"{name}: invalid JSON payload from API")
+                        degrade_flag = True
+                        continue
+
+                    message = payload.get('message') or payload.get('status') or 'OK'
+                    summary["details"].append(f"{name}: {message}")
+                    if not payload.get('success', True):
+                        degrade_flag = True
+                        summary["errors"].append(f"{name}: API reported success=False")
+                else:
+                    summary["errors"].append(f"{name}: HTTP {response.status_code}")
+            except requests.exceptions.RequestException as exc:
+                summary["errors"].append(f"{name}: {exc}")
+            except Exception as exc:
+                summary["errors"].append(f"{name}: {type(exc).__name__} - {exc}")
+
+        if latencies:
+            summary["latency_ms"] = round(sum(latencies) / len(latencies), 1)
+
+        if success_count == len(endpoints) and not degrade_flag and not summary["errors"]:
+            summary["state"] = "online"
+        elif success_count > 0:
+            summary["state"] = "degraded"
+        else:
+            summary["state"] = "offline"
+            if not summary["errors"]:
+                summary["errors"].append('API did not respond')
+
+        if not summary["details"]:
+            summary["details"].append('No API response received')
+
+        self.result_ready.emit(summary)
+
 class StyleHMainWindow(QMainWindow):
     """風格H: 專業賽車分析工作站主視窗"""
     
     def __init__(self):
         super().__init__()
         print("[INIT] 🚀 開始初始化 F1T 主視窗...")
+        # API health monitor attributes
+        self.ready_label = None
+        self.api_status_label = None
+        self.time_label = None
+        self.api_health_timer = None
+        self._api_health_worker = None
+        self._api_health_worker_active = False
+        self._api_last_state = "unknown"
+        self._api_status_details = []
+        self._api_health_manual_request = False
+        self.api_mode_enabled = False
+        self.api_base_url = None
+        self.check_api_action = None
+
         
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
@@ -4779,6 +4848,10 @@ class StyleHMainWindow(QMainWindow):
         # 整合連動管理器
         print("[INIT] 🔗 開始整合連動管理器...")
         self.integrate_linkage_manager()
+        print("[INIT] [API] Initialising health monitor...")
+        self.setup_api_health_monitor()
+        print("[INIT] [API] Health monitor active")
+
         print("[INIT] ✅ 連動管理器整合完成")
         
         print("[INIT] ✅ 主視窗初始化完成！")
@@ -4815,8 +4888,8 @@ class StyleHMainWindow(QMainWindow):
         analysis_splitter = QSplitter(Qt.Horizontal)
         analysis_splitter.setChildrenCollapsible(False)
         
-        # 左側功能樹和系統日誌
-        left_panel = self.create_left_panel_with_log()
+        # 左側功能樹
+        left_panel = self.create_left_panel()
         analysis_splitter.addWidget(left_panel)
         
         # 中央工作區域 - MDI多視窗
@@ -4871,7 +4944,11 @@ class StyleHMainWindow(QMainWindow):
         tools_menu = menubar.addMenu(tr('tools_menu'))
         tools_menu.addAction('Data Validation', self.data_validation)
         tools_menu.addAction('System Settings', self.system_settings)
-        tools_menu.addAction('Clear Log', self.clear_log)
+        self.check_api_action = QAction('Check API Status', self)
+        self.check_api_action.setStatusTip('Run an API health check immediately')
+        self.check_api_action.triggered.connect(self.manual_api_health_check)
+        tools_menu.addAction(self.check_api_action)
+
         tools_menu.addSeparator()
         
         # 語言切換功能
@@ -5746,38 +5823,19 @@ class StyleHMainWindow(QMainWindow):
         self._lap_update_timer.timeout.connect(self.update_all_lap_analysis)
         self._lap_update_timer.start(500)  # 500毫秒延遲
         
-    def create_left_panel_with_log(self):
-        """創建左側面板包含功能樹和系統日誌"""
+    def create_left_panel(self):
+        """創建左側面板 (僅包含功能樹)。"""
         widget = QWidget()
-        widget.setObjectName("LeftPanel")  # 添加對象名稱
+        widget.setObjectName("LeftPanel")
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(1, 1, 1, 1)
         layout.setSpacing(1)
-        
-        # 功能樹 - 設置拉伸因子
+
         function_tree = self.create_professional_function_tree()
-        layout.addWidget(function_tree, 3)  # 拉伸因子3 (佔大部分空間)
-        
-        # 系統日誌 (放在左下角) - 設置拉伸因子
-        log_frame = QFrame()
-        log_frame.setObjectName("LogFrame")
-        log_frame.setMaximumHeight(110)  # 限制最大高度
-        log_layout = QVBoxLayout(log_frame)
-        log_layout.setContentsMargins(2, 2, 2, 2)
-        log_layout.setSpacing(1)
-        
-        log_title = QLabel("系統日誌")
-        log_title.setObjectName("LogTitle")
-        log_title.setFixedHeight(12)  # 固定高度12像素
-        log_layout.addWidget(log_title)
-        
-        system_log = SystemLogWidget()
-        log_layout.addWidget(system_log)
-        
-        layout.addWidget(log_frame, 0)  # 拉伸因子0 (固定大小)
-        
+        layout.addWidget(function_tree)
+
         return widget
-        
+
     def create_professional_function_tree(self):
         """創建專業功能樹"""
         widget = QWidget()
@@ -6773,51 +6831,200 @@ class StyleHMainWindow(QMainWindow):
         return widget
         
     def create_professional_status_bar(self):
-        """創建專業狀態列"""
+        """Create professional status bar."""
         status_bar = QStatusBar()
         status_bar.setFixedHeight(16)
         self.setStatusBar(status_bar)
-        
-        # 狀態指示
-        ready_label = QLabel("[OK] READY")
-        ready_label.setObjectName("StatusReady")
-        
-        self.stats_label = QLabel("[STATS] Japan 2025 R")
-        self.stats_label.setObjectName("StatusStats")
-        
-        drivers_label = QLabel("[FINISH] VER vs LEC")
-        time_label = QLabel("[TIME] 13:28:51")
-        
-        status_bar.addWidget(ready_label)
-        status_bar.addWidget(QLabel(" | "))
-        status_bar.addWidget(self.stats_label)
-        status_bar.addWidget(QLabel(" | "))
-        status_bar.addWidget(drivers_label)
-        status_bar.addWidget(QLabel(" | "))
-        status_bar.addWidget(time_label)
-        
-        # 右側版本信息
-        version_label = QLabel("F1T Professional v8.0")
-        version_label.setObjectName("VersionInfo")
+
+        # Status indicators
+        self.ready_label = QLabel('[READY] INITIALIZING')
+        self.ready_label.setObjectName('StatusReady')
+
+        self.api_status_label = QLabel('[API] Pending')
+        self.api_status_label.setObjectName('StatusApi')
+        self.api_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
+
+        self.time_label = QLabel(f"[TIME] {datetime.datetime.now().strftime('%H:%M:%S')}")
+        self.time_label.setObjectName('StatusTime')
+
+        status_bar.addWidget(self.ready_label)
+        status_bar.addWidget(QLabel(' | '))
+        status_bar.addWidget(self.api_status_label)
+        status_bar.addWidget(QLabel(' | '))
+        status_bar.addWidget(self.time_label)
+
+        # Version information segment
+        version_label = QLabel('F1T Professional v8.0')
+        version_label.setObjectName('VersionInfo')
         status_bar.addPermanentWidget(version_label)
-        
-        # 更新狀態列以顯示當前參數
+
+        # Refresh status information
         self.update_status_bar()
-        
+
+
+    def _determine_api_base_url(self) -> str:
+        """Resolve the API base URL from environment variables or config files."""
+        env_url = os.getenv('F1_API_BASE_URL')
+        if env_url:
+            return str(env_url).rstrip('/')
+        config_path = Path('config/api_config.json')
+        if config_path.exists():
+            try:
+                config_data = json.loads(config_path.read_text(encoding='utf-8'))
+                api_url = config_data.get('api_base_url')
+                if api_url:
+                    return str(api_url).rstrip('/')
+            except Exception as exc:
+                logger.warning('Failed to read api_config.json: %s', exc)
+        return 'http://127.0.0.1:8000'
+
+    def setup_api_health_monitor(self) -> None:
+        """Initialise the periodic API health checks and kick off the first probe."""
+        try:
+            self.api_base_url = self._determine_api_base_url()
+            self._api_last_state = 'unknown'
+            self.api_mode_enabled = False
+            if self.api_status_label:
+                self.api_status_label.setText('[API] CHECKING...')
+                self.api_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
+                self.api_status_label.setToolTip(f'API Base: {self.api_base_url}\nChecking...')
+            if self.ready_label:
+                self.ready_label.setText('[READY] INITIALIZING')
+            if self.api_health_timer:
+                self.api_health_timer.stop()
+            self.api_health_timer = QTimer(self)
+            self.api_health_timer.setInterval(60_000)
+            self.api_health_timer.timeout.connect(self.trigger_api_health_check)
+            QTimer.singleShot(200, self.trigger_api_health_check)
+            self.api_health_timer.start()
+        except Exception as exc:
+            logger.error('Failed to setup API health monitor: %s', exc)
+            if self.api_status_label:
+                self.api_status_label.setText('[API] ERROR')
+                self.api_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
+                self.api_status_label.setToolTip(str(exc))
+
+    def trigger_api_health_check(self, manual: bool = False) -> None:
+        """Launch a background API health check."""
+        if self._api_health_worker_active:
+            if manual:
+                QMessageBox.information(self, 'API Check', 'API health check is already running. Please wait.')
+            return
+        if not self.api_base_url:
+            self.api_base_url = self._determine_api_base_url()
+        self._api_health_worker_active = True
+        self._api_health_manual_request = manual
+        if self.api_status_label:
+            self.api_status_label.setText('[API] CHECKING...')
+            self.api_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
+            self.api_status_label.setToolTip(f'API Base: {self.api_base_url}\nChecking...')
+        if self.check_api_action:
+            self.check_api_action.setEnabled(False)
+        logger.info('Starting API health check (manual=%s, base=%s)', manual, self.api_base_url)
+        self._api_health_worker = ApiHealthWorker(self.api_base_url, manual=manual, parent=self)
+        self._api_health_worker.result_ready.connect(self.on_api_health_result)
+        self._api_health_worker.finished.connect(self.on_api_health_finished)
+        self._api_health_worker.start()
+
+    def on_api_health_result(self, result: dict) -> None:
+        """Handle health check result coming back from the worker thread."""
+        try:
+            state = result.get('state', 'offline')
+            manual = result.get('manual', False)
+            base_url = result.get('base_url', self.api_base_url)
+            details = [str(item) for item in result.get('details', [])]
+            errors = [str(item) for item in result.get('errors', [])]
+            latency = result.get('latency_ms')
+            checked_at = result.get('checked_at')
+            tooltip_lines = [f'API Base: {base_url}']
+            if checked_at:
+                tooltip_lines.append(f'Checked: {checked_at}')
+            if latency is not None:
+                tooltip_lines.append(f'Avg latency: {latency:.1f} ms')
+            if details:
+                tooltip_lines.extend(details)
+            if errors:
+                tooltip_lines.append('----')
+                tooltip_lines.extend(errors)
+            tooltip_text = '\n'.join(tooltip_lines)
+            self._api_status_details = details
+            if self.api_status_label:
+                text_map = {
+                    'online': '[API] ONLINE',
+                    'degraded': '[API] DEGRADED',
+                    'offline': '[API] OFFLINE',
+                }
+                color_map = {
+                    'online': '#2ecc71',
+                    'degraded': '#f1c40f',
+                    'offline': '#e74c3c',
+                }
+                self.api_status_label.setText(text_map.get(state, '[API] UNKNOWN'))
+                self.api_status_label.setStyleSheet(f"color: {color_map.get(state, '#95a5a6')}; font-weight: bold;")
+                self.api_status_label.setToolTip(tooltip_text)
+            if self.ready_label:
+                if state == 'online':
+                    self.ready_label.setText('[READY] API MODE')
+                elif state == 'degraded':
+                    self.ready_label.setText('[READY] API MODE (DEGRADED)')
+                else:
+                    self.ready_label.setText('[READY] LOCAL JSON MODE')
+            self.api_mode_enabled = state != 'offline'
+            previous_state = getattr(self, '_api_last_state', 'unknown')
+            self._api_last_state = state
+            message_title = {
+                'online': 'API Online',
+                'degraded': 'API Degraded',
+                'offline': 'API Offline',
+            }.get(state, 'API Status')
+            if manual:
+                if state == 'online':
+                    QMessageBox.information(self, message_title, tooltip_text)
+                elif state == 'degraded':
+                    QMessageBox.warning(self, message_title, tooltip_text)
+                else:
+                    QMessageBox.warning(self, message_title, tooltip_text)
+            else:
+                if state == 'offline' and previous_state != 'offline':
+                    QMessageBox.warning(self, message_title, tooltip_text)
+                elif state == 'online' and previous_state in ('offline', 'degraded'):
+                    QMessageBox.information(self, 'API Restored', tooltip_text)
+                elif state == 'degraded' and previous_state == 'online':
+                    QMessageBox.warning(self, message_title, tooltip_text)
+            if state == 'offline':
+                logger.warning('API health check failed: %s', errors or details)
+            elif state == 'degraded':
+                logger.warning('API health degraded: %s', errors or details)
+            else:
+                logger.info('API health online (latency=%s ms)', latency)
+        except Exception as exc:
+            logger.error('Error processing API health result: %s', exc)
+        finally:
+            if self.check_api_action:
+                self.check_api_action.setEnabled(True)
+
+    def on_api_health_finished(self) -> None:
+        self._api_health_worker_active = False
+        self._api_health_worker = None
+        if self.check_api_action:
+            self.check_api_action.setEnabled(True)
+
+    def manual_api_health_check(self) -> None:
+        """Slot wired to the Tools menu to trigger manual health checks."""
+        self.trigger_api_health_check(manual=True)
+
+
     def update_status_bar(self):
-        """更新狀態列以顯示當前參數"""
-        if hasattr(self, 'year_combo') and hasattr(self, 'race_combo') and hasattr(self, 'session_combo') and hasattr(self, 'stats_label'):
-            year = self.year_combo.currentText()
-            race = self.race_combo.currentText()
-            session = self.session_combo.currentText()
-            
-            # 更新狀態列中的 STATS 信息
-            self.stats_label.setText(f"[STATS] {race} {year} {session}")
-            print(f"[STATUS] 更新狀態列: {race} {year} {session}")
-            
-            # 更新所有子窗口的標題
-            self.update_all_window_titles()
-            
+        """更新狀態列 (只維護時間與同步視窗標題)。"""
+        if hasattr(self, 'time_label') and self.time_label is not None:
+            self.time_label.setText(f"[TIME] {datetime.datetime.now().strftime('%H:%M:%S')}")
+
+        if hasattr(self, 'year_combo') and hasattr(self, 'race_combo') and hasattr(self, 'session_combo'):
+            try:
+                self.update_all_window_titles()
+            except Exception as exc:
+                logger.debug('update_all_window_titles failed: %s', exc)
+
     def get_current_parameters(self):
         """獲取當前參數設定"""
         display_race = self.race_combo.currentText() if hasattr(self, 'race_combo') else 'Japan'
@@ -10231,11 +10438,6 @@ class StyleHMainWindow(QMainWindow):
         except Exception as e:
             print(f"[ERROR] 刷新功能表文字失敗: {e}")
         
-    def clear_log(self): 
-        #print("[工具] 清除日誌")
-        # 這裡可以添加清除日誌的邏輯
-        pass
-    
     def toggle_lap_analysis_linkage(self, checked):
         """切換圈速分析連動功能總開關"""
         try:
@@ -10679,38 +10881,6 @@ class StyleHMainWindow(QMainWindow):
         #ProfessionalFunctionTree::item:selected {
             background-color: #0078D4;
             color: #FFFFFF;
-        }
-        
-        /* 系統日誌框架 - 白色主題 */
-        #LogFrame {
-            background-color: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            border-radius: 0px;
-        }
-        #LogTitle {
-            background-color: #F0F0F0;
-            color: #333333;
-            font-weight: bold;
-            font-size: 7pt;
-            height: 12px;
-            padding: 1px;
-        }
-        
-        /* 系統日誌 - 白色主題 */
-        #SystemLog {
-            background-color: #FFFFFF;
-            border: 1px solid #CCCCCC;
-            color: #006600;
-            font-family: "Consolas", "Courier New", monospace;
-            font-size: 7pt;
-            border-radius: 0px;
-            selection-background-color: #E8E8E8;
-        }
-        QTextEdit#SystemLog {
-            background-color: #FFFFFF;
-        }
-        QScrollArea QTextEdit#SystemLog {
-            background-color: #FFFFFF;
         }
         
         /* MDI工作區 - 白色主題 - 增強版 */
@@ -11482,6 +11652,20 @@ class StyleHMainWindow(QMainWindow):
     def closeEvent(self, event):
         """視窗關閉事件處理"""
         try:
+            if hasattr(self, 'api_health_timer') and self.api_health_timer:
+                self.api_health_timer.stop()
+            if hasattr(self, '_api_health_worker') and self._api_health_worker:
+                try:
+                    self._api_health_worker.result_ready.disconnect(self.on_api_health_result)
+                except Exception:
+                    pass
+                try:
+                    self._api_health_worker.finished.disconnect(self.on_api_health_finished)
+                except Exception:
+                    pass
+                self._api_health_worker = None
+            self._api_health_worker_active = False
+
             print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
             
             # 顯示關閉確認對話框（可選）

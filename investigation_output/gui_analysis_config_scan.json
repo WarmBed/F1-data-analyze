@@ -1,0 +1,67 @@
+{
+  "analysis_configs": [
+    {
+      "file": "modules\\gui\\base\\universal_data_loader_base.py",
+      "display_name": "遙測分析",
+      "debug_prefix": "TELEMETRY",
+      "data_source": "json",
+      "cli_function": "13"
+    },
+    {
+      "file": "modules\\gui\\base\\universal_data_loader_base.py",
+      "display_name": "降雨分析",
+      "debug_prefix": "RAIN",
+      "data_source": "json",
+      "cli_function": "rain_intensity"
+    },
+    {
+      "file": "modules\\gui\\base\\universal_data_loader_base.py",
+      "display_name": "事故分析",
+      "debug_prefix": "ACCIDENT",
+      "data_source": "json",
+      "cli_function": "accident"
+    },
+    {
+      "file": "modules\\gui\\base\\universal_data_loader_base.py",
+      "display_name": "進站分析",
+      "debug_prefix": "PITSTOP",
+      "data_source": "json",
+      "cli_function": "pitstop"
+    },
+    {
+      "file": "modules\\gui\\driverLap_analysis\\driverlap_analysis_mdi.py",
+      "display_name": "Detailed Lap Analysis",
+      "debug_prefix": "[F28_DATA]",
+      "data_source": "json",
+      "cli_function": "28",
+      "supports_realtime": false
+    },
+    {
+      "file": "modules\\gui\\rain_analysis\\rain_analysis_mdi.py",
+      "display_name": "下雨分析",
+      "debug_prefix": "[RAIN_ANALYSIS]",
+      "data_source": "json",
+      "cli_function": "run_rain_intensity_analysis_json",
+      "supports_realtime": false,
+      "cache_enabled": true
+    },
+    {
+      "file": "modules\\gui\\tire_analysis\\tire_analysis_mdi.py",
+      "display_name": "輪胎策略分析",
+      "debug_prefix": "[TIRE_ANALYSIS]",
+      "data_source": "json",
+      "cli_function": "26",
+      "supports_realtime": false,
+      "cache_enabled": true
+    },
+    {
+      "file": "modules\\gui\\track_analysis\\track_data_loader.py",
+      "display_name": "賽道分析",
+      "debug_prefix": "TRACK_ANALYSIS",
+      "data_source": "json",
+      "cli_function": "2",
+      "cache_pattern": "track_analysis_{year}_{race}_{session}.pkl",
+      "description": "賽道位置和地圖數據分析"
+    }
+  ]
+}
