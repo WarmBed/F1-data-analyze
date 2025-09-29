@@ -16,6 +16,16 @@ import argparse
 from typing import Optional, Union, Dict, Any
 from datetime import datetime
 
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from core.logger import setup_logging, get_logger
+
+setup_logging(component="cli")
+logger = get_logger("modular_main", component="cli")
+logger.info("CLI 模組化主程式啟動")
+
 # 移除編碼設置，避免 traceback 問題
 if sys.platform.startswith('win'):
     try:

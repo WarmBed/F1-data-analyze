@@ -16,6 +16,12 @@ import argparse
 from typing import Optional, Union, Dict, Any
 from datetime import datetime
 
+from core.logger import setup_logging, get_logger
+
+setup_logging(component="cli")
+logger = get_logger("main", component="cli")
+logger.info("F1 CLI 控制台初始化完成")
+
 # 移除編碼設置，避免 traceback 問題
 
 # 確保 modules 和 CLI_modules 目錄在 Python 路徑中

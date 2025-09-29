@@ -26,6 +26,12 @@ import subprocess
 import sys
 import os
 
+from core.logger import setup_logging, get_logger
+
+setup_logging(component="gui")
+logger = get_logger("main", component="gui")
+logger.info("F1T GUI 控制台初始化完成")
+
 # 導入連動管理器
 from modules.gui.lap_analysis.linkage import linkage_manager
 
@@ -895,7 +901,7 @@ class LapAnalysisOptionsDialog(QDialog):
             self.driver2_combo.clear()
             
             # 車手2先加入"無"選項
-            self.driver2_combo.addItem("無")
+            self.driver2_combo.addItem(tr("none_option", "None"))
             
             for driver in drivers:
                 self.driver1_combo.addItem(driver)
@@ -917,7 +923,7 @@ class LapAnalysisOptionsDialog(QDialog):
             self.driver2_combo.clear()
             
             # 車手2先加入"無"選項
-            self.driver2_combo.addItem("無")
+            self.driver2_combo.addItem(tr("none_option", "None"))
             
             for driver in default_drivers:
                 self.driver1_combo.addItem(driver)
@@ -4397,12 +4403,12 @@ class WindowSettingsDialog(QDialog):
         sync_layout = QVBoxLayout(sync_group)
         
         # 連動控制勾選框
-        self.sync_windows_checkbox = QCheckBox("[LINK] 接收主程式同步 (年份/賽事/賽段)")
+        self.sync_windows_checkbox = QCheckBox(tr("sync_checkbox_main", "[LINK] Receive Main Window Sync (Year/Race/Session)"))
         self.sync_windows_checkbox.setObjectName("SyncWindowsCheckbox")
         # [TOOL] 修復: 從父視窗獲取當前同步狀態
         current_sync_state = getattr(parent_window, 'sync_enabled', True)
         self.sync_windows_checkbox.setChecked(current_sync_state)
-        self.sync_windows_checkbox.setToolTip("勾選時接收主程式參數同步，下方分析參數將變為不可編輯")
+        self.sync_windows_checkbox.setToolTip(tr("sync_checkbox_tooltip_main", "When checked, receive parameters from main window and lock analysis controls"))
         # [TOOL] 新增: 當同步狀態改變時，切換分析參數的可編輯性
         self.sync_windows_checkbox.toggled.connect(self.on_sync_checkbox_toggled)
         sync_layout.addWidget(self.sync_windows_checkbox)
@@ -4495,9 +4501,9 @@ class WindowSettingsDialog(QDialog):
             self.session_combo.setToolTip("已啟用同步接收，參數由主程式控制")
             print(f"[LOCK] [SETTING] 分析參數已鎖定 - 接收主程式同步")
         else:
-            self.year_combo.setToolTip("手動設定年份")
-            self.race_combo.setToolTip("手動設定賽事")
-            self.session_combo.setToolTip("手動設定賽段")
+            self.year_combo.setToolTip(tr("year_tooltip", "Set year manually"))
+            self.race_combo.setToolTip(tr("race_tooltip", "Set race manually"))
+            self.session_combo.setToolTip(tr("session_tooltip", "Set session manually"))
             print(f"🔓 [SETTING] 分析參數已解鎖 - 可手動編輯")
     
     def sync_params_from_main_window(self):
@@ -4911,7 +4917,7 @@ class StyleHMainWindow(QMainWindow):
         self.addToolBar(toolbar)
         
         # 參數輸入區域
-        toolbar.addWidget(QLabel("年份:"))
+        toolbar.addWidget(QLabel(tr("year_label", "Year:")))
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("ParameterCombo")
         self.year_combo.addItems(["2024", "2025"])
@@ -4919,14 +4925,14 @@ class StyleHMainWindow(QMainWindow):
         self.year_combo.setFixedWidth(140)
         toolbar.addWidget(self.year_combo)
         
-        toolbar.addWidget(QLabel("賽事:"))
+        toolbar.addWidget(QLabel(tr("race_label", "Race:")))
         self.race_combo = QComboBox()
         self.race_combo.setObjectName("ParameterCombo")
         # 賽事項目將由 on_year_changed 方法動態填充
         self.race_combo.setFixedWidth(120)  # 增加寬度以容納較長的賽事名稱
         toolbar.addWidget(self.race_combo)
         
-        toolbar.addWidget(QLabel("賽段:"))
+        toolbar.addWidget(QLabel(tr("session_label", "Session:")))
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("ParameterCombo")
         self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])  # [TOOL] 修復: 與子視窗一致
@@ -4943,8 +4949,8 @@ class StyleHMainWindow(QMainWindow):
         toolbar.addSeparator()
         
         # 檢視控制
-        toolbar.addAction("[TILE]", self.tile_windows)
-        toolbar.addAction("[CASCADE]", self.cascade_windows)
+        toolbar.addAction(tr("tile_windows_action", "Tile Windows"), self.tile_windows)
+        toolbar.addAction(tr("cascade_windows_action", "Cascade Windows"), self.cascade_windows)
         
         # 連接年份變更事件
         self.year_combo.currentTextChanged.connect(self.on_year_changed)
@@ -4964,7 +4970,7 @@ class StyleHMainWindow(QMainWindow):
         self.lap_separator = None
         
         # 車手1控件
-        self.driver1_label = QLabel("車手1:")
+        self.driver1_label = QLabel(tr("driver1_label", "Driver 1:"))
         self.driver1_label.setVisible(False)  # 初始隱藏
         self.driver1_combo = QComboBox()
         self.driver1_combo.setObjectName("ParameterCombo")
@@ -4972,7 +4978,7 @@ class StyleHMainWindow(QMainWindow):
         self.driver1_combo.setVisible(False)  # 初始隱藏
         
         # 圈數1控件
-        self.lap1_label = QLabel("圈數:")
+        self.lap1_label = QLabel(tr("lap_label", "Lap:"))
         self.lap1_label.setVisible(False)  # 初始隱藏
         self.lap1_spinbox = QSpinBox()
         self.lap1_spinbox.setRange(1, 100)
@@ -4981,16 +4987,16 @@ class StyleHMainWindow(QMainWindow):
         self.lap1_spinbox.setVisible(False)  # 初始隱藏
         
         # 車手2控件
-        self.driver2_label = QLabel("車手2:")
+        self.driver2_label = QLabel(tr("driver2_label", "Driver 2:"))
         self.driver2_label.setVisible(False)  # 初始隱藏
         self.driver2_combo = QComboBox()
         self.driver2_combo.setObjectName("ParameterCombo")
-        self.driver2_combo.addItem("無")  # 預設選項
+        self.driver2_combo.addItem(tr("none_option", "None"))  # 預設選項
         self.driver2_combo.setFixedWidth(60)
         self.driver2_combo.setVisible(False)  # 初始隱藏
         
         # 圈數2控件
-        self.lap2_label = QLabel("圈數:")
+        self.lap2_label = QLabel(tr("lap_label", "Lap:"))
         self.lap2_label.setVisible(False)  # 初始隱藏
         self.lap2_spinbox = QSpinBox()
         self.lap2_spinbox.setRange(1, 100)
@@ -4999,7 +5005,7 @@ class StyleHMainWindow(QMainWindow):
         self.lap2_spinbox.setVisible(False)  # 初始隱藏
         
         # 最速圈選項
-        self.fastest_lap_checkbox = QCheckBox("最速圈")
+        self.fastest_lap_checkbox = QCheckBox(tr("fastest_lap_option", "Fastest Lap"))
         self.fastest_lap_checkbox.setVisible(False)  # 初始隱藏
         
         # 🏁 連接最速圈checkbox的變更事件，自動設置圈數為99
@@ -5275,7 +5281,7 @@ class StyleHMainWindow(QMainWindow):
             print("[LAP_CONTROL] ✅ driver1_combo 設定完成")
             
             self.driver2_combo.clear()
-            self.driver2_combo.addItem("無")  # 第一個選項
+            self.driver2_combo.addItem(tr("none_option", "None"))  # 第一個選項
             self.driver2_combo.addItems(drivers)
             self.driver2_combo.setCurrentText("無")  # 預設無第二車手
             print("[LAP_CONTROL] ✅ driver2_combo 設定完成")

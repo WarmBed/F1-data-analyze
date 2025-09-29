@@ -9,7 +9,7 @@ F1 Analysis API 中間件模組
 
 from fastapi import Request, Response, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 import time
 import json
 import traceback

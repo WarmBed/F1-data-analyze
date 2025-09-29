@@ -13,6 +13,7 @@ import time
 
 # 導入服務
 from api.services.simple_analysis_service import SimpleF1AnalysisService
+from api.models.function_specs import FUNCTION_SPECS
 
 # 創建路由器
 router = APIRouter(
@@ -28,9 +29,12 @@ router = APIRouter(
 analysis_service = SimpleF1AnalysisService()
 
 
+SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys())
+
+
 @router.post("/execute")
 async def execute_analysis(
-    function_id: int = Query(..., ge=1, le=52, description="分析功能 ID (1-52)"),
+    function_id: int = Query(..., description="分析功能 ID"),
     year: int = Query(..., ge=2024, le=2025, description="賽季年份"),
     race: str = Query(..., min_length=3, description="賽事名稱"),
     session: str = Query(..., description="會話類型 (R/Q/FP1/FP2/FP3)"),
@@ -51,6 +55,13 @@ async def execute_analysis(
     """
     
     try:
+        if function_id not in FUNCTION_SPECS:
+            raise HTTPException(status_code=400, detail={
+                "error": "unsupported_function",
+                "message": f"function_id {function_id} 尚未透過 API 支援",
+                "supported": SUPPORTED_FUNCTION_IDS,
+            })
+
         # 建構參數
         params = {
             "year": year,
@@ -89,55 +100,36 @@ async def get_supported_functions() -> Dict[str, Any]:
     
     返回所有可用的分析功能及其描述
     """
-    
-    functions = {
-        "basic_analysis": {
-            "name": "基礎分析",
-            "functions": {
-                1: "降雨分析",
-                3: "車手成績分析", 
-                4: "車隊積分統計",
-                6: "進站策略分析"
+    try:
+        functions = {
+            spec.function_id: {
+                "name": spec.name,
+                "description": spec.description,
+                "required_params": spec.required_params,
+                "optional_params": spec.optional_params,
+                "cache_patterns": spec.cache_patterns,
+                "notes": spec.notes,
             }
-        },
-        "telemetry_analysis": {
-            "name": "遙測分析", 
-            "functions": {
-                12: "全車手遙測分析",
-                13: "車手遙測比較",
-                14: "詳細單圈分析",
-                15: "超車統計分析"
-            }
-        },
-        "pitstop_analysis": {
-            "name": "進站分析",
-            "functions": {
-                16: "車手詳細進站記錄",
-                17: "車手最快進站排名", 
-                18: "車隊進站排名",
-                19: "輪胎策略分析"
-            }
-        },
-        "race_analysis": {
-            "name": "賽事分析",
-            "functions": {
-                20: "事故分析",
-                21: "賽道邊界違規",
-                22: "處罰統計",
-                23: "安全車分析"
-            }
+            for spec in FUNCTION_SPECS.values()
         }
-    }
-    
-    return {
-        "success": True,
-        "message": "支持的分析功能",
-        "total_functions": sum(len(cat["functions"]) for cat in functions.values()),
-        "categories": len(functions),
-        "functions": functions,
-        "function_range": "1-52",
-        "timestamp": time.time()
-    }
+
+        return {
+            "success": True,
+            "message": "目前 API 支援的分析功能",
+            "total_functions": len(functions),
+            "functions": functions,
+            "supported_function_ids": SUPPORTED_FUNCTION_IDS,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "功能列表獲取失敗",
+                "message": str(e),
+                "timestamp": time.time()
+            }
+        )
 
 
 @router.get("/status")

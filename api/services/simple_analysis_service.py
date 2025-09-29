@@ -22,6 +22,7 @@ if project_root not in sys.path:
 
 # 導入已經工作的組件
 from api.services.cache_service import F1AnalysisCacheService
+from api.models.function_specs import FUNCTION_SPECS, FunctionSpec, get_function_spec
 
 
 class SimpleF1AnalysisService:
@@ -29,7 +30,50 @@ class SimpleF1AnalysisService:
     
     def __init__(self):
         self.cache_service = F1AnalysisCacheService()
+        self._function_specs = FUNCTION_SPECS
         print("[SERVICE] 簡化版分析服務已初始化")
+
+    def _get_spec(self, function_id: int) -> FunctionSpec:
+        """Return metadata for the requested function."""
+
+        try:
+            return get_function_spec(function_id)
+        except KeyError as exc:
+            raise ValueError(f"Unsupported function_id: {function_id}") from exc
+
+    def _prepare_params(self, spec: FunctionSpec, raw_params: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate and extract parameters required by the CLI."""
+
+        prepared: Dict[str, Any] = {}
+
+        for name in spec.required_params:
+            if name not in raw_params or raw_params[name] in (None, ""):
+                raise ValueError(f"Missing required parameter '{name}' for function {spec.function_id}")
+            prepared[name] = raw_params[name]
+
+        for name in spec.optional_params:
+            if name in raw_params and raw_params[name] not in (None, ""):
+                prepared[name] = raw_params[name]
+
+        return prepared
+
+    def _build_cli_command(self, spec: FunctionSpec, params: Dict[str, Any]) -> list[str]:
+        """Construct the CLI command for the given specification."""
+
+        cmd = [
+            "python",
+            "f1_analysis_modular_main.py",
+            "-f", str(spec.function_id)
+        ]
+
+        for param_name, flag in spec.cli_flag_map.items():
+            if param_name in params:
+                value = params[param_name]
+                if value in (None, ""):
+                    continue
+                cmd.extend([flag, str(value)])
+
+        return cmd
     
     async def execute_analysis(self, function_id: int, **params) -> Dict[str, Any]:
         """
@@ -48,27 +92,31 @@ class SimpleF1AnalysisService:
         start_time = time.time()
         
         try:
-            # 步驟 1: 檢查緩存 (已知工作正常)
-            print(f"[SERVICE] 檢查緩存...")
-            cached_result = self.cache_service.search_cached_analysis(function_id, **params)
-            
-            if cached_result:
-                execution_time = time.time() - start_time
-                print(f"[SERVICE] ✅ 緩存命中! (耗時: {execution_time:.3f}s)")
-                
-                return {
-                    "success": True,
-                    "message": f"分析完成 (功能 {function_id})",
-                    "data": cached_result,
-                    "source": "cache",
-                    "execution_time": f"{execution_time:.3f}s",
-                    "request_id": request_id,
-                    "timestamp": datetime.now().isoformat()
-                }
-            
-            # 步驟 2: 緩存未命中，嘗試簡單 CLI 執行
+            spec = self._get_spec(function_id)
+            prepared_params = self._prepare_params(spec, params)
+            force_refresh = bool(params.get("force_refresh"))
+
+            if not force_refresh:
+                print(f"[SERVICE] 檢查緩存...")
+                cached_result = self.cache_service.search_cached_analysis(function_id, **prepared_params)
+
+                if cached_result:
+                    execution_time = time.time() - start_time
+                    print(f"[SERVICE] ✅ 緩存命中! (耗時: {execution_time:.3f}s)")
+
+                    return {
+                        "success": True,
+                        "message": f"分析完成 (功能 {function_id})",
+                        "data": cached_result,
+                        "source": "cache",
+                        "execution_time": f"{execution_time:.3f}s",
+                        "request_id": request_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "function_spec": spec.__dict__,
+                    }
+
             print(f"[SERVICE] ❌ 緩存未命中，嘗試 CLI 執行...")
-            cli_result = await self._simple_cli_execution(function_id, **params)
+            cli_result = await self._simple_cli_execution(spec, prepared_params)
             
             execution_time = time.time() - start_time
             
@@ -76,12 +124,13 @@ class SimpleF1AnalysisService:
                 print(f"[SERVICE] ✅ CLI 執行成功! (耗時: {execution_time:.3f}s)")
                 return {
                     "success": True,
-                    "message": f"分析完成 (功能 {function_id})",
+                    "message": f"分析完成 (功能 {spec.function_id})",
                     "data": cli_result["data"],
                     "source": "cli",
                     "execution_time": f"{execution_time:.3f}s",
                     "request_id": request_id,
                     "timestamp": datetime.now().isoformat(),
+                    "function_spec": spec.__dict__,
                     "cli_info": cli_result.get("cli_info", {})
                 }
             else:
@@ -110,7 +159,7 @@ class SimpleF1AnalysisService:
                 "timestamp": datetime.now().isoformat()
             }
     
-    async def _simple_cli_execution(self, function_id: int, **params) -> Dict[str, Any]:
+    async def _simple_cli_execution(self, spec: FunctionSpec, params: Dict[str, Any]) -> Dict[str, Any]:
         """
         簡化版 CLI 執行
         
@@ -123,23 +172,7 @@ class SimpleF1AnalysisService:
         """
         try:
             # 建構基本 CLI 命令
-            cmd = [
-                "python", 
-                "f1_analysis_modular_main.py",
-                "-f", str(function_id)
-            ]
-            
-            # 添加基本參數
-            if "year" in params:
-                cmd.extend(["-y", str(params["year"])])
-            if "race" in params:
-                cmd.extend(["-r", str(params["race"])])
-            if "session" in params:
-                cmd.extend(["-s", str(params["session"])])
-            if "driver1" in params:
-                cmd.extend(["-d", str(params["driver1"])])
-            if "driver2" in params:
-                cmd.extend(["-d2", str(params["driver2"])])
+            cmd = self._build_cli_command(spec, params)
             
             print(f"[CLI] 執行命令: {' '.join(cmd)}")
             
@@ -161,7 +194,7 @@ class SimpleF1AnalysisService:
                 
                 # 嘗試重新搜尋緩存，看是否生成了新文件
                 await asyncio.sleep(0.5)  # 等待文件寫入
-                new_cached = self.cache_service.search_cached_analysis(function_id, **params)
+                new_cached = self.cache_service.search_cached_analysis(spec.function_id, **params)
                 
                 if new_cached:
                     return {
