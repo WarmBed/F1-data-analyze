@@ -363,7 +363,7 @@ class F1AnalysisFunctionMapper:
             else:
                 return {"success": False, "message": "降雨強度分析執行失敗：無結果數據", "function_id": "1"}
             
-            # 保存JSON輸出 (使用統一工具函數)
+            # 新版僅保留增強版 JSON，直接回傳分析結果
             final_result = {
                 "success": True,
                 "message": "降雨強度分析完成",
@@ -371,8 +371,6 @@ class F1AnalysisFunctionMapper:
                 "cache_used": result.get("cache_used", False) if isinstance(result, dict) else False,
                 "function_id": "1"
             }
-            self._export_to_json(final_result, "1", "rain_intensity_analysis")
-            
             return final_result
         except Exception as e:
             print(f"[ERROR] 降雨強度分析失敗: {str(e)}")
@@ -643,7 +641,12 @@ class F1AnalysisFunctionMapper:
             
             print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
             
-            from CLI_modules.cli.analyzer.accident_statistics_summary import run_accident_statistics_summary_json
+            try:
+                from CLI_modules.cli.analyzer.accident_statistics_summary import run_accident_statistics_summary_json  # type: ignore
+            except ImportError:
+                from modules.gui.accident_analysis.accident_statistics_summary import (
+                    run_accident_statistics_summary_json,
+                )
             print("[STATS] 執行事故統計摘要分析 (功能6)...")
             result = run_accident_statistics_summary_json(
                 self.data_loader,
@@ -708,7 +711,12 @@ class F1AnalysisFunctionMapper:
             
             print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
             
-            from CLI_modules.cli.analyzer.severity_distribution_analysis import run_severity_distribution_analysis_json
+            try:
+                from CLI_modules.cli.analyzer.severity_distribution_analysis import run_severity_distribution_analysis_json  # type: ignore
+            except ImportError:
+                from modules.gui.accident_analysis.severity_distribution_analysis import (
+                    run_severity_distribution_analysis_json,
+                )
             print("[WARNING] 執行嚴重程度分佈分析 (功能7)...")
             result = run_severity_distribution_analysis_json(
                 self.data_loader,
@@ -838,7 +846,12 @@ class F1AnalysisFunctionMapper:
             
             print(f"[PARAMS] 參數檢查 - 年份: {year}, 賽事: {race}, 賽段: {session}")
             
-            from CLI_modules.cli.analyzer.special_incidents_analysis import run_special_incidents_analysis_json
+            try:
+                from CLI_modules.cli.analyzer.special_incidents_analysis import run_special_incidents_analysis_json  # type: ignore
+            except ImportError:
+                from modules.gui.accident_analysis.special_incidents_analysis import (
+                    run_special_incidents_analysis_json,
+                )
             print("[ALERT] 執行特殊事件報告分析 (JSON輸出版)...")
             result = run_special_incidents_analysis_json(
                 self.data_loader,
@@ -2263,7 +2276,12 @@ class F1AnalysisFunctionMapper:
             if show_detailed_output:
                 print("[INFO] 詳細輸出模式: 啟用 (緩存數據也將顯示完整表格)")
             
-            from CLI_modules.cli.analyzer.special_incidents_analysis import run_special_incidents_analysis
+            try:
+                from CLI_modules.cli.analyzer.special_incidents_analysis import run_special_incidents_analysis  # type: ignore
+            except ImportError:
+                from modules.gui.accident_analysis.special_incidents_analysis import (
+                    run_special_incidents_analysis,
+                )
             print("[ALERT] 執行特殊事件報告分析...")
             result = run_special_incidents_analysis(
                 self.data_loader,

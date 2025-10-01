@@ -5867,13 +5867,13 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(basic_group, [tr("track_analysis", "Track Analysis")])
         QTreeWidgetItem(basic_group, [tr("pitstop_analysis", "Pitstop Analysis")])
         QTreeWidgetItem(basic_group, [tr("accident_analysis", "Accident Analysis")])
-        QTreeWidgetItem(basic_group, [tr("driver_ranking", "Driver Ranking")])
+        QTreeWidgetItem(basic_group, [tr("driver_analysis", "Driver Analysis")])
         QTreeWidgetItem(basic_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         
         # 單場賽事車手分析模組
         single_group = QTreeWidgetItem(tree, [tr("single_race_driver_analysis", "🚗 Single Race Driver Analysis")])
         single_group.setExpanded(True)
-        QTreeWidgetItem(single_group, [tr("telemetry_analysis", "Telemetry Analysis")])
+        QTreeWidgetItem(single_group, [tr("lap_analysis", "Lap Analysis")])
         QTreeWidgetItem(single_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
         
         layout.addWidget(tree)
@@ -7326,9 +7326,14 @@ class StyleHMainWindow(QMainWindow):
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
         
-        # 特殊處理：遙測分析直接調用 lap_analysis 方法（但排除詳細圈速分析）
-        if (("圈速" in function_name or "遙測分析" in function_name) and "詳細圈速分析" not in function_name) or \
-           (("Telemetry Analysis" in function_name) and "Detailed Lap Analysis" not in function_name):
+        # 特殊處理：遙測/圈速分析概覽直接調用 lap_analysis 方法（排除詳細圈速分析）
+        is_detailed_lap = ("詳細圈速分析" in function_name) or ("Detailed Lap Analysis" in function_name)
+        if (not is_detailed_lap) and (
+            ("圈速" in function_name)
+            or ("遙測分析" in function_name)
+            or ("Telemetry Analysis" in function_name)
+            or ("Lap Analysis" in function_name)
+        ):
             print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
             return
@@ -7474,7 +7479,8 @@ class StyleHMainWindow(QMainWindow):
                 "檔位分析": "gear_analysis",     # 檔位分析映射
                 "煞車分析": "brake_analysis",    # 煞車分析映射
                 "降雨分析": "rain_analysis",     # 降雨分析映射
-                "車手排名": "telemetry_analysis", # 車手排名映射 (原單場賽事總攬)
+                "車手分析": "telemetry_analysis", # 車手分析映射 (原單場賽事總攬)
+                "車手排名": "telemetry_analysis", # 保留舊映射以維持相容
                 # "遙測分析": 通過特殊處理路徑，不使用模組工廠
                 "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
                 "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
@@ -7487,6 +7493,7 @@ class StyleHMainWindow(QMainWindow):
                 "Gear Analysis": "gear_analysis",
                 "Brake Analysis": "brake_analysis",
                 "Rain Analysis": "rain_analysis",
+                "Driver Analysis": "telemetry_analysis",
                 "Driver Ranking": "telemetry_analysis",
                 # "Telemetry Analysis": 通過特殊處理路徑，不使用模組工廠
                 "Tire Strategy Analysis": "tire_analysis",

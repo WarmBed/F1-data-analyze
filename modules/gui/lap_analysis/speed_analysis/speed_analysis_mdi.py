@@ -234,11 +234,24 @@ class SpeedDataManager(QObject):
     def _on_data_loaded(self, data: dict):
         """處理數據載入完成"""
         try:
-            print(f"[SPEED_MDI] 數據載入完成")
+            print(f"[SPEED_MDI_DATA] ========== 數據載入完成回調 ==========")
+            print(f"[SPEED_MDI_DATA] 📦 接收到數據類型: {type(data)}")
+            print(f"[SPEED_MDI_DATA] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            if isinstance(data, dict) and 'speed_data' in data:
+                speed_data = data['speed_data']
+                print(f"[SPEED_MDI_DATA] 📊 speed_data 鍵值: {list(speed_data.keys())}")
+                print(f"[SPEED_MDI_DATA] 📊 distance 點數: {len(speed_data.get('distance', []))}")
+                print(f"[SPEED_MDI_DATA] 📊 driver1_speed 點數: {len(speed_data.get('driver1_speed', []))}")
+                print(f"[SPEED_MDI_DATA] 📊 driver2_speed 點數: {len(speed_data.get('driver2_speed', []))}")
             self._is_loading = False
+            print(f"[SPEED_MDI_DATA] 🚀 即將發送 data_loaded 信號...")
+            print(f"[SPEED_MDI_DATA] 📡 信號接收者數量: {self.receivers(self.data_loaded)}")
             self.data_loaded.emit(data)
+            print(f"[SPEED_MDI_DATA] ✅ data_loaded 信號已發送")
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 數據處理失敗: {e}")
+            print(f"[ERROR] [SPEED_MDI_DATA] 數據處理失敗: {e}")
+            import traceback
+            traceback.print_exc()
             self.error_occurred.emit(f"數據處理失敗: {str(e)}")
     
     def _on_load_error(self, error_message: str):
@@ -363,15 +376,29 @@ class SpeedAnalysisModule(IAnalysisModule):
     def _update_chart(self, data: dict):
         """更新圖表"""
         try:
-            print(f"[SPEED_MDI] 更新速度圖表")
+            print(f"[SPEED_MDI] ========== 更新速度圖表回調 ==========")
+            print(f"[SPEED_MDI] 📦 接收到數據類型: {type(data)}")
+            print(f"[SPEED_MDI] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            if isinstance(data, dict) and 'speed_data' in data:
+                speed_data = data['speed_data']
+                print(f"[SPEED_MDI] 📊 speed_data 鍵值: {list(speed_data.keys())}")
+                print(f"[SPEED_MDI] 📊 distance 點數: {len(speed_data.get('distance', []))}")
+                print(f"[SPEED_MDI] 📊 driver1_speed 點數: {len(speed_data.get('driver1_speed', []))}")
+                print(f"[SPEED_MDI] 📊 driver2_speed 點數: {len(speed_data.get('driver2_speed', []))}")
             if self.speed_chart_widget:
+                print(f"[SPEED_MDI] 🎨 調用 speed_chart_widget.update_speed_data...")
                 self.speed_chart_widget.update_speed_data(data)
+                print(f"[SPEED_MDI] ✅ 圖表更新完成")
                 
                 # 更新工具欄狀態信息
                 self._update_toolbar_status(data)
+            else:
+                print(f"[SPEED_MDI] ❌ speed_chart_widget 未初始化")
                 
         except Exception as e:
             print(f"[ERROR] [SPEED_MDI] 圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
             self.module_error.emit(f"圖表更新失敗: {str(e)}")
     
     def _update_toolbar_status(self, data: dict):

@@ -17,8 +17,13 @@ import subprocess
 import time
 import gc
 import hashlib
+from pathlib import Path
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+
+from typing import Any, Dict, Optional, Tuple
+
+import requests
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
@@ -164,62 +169,169 @@ class TrackAnalysisCacheManager:
         return file_age < self.cache_expiry
 
 class TrackAnalysisWorkerThread(QThread):
-    """賽道分析工作執行緒"""
-    
-    progress_updated = pyqtSignal(int, str)  # 進度和狀態訊息
-    analysis_completed = pyqtSignal(dict)    # 分析完成
-    analysis_failed = pyqtSignal(str)        # 分析失敗
-    
-    def __init__(self, year, race, session):
+    """賽道分析工作執行緒 (API 優先)"""
+
+    progress_updated = pyqtSignal(int, str)
+    analysis_completed = pyqtSignal(dict)
+    analysis_failed = pyqtSignal(str)
+
+    def __init__(self, year, race, session, force_refresh: bool = False):
         super().__init__()
         self.year = year
         self.race = race
         self.session = session
+        self.force_refresh = force_refresh
         self.cache_manager = TrackAnalysisCacheManager()
-    
+        self.api_base_url = self._determine_api_base_url()
+        self.api_timeout = 60.0
+        self.allow_local_fallback, self.fallback_reason = self._resolve_local_fallback_policy()
+        self.last_api_metadata: Dict[str, Any] = {}
+
+    def _determine_api_base_url(self) -> str:
+        env_url = os.getenv("F1_API_BASE_URL")
+        if env_url:
+            return str(env_url).rstrip('/')
+
+        config_path = Path(project_root) / "config" / "api_config.json"
+        if config_path.exists():
+            try:
+                config_data = json.loads(config_path.read_text(encoding="utf-8"))
+                api_url = config_data.get("api_base_url")
+                if api_url:
+                    return str(api_url).rstrip('/')
+            except Exception as exc:
+                print(f"[TRACK_ANALYSIS] 讀取 api_config.json 失敗: {exc}")
+
+        return "http://127.0.0.1:8000"
+
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        env_value = os.getenv("F1T_ALLOW_TRACK_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
+            return False, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
+        return False, "預設策略 (API 優先，不允許本地回退)"
+
+    def override_local_fallback(self, allowed: bool, reason: str = "GUI override") -> None:
+        self.allow_local_fallback = bool(allowed)
+        self.fallback_reason = reason
+
     def run(self):
-        """執行賽道分析"""
         try:
-            self.progress_updated.emit(10, "檢查緩存數據...")
-            
-            # 1. 檢查緩存
-            cached_file = self.cache_manager.find_latest_track_json(
-                self.year, self.race, self.session
-            )
-            
-            if cached_file and self.cache_manager.is_cache_valid(cached_file):
-                self.progress_updated.emit(50, "使用緩存數據...")
-                track_data = self.load_json_data(cached_file)
+            self.progress_updated.emit(10, "透過 API 載入賽道資料...")
+            track_payload, api_meta, full_payload = self._fetch_analysis_via_api()
+            processed_data = self._prepare_track_data(track_payload, full_payload)
+            metadata = processed_data.setdefault("metadata", {})
+            metadata.setdefault("data_source", "api")
+            if api_meta:
+                metadata["api"] = api_meta
+            metadata.setdefault("year", self.year)
+            metadata.setdefault("race", self.race)
+            metadata.setdefault("session", self.session)
+            metadata["requested_force_refresh"] = self.force_refresh
+
+            self.progress_updated.emit(100, "API 載入完成")
+            self.analysis_completed.emit(processed_data)
+
+        except Exception as exc:
+            if self.allow_local_fallback:
+                self.progress_updated.emit(55, "API 失敗，啟動本地 JSON 後備流程...")
+                try:
+                    if self._attempt_local_fallback(str(exc)):
+                        return
+                    self.analysis_failed.emit(
+                        f"API 載入失敗且本地 JSON 後備亦失敗: {exc}"
+                    )
+                except Exception as fallback_exc:
+                    self.analysis_failed.emit(
+                        f"本地 JSON 後備流程錯誤: {fallback_exc}"
+                    )
+            else:
+                message = (
+                    "API 載入失敗，且本地 JSON 後備已停用。"
+                    " 如需啟用，請設定環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK=1。"
+                )
+                self.analysis_failed.emit(f"{message} 詳細: {exc}")
+
+    def _fetch_analysis_via_api(self) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+        endpoint = f"{self.api_base_url}/api/v2/analysis/execute"
+        params = {
+            "function_id": 2,
+            "year": int(self.year),
+            "race": self.race,
+            "session": self.session,
+        }
+        if self.force_refresh:
+            params["force_refresh"] = True
+
+        start_ts = time.perf_counter()
+        response = requests.post(
+            endpoint,
+            params=params,
+            timeout=self.api_timeout,
+            headers={"Accept": "application/json"}
+        )
+        response.raise_for_status()
+        payload = response.json()
+
+        if not isinstance(payload, dict):
+            raise ValueError("API 回傳必須為 JSON 物件")
+        if not payload.get("success", False):
+            raise RuntimeError(payload.get("message", "API returned success=False"))
+
+        data = payload.get("data")
+        if not isinstance(data, dict):
+            raise ValueError("API 回傳缺少 data 欄位")
+
+        latency_ms = (time.perf_counter() - start_ts) * 1000.0
+        api_meta = {
+            "source": payload.get("source", "api"),
+            "execution_time": payload.get("execution_time"),
+            "request_id": payload.get("request_id"),
+            "timestamp": payload.get("timestamp"),
+            "function_spec": payload.get("function_spec"),
+            "latency_ms": round(latency_ms, 2),
+            "base_url": self.api_base_url,
+        }
+        self.last_api_metadata = api_meta
+        return data, api_meta, payload
+
+    def _attempt_local_fallback(self, reason: str) -> bool:
+        cached_file = self.cache_manager.find_latest_track_json(self.year, self.race, self.session)
+        if cached_file and self.cache_manager.is_cache_valid(cached_file):
+            track_data = self.load_json_data(cached_file)
+            if track_data:
+                metadata = track_data.setdefault("metadata", {})
+                metadata.setdefault("data_source", "local-json")
+                metadata["fallback_reason"] = reason
+                metadata["fallback_policy"] = self.fallback_reason
+                metadata.setdefault("year", self.year)
+                metadata.setdefault("race", self.race)
+                metadata.setdefault("session", self.session)
+                self.progress_updated.emit(100, "使用本地 JSON 快取完成")
+                self.analysis_completed.emit(track_data)
+                return True
+
+        self.progress_updated.emit(70, "未找到有效快取，執行 CLI 生成...")
+        if self.run_cli_analysis():
+            generated = self.cache_manager.find_latest_track_json(self.year, self.race, self.session)
+            if generated:
+                track_data = self.load_json_data(generated)
                 if track_data:
-                    self.progress_updated.emit(100, "緩存載入完成")
+                    metadata = track_data.setdefault("metadata", {})
+                    metadata.setdefault("data_source", "local-json")
+                    metadata["fallback_reason"] = reason
+                    metadata["generated_via_cli"] = True
+                    metadata["fallback_policy"] = self.fallback_reason
+                    metadata.setdefault("year", self.year)
+                    metadata.setdefault("race", self.race)
+                    metadata.setdefault("session", self.session)
+                    self.progress_updated.emit(100, "CLI 生成完成")
                     self.analysis_completed.emit(track_data)
-                    return
-            
-            # 2. 執行CLI分析
-            self.progress_updated.emit(30, "執行賽道位置分析...")
-            success = self.run_cli_analysis()
-            
-            if not success:
-                self.analysis_failed.emit("CLI分析執行失敗")
-                return
-            
-            # 3. 載入分析結果
-            self.progress_updated.emit(80, "載入分析結果...")
-            cached_file = self.cache_manager.find_latest_track_json(
-                self.year, self.race, self.session
-            )
-            
-            if cached_file:
-                track_data = self.load_json_data(cached_file)
-                if track_data:
-                    self.progress_updated.emit(100, "分析完成")
-                    self.analysis_completed.emit(track_data)
-                    return
-            
-            self.analysis_failed.emit("無法載入分析結果")
-            
-        except Exception as e:
-            self.analysis_failed.emit(f"分析執行錯誤: {str(e)}")
+                    return True
+
+        return False
     
     def run_cli_analysis(self):
         """執行CLI賽道路線分析"""
@@ -253,39 +365,103 @@ class TrackAnalysisWorkerThread(QThread):
             print(f"[ERROR] CLI分析執行錯誤: {e}")
             return False
     
-    def load_json_data(self, file_path):
-        """載入JSON數據"""
+    def load_json_data(self, file_path: str) -> Optional[Dict[str, Any]]:
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-            
-            # 檢查新格式 (track_position_analysis_*.json)
-            if data.get('success') and 'data' in data:
-                track_data = data['data']
-                # 轉換數據格式以符合模組期望
-                if 'position_records' in track_data:
-                    processed_data = {
-                        'analysis_type': 'track_position_analysis',
-                        'detailed_position_records': track_data['position_records'],
-                        'has_position_data': track_data.get('has_position_data', True),
-                        'track_summary': track_data.get('track_summary', {}),
-                        'race_info': track_data.get('race_info', {}),
-                        'raw_data': data  # 保留原始數據
-                    }
-                    return processed_data
-            
-            # 檢查舊格式 (raw_data_track_position_*.json)
-            elif (data.get('analysis_type') == 'track_position_analysis' and
-                'detailed_position_records' in data):
-                return data
-            
+
+            if isinstance(data, dict):
+                if data.get("success") and isinstance(data.get("data"), dict):
+                    return self._prepare_track_data(data["data"], data)
+                return self._prepare_track_data(data, data)
+
             print(f"[WARNING] JSON格式不符合預期: {file_path}")
-            print(f"[DEBUG] JSON結構: {list(data.keys()) if isinstance(data, dict) else type(data)}")
             return None
-                
-        except Exception as e:
-            print(f"[ERROR] 載入JSON失敗: {e}")
+
+        except Exception as exc:
+            print(f"[ERROR] 載入JSON失敗: {exc}")
             return None
+
+    def _prepare_track_data(self, track_payload: Dict[str, Any], full_payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+        if not isinstance(track_payload, dict):
+            raise ValueError("賽道分析資料格式錯誤：需要字典")
+
+        core_payload = track_payload
+        if "data" in track_payload and isinstance(track_payload["data"], dict):
+            core_payload = track_payload["data"]
+
+        position_records = core_payload.get("position_records")
+        if position_records is None:
+            position_records = core_payload.get("detailed_position_records")
+        if position_records is None and isinstance(core_payload.get("track_data"), dict):
+            position_records = core_payload["track_data"].get("positions")
+        if position_records is None:
+            position_records = []
+
+        race_info = core_payload.get("race_info") or track_payload.get("race_info") or {
+            "year": self.year,
+            "race": self.race,
+            "session": self.session,
+        }
+
+        session_info = core_payload.get("session_info") or track_payload.get("session_info") or race_info
+
+        position_analysis = core_payload.get("position_analysis") or track_payload.get("position_analysis") or {
+            "total_position_records": len(position_records),
+            "track_bounds": core_payload.get("track_bounds", {}),
+            "fastest_lap_info": core_payload.get("fastest_lap_info", {}),
+            "distance_covered_m": core_payload.get("distance_covered", 0.0),
+        }
+
+        # 確保關鍵欄位存在
+        position_analysis.setdefault("total_position_records", len(position_records))
+        position_analysis.setdefault("track_bounds", core_payload.get("track_bounds", {}))
+        if "distance_covered_m" not in position_analysis:
+            distance_val = core_payload.get("distance_covered") or core_payload.get("distance_m")
+            if distance_val is not None:
+                position_analysis["distance_covered_m"] = distance_val
+        if "fastest_lap_info" not in position_analysis and core_payload.get("fastest_lap_info"):
+            position_analysis["fastest_lap_info"] = core_payload.get("fastest_lap_info")
+
+        track_summary = track_payload.get("track_summary", {})
+        if not track_summary and core_payload.get("track_summary"):
+            track_summary = core_payload.get("track_summary")
+        if isinstance(session_info, dict) and isinstance(track_summary, dict):
+            if track_summary.get("track_name") and not session_info.get("track_name"):
+                session_info["track_name"] = track_summary.get("track_name")
+
+        processed = {
+            "analysis_type": core_payload.get("analysis_type") or track_payload.get("analysis_type", "track_position_analysis"),
+            "session_info": session_info,
+            "position_analysis": position_analysis,
+            "track_summary": track_summary,
+            "detailed_position_records": position_records,
+            "has_position_data": core_payload.get("has_position_data", bool(position_records)),
+            "race_info": race_info,
+            "track_bounds": position_analysis.get("track_bounds", core_payload.get("track_bounds", {})),
+            "raw_data": full_payload or track_payload,
+        }
+
+        metadata = processed.setdefault("metadata", {})
+        metadata.setdefault("year", self.year)
+        metadata.setdefault("race", self.race)
+        metadata.setdefault("session", self.session)
+        metadata.setdefault("data_source", "api")
+        if isinstance(track_payload.get("metadata"), dict):
+            metadata.update({k: v for k, v in track_payload["metadata"].items() if k not in metadata})
+        if isinstance(core_payload.get("metadata"), dict):
+            metadata.update({k: v for k, v in core_payload["metadata"].items() if k not in metadata})
+        if full_payload and isinstance(full_payload, dict):
+            metadata["cache_used"] = full_payload.get("cache_used")
+            if full_payload.get("cache_info"):
+                metadata["cache_info"] = full_payload.get("cache_info")
+
+        if isinstance(track_payload.get("analysis_info"), dict):
+            processed.setdefault("analysis_info", track_payload["analysis_info"])
+        if "analysis_info" not in processed and isinstance(core_payload.get("analysis_info"), dict):
+            processed["analysis_info"] = core_payload.get("analysis_info")
+
+        return processed
 
 class TrackMapWidget(QWidget):
     """
@@ -622,6 +798,9 @@ class TrackAnalysisModule(QWidget):
         self.driver = driver
         self.track_data = None
         self.data_processor = None
+        self._fallback_override: Optional[bool] = None
+        self._fallback_override_reason = "GUI override"
+        self._force_refresh = False
         
         # 初始化數據處理器
         if TrackDataProcessor:
@@ -852,6 +1031,11 @@ class TrackAnalysisModule(QWidget):
         # 目前暫無特殊連接需求
         pass
     
+    def set_local_fallback_allowed(self, allowed: bool, reason: str = "GUI override"):
+        """設定是否允許本地 JSON 後備流程"""
+        self._fallback_override = bool(allowed)
+        self._fallback_override_reason = reason
+
     def start_analysis_workflow(self):
         """開始賽道分析工作流程"""
         print(f"[TRACK] 開始賽道分析工作流程: {self.year} {self.race} {self.session}")
@@ -862,11 +1046,22 @@ class TrackAnalysisModule(QWidget):
         # self.progress_bar.setValue(0)
         
         # 建立並啟動工作執行緒
-        self.worker_thread = TrackAnalysisWorkerThread(self.year, self.race, self.session)
+        self.worker_thread = TrackAnalysisWorkerThread(
+            self.year,
+            self.race,
+            self.session,
+            force_refresh=self._force_refresh,
+        )
+        if self._fallback_override is not None:
+            self.worker_thread.override_local_fallback(
+                self._fallback_override,
+                self._fallback_override_reason,
+            )
         self.worker_thread.progress_updated.connect(self.on_progress_updated)
         self.worker_thread.analysis_completed.connect(self.on_analysis_completed)
         self.worker_thread.analysis_failed.connect(self.on_analysis_failed)
         self.worker_thread.start()
+        self._force_refresh = False
     
     def on_progress_updated(self, progress, message):
         """進度更新處理"""
@@ -1179,6 +1374,7 @@ class TrackAnalysisModule(QWidget):
     def reload_analysis(self):
         """Reload analysis"""
         print(f"[TRACK] Reloading track analysis: {self.year} {self.race} {self.session}")
+        self._force_refresh = True
         self.start_analysis_workflow()
     
     def update_display_options(self):

@@ -294,3 +294,1525 @@
 2025-09-29 22:46:31 | WARNING | f1.console |    [WARNING] 基於位置計算距離
 2025-09-30 01:22:26 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
 2025-09-30 01:25:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:48:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:49:07 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:53:59 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:54:54 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:55:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 01:56:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 12:46:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 13:50:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 14:22:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 14:22:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 14:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 14:23:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 14:24:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 17:37:02 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:02:55 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:03:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:03:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:06:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:16:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:27:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:28:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:34:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:48:38 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 18:48:38 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 19:02:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 19:02:29 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 20:31:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 20:50:46 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 20:55:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 21:01:50 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 21:01:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:31 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-09-30 22:23:31 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-09-30 22:23:31 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-09-30 22:23:32 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:26:38 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:28:47 | ERROR | f1.console | 
+[ERROR] 此程式僅支援參數化模式運行
+2025-09-30 22:28:47 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-09-30 22:29:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:43 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 22:52:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:52:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 22:58:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:14:20 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 23:14:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:17:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:29:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-09-30 23:30:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:07:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:07:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:07:58 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:07:58 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:07:58 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:08:02 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:08:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:08:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:08:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:08:33 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 00:37:41 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:37:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:37:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:37:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:37:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:38:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:38:01 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:01 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:01 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:38:01 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:01 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-10-01 00:38:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:38:51 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:51 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:51 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:38:51 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:38:51 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-10-01 00:39:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:39:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:39:21 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 00:39:54 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:39:54 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:39:54 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:39:54 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:39:54 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:39:54 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-10-01 00:45:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:45:09 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:45:09 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:45:09 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:45:09 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:45:09 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-10-01 00:45:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:46:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:46:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:47:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:47:17 | ERROR | f1.console | [ERROR] 功能 999 執行失敗: 不支援的功能執行失敗：無結果數據
+2025-10-01 00:47:17 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:47:17 | ERROR | f1.console | [ERROR] 錯誤信息: 不支援的功能執行失敗：無結果數據
+2025-10-01 00:47:17 | ERROR | f1.console | [ERROR] 分析執行失敗
+2025-10-01 00:49:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:55:36 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:55:36 | ERROR | f1.console | [ERROR] 功能 999 執行失敗: 不支援的功能執行失敗：無結果數據
+2025-10-01 00:55:36 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:55:36 | ERROR | f1.console | [ERROR] 錯誤信息: 不支援的功能執行失敗：無結果數據
+2025-10-01 00:55:36 | ERROR | f1.console | [ERROR] 分析執行失敗: 不支援的功能執行失敗：無結果數據
+2025-10-01 00:55:36 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '999', 'result': {'success': False, 'message': '不支援的功能執行失敗：無結果數據', 'function_id': '999', 'data': None, 'error': 'No result data'}}
+2025-10-01 00:55:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:58:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:09 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:09 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:09 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:59:09 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:09 | ERROR | f1.console | [ERROR] 分析執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:09 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '6', 'result': {'success': False, 'message': "事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'", 'function_id': '6'}}
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 00:59:57 | ERROR | f1.console | [ERROR] 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:57 | ERROR | f1.console | [ERROR] 功能 6 執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:57 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 00:59:57 | ERROR | f1.console | [ERROR] 錯誤信息: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:57 | ERROR | f1.console | [ERROR] 分析執行失敗: 事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'
+2025-10-01 00:59:57 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '6', 'result': {'success': False, 'message': "事故統計摘要分析失敗: No module named 'CLI_modules.cli.analyzer.accident_statistics_summary'", 'function_id': '6'}}
+2025-10-01 01:00:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:00:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:00:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:00:22 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-01 01:00:22 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-01 01:03:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:03:14 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:04:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:04:06 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:04:06 | WARNING | f1.console | [WARNING] 執行嚴重程度分佈分析 (功能7)...
+2025-10-01 01:04:06 | WARNING | f1.console | 
+⚠️ 事故嚴重程度分佈分析 (Function 7):
+2025-10-01 01:04:06 | WARNING | f1.console | 
+⚠️ 嚴重程度詳細分佈:
+2025-10-01 01:04:06 | WARNING | f1.console | +----------+----------+--------+-------------+----------------------+
+| 嚴重程度 | 事故數量 | 百分比 |   風險等級  |         說明         |
++----------+----------+--------+-------------+----------------------+
+|  MEDIUM  |    3     | 50.0%  | 🟡 中等風險 | 需要調查或處罰的事件 |
+|   LOW    |    3     | 50.0%  |  🟢 低風險  |  輕微違規或技術問題  |
++----------+----------+--------+-------------+----------------------+
+2025-10-01 01:04:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:04:14 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:06:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:06:48 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:06:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:06:51 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:07:55 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:08:02 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:08:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:08:55 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:08:55 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:09:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:28 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:09:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:32 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:09:35 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:39 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:09:39 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:09:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:20:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:20:24 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:20:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:21:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:21:16 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:21:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:21:19 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:23:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:23:10 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:23:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:23:13 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:26:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:26:29 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:26:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:26:31 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:32:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:32:11 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:32:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 01:32:17 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 01:32:17 | WARNING | f1.console | [WARNING] 執行嚴重程度分佈分析 (功能7)...
+2025-10-01 07:03:39 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 07:03:40 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 07:03:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 07:04:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 07:04:15 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 07:04:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 07:56:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 07:56:14 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-01 08:11:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:24 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:24 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:24 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:33 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 08:11:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:11:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 08:40:03 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:09:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:51:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 09:52:02 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 12:49:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 12:54:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:39 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:45 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 13:10:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:10:52 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 13:10:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 13:11:01 | WARNING | f1.console |    [WARNING] 基於位置計算距離
+2025-10-01 13:11:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 15:04:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:44 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:45 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 20:04:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:45 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:04:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:01 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:05:01 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:05:01 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+�比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:05:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 找不到車手 None 的數據
+2025-10-01 20:07:18 | WARNING | f1.console | [WARNING] 無法找到車手 None 的最速圈，使用第1圈
+2025-10-01 20:07:18 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:07:18 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:07:18 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:07:19 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:09:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:17 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:10:17 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:10:17 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:10:18 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:10:18 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:10:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:22 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 20:10:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:10:32 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:17:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:17:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:04 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:04 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:04 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:04 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:19:05 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:19:05 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:30 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 20:31:30 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 20:31:30 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 20:31:31 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 20:31:31 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:20 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:20 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:20 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:20 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:22:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:22:21 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:22:21 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:22 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:22 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:38:23 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:38:23 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | ❌ 找不到車手 None 的數據
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:15 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:15 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:15 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:15 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:15 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:16 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:16 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:16 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-01 21:39:16 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-01 21:39:16 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:53 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-01 22:48:54 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:56:56 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 22:58:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-01 23:02:21 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:13:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:14:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:24:43 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:28:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:38 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:42 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:46 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:53 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:32:58 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-02 00:33:01 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:08 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 00:33:17 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'

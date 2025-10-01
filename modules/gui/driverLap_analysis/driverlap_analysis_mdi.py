@@ -3,9 +3,13 @@
 功能: 提供詳細的圈速分析，包括圈速趨勢、智能標記和輪胎策略時間軸
 """
 
-from typing import Dict, Any, List, Optional
+import os
+import time
+from typing import Dict, Any, List, Optional, Tuple
+
+import requests
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
-from PyQt5.QtCore import pyqtSignal, QObject
+from PyQt5.QtCore import pyqtSignal, QObject, QThread
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -13,6 +17,91 @@ from core.gui_i18n import tr
 # 導入基類
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+
+
+class DetailedLapAnalysisApiWorker(QThread):
+    """Background worker responsible for fetching detailed lap analysis data via REST API."""
+
+    progress = pyqtSignal(int)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(
+        self,
+        base_url: str,
+        params: Dict[str, Any],
+        *,
+        timeout: float = 75.0,
+        parent: Optional[QObject] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip("/")
+        self.params = dict(params)
+        self.timeout = float(timeout)
+
+    def run(self) -> None:  # pragma: no cover - executed in worker thread
+        try:
+            self.progress.emit(10)
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": 28,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+            }
+
+            driver = self.params.get("driver_filter")
+            if driver and str(driver).strip().upper() not in {"", "ALL", "ALL_DRIVERS"}:
+                query_params["driver1"] = str(driver).strip().upper()
+
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            if self.isInterruptionRequested():
+                return
+
+            self.progress.emit(40)
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"},
+            )
+
+            if self.isInterruptionRequested():
+                return
+
+            self.progress.emit(70)
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API response must be a JSON object")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API returned success=False"))
+
+            data = payload.get("data")
+            if data is None:
+                raise ValueError("API response missing 'data'")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "function_spec": payload.get("function_spec"),
+                "latency_ms": round(latency_ms, 2),
+                "endpoint": endpoint,
+            }
+
+            self.progress.emit(95)
+            self.success.emit({"data": data, "meta": meta})
+        except Exception as exc:  # pragma: no cover - propagated to GUI
+            self.failure.emit(str(exc))
+        finally:
+            self.progress.emit(100)
 
 
 class driverLapAnalysisDataManager(UniversalDataLoader):
@@ -29,7 +118,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             laptime_config = AnalysisConfig(
                 display_name="Detailed Lap Analysis",
                 debug_prefix="[F28_DATA]",
-                data_source="json",
+                data_source="api",
                 cli_function="28",  # CLI -f28: 詳細圈速分析
                 file_patterns=[
                     "detailed_laptime_analysis_{year}_{race}_{session}_{driver}.json",
@@ -41,7 +130,8 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 ],
                 search_directories=["json", "json_exports", "cache"],
                 supports_realtime=False,
-                required_params=["year", "race"]
+                required_params=["year", "race"],
+                api_endpoint="/api/v2/analysis/execute"
             )
             UniversalDataLoader.register_analysis_type("laptime", laptime_config)
             print(f"[F28_DATA] 已註冊 laptime 分析類型")
@@ -58,9 +148,27 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         
         # 載入狀態控制
         self._loading = False
-        self._last_load_params = None
-        self._cached_data = None  # 添加數據緩存
+        self._last_load_params: Optional[Tuple[Any, ...]] = None
+        self._cached_data: Optional[Dict[str, Any]] = None
         self._signals_connected = False  # 添加信號連接狀態標記
+        self._is_loading = False  # 與基類保持一致
+        self._pending_data_source: Optional[str] = None
+
+        # API 整合屬性
+        self._api_worker: Optional[DetailedLapAnalysisApiWorker] = None
+        self._api_timeout = float(os.getenv("F1T_LAPTIME_API_TIMEOUT", "75"))
+        self._api_base_url = self._determine_api_base_url()
+        self._api_enabled = self._is_api_enabled()
+        self._allow_local_fallback = self._resolve_local_fallback_policy()
+        self._current_api_params: Dict[str, Any] = {}
+        self._last_api_metadata: Dict[str, Any] = {}
+        self._last_data_source: Optional[str] = None
+        self._last_error: Optional[str] = None
+        self._api_progress: int = 0
+        self._cli_generation_attempted: bool = False
+        self._cli_worker = None
+        # 舊版模組可能仍然引用 cli_worker，保留相容屬性
+        self.cli_worker = None
         
         # 整合架構：直接繼承 UniversalDataLoader 功能
         # self.data_loader = driverLapUniversalDataLoader(parent=self)  # 分離架構（已廢棄）
@@ -68,137 +176,367 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         print(f"[LAPTIME_DATA_MANAGER] 詳細圈速分析數據管理器初始化完成")
         
     def load_data(self, **kwargs) -> bool:
-        """載入詳細圈速分析數據 - 委託給專門的數據載入器"""
+        """載入詳細圈速分析數據，優先使用 API，必要時回退到本地 JSON/CLI。"""
         try:
-            # 檢查是否與上次載入參數相同
-            current_params = (kwargs.get('year'), kwargs.get('race'), kwargs.get('session'))
-            print(f"[LAPTIME_DATA_MANAGER] 🔍 載入檢查: 當前參數={current_params}, 上次參數={self._last_load_params}, 載入中={self._loading}")
-            
-            # 如果參數相同且有有效數據，直接發射現有數據信號
-            if self._last_load_params == current_params and not self._loading:
-                print(f"[LAPTIME_DATA_MANAGER] ⚠️ 參數未變化，檢查是否有有效數據: {current_params}")
-                
-                # 檢查是否有有效的數據可以重用
-                if hasattr(self, '_cached_data') and self._cached_data:
-                    print(f"[LAPTIME_DATA_MANAGER] ✅ 發射緩存數據")
-                    # 直接發射緩存的數據
-                    self.data_loaded.emit(self._cached_data)
-                    return True
-                else:
-                    print(f"[LAPTIME_DATA_MANAGER] ⚠️ 無有效緩存數據，繼續載入流程")
-            
-            # 如果參數有變化，強制重置載入狀態
-            if self._last_load_params != current_params:
-                print(f"[LAPTIME_DATA_MANAGER] 🔄 參數變化檢測: {self._last_load_params} -> {current_params}")
-                self._loading = False  # 強制重置載入狀態
-                self._cached_data = None  # 清除舊的緩存數據
-                print(f"[LAPTIME_DATA_MANAGER] ✅ 載入狀態已重置為: {self._loading}")
-                
-            # 檢查是否正在載入中
-            if self._loading:
-                print(f"[LAPTIME_DATA_MANAGER] ⚠️ 數據正在載入中，跳過重複請求")
-                return True
-                
-            self._loading = True
-            self._last_load_params = current_params
-            
-            print(f"[LAPTIME_DATA_MANAGER] 🔄 開始載入數據: {kwargs}")
-            
-            # 提取參數
-            year = kwargs.get('year', 2025)
-            race = kwargs.get('race', 'Japan')
-            session = kwargs.get('session', 'R')
-            driver = kwargs.get('driver', 'all_drivers')
-            
-            print(f"[LAPTIME_DATA_MANAGER] 載入參數: {year} {race} {session} {driver}")
-            
-            # 整合架構：直接使用基類的 load_data 方法（like tire_analysis）
-            print(f"[LAPTIME_DATA_MANAGER] 使用整合架構載入數據")
-            
-            # 直接調用基類的 load_data 方法
-            success = super().load_data(
-                year=year,
-                race=race,
-                session=session,
-                driver=driver
+            params = self._normalize_load_params(kwargs)
+            cache_key = (params["year"], params["race"], params["session"], params.get("driver"))
+
+            self._debug(
+                f"load_data: params={params}, cached_key={self._last_load_params}, "
+                f"is_loading={self._is_loading}, api_enabled={self._api_enabled}"
             )
-            
-            if success:
-                print(f"[LAPTIME_DATA_MANAGER] ✅ 數據載入成功")
-            else:
-                print(f"[LAPTIME_DATA_MANAGER] ⚠️ 數據載入失敗")
-                self._reset_loading_state()
-                
-            return success
-                
-        except Exception as e:
-            print(f"[LAPTIME_DATA_MANAGER] ❌ 載入數據失敗: {e}")
+
+            if self._is_loading:
+                self._debug("load_data: already loading, ignore duplicate request")
+                return False
+
+            # 快取命中
+            if (
+                self._cached_data
+                and self._last_load_params == cache_key
+                and not params.get("force_refresh")
+            ):
+                self._debug("load_data: reuse cached data")
+                self._current_data = self._cached_data
+                self._last_data_source = self._last_data_source or "cache"
+                self.data_loaded.emit(self._cached_data)
+                return True
+
+            # 重置狀態
+            self._reset_loading_state()
+            self._loading = True
+            self._last_load_params = cache_key
+            self._current_api_params = params
+            self._last_error = None
+            self._cli_generation_attempted = False
+
+            if self._api_enabled:
+                self._debug("load_data: starting API worker")
+                self._is_loading = True
+                self._pending_data_source = "api"
+                self._start_api_request(params)
+                return True
+
+            self._debug("load_data: API disabled, falling back to local JSON")
+            self._pending_data_source = "local-json"
+            return self._load_via_local_json(params)
+
+        except Exception as exc:  # pragma: no cover - defensive logging for UI
+            self._error(f"load_data: unexpected failure -> {exc}")
             import traceback
             traceback.print_exc()
-            self.error_occurred.emit(str(e))
+            self._last_error = str(exc)
             self._reset_loading_state()
+            self.load_error.emit(str(exc))
             return False
-        
-    def _reset_loading_state(self):
-        """重置載入狀態"""
-        print(f"[LAPTIME_DATA_MANAGER] 🔄 重置載入狀態")
+
+    # ------------------------------------------------------------------
+    # API 與回退管理
+    # ------------------------------------------------------------------
+
+    def _normalize_load_params(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """標準化載入參數，補齊預設值並準備 API 所需欄位。"""
+        year = kwargs.get("year") or kwargs.get("current_year")
+        race = kwargs.get("race") or kwargs.get("current_race")
+        session = kwargs.get("session") or kwargs.get("current_session") or "R"
+        driver_raw = (
+            kwargs.get("driver")
+            or kwargs.get("driver1")
+            or kwargs.get("selected_driver")
+            or "all_drivers"
+        )
+
+        if year is None or race is None:
+            raise ValueError("載入詳細圈速分析需要提供 year 與 race 參數")
+
+        try:
+            year = int(year)
+        except (TypeError, ValueError):
+            raise ValueError(f"無效的年份參數: {year}")
+
+        race = str(race).strip()
+        session = str(session).strip().upper() or "R"
+
+        driver_str = str(driver_raw).strip()
+        if not driver_str or driver_str.lower() in {"all", "all_drivers", "*"}:
+            driver_for_files = "all_drivers"
+            selected_driver = None
+        else:
+            selected_driver = driver_str.upper()
+            driver_for_files = "all_drivers"
+
+        force_refresh = bool(kwargs.get("force_refresh") or kwargs.get("refresh"))
+
+        normalized = {
+            "year": year,
+            "race": race,
+            "session": session,
+            "driver": driver_for_files,
+            "selected_driver": selected_driver,
+            "force_refresh": force_refresh,
+        }
+
+        self._debug(f"_normalize_load_params -> {normalized}")
+        return normalized
+
+    def _is_api_enabled(self) -> bool:
+        """判斷是否啟用 API 模式。"""
+        disable_flag = os.getenv("F1T_DISABLE_LAPTIME_API", "").strip().lower()
+        if disable_flag in {"1", "true", "yes", "on"}:
+            return False
+        return True
+
+    def _determine_api_base_url(self) -> str:
+        """取得 API 基底網址，預設使用本機 FastAPI 服務。"""
+        override = os.getenv("F1T_API_BASE_URL") or os.getenv("F1T_LAPTIME_API_BASE")
+        base_url = (override or "http://127.0.0.1:8000").rstrip("/")
+        self._debug(f"API base URL: {base_url}")
+        return base_url
+
+    def _resolve_local_fallback_policy(self) -> bool:
+        """讀取環境變數設定，決定是否允許自動回退到 JSON/CLI。"""
+        flag = os.getenv("F1T_ALLOW_LAPTIME_JSON_FALLBACK", "1").strip().lower()
+        return flag not in {"0", "false", "no", "off"}
+
+    def set_local_fallback_allowed(self, allowed: bool) -> None:
+        """允許外部動態切換回退策略。"""
+        self._allow_local_fallback = bool(allowed)
+
+    def _start_api_request(self, params: Dict[str, Any]) -> None:
+        """啟動後台 API 請求，確保同一時間僅有單一 worker 執行。"""
+        self._stop_api_worker()
+
+        api_payload = {
+            "year": params["year"],
+            "race": params["race"],
+            "session": params["session"],
+        }
+
+        driver_filter = params.get("selected_driver")
+        allow_filter = os.getenv("F1T_LAPTIME_API_ALLOW_DRIVER_FILTER", "0").strip().lower() in {"1", "true", "yes", "on"}
+        if allow_filter and driver_filter:
+            api_payload["driver_filter"] = driver_filter
+
+        if params.get("force_refresh"):
+            api_payload["force_refresh"] = True
+
+        self._debug(f"_start_api_request -> payload={api_payload}")
+
+        self._api_worker = DetailedLapAnalysisApiWorker(
+            self._api_base_url,
+            api_payload,
+            timeout=self._api_timeout,
+            parent=self,
+        )
+        self._api_worker.progress.connect(self._on_api_progress)
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_error)
+        self._api_worker.finished.connect(self._cleanup_api_worker)
+        self._api_worker.start()
+
+        self.status_changed.emit("正在透過 API 取得詳細圈速分析數據...")
+        self.load_progress.emit(5)
+
+    def _on_api_progress(self, value: int) -> None:
+        self._api_progress = value
+        self.load_progress.emit(min(99, max(0, value)))
+
+    def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        self._debug("_on_api_success: 接收到 API 回應")
+
+        try:
+            raw_data = payload.get("data") if isinstance(payload, dict) else payload
+            meta = payload.get("meta", {}) if isinstance(payload, dict) else {}
+
+            if raw_data is None:
+                raise ValueError("API 回傳缺少數據內容")
+
+            if not self._validate_data_format(raw_data):
+                raise ValueError("API 回傳數據格式無法通過驗證")
+
+            self._pending_data_source = "api"
+            processed = self._process_data(raw_data)
+
+            self._cached_data = processed
+            self._current_data = processed
+            self._last_api_metadata = meta
+            self._last_data_source = "api"
+            self._reset_loading_state()
+            self.load_progress.emit(100)
+            self.status_changed.emit("API 數據載入完成")
+            self.data_loaded.emit(processed)
+        except Exception as exc:
+            self._error(f"_on_api_success: 數據處理失敗 -> {exc}")
+            self._last_error = str(exc)
+            if self._allow_local_fallback:
+                self._fallback_to_local("API 數據處理失敗，自動切換到本地 JSON")
+            else:
+                self.load_error.emit(str(exc))
+                self._reset_loading_state()
+
+    def _on_api_error(self, message: str) -> None:
+        self._error(f"_on_api_error: {message}")
+        self._last_error = message
+
+        if self._allow_local_fallback:
+            self._fallback_to_local("API 取得失敗，改用本地 JSON/CLI")
+        else:
+            self.load_error.emit(message)
+            self._reset_loading_state()
+
+    def _fallback_to_local(self, reason: str) -> None:
+        self._debug(f"_fallback_to_local: {reason}")
+        self.status_changed.emit(reason)
+        self._pending_data_source = "local-json"
+        self._load_via_local_json(self._current_api_params)
+
+    def _load_via_local_json(self, params: Dict[str, Any]) -> bool:
+        self._debug(f"_load_via_local_json -> {params}")
+        # 允許基類重新管理載入狀態
+        self._is_loading = False
+
+        local_kwargs = {
+            "year": params["year"],
+            "race": params["race"],
+            "session": params.get("session", "R"),
+            "driver": params.get("driver", "all_drivers") or "all_drivers",
+            "selected_driver": params.get("selected_driver"),
+        }
+
+        result = super().load_data(**local_kwargs)
+
+        if not result:
+            self._debug("_load_via_local_json: 無法啟動本地載入流程")
+            self._reset_loading_state()
+            self.load_error.emit("無法載入詳細圈速分析的本地資料")
+        else:
+            self.status_changed.emit("使用本地 JSON/CLI 取得詳細圈速分析數據")
+
+        return result
+
+    def _cleanup_api_worker(self) -> None:
+        worker = self._api_worker
+        if not worker:
+            return
+
+        self._api_worker = None
+
+        for signal, slot in (
+            (worker.progress, self._on_api_progress),
+            (worker.success, self._on_api_success),
+            (worker.failure, self._on_api_error),
+            (worker.finished, self._cleanup_api_worker),
+        ):
+            try:
+                signal.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
+
+        worker.setParent(None)
+        worker.deleteLater()
+
+    def _stop_api_worker(self) -> None:
+        worker = self._api_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._debug("_stop_api_worker: requesting interruption")
+            worker.requestInterruption()
+            if not worker.wait(2000):
+                self._debug("_stop_api_worker: worker timeout, forcing terminate()")
+                worker.terminate()
+                worker.wait(200)
+
+        self._cleanup_api_worker()
+
+    def _reset_loading_state(self) -> None:
         self._loading = False
-        print(f"[LAPTIME_DATA_MANAGER] ✅ 載入狀態重置完成: loading={self._loading}")
-        
-    def _on_data_loaded(self, data):
-        """處理專門載入器的數據載入完成信號"""
-        try:
-            print(f"[LAPTIME_DATA_MANAGER] 📥 接收到載入器數據")
-            print(f"   - 數據類型: {type(data)}")
-            if isinstance(data, dict):
-                print(f"   - 數據鍵: {list(data.keys())}")
-            
-            # 處理數據並發出信號給 MDI
-            processed_data = self.process_loaded_data(data)
-            
-            # 緩存處理後的數據
-            self._cached_data = processed_data
-            print(f"[LAPTIME_DATA_MANAGER] 💾 數據已緩存")
-            
-            self.data_loaded.emit(processed_data)
-            print(f"[LAPTIME_DATA_MANAGER] ✅ 已發出 data_loaded 信號")
-            
-            # 重置載入狀態
-            self._reset_loading_state()
-            
-        except Exception as e:
-            print(f"[LAPTIME_DATA_MANAGER] ❌ 數據處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            self.error_occurred.emit(str(e))
-            self._reset_loading_state()
-    
-    def _on_load_error(self, error_message):
-        """處理專門載入器的載入錯誤信號"""
-        try:
-            print(f"[LAPTIME_DATA_MANAGER] ❌ 載入器報告錯誤: {error_message}")
-            
-            # 重置載入狀態 - 關鍵修復點
-            self._reset_loading_state()
-            
-            # 轉發錯誤信號給 MDI
-            self.error_occurred.emit(error_message)
-            
-        except Exception as e:
-            print(f"[LAPTIME_DATA_MANAGER] ❌ 錯誤處理失敗: {e}")
-            self._reset_loading_state()
-    
-    def _reset_loading_state(self):
-        """重置載入狀態 - 統一的狀態重置方法"""
-        try:
-            print(f"[LAPTIME_DATA_MANAGER] 🔄 重置載入狀態")
-            self._loading = False
-            # 注意：不清除 _last_load_params，這樣可以避免重複載入相同的錯誤
-            print(f"[LAPTIME_DATA_MANAGER] ✅ 載入狀態重置完成: loading={self._loading}")
-        except Exception as e:
-            print(f"[LAPTIME_DATA_MANAGER] ❌ 重置載入狀態失敗: {e}")
-            # 強制重置，即使出現異常
-            self._loading = False
+        self._is_loading = False
+
+    def get_last_data_source(self) -> Optional[str]:
+        """回傳最近一次資料載入來源 (api/local-json/cli-json/cache)。"""
+        return self._last_data_source
+
+    # ------------------------------------------------------------------
+    # 終止/清理流程
+    # ------------------------------------------------------------------
+
+    def _on_cli_progress_updated(self, message: str) -> None:
+        self._debug(f"[CLI] {message}")
+
+    def _on_cli_output_received(self, output: str) -> None:
+        self._debug(f"📤 CLI 輸出: {output}")
+
+    def _on_cli_analysis_completed(self, success: bool, message: str) -> None:
+        self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
+        if success:
+            self.status_changed.emit("CLI 生成完成，正在載入詳細圈速分析數據")
+        else:
+            self.load_error.emit(message)
+
+    def _on_cli_worker_finished(self) -> None:
+        self._debug("_on_cli_worker_finished: CLI worker finished")
+        self._cleanup_cli_worker()
+
+    def _cleanup_cli_worker(self) -> None:
+        worker = self._cli_worker
+        if not worker:
+            return
+
+        self._cli_worker = None
+        self.cli_worker = None
+
+        for signal, slot in (
+            (worker.finished, self._on_cli_worker_finished),
+            (worker.analysis_completed, self._on_cli_analysis_completed),
+            (worker.output_received, self._on_cli_output_received),
+            (worker.progress_updated, self._on_cli_progress_updated),
+        ):
+            try:
+                signal.disconnect(slot)
+            except (TypeError, RuntimeError):
+                pass
+
+        worker.setParent(None)
+        worker.deleteLater()
+
+    def _stop_cli_worker(self) -> None:
+        worker = self._cli_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._debug("_stop_cli_worker: requesting CLI worker stop")
+            try:
+                worker.stop()
+            except Exception as exc:
+                self._error(f"_stop_cli_worker: stop() raised -> {exc}")
+
+            if worker.isRunning() and not worker.wait(2000):
+                self._debug("_stop_cli_worker: worker timeout, forcing terminate()")
+                worker.terminate()
+                worker.wait(200)
+
+        self._cleanup_cli_worker()
+
+    def stop_loading(self) -> None:
+        """外部停止任何正在進行的載入或分析流程。"""
+        self._debug("stop_loading: 開始終止所有工作器")
+        self._reset_loading_state()
+        self._stop_api_worker()
+        self._stop_cli_worker()
+
+    def cleanup(self) -> None:
+        """模組清理鉤子：確保離開時不留任何背景執行緒。"""
+        self._debug("cleanup: 釋放詳細圈速分析管理器資源")
+        self.stop_loading()
+        self._cached_data = None
+        self._current_data = None
+
+    def get_last_api_metadata(self) -> Dict[str, Any]:
+        """取得最近一次 API 成功回應的詳細資訊。"""
+        return dict(self._last_api_metadata)
         
     def set_parameters(self, year: str, race: str, session: str):
         """設置分析參數"""
@@ -262,27 +600,37 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         try:
             if not isinstance(data, dict):
                 raise ValueError("數據格式不正確：必須是字典格式")
-                
-            # 儲存完整的原始數據
-            self.data = data
-            
-            # 支援 Function 28 JSON 格式的數據解析
-            if "all_drivers_detailed_laptime" in data:
-                # CLI -f28 標準格式
-                self.detailed_laptime_data = data["all_drivers_detailed_laptime"]
-                print("使用 all_drivers_detailed_laptime 格式 (CLI -f28)")
-            elif "detailed_laptime_analysis" in data:
-                # 另一種可能的格式
-                self.detailed_laptime_data = data["detailed_laptime_analysis"]
-                print("使用 detailed_laptime_analysis 格式")
-            else:
+
+            normalized_data, driver_payloads, driver_codes = self._normalize_driver_payload(data)
+
+            if not driver_payloads:
                 raise ValueError("找不到支援的詳細圈速分析數據格式")
-                
+
+            # 儲存完整的原始數據與車手資訊
+            self.data = normalized_data
+            self.detailed_laptime_data = driver_payloads
+
+            self.available_drivers = driver_codes
+
+            if driver_codes:
+                print(f"使用 {len(driver_codes)} 位車手詳細圈速數據：{driver_codes}")
+
+            preferred_driver = None
+            if isinstance(self._current_api_params, dict):
+                preferred_driver = self._current_api_params.get("selected_driver")
+
+            if preferred_driver and preferred_driver in driver_codes:
+                self.selected_drivers = [preferred_driver]
+            elif driver_codes:
+                self.selected_drivers = [driver_codes[0]]
+            else:
+                self.selected_drivers = []
+
             # 獲取摘要數據
-            if "analysis_info" in data:
-                self.analysis_stats = data["analysis_info"]
-            elif "metadata" in data:
-                self.analysis_stats = data["metadata"]
+            if "analysis_info" in normalized_data:
+                self.analysis_stats = normalized_data["analysis_info"]
+            elif "metadata" in normalized_data:
+                self.analysis_stats = normalized_data["metadata"]
                 print("使用 metadata 作為摘要數據")
             else:
                 self.analysis_stats = {}
@@ -293,17 +641,88 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 "summary": self.analysis_stats,
                 "metadata": data.get("metadata", {}),
                 "analysis_mode": data.get("analysis_mode", "all"),
-                "drivers_analyzed": data.get("drivers_analyzed", list(self.detailed_laptime_data.keys())),
+                "drivers_analyzed": normalized_data.get("drivers_analyzed", driver_codes or list(self.detailed_laptime_data.keys())),
+                "selected_drivers": list(self.selected_drivers),
                 "charts_data": self._prepare_detailed_laptime_chart_data()
             }
             
             print(f"成功處理 {len(self.detailed_laptime_data)} 車手詳細圈速數據")
             
+            self._cached_data = processed_data
+            self._current_data = processed_data
+            if self._pending_data_source:
+                self._last_data_source = self._pending_data_source
+            elif not self._last_data_source:
+                self._last_data_source = "local-json"
+            self._pending_data_source = None
+            self._loading = False
+
             return processed_data
             
         except Exception as e:
             print(f"數據處理失敗: {e}")
+            self._pending_data_source = None
             return {"error": str(e), "raw_data": data}
+
+    def _normalize_driver_payload(
+        self, raw_data: Dict[str, Any]
+    ) -> Tuple[Dict[str, Any], Dict[str, Any], List[str]]:
+        """確保數據包含標準的多車手結構，支援單車手 JSON 轉換。"""
+
+        normalized = raw_data
+        driver_payloads: Dict[str, Any] = {}
+
+        if isinstance(normalized.get("all_drivers_detailed_laptime"), dict):
+            driver_payloads = normalized["all_drivers_detailed_laptime"]
+        elif isinstance(normalized.get("detailed_laptime_analysis"), dict):
+            driver_payloads = normalized["detailed_laptime_analysis"]
+            normalized["all_drivers_detailed_laptime"] = driver_payloads
+        elif normalized.get("driver") and isinstance(normalized.get("detailed_lap_data"), list):
+            driver_code = str(normalized.get("driver")).strip().upper()
+            if not driver_code:
+                driver_code = "UNKNOWN"
+
+            driver_payload = {
+                "driver": driver_code,
+                "success": normalized.get("success", True),
+                "total_laps": normalized.get("total_laps"),
+                "detailed_lap_data": normalized.get("detailed_lap_data", []),
+                "smart_markers_summary": normalized.get("smart_markers_summary", {}),
+                "summary_statistics": normalized.get("summary_statistics", {}),
+                "analysis_metadata": normalized.get("analysis_metadata", {}),
+            }
+
+            driver_payloads = {driver_code: driver_payload}
+            normalized["all_drivers_detailed_laptime"] = driver_payloads
+            normalized["detailed_laptime_analysis"] = driver_payloads
+            normalized.setdefault("drivers_analyzed", [driver_code])
+
+            if "analysis_info" not in normalized:
+                normalized["analysis_info"] = {
+                    "total_drivers": 1,
+                    "drivers": [driver_code],
+                    "summary_statistics": normalized.get("summary_statistics", {}),
+                    "smart_markers_summary": normalized.get("smart_markers_summary", {}),
+                }
+            else:
+                info = normalized["analysis_info"]
+                if isinstance(info, dict):
+                    info.setdefault("total_drivers", 1)
+                    info.setdefault("drivers", [driver_code])
+
+            metadata = normalized.get("metadata")
+            if not isinstance(metadata, dict):
+                metadata = {}
+            metadata.setdefault("driver", driver_code)
+            metadata.setdefault("drivers", [driver_code])
+            normalized["metadata"] = metadata
+        else:
+            driver_payloads = {}
+
+        driver_codes = list(driver_payloads.keys())
+        if driver_codes and "drivers_analyzed" not in normalized:
+            normalized["drivers_analyzed"] = driver_codes
+        return normalized, driver_payloads, driver_codes
     
     def _process_detailed_laptime_analysis_data(self) -> Dict[str, List]:
         """處理詳細圈速分析數據"""
@@ -392,7 +811,8 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             "all_drivers_detailed_laptime": self.detailed_laptime_data,
             "detailed_laptime_analysis": self.detailed_laptime_data,
             "analysis_info": self.data.get("analysis_info", {}),
-            "metadata": self.data.get("metadata", {})
+            "metadata": self.data.get("metadata", {}),
+            "selected_drivers": list(self.selected_drivers),
         }
         
         print(f"圖表數據已準備：{len(chart_data['drivers_analyzed'])} 個車手")
@@ -423,73 +843,70 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
     
     def _build_filename_patterns(self, **kwargs) -> List[str]:
         """構建詳細圈速分析檔案名稱搜尋模式 (Function 28)"""
-        year = kwargs.get('year', '*')
-        race = kwargs.get('race', '*')
-        session = kwargs.get('session', 'R')
-        
-        # 只搜尋全車手數據檔案
-        patterns = [
-            f"detailed_laptime_analysis_{year}_{race}_{session}_all_drivers.json"
+        year = kwargs.get("year", "*")
+        race = kwargs.get("race", "*")
+        session = kwargs.get("session", "R")
+        selected_driver = kwargs.get("selected_driver")
+
+        race_safe = str(race).strip()
+
+        patterns: List[str] = [
+            f"detailed_laptime_analysis_{year}_{race_safe}_{session}.json",
+            f"detailed_laptime_analysis_{year}_{race_safe}_{session}_all_drivers.json",
+            f"detailed_driver_laptime_{year}_{race_safe}_{session}.json",
+            f"detailed_laptime_analysis_{year}_{race_safe}_{session}.pkl",
         ]
-        
+
+        if selected_driver:
+            driver_upper = str(selected_driver).strip().upper()
+            patterns.extend([
+                f"detailed_laptime_analysis_{year}_{race_safe}_{session}_{driver_upper}.json",
+                f"detailed_driver_laptime_{year}_{race_safe}_{session}_{driver_upper}.json",
+                f"detailed_laptime_analysis_{year}_{race_safe}_{session}_{driver_upper}.pkl",
+            ])
+
         return patterns
     
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """透過 CLI -f28 工具生成詳細圈速分析數據"""
+        """透過 CLI -f28 工具生成詳細圈速分析數據。"""
         try:
-            year = kwargs.get('year')
-            race = kwargs.get('race')
-            session = kwargs.get('session', 'R')
-            # driver 參數移除，永遠讀取全車手數據
-            
-            self._debug(f"🚀 啟動 CLI 詳細圈速分析數據生成")
+            year = kwargs.get("year")
+            race = kwargs.get("race")
+            session = kwargs.get("session", "R")
+
+            self._debug("🚀 啟動 CLI 詳細圈速分析數據生成")
             self._debug(f"   參數: year={year}, race={race}, session={session}")
-            
-            # 檢查配置中的 CLI 函數
+
             cli_function = self.config.cli_function
             if not cli_function:
                 self._debug("❌ 配置中沒有 CLI 函數")
                 return False
-            
-            # 使用標準化的 CliAnalysisWorker
-            force_mode = 28  # 功能28: 詳細圈速分析
-            
+
+            force_mode = 28  # 功能 28: 詳細圈速分析
             self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
-            
-            # 創建並啟動 CLI 工作器
-            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
-            
-            # 連接信號
-            def on_cli_finished():
-                self._debug("✅ CLI 工作器執行完成")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_completed(success, message):
-                self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_output(output):
-                self._debug(f"📤 CLI 輸出: {output}")
-            
-            # 連接信號 (統一使用直接連接方式)
-            self.cli_worker.finished.connect(on_cli_finished)
-            self.cli_worker.analysis_completed.connect(on_cli_completed)
-            self.cli_worker.output_received.connect(on_cli_output)  # 統一使用 output_received
-            
-            # 啟動工作器
-            self.cli_worker.start()
-            self._debug(f"✅ CLI 工作器已啟動")
-            
+
+            self._stop_cli_worker()
+
+            self._cli_generation_attempted = True
+            self._pending_data_source = "cli-json"
+            worker = self.create_cli_worker(year, race, session, force_mode)
+            worker.finished.connect(self._on_cli_worker_finished)
+            worker.analysis_completed.connect(self._on_cli_analysis_completed)
+            worker.output_received.connect(self._on_cli_output_received)
+            worker.progress_updated.connect(self._on_cli_progress_updated)
+
+            self._cli_worker = worker
+            self.cli_worker = worker  # 相容舊版屬性
+            worker.start()
+
+            self._debug("✅ CLI 工作器已啟動")
             return True
-                
+
         except Exception as e:
             self._debug(f"CLI 執行異常: {e}")
             import traceback
             traceback.print_exc()
+            self._stop_cli_worker()
             return False
     
     def _validate_data_format(self, raw_data: Any) -> bool:

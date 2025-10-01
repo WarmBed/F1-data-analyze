@@ -88,6 +88,24 @@ class AnalysisRequest(BaseModel):
         True,
         description="是否包含遙測數據"
     )
+
+    lap: Optional[int] = Field(
+        None,
+        ge=1,
+        description="統一圈數參數 (單圈分析)"
+    )
+
+    lap1: Optional[int] = Field(
+        None,
+        ge=1,
+        description="車手1圈數 (遙測比較分析用)"
+    )
+
+    lap2: Optional[int] = Field(
+        None,
+        ge=1,
+        description="車手2圈數 (遙測比較分析用)"
+    )
     
     @field_validator('driver1', 'driver2', mode='before')
     @classmethod
@@ -146,6 +164,8 @@ class AnalysisRequest(BaseModel):
                 "session": "R",
                 "driver1": "VER",
                 "driver2": "LEC",
+                "lap1": 1,
+                "lap2": 1,
                 "force_refresh": False,
                 "include_telemetry": True
             }

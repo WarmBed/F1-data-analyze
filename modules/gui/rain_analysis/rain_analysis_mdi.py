@@ -20,14 +20,19 @@ Version: 1.0.0
 
 import sys
 import os
+import json
+import time
+from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QGroupBox, QGridLayout, QPushButton, QComboBox,
     QCheckBox, QSpinBox, QSlider
 )
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QFont
+
+import requests
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -43,6 +48,71 @@ except ImportError:
     from modules.gui.base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
 
 
+class RainAnalysisApiWorker(QThread):
+    """Background worker that fetches rain analysis data from the REST API."""
+
+    progress = pyqtSignal(int)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 20.0, parent=None):
+        super().__init__(parent)
+        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.params = dict(params)
+        self.timeout = timeout
+
+    def run(self):
+        try:
+            self.progress.emit(20)
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": 1,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+            }
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(70)
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API response must be a JSON object")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API returned success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API response missing 'data' object")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "function_spec": payload.get("function_spec"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+            }
+
+            self.progress.emit(90)
+            self.success.emit({"data": data, "meta": meta})
+        except Exception as exc:
+            self.failure.emit(str(exc))
+        finally:
+            self.progress.emit(100)
+
+
 class RainAnalysisDataManager(UniversalDataLoader):
     """下雨分析數據管理器"""
     
@@ -52,8 +122,11 @@ class RainAnalysisDataManager(UniversalDataLoader):
             rain_config = AnalysisConfig(
                 display_name="下雨分析",
                 debug_prefix="[RAIN_ANALYSIS]",
-                data_source="json",
+                data_source="api",
                 cli_function="run_rain_intensity_analysis_json",
+                api_endpoint="/api/v2/analysis/execute",
+                api_function_id=1,
+                api_timeout=60.0,
                 file_patterns=[
                     "enhanced_rain_analysis_{year}_{race}_{session}.json",
                     "rain_analysis_{year}_{race}_{session}.json",
@@ -71,6 +144,16 @@ class RainAnalysisDataManager(UniversalDataLoader):
         self.weather_data = {}
         self.lap_weather_mapping = {}
         self.summary_stats = {}
+        self._api_base_url = self._determine_api_base_url()
+        self._api_worker: Optional[RainAnalysisApiWorker] = None
+        self._pending_params: Dict[str, Any] = {}
+        self._last_data_source: str = "unknown"
+        self._last_api_meta: Dict[str, Any] = {}
+        self._allow_local_fallback, self._fallback_policy_reason = self._resolve_local_fallback_policy()
+        fallback_state = "啟用" if self._allow_local_fallback else "停用"
+        self._debug(
+            f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
+        )
         
         print(f"[RAIN_DATA_MANAGER] 初始化完成, 搜索目錄: {self.config.search_directories}")
         print(f"[RAIN_DATA_MANAGER] 文件模式: {self.config.file_patterns}")
@@ -85,6 +168,208 @@ class RainAnalysisDataManager(UniversalDataLoader):
             self._debug("參數不完整：需要年份、比賽和賽段")
             return False
         return True
+    
+    def _determine_api_base_url(self) -> str:
+        """Resolve the API base URL from environment variables or configuration."""
+        env_url = os.getenv("F1_API_BASE_URL")
+        if env_url:
+            return str(env_url).rstrip('/')
+
+        config_path = Path('config/api_config.json')
+        if config_path.exists():
+            try:
+                config_data = json.loads(config_path.read_text(encoding='utf-8'))
+                api_url = config_data.get('api_base_url')
+                if api_url:
+                    return str(api_url).rstrip('/')
+            except Exception as exc:
+                self._debug(f"讀取 api_config.json 失敗: {exc}")
+
+        return "http://127.0.0.1:8000"
+
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        """Determine whether local JSON fallback is permitted."""
+        env_value = os.getenv("F1T_ALLOW_RAIN_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"環境變數 F1T_ALLOW_RAIN_JSON_FALLBACK={env_value}"
+            return False, f"環境變數 F1T_ALLOW_RAIN_JSON_FALLBACK={env_value}"
+        return False, "預設策略 (API 優先，不允許本地回退)"
+
+    def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
+        """Manually toggle whether local JSON fallback is allowed."""
+        self._allow_local_fallback = bool(allowed)
+        self._fallback_policy_reason = reason or "手動覆寫"
+        state = "啟用" if self._allow_local_fallback else "停用"
+        self._debug(f"本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+
+    def load_data_from_local(self, **kwargs) -> bool:
+        """Force loading data via the legacy local JSON workflow for diagnostics."""
+        previous_state = self._allow_local_fallback
+        previous_reason = self._fallback_policy_reason
+        try:
+            self._allow_local_fallback = True
+            self._fallback_policy_reason = "手動診斷模式"
+            self._debug("以手動模式使用本地 JSON 後備流程")
+            return super().load_data(**kwargs)
+        finally:
+            self._allow_local_fallback = previous_state
+            self._fallback_policy_reason = previous_reason
+
+    def load_data(self, **kwargs) -> bool:
+        """載入降雨分析資料，優先透過 API，失敗時回退本地流程。"""
+        if self.config.data_source != "api":
+            return super().load_data(**kwargs)
+
+        if self._is_loading:
+            self._debug("已有載入請求執行中，忽略新的請求")
+            return False
+
+        if not self._validate_load_parameters(kwargs):
+            self._error("API 載入參數驗證失敗")
+            self.load_error.emit("載入參數不正確")
+            return False
+
+        self._is_loading = True
+        self._pending_params = dict(kwargs)
+        self._api_base_url = self._determine_api_base_url()
+
+        self._debug(f"透過 API 載入降雨資料: base_url={self._api_base_url}, params={self._pending_params}")
+        self.load_progress.emit(5)
+        self.status_changed.emit("正在透過 API 載入降雨分析資料...")
+
+        try:
+            self._start_api_request(self._pending_params)
+            return True
+        except Exception as exc:
+            self._error(f"啟動 API 請求失敗: {exc}")
+            self._is_loading = False
+            self.status_changed.emit("API 載入失敗，改用本地資料")
+            return super().load_data(**kwargs)
+
+    def set_api_base_url(self, base_url: Optional[str]) -> None:
+        """Allows external callers to override the API base URL."""
+        if base_url:
+            self._api_base_url = str(base_url).rstrip('/')
+            self._debug(f"API base URL 更新為 {self._api_base_url}")
+
+    def _start_api_request(self, params: Dict[str, Any]) -> None:
+        """Spawn the background worker that contacts the REST API."""
+        self._cleanup_api_worker()
+
+        worker_params = {
+            "year": params.get("year"),
+            "race": params.get("race"),
+            "session": params.get("session"),
+            "force_refresh": params.get("force_refresh", False),
+        }
+
+        timeout = getattr(self.config, "api_timeout", 60.0)
+        self._api_worker = RainAnalysisApiWorker(self._api_base_url, worker_params, timeout=timeout, parent=self)
+        self._api_worker.progress.connect(self._on_api_progress)
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_error)
+        self._api_worker.finished.connect(self._cleanup_api_worker)
+        self._api_worker.start()
+
+    def _on_api_progress(self, value: int) -> None:
+        try:
+            bounded = max(0, min(int(value), 100))
+            self.load_progress.emit(bounded)
+        except Exception:
+            pass
+
+    def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        try:
+            raw_data = payload.get("data")
+            meta = payload.get("meta", {})
+            self._last_api_meta = meta or {}
+            self._last_data_source = "api"
+
+            if not self._validate_data_format(raw_data):
+                raise ValueError("API 回傳數據格式不符合預期")
+
+            processed_data = self._process_data(raw_data)
+            if isinstance(processed_data, dict):
+                metadata = processed_data.setdefault("metadata", {})
+                metadata.setdefault("data_source", "api")
+                if self._last_api_meta:
+                    metadata["api"] = self._last_api_meta
+
+            self._current_data = processed_data
+            self._is_loading = False
+            self.load_progress.emit(100)
+            self.status_changed.emit("已從 API 載入降雨分析資料")
+            self.data_loaded.emit(processed_data)
+
+        except Exception as exc:
+            self._error(f"處理 API 數據失敗: {exc}")
+            self._is_loading = False
+            self.status_changed.emit("API 資料格式錯誤，改用本地資料")
+            self._fallback_to_local(str(exc))
+
+    def _on_api_error(self, message: str) -> None:
+        self._error(f"API 請求失敗: {message}")
+        self._is_loading = False
+        self.status_changed.emit("API 請求失敗，改用本地資料")
+        self._fallback_to_local(message)
+
+    def _fallback_to_local(self, reason: str) -> None:
+        params = self._pending_params or {}
+        if not params:
+            self.load_error.emit(f"API 載入失敗: {reason}")
+            return
+
+        if not self._allow_local_fallback:
+            self._last_data_source = "local-fallback-disabled"
+            self._last_api_meta = {}
+            message = (
+                "API 載入失敗，且本地 JSON 後備已被策略停用。"
+                " 如需啟用，請設定環境變數 F1T_ALLOW_RAIN_JSON_FALLBACK=1 或使用 set_local_fallback_allowed。"
+            )
+            self._debug(f"本地 JSON 後備被阻擋: {reason}")
+            self._is_loading = False
+            self.status_changed.emit("本地 JSON 後備已停用，請檢查 API 或手動啟用後備流程。")
+            self.load_error.emit(message)
+            return
+
+        self._last_data_source = "local-json"
+        self._last_api_meta = {}
+        self._debug(f"啟動本地 JSON/CLI 後備流程: {reason}")
+        self.status_changed.emit("使用本地 JSON/CLI 後備載入降雨資料...")
+        self.load_error.emit(f"API 載入失敗，使用本地資料: {reason}")
+        super().load_data(**params)
+
+    def _cleanup_api_worker(self) -> None:
+        if self._api_worker:
+            if self._api_worker.isRunning():
+                self._api_worker.requestInterruption()
+                self._api_worker.wait(200)
+            try:
+                self._api_worker.progress.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.success.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.failure.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.finished.disconnect()
+            except Exception:
+                pass
+            self._api_worker.deleteLater()
+            self._api_worker = None
+
+    def get_last_data_source(self) -> str:
+        return getattr(self, "_last_data_source", "unknown")
+
+    def get_last_api_metadata(self) -> Dict[str, Any]:
+        return getattr(self, "_last_api_meta", {})
         
     def _build_filename_patterns(self, year: str, race: str, session: str, **kwargs) -> List[str]:
         """構建檔案名稱模式"""
@@ -190,6 +475,15 @@ class RainAnalysisDataManager(UniversalDataLoader):
                 "metadata": data.get("metadata", {}),
                 "charts_data": self._prepare_chart_data()
             }
+
+            metadata = processed_data.setdefault("metadata", {})
+            if self._last_data_source:
+                metadata["data_source"] = self._last_data_source
+            if self._last_data_source == "api" and self._last_api_meta:
+                existing_api_meta = metadata.get("api", {})
+                merged_meta = dict(existing_api_meta)
+                merged_meta.update(self._last_api_meta)
+                metadata["api"] = merged_meta
             
             self._debug(f"成功處理 {len(self.lap_weather_mapping)} 圈天氣數據")
             
@@ -464,11 +758,15 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
                 
                 # 如果有數據，更新圖表
                 if result and hasattr(self, 'chart_widget') and self.chart_widget:
-                    data = self.data_manager._prepare_chart_data()
-                    if data:
+                    current_data = self.data_manager.get_current_data()
+                    charts_payload = None
+                    if current_data and isinstance(current_data, dict):
+                        charts_payload = current_data.get("charts_data")
+                    if charts_payload is None:
+                        charts_payload = self.data_manager._prepare_chart_data()
+                    if charts_payload:
                         print(f"[RAIN_MDI] 更新圖表數據...")
-                        # 包裝數據格式以符合圖表組件的期望
-                        chart_data = {"charts_data": data}
+                        chart_data = {"charts_data": charts_payload}
                         self.chart_widget.update_data(chart_data)
             
             print(f"[RAIN_MDI] 參數更新完成")
@@ -602,7 +900,7 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         try:
             rain_summary = self.data_manager.get_rain_summary()
             
-            return {
+            summary = {
                 "module": "下雨分析",
                 "parameters": {
                     "year": self.current_year,
@@ -617,6 +915,13 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
                 },
                 "generated_at": self.get_current_timestamp()
             }
+            data_source = getattr(self.data_manager, "get_last_data_source", lambda: "unknown")()
+            summary["data_source"] = data_source
+            if data_source == "api":
+                api_meta = getattr(self.data_manager, "get_last_api_metadata", lambda: {})()
+                if api_meta:
+                    summary["api_meta"] = api_meta
+            return summary
             
         except Exception as e:
             self._debug(f"獲取分析摘要失敗: {str(e)}")

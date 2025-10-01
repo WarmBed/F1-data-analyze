@@ -12,6 +12,22 @@ import pandas as pd
 from datetime import datetime
 from prettytable import PrettyTable
 
+
+def _sanitize_token(value, default="Unknown"):
+    """將文字轉換為檔名安全的格式。"""
+
+    if value is None:
+        return default
+
+    token = str(value).strip()
+    if not token:
+        return default
+
+    token = token.replace(" ", "_")
+    sanitized = "".join(ch if ch.isalnum() or ch in {"_", "-"} else "_" for ch in token)
+    sanitized = sanitized.strip("_")
+    return sanitized or default
+
 def generate_cache_key(session_info):
     """生成快取鍵值"""
     return f"all_incidents_summary_{session_info.get('year', 2024)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
@@ -809,17 +825,44 @@ def display_all_incidents_summary(data):
 def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
-    
-    # 🔧 修改：移除時間戳，簡化檔案名稱格式
-    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
-    filename = f"all_incidents_summary_{session_info.get('year', 2024)}_{event_name}.json"
+
+    if session_info is None:
+        session_info = {}
+
+    year = session_info.get('year', 2024)
+    race_raw = session_info.get('event_name') or session_info.get('race') or 'Unknown'
+    session_raw = (
+        session_info.get('session_type')
+        or session_info.get('session')
+        or 'R'
+    )
+
+    race_token = _sanitize_token(race_raw, 'Unknown')
+    session_token = _sanitize_token(session_raw, 'R').upper()
+
+    filename = f"all_incidents_summary_{year}_{race_token}_{session_token}.json"
     filepath = os.path.join("json", filename)
-    
+
+    legacy_filename = f"all_incidents_summary_{year}_{race_token}.json"
+    legacy_path = os.path.join("json", legacy_filename)
+    if os.path.exists(legacy_path) and legacy_path != filepath:
+        try:
+            os.replace(legacy_path, filepath)
+            print(f"♻️ 已重新命名舊版檔案: {legacy_filename} -> {filename}")
+        except Exception as legacy_error:
+            print(f"⚠️ 舊版檔案重新命名失敗: {legacy_error}")
+
+    normalized_session_info = dict(session_info or {})
+    normalized_session_info.setdefault('event_name', race_raw)
+    normalized_session_info.setdefault('race', race_raw)
+    normalized_session_info['session_type'] = session_token
+    normalized_session_info['year'] = year
+
     json_result = {
         "function_id": 8,
         "function_name": "All Incidents Summary",
         "analysis_type": "all_incidents_summary",
-        "session_info": session_info,
+        "session_info": normalized_session_info,
         "timestamp": datetime.now().isoformat(),
         "data": data
     }

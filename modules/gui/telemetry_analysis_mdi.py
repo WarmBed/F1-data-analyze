@@ -12,7 +12,11 @@ import datetime
 import traceback
 import threading
 import subprocess
-from typing import Dict, List, Any, Optional
+import time
+from pathlib import Path
+from typing import Dict, List, Any, Optional, Tuple
+
+import requests
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -35,6 +39,71 @@ except ImportError:
     class IAnalysisModule(QObject):
         def __init__(self, parent=None):
             super().__init__(parent)
+
+
+class TelemetryAnalysisApiWorker(QThread):
+    """背景 API worker，用於載入遙測分析資料 (Function 12)。"""
+
+    progress = pyqtSignal(int, str)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0, parent=None):
+        super().__init__(parent)
+        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.params = dict(params)
+        self.timeout = timeout
+
+    def run(self) -> None:
+        try:
+            self.progress.emit(12, "呼叫 API 取得遙測分析資料...")
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": 12,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+            }
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(55, "API 回應解析中...")
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API 回傳必須為 JSON 物件")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API 回傳 success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API 回傳缺少 data 欄位")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "function_spec": payload.get("function_spec"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+            }
+
+            self.progress.emit(90, "API 遙測分析載入完成")
+            self.success.emit({"data": data, "meta": meta})
+        except Exception as exc:
+            self.failure.emit(str(exc))
+        finally:
+            self.progress.emit(100, "API 任務結束")
 
 
 class TelemetryDataManager(QObject):
@@ -62,6 +131,14 @@ class TelemetryDataManager(QObject):
         self.current_data = {}
         self._is_loading = False
         self._generation_params = None
+        self._pending_params: Dict[str, Any] = {}
+        self._cli_generation_context: Dict[str, Any] = {}
+        self._api_base_url = self._determine_api_base_url()
+        self._api_timeout = 75.0
+        self._api_worker: Optional[TelemetryAnalysisApiWorker] = None
+        self._allow_local_fallback, self._fallback_policy_reason = self._resolve_local_fallback_policy()
+        self._last_data_source: str = "unknown"
+        self._last_api_meta: Dict[str, Any] = {}
         
         # 檔案生成監控定時器（參考進站分析）
         self._generation_timer = QTimer()
@@ -69,44 +146,243 @@ class TelemetryDataManager(QObject):
         
         self._generation_timeout_timer = QTimer()
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+
+        fallback_state = "啟用" if self._allow_local_fallback else "停用"
+        print(
+            f"[TELEMETRY_MANAGER] 初始化完成，API 基底網址: {self._api_base_url}，"
+            f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
+        )
     
-    def loadTelemetryData(self, year: str, race: str, session: str) -> bool:
-        """載入遙測分析數據 - 支援JSON優先+CLI後備"""
+    def loadTelemetryData(self, year: str, race: str, session: str, force_refresh: bool = False) -> bool:
+        """載入遙測分析資料 - API 優先，失敗時可回退至 JSON/CLI。"""
         if self._is_loading:
-            print(f"[TELEMETRY] 正在載入中，跳過重複請求")
+            print("[TELEMETRY] 正在載入中，跳過重複請求")
             return False
-            
+
+        self._stop_generation_monitoring()
+        self._cleanup_api_worker()
+
         self._is_loading = True
         self.loading_started.emit()
-        self.loading_progress.emit(10)
-        self.status_changed.emit("正在載入遙測數據...")
-        
+        self.loading_progress.emit(5)
+        self.status_changed.emit("準備載入遙測分析資料...")
+
+        self.current_year = year
+        self.current_race = race
+        self.current_session = session
+
+        self._pending_params = {
+            "year": year,
+            "race": race,
+            "session": session,
+            "force_refresh": force_refresh,
+        }
+        self._api_base_url = self._determine_api_base_url()
+
         try:
-            # 更新當前參數
-            self.current_year = year
-            self.current_race = race
-            self.current_session = session
-            
-            # 1. 檢查現有JSON檔案
-            json_file = self._find_telemetry_file(year, race, session)
-            
-            if json_file:
-                # 載入現有JSON
-                print(f"[TELEMETRY] 找到遙測JSON檔案: {json_file}")
-                self.loading_progress.emit(50)
-                QTimer.singleShot(10, lambda: self._load_telemetry_json(json_file))
+            self.loading_progress.emit(10)
+            self.status_changed.emit("正在透過 API 載入遙測分析資料...")
+            self._start_api_request(self._pending_params)
+            return True
+        except Exception as exc:
+            print(f"[TELEMETRY] 啟動 API 請求失敗: {exc}")
+            self.status_changed.emit("API 請求初始化失敗，改用本地 JSON/CLI 後備流程")
+            if self._fallback_to_local(str(exc)):
                 return True
-            else:
-                # 自動觸發CLI生成
-                print(f"[AUTO_GEN] 找不到遙測JSON，觸發CLI自動生成")
-                self.loading_progress.emit(20)
-                return self._generate_telemetry_via_cli(year, race, session)
-                
-        except Exception as e:
-            self.error_occurred.emit(f"載入遙測數據失敗: {str(e)}")
+
+            self.error_occurred.emit(f"載入遙測數據失敗: {exc}")
             self.loading_finished.emit()
             self._is_loading = False
             return False
+
+    def _determine_api_base_url(self) -> str:
+        env_url = os.getenv("F1_API_BASE_URL")
+        if env_url:
+            return str(env_url).rstrip('/')
+
+        config_path = Path("config/api_config.json")
+        if config_path.exists():
+            try:
+                config_data = json.loads(config_path.read_text(encoding="utf-8"))
+                api_url = config_data.get("api_base_url")
+                if api_url:
+                    return str(api_url).rstrip('/')
+            except Exception as exc:
+                print(f"[TELEMETRY] 讀取 api_config.json 失敗: {exc}")
+
+        return "http://127.0.0.1:8000"
+
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
+            return False, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
+        return False, "預設策略 (API 優先，不允許本地回退)"
+
+    def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
+        self._allow_local_fallback = bool(allowed)
+        self._fallback_policy_reason = reason or "手動覆寫"
+        state = "啟用" if self._allow_local_fallback else "停用"
+        print(f"[TELEMETRY_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+
+    def set_api_base_url(self, base_url: Optional[str]) -> None:
+        if base_url:
+            self._api_base_url = str(base_url).rstrip('/')
+            print(f"[TELEMETRY_MANAGER] API 基底網址更新為 {self._api_base_url}")
+
+    def _cleanup_api_worker(self) -> None:
+        if self._api_worker:
+            try:
+                if self._api_worker.isRunning():
+                    self._api_worker.requestInterruption()
+                    self._api_worker.quit()
+                    self._api_worker.wait(1000)
+            except Exception:
+                pass
+            self._api_worker = None
+
+    def _start_api_request(self, params: Dict[str, Any]) -> None:
+        self._cleanup_api_worker()
+
+        timeout = getattr(self, "_api_timeout", 75.0)
+        self._api_worker = TelemetryAnalysisApiWorker(
+            self._api_base_url,
+            params,
+            timeout=timeout,
+            parent=self
+        )
+        self._api_worker.progress.connect(self._on_api_progress)
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_error)
+        self._api_worker.finished.connect(self._cleanup_api_worker)
+        self._api_worker.start()
+
+    def _on_api_progress(self, value: int, message: str) -> None:
+        try:
+            bounded = max(0, min(int(value), 100))
+            self.loading_progress.emit(bounded)
+            if message:
+                self.status_changed.emit(message)
+        except Exception:
+            pass
+
+    def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        try:
+            raw_data = payload.get("data")
+            meta = payload.get("meta", {})
+            self._last_api_meta = meta or {}
+            self._last_data_source = "api"
+            self._cli_generation_context = {}
+
+            if not self._validate_telemetry_data(raw_data):
+                raise ValueError("API 回傳數據格式不符合遙測分析預期")
+
+            processed_data = raw_data
+            if isinstance(processed_data, dict):
+                metadata = processed_data.setdefault("metadata", {})
+                metadata.setdefault("data_source", "api")
+                metadata.setdefault("year", self.current_year)
+                metadata.setdefault("race", self.current_race)
+                metadata.setdefault("session", self.current_session)
+                if self._pending_params.get("force_refresh"):
+                    metadata["requested_force_refresh"] = True
+                if self._last_api_meta:
+                    metadata["api"] = self._last_api_meta
+
+            self.current_data = processed_data
+            self.loading_progress.emit(100)
+            self.status_changed.emit("已從 API 載入遙測分析資料")
+            self.telemetry_loaded.emit(processed_data)
+            self.loading_finished.emit()
+            self._is_loading = False
+
+        except Exception as exc:
+            print(f"[TELEMETRY] 處理 API 回傳失敗: {exc}")
+            self.status_changed.emit("API 數據格式錯誤，改用本地 JSON/CLI")
+            if self._fallback_to_local(str(exc)):
+                return
+            self.error_occurred.emit(f"API 數據處理失敗: {exc}")
+            self.loading_finished.emit()
+            self._is_loading = False
+
+    def _on_api_error(self, message: str) -> None:
+        print(f"[TELEMETRY] API 請求失敗: {message}")
+        self.status_changed.emit("API 請求失敗，改用本地 JSON/CLI 後備流程")
+        if self._fallback_to_local(message):
+            return
+        self.error_occurred.emit(f"API 請求失敗: {message}")
+        self.loading_finished.emit()
+        self._is_loading = False
+
+    def _fallback_to_local(self, reason: str) -> bool:
+        params = dict(self._pending_params) if self._pending_params else {}
+        if not params:
+            params = {
+                "year": self.current_year,
+                "race": self.current_race,
+                "session": self.current_session,
+                "force_refresh": False,
+            }
+
+        if not self._allow_local_fallback:
+            message = (
+                "API 載入失敗，且本地 JSON 後備已停用。"
+                " 如需啟用，請設定環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK=1 或呼叫 set_local_fallback_allowed(True)。"
+            )
+            print(f"[TELEMETRY] {message} 詳細: {reason}")
+            return False
+
+        self.status_changed.emit("API 失敗，改用本地 JSON/CLI 數據")
+        self.loading_progress.emit(35)
+        success = self._start_local_workflow(params, fallback_reason=reason)
+        if not success:
+            print(f"[TELEMETRY] 本地 JSON 後備啟動失敗: {reason}")
+        return success
+
+    def _start_local_workflow(self, params: Dict[str, Any], fallback_reason: Optional[str] = None) -> bool:
+        year = params.get("year")
+        race = params.get("race")
+        session = params.get("session")
+
+        if not year or not race or not session:
+            print("[TELEMETRY] 本地工作流程缺少必要參數")
+            return False
+
+        json_file = self._find_telemetry_file(year, race, session)
+        if json_file:
+            print(f"[TELEMETRY] 使用本地遙測JSON檔案: {json_file}")
+            self.loading_progress.emit(70)
+            self.status_changed.emit("使用本地 JSON 快取載入遙測資料")
+            self._cli_generation_context = {
+                "fallback_reason": fallback_reason,
+                "force_refresh": params.get("force_refresh", False),
+                "generated_via_cli": False,
+                "data_source": "local-json",
+            }
+            QTimer.singleShot(
+                10,
+                lambda: self._load_telemetry_json(
+                    json_file,
+                    data_source="local-json",
+                    fallback_reason=fallback_reason,
+                    generated_via_cli=False,
+                    force_refresh=params.get("force_refresh", False)
+                )
+            )
+            return True
+
+        print("[AUTO_GEN] 找不到遙測JSON，觸發CLI自動生成")
+        self.loading_progress.emit(40)
+        self.status_changed.emit("未找到現有遙測 JSON，啟動 CLI 生成流程")
+        self._cli_generation_context = {
+            "fallback_reason": fallback_reason,
+            "force_refresh": params.get("force_refresh", False),
+            "generated_via_cli": True,
+            "data_source": "local-json",
+        }
+        return self._generate_telemetry_via_cli(year, race, session, force_refresh=params.get("force_refresh", False))
     
     def _find_telemetry_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋遙測分析數據檔案"""
@@ -220,8 +496,16 @@ class TelemetryDataManager(QObject):
             print(f"[ERROR] 快速驗證檔案失敗: {e}")
             return False
     
-    def _load_telemetry_json(self, file_path: str):
-        """載入遙測JSON檔案"""
+    def _load_telemetry_json(
+        self,
+        file_path: str,
+        *,
+        data_source: str = "local-json",
+        fallback_reason: Optional[str] = None,
+        generated_via_cli: bool = False,
+        force_refresh: bool = False
+    ):
+        """載入遙測JSON檔案並附加來源中繼資料"""
         try:
             print(f"[LOAD] 開始載入遙測檔案: {file_path}")
             self.loading_progress.emit(70)
@@ -232,6 +516,19 @@ class TelemetryDataManager(QObject):
             # 驗證數據格式
             if self._validate_telemetry_data(data):
                 self.current_data = data
+                self._last_data_source = data_source
+                metadata = self.current_data.setdefault("metadata", {})
+                metadata.setdefault("data_source", data_source)
+                metadata.setdefault("year", self.current_year)
+                metadata.setdefault("race", self.current_race)
+                metadata.setdefault("session", self.current_session)
+                metadata.setdefault("fallback_policy", self._fallback_policy_reason)
+                if fallback_reason:
+                    metadata["fallback_reason"] = fallback_reason
+                if generated_via_cli:
+                    metadata["generated_via_cli"] = True
+                if force_refresh:
+                    metadata["requested_force_refresh"] = True
                 self.loading_progress.emit(100)
                 self.status_changed.emit("遙測數據載入完成")
                 self.telemetry_loaded.emit(data)
@@ -244,6 +541,8 @@ class TelemetryDataManager(QObject):
             self.error_occurred.emit(f"載入JSON檔案失敗: {str(e)}")
         
         finally:
+            self._cli_generation_context = {}
+            self._generation_params = None
             self.loading_finished.emit()
             self._is_loading = False
     
@@ -317,11 +616,16 @@ class TelemetryDataManager(QObject):
             print(f"[ERROR] 驗證遙測數據時發生錯誤: {e}")
             return False
     
-    def _generate_telemetry_via_cli(self, year: str, race: str, session: str) -> bool:
+    def _generate_telemetry_via_cli(self, year: str, race: str, session: str, force_refresh: bool = False) -> bool:
         """透過CLI生成遙測分析數據（後台執行）"""
         try:
             # 儲存參數供後續使用
-            self._generation_params = (year, race, session)
+            self._generation_params = {
+                "year": year,
+                "race": race,
+                "session": session,
+                "force_refresh": force_refresh,
+            }
             
             # 啟動 CLI 生成
             success = self._start_cli_generation(year, race, session)
@@ -407,8 +711,20 @@ class TelemetryDataManager(QObject):
         
     def _check_generation_progress(self):
         """檢查檔案生成進度"""
-        if hasattr(self, '_generation_params'):
-            year, race, session = self._generation_params
+        if hasattr(self, '_generation_params') and self._generation_params:
+            params = self._generation_params
+            if isinstance(params, dict):
+                year = params.get("year")
+                race = params.get("race")
+                session = params.get("session")
+            else:
+                year, race, session = params
+                params = {
+                    "year": year,
+                    "race": race,
+                    "session": session,
+                    "force_refresh": False,
+                }
             
             # 檢查是否有新檔案生成
             json_file = self._find_telemetry_file(year, race, session)
@@ -420,7 +736,17 @@ class TelemetryDataManager(QObject):
                 self._stop_generation_monitoring()
                 
                 # 載入新生成的檔案
-                QTimer.singleShot(10, lambda: self._load_telemetry_json(json_file))
+                context = self._cli_generation_context or {}
+                QTimer.singleShot(
+                    10,
+                    lambda: self._load_telemetry_json(
+                        json_file,
+                        data_source=context.get("data_source", "local-json"),
+                        fallback_reason=context.get("fallback_reason"),
+                        generated_via_cli=context.get("generated_via_cli", True),
+                        force_refresh=context.get("force_refresh", False)
+                    )
+                )
             else:
                 print(f"⏳ [CLI_GEN] 繼續等待遙測檔案生成...")
                 self.loading_progress.emit(50)
@@ -430,6 +756,9 @@ class TelemetryDataManager(QObject):
         print(f"[TIME] [CLI_GEN] 遙測檔案生成超時")
         self._stop_generation_monitoring()
         self.error_occurred.emit("遙測數據生成超時，請檢查網路連線或稍後重試")
+        self._generation_params = None
+        self._cli_generation_context = {}
+        self.loading_finished.emit()
         self._is_loading = False
         
     def _stop_generation_monitoring(self):
@@ -1085,10 +1414,10 @@ class TelemetryAnalysisModule(IAnalysisModule):
         super().__init__(parent)
         
         # 模組基本資訊
-        self._module_name = "DriverRanking"
-        self._display_name = "� Driver Ranking"
+        self._module_name = "DriverAnalysis"
+        self._display_name = "🚗 Driver Analysis"
         self._version = "1.0.0"
-        self._description = "F1 Driver Statistics and Ranking Analysis (Function 12)"
+        self._description = "F1 single-race driver performance dashboard (Function 12)"
         
         # 參數
         self.current_year = None
@@ -1266,11 +1595,11 @@ class TelemetryAnalysisModule(IAnalysisModule):
         year = self.current_year or "2025"
         race = self.current_race or "Unknown"
         session = self.current_session or "R"
-        return f"遙測分析_{year}_{race}_{session}"
+        return f"車手分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"� Driver Ranking - {year} {race} {session}"
+        return f"🚗 Driver Analysis - {year} {race} {session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""
@@ -1541,7 +1870,8 @@ class TelemetryAnalysisModule(IAnalysisModule):
                 success = self.data_manager.loadTelemetryData(
                     self.current_year, 
                     self.current_race, 
-                    self.current_session
+                    self.current_session,
+                    force_refresh=True
                 )
                 
                 if success:

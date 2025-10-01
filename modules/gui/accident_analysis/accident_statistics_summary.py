@@ -8,9 +8,38 @@ Accident Statistics Summary Module - Following Core Development Standards
 import os
 import json
 import pickle
-import pandas as pd
 from datetime import datetime
+from typing import Any
+
+import pandas as pd
 from prettytable import PrettyTable
+
+def _sanitize_token(value: Any, *, default: str = "Unknown", upper: bool = False) -> str:
+    """Normalize text so it is safe for filenames."""
+
+    text = str(value).strip() if value is not None else ""
+    if not text:
+        text = default
+
+    normalized = []
+    for char in text:
+        if char.isalnum() or char in {"_", "-"}:
+            normalized.append(char)
+        elif char.isspace():
+            normalized.append("_")
+        else:
+            normalized.append("_")
+
+    sanitized = "".join(normalized)
+    while "__" in sanitized:
+        sanitized = sanitized.replace("__", "_")
+    sanitized = sanitized.strip("_") or default
+
+    if upper:
+        sanitized = sanitized.upper()
+
+    return sanitized
+
 
 def generate_cache_key(session_info):
     """生成快取鍵值"""
@@ -205,16 +234,33 @@ def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
     
-    # 🔧 修改：移除時間戳，簡化檔案名稱格式
-    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
-    filename = f"accident_statistics_summary_{session_info.get('year', 2025)}_{event_name}.json"
+    year = session_info.get('year', 2025)
+    race_name = session_info.get('event_name', 'Unknown')
+    session_code = session_info.get('session_type') or session_info.get('session') or 'R'
+
+    race_token = _sanitize_token(race_name)
+    session_token = _sanitize_token(session_code, upper=True)
+
+    filename = f"accident_statistics_summary_{year}_{race_token}_{session_token}.json"
     filepath = os.path.join("json", filename)
+
+    # 將舊版未含 session 的檔名自動遷移，以保留既有資料
+    legacy_filename = f"accident_statistics_summary_{year}_{race_token}.json"
+    legacy_path = os.path.join("json", legacy_filename)
+    if os.path.exists(legacy_path) and legacy_path != filepath:
+        try:
+            os.replace(legacy_path, filepath)
+        except OSError:
+            pass
     
+    normalized_session_info = dict(session_info)
+    normalized_session_info['session_type'] = str(session_token)
+
     json_result = {
         "function_id": 6,
         "function_name": "Accident Statistics Summary",
         "analysis_type": "accident_statistics_summary",
-        "session_info": session_info,
+        "session_info": normalized_session_info,
         "timestamp": datetime.now().isoformat(),
         "data": data
     }

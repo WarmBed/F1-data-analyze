@@ -13,7 +13,11 @@ import time
 
 # 導入服務
 from api.services.simple_analysis_service import SimpleF1AnalysisService
-from api.models.function_specs import FUNCTION_SPECS
+from api.models.function_specs import (
+    FUNCTION_SPECS,
+    function_id_sort_key,
+    normalize_function_id,
+)
 
 # 創建路由器
 router = APIRouter(
@@ -29,18 +33,21 @@ router = APIRouter(
 analysis_service = SimpleF1AnalysisService()
 
 
-SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys())
+SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys(), key=function_id_sort_key)
 
 
 @router.post("/execute")
 async def execute_analysis(
-    function_id: int = Query(..., description="分析功能 ID"),
+    function_id: str = Query(..., description="分析功能 ID"),
     year: int = Query(..., ge=2024, le=2025, description="賽季年份"),
     race: str = Query(..., min_length=3, description="賽事名稱"),
     session: str = Query(..., description="會話類型 (R/Q/FP1/FP2/FP3)"),
     driver1: Optional[str] = Query(None, min_length=3, max_length=3, description="主要車手代碼"),
     driver2: Optional[str] = Query(None, min_length=3, max_length=3, description="比較車手代碼"),
-    force_refresh: bool = Query(False, description="強制重新執行分析")
+    force_refresh: bool = Query(False, description="強制重新執行分析"),
+    lap: Optional[int] = Query(None, ge=1, description="統一圈數參數 (單圈分析)"),
+    lap1: Optional[int] = Query(None, ge=1, description="車手1圈數 (遙測比較)"),
+    lap2: Optional[int] = Query(None, ge=1, description="車手2圈數 (遙測比較)")
 ) -> Dict[str, Any]:
     """
     執行 F1 分析功能
@@ -55,7 +62,9 @@ async def execute_analysis(
     """
     
     try:
-        if function_id not in FUNCTION_SPECS:
+        normalized_id = normalize_function_id(function_id)
+
+        if normalized_id not in FUNCTION_SPECS:
             raise HTTPException(status_code=400, detail={
                 "error": "unsupported_function",
                 "message": f"function_id {function_id} 尚未透過 API 支援",
@@ -75,9 +84,15 @@ async def execute_analysis(
             params["driver2"] = driver2.upper()
         if force_refresh:
             params["force_refresh"] = True
+        if lap:
+            params["lap"] = lap
+        if lap1:
+            params["lap1"] = lap1
+        if lap2:
+            params["lap2"] = lap2
             
         # 執行分析
-        result = await analysis_service.execute_analysis(function_id, **params)
+        result = await analysis_service.execute_analysis(normalized_id, **params)
         
         return result
         
@@ -143,12 +158,16 @@ async def get_analysis_status() -> Dict[str, Any]:
     try:
         health_result = await analysis_service.health_check()
         cache_result = await analysis_service.get_cache_status()
+        runtime_state = analysis_service.get_runtime_state()
+        service_status = "busy" if runtime_state.get("busy") else health_result.get("status", "unknown")
         
         return {
             "success": True,
             "message": "分析服務狀態",
+            "status": service_status,
             "service_health": health_result,
             "cache_status": cache_result,
+            "runtime": runtime_state,
             "timestamp": time.time()
         }
         

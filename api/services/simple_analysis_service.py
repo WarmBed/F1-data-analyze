@@ -10,10 +10,13 @@ F1 Analysis Simple Service - 簡化版分析服務
 import os
 import sys
 import asyncio
-import subprocess
+import asyncio.subprocess as aio_subprocess
 import time
+from collections import deque
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Deque, Union
+
+from uuid import uuid4
 
 # 添加專案根目錄到 Python 路徑
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,22 +25,46 @@ if project_root not in sys.path:
 
 # 導入已經工作的組件
 from api.services.cache_service import F1AnalysisCacheService
-from api.models.function_specs import FUNCTION_SPECS, FunctionSpec, get_function_spec
+from api.models.function_specs import (
+    FUNCTION_SPECS,
+    FunctionSpec,
+    get_function_spec,
+    normalize_function_id,
+)
 
 
 class SimpleF1AnalysisService:
     """簡化版 F1 分析服務 - 專注核心功能"""
-    
+
     def __init__(self):
         self.cache_service = F1AnalysisCacheService()
         self._function_specs = FUNCTION_SPECS
+
+        # 服務狀態追蹤
+        self._active_tasks: Dict[str, Dict[str, Any]] = {}
+        self._recent_history: Deque[Dict[str, Any]] = deque(maxlen=25)
+        self._metrics: Dict[str, Any] = {
+            "total_requests": 0,
+            "cache_hits": 0,
+            "cli_runs": 0,
+            "failures": 0,
+            "avg_execution_time": 0.0,
+            "last_execution_time": None,
+            "last_request_id": None,
+            "last_completed_request": None,
+            "last_completed_source": None,
+        }
+        self._max_concurrency: int = int(os.getenv("F1_API_MAX_CONCURRENCY", "1"))
+
         print("[SERVICE] 簡化版分析服務已初始化")
 
-    def _get_spec(self, function_id: int) -> FunctionSpec:
+    def _get_spec(self, function_id: Union[str, int, FunctionSpec]) -> FunctionSpec:
         """Return metadata for the requested function."""
 
+        normalized_id = normalize_function_id(function_id)
+
         try:
-            return get_function_spec(function_id)
+            return get_function_spec(normalized_id)
         except KeyError as exc:
             raise ValueError(f"Unsupported function_id: {function_id}") from exc
 
@@ -75,80 +102,203 @@ class SimpleF1AnalysisService:
 
         return cmd
     
-    async def execute_analysis(self, function_id: int, **params) -> Dict[str, Any]:
-        """
-        執行分析 - 簡化版邏輯
-        
-        Args:
-            function_id: 功能 ID (1-52)
-            **params: 分析參數
-            
-        Returns:
-            Dict: 簡化的響應格式
-        """
-        request_id = f"req_{int(time.time() * 1000)}"
-        print(f"[SERVICE] 開始分析 {request_id}: 功能 {function_id}")
-        
+    async def execute_analysis(self, function_id: Union[str, int], **params) -> Dict[str, Any]:
+        """執行分析 - 支援非阻塞 CLI 呼叫與狀態追蹤"""
+
+        request_id = self._generate_request_id()
+        self._metrics["total_requests"] += 1
+        self._metrics["last_request_id"] = request_id
+
         start_time = time.time()
-        
+        canonical_id: Optional[str] = None
+
         try:
             spec = self._get_spec(function_id)
+            canonical_id = spec.function_id
+            print(f"[SERVICE] 開始分析 {request_id}: 功能 {canonical_id}")
             prepared_params = self._prepare_params(spec, params)
             force_refresh = bool(params.get("force_refresh"))
 
             if not force_refresh:
-                print(f"[SERVICE] 檢查緩存...")
-                cached_result = self.cache_service.search_cached_analysis(function_id, **prepared_params)
+                print("[SERVICE] 檢查緩存...")
+                cached_result = await asyncio.to_thread(
+                    self.cache_service.search_cached_analysis,
+                    canonical_id,
+                    **prepared_params,
+                )
 
                 if cached_result:
                     execution_time = time.time() - start_time
                     print(f"[SERVICE] ✅ 緩存命中! (耗時: {execution_time:.3f}s)")
+                    self._metrics["cache_hits"] += 1
+                    self._metrics["last_execution_time"] = execution_time
+                    self._record_history(
+                        request_id,
+                        canonical_id,
+                        execution_time,
+                        success=True,
+                        source="cache",
+                        message="cache_hit",
+                    )
 
                     return {
                         "success": True,
-                        "message": f"分析完成 (功能 {function_id})",
+                        "message": f"分析完成 (功能 {canonical_id})",
                         "data": cached_result,
                         "source": "cache",
                         "execution_time": f"{execution_time:.3f}s",
                         "request_id": request_id,
                         "timestamp": datetime.now().isoformat(),
                         "function_spec": spec.__dict__,
+                        "runtime": self.get_runtime_state(),
                     }
 
-            print(f"[SERVICE] ❌ 緩存未命中，嘗試 CLI 執行...")
-            cli_result = await self._simple_cli_execution(spec, prepared_params)
-            
+            task_info = self._start_active_task(request_id, canonical_id, prepared_params)
+            cli_result = await self._run_cli_async(request_id, spec, prepared_params)
+
             execution_time = time.time() - start_time
-            
+            self._metrics["last_execution_time"] = execution_time
+
             if cli_result["success"]:
-                print(f"[SERVICE] ✅ CLI 執行成功! (耗時: {execution_time:.3f}s)")
-                return {
-                    "success": True,
-                    "message": f"分析完成 (功能 {spec.function_id})",
-                    "data": cli_result["data"],
-                    "source": "cli",
-                    "execution_time": f"{execution_time:.3f}s",
-                    "request_id": request_id,
-                    "timestamp": datetime.now().isoformat(),
-                    "function_spec": spec.__dict__,
-                    "cli_info": cli_result.get("cli_info", {})
-                }
-            else:
-                print(f"[SERVICE] ❌ CLI 執行失敗! (耗時: {execution_time:.3f}s)")
+                self._metrics["cli_runs"] += 1
+                self._update_average_execution(execution_time)
+
+                # 等待 CLI 將結果寫入後重新讀取緩存
+                await asyncio.sleep(0.5)
+                refreshed_data = await asyncio.to_thread(
+                    self.cache_service.search_cached_analysis,
+                    canonical_id,
+                    **prepared_params,
+                )
+
+                if refreshed_data:
+                    print(f"[SERVICE] ✅ CLI 執行成功! (耗時: {execution_time:.3f}s)")
+                    recorded = self._complete_active_task(
+                        request_id,
+                        status="completed",
+                        message="cli_completed",
+                        duration=execution_time,
+                        cli_info=cli_result.get("cli_info", {}),
+                        success=True,
+                        source="cli",
+                    )
+                    if not recorded:
+                        self._record_history(
+                            request_id,
+                            canonical_id,
+                            execution_time,
+                            success=True,
+                            source="cli",
+                            message="cli_completed",
+                        )
+
+                    return {
+                        "success": True,
+                        "message": f"分析完成 (功能 {canonical_id})",
+                        "data": refreshed_data,
+                        "source": "cli",
+                        "execution_time": f"{execution_time:.3f}s",
+                        "request_id": request_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "function_spec": spec.__dict__,
+                        "cli_info": cli_result.get("cli_info", {}),
+                        "runtime": self.get_runtime_state(),
+                    }
+
+                error_msg = "CLI 執行成功但未找到輸出文件"
+                recorded = self._complete_active_task(
+                    request_id,
+                    status="error",
+                    message=error_msg,
+                    duration=execution_time,
+                    cli_info=cli_result.get("cli_info", {}),
+                    success=False,
+                    source="cli",
+                )
+                self._metrics["failures"] += 1
+                if not recorded:
+                    self._record_history(
+                        request_id,
+                        canonical_id,
+                        execution_time,
+                        success=False,
+                        source="cli",
+                        message=error_msg,
+                    )
+
                 return {
                     "success": False,
                     "message": "分析執行失敗",
-                    "error": cli_result.get("error", "未知錯誤"),
-                    "source": "cli_failed",
+                    "error": error_msg,
+                    "source": "cli_no_output",
                     "execution_time": f"{execution_time:.3f}s",
                     "request_id": request_id,
-                    "timestamp": datetime.now().isoformat()
+                    "timestamp": datetime.now().isoformat(),
+                    "cli_info": cli_result.get("cli_info", {}),
+                    "runtime": self.get_runtime_state(),
                 }
-        
+
+            error_message = cli_result.get("error", "未知錯誤")
+            recorded = self._complete_active_task(
+                request_id,
+                status="failed",
+                message=error_message,
+                duration=execution_time,
+                cli_info=cli_result.get("cli_info", {}),
+                success=False,
+                source="cli",
+            )
+            self._metrics["failures"] += 1
+            if not recorded:
+                self._record_history(
+                    request_id,
+                    canonical_id,
+                    execution_time,
+                    success=False,
+                    source="cli",
+                    message=error_message,
+                )
+
+            print(f"[SERVICE] ❌ CLI 執行失敗! (耗時: {execution_time:.3f}s)")
+            return {
+                "success": False,
+                "message": "分析執行失敗",
+                "error": error_message,
+                "source": "cli_failed",
+                "execution_time": f"{execution_time:.3f}s",
+                "request_id": request_id,
+                "timestamp": datetime.now().isoformat(),
+                "cli_info": cli_result.get("cli_info", {}),
+                "runtime": self.get_runtime_state(),
+            }
+
         except Exception as e:
             execution_time = time.time() - start_time
+            self._metrics["failures"] += 1
+            try:
+                safe_function_id = canonical_id or normalize_function_id(function_id)
+            except Exception:
+                safe_function_id = str(function_id)
+            recorded = self._complete_active_task(
+                request_id,
+                status="failed",
+                message=str(e),
+                duration=execution_time,
+                cli_info=None,
+                success=False,
+                source="service_error",
+            )
+            if not recorded:
+                self._record_history(
+                    request_id,
+                    safe_function_id,
+                    execution_time,
+                    success=False,
+                    source="service_error",
+                    message=str(e),
+                )
+
             print(f"[SERVICE] ❌ 服務異常! (耗時: {execution_time:.3f}s): {e}")
-            
             return {
                 "success": False,
                 "message": "服務執行異常",
@@ -156,106 +306,336 @@ class SimpleF1AnalysisService:
                 "source": "service_error",
                 "execution_time": f"{execution_time:.3f}s",
                 "request_id": request_id,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "runtime": self.get_runtime_state(),
             }
-    
-    async def _simple_cli_execution(self, spec: FunctionSpec, params: Dict[str, Any]) -> Dict[str, Any]:
-        """
-        簡化版 CLI 執行
-        
-        Args:
-            function_id: 功能 ID
-            **params: 參數
-            
-        Returns:
-            Dict: CLI 執行結果
-        """
-        try:
-            # 建構基本 CLI 命令
-            cmd = self._build_cli_command(spec, params)
-            
-            print(f"[CLI] 執行命令: {' '.join(cmd)}")
-            
-            # 簡單的同步執行 (避免複雜的非同步問題)
-            start_time = time.time()
-            
-            process = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=120,  # 2分鐘超時
-                cwd=os.getcwd()
+
+    async def _run_cli_async(
+        self,
+        request_id: str,
+        spec: FunctionSpec,
+        params: Dict[str, Any],
+        timeout: float = 180.0,
+    ) -> Dict[str, Any]:
+        """以非阻塞方式執行 CLI 命令並追蹤進度"""
+
+        cmd = self._build_cli_command(spec, params)
+        print(f"[CLI] 執行命令: {' '.join(cmd)}")
+
+        task_info = self._active_tasks.get(request_id)
+        if task_info:
+            self._update_active_task(
+                request_id,
+                status="starting",
+                progress=0.15,
+                message="排程 CLI 任務",
+                command=" ".join(cmd),
             )
-            
-            execution_time = time.time() - start_time
-            
-            if process.returncode == 0:
-                print(f"[CLI] ✅ 命令執行成功 (耗時: {execution_time:.3f}s)")
-                
-                # 嘗試重新搜尋緩存，看是否生成了新文件
-                await asyncio.sleep(0.5)  # 等待文件寫入
-                new_cached = self.cache_service.search_cached_analysis(spec.function_id, **params)
-                
-                if new_cached:
-                    return {
-                        "success": True,
-                        "data": new_cached,
-                        "cli_info": {
-                            "command": " ".join(cmd),
-                            "execution_time": f"{execution_time:.3f}s",
-                            "stdout_length": len(process.stdout),
-                            "new_file_generated": True
-                        }
-                    }
-                else:
-                    return {
-                        "success": False,
-                        "error": "CLI 執行成功但未找到輸出文件",
-                        "cli_info": {
-                            "command": " ".join(cmd),
-                            "execution_time": f"{execution_time:.3f}s",
-                            "stdout": process.stdout[:500] if process.stdout else "",
-                            "new_file_generated": False
-                        }
-                    }
-            else:
-                print(f"[CLI] ❌ 命令執行失敗 (返回碼: {process.returncode})")
+
+        start_time = time.time()
+        stdout_lines: list[str] = []
+        stderr_lines: list[str] = []
+
+        try:
+            process = await aio_subprocess.create_subprocess_exec(
+                *cmd,
+                cwd=os.getcwd(),
+                stdout=aio_subprocess.PIPE,
+                stderr=aio_subprocess.PIPE,
+            )
+
+            self._update_active_task(
+                request_id,
+                status="running",
+                progress=0.25,
+                message="CLI 進程啟動",
+                pid=process.pid,
+            )
+
+            async def _read_stream(stream, accumulator, stream_name: str) -> None:
+                while True:
+                    line = await stream.readline()
+                    if not line:
+                        break
+                    text = line.decode("utf-8", errors="replace").rstrip()
+                    accumulator.append(text)
+                    truncated = text[-160:]
+                    current_progress = self._active_tasks.get(request_id, {}).get("progress", 0.0)
+                    self._update_active_task(
+                        request_id,
+                        progress=min(current_progress + 0.05, 0.85),
+                        last_log=truncated,
+                        message=f"{stream_name}: {truncated}",
+                    )
+
+            readers = []
+            if process.stdout is not None:
+                readers.append(asyncio.create_task(_read_stream(process.stdout, stdout_lines, "stdout")))
+            if process.stderr is not None:
+                readers.append(asyncio.create_task(_read_stream(process.stderr, stderr_lines, "stderr")))
+
+            try:
+                await asyncio.wait_for(process.wait(), timeout=timeout)
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                for reader in readers:
+                    reader.cancel()
+                self._update_active_task(
+                    request_id,
+                    status="timeout",
+                    progress=0.95,
+                    message=f"CLI 執行超時 (>{int(timeout)}s)",
+                )
+
                 return {
                     "success": False,
-                    "error": f"CLI 執行失敗 (返回碼: {process.returncode})",
+                    "error": f"CLI 執行超時 (>{int(timeout)}秒)",
                     "cli_info": {
                         "command": " ".join(cmd),
-                        "execution_time": f"{execution_time:.3f}s",
-                        "returncode": process.returncode,
-                        "stderr": process.stderr[:500] if process.stderr else "",
-                        "stdout": process.stdout[:500] if process.stdout else ""
-                    }
+                        "timeout": True,
+                        "duration_seconds": time.time() - start_time,
+                        "stdout_preview": self._truncate_output("\n".join(stdout_lines)),
+                        "stderr_preview": self._truncate_output("\n".join(stderr_lines)),
+                    },
                 }
-        
-        except subprocess.TimeoutExpired:
+
+            await asyncio.gather(*readers, return_exceptions=True)
+
+            duration = time.time() - start_time
+            exit_code = process.returncode
+            stdout_text = "\n".join(stdout_lines)
+            stderr_text = "\n".join(stderr_lines)
+
+            cli_info = {
+                "command": " ".join(cmd),
+                "duration_seconds": duration,
+                "returncode": exit_code,
+                "stdout_preview": self._truncate_output(stdout_text),
+                "stderr_preview": self._truncate_output(stderr_text),
+                "pid": process.pid,
+            }
+
+            if exit_code == 0:
+                self._update_active_task(
+                    request_id,
+                    status="post_processing",
+                    progress=0.9,
+                    message="CLI 完成，等待輸出檔案",
+                    cli_info=cli_info,
+                )
+
+                return {
+                    "success": True,
+                    "cli_info": cli_info,
+                }
+
+            self._update_active_task(
+                request_id,
+                status="failed",
+                progress=0.95,
+                message=f"CLI 失敗 (返回碼 {exit_code})",
+                cli_info=cli_info,
+            )
+
             return {
                 "success": False,
-                "error": "CLI 執行超時 (超過2分鐘)",
-                "cli_info": {
-                    "command": " ".join(cmd),
-                    "timeout": True
-                }
+                "error": f"CLI 執行失敗 (返回碼: {exit_code})",
+                "cli_info": cli_info,
+            }
+
+        except FileNotFoundError as e:
+            error_message = f"無法找到 CLI 執行檔: {e}"
+            self._update_active_task(
+                request_id,
+                status="failed",
+                progress=0.95,
+                message=error_message,
+            )
+            return {
+                "success": False,
+                "error": error_message,
+                "cli_info": {"command": " ".join(cmd)},
             }
         except Exception as e:
+            self._update_active_task(
+                request_id,
+                status="failed",
+                progress=0.95,
+                message=str(e),
+            )
             return {
                 "success": False,
                 "error": f"CLI 執行異常: {str(e)}",
-                "cli_info": {
-                    "command": " ".join(cmd),
-                    "exception": str(e)
-                }
+                "cli_info": {"command": " ".join(cmd)},
             }
+
+    def _start_active_task(self, request_id: str, function_id: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        now = time.time()
+        task_info = {
+            "request_id": request_id,
+            "function_id": function_id,
+            "params": params.copy(),
+            "status": "queued",
+            "progress": 0.1,
+            "message": "等待 CLI 執行",
+            "started_at": now,
+            "started_at_iso": datetime.fromtimestamp(now).isoformat(),
+            "updated_at": now,
+            "last_log": None,
+            "pid": None,
+            "cli_info": None,
+        }
+
+        self._active_tasks[request_id] = task_info
+        return task_info
+
+    def _update_active_task(self, request_id: str, **updates: Any) -> None:
+        task_info = self._active_tasks.get(request_id)
+        if not task_info:
+            return
+
+        task_info.update({k: v for k, v in updates.items() if v is not None})
+        task_info["updated_at"] = time.time()
+
+    def _complete_active_task(
+        self,
+        request_id: str,
+        status: str,
+        message: str,
+        duration: float,
+        cli_info: Optional[Dict[str, Any]],
+        success: bool = False,
+        source: str = "cli",
+    ) -> bool:
+        task_info = self._active_tasks.pop(request_id, None)
+        finished_at = datetime.now().isoformat()
+
+        if task_info:
+            task_info.update(
+                {
+                    "status": status,
+                    "progress": 1.0 if success else task_info.get("progress", 1.0),
+                    "message": message,
+                    "duration_seconds": duration,
+                    "completed_at": finished_at,
+                    "cli_info": cli_info,
+                }
+            )
+
+            history_entry = {
+                "request_id": request_id,
+                "function_id": task_info.get("function_id"),
+                "completed_at": finished_at,
+                "duration_seconds": round(duration, 3),
+                "success": success,
+                "status": status,
+                "message": message,
+                "source": source,
+            }
+            self._recent_history.append(history_entry)
+            self._metrics["last_completed_request"] = request_id
+            self._metrics["last_completed_source"] = source
+            return True
+
+        return False
+
+    def _record_history(
+        self,
+        request_id: str,
+    function_id: str,
+        duration: float,
+        success: bool,
+        source: str,
+        message: str,
+    ) -> None:
+        entry = {
+            "request_id": request_id,
+            "function_id": function_id,
+            "completed_at": datetime.now().isoformat(),
+            "duration_seconds": round(duration, 3),
+            "success": success,
+            "source": source,
+            "message": message,
+        }
+        self._recent_history.append(entry)
+        self._metrics["last_completed_request"] = request_id
+        self._metrics["last_completed_source"] = source
+
+    def _truncate_output(self, text: str, limit: int = 2000) -> str:
+        if len(text) <= limit:
+            return text
+        return text[: limit - 3] + "..."
+
+    def _update_average_execution(self, duration: float) -> None:
+        current_avg = self._metrics.get("avg_execution_time") or 0.0
+        if current_avg <= 0:
+            self._metrics["avg_execution_time"] = duration
+        else:
+            # 指數移動平均
+            alpha = 0.3
+            self._metrics["avg_execution_time"] = current_avg * (1 - alpha) + duration * alpha
+
+    def _generate_request_id(self) -> str:
+        return f"req_{uuid4().hex[:10]}"
+
+    def get_runtime_state(self) -> Dict[str, Any]:
+        now = time.time()
+        active_list = []
+        for task in self._active_tasks.values():
+            active_list.append(
+                {
+                    "request_id": task["request_id"],
+                    "function_id": task["function_id"],
+                    "status": task["status"],
+                    "progress": round(task.get("progress", 0.0), 3),
+                    "message": task.get("message"),
+                    "started_at": task.get("started_at_iso"),
+                    "elapsed_seconds": round(now - task.get("started_at", now), 3),
+                    "last_log": task.get("last_log"),
+                    "pid": task.get("pid"),
+                }
+            )
+
+        queue_length = max(len(active_list) - self._max_concurrency, 0)
+        avg_exec = self._metrics.get("avg_execution_time") or 0.0
+        estimated_completion = None
+        if avg_exec > 0 and active_list:
+            estimated_completion = round(avg_exec * len(active_list), 2)
+
+        total_requests = self._metrics["total_requests"]
+        cache_hits = self._metrics["cache_hits"]
+        cache_hit_rate = round(cache_hits / total_requests, 3) if total_requests else None
+
+        return {
+            "busy": bool(active_list),
+            "active_task_count": len(active_list),
+            "queue_length": queue_length,
+            "estimated_completion_seconds": estimated_completion,
+            "max_concurrency": self._max_concurrency,
+            "active_tasks": active_list,
+            "metrics": {
+                "total_requests": total_requests,
+                "cache_hits": cache_hits,
+                "cache_hit_rate": cache_hit_rate,
+                "cli_runs": self._metrics["cli_runs"],
+                "failures": self._metrics["failures"],
+                "avg_execution_seconds": round(avg_exec, 3) if avg_exec else None,
+                "last_execution_seconds": round(self._metrics["last_execution_time"], 3)
+                if self._metrics["last_execution_time"]
+                else None,
+                "last_request_id": self._metrics["last_request_id"],
+                "last_completed_request": self._metrics["last_completed_request"],
+                "last_completed_source": self._metrics["last_completed_source"],
+            },
+            "recent_history": list(self._recent_history),
+        }
     
     async def get_cache_status(self) -> Dict[str, Any]:
         """獲取緩存狀態 - 簡化版"""
         try:
             print("[SERVICE] 獲取緩存狀態...")
-            stats = self.cache_service.get_cache_statistics()
+            stats = await asyncio.to_thread(self.cache_service.get_cache_statistics)
             
             return {
                 "success": True,
@@ -267,7 +647,8 @@ class SimpleF1AnalysisService:
                 },
                 "recent_files_count": len(stats["recent_files"]),
                 "supported_functions_count": len(stats["supported_functions"]),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "runtime": self.get_runtime_state(),
             }
         
         except Exception as e:
@@ -275,7 +656,8 @@ class SimpleF1AnalysisService:
                 "success": False,
                 "message": "緩存狀態獲取失敗",
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "runtime": self.get_runtime_state(),
             }
     
     async def health_check(self) -> Dict[str, Any]:
@@ -288,18 +670,20 @@ class SimpleF1AnalysisService:
             # 簡單的系統檢查
             python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
             current_dir = os.getcwd()
+            runtime_state = self.get_runtime_state()
             
             return {
                 "success": True,
-                "status": "healthy" if cache_healthy else "degraded",
-                "message": "服務運行正常",
+                "status": "busy" if runtime_state.get("busy") else ("healthy" if cache_healthy else "degraded"),
+                "message": "服務運行正常" if not runtime_state.get("busy") else "服務繁忙，背景執行中",
                 "checks": {
                     "cache_service": "healthy" if cache_healthy else "error",
                     "python_version": python_version,
                     "working_directory": current_dir,
                     "cli_file_exists": os.path.exists("f1_analysis_modular_main.py")
                 },
-                "timestamp": datetime.now().isoformat()
+                "runtime": runtime_state,
+                "timestamp": datetime.now().isoformat(),
             }
         
         except Exception as e:
@@ -308,5 +692,6 @@ class SimpleF1AnalysisService:
                 "status": "unhealthy", 
                 "message": "健康檢查失敗",
                 "error": str(e),
-                "timestamp": datetime.now().isoformat()
+                "timestamp": datetime.now().isoformat(),
+                "runtime": self.get_runtime_state(),
             }

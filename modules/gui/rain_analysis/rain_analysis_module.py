@@ -403,6 +403,27 @@ class RainAnalysisModule(IAnalysisModule):
             print(f"❌ [RAIN_MODULE] get_current_data 錯誤: {e}")
             return None
 
+    def get_analysis_summary(self) -> Dict[str, Any]:
+        """取得分析摘要並標示資料來源。"""
+        try:
+            if self._rain_analysis_core and hasattr(self._rain_analysis_core, 'get_analysis_summary'):
+                summary = self._rain_analysis_core.get_analysis_summary()
+            else:
+                summary = {}
+
+            if isinstance(summary, dict):
+                data_source = getattr(self.data_manager, 'get_last_data_source', lambda: 'unknown')()
+                summary['data_source'] = data_source
+                if data_source == 'api':
+                    api_meta = getattr(self.data_manager, 'get_last_api_metadata', lambda: {})()
+                    if api_meta:
+                        summary['api_meta'] = api_meta
+            return summary
+
+        except Exception as e:
+            self._debug(f"獲取分析摘要失敗: {str(e)}")
+            return {}
+
     # ===== 輔助方法 =====
     
     def _debug(self, message: str):

@@ -10,7 +10,10 @@ import os
 import json
 import datetime
 import traceback
-from typing import Dict, List, Any, Optional
+import time
+from pathlib import Path
+from functools import partial
+from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -21,6 +24,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+import requests
+
 # 導入翻譯函數
 from core.gui_i18n import tr
 
@@ -29,6 +34,82 @@ from ..interfaces.analysis_module import IAnalysisModule
 
 # 導入基礎類別
 # from f1t_gui_main import PopoutSubWindow  # 不再直接繼承PopoutSubWindow
+
+
+class PitstopAnalysisApiWorker(QThread):
+    """Background worker for pitstop-related API calls."""
+
+    progress = pyqtSignal(int, str)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(
+        self,
+        base_url: str,
+        function_id: int,
+        params: Dict[str, Any],
+        label: str,
+        timeout: float = 45.0,
+        parent=None,
+    ):
+        super().__init__(parent)
+        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.function_id = int(function_id)
+        self.params = dict(params)
+        self.label = label
+        self.timeout = timeout
+
+    def run(self) -> None:
+        try:
+            self.progress.emit(15, f"呼叫 API 取得{self.label}資料...")
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": self.function_id,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+            }
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"},
+            )
+            self.progress.emit(60, f"API {self.label}回應解析中...")
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API 回傳必須為 JSON 物件")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API 回傳 success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API 回傳缺少 data 欄位")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "function_spec": payload.get("function_spec"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+            }
+
+            self.progress.emit(90, f"API {self.label}資料載入完成")
+            self.success.emit({"data": data, "meta": meta})
+        except Exception as exc:
+            self.failure.emit(str(exc))
+        finally:
+            self.progress.emit(100, f"API {self.label}任務結束")
+
 
 class PitstopDataManager(QObject):
     """進站數據管理器 - 負責JSON緩存和CLI備援 - 採用檔案系統監控機制"""
@@ -52,6 +133,17 @@ class PitstopDataManager(QObject):
         self.loading = False
         self._is_loading = False  # 載入狀態標誌
         self._generation_params = None  # 生成參數
+        self._team_is_loading = False
+        self._detail_is_loading = False
+        self._driver_params: Dict[str, Any] = {}
+        self._team_params: Dict[str, Any] = {}
+        self._detail_params: Dict[str, Any] = {}
+        self._api_base_url = self._determine_api_base_url()
+        self._api_timeout = 60.0
+        self._api_workers: Dict[str, PitstopAnalysisApiWorker] = {}
+        self._allow_local_fallback, self._fallback_policy_reason = self._resolve_local_fallback_policy()
+        self._last_api_meta: Dict[str, Any] = {}
+        self._last_data_source: str = "unknown"
         
         # 檔案生成監控定時器（類似賽道分析）
         self._generation_timer = QTimer()
@@ -59,7 +151,218 @@ class PitstopDataManager(QObject):
         
         self._generation_timeout_timer = QTimer()
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+
+        fallback_state = "啟用" if self._allow_local_fallback else "停用"
+        print(
+            f"[PITSTOP_MANAGER] 初始化完成，API 基底網址: {self._api_base_url}，本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
+        )
         
+    def _determine_api_base_url(self) -> str:
+        env_url = os.getenv("F1_API_BASE_URL")
+        if env_url:
+            return str(env_url).rstrip('/')
+
+        config_path = Path("config/api_config.json")
+        if config_path.exists():
+            try:
+                config_data = json.loads(config_path.read_text(encoding="utf-8"))
+                api_url = config_data.get("api_base_url")
+                if api_url:
+                    return str(api_url).rstrip('/')
+            except Exception as exc:
+                print(f"[PITSTOP_MANAGER] 讀取 api_config.json 失敗: {exc}")
+
+        return "http://127.0.0.1:8000"
+
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        env_value = os.getenv("F1T_ALLOW_PITSTOP_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"環境變數 F1T_ALLOW_PITSTOP_JSON_FALLBACK={env_value}"
+            return False, f"環境變數 F1T_ALLOW_PITSTOP_JSON_FALLBACK={env_value}"
+        return False, "預設策略 (API 優先，不允許本地回退)"
+
+    def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
+        self._allow_local_fallback = bool(allowed)
+        self._fallback_policy_reason = reason or "手動覆寫"
+        state = "啟用" if self._allow_local_fallback else "停用"
+        print(f"[PITSTOP_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+
+    def set_api_base_url(self, base_url: Optional[str]) -> None:
+        if base_url:
+            self._api_base_url = str(base_url).rstrip('/')
+            print(f"[PITSTOP_MANAGER] API 基底網址更新為 {self._api_base_url}")
+
+    def _cleanup_api_worker(self, kind: str) -> None:
+        worker = self._api_workers.pop(kind, None)
+        if worker:
+            try:
+                if worker.isRunning():
+                    worker.requestInterruption()
+                    worker.quit()
+                    worker.wait(1000)
+            except Exception:
+                pass
+
+    def _start_api_request(
+        self,
+        kind: str,
+        function_id: int,
+        params: Dict[str, Any],
+        label: str,
+    ) -> None:
+        self._cleanup_api_worker(kind)
+        worker = PitstopAnalysisApiWorker(
+            self._api_base_url,
+            function_id,
+            params,
+            label,
+            timeout=self._api_timeout,
+            parent=self,
+        )
+        worker.progress.connect(partial(self._on_api_progress, kind=kind))
+        worker.success.connect(partial(self._on_api_success, kind=kind))
+        worker.failure.connect(partial(self._on_api_error, kind=kind))
+        worker.finished.connect(partial(self._on_api_finished, kind=kind))
+        self._api_workers[kind] = worker
+        worker.start()
+
+    def _on_api_progress(self, value: int, message: str, *, kind: str) -> None:
+        try:
+            bounded = max(0, min(int(value), 100))
+        except Exception:
+            bounded = 0
+        if kind == "driver":
+            self.loading_progress.emit(bounded)
+        if message:
+            self.status_changed.emit(message)
+
+    def _on_api_finished(self, *, kind: str) -> None:
+        self._api_workers.pop(kind, None)
+
+    def _append_metadata(self, data: Dict[str, Any], meta: Dict[str, Any]) -> Dict[str, Any]:
+        metadata = data.setdefault("metadata", {})
+        metadata.setdefault("data_source", "api")
+        metadata.setdefault("fallback_policy", self._fallback_policy_reason)
+        if self.current_year:
+            metadata.setdefault("year", self.current_year)
+        if self.current_race:
+            metadata.setdefault("race", self.current_race)
+        if self.current_session:
+            metadata.setdefault("session", self.current_session)
+        if meta:
+            metadata["api"] = meta
+        return data
+
+    def _on_api_success(self, payload: Dict[str, Any], *, kind: str) -> None:
+        data = payload.get("data")
+        meta = payload.get("meta", {})
+        self._last_api_meta = meta or {}
+        self._last_data_source = "api"
+
+        try:
+            if not isinstance(data, dict):
+                raise ValueError("API 回傳資料格式錯誤")
+
+            if kind == "driver":
+                if not self._validate_pitstop_data(data):
+                    raise ValueError("車手進站數據格式驗證失敗")
+                enriched = self._append_metadata(data, meta)
+                if self._driver_params.get("force_refresh"):
+                    enriched.setdefault("metadata", {})["requested_force_refresh"] = True
+                self.current_data = enriched
+                self.loading_progress.emit(100)
+                self.status_changed.emit("已從 API 載入車手進站數據")
+                self.data_loaded.emit(enriched)
+                self._is_loading = False
+
+            elif kind == "team":
+                if not self._validate_team_pitstop_data(data):
+                    raise ValueError("車隊進站數據格式驗證失敗")
+                enriched = self._append_metadata(data, meta)
+                if self._team_params.get("force_refresh"):
+                    enriched.setdefault("metadata", {})["requested_force_refresh"] = True
+                self.team_data_loaded.emit(enriched)
+                self._team_is_loading = False
+
+            elif kind == "detail":
+                if not self._validate_driver_detailed_data(data):
+                    raise ValueError("車手詳細進站數據格式驗證失敗")
+                enriched = self._append_metadata(data, meta)
+                if self._detail_params.get("force_refresh"):
+                    enriched.setdefault("metadata", {})["requested_force_refresh"] = True
+                self.driver_detailed_loaded.emit(enriched)
+                self._detail_is_loading = False
+
+        except Exception as exc:
+            print(f"[PITSTOP_MANAGER] API 資料處理失敗 ({kind}): {exc}")
+            if not self._fallback_to_local(kind, message=str(exc)):
+                self.error_occurred.emit(f"API 資料處理失敗: {exc}")
+                if kind == "driver":
+                    self._is_loading = False
+                elif kind == "team":
+                    self._team_is_loading = False
+                elif kind == "detail":
+                    self._detail_is_loading = False
+
+    def _on_api_error(self, message: str, *, kind: str) -> None:
+        print(f"[PITSTOP_MANAGER] API 請求失敗 ({kind}): {message}")
+        if not self._fallback_to_local(kind, message=message):
+            self.error_occurred.emit(f"API 請求失敗: {message}")
+            if kind == "driver":
+                self._is_loading = False
+            elif kind == "team":
+                self._team_is_loading = False
+            elif kind == "detail":
+                self._detail_is_loading = False
+
+    def _fallback_to_local(self, kind: str, *, message: str) -> bool:
+        params = {}
+        if kind == "driver":
+            params = dict(self._driver_params)
+        elif kind == "team":
+            params = dict(self._team_params)
+        elif kind == "detail":
+            params = dict(self._detail_params)
+
+        if not self._allow_local_fallback:
+            print(
+                "[PITSTOP_MANAGER] API 失敗且本地後備停用。如需啟用請設定 F1T_ALLOW_PITSTOP_JSON_FALLBACK=1"
+            )
+            return False
+
+        self.status_changed.emit("API 失敗，改用本地 JSON/CLI 數據")
+
+        year = params.get("year", self.current_year)
+        race = params.get("race", self.current_race)
+        session = params.get("session", self.current_session)
+
+        if kind == "driver":
+            json_file = self._find_pitstop_data_file(year, race, session)
+            if json_file:
+                QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+                return True
+            return self._start_cli_generation(year, race, session)
+
+        if kind == "team":
+            self._team_is_loading = False
+            json_file = self._find_team_pitstop_file(year, race, session)
+            if json_file:
+                QTimer.singleShot(10, lambda: self._load_team_json_file(json_file))
+                return True
+            return self._generate_team_data_via_cli(year, race, session)
+
+        if kind == "detail":
+            self._detail_is_loading = False
+            json_file = self._find_driver_detailed_file(year, race, session)
+            if json_file:
+                QTimer.singleShot(10, lambda: self._load_driver_detailed_json(json_file))
+                return True
+            return self._generate_driver_detailed_via_cli(year, race, session)
+
+        return False
+
     # check_json_cache 方法已移除，改用 _find_pitstop_data_file
     
     def _find_pitstop_data_file(self, year: str, race: str, session: str) -> Optional[str]:
@@ -466,39 +769,44 @@ class PitstopDataManager(QObject):
     
     # 舊的統一CLI管理器方法已移除，改用檔案系統監控機制
     
-    def load_data(self, year: str, race: str, session: str):
-        """載入數據的主要方法（類似賽道分析模組）"""
+    def load_data(self, year: str, race: str, session: str, force_refresh: bool = False):
+        """載入車手進站數據 - API 優先"""
         try:
-            print(f"[FOLDER] [DATA_MANAGER] 開始載入進站數據: {year} {race} {session}")
-            
+            print(f"[PITSTOP_MANAGER] 開始載入車手進站數據: {year} {race} {session}")
+
             if self._is_loading:
                 self.error_occurred.emit("載入器正忙，請稍後再試")
                 return False
-                
+
             self._is_loading = True
-            self.loading_progress.emit(0)
-            
-            # 儲存當前參數
+            self.loading_progress.emit(5)
+
             self.current_year = year
             self.current_race = race
             self.current_session = session
-            
-            # 尋找對應的 JSON 檔案
-            json_file = self._find_pitstop_data_file(year, race, session)
-            print(f"[FOLDER] [DATA_MANAGER] 搜尋到的檔案: {json_file}")
-            
-            if not json_file:
-                print(f"[FOLDER] [DATA_MANAGER] 找不到現有 JSON，開始生成: {year} {race} {session}")
-                # 呼叫 CLI 生成 JSON (異步)
-                self._start_cli_generation(year, race, session)
-                return True  # 返回 True 表示已啟動生成流程
-                    
-            # 使用 QTimer 模擬異步載入
-            QTimer.singleShot(10, lambda: self._load_json_file(json_file))
+            self._driver_params = {
+                "year": year,
+                "race": race,
+                "session": session,
+                "force_refresh": force_refresh,
+            }
+
+            self._api_base_url = self._determine_api_base_url()
+            self.loading_progress.emit(15)
+            self.status_changed.emit("正在透過 API 載入車手進站數據...")
+            self._start_api_request(
+                "driver",
+                function_id=3,
+                params=self._driver_params,
+                label="車手進站分析",
+            )
             return True
-            
-        except Exception as e:
-            self.error_occurred.emit(f"載入失敗: {str(e)}")
+
+        except Exception as exc:
+            print(f"[PITSTOP_MANAGER] 啟動車手進站 API 失敗: {exc}")
+            if self._fallback_to_local("driver", message=str(exc)):
+                return True
+            self.error_occurred.emit(f"載入進站數據失敗: {exc}")
             self._is_loading = False
             return False
     
@@ -563,29 +871,41 @@ class PitstopDataManager(QObject):
             print(f"[ERROR] [TEAM_PITSTOP] 搜尋車隊檔案時發生錯誤: {str(e)}")
             return None
     
-    def load_team_data(self, year: str, race: str, session: str):
-        """載入車隊數據"""
+    def load_team_data(self, year: str, race: str, session: str, force_refresh: bool = False):
+        """載入車隊進站數據 - API 優先"""
         try:
-            print(f"[FOLDER] [TEAM_DATA_MANAGER] 開始載入車隊進站數據: {year} {race} {session}")
-            
-            # 尋找車隊 JSON 檔案
-            json_file = self._find_team_pitstop_file(year, race, session)
-            print(f"[FOLDER] [TEAM_DATA_MANAGER] 搜尋到的車隊檔案: {json_file}")
-            
-            if json_file:
-                # 載入現有 JSON
-                QTimer.singleShot(10, lambda: self._load_team_json_file(json_file))
-            else:
-                # 🔧 修正：如果找不到車隊檔案，自動呼叫CLI生成
-                print(f"[CLI] [TEAM_GENERATE] 找不到車隊JSON檔案，嘗試生成: {year} {race} {session}")
-                success = self._generate_team_data_via_cli(year, race, session)
-                if not success:
-                    self.error_occurred.emit("找不到車隊進站數據檔案，且CLI生成失敗")
-            
+            print(f"[PITSTOP_MANAGER] 開始載入車隊進站數據: {year} {race} {session}")
+
+            if self._team_is_loading:
+                self.error_occurred.emit("車隊數據載入中，請稍後再試")
+                return False
+
+            self._team_is_loading = True
+            self.current_year = year
+            self.current_race = race
+            self.current_session = session
+            self._team_params = {
+                "year": year,
+                "race": race,
+                "session": session,
+                "force_refresh": force_refresh,
+            }
+            self._api_base_url = self._determine_api_base_url()
+            self.status_changed.emit("正在透過 API 載入車隊進站數據...")
+            self._start_api_request(
+                "team",
+                function_id=4,
+                params=self._team_params,
+                label="車隊進站分析",
+            )
             return True
-            
-        except Exception as e:
-            self.error_occurred.emit(f"車隊數據載入失敗: {str(e)}")
+
+        except Exception as exc:
+            print(f"[PITSTOP_MANAGER] 啟動車隊進站 API 失敗: {exc}")
+            if self._fallback_to_local("team", message=str(exc)):
+                return True
+            self.error_occurred.emit(f"車隊數據載入失敗: {exc}")
+            self._team_is_loading = False
             return False
     
     def _load_team_json_file(self, file_path: str):
@@ -606,6 +926,8 @@ class PitstopDataManager(QObject):
         except Exception as e:
             print(f"[ERROR] [TEAM_JSON] 車隊 JSON 載入失敗: {e}")
             self.error_occurred.emit(f"車隊 JSON 載入失敗: {str(e)}")
+        finally:
+            self._team_is_loading = False
     
     def _validate_team_pitstop_data(self, data: Dict[str, Any]) -> bool:
         """驗證車隊進站數據格式"""
@@ -764,29 +1086,41 @@ class PitstopDataManager(QObject):
             print(f"[ERROR] [DRIVER_DETAILED] 搜尋檔案時發生錯誤: {str(e)}")
             return None
 
-    def load_driver_detailed_data(self, year: str, race: str, session: str):
-        """載入車手進站詳細數據 - 支援JSON優先+CLI後備"""
+    def load_driver_detailed_data(self, year: str, race: str, session: str, force_refresh: bool = False):
+        """載入車手進站詳細數據 - API 優先"""
         try:
-            print(f"[FOLDER] [DRIVER_DETAILED_MANAGER] 開始載入車手詳細數據: {year} {race} {session}")
-            
-            # 檢查現有JSON檔案
-            json_file = self._find_driver_detailed_file(year, race, session)
-            print(f"[FOLDER] [DRIVER_DETAILED_MANAGER] 搜尋到的檔案: {json_file}")
-            
-            if json_file:
-                # 載入現有JSON
-                QTimer.singleShot(10, lambda: self._load_driver_detailed_json(json_file))
-            else:
-                # 自動觸發CLI生成
-                print(f"[CLI] [DRIVER_DETAILED_GENERATE] 找不到JSON檔案，嘗試生成: {year} {race} {session}")
-                success = self._generate_driver_detailed_via_cli(year, race, session)
-                if not success:
-                    self.error_occurred.emit("找不到車手詳細進站數據檔案，且CLI生成失敗")
-            
+            print(f"[PITSTOP_MANAGER] 開始載入車手詳細進站數據: {year} {race} {session}")
+
+            if self._detail_is_loading:
+                self.error_occurred.emit("車手詳細數據載入中，請稍後再試")
+                return False
+
+            self._detail_is_loading = True
+            self.current_year = year
+            self.current_race = race
+            self.current_session = session
+            self._detail_params = {
+                "year": year,
+                "race": race,
+                "session": session,
+                "force_refresh": force_refresh,
+            }
+            self._api_base_url = self._determine_api_base_url()
+            self.status_changed.emit("正在透過 API 載入車手詳細進站數據...")
+            self._start_api_request(
+                "detail",
+                function_id=5,
+                params=self._detail_params,
+                label="車手進站詳細分析",
+            )
             return True
-            
-        except Exception as e:
-            self.error_occurred.emit(f"車手詳細數據載入失敗: {str(e)}")
+
+        except Exception as exc:
+            print(f"[PITSTOP_MANAGER] 啟動車手詳細進站 API 失敗: {exc}")
+            if self._fallback_to_local("detail", message=str(exc)):
+                return True
+            self.error_occurred.emit(f"車手詳細數據載入失敗: {exc}")
+            self._detail_is_loading = False
             return False
 
     def _load_driver_detailed_json(self, file_path: str):
@@ -807,6 +1141,8 @@ class PitstopDataManager(QObject):
         except Exception as e:
             print(f"[ERROR] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入失敗: {e}")
             self.error_occurred.emit(f"車手詳細 JSON 載入失敗: {str(e)}")
+        finally:
+            self._detail_is_loading = False
 
     def _validate_driver_detailed_data(self, data: Dict[str, Any]) -> bool:
         """驗證車手詳細進站數據格式"""

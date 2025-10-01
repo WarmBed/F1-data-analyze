@@ -8,8 +8,10 @@ Accident Severity Distribution Module - Following Core Development Standards
 import os
 import json
 import pickle
-import pandas as pd
 from datetime import datetime
+from typing import Any
+
+import pandas as pd
 from prettytable import PrettyTable
 
 def generate_cache_key(session_info):
@@ -37,6 +39,31 @@ def save_cache(data, cache_key):
         return True
     except:
         return False
+
+
+def _sanitize_token(value: Any, *, default: str = "Unknown", upper: bool = False) -> str:
+    text = str(value).strip() if value is not None else ""
+    if not text:
+        text = default
+
+    normalized = []
+    for char in text:
+        if char.isalnum() or char in {"_", "-"}:
+            normalized.append(char)
+        elif char.isspace():
+            normalized.append("_")
+        else:
+            normalized.append("_")
+
+    sanitized = "".join(normalized)
+    while "__" in sanitized:
+        sanitized = sanitized.replace("__", "_")
+    sanitized = sanitized.strip("_") or default
+
+    if upper:
+        sanitized = sanitized.upper()
+
+    return sanitized
 
 def assess_severity(message):
     """評估事故嚴重程度"""
@@ -320,25 +347,38 @@ def display_severity_distribution(data):
 def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
     os.makedirs("json", exist_ok=True)
-    
-    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
+
     year = session_info.get('year', 2025)
-    filename = f"severity_distribution_{year}_{event_name}.json"
+    race_token = _sanitize_token(session_info.get('event_name', 'Unknown'))
+    session_token = _sanitize_token(
+        session_info.get('session_type') or session_info.get('session') or 'R',
+        upper=True,
+    )
+
+    filename = f"severity_distribution_{year}_{race_token}_{session_token}.json"
     filepath = os.path.join("json", filename)
-    
+
+    legacy_filename = f"severity_distribution_{year}_{race_token}.json"
+    legacy_path = os.path.join("json", legacy_filename)
+    if os.path.exists(legacy_path) and legacy_path != filepath:
+        try:
+            os.replace(legacy_path, filepath)
+        except OSError:
+            pass
+
     json_result = {
         "function_id": 7,
         "function_name": "Severity Distribution Analysis",
         "analysis_type": "severity_distribution",
-        "session_info": session_info,
+        "session_info": {**session_info, "session_type": session_token},
         "timestamp": datetime.now().isoformat(),
         "data": data
     }
-    
+
     try:
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(json_result, f, ensure_ascii=False, indent=2)
-        
+
         abs_filepath = os.path.abspath(filepath)
         print(f"💾 JSON結果已保存到: file:///{abs_filepath}")
         return True

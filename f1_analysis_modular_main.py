@@ -167,6 +167,8 @@ class F1AnalysisModularCLI:
         self.f1_analysis_instance = None  # 添加完整的F1分析實例
         self.open_analyzer = None  # 添加 OpenF1 分析器實例
         self.args = args  # 保存命令行參數
+        self.last_error_message: Optional[str] = None
+        self.last_error_details: Optional[Dict[str, Any]] = None
         
         # 初始化F1分析實例
         self._initialize_f1_analysis_instance()
@@ -238,6 +240,13 @@ class F1AnalysisModularCLI:
             print("[OK] 兼容數據載入器初始化成功")
         except Exception as e:
             print(f"[ERROR] 數據載入器初始化失敗: {e}")
+            self.last_error_message = f"數據載入器初始化失敗: {e}"
+            self.last_error_details = {
+                "year": year,
+                "race": race,
+                "session": session,
+                "exception": str(e)
+            }
             return False
         
         # 載入數據
@@ -254,6 +263,12 @@ class F1AnalysisModularCLI:
             return True
         else:
             print(f"[ERROR] 賽事數據載入失敗")
+            self.last_error_message = "無法載入指定賽事的數據"
+            self.last_error_details = {
+                "year": year,
+                "race": race,
+                "session": session
+            }
             return False
 
 
@@ -568,8 +583,15 @@ class F1AnalysisModularCLI:
             
             if result.get("success", False):
                 print(f"[OK] 功能 {function_id} 執行成功")
+                self.last_error_message = None
+                self.last_error_details = None
             else:
                 print(f"[ERROR] 功能 {function_id} 執行失敗: {result.get('message', '未知錯誤')}")
+                self.last_error_message = result.get('message', '未知錯誤')
+                self.last_error_details = {
+                    "function_id": function_id,
+                    "result": result
+                }
             
             return result
             
@@ -581,6 +603,11 @@ class F1AnalysisModularCLI:
                 "error": str(e)
             }
             print(f"[ERROR] {error_result['message']}")
+            self.last_error_message = error_result['message']
+            self.last_error_details = {
+                "function_id": function_id,
+                "exception": str(e)
+            }
             return error_result
         """執行分析功能並返回JSON格式的結果
         
@@ -1464,6 +1491,8 @@ class F1AnalysisModularCLI:
 
     def run(self):
         """執行 F1 分析 - 僅支援參數化模式"""
+        self.last_error_message = None
+        self.last_error_details = None
         self.display_header()
         
         print(f"\n[OK] 模組化F1分析系統已啟動 (參數化模式)")
@@ -1477,6 +1506,13 @@ class F1AnalysisModularCLI:
             print("\n使用範例:")
             print("  python f1_analysis_modular_main.py -y 2025 -r China -s R -f 1")
             print("  python f1_analysis_modular_main.py --help  # 查看完整參數說明")
+            self.last_error_message = "缺少必要的參數"
+            self.last_error_details = {
+                "year": getattr(self.args, "year", None),
+                "race": getattr(self.args, "race", None),
+                "session": getattr(self.args, "session", None),
+                "function": getattr(self.args, "function", None),
+            }
             return False
         
         # 參數模式
@@ -1498,6 +1534,13 @@ class F1AnalysisModularCLI:
         
         if not self.load_race_data_from_args(year, race, session):
             print("[ERROR] 參數模式數據載入失敗")
+            if not self.last_error_message:
+                self.last_error_message = "賽事數據載入失敗"
+                self.last_error_details = {
+                    "year": year,
+                    "race": race,
+                    "session": session
+                }
             return False
         
         # 執行指定功能
@@ -1527,11 +1570,20 @@ class F1AnalysisModularCLI:
             else:
                 print("[ERROR] 參數化模式功能執行失敗")
                 print(f"[ERROR] 錯誤信息: {result.get('message', '未知錯誤')}")
+                self.last_error_message = result.get('message', '未知錯誤')
+                self.last_error_details = {
+                    "function_id": function_id,
+                    "result": result
+                }
                 return False
         else:
             print("[ERROR] 參數模式需要指定功能編號 (-f)")
             print("範例: python f1_analysis_modular_main.py -y 2025 -r China -s R -f 1")
             print("使用 --help 查看所有可用參數和功能")
+            self.last_error_message = "缺少功能編號參數 (-f)"
+            self.last_error_details = {
+                "function": getattr(self.args, 'function', None)
+            }
             return False
 
 
@@ -1647,13 +1699,22 @@ def create_argument_parser():
     
     return parser
 
-def main():
+def main() -> int:
     """主程式進入點 - 僅支援參數化模式"""
     try:
         # 解析命令行參數
         parser = create_argument_parser()
         args = parser.parse_args()
-        
+
+        # 未提供任何參數時，顯示使用說明並提前結束
+        if len(sys.argv) <= 1:
+            print("\n[INFO] 偵測到未提供任何參數，本程式僅支援參數化模式運行。")
+            print("請參考以下範例提供必要的參數後再試一次：")
+            print("  python f1_analysis_modular_main.py -y 2025 -r Japan -s R -f 1")
+            print("  python f1_analysis_modular_main.py --help  # 查看完整參數說明")
+            parser.print_help()
+            return 0
+
         # 如果要求列出賽事
         if args.list_races:
             if args.year:
@@ -1662,28 +1723,49 @@ def main():
             else:
                 # 顯示所有支援年份的賽事列表
                 print_supported_races()
-            return
-        
+            return 0
+
         # 檢查 modules 目錄是否存在
         if not os.path.exists(modules_dir):
             print(f"[ERROR] 找不到 modules 目錄: {modules_dir}")
             print("請確保在正確的工作目錄中運行此程式")
-            sys.exit(1)
-            
+            return 1
+
         # 啟動模組化CLI (僅參數化模式)
         cli = F1AnalysisModularCLI(args)
         success = cli.run()
         
         if not success:
-            print("[ERROR] 分析執行失敗")
-            sys.exit(1)
-        
+            error_message = cli.last_error_message or "分析執行失敗"
+            print(f"[ERROR] 分析執行失敗: {error_message}")
+            if cli.last_error_details:
+                logger.error("CLI 執行失敗詳情: %s", cli.last_error_details)
+            return 1
+
+        return 0
+
     except KeyboardInterrupt:
         print("\n\n👋 程式已被使用者中斷，再見！")
-    except Exception as e:
-        
+        return 0
+    except Exception:
+        logger.exception("CLI 執行期間發生未處理例外")
         print("請檢查系統環境或聯繫技術支援")
-        sys.exit(1)
+        return 1
+
+def _is_interactive_environment() -> bool:
+    """判斷當前是否為互動式環境，避免在 IDE/Jupyter 中拋出 SystemExit 堆疊"""
+    if hasattr(sys, "ps1"):
+        return True
+    if "IPython" in sys.modules:
+        return True
+    # 檢查 VS Code Python Debug Console
+    if "debugpy" in sys.modules or "_pydevd_bundle" in sys.modules:
+        return True
+    # 檢查其他 IDE 調試器
+    if any(mod in sys.modules for mod in ["pydevd", "pdb", "bdb"]):
+        return True
+    argv0 = sys.argv[0] if sys.argv else ""
+    return argv0 in {"", "-c"}
 
 def print_supported_races():
     """列印支援的賽事列表"""
@@ -1836,4 +1918,9 @@ def print_races_for_year(year):
 
 
 if __name__ == "__main__":
-    main()
+    _exit_code = main()
+    if _is_interactive_environment():
+        if isinstance(_exit_code, int) and _exit_code != 0:
+            print(f"[WARN] CLI 已以狀態碼 {_exit_code} 結束 (互動模式下已抑制 SystemExit)")
+    else:
+        sys.exit(_exit_code)

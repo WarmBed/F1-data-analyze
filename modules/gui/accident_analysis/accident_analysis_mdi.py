@@ -13,7 +13,7 @@ import datetime
 import traceback
 import subprocess
 import threading
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple, Set
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -37,420 +37,8 @@ except ImportError:
         def __init__(self, parent=None):
             super().__init__(parent)
 
-
-class AccidentDataManager(QObject):
-    """事故數據管理器 - 負責JSON緩存和CLI備援 (參考進站分析模式)"""
-    
-    # 信號定義 (參考進站分析模式)
-    statistics_loaded = pyqtSignal(dict)        # 統計數據載入完成
-    statistics_reload_requested = pyqtSignal()  # 統計數據重載請求
-    all_incidents_loaded = pyqtSignal(dict)     # 所有事故列表載入完成
-    all_incidents_reload_requested = pyqtSignal()  # 所有事故重載請求
-    severity_loaded = pyqtSignal(dict)          # 嚴重程度分析載入完成
-    key_events_loaded = pyqtSignal(dict)        # 關鍵事件載入完成
-    error_occurred = pyqtSignal(str)
-    loading_progress = pyqtSignal(int)
-    status_changed = pyqtSignal(str)
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.cache_dir = os.path.join(os.getcwd(), "cache")
-        self.current_year = None
-        self.current_race = None
-        self.current_session = None
-        self.loading = False
-        self._is_loading = False
-        
-        # 生成監控定時器 (參考進站分析)
-        self._generation_timer = QTimer()
-        self._generation_timer.timeout.connect(self._check_generation_progress)
-        
-        self._generation_timeout_timer = QTimer()
-        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
-    
-    def loadAccidentStatistics(self, year: str, race: str, session: str) -> bool:
-        """載入事故統計數據 - 支援JSON優先+CLI後備 (參考進站分析)"""
-        print(f"[AccidentDataManager] 載入事故統計: {year} {race} {session}")
-        
-        self.current_year = year
-        self.current_race = race
-        self.current_session = session
-        
-        # 1. 檢查現有JSON檔案
-        json_file = self._find_statistics_file(year, race, session)
-        
-        if json_file:
-            # 載入現有JSON
-            print(f"[AccidentDataManager] 找到統計JSON: {json_file}")
-            QTimer.singleShot(10, lambda: self._load_statistics_json(json_file))
-            return True
-        else:
-            # 自動觸發CLI生成
-            print(f"[AccidentDataManager] 找不到統計JSON，觸發CLI自動生成")
-            return self._generate_statistics_via_cli(year, race, session)
-    
-    def loadAllIncidentsSummary(self, year: str, race: str, session: str) -> bool:
-        """載入所有事件詳細列表分析 - 功能8數據載入入口"""
-        return self.load_all_incidents_data(year, race, session)
-    
-    def load_all_incidents_data(self, year: str, race: str, session: str) -> bool:
-        """載入所有事件詳細數據 - 功能8專用"""
-        print(f"[AccidentDataManager] 載入所有事件數據: {year} {race} {session}")
-        
-        self.current_year = year
-        self.current_race = race
-        self.current_session = session
-        
-        # 1. 檢查現有JSON檔案
-        json_file = self._find_all_incidents_file(year, race, session)
-        
-        if json_file:
-            # 載入現有JSON
-            print(f"[AccidentDataManager] 找到事件JSON: {json_file}")
-            QTimer.singleShot(10, lambda: self._load_all_incidents_json(json_file))
-            return True
-        else:
-            # 自動觸發CLI生成
-            print(f"[AccidentDataManager] 找不到事件JSON，觸發CLI自動生成")
-            return self._generate_all_incidents_via_cli(year, race, session)
-    
-    def _find_statistics_file(self, year: str, race: str, session: str) -> Optional[str]:
-        """搜尋事故統計數據檔案 (支援多格式匹配，參考進站分析)"""
-        try:
-            print(f"[AccidentDataManager] 搜尋統計檔案: {year} {race} {session}")
-            
-            search_dirs = ["json", "json_exports", "cache"]
-            
-            # 賽事名稱映射 (參考進站分析模式)
-            race_mappings = {
-                "Japan": ["Japanese_Grand_Prix", "Japan"],
-                "China": ["Chinese_Grand_Prix", "China"],
-                "Belgium": ["Belgian_Grand_Prix", "Belgium"],
-                "Miami": ["Miami_Grand_Prix", "Miami"],
-                "Australia": ["Australian_Grand_Prix", "Australia"],
-                "Great_Britain": ["British_Grand_Prix", "Great_Britain"],
-                "United_States": ["United_States_Grand_Prix", "United_States"],
-                "Bahrain": ["Bahrain_Grand_Prix", "Bahrain"],
-                "Saudi_Arabia": ["Saudi_Arabian_Grand_Prix", "Saudi_Arabia"],
-                "Monaco": ["Monaco_Grand_Prix", "Monaco"],
-                "Canada": ["Canadian_Grand_Prix", "Canada"],
-                "Spain": ["Spanish_Grand_Prix", "Spain"],
-                "Austria": ["Austrian_Grand_Prix", "Austria"],
-                "Hungary": ["Hungarian_Grand_Prix", "Hungary"],
-                "Netherlands": ["Dutch_Grand_Prix", "Netherlands"],
-                "Italy": ["Italian_Grand_Prix", "Italy"],
-                "Azerbaijan": ["Azerbaijan_Grand_Prix", "Azerbaijan"],
-                "Singapore": ["Singapore_Grand_Prix", "Singapore"]
-            }
-            
-            possible_race_names = race_mappings.get(race, [race.replace(' ', '_')])
-            
-            # 多種檔案命名模式 (參考規格文件)
-            patterns = []
-            for race_name in possible_race_names:
-                patterns.extend([
-                    f"accident_statistics_{year}_{race_name}.json",
-                    f"accident_statistics_{year}_{race_name}_Grand_Prix.json",
-                    f"accident_statistics_summary_{year}_{race_name}.json"
-                ])
-            
-            # 搜尋多個目錄中的精確匹配
-            for search_dir in search_dirs:
-                for pattern in patterns:
-                    file_path = os.path.join(search_dir, pattern)
-                    if os.path.exists(file_path):
-                        print(f"[AccidentDataManager] 找到統計檔案: {file_path}")
-                        return file_path
-                        
-            print(f"[AccidentDataManager] 未找到統計檔案，嘗試的模式: {patterns}")
-            return None
-            
-        except Exception as e:
-            print(f"[AccidentDataManager] 搜尋統計檔案時發生錯誤: {e}")
-            return None
-    
-    def _load_statistics_json(self, file_path: str):
-        """載入統計JSON檔案並發送信號 (參考進站分析)"""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            print(f"[AccidentDataManager] 統計JSON載入成功: {os.path.basename(file_path)}")
-            
-            # 發射主要統計信號
-            self.statistics_loaded.emit(data)
-            
-            # 為其他 Widget 發射特定信號
-            if 'all_incidents' in data:
-                self.all_incidents_loaded.emit(data)
-            
-            if 'severity_distribution' in data:
-                self.severity_loaded.emit(data)
-                
-            if 'key_events' in data:
-                self.key_events_loaded.emit(data)
-            
-        except Exception as e:
-            print(f"[AccidentDataManager] 載入統計JSON失敗: {file_path}, 錯誤: {e}")
-            self.statistics_loaded.emit({})
-    
-    def _generate_statistics_via_cli(self, year: str, race: str, session: str) -> bool:
-        """透過CLI生成事故統計數據 (後台執行，參考進站分析)"""
-        command = [
-            "python", "f1_analysis_modular_main.py",
-            "-f", "6",  # 功能6: 事故統計摘要
-            "-y", str(year), "-r", race, "-s", session
-        ]
-        
-        print(f"[AccidentDataManager] 執行CLI命令: {' '.join(command)}")
-        
-        def run_statistics_cli():
-            try:
-                process = subprocess.Popen(
-                    command, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE,
-                    text=True, 
-                    cwd=os.getcwd(),
-                    encoding='utf-8',
-                    errors='ignore'
-                )
-                
-                stdout, stderr = process.communicate()
-                
-                if process.returncode == 0:
-                    print(f"[OK] [STATISTICS_CLI_GEN] 統計數據CLI執行成功")
-                    print(f"[CLI_OUTPUT] {stdout}")
-                    # 使用信號機制，在主執行緒中處理重新載入
-                    print(f"[RELOAD] [STATISTICS_CLI_GEN] 發送統計數據重新載入信號")
-                    self.statistics_reload_requested.emit()
-                else:
-                    print(f"[ERROR] [STATISTICS_CLI_GEN] CLI統計生成失敗: {stderr}")
-                    self.error_occurred.emit(f"CLI統計生成失敗: {stderr}")
-                    
-            except Exception as e:
-                print(f"[ERROR] [STATISTICS_CLI_GEN] CLI統計執行異常: {e}")
-                self.error_occurred.emit(f"CLI統計執行異常: {str(e)}")
-                
-        # 在後台執行統計CLI (參考進站分析)
-        thread = threading.Thread(target=run_statistics_cli, daemon=True)
-        thread.start()
-        return True
-    
-    def _reload_statistics_after_generation(self, year: str, race: str, session: str):
-        """CLI生成後重新載入統計數據 (參考進站分析)"""
-        print(f"[AccidentDataManager] CLI完成，重新載入統計數據")
-        self.loadAccidentStatistics(year, race, session)
-    
-    def _check_generation_progress(self):
-        """檢查生成進度 (參考進站分析)"""
-        # 實現進度檢查邏輯
-        pass
-    
-    def _on_generation_timeout(self):
-        """生成超時處理 (參考進站分析)"""
-        print(f"[AccidentDataManager] CLI生成超時")
-        self.error_occurred.emit("CLI生成超時，請檢查網路連接或數據可用性")
-    
-    def _find_all_incidents_file(self, year: str, race: str, session: str) -> Optional[str]:
-        """搜尋所有事件數據檔案 - 功能8專用"""
-        try:
-            print(f"[AccidentDataManager] 搜尋事件檔案: {year} {race} {session}")
-            
-            search_dirs = ["json", "json_exports", "cache"]
-            
-            # 賽事名稱映射
-            race_mappings = {
-                "Australia": ["Australia", "Australian", "Melbourne"],
-                "Bahrain": ["Bahrain", "Sakhir"],
-                "China": ["China", "Chinese", "Shanghai"],
-                "Japan": ["Japan", "Japanese", "Suzuka"],
-                "Belgium": ["Belgium", "Belgian", "Spa"]
-            }
-            
-            race_variants = race_mappings.get(race, [race])
-            
-            # 檔案名稱模式
-            patterns = []
-            for race_variant in race_variants:
-                patterns.extend([
-                    f"all_incidents_summary_{year}_{race_variant}.json",
-                    f"all_incidents_summary_{year}_{race_variant}_{session}.json",
-                    f"incident_details_{year}_{race_variant}.json"
-                ])
-            
-            for directory in search_dirs:
-                if os.path.exists(directory):
-                    for pattern in patterns:
-                        full_path = os.path.join(directory, pattern)
-                        if os.path.exists(full_path):
-                            print(f"[AccidentDataManager] 找到事件檔案: {full_path}")
-                            return full_path
-                            
-            return None
-            
-        except Exception as e:
-            print(f"[ERROR] [AccidentDataManager] 搜尋事件檔案時發生錯誤: {str(e)}")
-            return None
-    
-    def _generate_all_incidents_via_cli(self, year: str, race: str, session: str) -> bool:
-        """透過CLI生成所有事件數據 - 功能8專用"""
-        command = [
-            "python", "f1_analysis_modular_main.py",
-            "-f", "8",  # 功能8: 所有事件詳細列表
-            "-y", str(year), "-r", race, "-s", session
-        ]
-        
-        print(f"[AccidentDataManager] 執行CLI命令（功能8）: {' '.join(command)}")
-        
-        def run_all_incidents_cli():
-            try:
-                process = subprocess.Popen(
-                    command, 
-                    stdout=subprocess.PIPE, 
-                    stderr=subprocess.PIPE,
-                    text=True, 
-                    cwd=os.getcwd(),
-                    encoding='utf-8',
-                    errors='ignore'
-                )
-                
-                stdout, stderr = process.communicate()
-                
-                if process.returncode == 0:
-                    print(f"[OK] [ALL_INCIDENTS_CLI_GEN] 所有事件CLI執行成功")
-                    print(f"[CLI_OUTPUT] {stdout}")
-                    # 使用信號機制，在主執行緒中處理重新載入
-                    print(f"[RELOAD] [ALL_INCIDENTS_CLI_GEN] 發送所有事件數據重新載入信號")
-                    self.all_incidents_reload_requested.emit()
-                else:
-                    print(f"[ERROR] [ALL_INCIDENTS_CLI_GEN] CLI事件生成失敗: {stderr}")
-                    self.error_occurred.emit(f"CLI事件生成失敗: {stderr}")
-                    
-            except Exception as e:
-                print(f"[ERROR] [ALL_INCIDENTS_CLI_GEN] CLI事件執行異常: {e}")
-                self.error_occurred.emit(f"CLI事件執行異常: {str(e)}")
-                
-        # 在後台執行CLI
-        thread = threading.Thread(target=run_all_incidents_cli, daemon=True)
-        thread.start()
-        return True
-    
-    def _load_all_incidents_json(self, file_path: str):
-        """載入所有事件JSON檔案 - 功能8專用（參考進站分析模組）"""
-        try:
-            print(f"[LOAD] [ALL_INCIDENTS_JSON] 載入事件 JSON 檔案: {file_path}")
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            # 驗證數據（參考進站分析模組的驗證流程）
-            if self._validate_all_incidents_data(data):
-                print(f"[OK] [ALL_INCIDENTS_JSON] 事件 JSON 載入並驗證成功")
-                self.all_incidents_loaded.emit(data)
-            else:
-                print(f"[ERROR] [VALIDATE] 所有事件數據格式無效")
-                self.error_occurred.emit("所有事件數據格式無效")
-                self.all_incidents_loaded.emit({})
-                
-        except Exception as e:
-            print(f"[ERROR] [ALL_INCIDENTS_JSON] 事件 JSON 載入失敗: {e}")
-            self.error_occurred.emit(f"所有事件 JSON 載入失敗: {str(e)}")
-            self.all_incidents_loaded.emit({})
-    
-    def _validate_all_incidents_data(self, data: Dict[str, Any]) -> bool:
-        """驗證所有事件數據格式 - 功能8專用"""
-        try:
-            print(f"[VALIDATE] 開始驗證所有事件數據...")
-            
-            # 檢查基本結構
-            if not isinstance(data, dict):
-                print(f"[VALIDATE] 數據不是字典格式")
-                return False
-                
-            print(f"[VALIDATE] 數據鍵: {list(data.keys())}")
-            
-            # 檢查必要欄位
-            required_fields = ["function_id", "data"]
-            for field in required_fields:
-                if field not in data:
-                    print(f"[VALIDATE] 缺少必要欄位: {field}")
-                    return False
-            
-            # 檢查功能ID
-            function_id = data.get("function_id")
-            print(f"[VALIDATE] 功能ID: {function_id}")
-            if function_id != 8:
-                print(f"[VALIDATE] 功能ID不正確: {function_id}, 期望: 8")
-                return False
-            
-            # 檢查數據結構
-            data_section = data["data"]
-            print(f"[VALIDATE] data 段鍵: {list(data_section.keys()) if isinstance(data_section, dict) else 'Not a dict'}")
-            
-            if "all_incidents" not in data_section:
-                print(f"[VALIDATE] 缺少 all_incidents 數據")
-                return False
-                
-            incidents = data_section["all_incidents"]
-            if not isinstance(incidents, list):
-                print(f"[VALIDATE] all_incidents 不是列表格式: {type(incidents)}")
-                return False
-                
-            print(f"[VALIDATE] 找到 {len(incidents)} 個事件記錄")
-            
-            # 檢查事件記錄格式
-            if incidents:
-                first_incident = incidents[0]
-                print(f"[VALIDATE] 第一個事件鍵: {list(first_incident.keys()) if isinstance(first_incident, dict) else 'Not a dict'}")
-                
-                # 使用英文欄位名稱，與JSON格式匹配
-                required_incident_fields = ["sequence_number", "lap", "message", "category"]
-                for field in required_incident_fields:
-                    if field not in first_incident:
-                        print(f"[VALIDATE] 事件記錄缺少欄位: {field}")
-                        return False
-            
-            print(f"[VALIDATE] 所有事件數據驗證通過")
-            return True
-            
-        except Exception as e:
-            print(f"[VALIDATE] 驗證過程中發生錯誤: {e}")
-            return False
-                
-            # 檢查事件記錄格式
-            if len(incidents) > 0:
-                first_incident = incidents[0]
-                # 根據實際JSON格式檢查欄位（中文欄位名）
-                required_incident_fields = ["序號", "圈數", "時間", "事件描述", "期別", "嚴重程度", "影響車手"]
-                for field in required_incident_fields:
-                    if field not in first_incident:
-                        print(f"[ERROR] [VALIDATE] 事件記錄缺少欄位: {field}")
-                        return False
-            
-            print(f"[OK] [VALIDATE] 所有事件數據驗證通過，記錄數量：{len(incidents)}")
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] [VALIDATE] 數據驗證失敗: {str(e)}")
-            return False
-                
-            # 檢查事件記錄格式
-            if len(incidents) > 0:
-                first_incident = incidents[0]
-                # 根據實際JSON格式檢查欄位（中文欄位名）
-                required_incident_fields = ["序號", "圈數", "時間", "事件描述", "期別", "嚴重程度", "影響車手"]
-                for field in required_incident_fields:
-                    if field not in first_incident:
-                        print(f"[ERROR] [VALIDATE] 事件記錄缺少欄位: {field}")
-                        return False
-            
-            print(f"[OK] [VALIDATE] 所有事件數據驗證通過，記錄數量：{len(incidents)}")
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] [VALIDATE] 數據驗證失敗: {str(e)}")
-            return False
+# API 化後的數據管理器
+from .accident_data_manager import AccidentDataManager
 
 
 class AccidentStatisticsWidget(QWidget):
@@ -1154,6 +742,8 @@ class AccidentAnalysisModule(IAnalysisModule):
             self.load_data()
         elif current_index == 1:  # 詳細記錄分頁
             print(f"[SYNC_DATA] 載入詳細記錄數據: {year} {race} {session}")
+            if hasattr(self.detailed_list_widget, "show_loading_state"):
+                self.detailed_list_widget.show_loading_state()
             self.data_manager.load_all_incidents_data(year, race, session)
         # 其他分頁的處理將在後續開發
     
@@ -1171,22 +761,34 @@ class AccidentAnalysisModule(IAnalysisModule):
         elif index == 1:  # 詳細記錄分頁
             print(f"[TAB_SWITCH] 載入詳細記錄數據: {self.current_year} {self.current_race} {self.current_session}")
             # 載入詳細記錄數據
+            if hasattr(self.detailed_list_widget, "show_loading_state"):
+                self.detailed_list_widget.show_loading_state()
             self.data_manager.load_all_incidents_data(
                 self.current_year, self.current_race, self.current_session)
     
     def reload_statistics_data(self):
         """重新載入統計數據 (CLI完成後調用，參考進站分析)"""
         print(f"[AccidentAnalysisModule] 重新載入統計數據")
-        # 延遲2秒後重新載入，確保檔案生成完成
-        QTimer.singleShot(2000, lambda: self.data_manager.loadAccidentStatistics(
-            self.current_year, self.current_race, self.current_session))
+        if not all([self.current_year, self.current_race, self.current_session]):
+            return
+        self.data_manager.loadAccidentStatistics(
+            self.current_year,
+            self.current_race,
+            self.current_session,
+            force_refresh=True,
+        )
     
     def reload_all_incidents_data(self):
         """重新載入所有事件數據 (CLI完成後調用)"""
         print(f"[AccidentAnalysisModule] 重新載入所有事件數據")
-        # 延遲2秒後重新載入，確保檔案生成完成
-        QTimer.singleShot(2000, lambda: self.data_manager.loadAllIncidentsSummary(
-            self.current_year, self.current_race, self.current_session))
+        if not all([self.current_year, self.current_race, self.current_session]):
+            return
+        self.data_manager.load_all_incidents_data(
+            self.current_year,
+            self.current_race,
+            self.current_session,
+            force_refresh=True,
+        )
     
     def on_error_occurred(self, error_message):
         """錯誤處理"""
@@ -1307,69 +909,39 @@ class AccidentAnalysisModule(IAnalysisModule):
             print(f"[ERROR] [ACCIDENT_MODULE] 更新參數失敗: {str(e)}")
             self.emit_error(f"更新參數失敗: {str(e)}")
     
-    def load_data(self, **kwargs) -> bool:
-        """載入數據 - 從JSON檔案讀取all_incidents_summary資料（參照進站分析流程）"""
+    def load_data(self, force_refresh: bool = False, **kwargs) -> bool:
+        """透過資料管理器載入事故統計資料（API 優先）。"""
         if not all([self.current_year, self.current_race, self.current_session]):
-            print(f"[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
-            print(f"[WARNING] [ACCIDENT_MODULE] 當前參數: year={self.current_year}, race={self.current_race}, session={self.current_session}")
+            print("[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
+            print(
+                f"[WARNING] [ACCIDENT_MODULE] 當前參數: year={self.current_year}, "
+                f"race={self.current_race}, session={self.current_session}"
+            )
             return False
-            
-        print(f"🔄 [ACCIDENT_MODULE] ========== 載入事故分析數據 ==========")
-        print(f"🔄 [ACCIDENT_MODULE] 載入參數: {self.current_year} {self.current_race} {self.current_session}")
-        
-        # 載入JSON檔案數據
-        json_file_path = self.get_json_file_path()
-        
-        if json_file_path and os.path.exists(json_file_path):
-            try:
-                print(f"📁 [ACCIDENT_MODULE] 找到JSON檔案: {json_file_path}")
-                print(f"📊 [ACCIDENT_MODULE] 開始讀取JSON數據...")
-                
-                with open(json_file_path, 'r', encoding='utf-8') as f:
-                    json_data = json.load(f)
-                
-                print(f"📈 [ACCIDENT_MODULE] JSON數據讀取成功，開始處理...")
-                
-                # 處理並更新統計數據
-                self.process_json_data(json_data)
-                print(f"✅ [ACCIDENT_MODULE] 事故分析數據載入完成")
-                print(f"✅ [ACCIDENT_MODULE] ========================================")
-                return True
-                
-            except Exception as e:
-                print(f"❌ [ACCIDENT_MODULE] 讀取JSON檔案失敗: {e}")
-                print(f"❌ [ACCIDENT_MODULE] 檔案路徑: {json_file_path}")
-                
-                # 顯示用戶友好的錯誤訊息
-                if hasattr(self, 'error_label'):
-                    self.error_label.setText(f"載入失敗: {str(e)}")
-                    self.error_label.show()
-                    
-                return False
-        else:
-            print(f"⚠️ [ACCIDENT_MODULE] 未找到JSON檔案，啟動CLI生成...")
-            print(f"⚠️ [ACCIDENT_MODULE] 目標檔案: {json_file_path}")
-            
-            # 搜尋可能的檔案
-            self.search_and_suggest_files()
-            
-            # 啟動CLI生成流程（參照進站分析模式）
-            print(f"🔧 [ACCIDENT_MODULE] 開始透過CLI生成事故分析數據...")
-            success = self._start_cli_generation(self.current_year, self.current_race, self.current_session)
-            
-            if success:
-                print(f"✅ [ACCIDENT_MODULE] CLI生成流程已啟動，等待數據生成...")
-                # 顯示友好的訊息
-                if hasattr(self, 'error_label'):
-                    self.error_label.setText(f"正在生成事故分析數據，請稍候...")
-                    self.error_label.show()
-                return True
-            else:
-                # 顯示友好的訊息
-                if hasattr(self, 'error_label'):
-                    self.error_label.setText(f"找不到事故分析數據檔案\n請先執行 CLI 分析生成數據")
-                    self.error_label.show()
-                return False
+
+        print("🔄 [ACCIDENT_MODULE] ========== 載入事故分析數據 ==========")
+        print(
+            f"🔄 [ACCIDENT_MODULE] 載入參數: "
+            f"{self.current_year} {self.current_race} {self.current_session}"
+        )
+
+        if hasattr(self.statistics_widget, "show_loading_state"):
+            self.statistics_widget.show_loading_state()
+        if hasattr(self.detailed_list_widget, "show_loading_state"):
+            self.detailed_list_widget.show_loading_state()
+
+        result = self.data_manager.loadAccidentStatistics(
+            self.current_year,
+            self.current_race,
+            self.current_session,
+            force_refresh=force_refresh or kwargs.get("force_refresh", False),
+        )
+
+        if not result and hasattr(self, "error_label"):
+            self.error_label.setText("事故分析資料載入失敗，請稍後再試。")
+            self.error_label.show()
+
+        return result
 
     def _start_cli_generation(self, year: str, race: str, session: str) -> bool:
         """
@@ -1586,17 +1158,17 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def get_json_file_path(self):
         """獲取JSON檔案路徑"""
-        # 建構檔案名稱，例如: all_incidents_summary_2025_Japan.json
-        filename = f"all_incidents_summary_{self.current_year}_{self.current_race}.json"
+        # 建構檔案名稱，例如: all_incidents_summary_2025_Japan_R.json
+        filename = f"all_incidents_summary_{self.current_year}_{self.current_race}_{self.current_session}.json"
         json_path = os.path.join("json", filename)
         
         # 如果檔案不存在，嘗試其他可能的命名格式
         if not os.path.exists(json_path):
             # 嘗試用完整比賽名稱
             possible_names = [
+                f"all_incidents_summary_{self.current_year}_{self.current_race}.json",
                 f"all_incidents_summary_{self.current_year}_Japanese_Grand_Prix.json",
-                f"all_incidents_summary_{self.current_year}_{self.current_race}_Grand_Prix.json",
-                f"all_incidents_summary_{self.current_year}_{self.current_race}_{self.current_session}.json"
+                f"all_incidents_summary_{self.current_year}_{self.current_race}_Grand_Prix.json"
             ]
             
             for alt_name in possible_names:
@@ -1681,6 +1253,7 @@ class AccidentDetailedListWidget(QWidget):
         self.incidents_data = []
         self.filtered_data = []
         self.current_filters = {}
+        self._last_incident_path = ""
         
         # 建立欄位映射：JSON英文欄位 -> 中文顯示
         self.field_mapping = {
@@ -1820,22 +1393,21 @@ class AccidentDetailedListWidget(QWidget):
             print(f"[DEBUG] 數據類型: {type(data)}")
             print(f"[DEBUG] 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
             
-            # 驗證數據格式
-            if not self._validate_incidents_data(data):
+            incidents_list = self._validate_incidents_data(data)
+            if incidents_list is None:
                 print(f"[ERROR] 數據驗證失敗")
                 self.show_error_message("無效的事件數據格式")
                 return
-            
-            # 提取事件列表
-            if "data" in data and "all_incidents" in data["data"]:
-                self.incidents_data = data["data"]["all_incidents"]
-                print(f"[DEBUG] 成功提取 all_incidents，數量: {len(self.incidents_data)}")
-            else:
-                self.incidents_data = []
-                print(f"[ERROR] 找不到 data.all_incidents 結構")
-                
-            print(f"[DEBUG] 載入事件數量: {len(self.incidents_data)}")
-            
+
+            self.incidents_data = incidents_list
+            print(
+                f"[DEBUG] 成功取得事件列表，數量: {len(self.incidents_data)}，來源路徑: "
+                f"{self._last_incident_path or 'unknown'}"
+            )
+
+            # 重置狀態樣式
+            self.stats_label.setStyleSheet("font-weight: bold; color: #495057;")
+
             # 更新篩選選項
             self.update_filter_options()
             
@@ -1852,23 +1424,66 @@ class AccidentDetailedListWidget(QWidget):
     def _validate_incidents_data(self, data: Dict[str, Any]) -> bool:
         """驗證事件數據格式（參考AccidentDataManager的驗證邏輯）"""
         try:
-            if not isinstance(data, dict):
-                print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: 數據不是字典格式")
-                return False
-            if "data" not in data:
-                print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: 缺少 data 欄位")
-                return False
-            if "all_incidents" not in data["data"]:
-                print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: 缺少 all_incidents 欄位")
-                return False
-            if not isinstance(data["data"]["all_incidents"], list):
-                print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: all_incidents 不是列表格式")
-                return False
-            print(f"[OK] [VALIDATE] AccidentDetailedListWidget: 數據格式驗證通過")
-            return True
+            incidents, path = self._extract_incidents_list(data)
+
+            if incidents is None:
+                print(
+                    "[ERROR] [VALIDATE] AccidentDetailedListWidget: 無法在資料中找到事故列表"
+                )
+                return None
+
+            if not isinstance(incidents, list):
+                print(
+                    "[ERROR] [VALIDATE] AccidentDetailedListWidget: 事故列表不是 list 類型"
+                )
+                return None
+
+            self._last_incident_path = " -> ".join(path) if path else "data.all_incidents"
+            print(
+                f"[OK] [VALIDATE] AccidentDetailedListWidget: 數據格式驗證通過，匹配路徑: {self._last_incident_path}"
+            )
+            return incidents
         except Exception as e:
             print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: 數據驗證異常: {e}")
-            return False
+            return None
+
+    def _extract_incidents_list(
+        self, data: Any
+    ) -> Tuple[Optional[List[Dict[str, Any]]], List[str]]:
+        """在多層資料結構中尋找事故列表，回傳列表及其路徑。"""
+
+        target_keys = {"all_incidents", "incidents", "incident_records", "incident_list"}
+        visited: Set[int] = set()
+
+        def _search(node: Any, breadcrumbs: List[str]) -> Tuple[Optional[List[Dict[str, Any]]], List[str]]:
+            node_id = id(node)
+            if node_id in visited:
+                return None, []
+            visited.add(node_id)
+
+            if isinstance(node, dict):
+                for key in target_keys:
+                    value = node.get(key)
+                    if isinstance(value, list):
+                        return value, breadcrumbs + [key]
+                for key, value in node.items():
+                    result, path = _search(value, breadcrumbs + [key])
+                    if result is not None:
+                        return result, path
+            elif isinstance(node, list):
+                for item in node:
+                    result, path = _search(item, breadcrumbs)
+                    if result is not None:
+                        return result, path
+            return None, []
+
+        if isinstance(data, list):
+            return data, ["<list>"]
+
+        if not isinstance(data, dict):
+            return None, []
+
+        return _search(data, [])
             
     def update_filter_options(self):
         """更新篩選選項（使用實際的JSON欄位名稱）"""
@@ -1891,8 +1506,11 @@ class AccidentDetailedListWidget(QWidget):
     def _update_combo_options(self, combo: QComboBox, options: list):
         """更新下拉選單選項"""
         current_text = combo.currentText()
+        default_text = combo.itemText(0) if combo.count() > 0 else "全部"
+        default_data = combo.itemData(0) if combo.count() > 0 else ""
+
         combo.clear()
-        combo.addItem("全部", "")
+        combo.addItem(default_text or "全部", default_data if default_data is not None else "")
         
         for option in options:
             if option:  # 排除空值
@@ -2160,7 +1778,8 @@ class AccidentDetailedListWidget(QWidget):
                 self.data_manager.load_all_incidents_data(
                     parent_module.current_year,
                     parent_module.current_race,
-                    parent_module.current_session
+                    parent_module.current_session,
+                    force_refresh=True,
                 )
                 
     def show_error_message(self, message: str):

@@ -155,6 +155,10 @@ class LaptimeChartWidget(QWidget):
             font.setPointSize(8)
             painter.setFont(font)
             painter.drawText(self.rect(), Qt.AlignCenter, f"Drawing Error: {str(e)}")
+        finally:
+            # 確保 painter 總是被正確結束
+            if painter.isActive():
+                painter.end()
     
     def _calculate_legend_space(self):
         """智能計算圖例所需空間"""

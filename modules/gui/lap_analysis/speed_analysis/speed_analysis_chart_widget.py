@@ -117,6 +117,13 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                       driver2_speed: List[float], driver1_name: str = "Driver 1", 
                       driver2_name: str = "Driver 2", sectors: List[Dict] = None):
         """設置速度數據"""
+        print(f"[SPEED_CHART] ========== set_speed_data 被調用 ==========")
+        print(f"[SPEED_CHART] 📏 distance 點數: {len(distance) if distance else 0}")
+        print(f"[SPEED_CHART] 🏎️ driver1_speed 點數: {len(driver1_speed) if driver1_speed else 0}")
+        print(f"[SPEED_CHART] 🏎️ driver2_speed 點數: {len(driver2_speed) if driver2_speed else 0}")
+        print(f"[SPEED_CHART] 👤 driver1_name: {driver1_name}")
+        print(f"[SPEED_CHART] 👤 driver2_name: {driver2_name}")
+        
         # 強制重置視圖狀態
         self.view_min_distance = None
         self.view_max_distance = None
@@ -136,11 +143,13 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         
         # 判斷單車手模式：空的 driver2_speed 或空的 driver2_name 表示單車手模式
         self.is_single_driver = (not driver2_speed or driver2_name == "" or driver1_name == driver2_name)
+        print(f"[SPEED_CHART] 🔍 單車手模式: {self.is_single_driver}")
         
         # 計算數據範圍
         if distance:
             self.min_distance = min(distance)
             self.max_distance = max(distance)
+            print(f"[SPEED_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
         
         all_speeds = []
         if driver1_speed:
@@ -151,9 +160,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         if all_speeds:
             self.min_speed = max(0, min(all_speeds) - 20)
             self.max_speed = max(all_speeds) + 20
+            print(f"[SPEED_CHART] 📊 速度範圍: {self.min_speed:.1f} - {self.max_speed:.1f}")
         
         # 強制重繪
+        print(f"[SPEED_CHART] 🖌️ 調用 repaint()...")
         self.repaint()
+        print(f"[SPEED_CHART] ✅ set_speed_data 完成")
         
     def reset_view(self):
         """重置視圖到原始範圍"""
@@ -1231,10 +1243,16 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.current_data = data
         
         try:
+            print(f"[SPEED_CHART_WIDGET] ========== 更新速度數據 ==========")
+            print(f"[SPEED_CHART_WIDGET] 📦 接收到數據類型: {type(data)}")
+            print(f"[SPEED_CHART_WIDGET] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            
             # 提取元數據
             metadata = data.get('metadata', {})
             speed_data = data.get('speed_data', {})
             statistics = data.get('statistics', {})
+            
+            print(f"[SPEED_CHART_WIDGET] 📊 speed_data 鍵值: {list(speed_data.keys()) if isinstance(speed_data, dict) else 'Not a dict'}")
             
             # 提取車手信息
             drivers = metadata.get('drivers', [])
@@ -1246,6 +1264,12 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             driver2_speed = speed_data.get('driver2_speed', [])
             driver1_name = speed_data.get('driver1_name', 'Driver 1')
             driver2_name = speed_data.get('driver2_name', 'Driver 2')
+            
+            print(f"[SPEED_CHART_WIDGET] 📏 distance 點數: {len(distance)}")
+            print(f"[SPEED_CHART_WIDGET] 🏎️ driver1_speed 點數: {len(driver1_speed)}")
+            print(f"[SPEED_CHART_WIDGET] 🏎️ driver2_speed 點數: {len(driver2_speed)}")
+            print(f"[SPEED_CHART_WIDGET] 👤 driver1_name: {driver1_name}")
+            print(f"[SPEED_CHART_WIDGET] 👤 driver2_name: {driver2_name}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             if len(drivers) >= 2:
@@ -1282,6 +1306,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 print(f"[SPEED_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 更新圖表
+            print(f"[SPEED_CHART_WIDGET] 🎨 調用 chart_widget.set_speed_data...")
             self.chart_widget.set_speed_data(
                 distance=distance,
                 driver1_speed=driver1_speed,
@@ -1290,6 +1315,13 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_name=driver2_name,
                 sectors=sectors
             )
+            print(f"[SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成")
+            
+            # 強制重繪圖表（雙重保險）
+            print(f"[SPEED_CHART_WIDGET] 🖌️ 強制重繪圖表...")
+            self.chart_widget.update()
+            self.chart_widget.repaint()
+            print(f"[SPEED_CHART_WIDGET] ✅ 圖表重繪完成")
             
             # 更新統計表格
             self._update_statistics_table(statistics, driver1_name, driver2_name)
@@ -1298,6 +1330,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             self._update_status_info(data)
             
             self.chart_updated.emit()
+            print(f"[SPEED_CHART_WIDGET] ✅ update_speed_data 全部完成")
             
         except Exception as e:
             print(f"[ERROR] [SPEED CHART WIDGET] 更新數據失敗: {e}")

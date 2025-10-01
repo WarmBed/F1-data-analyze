@@ -610,42 +610,48 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # 清除背景
-        painter.fillRect(self.rect(), self.theme.BACKGROUND)
+        try:
+            # 清除背景
+            painter.fillRect(self.rect(), self.theme.BACKGROUND)
+            
+            # 計算繪圖區域
+            plot_rect = QRect(
+                self.theme.MARGIN_LEFT,
+                self.theme.MARGIN_TOP,
+                self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
+                self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
+            )
+            
+            if plot_rect.width() <= 0 or plot_rect.height() <= 0:
+                return
+            
+            # 繪製網格和軸
+            self._draw_grid_and_axes(painter, plot_rect)
+            
+            # 繪製扇形區域
+            self._draw_sectors(painter, plot_rect)
+            
+            # 使用渲染器繪製圖表
+            current_x_range = self.view_x_range or self.x_range
+            current_y_range = self.view_y_range or self.y_range
+            
+            self.renderer.render(painter, plot_rect, self.series_list, 
+                               current_x_range, current_y_range)
+            
+            # 繪製交互元素
+            self._draw_interaction_elements(painter, plot_rect, current_x_range)
+            
+            # 繪製數值追蹤線和提示
+            self._draw_tracking_elements(painter, plot_rect, current_x_range, current_y_range)
+            
+            # 繪製座標軸標題
+            if self.show_axis_titles:
+                self._draw_axis_titles(painter, plot_rect)
         
-        # 計算繪圖區域
-        plot_rect = QRect(
-            self.theme.MARGIN_LEFT,
-            self.theme.MARGIN_TOP,
-            self.width() - self.theme.MARGIN_LEFT - self.theme.MARGIN_RIGHT,
-            self.height() - self.theme.MARGIN_TOP - self.theme.MARGIN_BOTTOM
-        )
-        
-        if plot_rect.width() <= 0 or plot_rect.height() <= 0:
-            return
-        
-        # 繪製網格和軸
-        self._draw_grid_and_axes(painter, plot_rect)
-        
-        # 繪製扇形區域
-        self._draw_sectors(painter, plot_rect)
-        
-        # 使用渲染器繪製圖表
-        current_x_range = self.view_x_range or self.x_range
-        current_y_range = self.view_y_range or self.y_range
-        
-        self.renderer.render(painter, plot_rect, self.series_list, 
-                           current_x_range, current_y_range)
-        
-        # 繪製交互元素
-        self._draw_interaction_elements(painter, plot_rect, current_x_range)
-        
-        # 繪製數值追蹤線和提示
-        self._draw_tracking_elements(painter, plot_rect, current_x_range, current_y_range)
-        
-        # 繪製座標軸標題
-        if self.show_axis_titles:
-            self._draw_axis_titles(painter, plot_rect)
+        finally:
+            # 確保 painter 總是被正確結束
+            if painter.isActive():
+                painter.end()
     
     def _calculate_data_ranges(self):
         """計算數據範圍"""
