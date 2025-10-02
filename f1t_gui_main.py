@@ -40,6 +40,7 @@ from modules.gui.lap_analysis.linkage import linkage_manager
 
 # 導入 GUI 國際化模組
 from core.gui_i18n import tr, set_gui_language, get_gui_language, get_telemetry_option_text
+from core.gui_settings_manager import gui_settings_manager
 
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
@@ -5867,7 +5868,7 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(basic_group, [tr("track_analysis", "Track Analysis")])
         QTreeWidgetItem(basic_group, [tr("pitstop_analysis", "Pitstop Analysis")])
         QTreeWidgetItem(basic_group, [tr("accident_analysis", "Accident Analysis")])
-        QTreeWidgetItem(basic_group, [tr("driver_analysis", "Driver Analysis")])
+        # QTreeWidgetItem(basic_group, [tr("driver_analysis", "Driver Analysis")])  # 隱藏：功能尚未啟用
         QTreeWidgetItem(basic_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         
         # 單場賽事車手分析模組
@@ -7359,18 +7360,46 @@ class StyleHMainWindow(QMainWindow):
             #print(f"[警告] 無法找到MDI區域來添加視窗: {function_name}")
             return
 
+        current_year = self.year_combo.currentText()
+        current_race = self.race_combo.currentText()
+        current_session = self.session_combo.currentText()
+
+        detailed_lap_selection = {"detail_table": True, "box_plot": False}
+        if is_detailed_lap:
+            selection = self._prompt_detailed_lap_options()
+            if selection is None:
+                print("[DETAILED_LAP] 使用者取消了詳細圈速分析選項對話框")
+                return
+            detailed_lap_selection = selection
+
+            if detailed_lap_selection.get("box_plot"):
+                self._create_detailed_lap_boxplot_window(
+                    mdi_area,
+                    current_year,
+                    current_race,
+                    current_session,
+                )
+
+            if not detailed_lap_selection.get("detail_table"):
+                print("[DETAILED_LAP] 僅選擇圈速箱型圖，跳過詳細圈速模組視窗建立")
+                return
+
         # [TOOL] 新增：嘗試使用模組化架構
         analysis_module = self._create_analysis_module(function_name)
         
         if analysis_module:
             # [FIX] 獲取當前參數，類似賽道分析模組
-            current_year = self.year_combo.currentText()
-            current_race = self.race_combo.currentText()  
-            current_session = self.session_combo.currentText()
+            current_year_value = current_year or self.year_combo.currentText()
+            current_race_value = current_race or self.race_combo.currentText()
+            current_session_value = current_session or self.session_combo.currentText()
             
             # 使用 get_window_title 方法並傳入當前參數
             if hasattr(analysis_module, 'get_window_title'):
-                window_title = analysis_module.get_window_title(current_year, current_race, current_session)
+                window_title = analysis_module.get_window_title(
+                    current_year_value,
+                    current_race_value,
+                    current_session_value,
+                )
                 print(f"[TITLE] [FIX] 使用當前參數生成標題: {window_title}")
             else:
                 window_title = analysis_module.get_title()
@@ -7434,17 +7463,87 @@ class StyleHMainWindow(QMainWindow):
         analysis_window.show()
         
         # 計算新視窗位置（避免重疊）
-        existing_windows = mdi_area.subWindowList()
-        window_count = len(existing_windows)
-        
-        # 使用階梯式排列
-        offset_x = (window_count % 4) * 30
-        offset_y = (window_count // 4) * 30
-        base_x = 10 + offset_x
-        base_y = 10 + offset_y
-        
-        analysis_window.move(base_x, base_y)
+        self._position_subwindow(mdi_area, analysis_window)
     
+    def _prompt_detailed_lap_options(self):
+        """顯示詳細圈速分析選項並回傳使用者選擇。"""
+        try:
+            from modules.gui.driver_race.detailed_lap_analysis.detailed_lap_options_dialog import (
+                DetailedLapAnalysisOptionsDialog,
+            )
+        except ImportError as exc:
+            print(f"[DETAILED_LAP] 無法載入選項對話框: {exc}")
+            return {"detail_table": True, "box_plot": False}
+
+        dialog = DetailedLapAnalysisOptionsDialog(self)
+        result = dialog.exec_()
+
+        if result != QDialog.Accepted:
+            return None
+
+        selected_types = dialog.get_selected_types()
+        selection = {
+            "detail_table": DetailedLapAnalysisOptionsDialog.TYPE_DETAIL_TABLE in selected_types,
+            "box_plot": DetailedLapAnalysisOptionsDialog.TYPE_BOX_PLOT in selected_types,
+        }
+
+        if not selection["detail_table"] and not selection["box_plot"]:
+            selection["detail_table"] = True
+
+        print(f"[DETAILED_LAP] 選項結果: {selection}")
+        return selection
+
+    def _create_detailed_lap_boxplot_window(self, mdi_area, year, race, session):
+        """建立圈速箱型圖視窗並加入 MDI。"""
+        try:
+            from modules.gui.driver_race.detailed_lap_analysis.laptime_boxplot_widget import (
+                LapTimeBoxPlotWidget,
+            )
+        except ImportError as exc:
+            message = f"Unable to load Lap Time Box Plot widget: {exc}"
+            print(f"[DETAILED_LAP] {message}")
+            self.show_error_message("Detailed Lap Analysis", message)
+            return None
+
+        try:
+            widget = LapTimeBoxPlotWidget(year=year, race=race, session=session)
+        except Exception as exc:
+            message = f"Failed to create Lap Time Box Plot widget: {exc}"
+            print(f"[DETAILED_LAP] {message}")
+            self.show_error_message("Detailed Lap Analysis", message)
+            return None
+
+        window_title = f"Lap Time Box Plot_{year}_{race}_{session}"
+        sub_window = PopoutSubWindow(window_title, mdi_area)
+        sub_window.setWidget(widget)
+        sub_window.resize(1200, 720)
+
+        mdi_area.addSubWindow(sub_window)
+        if hasattr(sub_window, 'window_closed'):
+            sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
+        if hasattr(self, 'active_subwindows'):
+            self.active_subwindows.append(sub_window)
+
+        sub_window.show()
+        self._position_subwindow(mdi_area, sub_window)
+        print(f"[DETAILED_LAP] 已開啟圈速箱型圖視窗: {window_title}")
+        return sub_window
+
+    def _position_subwindow(self, mdi_area, sub_window):
+        """根據現有視窗數量調整子視窗位置，避免重疊。"""
+        try:
+            existing_windows = mdi_area.subWindowList()
+            window_count = len(existing_windows)
+
+            offset_x = (window_count % 4) * 30
+            offset_y = (window_count // 4) * 30
+            base_x = 10 + offset_x
+            base_y = 10 + offset_y
+
+            sub_window.move(base_x, base_y)
+        except Exception as exc:
+            print(f"[WARNING] 無法調整子視窗位置: {exc}")
+
     def _create_analysis_module(self, function_name):
         """創建分析模組實例"""
         try:
@@ -10495,8 +10594,10 @@ class StyleHMainWindow(QMainWindow):
         pass
         
     def system_settings(self): 
-        #print("[工具] 系統設定")
-        pass
+        try:
+            gui_settings_manager.open_system_settings_dialog(self)
+        except Exception as exc:
+            print(f"[ERROR] 開啟系統設定時發生錯誤: {exc}")
     
     def set_interface_language(self, language):
         """設定介面語言"""

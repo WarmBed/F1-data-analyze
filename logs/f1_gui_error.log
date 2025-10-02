@@ -24768,3 +24768,1688 @@ RuntimeError: 分析執行失敗
 2025-10-02 19:37:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
 2025-10-02 19:37:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
 2025-10-02 19:37:21 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 19:48:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:21:02 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:22:13 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:23:15 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 20:23:15 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:23:15 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:33:23 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:36:40 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:42:56 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:43:33 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:45:01 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:47:30 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:51:44 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:53:31 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:53:34 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:53:34 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 20:57:38 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:57:56 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:58:25 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 20:59:55 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:00:14 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:01:07 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:01:14 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:01:17 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:01:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:08:52 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:09:12 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:10:16 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:10:24 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:10:27 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:10:27 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:14:02 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:14:19 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:14:43 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:14:56 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:15:09 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:16:20 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:16:30 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:16:48 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:16:58 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:17:19 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:17:42 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:17:51 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:18:07 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:18:31 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:18:39 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:18:57 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:19:04 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:19:42 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:19:47 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:19:50 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:19:50 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 21:20:13 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_1469214608560
+2025-10-02 21:20:13 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 21:20:13 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 21:20:13 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_1469116711280
+2025-10-02 21:20:13 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 21:20:13 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:20:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 21:24:29 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:24:43 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:25:44 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:25:55 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:26:29 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:26:43 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 21:27:11 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:50:50 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:54:12 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:55:46 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:56:01 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:56:31 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:57:08 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:58:03 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:58:33 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 22:59:41 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:00:59 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:01:33 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:02:39 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:03:19 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:03:20 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:03:20 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:04:12 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:04:26 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:06:02 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:06:14 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:06:17 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:06:17 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:07:13 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:08:06 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:10:38 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:10:40 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:10:40 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:14:22 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:14:53 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:15:48 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:16:04 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:17:55 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:18:01 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:18:03 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:18:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:19:03 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:19:21 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:22:03 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:22:20 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:22:22 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:22:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:24:52 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:25:58 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:26:04 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:26:06 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:26:06 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:27:08 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:27:28 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:36:28 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:36:41 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:36:43 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:36:43 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:39:36 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:40:00 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:40:09 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:40:11 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:40:11 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:41:45 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:42:04 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:42:12 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:42:14 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:14 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:42:29 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2475225143424
+2025-10-02 23:42:29 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 23:42:29 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:42:29 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2475126718832
+2025-10-02 23:42:29 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 23:42:29 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-02 23:42:34 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ driverLapAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:42:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:42:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:42:34 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:34 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:34 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:34 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:35 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:35 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:35 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:35 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:35 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:35 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:35 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:35 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:35 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:35 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:35 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:42:35 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:42:35 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:42:35 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:42:35 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:43:41 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:43:44 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:12 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:44:24 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:44:26 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:26 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-02 23:44:31 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2148796470560
+2025-10-02 23:44:31 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 23:44:31 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-02 23:44:31 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2148819434912
+2025-10-02 23:44:31 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-02 23:44:31 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-02 23:44:34 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ driverLapAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:44:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:44:34 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-10-02 23:44:34 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:34 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-02 23:44:34 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-02 23:44:34 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-02 23:44:34 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [distancediff_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'distancediffAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [distancediff_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [gear_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'GearAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [gear_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [brake_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'BrakeAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [brake_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [acceleration_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'accelerationAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [acceleration_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [speeddiff_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'SpeeddiffAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [speeddiff_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:44:35 | ERROR | f1.console | [ERROR] [RPM_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: 'RPMAnalysisModule' object has no attribute '_check_and_load_telemetry_if_needed'
+2025-10-02 23:44:35 | WARNING | f1.console | [RPM_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數
+2025-10-02 23:45:15 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:45:22 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-02 23:46:06 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:03:14 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:03:16 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:03:16 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:04:03 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2222162090112
+2025-10-03 00:04:03 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:04:03 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:04:03 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2222165803232
+2025-10-03 00:04:03 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:04:03 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-03 00:04:47 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:05:07 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:05:27 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:05:29 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:29 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:05:32 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2346591589664
+2025-10-03 00:05:32 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:05:32 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:05:32 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2346594844208
+2025-10-03 00:05:32 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:05:32 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-03 00:08:21 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:08:54 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:09:09 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:09:45 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:09:47 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:47 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:09:53 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_2758700962960
+2025-10-03 00:09:53 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:09:53 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Driver Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:09:53 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_2758704217360
+2025-10-03 00:09:53 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:09:53 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-03 00:10:16 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:13:04 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:13:28 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:15:53 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:41:55 | ERROR | f1.console | [ERROR] 無法導入基礎模組
+2025-10-03 00:41:55 | ERROR | f1.console | [WARNING] 詳細圈速分析模組導入部分失敗: No module named 'modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module'
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[RAIN] Rain Analysis' 中
+2025-10-03 00:41:55 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: rain_weather_analysis_1974447712032
+2025-10-03 00:41:55 | ERROR | f1.console | [ERROR] [RAIN_MDI] 設置響應式佈局失敗: 'RainAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:41:55 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 '[FINISH] Track Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Pitstop Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Accident Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Tire Strategy Analysis' 中
+2025-10-03 00:41:55 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: tire_analysis_analysis_1974448546608
+2025-10-03 00:41:55 | ERROR | f1.console | [ERROR] [tire_MDI] 設置響應式佈局失敗: 'TireAnalysisUniversal' object has no attribute 'setSizePolicy'
+2025-10-03 00:41:55 | WARNING | f1.console | ⚠️ [tire_MODULE] Parameter update failed
+2025-10-03 00:41:57 | WARNING | f1.console | [SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [SPEED_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] 速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [brake_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:57 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:57 | WARNING | f1.console | [brake_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [brake_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] brake分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ RainAnalysisChartWidget does not support statistics panel control
+2025-10-03 00:41:57 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ TireAnalysisChartWidget does not support statistics panel control
+2025-10-03 00:41:57 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:57 | WARNING | f1.console | [THROTTLE_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [THROTTLE_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] 油門分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [gear_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:57 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:57 | WARNING | f1.console | [GEAR_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [gear_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] gear分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [RPM_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:57 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:57 | WARNING | f1.console | [RPM_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [RPM_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] RPM分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [acceleration_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:57 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:57 | WARNING | f1.console | [acceleration_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [acceleration_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [ERROR] [MODULE] 加速度分析_2025_Japan_R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:57 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:57 | WARNING | f1.console | [speeddiff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:58 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:58 | WARNING | f1.console | [speeddiff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:58 | ERROR | f1.console | [ERROR] [speeddiff_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:58 | ERROR | f1.console | [ERROR] [MODULE] ⚡ 速度差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:58 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:41:58 | WARNING | f1.console | [distancediff_TITLE_DEBUG] ⚠️ 無法更新標題:
+2025-10-03 00:41:58 | WARNING | f1.console | [LAP_CONTROL] ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加
+2025-10-03 00:41:58 | WARNING | f1.console | [distancediff_MDI_DATA] ⚠️ 數據載入中，忽略新請求
+2025-10-03 00:41:58 | ERROR | f1.console | [ERROR] [distancediff_MDI] 載入器正忙，請稍後再試
+2025-10-03 00:41:58 | ERROR | f1.console | [ERROR] [MODULE] 📏 累積距離差分析 - VER vs None (第1圈 vs 第1圈) - 2025 Japan R 模組錯誤: 載入器正忙，請稍後再試
+2025-10-03 00:41:58 | ERROR | f1.console | [CREATE_DEBUG] ⚠️ 數據載入失敗
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '進站分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '事故分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '速度分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '油門分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '檔位分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '煞車分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '降雨分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '車手排名' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '賽道分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '輪胎策略分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: '詳細圈速分析' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Pitstop Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Accident Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Speed Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Throttle Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'RPM Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Gear Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Brake Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Rain Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Driver Ranking' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Track Analysis' 不在 'Detailed Lap Analysis' 中
+2025-10-03 00:42:00 | ERROR | f1.console | [DEBUG] [MODULE_FACTORY] ❌ 未匹配: 'Tire Strategy Analysis' 不在 'Detailed Lap Analysis' 中

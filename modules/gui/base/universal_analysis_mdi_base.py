@@ -953,11 +953,12 @@ UniversalAnalysisMDI.register_mdi_module_type(
 )
 
 # 註冊事故分析 MDI 模組
+from core.gui_i18n import tr
 UniversalAnalysisMDI.register_mdi_module_type(
     'accident',
     AnalysisMDIConfig(
         analysis_type='accident',
-        display_name='事故分析',
+        display_name=tr('accident_analysis', 'Accident Analysis'),
         default_size=(1100, 600),
         requires_driver_params=False,
         requires_lap_params=False,

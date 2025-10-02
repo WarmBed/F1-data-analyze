@@ -754,10 +754,11 @@ UniversalDataLoader.register_analysis_type(
 )
 
 # 註冊事故分析類型
+from core.gui_i18n import tr
 UniversalDataLoader.register_analysis_type(
     'accident',
     AnalysisConfig(
-        display_name='事故分析',
+        display_name=tr('accident_analysis', 'Accident Analysis'),
         debug_prefix='ACCIDENT',
         data_source='json',
         cli_function='accident',

@@ -49544,3 +49544,47 @@ Edition
 2025-10-02 19:37:22 | INFO | f1.console | [OK] 功能 28 執行成功
 2025-10-02 19:37:22 | INFO | f1.console | [OK] 參數化模式功能執行完成
 2025-10-02 19:37:22 | INFO | f1.console | [INFO] 執行摘要: 分析完成
+2025-10-02 23:43:56 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-02 23:43:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 23:43:57 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-02 23:43:57 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-02 23:43:57 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-02 23:43:57 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-02 23:43:57 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-02 23:43:57 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-02 23:43:57 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-02 23:43:57 | INFO | f1.console | ================================================================================
+2025-10-02 23:43:57 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-02 23:43:57 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-02 23:43:57 | INFO | f1.console | ================================================================================
+2025-10-02 23:43:57 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-02 23:43:57 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-02 23:43:57 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-02 23:43:57 | INFO | f1.console | ================================================================================
+2025-10-02 23:43:57 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-02 23:43:57 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-02 23:43:57 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-02 23:43:57 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-02 23:43:57 | INFO | f1.console | ============================================================
+2025-10-02 23:43:57 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-02 23:43:57 | INFO | f1.console | ============================================================
+2025-10-02 23:43:57 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=Australia, Session=R
+2025-10-02 23:43:57 | INFO | f1.console | 
+[STATS] 從參數載入 2025 Australia R 數據...
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-02 23:43:57 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_Australia_R.pkl
+2025-10-02 23:43:57 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-02 23:43:57 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-02 23:43:57 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-02 23:43:57 | INFO | f1.console | [TARGET] 執行功能: 28
+2025-10-02 23:43:57 | INFO | f1.console | [START] 執行功能編號: 28
+2025-10-02 23:43:57 | INFO | f1.console | 💾 JSON 已保存: json\detailed_laptime_analysis_2025_Australia_R_all_drivers.json (1,559,362 bytes)
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 功能 28 執行成功
+2025-10-02 23:43:57 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-02 23:43:57 | INFO | f1.console | [INFO] 執行摘要: 分析完成

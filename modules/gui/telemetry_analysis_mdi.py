@@ -1592,14 +1592,16 @@ class TelemetryAnalysisModule(IAnalysisModule):
     
     def get_title(self) -> str:
         """返回模組標題 - 模組工廠需要的方法"""
+        from core.gui_i18n import tr
         year = self.current_year or "2025"
         race = self.current_race or "Unknown"
         session = self.current_session or "R"
-        return f"車手分析_{year}_{race}_{session}"
+        return f"{tr('driver_analysis', 'Driver Analysis')}_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """生成視窗標題"""
-        return f"🚗 Driver Analysis - {year} {race} {session}"
+        from core.gui_i18n import tr
+        return f"🚗 {tr('driver_analysis', 'Driver Analysis')} - {year} {race} {session}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

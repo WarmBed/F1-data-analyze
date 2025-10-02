@@ -1882,3 +1882,4 @@ cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (un
 2025-10-02 19:37:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
 2025-10-02 19:37:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
 2025-10-02 19:37:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-02 23:43:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
