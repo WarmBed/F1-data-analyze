@@ -32,9 +32,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 try:
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 except ImportError:
-    # 備用路徑
-    sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'base'))
-    from universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    # 備用路徑（相對導入）
+    from ..base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 
 
 class TrackUniversalDataLoader(UniversalDataLoader):
@@ -54,12 +53,14 @@ class TrackUniversalDataLoader(UniversalDataLoader):
             cli_function="2",  # CLI -f2 賽道分析
             file_patterns=["track_positions_*_{year}_{race}_{session}.json"],
             cache_pattern="track_analysis_{year}_{race}_{session}.pkl",
-            description="賽道位置和地圖數據分析"
+            description="賽道位置和地圖數據分析",
+            search_directories=["json", "json_exports", "cache"]
         )
         
         # 註冊賽道分析類型
-        analysis_type = "track"
-        self.register_analysis_type(analysis_type, config)
+        analysis_type = "track_analysis"
+        if analysis_type not in self.ANALYSIS_TYPES:
+            self.register_analysis_type(analysis_type, config)
         
         super().__init__(analysis_type, parent)
         print(f"[TRACK_ANALYSIS] 初始化完成，使用專門的 TrackDataLoader")

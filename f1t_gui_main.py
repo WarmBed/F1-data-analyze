@@ -6742,7 +6742,7 @@ class StyleHMainWindow(QMainWindow):
         return tab_container
         
     def create_track_analysis_tab(self):
-        """創建賽道分析分頁 - 使用新的 TrackAnalysisModule"""
+        """創建賽道分析分頁 - 使用通用 TrackAnalysisUniversal 模組"""
         # 直接調用新的賽道分析視窗功能
         self.open_track_analysis_window()
         
@@ -7461,12 +7461,12 @@ class StyleHMainWindow(QMainWindow):
             
             # 賽道分析模組導入與註冊
             try:
-                from modules.gui.track_analysis import TrackAnalysisModule
+                from modules.gui.track_analysis import TrackAnalysisUniversal
                 TRACK_ANALYSIS_AVAILABLE = True
-                print("[OK] [MODULE_IMPORT] TrackAnalysisModule 載入完成")
+                print("[OK] [MODULE_IMPORT] TrackAnalysisUniversal 載入完成")
             except ImportError as e:
                 TRACK_ANALYSIS_AVAILABLE = False
-                print(f"警告: TrackAnalysisModule 不可用: {e}")
+                print(f"警告: TrackAnalysisUniversal 不可用: {e}")
             
             # 根據功能名稱映射到模組類型 (支援中英文)
             module_mapping = {
@@ -7481,6 +7481,7 @@ class StyleHMainWindow(QMainWindow):
                 "降雨分析": "rain_analysis",     # 降雨分析映射
                 "車手分析": "telemetry_analysis", # 車手分析映射 (原單場賽事總攬)
                 "車手排名": "telemetry_analysis", # 保留舊映射以維持相容
+                "賽道分析": "track_analysis",
                 # "遙測分析": 通過特殊處理路徑，不使用模組工廠
                 "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
                 "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
@@ -7495,6 +7496,7 @@ class StyleHMainWindow(QMainWindow):
                 "Rain Analysis": "rain_analysis",
                 "Driver Analysis": "telemetry_analysis",
                 "Driver Ranking": "telemetry_analysis",
+                "Track Analysis": "track_analysis",
                 # "Telemetry Analysis": 通過特殊處理路徑，不使用模組工廠
                 "Tire Strategy Analysis": "tire_analysis",
                 "Detailed Lap Analysis": "driverlap_analysis",
@@ -7628,6 +7630,40 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 處理賽道分析模組
+                elif module_type == "track_analysis":
+                    if not TRACK_ANALYSIS_AVAILABLE:
+                        print(f"[INFO] [MODULE_FACTORY] TrackAnalysisUniversal 不可用，返回舊版流程")
+                        return None
+
+                    try:
+                        current_year = parameter_provider.get_current_year()
+                        current_race = parameter_provider.get_current_race()
+                        current_session = parameter_provider.get_current_session()
+
+                        module = TrackAnalysisUniversal(main_window=self)
+                        module.parameter_provider = parameter_provider
+
+                        # 轉換年份為整數，失敗時保持原值
+                        try:
+                            year_value = int(current_year)
+                        except (TypeError, ValueError):
+                            year_value = current_year
+
+                        module.update_parameters(
+                            year=year_value,
+                            race=current_race,
+                            session=current_session
+                        )
+
+                        print(f"[OK] [MODULE_FACTORY] 賽道分析模組初始化成功: {current_year} {current_race} {current_session}")
+                        return module
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 賽道分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+
                 # 處理油門分析模組
                 elif module_type == "throttle_analysis":
                     try:
@@ -7913,26 +7949,37 @@ class StyleHMainWindow(QMainWindow):
         elif "轉向" in function_name or "方向盤" in function_name:
             return TelemetryChartWidget("steering")
         elif "賽道" in function_name:
-            # 使用新的 TrackAnalysisModule 而不是舊的 TrackMapWidget
+            params = self.get_current_parameters()
+            parameter_provider = MainWindowParameterProvider(self)
+
             try:
-                from modules.gui.track_analysis import TrackAnalysisModule
-                
-                # 創建賽道分析模組實例
-                # 獲取參數
-                params = self.get_current_parameters()
-                track_module = TrackAnalysisModule(
-                    year=params['year'], 
-                    race=params['race'], 
+                from modules.gui.track_analysis import TrackAnalysisUniversal
+
+                module = TrackAnalysisUniversal(main_window=self)
+                module.parameter_provider = parameter_provider
+
+                try:
+                    year_value = int(params['year'])
+                except (TypeError, ValueError):
+                    year_value = params['year']
+
+                module.update_parameters(
+                    year=year_value,
+                    race=params['race'],
                     session=params['session']
                 )
-                
-                print(f"[OK] [NEW] 使用新版 TrackAnalysisModule: {params['year']} {params['race']} {params['session']}")
-                return track_module
-                    
+
+                print(f"[OK] [LEGACY->UNIVERSAL] 使用 TrackAnalysisUniversal: {params['year']} {params['race']} {params['session']}")
+                return module.get_widget(), module
+
             except ImportError as e:
-                print(f"[ERROR] [ERROR] TrackAnalysisModule 導入失敗: {e}")
-                
-            # 如果新模組失敗，返回佔位符而不是舊的 TrackMapWidget
+                print(f"[ERROR] TrackAnalysisUniversal 導入失敗: {e}")
+            except Exception as e:
+                print(f"[ERROR] TrackAnalysisUniversal 初始化失敗: {e}")
+                import traceback
+                traceback.print_exc()
+
+            # 如果新模組失敗，退回舊版 Widget 提示
             placeholder = QLabel("[WARNING] 賽道分析模組不可用\n\n請使用菜單中的\n'[FINISH] 賽道軌跡分析'")
             placeholder.setAlignment(Qt.AlignCenter)
             placeholder.setStyleSheet("""
@@ -9809,17 +9856,24 @@ class StyleHMainWindow(QMainWindow):
             # 檢查是否為首次使用分析功能
             self.check_and_remove_welcome_page()
             
-            # 檢查模組是否可用
+            # 檢查模組是否可用並決定使用的實作
+            track_module = None
+            track_widget = None
+            use_universal = False
+
             try:
-                from modules.gui.track_analysis import TrackAnalysisModule
-                track_analysis_available = True
-            except ImportError:
-                track_analysis_available = False
-                
-            if not track_analysis_available:
-                QMessageBox.warning(self, "警告", "賽道分析模組不可用")
-                return
-                
+                from modules.gui.track_analysis import TrackAnalysisUniversal
+                use_universal = True
+                print("[OK] TrackAnalysisUniversal 可用")
+            except ImportError as universal_error:
+                print(f"[WARN] TrackAnalysisUniversal 導入失敗: {universal_error}")
+                try:
+                    from modules.gui.track_analysis import TrackAnalysisModule
+                    print("[WARN] 回退至 legacy TrackAnalysisModule")
+                except ImportError:
+                    QMessageBox.warning(self, "警告", "賽道分析模組不可用")
+                    return
+
             # 創建參數提供者
             parameter_provider = MainWindowParameterProvider(self)
             
@@ -9827,16 +9881,46 @@ class StyleHMainWindow(QMainWindow):
             current_year = parameter_provider.get_current_year()
             current_race = parameter_provider.get_current_race()
             current_session = parameter_provider.get_current_session()
-            
-            # 創建賽道分析模組實例，使用當前參數
-            track_module = TrackAnalysisModule(
-                year=current_year,
-                race=current_race,
-                session=current_session
-            )
-            
-            # 生成視窗標題
-            window_title = track_module.get_window_title(current_year, current_race, current_session)
+            default_size = None
+
+            if use_universal:
+                try:
+                    module_instance = TrackAnalysisUniversal(main_window=self)
+                    module_instance.parameter_provider = parameter_provider
+
+                    try:
+                        year_value = int(current_year)
+                    except (TypeError, ValueError):
+                        year_value = current_year
+
+                    module_instance.update_parameters(
+                        year=year_value,
+                        race=current_race,
+                        session=current_session
+                    )
+
+                    track_module = module_instance
+                    track_widget = module_instance.get_widget()
+                    window_title = module_instance.get_window_title(current_year, current_race, current_session)
+                    default_size = module_instance.get_default_size()
+                    print(f"[OK] 使用 TrackAnalysisUniversal 開啟視窗: {window_title}")
+                except Exception as exc:
+                    print(f"[ERROR] TrackAnalysisUniversal 初始化失敗，回退 Legacy: {exc}")
+                    use_universal = False
+
+            if not use_universal:
+                # 確保 legacy 類別可用
+                from modules.gui.track_analysis import TrackAnalysisModule
+
+                track_module = TrackAnalysisModule(
+                    year=current_year,
+                    race=current_race,
+                    session=current_session
+                )
+                track_widget = track_module
+                window_title = track_module.get_window_title(current_year, current_race, current_session)
+                default_size = None
+                print(f"[OK] 使用 legacy TrackAnalysisModule 開啟視窗: {window_title}")
             
             # 獲取當前 MDI 區域
             current_mdi_area = self.get_current_mdi_area()
@@ -9855,7 +9939,7 @@ class StyleHMainWindow(QMainWindow):
             )
             
             # 設置賽道分析模組為視窗內容
-            sub_window.setWidget(track_module)
+            sub_window.setWidget(track_widget)
             
             # 添加到 MDI 區域
             current_mdi_area.addSubWindow(sub_window)
@@ -9863,13 +9947,18 @@ class StyleHMainWindow(QMainWindow):
             
             # 連接信號
             sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
-            track_module.module_error.connect(lambda msg: self.show_error_message("賽道分析錯誤", msg))
+            if hasattr(track_module, 'module_error'):
+                track_module.module_error.connect(lambda msg: self.show_error_message("賽道分析錯誤", msg))
             
             # 記錄視窗
             self.active_subwindows.append(sub_window)
             
             # 更新狀態
             print(f"[STATUS] 已開啟賽道分析視窗: {window_title}")
+
+            # 依模組建議尺寸調整視窗大小
+            if default_size and isinstance(default_size, (tuple, list)) and len(default_size) == 2:
+                sub_window.resize(default_size[0], default_size[1])
             
         except Exception as e:
             QMessageBox.critical(self, "錯誤", f"無法開啟賽道分析視窗: {str(e)}")

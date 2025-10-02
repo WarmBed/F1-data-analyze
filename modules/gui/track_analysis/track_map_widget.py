@@ -1,269 +1,381 @@
 #!/usr/bin/env python3
 """
-賽道地圖繪製元件 - TrackMapWidget
-Track Map Drawing Widget
+賽道地圖繪製元件 - TrackMapWidget (Universal 版)
+===============================================
 
-此檔案為賽道地圖繪製的核心元件，負責：
-1. 載入賽道位置數據
-2. 繪製賽道路線和標記
-3. 提供互動功能 (縮放、平移、懸停)
-4. 顯示距離標記和座標網格
+從舊版 Track Analysis Module 移植的完整賽道繪圖邏輯，
+支援：
+1. 依據位置點繪製平滑賽道路徑
+2. 顯示起迄點與距離標記
+3. 視窗縮放自適應與手動縮放
+4. 選項控制：網格、標記、標籤
 
-目前為佔位符實現，待後續完整開發
+Author: F1T Team
+Date: 2025-10-02
 """
 
-import sys
-import json
-import math
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel
-from PyQt5.QtCore import Qt, QPointF, pyqtSignal
-from PyQt5.QtGui import QPainter, QPen, QBrush, QColor, QFont
+from __future__ import annotations
+
+from typing import Dict, Any, List, Optional, Tuple
+
+from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize
+from PyQt5.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QPainter,
+    QPainterPath,
+    QPen,
+)
+from PyQt5.QtWidgets import QWidget
+
 
 class TrackMapWidget(QWidget):
-    """賽道地圖繪製元件 - 佔位符版本"""
-    
-    # 信號定義
-    point_hovered = pyqtSignal(dict)  # 座標點懸停信號
-    point_clicked = pyqtSignal(dict)  # 座標點點擊信號
-    
-    def __init__(self, parent=None):
+    """可視化賽道位置資料的 PyQt Widget。"""
+
+    point_clicked = pyqtSignal(dict)
+    point_hovered = pyqtSignal(dict)
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self.track_data = None
-        self.position_records = []
-        self.track_bounds = {}
-        
-        # 繪圖設定
-        self.zoom_factor = 1.0
-        self.pan_offset = QPointF(0, 0)
-        self.margin = 50  # 邊距
-        
-        self.init_ui()
-    
-    def init_ui(self):
-        """初始化UI"""
-        # self.setMinimumSize(400, 300) - 尺寸限制已移除
-        self.setStyleSheet("""
-            TrackMapWidget {
-                background-color: white;
-                border: 1px solid #ccc;
-                border-radius: 5px;
-            }
-        """)
-        
-        # 設置佔位符
-        layout = QVBoxLayout(self)
-        self.placeholder_label = QLabel("賽道地圖\n(準備中...)")
-        self.placeholder_label.setAlignment(Qt.AlignCenter)
-        self.placeholder_label.setStyleSheet("""
-            QLabel {
-                color: #666;
-                font-size: 16px;
-                border: 2px dashed #ddd;
-                border-radius: 10px;
-                background-color: #f9f9f9;
-                padding: 20px;
-            }
-        """)
-        layout.addWidget(self.placeholder_label)
-    
-    def load_track_data(self, track_data):
-        """載入賽道數據"""
-        self.track_data = track_data
-        
-        if not track_data:
-            print("[TRACK_MAP] 無賽道數據")
-            return False
-        
+
+        self.track_data: Optional[Dict[str, Any]] = None
+        self.position_data: List[Dict[str, Any]] = []
+        self.track_bounds: Optional[Dict[str, float]] = None
+
+        self._base_scale: float = 1.0
+        self.scale_factor: float = 1.0
+        self._pending_fit: bool = False
+        self.offset_x: float = 0.0
+        self.offset_y: float = 0.0
+        self._last_size: QSize = QSize(0, 0)
+
+        self.show_start_point: bool = False
+        self.show_finish_point: bool = False
+        self.show_distance_markers: bool = False
+        self.show_track_labels: bool = False
+        self.show_grid: bool = False
+
+        self._grid_spacing: float = 500.0  # 公尺
+        self._max_grid_lines: int = 12
+
+        self.setMouseTracking(True)
+        self.setStyleSheet("background-color: white; border: 1px solid #ccc;")
+
+    # ------------------------------------------------------------------
+    # 資料載入與設定
+    # ------------------------------------------------------------------
+    def load_track_data(self, track_data: Dict[str, Any]) -> bool:
+        """供 Universal MDI 呼叫的資料載入接口。"""
         try:
-            # 提取位置記錄
-            self.position_records = track_data.get('detailed_position_records', [])
-            
-            # 提取賽道邊界
-            position_analysis = track_data.get('position_analysis', {})
-            self.track_bounds = position_analysis.get('track_bounds', {})
-            
-            # 基本資訊
-            session_info = track_data.get('session_info', {})
-            track_name = session_info.get('track_name', '未知賽道')
-            
-            print(f"[TRACK_MAP] 賽道數據載入完成: {track_name}")
-            print(f"[TRACK_MAP] 位置點數: {len(self.position_records)}")
-            print(f"[TRACK_MAP] 賽道邊界: {self.track_bounds}")
-            
-            # 更新佔位符顯示
-            self.placeholder_label.setText(f"賽道地圖\n{track_name}\n{len(self.position_records)} 個位置點")
-            
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] 載入賽道數據失敗: {e}")
+            self.track_data = track_data or {}
+            records = track_data.get("detailed_position_records") or track_data.get("position_records") or []
+            self.position_data = [record for record in records if isinstance(record, dict)]
+
+            bounds = track_data.get("position_analysis", {}).get("track_bounds")
+            if not bounds:
+                bounds = track_data.get("track_bounds")
+            if not bounds:
+                bounds = self._calculate_bounds_from_positions(self.position_data)
+
+            self.track_bounds = bounds if isinstance(bounds, dict) else None
+
+            if self.track_bounds:
+                self._pending_fit = True
+                self.fit_to_view()
+            else:
+                self.scale_factor = 1.0
+                self.offset_x = 0.0
+                self.offset_y = 0.0
+
+            self.update()
+
+            info = track_data.get("session_info", {})
+            track_name = info.get("track_name") or info.get("event_name") or "Unknown"
+            print(f"[TRACK_MAP] Data loaded: {track_name}, points={len(self.position_data)} bounds={self.track_bounds}")
+            return bool(self.position_data)
+        except Exception as exc:
+            print(f"[TRACK_MAP] Failed to load data: {exc}")
             return False
-    
-    def draw_track_map(self):
-        """繪製賽道地圖 - 佔位符版本"""
-        if not self.position_records:
-            print("[TRACK_MAP] 沒有位置數據可繪製")
-            return
-        
-        print(f"[TRACK_MAP] 開始繪製賽道地圖 ({len(self.position_records)} 個點)")
-        
-        # 更新顯示狀態
-        self.placeholder_label.setText(f"賽道地圖已載入\n{len(self.position_records)} 個位置點\n(點擊可查看詳細座標)")
-        
-        # 觸發重繪
+
+    def set_track_data(self, position_data: List[Dict[str, Any]], track_bounds: Dict[str, float]) -> None:
+        """兼容 legacy API。"""
+        self.position_data = position_data or []
+        self.track_bounds = track_bounds or self._calculate_bounds_from_positions(self.position_data)
+        self._pending_fit = True
+        self.fit_to_view()
         self.update()
-    
-    def paintEvent(self, event):
-        """繪製事件 - 簡化版本"""
+
+    def set_display_options(
+        self,
+        show_start: Optional[bool] = None,
+        show_finish: Optional[bool] = None,
+        show_markers: Optional[bool] = None,
+        show_labels: Optional[bool] = None,
+        show_grid: Optional[bool] = None,
+    ) -> None:
+        if show_start is not None:
+            self.show_start_point = bool(show_start)
+        if show_finish is not None:
+            self.show_finish_point = bool(show_finish)
+        if show_markers is not None:
+            self.show_distance_markers = bool(show_markers)
+        if show_labels is not None:
+            self.show_track_labels = bool(show_labels)
+        if show_grid is not None:
+            self.show_grid = bool(show_grid)
+        self.update()
+
+    # ------------------------------------------------------------------
+    # 縮放與視圖控制
+    # ------------------------------------------------------------------
+    def fit_to_view(self) -> None:
+        if not self.track_bounds:
+            return
+
+        self._base_scale, self.offset_x, self.offset_y = self._compute_fit_to_view()
+        self.scale_factor = self._base_scale
+        self._pending_fit = False
+        self.update()
+
+    def set_zoom(self, zoom_factor: float) -> None:
+        if zoom_factor <= 0.0:
+            self.fit_to_view()
+            return
+
+        if not self.track_bounds:
+            return
+
+        if self._pending_fit:
+            self.fit_to_view()
+
+        self.scale_factor = self._base_scale * zoom_factor
+        self._recenter_after_zoom()
+        self.update()
+
+    def get_zoom(self) -> float:
+        if self._base_scale == 0:
+            return 1.0
+        return self.scale_factor / self._base_scale
+
+    def set_show_grid(self, show: bool) -> None:
+        self.show_grid = bool(show)
+        self.update()
+
+    def set_show_markers(self, show: bool) -> None:
+        self.show_distance_markers = bool(show)
+        self.update()
+
+    def _recenter_after_zoom(self) -> None:
+        if not self.track_bounds:
+            return
+
+        track_width = self.track_bounds["x_max"] - self.track_bounds["x_min"]
+        track_height = self.track_bounds["y_max"] - self.track_bounds["y_min"]
+        scaled_width = track_width * self.scale_factor
+        scaled_height = track_height * self.scale_factor
+        self.offset_x = (self.width() - scaled_width) / 2
+        self.offset_y = (self.height() - scaled_height) / 2
+
+    def _compute_fit_to_view(self) -> Tuple[float, float, float]:
+        widget_width = max(1, self.width())
+        widget_height = max(1, self.height())
+        track_width = self.track_bounds["x_max"] - self.track_bounds["x_min"]
+        track_height = self.track_bounds["y_max"] - self.track_bounds["y_min"]
+
+        if track_width <= 0 or track_height <= 0:
+            return 1.0, 0.0, 0.0
+
+        margin_ratio = 0.9
+        scale_x = (widget_width * margin_ratio) / track_width
+        scale_y = (widget_height * margin_ratio) / track_height
+        base_scale = min(scale_x, scale_y)
+
+        offset_x = (widget_width - track_width * base_scale) / 2
+        offset_y = (widget_height - track_height * base_scale) / 2
+        return base_scale, offset_x, offset_y
+
+    # ------------------------------------------------------------------
+    # 繪圖邏輯
+    # ------------------------------------------------------------------
+    def paintEvent(self, event) -> None:  # noqa: D401 - Qt override
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 如果有數據，繪製簡化的賽道示意圖
-        if self.position_records and len(self.position_records) > 1:
-            self.draw_simplified_track(painter)
-        else:
-            # 繪製佔位符
-            self.draw_placeholder(painter)
-    
-    def draw_simplified_track(self, painter):
-        """繪製簡化的賽道示意圖"""
-        try:
-            # 計算顯示範圍
-            widget_rect = self.rect()
-            map_rect = widget_rect.adjusted(self.margin, self.margin, -self.margin, -self.margin)
-            
-            if map_rect.width() <= 0 or map_rect.height() <= 0:
-                return
-            
-            # 獲取座標範圍
-            x_coords = [record['position_x'] for record in self.position_records]
-            y_coords = [record['position_y'] for record in self.position_records]
-            
-            x_min, x_max = min(x_coords), max(x_coords)
-            y_min, y_max = min(y_coords), max(y_coords)
-            
-            x_range = x_max - x_min
-            y_range = y_max - y_min
-            
-            if x_range == 0 or y_range == 0:
-                return
-            
-            # 計算縮放因子
-            scale_x = map_rect.width() / x_range
-            scale_y = map_rect.height() / y_range
-            scale = min(scale_x, scale_y) * 0.9  # 留一些邊距
-            
-            # 設置繪筆
-            track_pen = QPen(QColor(60, 60, 60), 3)
-            point_pen = QPen(QColor(255, 0, 0), 2)
-            
-            # 繪製賽道路線
-            painter.setPen(track_pen)
-            for i in range(len(self.position_records) - 1):
-                current = self.position_records[i]
-                next_point = self.position_records[i + 1]
-                
-                # 轉換座標
-                x1 = int(map_rect.left() + (current['position_x'] - x_min) * scale)
-                y1 = int(map_rect.top() + (current['position_y'] - y_min) * scale)
-                x2 = int(map_rect.left() + (next_point['position_x'] - x_min) * scale)
-                y2 = int(map_rect.top() + (next_point['position_y'] - y_min) * scale)
-                
-                painter.drawLine(x1, y1, x2, y2)
-            
-            # 繪製起終點
-            if self.position_records:
-                start_point = self.position_records[0]
-                x = int(map_rect.left() + (start_point['position_x'] - x_min) * scale)
-                y = int(map_rect.top() + (start_point['position_y'] - y_min) * scale)
-                
-                painter.setPen(point_pen)
-                painter.setBrush(QBrush(QColor(255, 0, 0)))
-                painter.drawEllipse(x-4, y-4, 8, 8)
-                
-                # 起點標籤
-                painter.setPen(QPen(QColor(0, 0, 0)))
-                painter.setFont(QFont("Arial", 8))
-                painter.drawText(x+10, y, "START")
-            
-            # 繪製資訊文字
-            info_text = f"賽道位置點: {len(self.position_records)}"
-            painter.setPen(QPen(QColor(100, 100, 100)))
-            painter.setFont(QFont("Microsoft YaHei", 9))
-            painter.drawText(10, widget_rect.height() - 10, info_text)
-            
-        except Exception as e:
-            print(f"[ERROR] 繪製賽道失敗: {e}")
-    
-    def draw_placeholder(self, painter):
-        """繪製佔位符"""
-        painter.setPen(QPen(QColor(200, 200, 200), 2))
-        painter.setBrush(QBrush(QColor(245, 245, 245)))
-        
-        rect = self.rect().adjusted(20, 20, -20, -20)
-        painter.drawRect(rect)
-        
-        painter.setPen(QPen(QColor(150, 150, 150)))
-        painter.setFont(QFont("Microsoft YaHei", 12))
-        painter.drawText(rect, Qt.AlignCenter, "賽道地圖\n準備中...")
-    
-    def mousePressEvent(self, event):
-        """滑鼠點擊事件"""
-        if event.button() == Qt.LeftButton and self.position_records:
-            # 簡化版本：顯示點擊位置的資訊
-            click_info = {
-                'x': event.x(),
-                'y': event.y(),
-                'total_points': len(self.position_records)
-            }
-            print(f"[TRACK_MAP] 點擊位置: {click_info}")
-            self.point_clicked.emit(click_info)
-    
-    def wheelEvent(self, event):
-        """滾輪縮放事件 - 佔位符"""
-        delta = event.angleDelta().y()
-        if delta > 0:
-            self.zoom_factor *= 1.1
-        else:
-            self.zoom_factor /= 1.1
-        
-        # 限制縮放範圍
-        self.zoom_factor = max(0.1, min(10.0, self.zoom_factor))
-        
-        print(f"[TRACK_MAP] 縮放係數: {self.zoom_factor:.2f}")
-        self.update()
-    
-    def on_resize(self):
-        """視窗大小調整處理"""
-        self.update()
-    
-    def clear_map(self):
-        """清除地圖"""
-        self.track_data = None
-        self.position_records = []
-        self.track_bounds = {}
-        self.placeholder_label.setText("賽道地圖\n(準備中...)")
-        self.update()
-    
-    def get_track_info(self):
-        """獲取賽道資訊"""
-        if not self.track_data:
-            return {}
-        
+        painter.fillRect(self.rect(), QColor(245, 245, 245))
+
+        if not self.position_data or not self.track_bounds:
+            painter.setPen(QPen(QColor(120, 120, 120)))
+            painter.setFont(QFont("Microsoft YaHei", 12))
+            painter.drawText(self.rect(), Qt.AlignCenter, "賽道地圖\n等待數據...")
+            return
+
+        if self._pending_fit or self.size() != self._last_size:
+            self.fit_to_view()
+            self._last_size = self.size()
+
+        if self.show_grid:
+            self._draw_grid(painter)
+
+        points = self._create_screen_points()
+        if len(points) < 2:
+            painter.setPen(QPen(QColor(120, 120, 120)))
+            painter.drawText(self.rect(), Qt.AlignCenter, "賽道點數不足以繪製")
+            return
+
+        path = self._build_track_path(points)
+
+        painter.setPen(QPen(QColor(40, 40, 200), 4))
+        painter.drawPath(path)
+
+        painter.setPen(QPen(QColor(120, 120, 255), 1))
+        painter.drawPath(path)
+
+        if self.show_distance_markers:
+            self._draw_distance_markers(painter, points)
+
+    def _draw_grid(self, painter: QPainter) -> None:
+        if not self.track_bounds:
+            return
+
+        spacing = self._grid_spacing
+        bounds = self.track_bounds
+        x_min, x_max = bounds["x_min"], bounds["x_max"]
+        y_min, y_max = bounds["y_min"], bounds["y_max"]
+
+        painter.setPen(QPen(QColor(220, 220, 220), 1, Qt.DashLine))
+
+        count = 0
+        x = (int(x_min // spacing) + 1) * spacing
+        while x < x_max and count < self._max_grid_lines:
+            sx1, sy1 = self.world_to_screen(x, y_min)
+            sx2, sy2 = self.world_to_screen(x, y_max)
+            painter.drawLine(sx1, sy1, sx2, sy2)
+            count += 1
+            x += spacing
+
+        count = 0
+        y = (int(y_min // spacing) + 1) * spacing
+        while y < y_max and count < self._max_grid_lines:
+            sx1, sy1 = self.world_to_screen(x_min, y)
+            sx2, sy2 = self.world_to_screen(x_max, y)
+            painter.drawLine(sx1, sy1, sx2, sy2)
+            count += 1
+            y += spacing
+
+    def _create_screen_points(self) -> List[QPointF]:
+        return [QPointF(*self.world_to_screen(rec.get("position_x", 0), rec.get("position_y", 0))) for rec in self.position_data]
+
+    def _build_track_path(self, points: List[QPointF]) -> QPainterPath:
+        path = QPainterPath()
+        path.moveTo(points[0])
+        for idx in range(1, len(points)):
+            if idx < len(points) - 1:
+                mid = QPointF((points[idx].x() + points[idx + 1].x()) / 2, (points[idx].y() + points[idx + 1].y()) / 2)
+                path.quadTo(points[idx], mid)
+            else:
+                path.lineTo(points[idx])
+        return path
+
+    def _draw_start_finish(self, painter: QPainter, points: List[QPointF]) -> None:
+        if self.show_start_point and points:
+            painter.setBrush(QBrush(QColor(0, 200, 0)))
+            painter.setPen(QPen(QColor(0, 120, 0), 2))
+            painter.drawEllipse(points[0], 6, 6)
+            if self.show_track_labels:
+                painter.setFont(QFont("Arial", 8, QFont.Bold))
+                painter.setPen(QPen(QColor(0, 100, 0)))
+                painter.drawText(int(points[0].x()) + 10, int(points[0].y()) - 5, "START")
+
+        if self.show_finish_point and len(points) > 1:
+            painter.setBrush(QBrush(QColor(200, 0, 0)))
+            painter.setPen(QPen(QColor(120, 0, 0), 2))
+            painter.drawEllipse(points[-1], 6, 6)
+            if self.show_track_labels:
+                painter.setFont(QFont("Arial", 8, QFont.Bold))
+                painter.setPen(QPen(QColor(100, 0, 0)))
+                painter.drawText(int(points[-1].x()) + 10, int(points[-1].y()) - 5, "FINISH")
+
+    def _draw_distance_markers(self, painter: QPainter, points: List[QPointF]) -> None:
+        if not self.position_data:
+            return
+
+        painter.setBrush(QBrush(QColor(0, 0, 200)))
+        painter.setPen(QPen(QColor(0, 0, 150), 1))
+        step = max(1, len(points) // 8)
+        for idx in range(step, len(points) - 1, step):
+            painter.drawEllipse(points[idx], 3, 3)
+            distance_m = self.position_data[idx].get("distance_m")
+            if distance_m is not None:
+                painter.setFont(QFont("Arial", 7))
+                painter.setPen(QPen(QColor(0, 0, 120)))
+                painter.drawText(int(points[idx].x()) + 5, int(points[idx].y()) + 15, f"{distance_m/1000:.1f} km")
+
+    # ------------------------------------------------------------------
+    # 座標轉換
+    # ------------------------------------------------------------------
+    def world_to_screen(self, x: float, y: float) -> Tuple[int, int]:
+        if not self.track_bounds:
+            return int(x), int(y)
+
+        sx = (x - self.track_bounds["x_min"]) * self.scale_factor + self.offset_x
+        sy = (self.track_bounds["y_max"] - y) * self.scale_factor + self.offset_y
+        return int(sx), int(sy)
+
+    def _calculate_bounds_from_positions(self, positions: List[Dict[str, Any]]) -> Optional[Dict[str, float]]:
+        if not positions:
+            return None
+        xs = [p.get("position_x", 0.0) for p in positions]
+        ys = [p.get("position_y", 0.0) for p in positions]
         return {
-            'position_count': len(self.position_records),
-            'track_bounds': self.track_bounds.copy(),
-            'has_data': bool(self.position_records)
+            "x_min": min(xs),
+            "x_max": max(xs),
+            "y_min": min(ys),
+            "y_max": max(ys),
         }
 
-if __name__ == "__main__":
-    # 獨立測試
-    from PyQt5.QtWidgets import QApplication
-    
-    app = QApplication(sys.argv)
-    
-    widget = TrackMapWidget()
-    widget.show()
-    widget.resize(600, 400)
-    
-    sys.exit(app.exec_())
+    # ------------------------------------------------------------------
+    # 互動事件
+    # ------------------------------------------------------------------
+    def mousePressEvent(self, event) -> None:  # noqa: D401 - Qt override
+        if event.button() == Qt.LeftButton and self.position_data:
+            info = {
+                "x": event.x(),
+                "y": event.y(),
+                "total_points": len(self.position_data),
+            }
+            self.point_clicked.emit(info)
+        super().mousePressEvent(event)
+
+    def resizeEvent(self, event) -> None:  # noqa: D401 - Qt override
+        super().resizeEvent(event)
+        if self.track_bounds:
+            self._pending_fit = True
+        self.update()
+
+    # ------------------------------------------------------------------
+    # 輔助工具
+    # ------------------------------------------------------------------
+    def clear_map(self) -> None:
+        self.track_data = None
+        self.position_data = []
+        self.track_bounds = None
+        self.scale_factor = 1.0
+        self.offset_x = 0.0
+        self.offset_y = 0.0
+        self.update()
+
+    def get_track_info(self) -> Dict[str, Any]:
+        return {
+            "position_count": len(self.position_data),
+            "track_bounds": dict(self.track_bounds) if self.track_bounds else {},
+            "has_data": bool(self.position_data),
+        }
+
+    def force_rescale(self) -> None:
+        if not self.track_bounds:
+            return
+        self._pending_fit = True
+        self.fit_to_view()
+
+
+__all__ = ["TrackMapWidget"]

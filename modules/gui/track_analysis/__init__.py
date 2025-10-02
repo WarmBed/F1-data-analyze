@@ -10,12 +10,17 @@ Track Analysis GUI Module
 所有賽道分析相關的GUI功能都集中在這個模組中。
 """
 
-from .track_analysis_module import TrackAnalysisModule
+from .track_analysis_module import TrackAnalysisModule  # legacy QWidget module
+from .track_analysis_mdi import TrackAnalysisUniversal, TrackAnalysisDataManager
+from .track_data_loader import TrackUniversalDataLoader
 from .track_map_widget import TrackMapWidget
 from .track_data_processor import TrackDataProcessor
 
 __all__ = [
-    'TrackAnalysisModule',
+    'TrackAnalysisModule',           # legacy (backward compatibility)
+    'TrackAnalysisUniversal',        # preferred UniversalAnalysisMDI implementation
+    'TrackAnalysisDataManager',
+    'TrackUniversalDataLoader',
     'TrackMapWidget', 
     'TrackDataProcessor'
 ]

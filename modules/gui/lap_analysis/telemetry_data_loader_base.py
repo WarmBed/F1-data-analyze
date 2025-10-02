@@ -40,7 +40,84 @@ import fastf1
 import pandas as pd
 import subprocess
 from typing import Dict, List, Any, Optional, Tuple
-from PyQt5.QtCore import QObject, pyqtSignal, QTimer
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
+
+
+class TelemetryApiWorker(QThread):
+    """Background worker responsible for fetching telemetry comparison data via REST API."""
+
+    progress = pyqtSignal(int)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0,
+                 request_token: Optional[int] = None, parent=None):
+        super().__init__(parent)
+        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.params = dict(params)
+        self.timeout = timeout
+        self.request_token = request_token
+
+    def run(self) -> None:
+        try:
+            self.progress.emit(15)
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": 13,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+                "driver1": self.params.get("driver1"),
+                "driver2": self.params.get("driver2"),
+                "lap1": self.params.get("lap1"),
+                "lap2": self.params.get("lap2"),
+            }
+
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(70)
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API response must be a JSON object")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API returned success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API response missing 'data' object")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+                "function_id": 13,
+            }
+
+            self.progress.emit(90)
+            self.success.emit({
+                "data": data,
+                "payload": payload,
+                "meta": meta,
+                "request_token": self.request_token
+            })
+        except Exception as exc:
+            self.failure.emit(str(exc))
+        finally:
+            self.progress.emit(100)
 
 
 class TelemetryDataLoader(QObject):
@@ -56,10 +133,6 @@ class TelemetryDataLoader(QObject):
     load_progress = pyqtSignal(int)     # 載入進度 (0-100)
     load_error = pyqtSignal(str)        # 載入錯誤
     status_changed = pyqtSignal(str)    # 狀態變更
-    
-    # 🔧 修復：使用信號替代 QTimer.singleShot
-    _api_success_signal = pyqtSignal(dict, dict, object)  # data, payload, token
-    _api_failure_signal = pyqtSignal(str, object)  # reason, token
     
     # 支援的遙測類型映射
     TELEMETRY_TYPES = {
@@ -143,6 +216,10 @@ class TelemetryDataLoader(QObject):
         self.current_session = None
         self._generation_params = None
         self._active_request_token = 0
+        self._pending_params: Dict[str, Any] = {}
+        self._api_worker: Optional[TelemetryApiWorker] = None
+        self._last_data_source: str = "unknown"
+        self._last_api_meta: Dict[str, Any] = {}
         
         # 監控定時器 - 設置 parent 防止被垃圾回收
         self._generation_timer = QTimer(self)
@@ -151,10 +228,6 @@ class TelemetryDataLoader(QObject):
         self._generation_timeout_timer = QTimer(self)
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
         
-        # 🔧 修復：連接 API 回調信號
-        self._api_success_signal.connect(self._handle_api_success)
-        self._api_failure_signal.connect(self._handle_api_failure)
-
         self._debug(f"初始化 {self.config['display_name']} 載入器")
         self._api_base_url = self._determine_api_base_url()
         self._api_timeout = 75.0
@@ -281,17 +354,30 @@ class TelemetryDataLoader(QObject):
                 if self._sessions_match(self.current_session, incoming_session):
                     self._debug("已在載入中且參數相同，忽略重複請求")
                     return False
-                self._debug("偵測到新的請求參數，將停止目前的載入流程並重新啟動")
+                self._debug("偵測到新的請求參數，準備重置當前載入流程")
                 self._stop_generation_monitoring()
+                self._cleanup_api_worker()
 
             request_token = self._next_request_token()
             incoming_session['request_token'] = request_token
             incoming_session['request_started_at'] = time.time()
 
             self.current_session = incoming_session
+            self._pending_params = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver1': driver1,
+                'driver2': driver2,
+                'driver2_effective': effective_driver2,
+                'lap1': lap1,
+                'lap2': lap2,
+                'single_driver_mode': single_driver_mode
+            }
 
             self._is_loading = True
-            self.load_progress.emit(10)
+            self.load_progress.emit(5)
+            self.status_changed.emit("正在透過 API 載入遙測比較資料...")
 
             self._debug("========== 遙測數據載入 ==========")
             self._debug(f"類型: {self.config['display_name']}")
@@ -301,31 +387,10 @@ class TelemetryDataLoader(QObject):
             if single_driver_mode:
                 self._debug(f"API 將使用 {effective_driver2} 作為第二車手參數")
             self._debug(f"請求標識 (token): {request_token}")
-            
-            # 檢測特殊情況
-            if driver2 and driver1 == driver2 and lap1 == lap2:
-                self._debug(f"🔍 檢測到同車手同圈數特殊情況: {driver1} 第{lap1}圈")
-                self._debug("⚠️ 注意：CLI -f13 會生成 comparison_type: 'same_driver' 的特殊JSON格式")
-            elif driver2 and driver1 == driver2:
-                self._debug(f"🔍 檢測到同車手不同圈數情況: {driver1} 第{lap1}圈 vs 第{lap2}圈")
-            elif driver2:
-                self._debug(f"🔍 標準雙車手比較: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
-            else:
-                self._debug(f"🔍 單車手分析: {driver1} 第{lap1}圈")
-            
-            # 尋找對應的 JSON 檔案
-            json_file = self._find_telemetry_data_file(year, race, session, driver1, driver2, lap1, lap2)
-            self._debug(f"搜尋結果: {json_file}")
-            
-            if json_file:
-                self._debug("✅ 找到現有檔案，準備載入")
-                QTimer.singleShot(10, lambda: self._load_json_file(json_file, request_token))
-                return True
 
-            self._debug("❌ 找不到現有 JSON，嘗試透過 API 載入遙測資料")
             self._start_api_request(request_token)
             return True
-            
+
         except Exception as e:
             self._error(f"載入失敗: {str(e)}")
             self.load_error.emit(f"載入失敗: {str(e)}")
@@ -481,7 +546,54 @@ class TelemetryDataLoader(QObject):
         state = "啟用" if self._allow_local_fallback else "停用"
         self._debug(f"本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
 
-    def _start_api_request(self, request_token: Optional[int] = None):
+    def load_data_from_local(self, year: int, race: str, session: str,
+                              driver1: str, driver2: Optional[str] = None,
+                              lap1: int = 1, lap2: Optional[int] = None,
+                              is_fastest_lap: bool = False) -> bool:
+        """Force loading telemetry data through the legacy JSON/CLI path for diagnostics."""
+        if lap2 is None:
+            lap2 = lap1
+
+        driver1_normalized = self._normalize_driver_code(driver1)
+        driver2_normalized = self._normalize_driver_code(driver2)
+        if not driver1_normalized:
+            self._error("缺少主要車手代碼，無法載入本地遙測數據")
+            self.load_error.emit("缺少 driver1")
+            return False
+
+        single_driver_mode = (driver2_normalized is None) or (driver2_normalized == driver1_normalized)
+        effective_driver2 = driver2_normalized if driver2_normalized else driver1_normalized
+
+        params = {
+            'year': year,
+            'race': race,
+            'session': session,
+            'driver1': driver1_normalized,
+            'driver2': None if single_driver_mode else driver2_normalized,
+            'driver2_effective': effective_driver2,
+            'lap1': lap1,
+            'lap2': lap2,
+            'is_fastest_lap': is_fastest_lap,
+            'single_driver_mode': single_driver_mode,
+            'force_refresh': False
+        }
+        params['signature'] = self._build_request_signature(params)
+        params['request_token'] = self._next_request_token()
+        params['request_started_at'] = time.time()
+
+        previous_state = self._allow_local_fallback
+        previous_reason = self._fallback_policy_reason
+        try:
+            self._allow_local_fallback = True
+            self._fallback_policy_reason = "手動診斷模式"
+            self.current_session = params
+            self._debug("🔁 手動觸發本地 JSON/CLI 後備流程")
+            return self._fallback_to_local("manual local load", params['request_token'])
+        finally:
+            self._allow_local_fallback = previous_state
+            self._fallback_policy_reason = previous_reason
+
+    def _start_api_request(self, request_token: Optional[int] = None) -> None:
         if not self.current_session:
             self._error("缺少當前會話資訊，無法呼叫 API")
             self._fallback_to_local("缺少會話資訊", request_token)
@@ -501,165 +613,174 @@ class TelemetryDataLoader(QObject):
 
         if not driver1:
             self._error("缺少主要車手代碼，無法發送遙測比較 API")
-            self._handle_api_failure("缺少 driver1", request_token)
+            self._on_api_error("缺少 driver1", request_token)
             return
         if not driver2:
             driver2 = driver1
         if params.get('single_driver_mode'):
             self._debug(f"單車手模式啟動，driver2 將使用 {driver2}")
+
         lap1 = params.get('lap1') or params.get('lap') or 1
         lap2 = params.get('lap2') or lap1
 
-        query_params = {
-            "function_id": "13",
+        worker_params = {
             "year": params.get('year'),
             "race": params.get('race'),
             "session": params.get('session'),
             "driver1": driver1,
             "driver2": driver2,
             "lap1": lap1,
-            "lap2": lap2
+            "lap2": lap2,
+            "force_refresh": params.get('force_refresh', False)
         }
 
         if params.get('is_fastest_lap'):
             self._debug("檢測到最速圈模式，lap1/lap2 由 API 自行解析")
 
-        if params.get('force_refresh'):
-            query_params['force_refresh'] = True
+        self._api_base_url = self._determine_api_base_url()
+        self._debug(f"🚀 呼叫 API: {self._api_base_url}/api/v2/analysis/execute")
+        self._debug(f"參數: {worker_params}")
 
-        endpoint = f"{self._api_base_url}/api/v2/analysis/execute"
-        self._debug(f"🚀 呼叫 API: {endpoint}")
-        self._debug(f"參數: {query_params}")
-        self.status_changed.emit("正在透過 API 生成遙測比較資料...")
+        self._cleanup_api_worker()
 
-        def run_api_call():
-            current_token = request_token
+        timeout = getattr(self, "_api_timeout", 75.0)
+        self._api_worker = TelemetryApiWorker(
+            self._api_base_url,
+            worker_params,
+            timeout=timeout,
+            request_token=request_token,
+            parent=self
+        )
+        self._api_worker.progress.connect(self._on_api_progress)
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_error)
+        self._api_worker.finished.connect(self._cleanup_api_worker)
+        self._api_worker.start()
+
+    def _on_api_progress(self, value: int) -> None:
+        try:
+            bounded = max(0, min(int(value), 100))
+            self.load_progress.emit(bounded)
+        except Exception:
+            pass
+
+    def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        if not isinstance(payload, dict):
+            self._on_api_error("無效的 API 回傳格式", None)
+            return
+        request_token = payload.get("request_token")
+        data = payload.get("data")
+        raw_payload = payload.get("payload", {})
+        meta = payload.get("meta", {})
+        self._handle_api_success(data, raw_payload, meta, request_token)
+
+    def _on_api_error(self, message: str, request_token: Optional[int] = None) -> None:
+        if request_token is not None and request_token != self._active_request_token:
+            self._debug(f"忽略過時的 API 失敗回應 (token {request_token} != {self._active_request_token})")
+            return
+        self._error(f"API 請求失敗: {message}")
+        self._is_loading = False
+        self.status_changed.emit("API 請求失敗，嘗試本地 JSON/CLI 後備流程")
+        if not self._fallback_to_local(message, request_token):
+            self.load_error.emit(f"API 載入失敗: {message}")
+
+    def _cleanup_api_worker(self) -> None:
+        if self._api_worker:
             try:
-                response = requests.post(
-                    endpoint,
-                    params=query_params,
-                    timeout=self._api_timeout,
-                    headers={"Accept": "application/json"}
-                )
-                if response.status_code != 200:
-                    raise RuntimeError(f"API 回傳狀態碼 {response.status_code}: {response.text}")
+                if self._api_worker.isRunning():
+                    self._api_worker.requestInterruption()
+                    self._api_worker.wait(200)
+                self._api_worker.progress.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.success.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.failure.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.finished.disconnect()
+            except Exception:
+                pass
+            self._api_worker.deleteLater()
+            self._api_worker = None
 
-                payload = response.json()
-                if not isinstance(payload, dict):
-                    raise ValueError("API 回傳格式錯誤 (非 JSON 物件)")
-                if not payload.get('success', False):
-                    raise RuntimeError(payload.get('message', 'API success=False'))
-
-                data = payload.get('data')
-                if not isinstance(data, dict):
-                    raise ValueError("API 回傳缺少 data 物件")
-
-                self._debug("✅ API 回傳成功，開始處理數據")
-                self._debug(f"📦 data 類型: {type(data)}")
-                self._debug(f"📦 data 鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-                self._debug(f"📦 payload 鍵值: {list(payload.keys())}")
-                self._debug(f"🔢 current_token: {current_token}")
-                self._debug("🚀 準備調用 _handle_api_success (透過信號機制)")
-                
-                # 🔧 修復：使用信號機制替代 QTimer.singleShot
-                self._api_success_signal.emit(data, payload, current_token)
-                self._debug("✅ _api_success_signal 已發送")
-                
-            except Exception as exc:
-                self._error(f"❌ API 請求失敗: {exc}")
-                import traceback
-                self._error("完整錯誤追蹤:")
-                self._error(traceback.format_exc())
-                # 🔧 修復：使用信號機制替代 QTimer.singleShot
-                self._api_failure_signal.emit(str(exc), current_token)
-
-        thread = threading.Thread(target=run_api_call, daemon=True)
-        thread.start()
-
-    def _handle_api_success(self, data: Dict[str, Any], payload: Dict[str, Any],
-                            request_token: Optional[int] = None):
+    def _handle_api_success(self, data: Any, payload: Dict[str, Any], meta: Dict[str, Any],
+                            request_token: Optional[int] = None) -> None:
         if request_token is not None and request_token != self._active_request_token:
             self._debug(f"忽略過時的 API 成功回應 (token {request_token} != {self._active_request_token})")
             return
         try:
+            if not isinstance(data, dict):
+                raise ValueError("API 回傳缺少 data 物件")
+
             self._debug("========== _handle_api_success 開始 ==========")
             self._debug(f"📦 data 類型: {type(data)}")
             self._debug(f"📦 data 鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-            
-            meta = {
-                "source": payload.get("source", "api"),
-                "execution_time": payload.get("execution_time"),
-                "request_id": payload.get("request_id"),
-                "timestamp": payload.get("timestamp"),
-                "api_base_url": self._api_base_url
-            }
-            self._debug("✅ 步驟1: meta 數據構建完成")
 
-            self._debug("🧪 步驟2: 開始驗證 API 數據格式")
-            validation_result = self._validate_telemetry_data(data)
-            self._debug(f"驗證結果: {validation_result}")
-            if not validation_result:
+            self._last_data_source = "api"
+            self._last_api_meta = meta or {}
+
+            self._debug("🧪 步驟1: 開始驗證 API 數據格式")
+            if not self._validate_telemetry_data(data):
                 raise ValueError("API 回傳數據格式驗證失敗")
-            self._debug("✅ 步驟2: 數據格式驗證通過")
+            self._debug("✅ 步驟1: 數據格式驗證通過")
 
-            self._debug("📝 步驟3: 設置 metadata")
+            self._debug("📝 步驟2: 設置 metadata")
             metadata = data.setdefault("metadata", {})
             metadata.setdefault("telemetry_type", self.telemetry_type)
             metadata.setdefault("data_source", "api")
-            metadata.setdefault("api", meta)
+            if meta:
+                metadata.setdefault("api", meta)
             session_snapshot = self.current_session or {}
             metadata.setdefault("year", session_snapshot.get('year'))
             metadata.setdefault("race", session_snapshot.get('race'))
             metadata.setdefault("session", session_snapshot.get('session'))
-            self._debug("✅ 步驟3: metadata 設置完成")
+            self._debug("✅ 步驟2: metadata 設置完成")
 
-            self._debug("💾 步驟4: 保存 API payload")
-            self._persist_api_payload(data)
-            self._debug("✅ 步驟4: payload 保存完成")
-
-            self._debug("🔧 步驟5: 處理遙測數據")
+            self._debug("� 步驟3: 處理遙測數據")
             processed_data = self._process_telemetry_data(data)
-            self._debug("✅ 步驟5: API 數據處理完成")
-            self._debug(f"處理後數據類型: {type(processed_data)}")
-            self._debug(f"處理後數據鍵值: {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
+            if isinstance(processed_data, dict):
+                metadata_bucket = processed_data.setdefault("metadata", {})
+                metadata_bucket.setdefault("telemetry_type", self.telemetry_type)
+                metadata_bucket.setdefault("data_source", "api")
+                if meta:
+                    metadata_bucket.setdefault("api", meta)
+            self._debug("✅ 步驟3: API 數據處理完成")
 
-            self._debug("📊 步驟6: 發送進度和狀態信號")
+            self._debug("📊 步驟4: 發送進度和狀態信號")
             self.load_progress.emit(100)
             self.status_changed.emit("已透過 API 載入遙測比較資料")
             self._current_data = processed_data
             self._is_loading = False
-            self._debug("✅ 步驟6: 狀態更新完成")
-            
-            self._debug("🚀 步驟7: 即將發送 data_loaded 信號")
+            self._debug("✅ 步驟4: 狀態更新完成")
+
+            self._debug("🚀 步驟5: 即將發送 data_loaded 信號")
             self._debug(f"📡 信號接收者數量: {self.receivers(self.data_loaded)}")
             self.data_loaded.emit(processed_data)
-            self._debug("✅ 步驟7: data_loaded 信號已發送")
+            self._debug("✅ 步驟5: data_loaded 信號已發送")
             self._debug("========== _handle_api_success 完成 ==========")
         except Exception as exc:
             self._error(f"❌ 處理 API 數據失敗: {exc}")
             import traceback
             self._error("完整錯誤追蹤:")
             self._error(traceback.format_exc())
-            self._handle_api_failure(str(exc), request_token)
-
-    def _handle_api_failure(self, reason: str, request_token: Optional[int] = None):
-        if request_token is not None and request_token != self._active_request_token:
-            self._debug(f"忽略過時的 API 失敗回應 (token {request_token} != {self._active_request_token})")
-            return
-        self.status_changed.emit("API 載入失敗，嘗試本地 JSON/CLI 後備流程")
-        if not self._fallback_to_local(reason, request_token):
-            self.load_error.emit(f"API 載入失敗: {reason}")
-            self._is_loading = False
+            self._on_api_error(str(exc), request_token)
 
     def _fallback_to_local(self, reason: str, request_token: Optional[int] = None) -> bool:
         if request_token is not None and request_token != self._active_request_token:
             self._debug(f"忽略過時的本地後備請求 (token {request_token} != {self._active_request_token})")
             return False
         if not self._allow_local_fallback:
+            self._last_data_source = "local-fallback-disabled"
+            self._last_api_meta = {}
             self._debug(f"本地 JSON 後備被停用: {reason}")
             return False
 
-        params = self.current_session or {}
+        params = self._pending_params or self.current_session or {}
         self._debug(f"啟動本地後備流程 (原因: {reason})")
         json_file = self._find_telemetry_data_file(
             params.get('year'), params.get('race'), params.get('session'),
@@ -667,11 +788,13 @@ class TelemetryDataLoader(QObject):
         )
 
         if json_file:
+            self._last_data_source = "local-json"
             self._debug(f"使用本地 JSON 檔案: {json_file}")
             QTimer.singleShot(10, lambda: self._load_json_file(json_file, request_token))
             return True
 
         self._debug("本地 JSON 不存在，改用 CLI 生成")
+        self._last_data_source = "cli-generation"
         self._start_cli_generation(
             params.get('year'), params.get('race'), params.get('session'),
             params.get('driver1'), params.get('driver2'), params.get('lap1', 1), params.get('lap2', 1),
