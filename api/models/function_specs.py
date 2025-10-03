@@ -334,6 +334,15 @@ _FUNCTION_SPEC_LIST = [
         notes="GUI detailed lap view consumes the JSON; driver optional for single-driver runs.",
     ),
     _make_spec(
+        "48",
+        name="All Drivers Straight-Line Speed",
+        description="Calculates the maximum straight-line speed achieved by every driver in the session.",
+        required_params=["year", "race", "session"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
+        cache_patterns=["all_drivers_straight_line_speed", "straight_line_speed"],
+        notes="Feeds the global straight-line speed chart for lap analysis modules.",
+    ),
+    _make_spec(
         "99",
         name="Season Calendar Overview",
         description="Returns completed and upcoming events for the selected season using FastF1 schedule data.",

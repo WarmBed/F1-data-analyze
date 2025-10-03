@@ -73,6 +73,11 @@ class SystemSettingsDialog(QDialog):
             tr("boxplot_filter_outliers", "Filter statistical outliers (IQR)")
         )
         group_layout.addRow(self.filter_outliers_checkbox)
+        
+        self.filter_yellow_flags_checkbox = QCheckBox(
+            tr("boxplot_filter_yellow_flags", "Filter yellow flag laps")
+        )
+        group_layout.addRow(self.filter_yellow_flags_checkbox)
 
         self.outlier_threshold_spinbox = QDoubleSpinBox()
         self.outlier_threshold_spinbox.setDecimals(1)
@@ -119,17 +124,20 @@ class SystemSettingsDialog(QDialog):
         settings = self._settings_manager.get_boxplot_settings()
         self.filter_pit_checkbox.setChecked(settings.get("filter_pit_laps", True))
         self.filter_outliers_checkbox.setChecked(settings.get("filter_outliers", True))
+        self.filter_yellow_flags_checkbox.setChecked(settings.get("filter_yellow_flags", True))
         self.outlier_threshold_spinbox.setValue(settings.get("outlier_threshold", 1.5))
 
     def _reset_defaults(self) -> None:
         self.filter_pit_checkbox.setChecked(True)
         self.filter_outliers_checkbox.setChecked(True)
+        self.filter_yellow_flags_checkbox.setChecked(True)
         self.outlier_threshold_spinbox.setValue(1.5)
 
     def _on_accept(self) -> None:
         self._settings_manager.update_boxplot_settings(
             filter_pit_laps=self.filter_pit_checkbox.isChecked(),
             filter_outliers=self.filter_outliers_checkbox.isChecked(),
+            filter_yellow_flags=self.filter_yellow_flags_checkbox.isChecked(),
             outlier_threshold=float(self.outlier_threshold_spinbox.value()),
         )
         self.accept()

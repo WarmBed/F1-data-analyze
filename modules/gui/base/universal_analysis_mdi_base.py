@@ -339,12 +339,15 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.module_error.emit(f"參數同步失敗: {str(e)}")
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
-        """獲取視窗標題"""
+        """獲取視窗標題（支援多國語言）"""
         year = year or self.current_year
         race = race or self.current_race
         session = session or self.current_session
         
-        base_title = f"{self.config.display_name} - {year} {race} {session}"
+        # 使用 tr() 翻譯 display_name（支援多國語言）
+        # 從 config.analysis_type 取得翻譯鍵，從 config.display_name 取得預設值
+        translated_name = tr(self.config.analysis_type, self.config.display_name)
+        base_title = f"{translated_name} - {year} {race} {session}"
         
         if self.config.requires_driver_params:
             driver1 = getattr(self, 'driver1', 'VER')

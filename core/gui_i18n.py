@@ -196,6 +196,7 @@ class GuiTranslator:
             'tire_analysis': {'zh': '輪胎分析', 'en': 'Tire Analysis', 'ja': 'タイヤ分析'},
             'accident_analysis': {'zh': '事故分析', 'en': 'Accident Analysis', 'ja': '事故分析'},
             'rain_analysis': {'zh': '雨況分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
+            'laptime_boxplot': {'zh': '圈速箱型圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイムボックスプロット'},
             
             # 事故分析模組
             'waiting_data_load': {'zh': '等待數據載入...', 'en': 'Waiting for data loading...', 'ja': 'データ読み込み待ち...'},

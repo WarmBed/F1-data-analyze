@@ -1,0 +1,226 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🎯 執行 F1T GUI 主程式",
+            "type": "shell",
+            "command": "python",
+            "args": ["f1t_gui_main.py"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true,
+                "close": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "PYTHONIOENCODING": "utf-8",
+                    "PYTHONLEGACYWINDOWSFS": "0"
+                },
+                "shell": {
+                    "executable": "powershell.exe",
+                    "args": ["-NoProfile", "-Command"]
+                }
+            },
+            "problemMatcher": {
+                "owner": "python",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "runOptions": {
+                "runOn": "default"
+            },
+            "isBackground": false
+        },
+        {
+            "label": "🛑 強制關閉 F1T GUI",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Write-Host 'F1T GUI 已強制關閉' -ForegroundColor Green"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": false,
+                "clear": true,
+                "close": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "shell": {
+                    "executable": "powershell.exe"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "🔄 重啟 F1T GUI",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "Get-Process python -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep -Seconds 2; python f1t_gui_main.py"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true,
+                "close": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "PYTHONIOENCODING": "utf-8",
+                    "PYTHONLEGACYWINDOWSFS": "0"
+                },
+                "shell": {
+                    "executable": "powershell.exe"
+                }
+            },
+            "problemMatcher": [],
+            "isBackground": false
+        },
+        {
+            "label": "🔧 執行 CLI 模組化主程式",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "f1_analysis_modular_main.py",
+                "-f", "1",
+                "-y", "2025",
+                "-r", "Japan",
+                "-s", "R"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "PYTHONIOENCODING": "utf-8"
+                }
+            },
+            "problemMatcher": "$python"
+        },
+        {
+            "label": "🌐 啟動 API 伺服器",
+            "type": "shell",
+            "command": "python",
+            "args": ["refactored_api.py"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "PYTHONIOENCODING": "utf-8"
+                }
+            },
+            "problemMatcher": "$python",
+            "isBackground": true
+        },
+        {
+            "label": "🧪 執行所有測試",
+            "type": "shell",
+            "command": "python",
+            "args": ["-m", "pytest", "tests/", "-v", "--tb=short"],
+            "group": "test",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}",
+                "env": {
+                    "PYTHONPATH": "${workspaceFolder}",
+                    "PYTHONIOENCODING": "utf-8"
+                }
+            },
+            "problemMatcher": "$python"
+        },
+        {
+            "label": "🧹 清理緩存檔案",
+            "type": "shell",
+            "command": "powershell",
+            "args": [
+                "-Command",
+                "Remove-Item -Path 'cache\\*.pkl' -Force -ErrorAction SilentlyContinue; Remove-Item -Path '__pycache__\\*' -Recurse -Force -ErrorAction SilentlyContinue; Write-Host '緩存檔案清理完成'"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "📦 安裝 Python 相依套件",
+            "type": "shell",
+            "command": "pip",
+            "args": ["install", "-r", "requirements.txt"],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "new",
+                "showReuseMessage": true,
+                "clear": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

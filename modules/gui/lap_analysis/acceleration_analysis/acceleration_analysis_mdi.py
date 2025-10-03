@@ -538,8 +538,19 @@ class accelerationAnalysisModule(IAnalysisModule):
             print(f"[acceleration_MDI] ========== 圈速參數更新 ==========")
             print(f"[acceleration_MDI] 收到參數: {year} {race} {session}")
             print(f"[acceleration_MDI] 車手: {driver1} vs {driver2}")
-            print(f"[acceleration_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
+            print(f"[acceleration_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈 (類型: lap1={type(lap1)}, lap2={type(lap2)})")
             print(f"[acceleration_MDI] 最速圈: {is_fastest}")
+            
+            # 🔍 診斷日誌：檢查當前屬性
+            print(f"[ACCEL_DEBUG] 當前屬性狀態:")
+            print(f"  self.current_year = {getattr(self, 'current_year', 'UNDEFINED')}")
+            print(f"  self.current_race = {getattr(self, 'current_race', 'UNDEFINED')}")
+            print(f"  self.current_session = {getattr(self, 'current_session', 'UNDEFINED')}")
+            print(f"  self.driver1 = {getattr(self, 'driver1', 'UNDEFINED')}")
+            print(f"  self.driver2 = {getattr(self, 'driver2', 'UNDEFINED')}")
+            print(f"  self.lap1 = {getattr(self, 'lap1', 'UNDEFINED')} (類型: {type(getattr(self, 'lap1', None))})")
+            print(f"  self.lap2 = {getattr(self, 'lap2', 'UNDEFINED')} (類型: {type(getattr(self, 'lap2', None))})")
+            print(f"  self.data_manager = {getattr(self, 'data_manager', 'UNDEFINED')}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
@@ -557,6 +568,9 @@ class accelerationAnalysisModule(IAnalysisModule):
                     print(f"[acceleration_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
             
             # 檢查參數是否有變化
+            old_lap1 = getattr(self, 'lap1', None)
+            old_lap2 = getattr(self, 'lap2', None)
+            
             params_changed = (
                 self.current_year != str(year) or 
                 self.current_race != race or 
@@ -566,6 +580,17 @@ class accelerationAnalysisModule(IAnalysisModule):
                 self.lap1 != lap1 or
                 self.lap2 != lap2
             )
+            
+            # 🔍 診斷日誌：參數變化詳情
+            print(f"[ACCEL_DEBUG] 參數變化檢測:")
+            print(f"  年份: {getattr(self, 'current_year', None)} != {str(year)} = {getattr(self, 'current_year', None) != str(year)}")
+            print(f"  賽事: {getattr(self, 'current_race', None)} != {race} = {getattr(self, 'current_race', None) != race}")
+            print(f"  會話: {getattr(self, 'current_session', None)} != {session} = {getattr(self, 'current_session', None) != session}")
+            print(f"  車手1: {getattr(self, 'driver1', None)} != {driver1} = {getattr(self, 'driver1', None) != driver1}")
+            print(f"  車手2: {getattr(self, 'driver2', None)} != {driver2} = {getattr(self, 'driver2', None) != driver2}")
+            print(f"  Lap1: {old_lap1} != {lap1} = {old_lap1 != lap1}")
+            print(f"  Lap2: {old_lap2} != {lap2} = {old_lap2 != lap2}")
+            print(f"  最終結果 params_changed = {params_changed}")
             
             print(f"[acceleration_MDI] 參數是否變化: {params_changed}")
             
@@ -585,10 +610,14 @@ class accelerationAnalysisModule(IAnalysisModule):
             
             if params_changed:
                 print(f"[acceleration_MDI] 🔄 參數已變化，開始重載數據...")
+                print(f"[ACCEL_DEBUG] 檢查 data_manager 狀態: {self.data_manager is not None}")
                 
                 # 載入新數據
                 if self.data_manager:
                     print(f"[acceleration_MDI] 📡 調用數據管理器載入新數據...")
+                    print(f"[ACCEL_DEBUG] 載入參數: year={self.current_year}, race={self.current_race}, session={self.current_session}")
+                    print(f"[ACCEL_DEBUG] 載入參數: driver1={self.driver1}, driver2={self.driver2}, lap1={self.lap1}, lap2={self.lap2}")
+                    
                     success = self.data_manager.load_acceleration_data(
                         year=self.current_year,
                         race=self.current_race,
@@ -598,6 +627,8 @@ class accelerationAnalysisModule(IAnalysisModule):
                         lap1=self.lap1,
                         lap2=self.lap2
                     )
+                    
+                    print(f"[ACCEL_DEBUG] load_acceleration_data 返回: {success}")
                     
                     if success:
                         print(f"[acceleration_MDI] ✅ 圈速參數更新後數據重載成功")

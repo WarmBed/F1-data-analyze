@@ -1,0 +1,87 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: GUI",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/f1t_gui_main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8",
+        "F1_API_HOST": "127.0.0.1",
+        "F1_API_PORT": "8000",
+        "F1_API_BASE_URL": "http://127.0.0.1:8000"
+      },
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Python: API server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/refactored_api.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8",
+        "F1_API_HOST": "127.0.0.1",
+        "F1_API_PORT": "8000",
+        "F1_API_RELOAD": "0"
+      },
+      "serverReadyAction": {
+        "pattern": "Uvicorn running on (http://\\S+)",
+        "uriFormat": "%s/docs",
+        "action": "openExternally"
+      },
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Python: CLI entry (interactive)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/f1_analysis_modular_main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Python: Pytest",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8"
+      },
+      "args": [
+        "tests/",
+        "-v",
+        "--tb=short"
+      ],
+      "justMyCode": false,
+      "stopOnEntry": false
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run GUI + API",
+      "configurations": [
+        "Python: API server",
+        "Python: GUI"
+      ],
+      "stopAll": true
+    }
+  ]
+}

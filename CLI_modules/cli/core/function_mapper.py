@@ -2731,7 +2731,46 @@ class F1AnalysisFunctionMapper:
     
     def _execute_all_drivers_straight_line_speed(self, **kwargs):
         """全部車手直線速度分析"""
-        return {"success": True, "message": "全部車手直線速度分析功能開發中", "function_id": "42"}
+        try:
+            from CLI_modules.cli.analyzer.all_drivers_straight_line_speed import (
+                AllDriversStraightLineSpeedAnalysis,
+            )
+
+            print("[START] 全部車手直線速度分析 (Function 48)")
+
+            if not self._check_data_loaded(48):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料，無法執行全部車手直線速度分析",
+                    "function_id": "48",
+                }
+
+            year = kwargs.get("year", getattr(self.data_loader, "year", None))
+            race = kwargs.get("race", getattr(self.data_loader, "race_name", None))
+            session = kwargs.get("session", getattr(self.data_loader, "session_type", None))
+            top_n = kwargs.get("top_n")
+            include_chart = kwargs.get("include_chart", True)
+
+            analyzer = AllDriversStraightLineSpeedAnalysis(
+                self.data_loader,
+                year=year,
+                race=race,
+                session=session,
+            )
+            result = analyzer.run(top_n=top_n, include_chart=include_chart)
+
+            if result.get("success"):
+                self._export_to_json(result, 48, "all_drivers_straight_line_speed")
+
+            return result
+
+        except Exception as exc:
+            print(f"[ERROR] 全部車手直線速度分析失敗: {exc}")
+            return {
+                "success": False,
+                "message": f"全部車手直線速度分析失敗: {exc}",
+                "function_id": "48",
+            }
     
     def _execute_all_drivers_race_starts_analysis(self, **kwargs):
         """全部車手起步分析"""

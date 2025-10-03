@@ -74,6 +74,7 @@ class F1AnalysisCacheService:
             "14.3": ["driver_overtaking_analysis", "overtaking_analysis"],
             "14.4": ["driver_fastest_lap_ranking", "fastest_lap_report"],
             "14.9": ["all_drivers_comprehensive", "driver_comprehensive_full"],
+            "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "99": ["season_calendar"],
         }
         
@@ -612,10 +613,12 @@ class F1AnalysisCacheService:
                     return False
 
         # 對於比較分析類型，也確認車手參數
+        driver_match = True  # 預設通過（如果沒有 driver1/driver2 參數）
         if driver1 and driver2:
             expected_pair = [str(driver1).upper(), str(driver2).upper()]
             expected_counter = Counter(expected_pair)
             found_driver_metadata = False
+            driver_match = False  # 初始設為不匹配
 
             def _collect_driver_codes(candidate: Dict[str, Any]) -> List[str]:
                 codes: List[str] = []
@@ -670,10 +673,14 @@ class F1AnalysisCacheService:
                 filtered_counter = Counter({key: candidate_counter_raw[key] for key in expected_counter})
 
                 if filtered_counter == expected_counter:
-                    return True
+                    driver_match = True  # 找到匹配的 driver，但不直接返回
+                    break
 
-            if found_driver_metadata:
+            # 如果找到 driver metadata 但不匹配，立即返回 False
+            if found_driver_metadata and not driver_match:
                 return False
+        
+        # 繼續檢查 lap 參數（不論 driver 是否匹配，都要檢查）
 
         def _match_lap(expected_value: Any, keys: List[str], alias: Optional[str], driver_hint: Optional[str] = None) -> bool:
             if expected_value in (None, "", "*"):
@@ -721,12 +728,12 @@ class F1AnalysisCacheService:
 
         if lap1 not in (None, "", "*"):
             driver_hint = str(driver1).upper() if driver1 else None
-            if not _match_lap(lap1, ["lap1", "driver1_lap"], "lap1", driver_hint):
+            if not _match_lap(lap1, ["lap1", "lap_number1", "driver1_lap"], "lap1", driver_hint):
                 return False
 
         if lap2 not in (None, "", "*"):
             driver_hint = str(driver2).upper() if driver2 else None
-            if not _match_lap(lap2, ["lap2", "driver2_lap"], "lap2", driver_hint):
+            if not _match_lap(lap2, ["lap2", "lap_number2", "driver2_lap"], "lap2", driver_hint):
                 return False
 
         return True

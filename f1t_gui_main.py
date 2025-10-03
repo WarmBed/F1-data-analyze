@@ -25,6 +25,7 @@ import datetime
 import traceback
 import subprocess
 from pathlib import Path
+from typing import Dict, List, Optional
 import requests
 import sys
 import os
@@ -41,6 +42,11 @@ from modules.gui.lap_analysis.linkage import linkage_manager
 # 導入 GUI 國際化模組
 from core.gui_i18n import tr, set_gui_language, get_gui_language, get_telemetry_option_text
 from core.gui_settings_manager import gui_settings_manager
+from modules.gui.shared.season_calendar_provider import (
+    SeasonCalendarError,
+    SeasonCalendarProvider,
+    SeasonEvent,
+)
 
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
@@ -511,6 +517,8 @@ class MainWindowParameterProvider:
     def get_current_year(self) -> str:
         """從主視窗獲取當前年份"""
         try:
+            if hasattr(self.main_window, 'get_selected_year'):
+                return str(self.main_window.get_selected_year())
             if hasattr(self.main_window, 'year_combo') and self.main_window.year_combo:
                 return self.main_window.year_combo.currentText()
         except Exception as e:
@@ -520,6 +528,8 @@ class MainWindowParameterProvider:
     def get_current_race(self) -> str:
         """從主視窗獲取當前賽事"""
         try:
+            if hasattr(self.main_window, 'get_selected_race_key'):
+                return self.main_window.get_selected_race_key()
             if hasattr(self.main_window, 'race_combo') and self.main_window.race_combo:
                 return self.main_window.race_combo.currentText()
         except Exception as e:
@@ -529,6 +539,8 @@ class MainWindowParameterProvider:
     def get_current_session(self) -> str:
         """從主視窗獲取當前賽段"""
         try:
+            if hasattr(self.main_window, 'get_selected_session_code'):
+                return self.main_window.get_selected_session_code()
             if hasattr(self.main_window, 'session_combo') and self.main_window.session_combo:
                 return self.main_window.session_combo.currentText()
         except Exception as e:
@@ -2094,6 +2106,8 @@ class PopoutSubWindow(QMdiSubWindow):
         self.local_year = "2025"
         self.local_race = "Japan"
         self.local_session = "R"
+        self._season_event_lookup: Dict[str, SeasonEvent] = {}
+        self._display_to_race_key: Dict[str, str] = {}
         
         # [TOOL] 修正：正確提取模組名稱
         self.module_name = self._extract_module_name_from_title(title)
@@ -2304,6 +2318,114 @@ class PopoutSubWindow(QMdiSubWindow):
         
         print(f"[REFRESH] [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
     
+    def _get_calendar_events_for_year(self, year: int) -> List[SeasonEvent]:
+        if self.main_window and hasattr(self.main_window, "_get_calendar_events"):
+            return self.main_window._get_calendar_events(year)
+        if self.main_window and hasattr(self.main_window, "_season_provider"):
+            try:
+                return self.main_window._season_provider.get_completed_events(year)
+            except SeasonCalendarError as exc:
+                print(f"[CALENDAR] 子視窗取得日曆失敗: {exc}")
+        return []
+
+    def _format_race_display(self, event: SeasonEvent) -> str:
+        if self.main_window and hasattr(self.main_window, "_format_race_display"):
+            return self.main_window._format_race_display(event)
+        if event.is_completed:
+            return event.display_label
+        suffix = tr("season_calendar_upcoming_suffix", "[未開賽]")
+        if suffix and suffix in event.display_label:
+            return event.display_label
+        return f"{event.display_label} {suffix}" if suffix else event.display_label
+
+    def _rebuild_race_mapping(self, events: List[SeasonEvent]) -> None:
+        self._season_event_lookup.clear()
+        self._display_to_race_key.clear()
+        for event in events:
+            self._season_event_lookup[event.race_key] = event
+            formatted_label = self._format_race_display(event)
+            candidate_labels = {event.display_label, formatted_label}
+            for label in candidate_labels:
+                self._display_to_race_key[label] = event.race_key
+                plain_label = self.main_window._strip_race_display(label) if self.main_window else label
+                if plain_label and plain_label not in self._display_to_race_key:
+                    self._display_to_race_key[plain_label] = event.race_key
+
+    def _select_race_by_key(self, race_key: Optional[str]) -> None:
+        if not hasattr(self, 'race_combo') or not self.race_combo or race_key is None:
+            return
+        for index in range(self.race_combo.count()):
+            data = self.race_combo.itemData(index)
+            if isinstance(data, SeasonEvent) and data.race_key == race_key:
+                self.race_combo.setCurrentIndex(index)
+                return
+
+    def get_selected_event(self) -> Optional[SeasonEvent]:
+        if not hasattr(self, 'race_combo') or not self.race_combo:
+            return None
+        data = self.race_combo.currentData()
+        if isinstance(data, SeasonEvent):
+            return data
+        display_text = self.race_combo.currentText()
+        race_key = self._display_to_race_key.get(display_text)
+        if not race_key and self.main_window:
+            race_key = self.main_window._strip_race_display(display_text)
+            race_key = self._display_to_race_key.get(race_key, race_key)
+        return self._season_event_lookup.get(race_key)
+
+    def get_selected_race_key(self) -> str:
+        event = self.get_selected_event()
+        if event:
+            return event.race_key
+        display_text = self.race_combo.currentText() if hasattr(self, 'race_combo') else ''
+        race_key = self._display_to_race_key.get(display_text)
+        if not race_key and self.main_window:
+            race_key = self.main_window._strip_race_display(display_text)
+        return race_key or self.local_race or "Unknown"
+
+    def get_selected_session_code(self) -> str:
+        if not hasattr(self, 'session_combo') or not self.session_combo:
+            return self.local_session or "R"
+        data = self.session_combo.currentData()
+        if data and hasattr(data, "code"):
+            return getattr(data, "code")
+        text = self.session_combo.currentText()
+        return text if text else (self.local_session or "R")
+
+    def _update_session_combo(self, event: Optional[SeasonEvent] = None, preserve_session_code: Optional[str] = None) -> None:
+        if not hasattr(self, 'session_combo') or not self.session_combo:
+            return
+
+        event = event or self.get_selected_event()
+        self.session_combo.blockSignals(True)
+        self.session_combo.clear()
+
+        if isinstance(event, SeasonEvent) and event.sessions:
+            codes = []
+            for session in event.sessions:
+                self.session_combo.addItem(session.code, session)
+                codes.append(session.code)
+
+            target_code = preserve_session_code or self.local_session or ("R" if "R" in codes else (codes[0] if codes else None))
+            if target_code:
+                index = self.session_combo.findText(target_code)
+                if index < 0:
+                    index = self.session_combo.findText(target_code.upper())
+                if index >= 0:
+                    self.session_combo.setCurrentIndex(index)
+                elif self.session_combo.count() > 0:
+                    self.session_combo.setCurrentIndex(0)
+        else:
+            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+                self.session_combo.addItem(code)
+            target_code = preserve_session_code or self.local_session
+            if target_code:
+                index = self.session_combo.findText(target_code)
+                if index >= 0:
+                    self.session_combo.setCurrentIndex(index)
+
+        self.session_combo.blockSignals(False)
+
 
 
     def get_current_parameters(self):
@@ -2863,9 +2985,9 @@ class PopoutSubWindow(QMdiSubWindow):
         
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("AnalysisComboBox")
-        self.year_combo.addItems(["2024", "2025"])  # [TOOL] 修復: 與主視窗一致，移除2023
+        self.year_combo.addItems([str(year) for year in range(2020, 2026)])
         self.year_combo.setCurrentText("2025")
-        self.year_combo.setFixedWidth(140)
+        self.year_combo.setFixedWidth(70)
         self.year_combo.currentTextChanged.connect(self.on_year_changed)
         control_layout.addWidget(self.year_combo)
         
@@ -2879,8 +3001,8 @@ class PopoutSubWindow(QMdiSubWindow):
         # [TOOL] 修復: 使用動態賽事列表而非硬編碼
         current_year = self.year_combo.currentText()
         self.update_races_for_year(current_year)
-        self.race_combo.setCurrentText("Japan")
-        self.race_combo.setFixedWidth(140)
+        self._select_race_by_key(self.local_race)
+        self.race_combo.setFixedWidth(250)
         self.race_combo.currentTextChanged.connect(self.on_race_changed)
         control_layout.addWidget(self.race_combo)
         
@@ -2891,8 +3013,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("AnalysisComboBox")
-        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])
-        self.session_combo.setCurrentText("R")
+        self._update_session_combo(preserve_session_code=self.local_session)
         self.session_combo.setFixedWidth(70)
         self.session_combo.currentTextChanged.connect(self.on_session_changed)
         control_layout.addWidget(self.session_combo)
@@ -2924,6 +3045,8 @@ class PopoutSubWindow(QMdiSubWindow):
         
         # [TOOL] 新增: 動態更新賽事列表
         self.update_races_for_year(year)
+
+        self.local_year = str(year)
         
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox.isChecked():
             self.sync_to_other_windows()
@@ -2935,6 +3058,16 @@ class PopoutSubWindow(QMdiSubWindow):
         window_title = self.windowTitle()
         #print(f"[FINISH] [{window_title}] 賽事變更為: {race}")
         
+        event = self.get_selected_event()
+        if event:
+            self.local_race = event.race_key
+        else:
+            canonical = self._display_to_race_key.get(race)
+            if canonical:
+                self.local_race = canonical
+
+        self._update_session_combo()
+
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox.isChecked():
             self.sync_to_other_windows()
         else:
@@ -2945,6 +3078,8 @@ class PopoutSubWindow(QMdiSubWindow):
         window_title = self.windowTitle()
         #print(f"[F1] [{window_title}] 賽段變更為: {session}")
         
+        self.local_session = self.get_selected_session_code()
+
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox.isChecked():
             self.sync_to_other_windows()
         else:
@@ -3073,28 +3208,12 @@ class PopoutSubWindow(QMdiSubWindow):
     def get_races_for_year_in_subwindow(self, year):
         """子視窗中根據年份獲取賽事列表（與主視窗保持一致）"""
         try:
-            # 與主視窗相同的賽事定義
-            race_options = {
-                2024: [
-                    "Bahrain", "Saudi Arabia", "Australia", "Japan", "China", "Miami",
-                    "Emilia Romagna", "Monaco", "Canada", "Spain", "Austria", "Great Britain",
-                    "Hungary", "Belgium", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ],
-                2025: [
-                    "Australia", "China", "Japan", "Bahrain", "Saudi Arabia", "Miami",
-                    "Emilia Romagna", "Monaco", "Spain", "Canada", "Austria", "Great Britain",
-                    "Belgium", "Hungary", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ]
-            }
-            
             year_int = int(year)
-            races = race_options.get(year_int, race_options[2025])
-            
-            print(f"[SUBWINDOW] 載入 {year} 年的賽事列表: {len(races)} 個賽事")
-            return races
-            
+            events = self._get_calendar_events_for_year(year_int)
+            self._rebuild_race_mapping(events)
+            race_labels = [self._format_race_display(event) for event in events]
+            print(f"[SUBWINDOW] 載入 {year_int} 年的賽事列表: {len(race_labels)} 個賽事")
+            return race_labels
         except Exception as e:
             print(f"[SUBWINDOW ERROR] 獲取賽事列表時出錯: {e}")
             return ["Japan", "Great Britain", "Monaco"]  # 回退列表
@@ -3103,33 +3222,60 @@ class PopoutSubWindow(QMdiSubWindow):
         """為指定年份更新賽事列表"""
         if not hasattr(self, 'race_combo') or not self.race_combo:
             return
-            
-        # 記住當前選擇的賽事
-        current_race = self.race_combo.currentText()
-        
-        # 獲取新年份的賽事列表
-        races = self.get_races_for_year_in_subwindow(year)
-        
-        # 更新賽事選擇器
-        self.race_combo.blockSignals(True)  # 阻止信號避免循環觸發
+
+        try:
+            year_int = int(year)
+        except Exception:
+            year_int = int(self.local_year) if self.local_year else 2025
+
+        previous_race_key = self.get_selected_race_key()
+        if not previous_race_key or previous_race_key == "Unknown":
+            previous_race_key = self.local_race
+
+        events = self._get_calendar_events_for_year(year_int)
+        self._rebuild_race_mapping(events)
+
+        self.race_combo.blockSignals(True)
         self.race_combo.clear()
-        self.race_combo.addItems(races)
-        
-        # 嘗試保持相同的賽事選擇（如果在新年份中存在）
-        race_index = self.race_combo.findText(current_race)
-        if race_index >= 0:
-            self.race_combo.setCurrentIndex(race_index)
-        else:
-            # 如果當前賽事不存在，則選擇日本或第一個賽事
-            japan_index = self.race_combo.findText("Japan")
-            if japan_index >= 0:
-                self.race_combo.setCurrentIndex(japan_index)
-            elif self.race_combo.count() > 0:
-                self.race_combo.setCurrentIndex(0)
-        
-        self.race_combo.blockSignals(False)  # 恢復信號
-        
-        print(f"[SUBWINDOW] 已更新賽事列表，當前選擇: {self.race_combo.currentText()}")
+
+        completed_events = [event for event in events if event.is_completed]
+        upcoming_events = [event for event in events if not event.is_completed]
+
+        def add_event(event: SeasonEvent) -> None:
+            label = self._format_race_display(event)
+            self._display_to_race_key[label] = event.race_key
+            self.race_combo.addItem(label, event)
+
+        for event in completed_events:
+            add_event(event)
+
+        if completed_events and upcoming_events:
+            self.race_combo.insertSeparator(self.race_combo.count())
+
+        for event in upcoming_events:
+            add_event(event)
+
+        if previous_race_key:
+            self._select_race_by_key(previous_race_key)
+
+        if self.race_combo.currentIndex() < 0:
+            preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+            if preferred_event is not None:
+                index = self.race_combo.findData(preferred_event)
+                if index >= 0:
+                    self.race_combo.setCurrentIndex(index)
+        if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
+            self.race_combo.setCurrentIndex(0)
+
+        self.race_combo.blockSignals(False)
+
+        selected_event = self.get_selected_event()
+        if selected_event:
+            self.local_race = selected_event.race_key
+
+        self._update_session_combo(preserve_session_code=self.local_session)
+
+        print(f"[SUBWINDOW] 已更新賽事列表，當前選擇: {self.get_selected_race_key()}")
     
     def call_cli_analysis(self, year, race, session):
         """呼叫CLI參數進行分析 - 使用背景執行緒避免GUI凍結"""
@@ -3991,6 +4137,8 @@ class PopoutSubWindow(QMdiSubWindow):
                 
             # 如果有main_window引用
             if hasattr(self, 'main_window') and self.main_window:
+                if hasattr(self.main_window, 'get_selected_year'):
+                    return str(self.main_window.get_selected_year())
                 if hasattr(self.main_window, 'year_combo') and self.main_window.year_combo:
                     return self.main_window.year_combo.currentText()
             
@@ -4009,6 +4157,8 @@ class PopoutSubWindow(QMdiSubWindow):
                 
             # 如果有main_window引用
             if hasattr(self, 'main_window') and self.main_window:
+                if hasattr(self.main_window, 'get_selected_race_key'):
+                    return self.main_window.get_selected_race_key()
                 if hasattr(self.main_window, 'race_combo') and self.main_window.race_combo:
                     return self.main_window.race_combo.currentText()
             
@@ -4027,6 +4177,8 @@ class PopoutSubWindow(QMdiSubWindow):
                 
             # 如果有main_window引用
             if hasattr(self, 'main_window') and self.main_window:
+                if hasattr(self.main_window, 'get_selected_session_code'):
+                    return self.main_window.get_selected_session_code()
                 if hasattr(self.main_window, 'session_combo') and self.main_window.session_combo:
                     return self.main_window.session_combo.currentText()
             
@@ -4362,6 +4514,9 @@ class WindowSettingsDialog(QDialog):
     def __init__(self, parent_window):
         super().__init__()
         self.parent_window = parent_window
+        self.main_window = parent_window.main_window if hasattr(parent_window, 'main_window') else parent_window
+        self._season_event_lookup: Dict[str, SeasonEvent] = {}
+        self._display_to_race_key: Dict[str, str] = {}
         self.setWindowTitle("Window Settings")
         self.setObjectName("SettingsDialog")
         self.setFixedSize(400, 300)
@@ -4404,7 +4559,7 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(QLabel("年份:"), 0, 0)
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("AnalysisComboBox")
-        self.year_combo.addItems(["2024", "2025"])  # [TOOL] 修復: 與主視窗一致，移除2023
+        self.year_combo.addItems([str(year) for year in range(2020, 2026)])
         # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
         if hasattr(parent_window, 'local_year') and parent_window.local_year:
             current_year = parent_window.local_year
@@ -4426,20 +4581,20 @@ class WindowSettingsDialog(QDialog):
             current_race = parent_window.local_race
         else:
             current_race = self.get_current_race_from_main_window()
-        self.race_combo.setCurrentText(current_race)
+        self._select_race_by_key(current_race)
+        self.race_combo.currentIndexChanged.connect(self._on_race_combo_changed)
         params_layout.addWidget(self.race_combo, 1, 1)
         
         # 賽段選擇器
         params_layout.addWidget(QLabel("賽段:"), 2, 0)
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("AnalysisComboBox")
-        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])
         # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
         if hasattr(parent_window, 'local_session') and parent_window.local_session:
             current_session = parent_window.local_session
         else:
             current_session = self.get_current_session_from_main_window()
-        self.session_combo.setCurrentText(current_session)
+        self._update_session_combo(preserve_session_code=current_session)
         params_layout.addWidget(self.session_combo, 2, 1)
         
         layout.addWidget(params_group)
@@ -4503,8 +4658,8 @@ class WindowSettingsDialog(QDialog):
             self.year_combo.setCurrentText(current_year)
             # 需要先更新賽事列表
             self.populate_races_for_year(current_year)
-            self.race_combo.setCurrentText(current_race)
-            self.session_combo.setCurrentText(current_session)
+            self._select_race_by_key(current_race)
+            self._update_session_combo(preserve_session_code=current_session)
             
             self.year_combo.blockSignals(False)
             self.race_combo.blockSignals(False)
@@ -4551,6 +4706,8 @@ class WindowSettingsDialog(QDialog):
             # 如果父視窗有main_window屬性（子視窗情況）
             if hasattr(self.parent_window, 'main_window'):
                 main_window = self.parent_window.main_window
+                if hasattr(main_window, 'get_selected_session_code'):
+                    return main_window.get_selected_session_code()
                 if hasattr(main_window, 'session_combo') and main_window.session_combo:
                     return main_window.session_combo.currentText()
             # [TOOL] 移除不安全的直接訪問，避免 AttributeError
@@ -4559,70 +4716,190 @@ class WindowSettingsDialog(QDialog):
         except Exception as e:
             print(f"[WARNING] [SETTING] 獲取賽段失敗: {e}")
         return "R"  # 預設值
+
+    # --- Season calendar helpers ---
+
+    def _get_calendar_events_for_year(self, year: int) -> List[SeasonEvent]:
+        if self.main_window and hasattr(self.main_window, "_get_calendar_events"):
+            return self.main_window._get_calendar_events(year)
+        if self.main_window and hasattr(self.main_window, "_season_provider"):
+            try:
+                return self.main_window._season_provider.get_completed_events(year)
+            except SeasonCalendarError as exc:
+                print(f"[DIALOG] 取得賽事日曆失敗: {exc}")
+        return []
+
+    def _format_race_display(self, event: SeasonEvent) -> str:
+        if self.main_window and hasattr(self.main_window, "_format_race_display"):
+            return self.main_window._format_race_display(event)
+        if event.is_completed:
+            return event.display_label
+        suffix = tr("season_calendar_upcoming_suffix", "[未開賽]")
+        if suffix and suffix in event.display_label:
+            return event.display_label
+        return f"{event.display_label} {suffix}" if suffix else event.display_label
+
+    def _rebuild_race_mapping(self, events: List[SeasonEvent]) -> None:
+        self._season_event_lookup.clear()
+        self._display_to_race_key.clear()
+        for event in events:
+            self._season_event_lookup[event.race_key] = event
+            formatted_label = self._format_race_display(event)
+            candidate_labels = {event.display_label, formatted_label}
+            for label in candidate_labels:
+                self._display_to_race_key[label] = event.race_key
+                if self.main_window:
+                    plain = self.main_window._strip_race_display(label)
+                else:
+                    plain = label
+                if plain and plain not in self._display_to_race_key:
+                    self._display_to_race_key[plain] = event.race_key
+
+    def _select_race_by_key(self, race_key: Optional[str]) -> None:
+        if race_key is None or not self.race_combo:
+            return
+        for index in range(self.race_combo.count()):
+            data = self.race_combo.itemData(index)
+            if isinstance(data, SeasonEvent) and data.race_key == race_key:
+                self.race_combo.setCurrentIndex(index)
+                return
+
+    def get_selected_event(self) -> Optional[SeasonEvent]:
+        data = self.race_combo.currentData() if self.race_combo else None
+        if isinstance(data, SeasonEvent):
+            return data
+        display_text = self.race_combo.currentText() if self.race_combo else ""
+        race_key = self._display_to_race_key.get(display_text)
+        if not race_key and self.main_window:
+            race_key = self.main_window._strip_race_display(display_text)
+            race_key = self._display_to_race_key.get(race_key, race_key)
+        return self._season_event_lookup.get(race_key)
+
+    def get_selected_race_key(self) -> str:
+        event = self.get_selected_event()
+        if event:
+            return event.race_key
+        display_text = self.race_combo.currentText() if self.race_combo else ""
+        race_key = self._display_to_race_key.get(display_text)
+        if not race_key and self.main_window:
+            race_key = self.main_window._strip_race_display(display_text)
+        return race_key or "Unknown"
+
+    def get_selected_session_code(self) -> str:
+        data = self.session_combo.currentData() if self.session_combo else None
+        if data and hasattr(data, "code"):
+            return getattr(data, "code")
+        text = self.session_combo.currentText() if self.session_combo else ""
+        return text or "R"
+
+    def _update_session_combo(self, preserve_session_code: Optional[str] = None) -> None:
+        if not self.session_combo:
+            return
+
+        event = self.get_selected_event()
+        current_code = preserve_session_code or self.get_selected_session_code()
+        self.session_combo.blockSignals(True)
+        self.session_combo.clear()
+
+        if isinstance(event, SeasonEvent) and event.sessions:
+            codes = []
+            for session in event.sessions:
+                self.session_combo.addItem(session.code, session)
+                codes.append(session.code)
+
+            target_code = current_code or ("R" if "R" in codes else (codes[0] if codes else None))
+            if target_code:
+                index = self.session_combo.findText(target_code)
+                if index < 0:
+                    index = self.session_combo.findText(target_code.upper())
+                if index >= 0:
+                    self.session_combo.setCurrentIndex(index)
+                elif self.session_combo.count() > 0:
+                    self.session_combo.setCurrentIndex(0)
+        else:
+            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+                self.session_combo.addItem(code)
+            if current_code:
+                index = self.session_combo.findText(current_code)
+                if index >= 0:
+                    self.session_combo.setCurrentIndex(index)
+
+        self.session_combo.blockSignals(False)
+
+    def _on_race_combo_changed(self):
+        self._update_session_combo()
+
     
     def get_races_for_year_in_dialog(self, year):
         """在設定對話框中根據年份獲取賽事列表（與主視窗保持一致）"""
         try:
-            # 與主視窗相同的賽事定義
-            race_options = {
-                2024: [
-                    "Bahrain", "Saudi Arabia", "Australia", "Japan", "China", "Miami",
-                    "Emilia Romagna", "Monaco", "Canada", "Spain", "Austria", "Great Britain",
-                    "Hungary", "Belgium", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ],
-                2025: [
-                    "Australia", "China", "Japan", "Bahrain", "Saudi Arabia", "Miami",
-                    "Emilia Romagna", "Monaco", "Spain", "Canada", "Austria", "Great Britain",
-                    "Belgium", "Hungary", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ]
-            }
-            
             year_int = int(year)
-            races = race_options.get(year_int, race_options[2025])
-            
-            print(f"[DIALOG] 載入 {year} 年的賽事列表: {len(races)} 個賽事")
-            return races
-            
+            events = self._get_calendar_events_for_year(year_int)
+            self._rebuild_race_mapping(events)
+            print(f"[DIALOG] 載入 {year_int} 年的賽事列表: {len(events)} 個賽事")
+            return events
         except Exception as e:
             print(f"[DIALOG ERROR] 獲取賽事列表時出錯: {e}")
-            return ["Japan", "Great Britain", "Monaco"]  # 回退列表
+            return []
     
     def populate_races_for_year(self, year):
         """為指定年份填充賽事列表"""
-        races = self.get_races_for_year_in_dialog(year)
+        events = self.get_races_for_year_in_dialog(year)
         self.race_combo.clear()
-        self.race_combo.addItems(races)
+        if events:
+            completed_events = [event for event in events if event.is_completed]
+            upcoming_events = [event for event in events if not event.is_completed]
+
+            def add_event(event: SeasonEvent) -> None:
+                label = self._format_race_display(event)
+                self._display_to_race_key[label] = event.race_key
+                self.race_combo.addItem(label, event)
+
+            for event in completed_events:
+                add_event(event)
+
+            if completed_events and upcoming_events:
+                self.race_combo.insertSeparator(self.race_combo.count())
+
+            for event in upcoming_events:
+                add_event(event)
+
+            if self.race_combo.currentIndex() < 0:
+                preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+                if preferred_event is not None:
+                    index = self.race_combo.findData(preferred_event)
+                    if index >= 0:
+                        self.race_combo.setCurrentIndex(index)
+            if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
+                self.race_combo.setCurrentIndex(0)
+        else:
+            placeholder = tr("season_calendar_placeholder", "[無已完成賽事]")
+            self.race_combo.addItem(placeholder, None)
         
     def on_year_changed_in_dialog(self, year):
         """處理設定對話框中的年份變更"""
         print(f"[DIALOG] 年份變更為: {year}")
         
         # 記住當前選擇的賽事
-        current_race = self.race_combo.currentText()
+        current_event = self.get_selected_event()
+        current_race_key = current_event.race_key if current_event else None
         
         # 更新賽事列表
         self.populate_races_for_year(year)
         
-        # 嘗試保持相同的賽事選擇（如果在新年份中存在）
-        race_index = self.race_combo.findText(current_race)
-        if race_index >= 0:
-            self.race_combo.setCurrentIndex(race_index)
-        else:
-            # 如果當前賽事不存在，則選擇日本或第一個賽事
-            japan_index = self.race_combo.findText("Japan")
-            if japan_index >= 0:
-                self.race_combo.setCurrentIndex(japan_index)
-            elif self.race_combo.count() > 0:
-                self.race_combo.setCurrentIndex(0)
+        if current_race_key:
+            self._select_race_by_key(current_race_key)
+        if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
+            self.race_combo.setCurrentIndex(0)
+
+        self._update_session_combo()
         
     def accept_settings(self):
         """確認設定"""
         window_title = self.parent_window.windowTitle()
         year = self.year_combo.currentText()
-        race = self.race_combo.currentText()
-        session = self.session_combo.currentText()
+        race = self.get_selected_race_key()
+        session = self.get_selected_session_code()
         sync_windows = self.sync_windows_checkbox.isChecked()
         
         print(f"[TOOL] [SETTING] [{window_title}] 設定已更新:")
@@ -4841,6 +5118,21 @@ class StyleHMainWindow(QMainWindow):
         self.lap_controls_visible = False  # 遙測控件是否可見
         self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
         print("[INIT] ✅ 遙測分析狀態追蹤已初始化")
+
+        # 賽季日曆支援
+        self._season_provider = SeasonCalendarProvider()
+        self._season_events_cache: Dict[int, List[SeasonEvent]] = {}
+        self._season_error_message: Optional[str] = None
+        self._race_event_lookup: Dict[str, SeasonEvent] = {}
+        self._display_to_race_key: Dict[str, str] = {}
+        self._fastf1_overrides: Dict[str, str] = {
+            "Great Britain": "British",
+            "United States": "United States",
+            "Emilia Romagna": "Emilia Romagna",
+            "Saudi Arabia": "Saudi Arabia",
+            "Las Vegas": "Las Vegas",
+            "Abu Dhabi": "Abu Dhabi",
+        }
         
         print("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
@@ -4999,16 +5291,16 @@ class StyleHMainWindow(QMainWindow):
         toolbar.addWidget(QLabel(tr("year_label", "Year:")))
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("ParameterCombo")
-        self.year_combo.addItems(["2024", "2025"])
+        self.year_combo.addItems([str(year) for year in range(2020, 2026)])
         self.year_combo.setCurrentText("2025")
-        self.year_combo.setFixedWidth(140)
+        self.year_combo.setFixedWidth(70)
         toolbar.addWidget(self.year_combo)
         
         toolbar.addWidget(QLabel(tr("race_label", "Race:")))
         self.race_combo = QComboBox()
         self.race_combo.setObjectName("ParameterCombo")
         # 賽事項目將由 on_year_changed 方法動態填充
-        self.race_combo.setFixedWidth(120)  # 增加寬度以容納較長的賽事名稱
+        self.race_combo.setFixedWidth(250)  # 增加寬度以容納較長的賽事名稱
         toolbar.addWidget(self.race_combo)
         
         toolbar.addWidget(QLabel(tr("session_label", "Session:")))
@@ -5039,7 +5331,173 @@ class StyleHMainWindow(QMainWindow):
         self.session_combo.currentTextChanged.connect(self.on_main_session_changed)
         
         # 初始化賽事列表
-        self.on_year_changed(self.year_combo.currentText())
+        initial_year = int(self.year_combo.currentText())
+        self._refresh_calendar_for_year(initial_year)
+
+    # ------------------------------------------------------------------
+    # 賽季日曆支援
+    # ------------------------------------------------------------------
+    def _get_calendar_events(self, year: int) -> List[SeasonEvent]:
+        """Fetch completed events for the given year with basic caching."""
+        if year in self._season_events_cache and self._season_events_cache[year]:
+            return self._season_events_cache[year]
+
+        try:
+            events = self._season_provider.get_completed_events(year)
+            if events:
+                self._season_events_cache[year] = events
+            self._season_error_message = None
+            return events
+        except SeasonCalendarError as exc:
+            self._season_error_message = str(exc)
+            print(f"[CALENDAR] {self._season_error_message}")
+            return self._season_events_cache.get(year, [])
+
+    def _refresh_calendar_for_year(
+        self,
+        year: int,
+        *,
+        preserve_race_key: Optional[str] = None,
+        preserve_session_code: Optional[str] = None,
+    ) -> None:
+        events = self._get_calendar_events(year)
+
+        self.race_combo.blockSignals(True)
+        self.race_combo.clear()
+        self._race_event_lookup.clear()
+        self._display_to_race_key.clear()
+
+        if events:
+            completed_events = [event for event in events if event.is_completed]
+            upcoming_events = [event for event in events if not event.is_completed]
+
+            def add_event_to_combo(event: SeasonEvent) -> None:
+                label = self._format_race_display(event)
+                self._race_event_lookup[event.race_key] = event
+                self._display_to_race_key[label] = event.race_key
+                self._display_to_race_key[event.display_label] = event.race_key
+                plain_label = self._strip_race_display(label)
+                if plain_label:
+                    self._display_to_race_key.setdefault(plain_label, event.race_key)
+                self.race_combo.addItem(label, event)
+
+            for event in completed_events:
+                add_event_to_combo(event)
+
+            if completed_events and upcoming_events:
+                self.race_combo.insertSeparator(self.race_combo.count())
+
+            for event in upcoming_events:
+                add_event_to_combo(event)
+
+            if preserve_race_key and preserve_race_key in self._race_event_lookup:
+                target_event = self._race_event_lookup[preserve_race_key]
+                index = self.race_combo.findData(target_event)
+                if index >= 0:
+                    self.race_combo.setCurrentIndex(index)
+
+            if self.race_combo.currentIndex() < 0:
+                preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+                if preferred_event is not None:
+                    index = self.race_combo.findData(preferred_event)
+                    if index >= 0:
+                        self.race_combo.setCurrentIndex(index)
+            if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
+                self.race_combo.setCurrentIndex(0)
+        else:
+            placeholder = tr("season_calendar_placeholder", "[無已完成賽事]")
+            self.race_combo.addItem(placeholder, None)
+
+        self.race_combo.blockSignals(False)
+
+        self._update_session_combo(preserve_session_code=preserve_session_code)
+
+        if self._season_error_message and self.statusBar():
+            self.statusBar().showMessage(self._season_error_message, 10000)
+
+    def _update_session_combo(
+        self,
+        event: Optional[SeasonEvent] = None,
+        *,
+        preserve_session_code: Optional[str] = None,
+    ) -> None:
+        event = event or self.race_combo.currentData()
+        self.session_combo.blockSignals(True)
+        self.session_combo.clear()
+
+        if isinstance(event, SeasonEvent) and event.sessions:
+            codes_in_order = []
+            for session in event.sessions:
+                self.session_combo.addItem(session.code, session)
+                codes_in_order.append(session.code)
+
+            target_code = preserve_session_code or ("R" if "R" in codes_in_order else codes_in_order[0])
+            index = self.session_combo.findText(target_code)
+            if index < 0:
+                index = self.session_combo.findText(target_code.upper())
+            if index >= 0:
+                self.session_combo.setCurrentIndex(index)
+            elif self.session_combo.count() > 0:
+                self.session_combo.setCurrentIndex(0)
+        else:
+            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+                self.session_combo.addItem(code)
+            if preserve_session_code:
+                index = self.session_combo.findText(preserve_session_code)
+                if index >= 0:
+                    self.session_combo.setCurrentIndex(index)
+
+        self.session_combo.blockSignals(False)
+
+    def get_selected_year(self) -> int:
+        try:
+            return int(self.year_combo.currentText())
+        except Exception:
+            return 2025
+
+    def get_selected_event(self) -> Optional[SeasonEvent]:
+        data = self.race_combo.currentData()
+        if isinstance(data, SeasonEvent):
+            return data
+        display_text = self.race_combo.currentText()
+        race_key = self._strip_race_display(display_text)
+        mapped_key = self._display_to_race_key.get(display_text) or self._display_to_race_key.get(race_key)
+        if mapped_key:
+            return self._race_event_lookup.get(mapped_key)
+        return self._race_event_lookup.get(race_key)
+
+    def get_selected_race_key(self) -> str:
+        event = self.get_selected_event()
+        if event:
+            return event.race_key
+        display_text = self.race_combo.currentText()
+        race_key = self._strip_race_display(display_text)
+        return self._display_to_race_key.get(display_text) or self._display_to_race_key.get(race_key) or race_key or "Unknown"
+
+    def get_selected_session_code(self) -> str:
+        data = self.session_combo.currentData()
+        if data and hasattr(data, "code"):
+            return getattr(data, "code")
+        text = self.session_combo.currentText()
+        return text.strip() if text else "R"
+
+    @staticmethod
+    def _strip_race_display(text: str) -> str:
+        if not text:
+            return ""
+        if "(" in text:
+            return text.split("(")[0].strip()
+        return text.strip()
+
+    def _format_race_display(self, event: SeasonEvent) -> str:
+        if not isinstance(event, SeasonEvent):
+            return ""
+        if event.is_completed:
+            return event.display_label
+        suffix = tr("season_calendar_upcoming_suffix", "[未開賽]")
+        if suffix and suffix in event.display_label:
+            return event.display_label
+        return f"{event.display_label} {suffix}" if suffix else event.display_label
     
     def _create_lap_analysis_controls(self):
         """創建遙測分析控件（不添加到工具欄）"""
@@ -5107,102 +5565,14 @@ class StyleHMainWindow(QMainWindow):
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
         try:
-            # 與 f1_analysis_modular_main.py 相同的賽事定義
-            race_options = {
-                2024: [
-                    "Bahrain", "Saudi Arabia", "Australia", "Japan", "China", "Miami",
-                    "Emilia Romagna", "Monaco", "Canada", "Spain", "Austria", "Great Britain",
-                    "Hungary", "Belgium", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ],
-                2025: [
-                    "Australia", "China", "Japan", "Bahrain", "Saudi Arabia", "Miami",
-                    "Emilia Romagna", "Monaco", "Spain", "Canada", "Austria", "Great Britain",
-                    "Belgium", "Hungary", "Netherlands", "Italy", "Azerbaijan", "Singapore",
-                    "United States", "Mexico", "Brazil", "Las Vegas", "Qatar", "Abu Dhabi"
-                ]
-            }
-            
-            # 賽事名稱映射：顯示名稱 -> FastF1 API 期望的名稱
-            self.race_name_mapping = {
-                "Great Britain": "British",  # 關鍵映射
-                "United States": "United States",
-                "Emilia Romagna": "Emilia Romagna",
-                "Saudi Arabia": "Saudi Arabia",
-                "Las Vegas": "Las Vegas",
-                "Abu Dhabi": "Abu Dhabi"
-            }
-            
-            # 反向映射：FastF1 名稱 -> 顯示名稱
-            self.display_name_mapping = {v: k for k, v in self.race_name_mapping.items()}
-            
-            # 賽事日期映射（可選顯示用）
-            race_dates = {
-                2024: {
-                    "Bahrain": "2024-03-02",
-                    "Saudi Arabia": "2024-03-09", 
-                    "Australia": "2024-03-24",
-                    "Japan": "2024-04-07",
-                    "China": "2024-04-21",
-                    "Miami": "2024-05-05",
-                    "Emilia Romagna": "2024-05-19",
-                    "Monaco": "2024-05-26",
-                    "Canada": "2024-06-09",
-                    "Spain": "2024-06-23",
-                    "Austria": "2024-06-30",
-                    "Great Britain": "2024-07-07",
-                    "Hungary": "2024-07-21",
-                    "Belgium": "2024-07-28",
-                    "Netherlands": "2024-09-01",
-                    "Italy": "2024-09-01",
-                    "Azerbaijan": "2024-09-15",
-                    "Singapore": "2024-09-22",
-                    "United States": "2024-10-20",
-                    "Mexico": "2024-10-27",
-                    "Brazil": "2024-11-03",
-                    "Las Vegas": "2024-11-23",
-                    "Qatar": "2024-12-01",
-                    "Abu Dhabi": "2024-12-08"
-                },
-                2025: {
-                    "Australia": "2025-03-16",
-                    "China": "2025-03-23",
-                    "Japan": "2025-04-06", 
-                    "Bahrain": "2025-04-13",
-                    "Saudi Arabia": "2025-04-20",
-                    "Miami": "2025-05-04",
-                    "Emilia Romagna": "2025-05-18",
-                    "Monaco": "2025-05-25",
-                    "Spain": "2025-06-01",
-                    "Canada": "2025-06-15",
-                    "Austria": "2025-06-29",
-                    "Great Britain": "2025-07-06",
-                    "Hungary": "2025-08-03",
-                    "Belgium": "2025-07-27",
-                    "Netherlands": "2025-08-31",
-                    "Italy": "2025-09-07",
-                    "Azerbaijan": "2025-09-21",
-                    "Singapore": "2025-10-05",
-                    "United States": "2025-10-19",
-                    "Mexico": "2025-10-26",
-                    "Brazil": "2025-11-09",
-                    "Las Vegas": "2025-11-22",
-                    "Qatar": "2025-11-30",
-                    "Abu Dhabi": "2025-12-07"
-                }
-            }
-            
-            # 轉換年份為整數
             year_int = int(year)
-            
-            # 獲取對應年份的賽事列表
-            races = race_options.get(year_int, race_options[2025])
-            
-            print(f"[RACE_OPTIONS] 載入 {year} 年的完整賽事列表: {len(races)} 個賽事")
-            print(f"[RACE_LIST] {', '.join(races)}")
-            
-            return races
-            
+            events = self._get_calendar_events(year_int)
+            if events:
+                race_keys = [event.race_key for event in events]
+                print(f"[RACE_OPTIONS] 從季賽日曆載入 {year_int} 年賽事: {len(race_keys)}")
+                return race_keys
+            print(f"[RACE_OPTIONS] 無法取得 {year_int} 年的季賽日曆資料")
+            return []
         except Exception as e:
             print(f"[ERROR] 獲取賽事列表時出錯: {e}")
             # 回退到基本列表
@@ -5210,48 +5580,91 @@ class StyleHMainWindow(QMainWindow):
     
     def get_fastf1_race_name(self, display_name):
         """將顯示名稱轉換為 FastF1 API 期望的名稱"""
-        return self.race_name_mapping.get(display_name, display_name)
+        if not display_name:
+            return "Unknown"
+
+        name = display_name.strip()
+        override = self._fastf1_overrides.get(name)
+        if override:
+            return override
+
+        # 優先使用季賽日曆映射
+        mapped_key = self._display_to_race_key.get(name)
+        if not mapped_key:
+            mapped_key = self._display_to_race_key.get(self._strip_race_display(name))
+
+        return mapped_key or name
+    
+    def _get_race_key_from_display(self, race_display: str) -> str:
+        """
+        從顯示文字獲取正規的 race_key，移除日期後綴
+        
+        範例:
+            "Japan (2025-04-06)" → "Japan"
+            "Italy" → "Italy"
+            "Italian Grand Prix (2025-09-01)" → "Italian Grand Prix"
+        
+        Args:
+            race_display: 從 race_combo 獲取的顯示文字（可能包含日期）
+            
+        Returns:
+            清理後的賽事名稱（移除日期後綴）
+        """
+        if not race_display:
+            return race_display
+        
+        # 優先使用 _display_to_race_key 映射表（最準確）
+        if hasattr(self, '_display_to_race_key') and race_display in self._display_to_race_key:
+            race_key = self._display_to_race_key[race_display]
+            return race_key
+        
+        # 後備方案: 使用正則表達式移除 " (YYYY-MM-DD)" 格式的日期後綴
+        import re
+        clean_name = re.sub(r'\s*\(\d{4}-\d{2}-\d{2}\)\s*$', '', race_display)
+        return clean_name.strip()
     
     def on_year_changed(self, year):
         """處理年份變更事件"""
         try:
-            # 獲取該年份的賽事列表
-            races = self.get_races_for_year(year)
-            
-            # 清空並更新賽事選擇器
-            self.race_combo.clear()
-            self.race_combo.addItems(races)
-            
-            # 設置預設選擇（如果 Japan 存在則選擇，否則選擇第一個）
-            if "Japan" in races:
-                self.race_combo.setCurrentText("Japan")
-            elif races:
-                self.race_combo.setCurrentText(races[0])
-                
-            print(f"已載入 {year} 年的 {len(races)} 個賽事")
-            
-            # 更新狀態列
-            self.update_status_bar()
-            
-            # 同步年份到MDI子視窗
-            self.sync_to_all_mdi_subwindows('year', year)
-            
-        except Exception as e:
-            print(f"更新賽事列表時出錯: {e}")
+            previous_race = self.get_selected_race_key()
+            previous_session = self.get_selected_session_code()
+        except Exception:
+            previous_race = None
+            previous_session = None
+
+        try:
+            year_int = int(year)
+        except Exception:
+            year_int = self.get_selected_year()
+
+        print(f"[CALENDAR] 切換至 {year_int} 年賽季日曆")
+
+        self._refresh_calendar_for_year(
+            year_int,
+            preserve_race_key=previous_race,
+            preserve_session_code=previous_session,
+        )
+
+        self.update_status_bar()
+        self.sync_to_all_mdi_subwindows('year', str(year_int))
     
     def on_main_race_changed(self, race):
         """主視窗賽事變更處理"""
-        print(f"[FINISH] [MAIN] 主視窗賽事變更為: {race}")
+        event = self.get_selected_event()
+        self._update_session_combo(event)
+        race_key = self.get_selected_race_key()
+        print(f"[FINISH] [MAIN] 主視窗賽事變更為: {race_key}")
         self.update_status_bar()
         # 同步賽事到MDI子視窗
-        self.sync_to_all_mdi_subwindows('race', race)
+        self.sync_to_all_mdi_subwindows('race', race_key)
     
     def on_main_session_changed(self, session):
         """主視窗賽段變更處理"""
-        print(f"[F1] [MAIN] 主視窗賽段變更為: {session}")
+        session_code = self.get_selected_session_code()
+        print(f"[F1] [MAIN] 主視窗賽段變更為: {session_code}")
         self.update_status_bar()
         # 同步賽段到MDI子視窗
-        self.sync_to_all_mdi_subwindows('session', session)
+        self.sync_to_all_mdi_subwindows('session', session_code)
     
     # ========== 遙測分析控件管理 ==========
     
@@ -5702,10 +6115,15 @@ class StyleHMainWindow(QMainWindow):
         
         # 獲取當前基本設置
         year = self.year_combo.currentText()
-        race = self.race_combo.currentText()
+        race_display = self.race_combo.currentText()
         session = self.session_combo.currentText()
         
+        # 🔧 修復: 清理 race 參數，移除日期後綴 (如 "Japan (2025-04-06)" → "Japan")
+        race = self._get_race_key_from_display(race_display)
+        
         print(f"[LAP_CONTROL] 📊 基本設置: {year} {race} {session}")
+        if race != race_display:
+            print(f"[LAP_CONTROL] 🧹 Race 參數清理: '{race_display}' → '{race}'")
         
         # 遍歷所有遙測分析視窗並更新
         updated_count = 0
@@ -7543,40 +7961,101 @@ class StyleHMainWindow(QMainWindow):
         return selection
 
     def _create_detailed_lap_boxplot_window(self, mdi_area, year, race, session):
-        """建立圈速箱型圖視窗並加入 MDI。"""
+        """建立圈速箱型圖視窗並加入 MDI (使用新版 API 化模組)。"""
         try:
-            from modules.gui.driver_race.detailed_lap_analysis.laptime_boxplot_widget import (
-                LapTimeBoxPlotWidget,
+            print(f"[BOXPLOT] 🚀 啟動新版 API 化圈速箱型圖模組...")
+            from modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
+                LapTimeBoxPlotAnalysis,
             )
+            print(f"[BOXPLOT] ✅ 新版模組導入成功")
         except ImportError as exc:
-            message = f"Unable to load Lap Time Box Plot widget: {exc}"
-            print(f"[DETAILED_LAP] {message}")
-            self.show_error_message("Detailed Lap Analysis", message)
+            message = f"Unable to load Lap Time Box Plot Analysis (API version): {exc}"
+            print(f"[BOXPLOT] ❌ {message}")
+            self.show_error_message("Lap Time Box Plot", message)
+            import traceback
+            traceback.print_exc()
             return None
 
         try:
-            widget = LapTimeBoxPlotWidget(year=year, race=race, session=session)
+            print(f"[BOXPLOT] 🔧 創建模組實例...")
+            # 創建新版 MDI 模組實例
+            analysis_module = LapTimeBoxPlotAnalysis(parent=self)
+            print(f"[BOXPLOT] ✅ 模組實例創建成功")
+            
+            # 創建參數提供者
+            parameter_provider = MainWindowParameterProvider(self)
+            analysis_module.parameter_provider = parameter_provider
+            print(f"[BOXPLOT] ✅ 參數提供者設置完成")
+            
+            # 設置當前參數
+            analysis_module.current_year = str(year)
+            analysis_module.current_race = race
+            analysis_module.current_session = session
+            print(f"[BOXPLOT] ✅ 基本參數設置完成: {year} {race} {session}")
+            
+            # 初始化模組
+            print(f"[BOXPLOT] 🚀 初始化圈速箱型圖模組...")
+            if not analysis_module.initialize_module():
+                raise RuntimeError("Module initialization failed")
+            print(f"[BOXPLOT] ✅ 模組初始化成功！")
+            
+            # 獲取模組標題
+            window_title = analysis_module.get_window_title(
+                year=year,
+                race=race,
+                session=session
+            )
+            print(f"[BOXPLOT] 📝 視窗標題: {window_title}")
+            
+            # 創建子視窗
+            print(f"[BOXPLOT] 🖼️ 創建 MDI 子視窗...")
+            sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
+            sub_window.setWidget(analysis_module.get_widget())
+            
+            # 設置模組的父視窗引用
+            analysis_module.set_parent_window(sub_window)
+            
+            # 設置視窗大小
+            sub_window.resize(1200, 800)
+            print(f"[BOXPLOT] ✅ 子視窗創建成功")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            if hasattr(sub_window, 'window_closed'):
+                sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.append(sub_window)
+            
+            sub_window.show()
+            self._position_subwindow(mdi_area, sub_window)
+            
+            print(f"[BOXPLOT] ✅ 圈速箱型圖視窗已創建: {window_title}")
+            
+            # 建立分析模組和子視窗的對應關係
+            analysis_module._sub_window = sub_window
+            
+            # 自動載入數據
+            print(f"[BOXPLOT] 🚀 自動載入圈速箱型圖數據...")
+            success = analysis_module.load_data(
+                year=year,
+                race=race,
+                session=session
+            )
+            
+            if success:
+                print(f"[BOXPLOT] ✅ 數據載入成功！")
+            else:
+                print(f"[BOXPLOT] ⚠️ 數據載入失敗，但視窗已創建")
+            
+            return sub_window
+            
         except Exception as exc:
-            message = f"Failed to create Lap Time Box Plot widget: {exc}"
-            print(f"[DETAILED_LAP] {message}")
-            self.show_error_message("Detailed Lap Analysis", message)
+            message = f"Failed to create Lap Time Box Plot Analysis: {exc}"
+            print(f"[BOXPLOT] ❌ {message}")
+            self.show_error_message("Lap Time Box Plot", message)
+            import traceback
+            traceback.print_exc()
             return None
-
-        window_title = f"Lap Time Box Plot_{year}_{race}_{session}"
-        sub_window = PopoutSubWindow(window_title, mdi_area)
-        sub_window.setWidget(widget)
-        sub_window.resize(1200, 720)
-
-        mdi_area.addSubWindow(sub_window)
-        if hasattr(sub_window, 'window_closed'):
-            sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
-        if hasattr(self, 'active_subwindows'):
-            self.active_subwindows.append(sub_window)
-
-        sub_window.show()
-        self._position_subwindow(mdi_area, sub_window)
-        print(f"[DETAILED_LAP] 已開啟圈速箱型圖視窗: {window_title}")
-        return sub_window
 
     def _position_subwindow(self, mdi_area, sub_window):
         """根據現有視窗數量調整子視窗位置，避免重疊。"""

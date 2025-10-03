@@ -13,6 +13,7 @@ class BoxPlotSettings:
     filter_pit_laps: bool = True
     filter_outliers: bool = True
     outlier_threshold: float = 1.5
+    filter_yellow_flags: bool = True  # 新增：過濾黃旗圈
 
 
 class GuiSettingsManager(QObject):
@@ -32,6 +33,7 @@ class GuiSettingsManager(QObject):
             "filter_pit_laps": self._boxplot_settings.filter_pit_laps,
             "filter_outliers": self._boxplot_settings.filter_outliers,
             "outlier_threshold": self._boxplot_settings.outlier_threshold,
+            "filter_yellow_flags": self._boxplot_settings.filter_yellow_flags,
         }
         return settings
 

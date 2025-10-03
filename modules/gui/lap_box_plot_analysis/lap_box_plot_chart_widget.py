@@ -7,7 +7,14 @@ LapTimeBoxPlotChartWidget - 圈速箱型圖圖表組件 (純 PyQt5 實現)
 - 應用車隊配色方案
 - 顯示統計資訊（中位數、Q1、Q3、鬚線、異常值）
 - 支援圖表匯出（PNG, JPG）
-- 支援滑鼠懸停工具提示
+- 支        else:
+            self._draw_no_data_message(painter)
+            
+        # 繪製標題 (已隱藏)
+        # self._draw_title(painter)
+        
+        # 繪製圖例 (已隱藏)
+        # self._draw_legend(painter)示
 - 支援多國語言（i18n）
 
 作者: F1T Team
@@ -182,11 +189,11 @@ class LapTimeBoxPlotChartWidget(QWidget):
         else:
             self._draw_no_data_message(painter)
             
-        # 繪製標題
-        self._draw_title(painter)
+        # 繪製標題 (已隱藏)
+        # self._draw_title(painter)
         
-        # 繪製圖例
-        self._draw_legend(painter)
+        # 繪製圖例 (已隱藏)
+        # self._draw_legend(painter)
         
         # 繪製工具提示
         if self.hover_driver:
@@ -253,9 +260,9 @@ class LapTimeBoxPlotChartWidget(QWidget):
             
         # X 軸標籤（車手代碼）會在繪製箱型圖時一起繪製
         
-        # Y 軸標題
+        # Y 軸標題（調整距離使其離 Y 軸數值更遠）
         painter.save()
-        painter.translate(15, self.chart_rect.center().y())
+        painter.translate(5, self.chart_rect.center().y())  # 從 15 改為 5，增加距離
         painter.rotate(-90)
         title_font = QFont("Arial", 11, QFont.Bold)
         painter.setFont(title_font)
@@ -266,18 +273,18 @@ class LapTimeBoxPlotChartWidget(QWidget):
         )
         painter.restore()
         
-        # X 軸標題
-        painter.setFont(title_font)
-        painter.drawText(
-            QRect(
-                self.chart_rect.left(),
-                self.chart_rect.bottom() + 60,
-                self.chart_rect.width(),
-                20
-            ),
-            Qt.AlignCenter,
-            tr("lap_box_plot.x_axis_title", "Driver Code")
-        )
+        # X 軸標題 (已隱藏)
+        # painter.setFont(title_font)
+        # painter.drawText(
+        #     QRect(
+        #         self.chart_rect.left(),
+        #         self.chart_rect.bottom() + 60,
+        #         self.chart_rect.width(),
+        #         20
+        #     ),
+        #     Qt.AlignCenter,
+        #     tr("lap_box_plot.x_axis_title", "Driver Code")
+        # )
         
     def _draw_box_plots(self, painter: QPainter):
         """繪製所有車手的箱型圖"""
@@ -468,7 +475,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         painter.setFont(legend_font)
         
         items = [
-            (tr("lap_box_plot.legend_box", "Box: Q1-Q3"), QColor(150, 150, 150), "box"),
+            (tr("lap_box_plot.legend_box", "Box: Q1-Q3"), QColor(255, 255, 255), "box"),  # 白色方框
             (tr("lap_box_plot.legend_whisker", "Whisker: 1.5×IQR"), Qt.black, "whisker"),
             (tr("lap_box_plot.legend_outlier", "Outlier"), QColor(220, 20, 20), "outlier")
         ]
@@ -554,12 +561,13 @@ class LapTimeBoxPlotChartWidget(QWidget):
             
         tooltip_rect = QRect(tooltip_x, tooltip_y, tooltip_width, tooltip_height)
         
-        # 繪製背景（白底黑字）
-        painter.fillRect(tooltip_rect, QColor(255, 255, 255, 250))  # 白色背景，高不透明度
+        # 繪製背景（白底黑字）- 重置畫筆和畫刷狀態
+        painter.setBrush(QBrush(QColor(255, 255, 255, 250)))  # 白色背景
         painter.setPen(QPen(QColor(100, 100, 100), 1))  # 灰色邊框
         painter.drawRect(tooltip_rect)
         
-        # 繪製文字（黑色）
+        # 繪製文字（黑色）- 重置畫刷
+        painter.setBrush(Qt.NoBrush)
         painter.setPen(QPen(Qt.black))
         for i, line in enumerate(lines):
             painter.drawText(

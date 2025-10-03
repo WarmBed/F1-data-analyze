@@ -48,3 +48,10 @@ def test_execute_analysis_missing_param_returns_error():
     result = asyncio.run(service.execute_analysis(1, year=2025, race="Japan"))
     assert result["success"] is False
     assert result["source"] == "service_error"
+
+
+def test_function_spec_straight_line_speed_registered():
+    spec = FUNCTION_SPECS["48"]
+    assert spec.required_params == ["year", "race", "session"]
+    assert "all_drivers_straight_line_speed" in spec.cache_patterns
+    assert spec.cli_flag_map["year"] == "-y"

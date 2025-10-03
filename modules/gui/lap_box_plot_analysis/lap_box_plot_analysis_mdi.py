@@ -915,7 +915,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         if "API" in error_message and "本地" in error_message:
             # API 失敗且本地 JSON 不存在
             solution_text = (
-                f"無法載入圈速箱型圖數據:\n{error_message}\n\n"
+                f"無法載入{tr('laptime_boxplot', '圈速箱型圖')}數據:\n{error_message}\n\n"
                 "請執行以下操作之一:\n\n"
                 "方案 1: 啟動 API 服務器\n"
                 "   開啟新終端執行: python refactored_api.py\n"
@@ -930,7 +930,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         # 使用 warning 而非 critical 以保持 GUI 可用性
         QMessageBox.warning(
             self.main_widget,
-            "圈速箱型圖 - 數據載入失敗",
+            f"{tr('laptime_boxplot', '圈速箱型圖')} - 數據載入失敗",
             solution_text,
             QMessageBox.Ok
         )
