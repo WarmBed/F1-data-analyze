@@ -23,6 +23,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -86,7 +89,8 @@ class AccidentStatisticsWidget(QWidget):
         layout.setSpacing(10)
         
         # 標題
-        title_label = QLabel("📊 事故統計總覽")
+        from core.gui_i18n import tr
+        title_label = QLabel(f"📊 {tr('accident_statistics_overview', 'Statistics Overview')}")
         title_label.setStyleSheet("font-size: 16px; font-weight: bold; padding: 10px;")
         layout.addWidget(title_label)
         
@@ -114,7 +118,7 @@ class AccidentStatisticsWidget(QWidget):
         layout.addWidget(self.incident_table)
         
         # 載入狀態顯示
-        self.status_label = QLabel("等待數據載入...")
+        self.status_label = QLabel(tr("waiting_data_load", "等待數據載入..."))
         self.status_label.setStyleSheet("color: #666; font-size: 12px; padding: 5px;")
         layout.addWidget(self.status_label)
         
@@ -157,7 +161,7 @@ class AccidentStatisticsWidget(QWidget):
         """創建事故類型分佈表格"""
         self.incident_table = QTableWidget()
         self.incident_table.setColumnCount(2)
-        self.incident_table.setHorizontalHeaderLabels(["事故類型", "次數"])
+        self.incident_table.setHorizontalHeaderLabels([tr("incident_type", "事故類型"), tr("count", "次數")])
         
         # 設置表格樣式 (簡化版)
         self.incident_table.setStyleSheet("""
@@ -198,12 +202,12 @@ class AccidentStatisticsWidget(QWidget):
             self.incident_table.setItem(i, 1, QTableWidgetItem(str(count)))
             
         # 更新狀態
-        self.status_label.setText("✅ 數據載入完成")
+        self.status_label.setText(tr("data_load_complete", "✅ 數據載入完成"))
         
     def clear_table(self):
         """清除表格數據"""
         self.incident_table.setRowCount(0)
-        self.status_label.setText("數據已清除")
+        self.status_label.setText(tr("data_cleared", "數據已清除"))
 
 
 class AccidentAnalysisModule(IAnalysisModule):
@@ -249,13 +253,13 @@ class AccidentAnalysisModule(IAnalysisModule):
         # 標題和參數顯示區域 (簡化樣式)
         header_layout = QHBoxLayout()
         
-        self.title_label = QLabel("🔥 事故綜合分析")
+        self.title_label = QLabel(tr("accident_comprehensive_analysis", "🔥 事故綜合分析"))
         self.title_label.setStyleSheet("font-size: 16px; font-weight: bold; color: #333; padding: 8px;")
         header_layout.addWidget(self.title_label)
         
         header_layout.addStretch()
         
-        self.params_label = QLabel("請選擇年份、賽事和賽段")
+        self.params_label = QLabel(tr("please_select_params", "請選擇年份、賽事和賽段"))
         self.params_label.setStyleSheet("font-size: 12px; color: #666; padding: 8px;")
         header_layout.addWidget(self.params_label)
         
@@ -280,23 +284,26 @@ class AccidentAnalysisModule(IAnalysisModule):
         """)
         
         # 分頁1: 事故統計總覽
+        from core.gui_i18n import tr
         self.statistics_widget = AccidentStatisticsWidget(self.data_manager)
-        self.tab_widget.addTab(self.statistics_widget, "📊 統計總覽")
+        self.tab_widget.addTab(self.statistics_widget, f"📊 {tr('accident_statistics_overview', 'Statistics Overview')}")
         
         # 分頁2-5: 待後續開發 (簡化佔位符)
-        for i, (icon, title) in enumerate([
-            ("📈", "分佈分析"),
-            ("⚠️", "嚴重程度"),
-            ("🎯", "關鍵事件"),
-            ("📋", "詳細列表")
-        ], 2):
+        tab_configs = [
+            ("📈", "accident_distribution_analysis", "Distribution Analysis"),
+            ("⚠️", "accident_severity_level", "Severity Level"),
+            ("🎯", "accident_key_events", "Key Events"),
+            ("📋", "accident_detailed_list", "Detailed List")
+        ]
+        for icon, tr_key, default_text in tab_configs:
             placeholder = QWidget()
             placeholder_layout = QVBoxLayout(placeholder)
-            label = QLabel(f"{icon} {title} - 待開發")
+            tab_title = tr(tr_key, default_text)
+            label = QLabel(f"{icon} {tab_title} - {tr('under_development', 'Under Development')}")
             label.setAlignment(Qt.AlignCenter)
             label.setStyleSheet("color: #666; font-size: 14px; padding: 50px;")
             placeholder_layout.addWidget(label)
-            self.tab_widget.addTab(placeholder, f"{icon} {title}")
+            self.tab_widget.addTab(placeholder, f"{icon} {tab_title}")
         
         layout.addWidget(self.tab_widget)
         
@@ -327,7 +334,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         if hasattr(self, 'params_label'):
             self.params_label.setText(f"{year} {race} {session}")
         if hasattr(self, 'title_label'):
-            self.title_label.setText(f"🔥 事故綜合分析 - {year} {race} {session}")
+            self.title_label.setText(f"🔥 {tr('accident_comprehensive_analysis_title', '事故綜合分析')} - {year} {race} {session}")
         
         # 載入當前分頁數據
         current_index = self.tab_widget.currentIndex()

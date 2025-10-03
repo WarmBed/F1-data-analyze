@@ -9,6 +9,13 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap, QPainter, QColor, QFont
 from typing import Optional
 
+# 導入國際化
+try:
+    from core.gui_i18n import tr
+except ImportError:
+    def tr(key, fallback):
+        return fallback
+
 
 class LinkageButton(QPushButton):
     """
@@ -22,7 +29,10 @@ class LinkageButton(QPushButton):
     
     linkage_toggled = pyqtSignal(bool)  # 連動狀態切換信號
     
-    def __init__(self, text: str = "🔗 連動", enabled: bool = True, parent=None):
+    def __init__(self, text: str = None, enabled: bool = True, parent=None):
+        # 如果沒有提供文字，使用國際化預設值
+        if text is None:
+            text = tr('linkage_button', '🔗 連動')
         super().__init__(text, parent)
         
         self.linkage_enabled = enabled
@@ -119,15 +129,15 @@ class LinkageStatusIndicator(QLabel):
         if self.master_enabled and self.individual_enabled:
             # 完全啟用 - 綠色
             self.setText("🟢")
-            self.setToolTip("連動已啟用")
+            self.setToolTip(tr('linkage_enabled', '連動已啟用'))
         elif self.master_enabled:
             # 主開關啟用，個別停用 - 黃色
             self.setText("🟡")
-            self.setToolTip("主連動已啟用，個別連動已停用")
+            self.setToolTip(tr('master_linkage_enabled_individual_disabled', '主連動已啟用，個別連動已停用'))
         else:
             # 主開關停用 - 紅色
             self.setText("🔴")
-            self.setToolTip("主連動已停用")
+            self.setToolTip(tr('master_linkage_disabled', '主連動已停用'))
     
     def set_master_enabled(self, enabled: bool):
         """設置主開關狀態"""
@@ -175,14 +185,14 @@ class LinkageControlPanel(QWidget):
         
         # 主連動按鈕
         if self.show_master:
-            self.master_button = LinkageButton("🔗 主連動", True, self)
+            self.master_button = LinkageButton(tr('master_linkage_button', '🔗 主連動'), True, self)
             self.master_button.linkage_toggled.connect(self.master_linkage_toggled)
             self.master_button.linkage_toggled.connect(self.status_indicator.set_master_enabled)
             layout.addWidget(self.master_button)
         
         # 個別連動按鈕
         if self.show_individual:
-            self.individual_button = LinkageButton("🔗 連動", True, self)
+            self.individual_button = LinkageButton(tr('linkage_button', '🔗 連動'), True, self)
             self.individual_button.linkage_toggled.connect(self.individual_linkage_toggled)
             self.individual_button.linkage_toggled.connect(self.status_indicator.set_individual_enabled)
             layout.addWidget(self.individual_button)
@@ -190,7 +200,7 @@ class LinkageControlPanel(QWidget):
         # 清除按鈕
         self.clear_button = QPushButton("🗑", self)
         self.clear_button.setFixedSize(30, 30)
-        self.clear_button.setToolTip("清除所有連動標記")
+        self.clear_button.setToolTip(tr('clear_all_linkage_marks', '清除所有連動標記'))
         self.clear_button.setStyleSheet("""
             QPushButton {
                 background-color: #ff6b6b;
@@ -293,18 +303,20 @@ class LinkageToolBar(QFrame):
         return self.control_panel.is_individual_linkage_enabled()
 
 
-def create_linkage_button(text: str = "🔗 連動", enabled: bool = True, parent=None) -> LinkageButton:
+def create_linkage_button(text: str = None, enabled: bool = True, parent=None) -> LinkageButton:
     """
     快速創建標準化的連動按鈕
     
     Args:
-        text: 按鈕文字
+        text: 按鈕文字 (如果為 None 則使用國際化預設值)
         enabled: 初始狀態
         parent: 父組件
     
     Returns:
         LinkageButton: 配置好的連動按鈕
     """
+    if text is None:
+        text = tr('linkage_button', '🔗 連動')
     return LinkageButton(text, enabled, parent)
 
 

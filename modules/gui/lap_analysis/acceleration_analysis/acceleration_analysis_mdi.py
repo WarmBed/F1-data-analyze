@@ -22,6 +22,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
+from core.gui_i18n import tr
 
 class AccelerationDataManager(QObject):
     """加速度數據管理器 - 負責JSON緩存和CLI備援"""
@@ -67,15 +68,15 @@ class AccelerationDataManager(QObject):
                 lap1, lap2 = self._resolve_lap_numbers(lap1, lap2, driver1, driver2, is_fastest)
                 print(f"🔢 [acceleration_MDI_DATA] 最速圈解析完成: {driver1}=第{lap1}圈, {driver2}=第{lap2}圈")
             
-            print(f"[acceleration_MDI_DATA] 🔗 創建 accelerationAnalysisDataLoader...")
+            print(f"[acceleration_MDI_DATA] 🔗 創建 AccelerationAnalysisDataLoader...")
             
             # 使用現有的acceleration分析數據載入器
-            from .acceleration_analysis_data_loader import accelerationAnalysisDataLoader
+            from .acceleration_analysis_data_loader import AccelerationAnalysisDataLoader
             
             print(f"[acceleration_MDI_DATA] 🚀 調用 load_acceleration_data...")
             
             # 創建數據載入器並保存為實例變量防止垃圾回收
-            self.acceleration_loader = accelerationAnalysisDataLoader()
+            self.acceleration_loader = AccelerationAnalysisDataLoader()
             self.acceleration_loader.data_loaded.connect(self._on_data_loaded)
             self.acceleration_loader.load_error.connect(self._on_load_error)
             self.acceleration_loader.status_changed.connect(self.status_changed.emit)
@@ -449,7 +450,7 @@ class accelerationAnalysisModule(IAnalysisModule):
         use_session = session if session is not None else self.current_session
         
         # 使用統一的簡潔標題格式，與其他模組保持一致
-        title = f"加速度分析_{use_year}_{use_race}_{use_session}"
+        title = f"{tr('acceleration_analysis', '加速度分析')}_{use_year}_{use_race}_{use_session}"
         
         print(f"[acceleration_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
         print(f"[acceleration_TITLE_DEBUG]   📊 參數詳情:")
@@ -1023,12 +1024,12 @@ class accelerationAnalysisModule(IAnalysisModule):
     @property
     def display_name(self) -> str:
         """顯示名稱"""
-        return "acceleration分析"
+        return tr("acceleration_analysis", "加速度分析")
 
     @property
     def description(self) -> str:
         """模組描述"""
-        return "F1賽車acceleration轉速對比分析工具"
+        return tr("acceleration_analysis_description", "F1賽車加速度對比分析工具")
 
     @property
     def version(self) -> str:

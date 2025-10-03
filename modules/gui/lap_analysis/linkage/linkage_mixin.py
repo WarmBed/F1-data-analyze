@@ -9,6 +9,13 @@ from PyQt5.QtCore import QObject, pyqtSignal, Qt, QRect
 from PyQt5.QtWidgets import QPushButton, QToolBar
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont
 
+# 導入國際化
+try:
+    from core.gui_i18n import tr
+except ImportError:
+    def tr(key, fallback):
+        return fallback
+
 
 class LapAnalysisLinkageMixin:
     """
@@ -245,7 +252,7 @@ class LapAnalysisLinkageDrawingMixin:
         # 繪製距離資訊
         painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Arial", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
+        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的數據資訊
         if distance_data and driver1_data:

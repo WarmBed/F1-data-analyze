@@ -1484,15 +1484,21 @@ class TelemetryDataLoader(QObject):
             return self._get_empty_data_structure()
     
     def _calculate_statistics(self, data: List[float]) -> dict:
-        """計算統計數據"""
+        """計算統計數據 - 自動過濾 None 值"""
         if not data:
             return {"max": 0, "min": 0, "avg": 0, "count": 0}
         
+        # 過濾掉 None 值,避免加速度等數據中的 None 導致計算失敗
+        valid_data = [x for x in data if x is not None]
+        
+        if not valid_data:
+            return {"max": 0, "min": 0, "avg": 0, "count": 0}
+        
         return {
-            "max": max(data),
-            "min": min(data),
-            "avg": sum(data) / len(data),
-            "count": len(data)
+            "max": max(valid_data),
+            "min": min(valid_data),
+            "avg": sum(valid_data) / len(valid_data),
+            "count": len(valid_data)
         }
     
     def _get_empty_data_structure(self) -> dict:

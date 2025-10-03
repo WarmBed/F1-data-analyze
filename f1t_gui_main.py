@@ -540,8 +540,8 @@ class LapAnalysisOptionsDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        # 設定 GUI 語言為英文
-        set_gui_language('en')
+        # 保留用戶當前語言設定，不強制切換
+        # set_gui_language('en')  # 已移除強制設定
         
         self.setWindowTitle(tr("telemetry_options_title"))
         self.setModal(True)
@@ -4112,33 +4112,33 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         if len(analyzable_items) == 1:
             # 單選選單
-            analyze_action = menu.addAction(f"🚀 執行分析 - {analyzable_items[0].text(0)}")
+            analyze_action = menu.addAction(f"🚀 {tr('execute_analysis', '執行分析')} - {analyzable_items[0].text(0)}")
             analyze_action.triggered.connect(lambda: self.analyze_function(analyzable_items[0].text(0)))
             
             menu.addSeparator()
             
-            export_action = menu.addAction(f"📊 匯出數據 - {analyzable_items[0].text(0)}")
+            export_action = menu.addAction(f"📊 {tr('export_data', '匯出數據')} - {analyzable_items[0].text(0)}")
             export_action.triggered.connect(lambda: self.export_function(analyzable_items[0].text(0)))
             
             menu.addSeparator()
             
-            help_action = menu.addAction(f"❓ 說明 - {analyzable_items[0].text(0)}")
+            help_action = menu.addAction(f"❓ {tr('help', '說明')} - {analyzable_items[0].text(0)}")
             help_action.triggered.connect(lambda: self.show_help(analyzable_items[0].text(0)))
             
         else:
             # 多選選單
-            analyze_action = menu.addAction(f"🚀 批量執行分析 ({len(analyzable_items)} 個模組)")
+            analyze_action = menu.addAction(f"🚀 {tr('batch_execute_analysis', '批量執行分析')} ({len(analyzable_items)} {tr('modules', '個模組')})")
             analyze_action.triggered.connect(lambda: self.analyze_multiple_functions(analyzable_items))
             
             menu.addSeparator()
             
-            export_action = menu.addAction(f"📊 批量匯出數據 ({len(analyzable_items)} 個模組)")
+            export_action = menu.addAction(f"📊 {tr('batch_export_data', '批量匯出數據')} ({len(analyzable_items)} {tr('modules', '個模組')})")
             export_action.triggered.connect(lambda: self.export_multiple_functions(analyzable_items))
             
             menu.addSeparator()
             
             # 顯示選中的項目列表
-            selected_submenu = menu.addMenu(f"已選擇的模組 ({len(analyzable_items)} 個)")
+            selected_submenu = menu.addMenu(f"{tr('selected_modules', '已選擇的模組')} ({len(analyzable_items)} {tr('items', '個')})")
             for item in analyzable_items:
                 item_action = selected_submenu.addAction(f"• {item.text(0)}")
                 item_action.setEnabled(False)  # 僅用於顯示，不可點擊
@@ -5449,7 +5449,8 @@ class StyleHMainWindow(QMainWindow):
                     self.update_all_action = self.main_toolbar.addAction(update_action)
                 
                 # 添加遙測分析連動總開關
-                self.lap_linkage_action = QAction("🔗 圈速連動", self)
+                from core.gui_i18n import tr
+                self.lap_linkage_action = QAction(f"🔗 {tr('lap_linkage', 'Lap Linkage')}", self)
                 self.lap_linkage_action.setCheckable(True)
                 self.lap_linkage_action.setChecked(True)  # 預設啟用
                 self.lap_linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
@@ -5862,7 +5863,7 @@ class StyleHMainWindow(QMainWindow):
         tree.setRootIsDecorated(True)
         
         # 基礎分析模組
-        basic_group = QTreeWidgetItem(tree, [tr("single_race_analysis", "[TOOL] Single Race Analysis")])
+        basic_group = QTreeWidgetItem(tree, [tr("single_race_analysis", "Single Race Analysis")])
         basic_group.setExpanded(True)
         QTreeWidgetItem(basic_group, [tr("rain_analysis", "Rain Analysis")])
         QTreeWidgetItem(basic_group, [tr("track_analysis", "Track Analysis")])
@@ -6424,7 +6425,8 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 關閉所有視窗按鈕
-        close_all_btn = QPushButton("關閉所有視窗")
+        from core.gui_i18n import tr
+        close_all_btn = QPushButton(tr('close_all_windows', 'Close All Windows'))
         close_all_btn.setFixedSize(120, 25)
         close_all_btn.setStyleSheet("""
             QPushButton {
@@ -6550,7 +6552,8 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 關閉所有視窗按鈕
-        close_all_btn = QPushButton("關閉所有視窗")
+        from core.gui_i18n import tr
+        close_all_btn = QPushButton(tr('close_all_windows', 'Close All Windows'))
         close_all_btn.setFixedSize(120, 25)
         close_all_btn.setStyleSheet("""
             QPushButton {
@@ -6683,7 +6686,8 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 關閉所有視窗按鈕
-        close_all_btn = QPushButton("關閉所有視窗")
+        from core.gui_i18n import tr
+        close_all_btn = QPushButton(tr('close_all_windows', 'Close All Windows'))
         close_all_btn.setFixedSize(120, 25)
         close_all_btn.setStyleSheet("""
             QPushButton {
@@ -7117,7 +7121,8 @@ class StyleHMainWindow(QMainWindow):
         toolbar_layout.setContentsMargins(10, 5, 10, 5)
         
         # 標題標籤
-        title_label = QLabel("[CHART] 分析工作區")
+        from core.gui_i18n import tr
+        title_label = QLabel(tr('analysis_workspace', 'Analysis Workspace'))
         title_label.setStyleSheet("""
             QLabel {
                 color: #333333;
@@ -7128,7 +7133,8 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 關閉所有視窗按鈕
-        close_all_btn = QPushButton("關閉所有視窗")
+        from core.gui_i18n import tr
+        close_all_btn = QPushButton(tr('close_all_windows', 'Close All Windows'))
         close_all_btn.setFixedSize(120, 25)
         close_all_btn.setStyleSheet("""
             QPushButton {
@@ -8402,6 +8408,66 @@ class StyleHMainWindow(QMainWindow):
                 except ImportError:
                     return []
             
+            def find_speeddiff_analysis_widgets(widget):
+                """遞歸查找 SpeeddiffAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_chart_widget import SpeeddiffAnalysisChartWidget
+                    speeddiff_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, SpeeddiffAnalysisChartWidget):
+                        speeddiff_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                speeddiff_widgets.extend(find_speeddiff_analysis_widgets(child))
+                    
+                    return speeddiff_widgets
+                except ImportError:
+                    return []
+            
+            def find_distancediff_analysis_widgets(widget):
+                """遞歸查找 distancediffAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_chart_widget import distancediffAnalysisChartWidget
+                    distancediff_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, distancediffAnalysisChartWidget):
+                        distancediff_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                distancediff_widgets.extend(find_distancediff_analysis_widgets(child))
+                    
+                    return distancediff_widgets
+                except ImportError:
+                    return []
+            
+            def find_acceleration_analysis_widgets(widget):
+                """遞歸查找 accelerationAnalysisChartWidget"""
+                try:
+                    from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_chart_widget import accelerationAnalysisChartWidget
+                    acceleration_widgets = []
+                    
+                    # 檢查當前widget
+                    if isinstance(widget, accelerationAnalysisChartWidget):
+                        acceleration_widgets.append(widget)
+                    
+                    # 遞歸檢查所有子widget
+                    if hasattr(widget, 'children'):
+                        for child in widget.children():
+                            if isinstance(child, QWidget):
+                                acceleration_widgets.extend(find_acceleration_analysis_widgets(child))
+                    
+                    return acceleration_widgets
+                except ImportError:
+                    return []
+            
             for i, subwindow in enumerate(subwindows):
                 if subwindow and subwindow.widget():
                     widget = subwindow.widget()
@@ -8418,9 +8484,13 @@ class StyleHMainWindow(QMainWindow):
                     rpm_widgets = find_rpm_analysis_widgets(widget)
                     gear_widgets = find_gear_analysis_widgets(widget)
                     throttle_widgets = find_throttle_analysis_widgets(widget)
+                    speeddiff_widgets = find_speeddiff_analysis_widgets(widget)
+                    distancediff_widgets = find_distancediff_analysis_widgets(widget)
+                    acceleration_widgets = find_acceleration_analysis_widgets(widget)
                     
                     print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表")
                     print(f"  分析模組: 速度={len(speed_widgets)}, 煞車={len(brake_widgets)}, RPM={len(rpm_widgets)}, 檔位={len(gear_widgets)}, 油門={len(throttle_widgets)}")
+                    print(f"  差異分析: 速度差={len(speeddiff_widgets)}, 距離差={len(distancediff_widgets)}, 加速度={len(acceleration_widgets)}")
                     
                     if telemetry_widgets:
                         for telemetry_widget in telemetry_widgets:
@@ -8555,6 +8625,39 @@ class StyleHMainWindow(QMainWindow):
                             throttle_widget.reset_chart_view()
                             reset_count += 1
                             print(f"[OK] 油門分析圖表重置完成")
+                    
+                    # 處理速度差異分析圖表 (SpeedDiffAnalysisChartWidget)
+                    if speeddiff_widgets:
+                        for speeddiff_widget in speeddiff_widgets:
+                            print(f"[TARGET] 重置速度差異分析圖表")
+                            if hasattr(speeddiff_widget, 'reset_chart_view'):
+                                speeddiff_widget.reset_chart_view()
+                            elif hasattr(speeddiff_widget, 'chart_widget') and hasattr(speeddiff_widget.chart_widget, 'reset_view'):
+                                speeddiff_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] 速度差異分析圖表重置完成")
+                    
+                    # 處理距離差異分析圖表 (DistanceDiffAnalysisChartWidget)
+                    if distancediff_widgets:
+                        for distancediff_widget in distancediff_widgets:
+                            print(f"[TARGET] 重置距離差異分析圖表")
+                            if hasattr(distancediff_widget, 'reset_chart_view'):
+                                distancediff_widget.reset_chart_view()
+                            elif hasattr(distancediff_widget, 'chart_widget') and hasattr(distancediff_widget.chart_widget, 'reset_view'):
+                                distancediff_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] 距離差異分析圖表重置完成")
+                    
+                    # 處理加速度分析圖表 (AccelerationAnalysisChartWidget)
+                    if acceleration_widgets:
+                        for acceleration_widget in acceleration_widgets:
+                            print(f"[TARGET] 重置加速度分析圖表")
+                            if hasattr(acceleration_widget, 'reset_chart_view'):
+                                acceleration_widget.reset_chart_view()
+                            elif hasattr(acceleration_widget, 'chart_widget') and hasattr(acceleration_widget.chart_widget, 'reset_view'):
+                                acceleration_widget.chart_widget.reset_view()
+                            reset_count += 1
+                            print(f"[OK] 加速度分析圖表重置完成")
                     
                     # 檢查是否為其他類型的圖表或可縮放小部件
                     elif hasattr(widget, 'fit_to_view'):

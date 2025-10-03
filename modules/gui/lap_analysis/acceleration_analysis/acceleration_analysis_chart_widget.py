@@ -18,6 +18,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
 # 導入全域信號管理器
+from core.gui_i18n import tr
 try:
     from f1t_gui_main import global_signals
 except ImportError:
@@ -73,8 +74,8 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.bg_color = QColor(255, 255, 255)
         self.grid_color = QColor(200, 200, 200)  # 修正：與速度分析一致
         self.axis_color = QColor(50, 50, 50)     # 修正：與速度分析一致
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.driver1_color = QColor(0, 100, 200)  # 柔和藍色 - 車手1
+        self.driver2_color = QColor(200, 50, 50)  # 柔和紅色 - 車手2
         self.sector_color = QColor(100, 100, 100, 100)  # 修正：半透明灰色
         
         # 滑鼠交互
@@ -147,6 +148,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
     
     def reset_view(self):
         """重置視圖到原始範圍"""
+        print(f"[ACCELERATION_CHART] 🔄 reset_view() 被調用")
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_acceleration = None
@@ -154,7 +156,9 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
+        print(f"[ACCELERATION_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()
+        print(f"[ACCELERATION_CHART] ✅ reset_view() 完成")
     
     def reset_data(self):
         """重置所有數據和視圖"""
@@ -328,10 +332,11 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         painter.setFont(axis_font)
         painter.setPen(text_color)
         
-        # X軸標題 - 左下角位置 (bottom-left)
-        x_title_x = rect.left() - 40
+        # X軸標題 - 置中顯示在圖表下方
+        x_title_width = 100
+        x_title_x = rect.left() + (rect.width() - x_title_width) // 2
         x_title_y = rect.bottom() + 5
-        painter.drawText(x_title_x, x_title_y, 60, 15, Qt.AlignLeft, "距離 (m)")
+        painter.drawText(x_title_x, x_title_y, x_title_width, 15, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
         
         # Y軸標題 - 垂直文字 (左側中央)  
         painter.save()
@@ -409,8 +414,9 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             points = []
             
             for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver1_acceleration)):
-                # 檢查是否有有效的數值
-                if (current_min_distance <= distance <= current_max_distance and 
+                # 檢查是否有有效的數值 (先檢查 None,再檢查 NaN/Inf)
+                if (distance is not None and acceleration is not None and
+                    current_min_distance <= distance <= current_max_distance and 
                     not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
@@ -428,8 +434,9 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             points = []
             
             for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver2_acceleration)):
-                # 檢查是否有有效的數值
-                if (current_min_distance <= distance <= current_max_distance and 
+                # 檢查是否有有效的數值 (先檢查 None,再檢查 NaN/Inf)
+                if (distance is not None and acceleration is not None and
+                    current_min_distance <= distance <= current_max_distance and 
                     not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
                     x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
@@ -526,7 +533,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
+            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手acceleration資訊
             for i, (driver_name, acceleration, color) in enumerate(drivers_to_show):
@@ -1014,7 +1021,7 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         
     def _setup_stats_table(self):
         """設置統計表格"""
-        headers = ["項目", "車手1", "車手2", "差值"]
+        headers = [tr("item", "項目"), tr("driver1", "車手1"), tr("driver2", "車手2"), tr("difference", "差值")]
         self.stats_table.setColumnCount(len(headers))
         self.stats_table.setHorizontalHeaderLabels(headers)
         self.stats_table.setRowCount(0)
@@ -1453,8 +1460,12 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
+        print(f"[ACCELERATION_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
+            print(f"[ACCELERATION_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
+        else:
+            print(f"[ACCELERATION_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""

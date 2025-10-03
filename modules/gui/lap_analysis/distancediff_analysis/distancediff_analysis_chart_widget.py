@@ -17,6 +17,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
 # 導入全域信號管理器
+from core.gui_i18n import tr
 try:
     from f1t_gui_main import global_signals
 except ImportError:
@@ -52,9 +53,9 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.__init_linkage__()
         
         # 🎯 設置統一的座標軸標題
-        self.x_axis_title = "距離 (m)"
-        self.y_axis_title = "距離差距 (m)"
-        self.x_title_position = "bottom-left"
+        self.x_axis_title = tr('distance_m', '距離 (m)')
+        self.y_axis_title = tr('distance_diff_m', '距離差距 (m)')
+        self.x_title_position = "bottom-center"  # 置中顯示，避免文字被截斷
         self.y_title_position = "left-center"
         self.show_axis_titles = True
         
@@ -98,8 +99,8 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.bg_color = QColor(255, 255, 255)
         self.grid_color = QColor(200, 200, 200)  # 修正：與速度分析一致
         self.axis_color = QColor(50, 50, 50)     # 修正：與速度分析一致
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.driver1_color = QColor(0, 100, 200)  # 柔和藍色 - 車手1
+        self.driver2_color = QColor(200, 50, 50)  # 柔和紅色 - 車手2
         self.sector_color = QColor(100, 100, 100, 100)  # 修正：半透明灰色
         
         # 滑鼠交互
@@ -169,6 +170,7 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
     
     def reset_view(self):
         """重置視圖到原始範圍"""
+        print(f"[DISTANCEDIFF_CHART] 🔄 reset_view() 被調用")
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_distancediff = None
@@ -176,7 +178,9 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
+        print(f"[DISTANCEDIFF_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()
+        print(f"[DISTANCEDIFF_CHART] ✅ reset_view() 完成")
     
     def reset_data(self):
         """重置所有數據和視圖"""
@@ -513,7 +517,7 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             painter.setFont(QFont("Arial", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
+            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手distancediff資訊
             for i, (driver_name, distancediff, color) in enumerate(drivers_to_show):
@@ -582,20 +586,20 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         painter.drawLine(legend_x, legend_y, legend_x + 20, legend_y)
         painter.setPen(QPen(self.axis_color, 1))
         painter.drawText(legend_x + 25, legend_y - 5, 150, 20, Qt.AlignLeft | Qt.AlignVCenter, 
-                        f"{self.driver1_name} 領先")
+                        f"{self.driver1_name} {tr('leading', '領先')}")
         
         # 紅色線條和文字
         painter.setPen(QPen(QColor(200, 50, 50), 2))  # 紅色線條
         painter.drawLine(legend_x, legend_y + 20, legend_x + 20, legend_y + 20)
         painter.setPen(QPen(self.axis_color, 1))
         painter.drawText(legend_x + 25, legend_y + 15, 150, 20, Qt.AlignLeft | Qt.AlignVCenter, 
-                        f"{self.driver2_name} 領先")
+                        f"{self.driver2_name} {tr('leading', '領先')}")
         
         # 灰色零線
         painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.DashLine))
         painter.drawLine(legend_x, legend_y + 40, legend_x + 20, legend_y + 40)
         painter.setPen(QPen(self.axis_color, 1))
-        painter.drawText(legend_x + 25, legend_y + 35, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, "零點線")
+        painter.drawText(legend_x + 25, legend_y + 35, 100, 20, Qt.AlignLeft | Qt.AlignVCenter, tr('zero_line', '零點線'))
     
     def mouseMoveEvent(self, event: QMouseEvent):
         """滑鼠移動事件"""
@@ -889,7 +893,7 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         title_layout.setContentsMargins(0, 0, 0, 0)
         
         # 標題標籤
-        title_label = QLabel("詳細統計信息")
+        title_label = QLabel(tr('detailed_statistics', '詳細統計信息'))
         title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
@@ -959,7 +963,7 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         layout.setSpacing(15)
         
         # 圈時間資訊
-        self.lap_time_label = QLabel("⏱️ 圈時間: N/A")
+        self.lap_time_label = QLabel(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
         self.lap_time_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.lap_time_label)
         
@@ -969,7 +973,7 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         layout.addWidget(separator1)
         
         # 輪胎配方資訊  
-        self.tyre_compound_label = QLabel("🛞 輪胎配方: N/A")
+        self.tyre_compound_label = QLabel(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
         self.tyre_compound_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.tyre_compound_label)
         
@@ -985,7 +989,7 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         tyre_life_layout.setSpacing(5)
         
         # 標籤
-        tyre_life_title = QLabel("🔄 圈數:")
+        tyre_life_title = QLabel(tr('lap_number_label', '🔄 圈數:'))
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         
@@ -1038,7 +1042,7 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         
     def _setup_stats_table(self):
         """設置統計表格"""
-        headers = ["項目", "車手1", "車手2", "差值"]
+        headers = [tr("item", "項目"), tr("driver1", "車手1"), tr("driver2", "車手2"), tr("difference", "差值")]
         self.stats_table.setColumnCount(len(headers))
         self.stats_table.setHorizontalHeaderLabels(headers)
         self.stats_table.setRowCount(0)
@@ -1444,8 +1448,12 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
+        print(f"[DISTANCEDIFF_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
+            print(f"[DISTANCEDIFF_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
+        else:
+            print(f"[DISTANCEDIFF_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""

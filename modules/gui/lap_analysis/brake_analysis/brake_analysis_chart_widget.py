@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -72,8 +75,8 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.bg_color = QColor(255, 255, 255)
         self.grid_color = QColor(200, 200, 200)  # 修正：與速度分析一致
         self.axis_color = QColor(50, 50, 50)     # 修正：與速度分析一致
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.driver1_color = QColor(0, 100, 200)  # 柔和藍色 - 車手1
+        self.driver2_color = QColor(200, 50, 50)  # 柔和紅色 - 車手2
         self.sector_color = QColor(100, 100, 100, 100)  # 修正：半透明灰色
         
         # 滑鼠交互
@@ -295,16 +298,16 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 放在"0"刻度左邊
-        x_title_x = chart_rect.left() - 60  # 0刻度左邊60像素
-        x_title_y = chart_rect.bottom() + 5   # X軸下方5像素（調整以適應新的下邊距20px）
-        painter.drawText(x_title_x, x_title_y, 55, 20, Qt.AlignRight, "距離 (m)")
+        # X軸標題 - 置中顯示在圖表下方
+        x_title_width = 100
+        x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
+        x_title_y = chart_rect.bottom() + 5
+        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
         
         # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        from core.gui_i18n import tr
         painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_brake', 'Brake (%)'))
         painter.restore()
     
@@ -478,12 +481,12 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
+            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手brake資訊
             for i, (driver_name, brake, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
-                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {brake:.0f} brake")
+                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {brake:.0f} {tr('brake_value', 'brake')}")
     
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -833,7 +836,7 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         title_layout.setContentsMargins(0, 0, 0, 0)
         
         # 標題標籤
-        title_label = QLabel("詳細統計信息")
+        title_label = QLabel(tr("detailed_statistics", "詳細統計信息"))
         title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
@@ -903,7 +906,7 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         layout.setSpacing(15)
         
         # 圈時間資訊
-        self.lap_time_label = QLabel("⏱️ 圈時間: N/A")
+        self.lap_time_label = QLabel(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
         self.lap_time_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.lap_time_label)
         
@@ -913,7 +916,7 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         layout.addWidget(separator1)
         
         # 輪胎配方資訊  
-        self.tyre_compound_label = QLabel("🛞 輪胎配方: N/A")
+        self.tyre_compound_label = QLabel(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
         self.tyre_compound_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.tyre_compound_label)
         
@@ -929,7 +932,7 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         tyre_life_layout.setSpacing(5)
         
         # 標籤
-        tyre_life_title = QLabel("🔄 圈數:")
+        tyre_life_title = QLabel(f"🔄 {tr('lap_number_short', '圈數')}:")
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         
@@ -982,7 +985,12 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         
     def _setup_stats_table(self):
         """設置統計表格"""
-        headers = ["項目", "車手1", "車手2", "差值"]
+        headers = [
+            tr("item", "項目"),
+            tr("driver1", "車手1"),
+            tr("driver2", "車手2"),
+            tr("difference", "差值")
+        ]
         self.stats_table.setColumnCount(len(headers))
         self.stats_table.setHorizontalHeaderLabels(headers)
         self.stats_table.setRowCount(0)

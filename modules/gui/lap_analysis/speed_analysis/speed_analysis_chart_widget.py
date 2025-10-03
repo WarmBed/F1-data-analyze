@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -50,8 +53,8 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.is_single_driver = False  # 新增：單車手模式標記 - 與油門分析一致
         
         # 顏色設定
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.driver1_color = QColor(0, 100, 200)  # 柔和藍色 - 車手1
+        self.driver2_color = QColor(200, 50, 50)  # 柔和紅色 - 車手2
         self.grid_color = QColor(200, 200, 200)
         self.axis_color = QColor(50, 50, 50)
         self.sector_color = QColor(100, 100, 100, 100)  # 半透明灰色
@@ -169,6 +172,7 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         
     def reset_view(self):
         """重置視圖到原始範圍"""
+        print(f"[SPEED_CHART] 🔄 reset_view() 被調用")
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_speed = None
@@ -176,7 +180,9 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.show_fixed_line = False
         self.fixed_line_x = -1
         self.fixed_distance_value = None
-        self.update()
+        print(f"[SPEED_CHART] ✅ 視圖範圍已重置，調用 repaint()")
+        self.repaint()  # 使用 repaint() 而非 update() 以強制立即重繪
+        print(f"[SPEED_CHART] ✅ reset_view() 完成")
     
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -289,16 +295,16 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 放在"0"刻度左邊
-        x_title_x = chart_rect.left() - 60  # 0刻度左邊60像素
-        x_title_y = chart_rect.bottom() + 5   # X軸下方5像素（調整以適應新的下邊距20px）
-        painter.drawText(x_title_x, x_title_y, 55, 20, Qt.AlignRight, "距離 (m)")
+        # X軸標題 - 置中顯示在圖表下方
+        x_title_width = 100
+        x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
+        x_title_y = chart_rect.bottom() + 5
+        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
         
         # Y軸標題
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        from core.gui_i18n import tr
         painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_speed', 'Speed (km/h)'))
         painter.restore()
         
@@ -491,7 +497,7 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
+            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手速度資訊
             for i, (driver_name, speed, color) in enumerate(drivers_to_show):
@@ -547,7 +553,7 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         # 繪製距離資訊
         painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Microsoft YaHei", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
+        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的速度資訊
         if self.distance_data and self.driver1_speed:
@@ -948,7 +954,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         title_layout.setContentsMargins(0, 0, 0, 0)
         
         # 標題標籤
-        title_label = QLabel("詳細統計信息")
+        title_label = QLabel(tr("detailed_statistics", "詳細統計信息"))
         title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
@@ -1018,7 +1024,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         layout.setSpacing(15)
         
         # 圈時間資訊
-        self.lap_time_label = QLabel("⏱️ 圈時間: N/A")
+        self.lap_time_label = QLabel(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
         self.lap_time_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.lap_time_label)
         
@@ -1028,7 +1034,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         layout.addWidget(separator1)
         
         # 輪胎配方資訊  
-        self.tyre_compound_label = QLabel("🛞 輪胎配方: N/A")
+        self.tyre_compound_label = QLabel(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
         self.tyre_compound_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.tyre_compound_label)
         
@@ -1044,7 +1050,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         tyre_life_layout.setSpacing(5)
         
         # 標籤
-        tyre_life_title = QLabel("🔄 圈數:")
+        tyre_life_title = QLabel(f"🔄 {tr('lap_number_short', '圈數')}:")
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         
@@ -1110,12 +1116,12 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                     # 圈時間
                     lap_time1 = driver1.get('lap_time', 'N/A')
                     lap_time2 = driver2.get('lap_time', 'N/A')
-                    self.lap_time_label.setText(f"⏱️ 圈時間: {lap_time1} | {lap_time2}")
+                    self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {lap_time1} | {lap_time2}")
                     
                     # 輪胎配方
                     compound1 = driver1.get('compound', 'N/A')
                     compound2 = driver2.get('compound', 'N/A')
-                    self.tyre_compound_label.setText(f"🛞 輪胎配方: {compound1} | {compound2}")
+                    self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {compound1} | {compound2}")
                     
                     # 更新圈數輸入框（如果數據中有圈數信息）
                     if 'lap_number' in driver1 and 'lap_number' in driver2:
@@ -1134,22 +1140,27 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                         lap_number = driver.get('lap_number', 1)
                         self.set_lap_numbers(lap_number, lap_number)
                     
-                    self.lap_time_label.setText(f"⏱️ 圈時間: {lap_time}")
-                    self.tyre_compound_label.setText(f"🛞 輪胎配方: {compound}")
+                    self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {lap_time}")
+                    self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {compound}")
             else:
                 # 沒有車手數據時的預設顯示
-                self.lap_time_label.setText("⏱️ 圈時間: N/A")
-                self.tyre_compound_label.setText("🛞 輪胎配方: N/A")
+                self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
+                self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
             print(f"[ERROR] 更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
-            self.lap_time_label.setText("⏱️ 圈時間: 錯誤")
-            self.tyre_compound_label.setText("🛞 輪胎配方: 錯誤")
+            self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
+            self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
         
     def _setup_stats_table(self):
         """設置統計表格"""
-        headers = ["項目", "車手1", "車手2", "差值"]
+        headers = [
+            tr("item", "項目"),
+            tr("driver1", "車手1"),
+            tr("driver2", "車手2"),
+            tr("difference", "差值")
+        ]
         self.stats_table.setColumnCount(len(headers))
         self.stats_table.setHorizontalHeaderLabels(headers)
         self.stats_table.setRowCount(0)
@@ -1402,8 +1413,12 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             
     def reset_chart_view(self):
         """重置圖表視圖"""
+        print(f"[SPEED_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget'):
+            print(f"[SPEED_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
+        else:
+            print(f"[SPEED_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條"""

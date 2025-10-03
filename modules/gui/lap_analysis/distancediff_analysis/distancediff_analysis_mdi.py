@@ -22,6 +22,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
+from core.gui_i18n import tr
 
 class distancediffDataManager(QObject):
     """distancediff數據管理器 - 負責JSON緩存和CLI備援"""
@@ -424,12 +425,12 @@ class distancediffAnalysisModule(IAnalysisModule):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         
-        label = QLabel("🔄 distancediff分析圖表")
+        label = QLabel(tr('distancediff_chart_title', '🔄 距離差分析圖表'))
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet("font-size: 16pt; padding: 20px;")
         layout.addWidget(label)
         
-        info_label = QLabel("distancediff圖表組件正在載入中...")
+        info_label = QLabel(tr('distancediff_chart_loading', '距離差圖表組件正在載入中...'))
         info_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(info_label)
         
@@ -455,31 +456,20 @@ class distancediffAnalysisModule(IAnalysisModule):
     def get_window_title(self, year: str = None, race: str = None, session: str = None, 
                         driver1: str = None, driver2: str = None, 
                         lap1: int = None, lap2: int = None) -> str:
-        """獲取視窗標題 - 包含車手和圈數資訊，與其他模組保持一致"""
+        """獲取視窗標題 - 統一格式，不包含車手和圈數資訊以保持模組兼容性"""
         # 如果提供了參數，使用傳入的參數；否則使用內部狀態
         use_year = year if year is not None else self.current_year
         use_race = race if race is not None else self.current_race
         use_session = session if session is not None else self.current_session
-        use_driver1 = driver1 if driver1 is not None else getattr(self, 'driver1', 'VER')
-        use_driver2 = driver2 if driver2 is not None else getattr(self, 'driver2', 'LEC')
-        use_lap1 = lap1 if lap1 is not None else getattr(self, 'lap1', 1)
-        use_lap2 = lap2 if lap2 is not None else getattr(self, 'lap2', 1)
         
-        # 生成與其他模組一致的標題格式
-        if use_driver2 and use_driver2 != use_driver1:
-            # 雙車手模式
-            title = f"📏 累積距離差分析 - {use_driver1} vs {use_driver2} (第{use_lap1}圈 vs 第{use_lap2}圈) - {use_year} {use_race} {use_session}"
-        else:
-            # 單車手模式
-            title = f"📏 累積距離差分析 - {use_driver1} (第{use_lap1}圈) - {use_year} {use_race} {use_session}"
+        # 使用統一的簡潔標題格式，與其他模組保持一致
+        title = f"{tr('distancediff_window_title', '📏 累積距離差分析')}_{use_year}_{use_race}_{use_session}"
         
         print(f"[distancediff_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
         print(f"[distancediff_TITLE_DEBUG]   📊 參數詳情:")
         print(f"[distancediff_TITLE_DEBUG]     - 年份: {use_year}")
         print(f"[distancediff_TITLE_DEBUG]     - 賽事: {use_race}")
         print(f"[distancediff_TITLE_DEBUG]     - 賽段: {use_session}")
-        print(f"[distancediff_TITLE_DEBUG]     - 車手1: {use_driver1} (第{use_lap1}圈)")
-        print(f"[distancediff_TITLE_DEBUG]     - 車手2: {use_driver2} (第{use_lap2}圈)")
         return title
     
     def update_window_title(self) -> None:
@@ -1058,12 +1048,12 @@ class distancediffAnalysisModule(IAnalysisModule):
     @property
     def display_name(self) -> str:
         """顯示名稱"""
-        return "distancediff分析"
+        return tr("distancediff_analysis", "距離差異分析")
 
     @property
     def description(self) -> str:
         """模組描述"""
-        return "F1賽車distancediff轉速對比分析工具"
+        return tr("distancediff_analysis_description", "F1賽車距離差異對比分析工具")
 
     @property
     def version(self) -> str:
@@ -1118,7 +1108,7 @@ class distancediffAnalysisModule(IAnalysisModule):
                 self.distancediff_chart_widget.clear_chart()
             
             if self.status_label:
-                self.status_label.setText("已清除")
+                self.status_label.setText(tr('cleared', '已清除'))
             
             if self.progress_bar:
                 self.progress_bar.setVisible(False)

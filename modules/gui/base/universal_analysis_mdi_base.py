@@ -1098,7 +1098,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'laptime',
     AnalysisMDIConfig(
         analysis_type='laptime',
-        display_name='詳細圈速分析',
+        display_name=tr('detailed_lap_analysis', 'Detailed Lap Analysis'),
         default_size=(1200, 800),
         requires_driver_params=True,
         requires_lap_params=False,

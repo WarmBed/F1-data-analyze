@@ -1883,3 +1883,434 @@ cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (un
 2025-10-02 19:37:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
 2025-10-02 19:37:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
 2025-10-02 23:43:57 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:47 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:15:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:09 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [ERROR] 單車手圈速分析失敗: CLI_modules.cli.analyzer.single_driver_laptime_analysis.SingleDriverLaptimeAnalysis.analyze_lap_times() got multiple values for keyword argument 'driver'
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:10 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:14 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:14 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': "車手對比分析失敗: No module named 'modules.base'", 'function_id': '13'}}
+2025-10-03 02:16:14 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-03 02:16:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:33 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [ERROR] 單車手圈速分析失敗: CLI_modules.cli.analyzer.single_driver_laptime_analysis.SingleDriverLaptimeAnalysis.analyze_lap_times() got multiple values for keyword argument 'driver'
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:35 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:36 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: No module named 'modules.base'
+2025-10-03 02:16:36 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': "車手對比分析失敗: No module named 'modules.base'", 'function_id': '13'}}
+2025-10-03 02:16:36 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-03 02:18:07 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-03 02:18:08 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-03 02:18:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:22 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:19:22 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:31 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:32 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:19:34 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:25:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:41:06 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:52:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:52:04 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:13 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:17 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:18 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:42 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/sessions?year=2025
+2025-10-03 02:56:42 | WARNING | f1.console | [WARNING]  未找到對應的 OpenF1 session，將只使用 FastF1 資料
+2025-10-03 02:56:42 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/sessions?year=2025
+2025-10-03 02:56:42 | WARNING | f1.console | [WARNING]  未找到對應的 OpenF1 session，將只使用 FastF1 資料
+2025-10-03 02:56:42 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/sessions?year=2025
+2025-10-03 02:56:42 | WARNING | f1.console | [WARNING]  未找到對應的 OpenF1 session，將只使用 FastF1 資料
+2025-10-03 02:56:42 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/sessions?year=2025
+2025-10-03 02:56:42 | WARNING | f1.console | [WARNING]  未找到對應的 OpenF1 session，將只使用 FastF1 資料
+2025-10-03 02:56:42 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/sessions?year=2025
+2025-10-03 02:56:42 | WARNING | f1.console | [WARNING]  未找到對應的 OpenF1 session，將只使用 FastF1 資料
+2025-10-03 02:56:43 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:56:43 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:43 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-03 02:56:43 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:43 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:43 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:44 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:44 | ERROR | f1.console | [ERROR] API 請求失敗: 429 Client Error: Too Many Requests for url: https://api.openf1.org/v1/drivers?session_key=10006
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:44 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:45 | ERROR | f1.console | [ERROR] 分析所有事件詳細列表時發生錯誤: unsupported operand type(s) for //: 'NoneType' and 'int'
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING] 基於位置計算距離
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:45 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:45 | ERROR | f1.console | +---------------+------+-------------------+
+|    旗幟類型   | 數量 |        說明       |
++---------------+------+-------------------+
+|  🟡 黃旗事件  |  0   |    黃旗警示事件   |
+|  🔴 紅旗事件  |  0   |    比賽中止事件   |
+| 🚗 安全車事件 |  0   |   安全車部署事件  |
+|  🟢 綠旗事件  |  0   | 比賽恢復/坑道開啟 |
+|  🔵 藍旗事件  |  0   |      讓道指示     |
+| 🏁 方格旗事件 |  0   |      比賽結束     |
++---------------+------+-------------------+
+2025-10-03 02:56:45 | ERROR | f1.console | ❌ JSON保存失敗: Object of type set is not JSON serializable
+2025-10-03 02:56:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:56:48 | ERROR | f1.console | [WARNING]  快取載入失敗，將重新載入: 'laps'
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOR  | Gabriel BORTOLETO         | # 5 | Kick Sauber
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAD  | Isack HADJAR              | # 6 | Racing Bulls
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - DOO  | Jack DOOHAN               | # 7 | Alpine
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ANT  | Kimi ANTONELLI            | #12 | Mercedes
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | Red Bull Racing
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Kick Sauber
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LAW  | Liam LAWSON               | #30 | Racing Bulls
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Haas F1 Team
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Ferrari
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Williams
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-03 02:56:52 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BEA  | Oliver BEARMAN            | #87 | Haas F1 Team
+2025-10-03 02:56:52 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-03 02:56:52 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-03 02:56:53 | ERROR | f1.console | ❌ JSON保存失敗: Object of type set is not JSON serializable
+2025-10-03 02:58:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:11 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:11 | ERROR | f1.console | ❌ 導入 core 模組失敗: No module named 'core.json_generator'
+2025-10-03 02:58:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:12 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:14 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 02:58:16 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:48 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-03 03:10:49 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)

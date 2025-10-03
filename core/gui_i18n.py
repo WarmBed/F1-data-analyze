@@ -106,6 +106,48 @@ class GuiTranslator:
             'telemetry_rpm': {'zh': '轉速 (RPM)', 'en': 'RPM', 'ja': 'RPM'},
             'telemetry_steering': {'zh': '方向盤轉角 (Steering)', 'en': 'Steering Angle', 'ja': 'Steering Angle'},
             
+            # brake 分析專用
+            'brake_chart_title': {'zh': '🔄 煞車分析圖表', 'en': '🔄 Brake Analysis Chart', 'ja': '🔄 ブレーキ分析チャート'},
+            'brake_chart_loading': {'zh': '煞車圖表組件正在載入中...', 'en': 'Brake chart component loading...', 'ja': 'ブレーキチャートコンポーネント読み込み中...'},
+            'brake_value': {'zh': '煞車', 'en': 'brake', 'ja': 'ブレーキ'},
+            
+            # throttle 分析專用
+            'throttle_chart_title': {'zh': '🔄 油門分析圖表', 'en': '🔄 Throttle Analysis Chart', 'ja': '🔄 スロットル分析チャート'},
+            'throttle_chart_loading': {'zh': '油門圖表組件正在載入中...', 'en': 'Throttle chart component loading...', 'ja': 'スロットルチャートコンポーネント読み込み中...'},
+            'throttle_value': {'zh': '油門', 'en': 'throttle', 'ja': 'スロットル'},
+            
+            # RPM 分析專用
+            'rpm_chart_title': {'zh': '🔄 RPM分析圖表', 'en': '🔄 RPM Analysis Chart', 'ja': '🔄 RPM分析チャート'},
+            'rpm_chart_loading': {'zh': 'RPM圖表組件正在載入中...', 'en': 'RPM chart component loading...', 'ja': 'RPMチャートコンポーネント読み込み中...'},
+            'rpm_value': {'zh': 'RPM', 'en': 'RPM', 'ja': 'RPM'},
+            
+            # gear 分析專用
+            'gear_chart_title': {'zh': '🔄 檔位分析圖表', 'en': '🔄 Gear Analysis Chart', 'ja': '🔄 ギア分析チャート'},
+            'gear_chart_loading': {'zh': '檔位圖表組件正在載入中...', 'en': 'Gear chart component loading...', 'ja': 'ギアチャートコンポーネント読み込み中...'},
+            'gear_value': {'zh': '檔位', 'en': 'gear', 'ja': 'ギア'},
+            
+            # acceleration 分析專用
+            'acceleration_chart_title': {'zh': '🔄 加速度分析圖表', 'en': '🔄 Acceleration Analysis Chart', 'ja': '🔄 加速度分析チャート'},
+            'acceleration_chart_loading': {'zh': '加速度圖表組件正在載入中...', 'en': 'Acceleration chart component loading...', 'ja': '加速度チャートコンポーネント読み込み中...'},
+            'acceleration_value': {'zh': '加速度', 'en': 'acceleration', 'ja': '加速度'},
+            'telemetry_acceleration': {'zh': '加速度 (m/s²)', 'en': 'Acceleration (m/s²)', 'ja': '加速度 (m/s²)'},
+            
+            # speeddiff 分析專用
+            'speeddiff_chart_title': {'zh': '🔄 速度差分析圖表', 'en': '🔄 Speed Diff Analysis Chart', 'ja': '🔄 速度差分析チャート'},
+            'speeddiff_chart_loading': {'zh': '速度差圖表組件正在載入中...', 'en': 'Speed diff chart component loading...', 'ja': '速度差チャートコンポーネント読み込み中...'},
+            'speeddiff_value': {'zh': '速度差', 'en': 'speed diff', 'ja': '速度差'},
+            'loading_speeddiff_data': {'zh': '開始載入速度差數據...', 'en': 'Loading speed diff data...', 'ja': '速度差データを読み込み中...'},
+            
+            # distancediff 分析專用
+            'distancediff_chart_title': {'zh': '🔄 距離差分析圖表', 'en': '🔄 Distance Diff Analysis Chart', 'ja': '🔄 距離差分析チャート'},
+            'distancediff_chart_loading': {'zh': '距離差圖表組件正在載入中...', 'en': 'Distance diff chart component loading...', 'ja': '距離差チャートコンポーネント読み込み中...'},
+            'distancediff_value': {'zh': '距離差', 'en': 'distance diff', 'ja': '距離差'},
+            'loading_distancediff_data': {'zh': '開始載入距離差數據...', 'en': 'Loading distance diff data...', 'ja': '距離差データを読み込み中...'},
+            'loading_acceleration_data': {'zh': '開始載入加速度數據...', 'en': 'Loading acceleration data...', 'ja': '加速度データを読み込み中...'},
+            
+            # 通用狀態
+            'cleared': {'zh': '已清除', 'en': 'Cleared', 'ja': 'クリア済み'},
+            
             # === 新增：QMessageBox 對話框翻譯鍵 ===
             # 關閉確認對話框
             'confirm_exit_title': {'zh': '確認退出', 'en': 'Confirm Exit', 'ja': '終了確認'},
@@ -148,11 +190,130 @@ class GuiTranslator:
             'tire_analysis': {'zh': '輪胎分析', 'en': 'Tire Analysis', 'ja': 'タイヤ分析'},
             'accident_analysis': {'zh': '事故分析', 'en': 'Accident Analysis', 'ja': '事故分析'},
             'rain_analysis': {'zh': '雨況分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
+            
+            # 事故分析模組
+            'waiting_data_load': {'zh': '等待數據載入...', 'en': 'Waiting for data loading...', 'ja': 'データ読み込み待ち...'},
+            'data_load_complete': {'zh': '✅ 數據載入完成', 'en': '✅ Data loaded successfully', 'ja': '✅ データ読み込み完了'},
+            'data_cleared': {'zh': '數據已清除', 'en': 'Data cleared', 'ja': 'データがクリアされました'},
+            'incident_type': {'zh': '事故類型', 'en': 'Incident Type', 'ja': '事故タイプ'},
+            'count': {'zh': '次數', 'en': 'Count', 'ja': '回数'},
+            'accident_comprehensive_analysis': {'zh': '🔥 事故綜合分析', 'en': '🔥 Accident Comprehensive Analysis', 'ja': '🔥 事故総合分析'},
+            'accident_comprehensive_analysis_title': {'zh': '事故綜合分析', 'en': 'Accident Comprehensive Analysis', 'ja': '事故総合分析'},
+            'please_select_params': {'zh': '請選擇年份、賽事和賽段', 'en': 'Please select year, race and session', 'ja': '年、レース、セッションを選択してください'},
+            
+            # 右鍵選單
+            'execute_analysis': {'zh': '執行分析', 'en': 'Execute Analysis', 'ja': '分析を実行'},
+            'export_data': {'zh': '匯出數據', 'en': 'Export Data', 'ja': 'データをエクスポート'},
+            'help': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
+            'batch_execute_analysis': {'zh': '批量執行分析', 'en': 'Batch Execute Analysis', 'ja': 'バッチ分析実行'},
+            'batch_export_data': {'zh': '批量匯出數據', 'en': 'Batch Export Data', 'ja': 'バッチデータエクスポート'},
+            'modules': {'zh': '個模組', 'en': 'modules', 'ja': 'モジュール'},
+            'selected_modules': {'zh': '已選擇的模組', 'en': 'Selected Modules', 'ja': '選択されたモジュール'},
+            'items': {'zh': '個', 'en': 'items', 'ja': '個'},
             'track_analysis': {'zh': '賽道分析', 'en': 'Track Analysis', 'ja': 'トラック分析'},
             'telemetry_analysis': {'zh': '遙測分析', 'en': 'Telemetry Analysis', 'ja': 'テレメトリー分析'},
             'lap_analysis': {'zh': '圈速分析', 'en': 'Lap Analysis', 'ja': 'ラップ分析'},
             'driver_analysis': {'zh': '車手分析', 'en': 'Driver Analysis', 'ja': 'ドライバー分析'},
             'pitstop_analysis': {'zh': '進站分析', 'en': 'Pitstop Analysis', 'ja': 'ピットストップ分析'},
+            
+            # 圈速分析子模組
+            'speed_analysis': {'zh': '速度分析', 'en': 'Speed Analysis', 'ja': '速度分析'},
+            'speed_analysis_description': {
+                'zh': 'F1賽車速度分析模組，支援雙車手圈速對比',
+                'en': 'F1 racing speed analysis with dual driver comparison',
+                'ja': 'F1レーシング速度分析、2ドライバー比較対応'
+            },
+            'throttle_analysis': {'zh': '油門分析', 'en': 'Throttle Analysis', 'ja': 'スロットル分析'},
+            'throttle_analysis_description': {
+                'zh': 'F1賽車油門分析模組，支援雙車手油門對比',
+                'en': 'F1 racing throttle analysis with dual driver comparison',
+                'ja': 'F1レーシングスロットル分析、2ドライバー比較対応'
+            },
+            'brake_analysis': {'zh': '煞車分析', 'en': 'Brake Analysis', 'ja': 'ブレーキ分析'},
+            'brake_analysis_description': {
+                'zh': 'F1賽車煞車分析模組，支援雙車手煞車對比',
+                'en': 'F1 racing brake analysis with dual driver comparison',
+                'ja': 'F1レーシングブレーキ分析、2ドライバー比較対応'
+            },
+            'rpm_analysis': {'zh': 'RPM分析', 'en': 'RPM Analysis', 'ja': 'RPM分析'},
+            'rpm_analysis_description': {
+                'zh': 'F1賽車RPM轉速對比分析工具',
+                'en': 'F1 racing RPM analysis tool',
+                'ja': 'F1レーシングRPM分析ツール'
+            },
+            'gear_analysis': {'zh': '檔位分析', 'en': 'Gear Analysis', 'ja': 'ギア分析'},
+            'gear_analysis_description': {
+                'zh': 'F1賽車檔位分析模組，支援雙車手檔位對比',
+                'en': 'F1 racing gear analysis with dual driver comparison',
+                'ja': 'F1レーシングギア分析、2ドライバー比較対応'
+            },
+            'speeddiff_analysis': {'zh': '速度差異分析', 'en': 'Speed Diff Analysis', 'ja': '速度差分析'},
+            'speeddiff_analysis_description': {
+                'zh': 'F1賽車速度差異對比分析工具',
+                'en': 'F1 racing speed difference analysis tool',
+                'ja': 'F1レーシング速度差分析ツール'
+            },
+            'distancediff_analysis': {'zh': '距離差異分析', 'en': 'Distance Diff Analysis', 'ja': '距離差分析'},
+            'distancediff_analysis_description': {
+                'zh': 'F1賽車距離差異對比分析工具',
+                'en': 'F1 racing distance difference analysis tool',
+                'ja': 'F1レーシング距離差分析ツール'
+            },
+            'acceleration_analysis': {'zh': '加速度分析', 'en': 'Acceleration Analysis', 'ja': '加速度分析'},
+            'acceleration_analysis_description': {
+                'zh': 'F1賽車加速度分析模組',
+                'en': 'F1 racing acceleration analysis module',
+                'ja': 'F1レーシング加速度分析モジュール'
+            },
+            
+            # 統計面板通用標籤
+            'detailed_statistics': {'zh': '詳細統計信息', 'en': 'Detailed Statistics', 'ja': '詳細統計情報'},
+            'lap_time': {'zh': '圈時間', 'en': 'Lap Time', 'ja': 'ラップタイム'},
+            'tire_compound': {'zh': '輪胎配方', 'en': 'Tire Compound', 'ja': 'タイヤコンパウンド'},
+            'lap_number_short': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
+            'lap_number_label': {'zh': '🔄 圈數:', 'en': '🔄 Lap:', 'ja': '🔄 ラップ:'},
+            
+            # 速度差分析專用標籤
+            'speed_diff_kmh': {'zh': '速度差距 (km/h)', 'en': 'Speed Diff (km/h)', 'ja': '速度差 (km/h)'},
+            'leading': {'zh': '領先', 'en': 'Leading', 'ja': '先行'},
+            'zero_line': {'zh': '零點線', 'en': 'Zero Line', 'ja': 'ゼロライン'},
+            'speeddiff_window_title': {'zh': '⚡ 速度差分析', 'en': '⚡ Speed Diff Analysis', 'ja': '⚡ 速度差分析'},
+            
+            # 累積距離差分析專用標籤
+            'distance_diff_m': {'zh': '距離差距 (m)', 'en': 'Distance Diff (m)', 'ja': '距離差 (m)'},
+            'distancediff_window_title': {'zh': '📏 累積距離差分析', 'en': '📏 Distance Diff Analysis', 'ja': '📏 距離差分析'},
+            
+            # 表格標題
+            'item': {'zh': '項目', 'en': 'Item', 'ja': '項目'},
+            'driver1': {'zh': '車手1', 'en': 'Driver 1', 'ja': 'ドライバー1'},
+            'driver2': {'zh': '車手2', 'en': 'Driver 2', 'ja': 'ドライバー2'},
+            'difference': {'zh': '差值', 'en': 'Difference', 'ja': '差分'},
+            
+            # 軸標籤和單位
+            'distance_m': {'zh': '距離 (m)', 'en': 'Distance (m)', 'ja': '距離 (m)'},
+            'distance_label': {'zh': '距離', 'en': 'Distance', 'ja': '距離'},
+            'linkage_distance': {'zh': '連動距離', 'en': 'Linkage Distance', 'ja': '連動距離'},
+            
+            # 連動系統專用翻譯
+            'linkage_button': {'zh': '🔗 連動', 'en': '🔗 Link', 'ja': '🔗 連動'},
+            'master_linkage_button': {'zh': '🔗 主連動', 'en': '🔗 Master Link', 'ja': '🔗 マスター連動'},
+            'linkage_enabled': {'zh': '連動已啟用', 'en': 'Linkage Enabled', 'ja': '連動有効'},
+            'linkage_disabled': {'zh': '連動已停用', 'en': 'Linkage Disabled', 'ja': '連動無効'},
+            'master_linkage_enabled': {'zh': '主連動已啟用', 'en': 'Master Linkage Enabled', 'ja': 'マスター連動有効'},
+            'master_linkage_disabled': {'zh': '主連動已停用', 'en': 'Master Linkage Disabled', 'ja': 'マスター連動無効'},
+            'master_linkage_enabled_individual_disabled': {'zh': '主連動已啟用，個別連動已停用', 'en': 'Master linkage enabled, individual linkage disabled', 'ja': 'マスター連動有効、個別連動無効'},
+            'clear_all_linkage_marks': {'zh': '清除所有連動標記', 'en': 'Clear all linkage marks', 'ja': 'すべての連動マークをクリア'},
+            'enabled_status': {'zh': '啟用', 'en': 'Enabled', 'ja': '有効'},
+            'disabled_status': {'zh': '停用', 'en': 'Disabled', 'ja': '無効'},
+            
+            # 狀態訊息
+            'na': {'zh': 'N/A', 'en': 'N/A', 'ja': 'N/A'},
+            'error': {'zh': '錯誤', 'en': 'Error', 'ja': 'エラー'},
+            'loading_speed_data': {'zh': '開始載入速度數據...', 'en': 'Loading speed data...', 'ja': '速度データを読み込み中...'},
+            'loading_throttle_data': {'zh': '開始載入油門數據...', 'en': 'Loading throttle data...', 'ja': 'スロットルデータを読み込み中...'},
+            'loading_brake_data': {'zh': '開始載入煞車數據...', 'en': 'Loading brake data...', 'ja': 'ブレーキデータを読み込み中...'},
+            'loading_rpm_data': {'zh': '開始載入RPM數據...', 'en': 'Loading RPM data...', 'ja': 'RPMデータを読み込み中...'},
+            'loading_gear_data': {'zh': '開始載入檔位數據...', 'en': 'Loading gear data...', 'ja': 'ギアデータを読み込み中...'},
             'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': 'Detailed Lap Analysis'},
             'driver_analysis': {'zh': '車手分析', 'en': 'Driver Analysis', 'ja': 'ドライバー分析'},
             'driver_ranking': {'zh': '車手排名', 'en': 'Driver Ranking', 'ja': 'Driver Ranking'},
@@ -177,8 +338,8 @@ class GuiTranslator:
             'exit': {'zh': '結束', 'en': 'Exit', 'ja': '終了'},
             
             # Analysis Menu 項目
-            'rain_analysis': {'zh': '[RAIN] 降雨分析', 'en': '[RAIN] Rain Analysis', 'ja': '[RAIN] 降雨分析'},
-            'track_analysis': {'zh': '[FINISH] 賽道分析', 'en': '[FINISH] Track Analysis', 'ja': '[FINISH] トラック分析'},
+            'rain_analysis': {'zh': '降雨分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
+            'track_analysis': {'zh': '賽道分析', 'en': 'Track Analysis', 'ja': 'トラック分析'},
             'race_overview': {'zh': '🏎️ 賽事概覽', 'en': '🏎️ Race Overview', 'ja': '🏎️ レース概要'},
             'telemetry_analysis': {'zh': '遙測分析', 'en': 'Telemetry Analysis', 'ja': 'テレメトリー分析'},
             'telemetry_comparison': {'zh': '遙測對比', 'en': 'Telemetry Comparison', 'ja': 'テレメトリー比較'},
@@ -213,7 +374,7 @@ class GuiTranslator:
             'close_tooltip': {'zh': '關閉', 'en': 'Close', 'ja': '閉じる'},
             
             # DraggableTitleBar 右鍵選單
-            'context_menu_restore': {'zh': '[REFRESH] 恢復正常大小', 'en': '[REFRESH] Restore Normal Size', 'ja': '[REFRESH] 通常サイズに戻す'},
+            'context_menu_restore': {'zh': '恢復正常大小', 'en': 'Restore Normal Size', 'ja': '通常サイズに戻す'},
             'context_menu_maximize': {'zh': '🔳 最大化', 'en': '🔳 Maximize', 'ja': '🔳 最大化'},
             
             # DraggableTitleBar 狀態訊息
@@ -239,7 +400,7 @@ class GuiTranslator:
             'analysis_modules': {'zh': '分析模組', 'en': 'Analysis Modules', 'ja': '分析モジュール'},
             
             # 功能樹項目
-            'single_race_analysis': {'zh': '[TOOL] 單場賽事分析', 'en': '[TOOL] Single Race Analysis', 'ja': '[TOOL] 単一レース分析'},
+            'single_race_analysis': {'zh': '單場賽事分析', 'en': 'Single Race Analysis', 'ja': '単一レース分析'},
             'single_race_driver_analysis': {'zh': '🚗 單場賽事車手分析', 'en': '🚗 Single Race Driver Analysis', 'ja': '🚗 単一レースドライバー分析'},
             'pitstop_analysis': {'zh': '進站分析', 'en': 'Pitstop Analysis', 'ja': 'ピットストップ分析'},
             'driver_ranking': {'zh': '車手排名', 'en': 'Driver Ranking', 'ja': 'ドライバーランキング'},
@@ -247,7 +408,7 @@ class GuiTranslator:
             'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
             
             # 歡迎頁面
-            'main_title': {'zh': '[FINISH] F1T 專業賽車分析工作站', 'en': '[FINISH] F1T Professional Racing Analysis Workstation', 'ja': '[FINISH] F1T Professional Racing Analysis Workstation'},
+            'main_title': {'zh': 'F1T 專業賽車分析工作站', 'en': 'F1T Professional Racing Analysis Workstation', 'ja': 'F1T Professional Racing Analysis Workstation'},
             'subtitle': {'zh': '專業級 F1 數據分析平台', 'en': 'Professional F1 Data Analysis Platform', 'ja': 'Professional F1 Data Analysis Platform'},
             'welcome_info': {'zh': '💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 13.0', 'en': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0', 'ja': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0'},
             
@@ -460,6 +621,31 @@ class GuiTranslator:
             'main_window_title': {'zh': 'F1T 專業賽車分析工作站 v8.0', 'en': 'F1T Professional Racing Analysis Workstation v8.0', 'ja': 'F1Tプロフェッショナルレーシング分析ワークステーション v8.0'},
             'ready': {'zh': '就緒', 'en': 'Ready', 'ja': '準備完了'},
             'close_all_windows': {'zh': '關閉所有視窗', 'en': 'Close All Windows', 'ja': 'すべてのウィンドウを閉じる'},
+            'show_all_windows': {'zh': '顯示所有視窗', 'en': 'Show All Windows', 'ja': 'すべてのウィンドウを表示'},
+            'lap_linkage': {'zh': '圈速連動', 'en': 'Lap Linkage', 'ja': 'ラップ連動'},
+            
+            # 事故分析分頁
+            'accident_statistics_overview': {'zh': '統計總覽', 'en': 'Statistics Overview', 'ja': '統計概要'},
+            'accident_distribution_analysis': {'zh': '分佈分析', 'en': 'Distribution Analysis', 'ja': '分布分析'},
+            'accident_severity_level': {'zh': '嚴重程度', 'en': 'Severity Level', 'ja': '重大度'},
+            'accident_key_events': {'zh': '關鍵事件', 'en': 'Key Events', 'ja': 'キーイベント'},
+            'accident_detailed_list': {'zh': '詳細列表', 'en': 'Detailed List', 'ja': '詳細リスト'},
+            'under_development': {'zh': '待開發', 'en': 'Under Development', 'ja': '開発中'},
+            
+            # 圈速分析模組
+            'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
+            'lap_analysis': {'zh': '圈速分析', 'en': 'Lap Analysis', 'ja': 'ラップ分析'},
+            
+            # 按鈕文字
+            'clear_button': {'zh': '清除', 'en': 'Clear', 'ja': 'クリア'},
+            'export_button': {'zh': '匯出', 'en': 'Export', 'ja': 'エクスポート'},
+            'analysis_workspace': {'zh': '分析工作區', 'en': 'Analysis Workspace', 'ja': '分析ワークスペース'},
+            
+            # Rain Analysis 座標軸
+            'lap_number_rain': {'zh': '圈數', 'en': 'Lap Number', 'ja': 'ラップ数'},
+            'temperature_celsius': {'zh': '溫度 (°C)', 'en': 'Temperature (°C)', 'ja': '温度 (°C)'},
+            'rainfall': {'zh': '降雨', 'en': 'Rainfall', 'ja': '降雨量'},
+            'air_temperature': {'zh': '氣溫', 'en': 'Air Temperature', 'ja': '気温'},
             
             # 右鍵選單視窗控制
             'cascade_windows': {'zh': '層疊視窗', 'en': 'Cascade Windows', 'ja': 'ウィンドウを重ねて表示'},

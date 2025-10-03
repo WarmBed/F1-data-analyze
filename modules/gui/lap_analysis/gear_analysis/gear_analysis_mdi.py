@@ -22,6 +22,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
+from core.gui_i18n import tr
 
 class GearDataManager(QObject):
     """檔位數據管理器 - 負責JSON緩存和CLI備援"""
@@ -447,7 +448,7 @@ class GearAnalysisModule(IAnalysisModule):
         use_session = session if session is not None else self.current_session
         
         # 使用統一的簡潔標題格式，與其他模組保持一致
-        title = f"gear分析_{use_year}_{use_race}_{use_session}"
+        title = f"{tr('gear_analysis', '檔位分析')}_{use_year}_{use_race}_{use_session}"
         
         print(f"[gear_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
         print(f"[gear_TITLE_DEBUG]   📊 參數詳情:")
@@ -1021,12 +1022,12 @@ class GearAnalysisModule(IAnalysisModule):
     @property
     def display_name(self) -> str:
         """顯示名稱"""
-        return "gear分析"
+        return tr("gear_analysis", "Gear分析")
 
     @property
     def description(self) -> str:
         """模組描述"""
-        return "F1賽車gear轉速對比分析工具"
+        return tr("gear_analysis_description", "F1賽車Gear檔位對比分析工具")
 
     @property
     def version(self) -> str:

@@ -20,6 +20,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
 
@@ -411,12 +414,12 @@ class BrakeAnalysisModule(IAnalysisModule):
         widget = QWidget()
         layout = QVBoxLayout(widget)
         
-        label = QLabel("🔄 brake分析圖表")
+        label = QLabel(tr('brake_chart_title', '🔄 煞車分析圖表'))
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet("font-size: 16pt; padding: 20px;")
         layout.addWidget(label)
         
-        info_label = QLabel("brake圖表組件正在載入中...")
+        info_label = QLabel(tr('brake_chart_loading', '煞車圖表組件正在載入中...'))
         info_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(info_label)
         
@@ -447,7 +450,7 @@ class BrakeAnalysisModule(IAnalysisModule):
         use_session = session if session is not None else self.current_session
         
         # 使用統一的簡潔標題格式，與其他模組保持一致
-        title = f"brake分析_{use_year}_{use_race}_{use_session}"
+        title = f"{tr('brake_analysis', '煞車分析')}_{use_year}_{use_race}_{use_session}"
         
         print(f"[brake_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
         print(f"[brake_TITLE_DEBUG]   📊 參數詳情:")
@@ -1021,12 +1024,12 @@ class BrakeAnalysisModule(IAnalysisModule):
     @property
     def display_name(self) -> str:
         """顯示名稱"""
-        return "brake分析"
+        return tr("brake_analysis", "煞車分析")
 
     @property
     def description(self) -> str:
         """模組描述"""
-        return "F1賽車brake轉速對比分析工具"
+        return tr("brake_analysis_description", "F1賽車煞車分析模組，支援雙車手煞車對比")
 
     @property
     def version(self) -> str:
@@ -1081,7 +1084,7 @@ class BrakeAnalysisModule(IAnalysisModule):
                 self.brake_chart_widget.clear_chart()
             
             if self.status_label:
-                self.status_label.setText("已清除")
+                self.status_label.setText(tr('cleared', '已清除'))
             
             if self.progress_bar:
                 self.progress_bar.setVisible(False)

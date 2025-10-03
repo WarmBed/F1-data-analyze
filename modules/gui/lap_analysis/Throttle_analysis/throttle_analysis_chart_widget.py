@@ -16,6 +16,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -50,8 +53,8 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         self.is_single_driver = False  # 新增：單車手模式標記 - 與油門分析一致
         
         # 顏色設定
-        self.driver1_color = QColor(0, 0, 255)  # 藍色 - 車手1
-        self.driver2_color = QColor(255, 0, 0)  # 紅色 - 車手2
+        self.driver1_color = QColor(0, 100, 200)  # 柔和藍色 - 車手1
+        self.driver2_color = QColor(200, 50, 50)  # 柔和紅色 - 車手2
         self.grid_color = QColor(200, 200, 200)
         self.axis_color = QColor(50, 50, 50)
         self.sector_color = QColor(100, 100, 100, 100)  # 半透明灰色
@@ -277,16 +280,16 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 放在"0"刻度左邊
-        x_title_x = chart_rect.left() - 60  # 0刻度左邊60像素
-        x_title_y = chart_rect.bottom() + 5   # X軸下方5像素（調整以適應新的下邊距20px）
-        painter.drawText(x_title_x, x_title_y, 55, 20, Qt.AlignRight, "距離 (m)")
+        # X軸標題 - 置中顯示在圖表下方
+        x_title_width = 100
+        x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
+        x_title_y = chart_rect.bottom() + 5
+        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
         
         # Y軸標題
         painter.save()
         painter.translate(20, chart_rect.center().y())
         painter.rotate(-90)
-        from core.gui_i18n import tr
         painter.drawText(-50, -10, 100, 20, Qt.AlignCenter, tr('telemetry_throttle', 'Throttle (%)'))
         painter.restore()
         
@@ -479,7 +482,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"距離: {distance_value:.0f} m")
+            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手油門資訊
             for i, (driver_name, throttle, color) in enumerate(drivers_to_show):
@@ -535,7 +538,7 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         # 繪製距離資訊
         painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Microsoft YaHei", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"連動距離: {self.linkage_distance_value:.0f} m")
+        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的速度資訊
         if self.distance_data and self.driver1_throttle:
@@ -933,7 +936,7 @@ class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
         title_layout.setContentsMargins(0, 0, 0, 0)
         
         # 標題標籤
-        title_label = QLabel("詳細統計信息")
+        title_label = QLabel(tr("detailed_statistics", "詳細統計信息"))
         title_label.setStyleSheet("""
             QLabel {
                 font-weight: bold;
@@ -1003,7 +1006,7 @@ class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
         layout.setSpacing(15)
         
         # 圈時間資訊
-        self.lap_time_label = QLabel("⏱️ 圈時間: N/A")
+        self.lap_time_label = QLabel(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
         self.lap_time_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.lap_time_label)
         
@@ -1013,7 +1016,7 @@ class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
         layout.addWidget(separator1)
         
         # 輪胎配方資訊  
-        self.tyre_compound_label = QLabel("🛞 輪胎配方: N/A")
+        self.tyre_compound_label = QLabel(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
         self.tyre_compound_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.tyre_compound_label)
         
@@ -1029,7 +1032,7 @@ class ThrottleAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
         tyre_life_layout.setSpacing(5)
         
         # 標籤
-        tyre_life_title = QLabel("🔄 圈數:")
+        tyre_life_title = QLabel(f"🔄 {tr('lap_number_short', '圈數')}:")
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         

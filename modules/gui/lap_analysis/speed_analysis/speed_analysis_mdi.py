@@ -20,6 +20,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
 
@@ -733,7 +736,7 @@ class SpeedAnalysisModule(IAnalysisModule):
         use_session = session if session is not None else self.current_session
         
         # 使用統一的簡潔標題格式，與其他模組保持一致
-        title = f"速度分析_{use_year}_{use_race}_{use_session}"
+        title = f"{tr('speed_analysis', '速度分析')}_{use_year}_{use_race}_{use_session}"
         return title
     
     def update_window_title(self) -> None:
@@ -786,12 +789,12 @@ class SpeedAnalysisModule(IAnalysisModule):
     @property
     def display_name(self) -> str:
         """顯示名稱"""
-        return "速度分析"
+        return tr("speed_analysis", "速度分析")
     
     @property
     def description(self) -> str:
         """模組描述"""
-        return "F1賽車速度分析模組，支援雙車手圈速對比"
+        return tr("speed_analysis_description", "F1賽車速度分析模組，支援雙車手圈速對比")
     
     @property
     def version(self) -> str:
@@ -812,7 +815,7 @@ class SpeedAnalysisModule(IAnalysisModule):
     
     def get_title(self) -> str:
         """返回模組標題 - 實現抽象方法"""
-        return f"速度分析 - {self.current_year} {self.current_race} {self.current_session}"
+        return f"{tr('speed_analysis', '速度分析')} - {self.current_year} {self.current_race} {self.current_session}"
     
     def supports_sync(self) -> bool:
         """是否支援主程式同步 - 實現抽象方法"""
