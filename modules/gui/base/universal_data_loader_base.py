@@ -91,113 +91,20 @@ class CliAnalysisWorker(QThread):
         self.should_stop = False
         
     def run(self):
-        """執行 CLI 分析"""
-        try:
-            # 構建CLI命令
-            cmd = [
-                sys.executable,
-                "f1_analysis_modular_main.py",
-                "-f", str(self.force_mode),  # 使用指定的 force_mode
-                "-y", str(self.year),
-                "-r", self.race,
-                "-s", self.session
-            ]
-            
-            print(f"[CLI_WORKER] 準備執行命令: {' '.join(cmd)}")
-            
-            self.progress_updated.emit(f"啟動 CLI 分析: {self.year} {self.race} {self.session}")
-            
-            # 設置環境變數以確保正確的編碼
-            env = os.environ.copy()
-            env['PYTHONIOENCODING'] = 'utf-8'
-            env['PYTHONLEGACYWINDOWSFS'] = '0'
-            
-            # 嘗試不同編碼方案來啟動進程
-            encodings_to_try = ['utf-8', 'cp950', 'gbk', 'big5']
-            
-            for encoding in encodings_to_try:
-                try:
-                    print(f"[CLI_WORKER] 嘗試使用編碼: {encoding}")
-                    self.process = subprocess.Popen(
-                        cmd,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding=encoding,
-                        errors='replace',  # 遇到無法解碼的字符時替換為 ?
-                        env=env,  # 使用自定義環境變數
-                        cwd=os.getcwd(),
-                        bufsize=1,
-                        universal_newlines=True
-                    )
-                    print(f"[CLI_WORKER] 成功使用編碼: {encoding}")
-                    break
-                except Exception as e:
-                    print(f"[CLI_WORKER] 編碼 {encoding} 失敗: {str(e)}")
-                    if encoding == encodings_to_try[-1]:  # 最後一個編碼也失敗
-                        raise Exception(f"所有編碼方案都失敗: {str(e)}")
-            
-            print(f"[CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
-            self.progress_updated.emit(f"CLI 分析已啟動 (PID: {self.process.pid})")
-            
-            # 即時讀取輸出
-            while True:
-                if self.should_stop:
-                    if self.process:
-                        self.process.terminate()
-                    break
-                    
-                # 檢查進程是否完成
-                if self.process.poll() is not None:
-                    break
-                    
-                # 讀取輸出，處理編碼問題
-                try:
-                    output = self.process.stdout.readline()
-                    if output:
-                        self.output_received.emit(output.strip())
-                except UnicodeDecodeError as e:
-                    # 如果遇到編碼錯誤，記錄但不中斷
-                    self.output_received.emit(f"[編碼錯誤] 無法解碼部分輸出: {str(e)}")
-                    
-                # 短暫休息避免CPU占用過高
-                self.msleep(100)
-            
-            # 獲取最終結果
-            if not self.should_stop:
-                return_code = self.process.wait()
-                print(f"[CLI_WORKER] 進程結束，返回碼: {return_code}")
-                
-                if return_code == 0:
-                    print(f"[CLI_WORKER] CLI 分析成功完成")
-                    self.analysis_completed.emit(True, "CLI 分析成功完成")
-                else:
-                    print(f"[CLI_WORKER] CLI 分析失敗，返回碼: {return_code}")
-                    try:
-                        stderr_output = self.process.stderr.read()
-                        print(f"[CLI_WORKER] 錯誤輸出: {stderr_output}")
-                        self.analysis_completed.emit(False, f"CLI 分析失敗: {stderr_output}")
-                    except UnicodeDecodeError as e:
-                        print(f"[CLI_WORKER] 錯誤輸出編碼問題: {str(e)}")
-                        self.analysis_completed.emit(False, f"CLI 分析失敗 (編碼錯誤): {str(e)}")
-            else:
-                print(f"[CLI_WORKER] 分析被用戶取消")
-                self.analysis_completed.emit(False, "分析被用戶取消")
-                
-        except Exception as e:
-            self.analysis_completed.emit(False, f"CLI 分析錯誤: {str(e)}")
+        """
+        [已禁用] 執行 CLI 分析
+        
+        ⚠️ API-ONLY 模式: CliAnalysisWorker 已完全禁用
+        系統只允許通過 REST API 獲取數據
+        """
+        print("[CLI_WORKER] ⚠️  [API-ONLY] CliAnalysisWorker 已禁用")
+        print("[CLI_WORKER] 💡 提示: 請使用 API 或手動執行 CLI 獲取數據")
+        self.progress_updated.emit("⚠️ CLI 調用已禁用 - 請使用 API")
+        self.analysis_completed.emit(False, "API-ONLY 模式: CLI 調用已禁用")
     
     def stop(self):
         """停止分析"""
-        self.should_stop = True
-        if self.process and self.process.poll() is None:
-            try:
-                self.process.terminate()
-                # 等待進程結束，如果沒有回應則強制終止
-                self.process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self.process.kill()
-                self.process.wait()
+        pass  # CliAnalysisWorker 已禁用,無需執行任何操作
 
 
 class UniversalDataLoaderMeta(type(QObject), type(ABC)):
@@ -309,10 +216,13 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
             self._debug(f"搜尋結果: {data_file}")
             
             if not data_file:
-                self._debug("❌ 找不到現有數據檔案，開始生成新檔案")
-                # 呼叫數據生成流程
-                self._start_data_generation(**kwargs)
-                return True  # 返回 True 表示已啟動生成流程
+                self._debug("❌ 找不到現有數據檔案")
+                self._debug("⚠️  [API-ONLY 模式] 禁止呼叫 CLI 生成數據")
+                self._debug("💡 提示: 請透過 API 獲取數據或手動執行 CLI 生成檔案")
+                # 禁止 CLI 調用 - 返回錯誤
+                self.load_error.emit("找不到數據檔案且 CLI 調用已禁用，請使用 API 獲取數據")
+                self._is_loading = False
+                return False
             else:
                 self._debug("✅ 找到現有檔案，準備載入")
                 

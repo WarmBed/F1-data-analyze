@@ -64,9 +64,9 @@ class AccidentDataManager(QObject):
             'red_flag_periods': 1,
             'average_incident_severity': 2.3,
             'incidents_by_type': {
-                '碰撞': 8,
-                '機械故障': 4,
-                '賽道偏離': 3
+                'Collision': 8,
+                'Mechanical Failure': 4,
+                'Track Limits': 3
             }
         }
         
@@ -100,10 +100,11 @@ class AccidentStatisticsWidget(QWidget):
         stats_layout.setSpacing(10)
         
         # 創建統計卡片 (簡化版)
-        self.total_card = self.create_simple_stats_card("總事故數", "0", "#E3F2FD")
-        self.safety_car_card = self.create_simple_stats_card("安全車次數", "0", "#F3E5F5")
-        self.red_flag_card = self.create_simple_stats_card("紅旗次數", "0", "#FFEBEE")
-        self.severity_card = self.create_simple_stats_card("平均嚴重程度", "0.0", "#E8F5E8")
+        from core.gui_i18n import tr
+        self.total_card = self.create_simple_stats_card(tr("total_incidents_card", "Total Incidents"), "0", "#E3F2FD")
+        self.safety_car_card = self.create_simple_stats_card(tr("safety_car_count", "Safety Car"), "0", "#F3E5F5")
+        self.red_flag_card = self.create_simple_stats_card(tr("red_flag_count", "Red Flags"), "0", "#FFEBEE")
+        self.severity_card = self.create_simple_stats_card(tr("avg_severity", "Avg Severity"), "0.0", "#E8F5E8")
         
         # 佈局統計卡片
         stats_layout.addWidget(self.total_card, 0, 0)
@@ -221,9 +222,9 @@ class AccidentAnalysisModule(IAnalysisModule):
         
         # 模組基本資訊
         self._module_name = "AccidentAnalysis"
-        self._display_name = "事故綜合分析"
+        self._display_name = tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')
         self._version = "1.0.0"
-        self._description = "F1 事故統計分析與可視化"
+        self._description = tr('accident_module_description', 'F1 Accident Statistics Analysis and Visualization')
         
         # 參數
         self.current_year = None
@@ -359,7 +360,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     def on_error_occurred(self, error_message):
         """錯誤處理"""
         print(f"[AccidentAnalysisModule] 錯誤: {error_message}")
-        QMessageBox.warning(self, "事故分析錯誤", error_message)
+        QMessageBox.warning(self, tr('accident_analysis_error', 'Accident Analysis Error'), error_message)
     
     # ===========================================
     # IAnalysisModule 接口實現 (必需的抽象方法)
@@ -373,7 +374,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     @property  
     def display_name(self) -> str:
         """返回顯示名稱"""
-        return "事故綜合分析"
+        return tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')
         
     @property
     def version(self) -> str:
@@ -439,7 +440,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             if hasattr(self, 'params_label'):
                 self.params_label.setText(f"{year} {race} {session}")
             if hasattr(self, 'title_label'):
-                self.title_label.setText(f"🔥 事故綜合分析 - {year} {race} {session}")
+                self.title_label.setText(f"🔥 {tr('accident_comprehensive_analysis_title', 'Accident Comprehensive Analysis')} - {year} {race} {session}")
             
             # 如果參數有變化，重新載入數據
             if params_changed:

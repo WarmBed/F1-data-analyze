@@ -233,7 +233,12 @@ class AccidentStatisticsWidget(QWidget):
         # 建立表格
         self.flag_table = QTableWidget()
         self.flag_table.setColumnCount(4)
-        self.flag_table.setHorizontalHeaderLabels(["旗標類型", "次數", "原因", "賽道區域"])
+        self.flag_table.setHorizontalHeaderLabels([
+            tr('flag_type', 'Flag Type'),
+            tr('count', 'Count'),
+            tr('reason', 'Reason'),
+            tr('track_sector', 'Track Sector')
+        ])
         
         # 設置表格樣式
         self.flag_table.setAlternatingRowColors(True)
@@ -273,7 +278,12 @@ class AccidentStatisticsWidget(QWidget):
         # 建立表格
         self.penalty_table = QTableWidget()
         self.penalty_table.setColumnCount(4)
-        self.penalty_table.setHorizontalHeaderLabels(["車手", "違規類型", "處罰", "圈數"])
+        self.penalty_table.setHorizontalHeaderLabels([
+            tr('driver', 'Driver'),
+            tr('violation_type', 'Violation Type'),
+            tr('penalty', 'Penalty'),
+            tr('lap_number', 'Lap')
+        ])
         
         # 設置表格樣式
         self.penalty_table.setAlternatingRowColors(True)
@@ -487,7 +497,7 @@ class AccidentStatisticsWidget(QWidget):
         # 如果沒有車手涉入數據，顯示空表格
         if not driver_involvement:
             self.driver_table.setRowCount(1)
-            no_data_item = QTableWidgetItem("暫無車手涉入數據")
+            no_data_item = QTableWidgetItem(tr('no_driver_involvement_data', 'No driver involvement data'))
             no_data_item.setTextAlignment(Qt.AlignCenter)
             self.driver_table.setItem(0, 0, no_data_item)
             for col in range(1, 4):
@@ -539,7 +549,7 @@ class AccidentStatisticsWidget(QWidget):
     def update_time_distribution_chart(self, time_distribution):
         """更新時間分佈圖表 (適應新的數據格式)"""
         if not time_distribution:
-            self.chart_area.setPlainText("無時間分佈數據")
+            self.chart_area.setPlainText(tr('no_time_distribution_data', 'No time distribution data'))
             return
             
         # 生成ASCII柱狀圖
@@ -549,11 +559,11 @@ class AccidentStatisticsWidget(QWidget):
     def generate_ascii_chart(self, time_distribution):
         """生成ASCII柱狀圖 (適應新的數據格式)"""
         if not time_distribution:
-            return "無數據可顯示"
+            return tr('no_data_to_display', 'No data to display')
             
         chart_lines = []
-        chart_lines.append("圈數事故分佈")
-        chart_lines.append("事故數量")
+        chart_lines.append(tr('lap_incident_distribution', 'Lap Incident Distribution'))
+        chart_lines.append(tr('incident_count', 'Incident Count'))
         chart_lines.append("  ^")
         
         # 如果是字典格式 (lap -> count)，轉換處理
@@ -627,15 +637,15 @@ class AccidentStatisticsWidget(QWidget):
     def get_most_dangerous_period(self, time_distribution):
         """獲取最危險的時間段"""
         if not time_distribution:
-            return "未知"
+            return tr('unknown', 'Unknown')
             
         max_period = max(time_distribution, key=lambda x: x.get("accidents", 0))
-        return max_period.get("period", "未知")
+        return max_period.get("period", tr('unknown', 'Unknown'))
         
     def get_most_involved_driver(self, driver_involvement):
         """獲取最多涉入的車手"""
         if not driver_involvement:
-            return "未知"
+            return tr('unknown', 'Unknown')
             
         max_driver = max(driver_involvement, key=lambda x: x.get("incidents", 0))
         driver_code = max_driver.get("driver", "Unknown")
@@ -654,9 +664,9 @@ class AccidentAnalysisModule(IAnalysisModule):
         
         # 模組基本資訊
         self._module_name = "AccidentAnalysis"
-        self._display_name = "事故綜合分析"
+        self._display_name = tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')
         self._version = "1.0.0"
-        self._description = "F1 事故統計分析與可視化"
+        self._description = tr('accident_module_description', 'F1 Accident Statistics Analysis and Visualization')
         
         # 參數
         self.current_year = None
@@ -689,11 +699,11 @@ class AccidentAnalysisModule(IAnalysisModule):
         
         # 分頁1: 事故統計總覽 (按照規格實現)
         self.statistics_widget = AccidentStatisticsWidget(self.data_manager)
-        self.tab_widget.addTab(self.statistics_widget, "📊 事故統計")
+        self.tab_widget.addTab(self.statistics_widget, f"📊 {tr('accident_statistics', 'Accident Statistics')}")
         
         # 分頁2: 詳細事故列表
         self.detailed_list_widget = AccidentDetailedListWidget(self.data_manager)
-        self.tab_widget.addTab(self.detailed_list_widget, "📋 詳細記錄")
+        self.tab_widget.addTab(self.detailed_list_widget, f"📋 {tr('detailed_records', 'Detailed Records')}")
         
         layout.addWidget(self.tab_widget)
         
@@ -730,7 +740,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         
         # 更新參數顯示
         self.params_label.setText(f"{year} {race} {session}")
-        self.title_label.setText(f"事故綜合分析 - {year} {race} {session}")
+        self.title_label.setText(f"{tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')} - {year} {race} {session}")
         
         # 載入當前分頁數據
         current_index = self.tab_widget.currentIndex()
@@ -794,7 +804,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         """錯誤處理"""
         print(f"[AccidentAnalysisModule] 錯誤: {error_message}")
         # 使用None作為parent，避免類型錯誤
-        QMessageBox.warning(None, "事故分析錯誤", error_message)
+        QMessageBox.warning(None, tr('accident_analysis_error', 'Accident Analysis Error'), error_message)
     
     # ===========================================
     # IAnalysisModule 接口實現 (必需的抽象方法)
@@ -808,7 +818,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     @property  
     def display_name(self) -> str:
         """返回顯示名稱"""
-        return "事故綜合分析"
+        return tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')
         
     @property
     def version(self) -> str:
@@ -898,7 +908,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             if hasattr(self, 'params_label'):
                 self.params_label.setText(f"{year} {race} {session}")
             if hasattr(self, 'title_label'):
-                self.title_label.setText(f"事故綜合分析 - {year} {race} {session}")
+                self.title_label.setText(f"{tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis')} - {year} {race} {session}")
             
             # 如果參數有變化，重新載入數據
             if params_changed:
@@ -938,7 +948,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         )
 
         if not result and hasattr(self, "error_label"):
-            self.error_label.setText("事故分析資料載入失敗，請稍後再試。")
+            self.error_label.setText(tr('accident_data_load_failed', 'Accident data failed to load, please try again later.'))
             self.error_label.show()
 
         return result
@@ -1096,7 +1106,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             except Exception as e:
                 print(f"❌ [ACCIDENT_MODULE] 載入新生成數據失敗: {e}")
                 if hasattr(self, 'error_label'):
-                    self.error_label.setText(f"載入失敗: {str(e)}")
+                    self.error_label.setText(f"{tr('load_failed', 'Load failed')}: {str(e)}")
                     self.error_label.show()
         else:
             print(f"⏳ [ACCIDENT_MODULE] 檔案尚未生成，繼續等待...")
@@ -1233,8 +1243,8 @@ class AccidentAnalysisModule(IAnalysisModule):
     def get_module_info(self):
         """模組信息"""
         return {
-            'name': '事故綜合分析',
-            'description': '提供F1事故的綜合統計和分析',
+            'name': tr('accident_comprehensive_analysis', 'Accident Comprehensive Analysis'),
+            'description': tr('accident_module_info_desc', 'Provides comprehensive statistics and analysis of F1 accidents'),
             'version': '1.0.0',
             'author': 'F1T Development Team'
         }
@@ -1257,16 +1267,16 @@ class AccidentDetailedListWidget(QWidget):
         
         # 建立欄位映射：JSON英文欄位 -> 中文顯示
         self.field_mapping = {
-            "sequence_number": "序號",
-            "lap": "圈數", 
-            "time": "時間",
-            "message": "事件描述",
-            "category": "類別",
-            "severity": "嚴重程度",
-            "impact": "影響程度",
-            "sector": "區段",
-            "flags_mentioned": "旗幟",
-            "involved_drivers": "車手"
+            "sequence_number": tr('sequence_number', 'No.'),
+            "lap": tr('lap', 'Lap'), 
+            "time": tr('time', 'Time'),
+            "message": tr('event_description', 'Event Description'),
+            "category": tr('category', 'Category'),
+            "severity": tr('severity', 'Severity'),
+            "impact": tr('impact_level', 'Impact'),
+            "sector": tr('sector', 'Sector'),
+            "flags_mentioned": tr('flags', 'Flags'),
+            "involved_drivers": tr('drivers', 'Drivers')
         }
         
         # 建立反向映射：中文顯示 -> JSON英文欄位
@@ -1301,29 +1311,29 @@ class AccidentDetailedListWidget(QWidget):
         
         # 類別篩選
         self.category_combo = QComboBox()
-        self.category_combo.addItem("全部類別", "")
-        toolbar_layout.addWidget(QLabel("類別:"))
+        self.category_combo.addItem(tr('all_categories', 'All Categories'), "")
+        toolbar_layout.addWidget(QLabel(tr('category', 'Category') + ":"))
         toolbar_layout.addWidget(self.category_combo)
         
         # 嚴重程度篩選
         self.severity_combo = QComboBox()
-        self.severity_combo.addItem("全部嚴重程度", "")
-        toolbar_layout.addWidget(QLabel("嚴重程度:"))
+        self.severity_combo.addItem(tr('all_severities', 'All Severities'), "")
+        toolbar_layout.addWidget(QLabel(tr('severity', 'Severity') + ":"))
         toolbar_layout.addWidget(self.severity_combo)
         
         # 影響程度篩選
         self.impact_combo = QComboBox()
-        self.impact_combo.addItem("全部影響程度", "")
-        toolbar_layout.addWidget(QLabel("影響程度:"))
+        self.impact_combo.addItem(tr('all_impacts', 'All Impacts'), "")
+        toolbar_layout.addWidget(QLabel(tr('impact_level', 'Impact') + ":"))
         toolbar_layout.addWidget(self.impact_combo)
         
         # 關鍵字搜尋
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("🔍 搜尋事件描述或關鍵字...")
+        self.search_input.setPlaceholderText(f"🔍 {tr('search_event_description', 'Search event description or keywords...')}")
         toolbar_layout.addWidget(self.search_input)
         
         # 刷新按鈕
-        self.refresh_button = QPushButton("🔄 刷新")
+        self.refresh_button = QPushButton(f"🔄 {tr('refresh', 'Refresh')}")
         self.refresh_button.clicked.connect(self.refresh_data)
         toolbar_layout.addWidget(self.refresh_button)
         
@@ -1336,7 +1346,7 @@ class AccidentDetailedListWidget(QWidget):
         self.stats_frame.setFixedHeight(40)
         
         stats_layout = QHBoxLayout(self.stats_frame)
-        self.stats_label = QLabel("載入中...")
+        self.stats_label = QLabel(tr('loading', 'Loading...'))
         self.stats_label.setStyleSheet("font-weight: bold; color: #495057;")
         stats_layout.addWidget(self.stats_label)
         
@@ -1350,7 +1360,18 @@ class AccidentDetailedListWidget(QWidget):
         
     def setup_table_structure(self):
         """設置表格結構"""
-        headers = ["序號", "圈數", "時間", "事件描述", "類別", "嚴重程度", "影響程度", "區段", "旗幟", "車手"]
+        headers = [
+            tr('sequence_number', 'No.'),
+            tr('lap', 'Lap'),
+            tr('time', 'Time'),
+            tr('event_description', 'Event Description'),
+            tr('category', 'Category'),
+            tr('severity', 'Severity'),
+            tr('impact_level', 'Impact'),
+            tr('sector', 'Sector'),
+            tr('flags', 'Flags'),
+            tr('drivers', 'Drivers')
+        ]
         self.table_widget.setColumnCount(len(headers))
         self.table_widget.setHorizontalHeaderLabels(headers)
         
@@ -1486,17 +1507,25 @@ class AccidentDetailedListWidget(QWidget):
         return _search(data, [])
             
     def update_filter_options(self):
-        """更新篩選選項（使用實際的JSON欄位名稱）"""
-        # 收集所有唯一值（使用欄位映射）
+        """更新篩選選項（直接使用 JSON 欄位名稱）"""
+        # 收集所有唯一值
         categories = set()
         severities = set()
         impacts = set()
         
         for incident in self.incidents_data:
-            # 使用欄位映射取得值
-            categories.add(self.get_field_value(incident, "類別"))
-            severities.add(self.get_field_value(incident, "嚴重程度"))
-            impacts.add(self.get_field_value(incident, "影響程度"))
+            # 直接使用 JSON 欄位名
+            category = incident.get("category", "")
+            if category:
+                categories.add(category)
+                
+            severity = incident.get("severity", "")
+            if severity:
+                severities.add(severity)
+                
+            impact = incident.get("impact", "")
+            if impact:
+                impacts.add(impact)
         
         # 更新下拉選單
         self._update_combo_options(self.category_combo, sorted(categories))
@@ -1548,25 +1577,25 @@ class AccidentDetailedListWidget(QWidget):
     def _matches_filters(self, incident: dict, filters: dict) -> bool:
         """檢查事件是否符合篩選條件（使用欄位映射）"""
         # 類別篩選
-        if filters["category"] and self.get_field_value(incident, "類別") != filters["category"]:
+        if filters["category"] and incident.get("category") != filters["category"]:
             return False
             
         # 嚴重程度篩選
-        if filters["severity"] and self.get_field_value(incident, "嚴重程度") != filters["severity"]:
+        if filters["severity"] and incident.get("severity") != filters["severity"]:
             return False
             
         # 影響程度篩選
-        if filters["impact"] and self.get_field_value(incident, "影響程度") != filters["impact"]:
+        if filters["impact"] and incident.get("impact") != filters["impact"]:
             return False
             
         # 文字搜尋
         if filters["search"]:
             search_text = filters["search"].lower()
             searchable_fields = [
-                self.get_field_value(incident, "事件描述"),
-                str(self.get_field_value(incident, "車手")),
-                str(self.get_field_value(incident, "序號")),
-                str(self.get_field_value(incident, "圈數")),
+                str(incident.get("message", "")),
+                str(incident.get("involved_drivers", "")),
+                str(incident.get("sequence_number", "")),
+                str(incident.get("lap", "")),
                 self.get_flag_summary(incident)  # 加入旗幟搜索
             ]
             
@@ -1577,44 +1606,44 @@ class AccidentDetailedListWidget(QWidget):
         return True
         
     def populate_table(self):
-        """填充表格數據（使用欄位映射）"""
+        """填充表格數據（直接使用英文欄位名）"""
         self.table_widget.setRowCount(len(self.filtered_data))
         
         for row, incident in enumerate(self.filtered_data):
             # 序號
-            self.table_widget.setItem(row, 0, 
-                QTableWidgetItem(str(self.get_field_value(incident, "序號"))))
+            seq_num = incident.get("sequence_number", row + 1)
+            self.table_widget.setItem(row, 0, QTableWidgetItem(str(seq_num)))
             
             # 圈數
-            self.table_widget.setItem(row, 1, 
-                QTableWidgetItem(str(self.get_field_value(incident, "圈數"))))
+            lap = incident.get("lap", "")
+            self.table_widget.setItem(row, 1, QTableWidgetItem(str(lap)))
             
             # 時間
-            time_str = self.get_field_value(incident, "時間")
-            self.table_widget.setItem(row, 2, QTableWidgetItem(time_str))
+            time_str = incident.get("time", "")
+            self.table_widget.setItem(row, 2, QTableWidgetItem(str(time_str)))
             
             # 事件描述
-            message = self.get_field_value(incident, "事件描述")
-            self.table_widget.setItem(row, 3, QTableWidgetItem(message))
+            message = incident.get("message", "")
+            self.table_widget.setItem(row, 3, QTableWidgetItem(str(message)))
             
             # 類別
-            category = self.get_field_value(incident, "類別")
-            self.table_widget.setItem(row, 4, QTableWidgetItem(category))
+            category = incident.get("category", "")
+            self.table_widget.setItem(row, 4, QTableWidgetItem(str(category)))
             
             # 嚴重程度（帶顏色）
-            severity = self.get_field_value(incident, "嚴重程度")
-            severity_item = QTableWidgetItem(severity)
+            severity = incident.get("severity", "")
+            severity_item = QTableWidgetItem(str(severity))
             severity_item.setBackground(QColor(self.get_severity_color(severity)))
             self.table_widget.setItem(row, 5, severity_item)
             
             # 影響程度（帶顏色）
-            impact = self.get_field_value(incident, "影響程度")
-            impact_item = QTableWidgetItem(impact)
+            impact = incident.get("impact", "")
+            impact_item = QTableWidgetItem(str(impact))
             impact_item.setBackground(QColor(self.get_impact_color(impact)))
             self.table_widget.setItem(row, 6, impact_item)
             
             # 區段
-            sector = self.get_field_value(incident, "區段", "N/A")
+            sector = incident.get("sector", "N/A")
             self.table_widget.setItem(row, 7, QTableWidgetItem(str(sector)))
             
             # 旗幟
@@ -1624,7 +1653,7 @@ class AccidentDetailedListWidget(QWidget):
             self.table_widget.setItem(row, 8, flag_item)
             
             # 車手
-            drivers = self.get_field_value(incident, "車手")
+            drivers = incident.get("involved_drivers", "")
             # 如果是列表，轉換為字符串
             if isinstance(drivers, list):
                 # 如果列表元素是字典，提取driver_code或合適的字段
@@ -1663,7 +1692,7 @@ class AccidentDetailedListWidget(QWidget):
         
     def get_flag_summary(self, incident: Dict[str, Any]) -> str:
         """獲取旗幟摘要"""
-        flags_mentioned = self.get_field_value(incident, "旗幟")
+        flags_mentioned = incident.get("flags_mentioned", "")
         
         # 如果沒有旗幟信息，返回空字符串
         if not flags_mentioned:
@@ -1731,7 +1760,7 @@ class AccidentDetailedListWidget(QWidget):
     def update_statistics(self):
         """更新統計摘要"""
         if not self.filtered_data:
-            self.stats_label.setText("無事件數據")
+            self.stats_label.setText(tr('no_incident_data', 'No incident data'))
             return
             
         total = len(self.filtered_data)
@@ -1739,11 +1768,11 @@ class AccidentDetailedListWidget(QWidget):
         # 按類別統計
         category_counts = {}
         for incident in self.filtered_data:
-            category = self.get_field_value(incident, "類別")
+            category = incident.get("category", "")
             category_counts[category] = category_counts.get(category, 0) + 1
         
         # 構建統計文字
-        stats_parts = [f"總事件: {total}"]
+        stats_parts = [f"{tr('total_events', 'Total Events')}: {total}"]
         
         # 顯示主要類別
         main_categories = ["PIT_RELATED", "TRACK_LIMITS", "INVESTIGATION", "PENALTY"]
@@ -1751,10 +1780,10 @@ class AccidentDetailedListWidget(QWidget):
             if category in category_counts:
                 # 簡化類別名稱顯示
                 display_name = {
-                    "PIT_RELATED": "PIT相關",
-                    "TRACK_LIMITS": "賽道限制", 
-                    "INVESTIGATION": "調查",
-                    "PENALTY": "處罰"
+                    "PIT_RELATED": tr('pit_related', 'PIT Related'),
+                    "TRACK_LIMITS": tr('track_limits', 'Track Limits'), 
+                    "INVESTIGATION": tr('investigation', 'Investigation'),
+                    "PENALTY": tr('penalty_cat', 'Penalty')
                 }.get(category, category)
                 stats_parts.append(f"{display_name}: {category_counts[category]}")
         
@@ -1762,7 +1791,7 @@ class AccidentDetailedListWidget(QWidget):
         other_count = sum(count for cat, count in category_counts.items() 
                          if cat not in main_categories)
         if other_count > 0:
-            stats_parts.append(f"其他: {other_count}")
+            stats_parts.append(f"{tr('other', 'Other')}: {other_count}")
         
         self.stats_label.setText(" | ".join(stats_parts))
         
@@ -1791,7 +1820,7 @@ class AccidentDetailedListWidget(QWidget):
         
     def show_loading_state(self):
         """顯示載入狀態"""
-        self.stats_label.setText("載入事件數據中...")
+        self.stats_label.setText(tr('loading_incident_data', 'Loading incident data...'))
         self.stats_label.setStyleSheet("color: #6c757d; font-weight: bold;")
         self.table_widget.setRowCount(0)
 

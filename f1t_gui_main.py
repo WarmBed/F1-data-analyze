@@ -793,17 +793,17 @@ class LapAnalysisOptionsDialog(QDialog):
         quick_select_layout.setSpacing(8)
         
         select_all_btn = QPushButton(tr("select_all"))
-        select_all_btn.setFixedSize(70, 24)
+        select_all_btn.setFixedHeight(28)
         select_all_btn.clicked.connect(self.select_all)
         quick_select_layout.addWidget(select_all_btn)
         
         select_none_btn = QPushButton(tr("select_none"))
-        select_none_btn.setFixedSize(70, 24)
+        select_none_btn.setFixedHeight(28)
         select_none_btn.clicked.connect(self.select_none)
         quick_select_layout.addWidget(select_none_btn)
         
         default_btn = QPushButton(tr("restore_default"))
-        default_btn.setFixedSize(90, 24)
+        default_btn.setFixedHeight(28)
         default_btn.clicked.connect(self.set_default)
         quick_select_layout.addWidget(default_btn)
         
@@ -3214,7 +3214,8 @@ class PopoutSubWindow(QMdiSubWindow):
                 self.progress_dialog.setLabelText("分析完成，正在載入結果...")
         else:
             print(f"[ERROR] CLI 分析失敗: {message}")
-            QMessageBox.warning(self, "分析失敗", f"CLI 分析過程中發生錯誤:\n{message}")
+            from core.gui_i18n import tr
+            QMessageBox.warning(self, tr('analysis_failed', 'Analysis Failed'), f"{tr('cli_error', 'Error occurred during CLI analysis')}:\n{message}")
             self.hide_analysis_progress()
             self.stop_json_monitoring()
     
@@ -5266,14 +5267,52 @@ class StyleHMainWindow(QMainWindow):
         
         lap_analysis_windows_found = []
         for sub_window in current_mdi_area.subWindowList():
-            if sub_window.isVisible():
-                widget = sub_window.widget()
-                window_title = sub_window.windowTitle()
-                
-                # 檢查是否為速度分析或RPM分析視窗
-                if any(keyword in window_title for keyword in ["Speed Analysis", "RPM Analysis", "⚡", "🔄"]):
-                    lap_analysis_windows_found.append((sub_window, widget, window_title))
-                    print(f"[LAP_CONTROL] 🎯 發現遙測分析視窗: {window_title}")
+            if not sub_window.isVisible():
+                continue
+
+            window_title = sub_window.windowTitle()
+            widget = sub_window.widget()
+
+            # 依序檢查可用的模組引用
+            candidate_sources = []
+
+            # 優先使用 PopoutSubWindow 上綁定的 analysis_module
+            analysis_module = getattr(sub_window, "analysis_module", None)
+            if analysis_module:
+                candidate_sources.append((analysis_module, "subwindow.analysis_module"))
+
+            # 子視窗的主widget可能就是分析模組本身
+            if widget:
+                candidate_sources.append((widget, "subwindow.widget"))
+
+                # 某些圖表widget會暴露 parent_module 指向真正的模組
+                parent_module = getattr(widget, "parent_module", None)
+                if parent_module:
+                    candidate_sources.append((parent_module, "widget.parent_module"))
+
+            matched_module = None
+            matched_source = None
+            for candidate, source_name in candidate_sources:
+                if hasattr(candidate, "update_lap_parameters"):
+                    matched_module = candidate
+                    matched_source = source_name
+                    break
+
+            if matched_module:
+                lap_analysis_windows_found.append((sub_window, matched_module, window_title, matched_source))
+                print(
+                    f"[LAP_CONTROL] 🎯 發現遙測分析視窗: {window_title} (source={matched_source})"
+                )
+                continue
+
+            # 後備：關鍵字判斷（維持舊版相容）
+            if any(keyword in window_title for keyword in [
+                "Speed Analysis", "RPM Analysis", "⚡", "🔄",
+                "Brake Analysis", "煞車分析", "Gear Analysis", "檔位分析",
+                "DistanceDiff", "距離差", "Acceleration Analysis", "加速度分析"
+            ]):
+                lap_analysis_windows_found.append((sub_window, widget, window_title, "title_fallback"))
+                print(f"[LAP_CONTROL] 🎯 (fallback) 發現遙測分析視窗: {window_title}")
         
         if lap_analysis_windows_found:
             print(f"[LAP_CONTROL] 📊 找到 {len(lap_analysis_windows_found)} 個遙測分析視窗")
@@ -5290,7 +5329,7 @@ class StyleHMainWindow(QMainWindow):
             self.lap_analysis_windows.clear()
             self.lap_analysis_windows.update(existing_modules)
             
-            for sub_window, widget, window_title in lap_analysis_windows_found:
+            for sub_window, analysis_obj, window_title, source in lap_analysis_windows_found:
                 # 檢查是否已經通過模組正確追蹤了這個視窗
                 already_tracked = False
                 for tracked_module in existing_modules:
@@ -5303,16 +5342,20 @@ class StyleHMainWindow(QMainWindow):
                 if already_tracked:
                     continue
                 
-                # 將分析模組添加到追蹤集合（如果widget是分析模組）
-                if hasattr(widget, 'update_lap_parameters'):
-                    self.lap_analysis_windows.add(widget)
-                    print(f"[LAP_CONTROL] ✅ 已添加模組到追蹤: {window_title}")
-                # 🔧 修復：檢查widget是否有parent_module引用（圖表組件情況）
-                elif hasattr(widget, 'parent_module') and hasattr(widget.parent_module, 'update_lap_parameters'):
-                    self.lap_analysis_windows.add(widget.parent_module)
-                    print(f"[LAP_CONTROL] ✅ 已添加父模組到追蹤: {window_title}")
+                # 優先使用已解析出的分析模組
+                if analysis_obj and hasattr(analysis_obj, 'update_lap_parameters'):
+                    self.lap_analysis_windows.add(analysis_obj)
+                    print(
+                        f"[LAP_CONTROL] ✅ 已添加模組到追蹤: {window_title} (source={source})"
+                    )
+                # 🔧 修復：檢查子視窗是否仍然保有分析模組引用
+                elif hasattr(sub_window, 'analysis_module') and hasattr(sub_window.analysis_module, 'update_lap_parameters'):
+                    self.lap_analysis_windows.add(sub_window.analysis_module)
+                    print(
+                        f"[LAP_CONTROL] ✅ 已透過子視窗引用添加模組: {window_title}"
+                    )
                 else:
-                    # 如果不是分析模組，添加子視窗本身
+                    # 如果不是分析模組，最後退回子視窗本身
                     self.lap_analysis_windows.add(sub_window)
                     print(f"[LAP_CONTROL] ✅ 已添加子視窗到追蹤: {window_title}")
             
@@ -5852,7 +5895,7 @@ class StyleHMainWindow(QMainWindow):
         title_frame.setFixedHeight(16)
         title_layout = QHBoxLayout(title_frame)
         title_layout.setContentsMargins(2, 1, 2, 1)
-        title_layout.addWidget(QLabel("分析模組"))
+        title_layout.addWidget(QLabel(tr("analysis_modules", "Analysis Modules")))
         layout.addWidget(title_frame)
         
         # 支援右鍵選單的功能樹
@@ -8724,11 +8767,13 @@ class StyleHMainWindow(QMainWindow):
                 is_fastest_lap = driver_info['is_fastest_lap']
                 
                 if not selected_charts:
-                    QMessageBox.information(self, "提示", "沒有選擇任何圖表，將不會開啟視窗。")
+                    from core.gui_i18n import tr
+                    QMessageBox.information(self, tr('info', 'Information'), tr('no_chart_selected', 'No chart selected. Window will not be opened.'))
                     return
                 
                 if not driver1:
-                    QMessageBox.information(self, "提示", "請選擇至少一位車手。")
+                    from core.gui_i18n import tr
+                    QMessageBox.information(self, tr('info', 'Information'), tr('select_driver', 'Please select at least one driver.'))
                     return
                 
                 print(f"[圈速分析] 使用者選擇的圖表: {selected_charts}")
@@ -10073,7 +10118,8 @@ class StyleHMainWindow(QMainWindow):
                     from modules.gui.track_analysis import TrackAnalysisModule
                     print("[WARN] 回退至 legacy TrackAnalysisModule")
                 except ImportError:
-                    QMessageBox.warning(self, "警告", "賽道分析模組不可用")
+                    from core.gui_i18n import tr
+                    QMessageBox.warning(self, tr('warning', 'Warning'), tr('track_module_unavailable', 'Track analysis module is not available'))
                     return
 
             # 創建參數提供者
@@ -10127,7 +10173,8 @@ class StyleHMainWindow(QMainWindow):
             # 獲取當前 MDI 區域
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
-                QMessageBox.warning(self, "警告", "無法找到當前 MDI 區域")
+                from core.gui_i18n import tr
+                QMessageBox.warning(self, tr('warning', 'Warning'), tr('mdi_area_not_found', 'Cannot find current MDI area'))
                 return
             
             # 創建 PopoutSubWindow
@@ -10163,7 +10210,8 @@ class StyleHMainWindow(QMainWindow):
                 sub_window.resize(default_size[0], default_size[1])
             
         except Exception as e:
-            QMessageBox.critical(self, "錯誤", f"無法開啟賽道分析視窗: {str(e)}")
+            from core.gui_i18n import tr
+            QMessageBox.critical(self, tr('error', 'Error'), f"{tr('track_window_error', 'Cannot open track analysis window')}: {str(e)}")
             print(f"[STATUS] 賽道分析視窗開啟失敗: {str(e)}")
     
     def rain_analysis(self):
@@ -11969,10 +12017,11 @@ class StyleHMainWindow(QMainWindow):
             print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
             
             # 顯示關閉確認對話框（可選）
+            from core.gui_i18n import tr
             reply = QMessageBox.question(
                 self, 
-                '確認退出', 
-                '確定要退出 F1T 專業賽車分析工作站嗎？\n\n所有正在執行的分析將被停止。',
+                tr('confirm_exit', 'Confirm Exit'), 
+                tr('confirm_exit_message', 'Are you sure you want to exit F1T Professional Racing Analysis Workstation?\n\nAll running analyses will be stopped.'),
                 QMessageBox.Yes | QMessageBox.No,
                 QMessageBox.No
             )

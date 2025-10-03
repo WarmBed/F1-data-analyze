@@ -120,7 +120,7 @@ class RainAnalysisDataManager(UniversalDataLoader):
         # 註冊下雨分析類型（如果尚未註冊）
         if "rain_weather" not in UniversalDataLoader.ANALYSIS_TYPES:
             rain_config = AnalysisConfig(
-                display_name="下雨分析",
+                display_name="Rain Analysis",
                 debug_prefix="[RAIN_ANALYSIS]",
                 data_source="api",
                 cli_function="run_rain_intensity_analysis_json",
@@ -396,60 +396,14 @@ class RainAnalysisDataManager(UniversalDataLoader):
         return self.process_loaded_data(data)
         
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """通過 CLI 生成數據"""
-        try:
-            year = kwargs.get('year')
-            race = kwargs.get('race') 
-            session = kwargs.get('session')
-            
-            self._debug(f"🚀 啟動 CLI 降雨數據生成")
-            self._debug(f"   參數: year={year}, race={race}, session={session}")
-            
-            # 檢查配置中的 CLI 函數
-            cli_function = self.config.cli_function
-            if not cli_function:
-                self._debug("❌ 配置中沒有 CLI 函數")
-                return False
-            
-            # 使用標準化的 CliAnalysisWorker
-            force_mode = 1  # 功能1: 降雨強度分析
-            
-            self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
-            
-            # 創建並啟動 CLI 工作器
-            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
-            
-            # 連接信號
-            def on_cli_finished():
-                self._debug("✅ CLI 工作器執行完成")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_completed(success, message):
-                self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_output(output):
-                self._debug(f"📤 CLI 輸出: {output}")
-            
-            self.cli_worker.finished.connect(on_cli_finished)
-            self.cli_worker.analysis_completed.connect(on_cli_completed)
-            self.cli_worker.output_received.connect(on_cli_output)
-            
-            # 啟動工作器
-            self.cli_worker.start()
-            self._debug(f"✅ CLI 工作器已啟動")
-            
-            return True
-            
-        except Exception as e:
-            self._error(f"CLI 生成失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+        """
+        [已禁用] 通過 CLI 生成數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
+        """
+        self._debug("⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug("💡 提示: 請使用 API 獲取降雨分析數據")
+        return False
         
     def process_loaded_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """處理載入的下雨分析數據"""
@@ -615,7 +569,7 @@ class RainAnalysisControlWidget(QWidget):
         layout = QVBoxLayout(self)
         
         # 圖表選擇群組
-        chart_group = QGroupBox("圖表類型")
+        chart_group = QGroupBox(tr("chart_type", "Chart Type"))
         chart_layout = QGridLayout(chart_group)
         
         self.chart_combo = QComboBox()
@@ -633,14 +587,14 @@ class RainAnalysisControlWidget(QWidget):
         layout.addWidget(chart_group)
         
         # 顯示選項群組
-        display_group = QGroupBox("顯示選項")
+        display_group = QGroupBox(tr("display_options", "Display Options"))
         display_layout = QGridLayout(display_group)
         
-        self.show_grid_cb = QCheckBox("顯示網格")
+        self.show_grid_cb = QCheckBox(tr("show_grid_checkbox", "Show Grid"))
         self.show_grid_cb.setChecked(True)
         self.show_grid_cb.toggled.connect(lambda x: self.parameter_changed.emit("show_grid", x))
         
-        self.show_legend_cb = QCheckBox("顯示圖例")
+        self.show_legend_cb = QCheckBox(tr("show_legend_checkbox", "Show Legend"))
         self.show_legend_cb.setChecked(True)
         self.show_legend_cb.toggled.connect(lambda x: self.parameter_changed.emit("show_legend", x))
         
@@ -654,16 +608,12 @@ class RainAnalysisControlWidget(QWidget):
     def _on_chart_type_changed(self, text: str):
         """圖表類型改變處理"""
         chart_type_map = {
-            # 中文
-            "主要圖表 (降雨+氣溫)": "primary",
-            "溫度對比 (氣溫vs賽道溫度)": "temperature",
-            "濕度風速 (濕度+風速)": "humidity_wind",
-            "氣壓變化": "pressure",
-            # 英文
+            # 英文映射 (tr() 傳回 fallback 後的字串)
             "Main Chart (Rain+Temperature)": "primary",
             "Temperature Comparison (Air vs Track)": "temperature", 
             "Humidity & Wind Speed": "humidity_wind",
-            "Pressure Changes": "pressure"
+            "Pressure Changes": "pressure",
+            # 若未來支援其他語言，在此添加
         }
         
         if text in chart_type_map:
@@ -685,7 +635,7 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         if "rain_weather" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
             rain_config = AnalysisMDIConfig(
                 analysis_type="rain_weather",
-                display_name="下雨分析",
+                display_name="Rain Analysis",
                 default_size=(1400, 900),
                 requires_driver_params=False,  # 下雨分析不需要車手參數
                 requires_lap_params=False,     # 下雨分析不需要圈數參數

@@ -580,7 +580,7 @@ class DriverSelectionWidget(QWidget):
         # 創建5個車手選擇下拉選單 - 響應式寬度
         for i in range(5):
             combo = QComboBox()
-            combo.addItem("-- 請選擇 --")
+            combo.addItem(f"-- {tr('please_select', '請選擇')} --")
             combo.currentTextChanged.connect(self._on_driver_selection_changed)
             # 響應式寬度設定
             combo.setMinimumWidth(50)  # 小視窗下的最小寬度
@@ -622,7 +622,7 @@ class DriverSelectionWidget(QWidget):
         for i, combo in enumerate(self.driver_combos):
             current_selection = combo.currentText()
             combo.clear()
-            combo.addItem("-- 請選擇 --")
+            combo.addItem(f"-- {tr('please_select', '請選擇')} --")
             combo.addItems(drivers)
             
             # 恢復之前的選擇（如果仍然可用）
@@ -630,7 +630,8 @@ class DriverSelectionWidget(QWidget):
                 combo.setCurrentText(current_selection)
         
         # 如果沒有預設選擇，自動選擇前3位車手
-        if drivers and all(combo.currentText() == "-- 請選擇 --" for combo in self.driver_combos):
+        placeholder = f"-- {tr('please_select', '請選擇')} --"
+        if drivers and all(combo.currentText() == placeholder for combo in self.driver_combos):
             print(f"[DRIVER_SELECTION] 🎯 自動選擇前3位車手")
             for i, driver in enumerate(drivers[:3]):  # 自動選擇前3位車手
                 if i < len(self.driver_combos):
@@ -665,9 +666,10 @@ class DriverSelectionWidget(QWidget):
     def _apply_selections(self):
         """應用車手選擇"""
         selected = []
+        placeholder = f"-- {tr('please_select', '請選擇')} --"
         for combo in self.driver_combos:
             driver = combo.currentText()
-            if driver != "-- 請選擇 --" and driver not in selected:
+            if driver != placeholder and driver not in selected:
                 selected.append(driver)
         
         self.selected_drivers = selected

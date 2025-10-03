@@ -196,12 +196,12 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
         quick_select_layout.setSpacing(8)
         
         select_all_btn = QPushButton(tr("select_all", "Select All"))
-        select_all_btn.setFixedSize(70, 24)
+        select_all_btn.setFixedHeight(28)
         select_all_btn.clicked.connect(self.select_all)
         quick_select_layout.addWidget(select_all_btn)
         
         select_none_btn = QPushButton(tr("select_none", "Select None"))
-        select_none_btn.setFixedSize(70, 24)
+        select_none_btn.setFixedHeight(28)
         select_none_btn.clicked.connect(self.select_none)
         quick_select_layout.addWidget(select_none_btn)
         

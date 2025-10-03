@@ -41,6 +41,7 @@ import pandas as pd
 import subprocess
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
+from core.gui_i18n import tr
 
 
 class TelemetryApiWorker(QThread):
@@ -137,55 +138,55 @@ class TelemetryDataLoader(QObject):
     # 支援的遙測類型映射
     TELEMETRY_TYPES = {
         'speed': {
-            'display_name': '速度分析',
+            'display_name': tr('speed_analysis', '速度分析'),
             'data_field': 'Speed',
             'unit': 'km/h',
             'debug_prefix': 'SPEED'
         },
         'rpm': {
-            'display_name': 'RPM分析', 
+            'display_name': tr('rpm_analysis', 'RPM分析'), 
             'data_field': 'RPM',
             'unit': 'rpm',
             'debug_prefix': 'RPM'
         },
         'gear': {
-            'display_name': '檔位分析',
+            'display_name': tr('gear_analysis', '檔位分析'),
             'data_field': 'nGear', 
             'unit': 'gear',
             'debug_prefix': 'GEAR'
         },
         'throttle': {
-            'display_name': '油門分析',
+            'display_name': tr('throttle_analysis', '油門分析'),
             'data_field': 'Throttle',
             'unit': '%',
             'debug_prefix': 'THROTTLE'
         },
         'brake': {
-            'display_name': '煞車分析',
+            'display_name': tr('brake_analysis', '煞車分析'),
             'data_field': 'Brake',
             'unit': '%', 
             'debug_prefix': 'BRAKE'
         },
         'acceleration': {
-            'display_name': '加速度分析',
+            'display_name': tr('acceleration_analysis', '加速度分析'),
             'data_field': 'Acceleration',
             'unit': 'm/s²',
             'debug_prefix': 'ACCEL'
         },
         'distancediff': {
-            'display_name': '距離差異分析',
+            'display_name': tr('distancediff_analysis', '距離差異分析'),
             'data_field': 'distance_difference',
             'unit': 'm',
             'debug_prefix': 'DISTDIFF'
         },
         'speeddiff': {
-            'display_name': '速度差異分析', 
+            'display_name': tr('speeddiff_analysis', '速度差異分析'), 
             'data_field': 'speed_difference',
             'unit': 'km/h',
             'debug_prefix': 'SPEEDDIFF'
         },
         'rain': {
-            'display_name': '降雨分析',
+            'display_name': tr('rain_analysis', '降雨分析'),
             'data_field': 'rain_intensity',
             'unit': 'mm/h',
             'debug_prefix': 'RAIN'

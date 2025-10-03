@@ -60,6 +60,11 @@ class SpeedDataManager(QObject):
             self._is_loading = True
             self.loading_progress.emit(0)
             self.status_changed.emit("開始載入速度數據...")
+
+            # 儲存當前賽事上下文，供遙測資料及CLI命令使用
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
             
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":

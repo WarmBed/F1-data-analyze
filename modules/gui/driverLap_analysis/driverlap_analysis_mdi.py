@@ -868,46 +868,14 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         return patterns
     
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """透過 CLI -f28 工具生成詳細圈速分析數據。"""
-        try:
-            year = kwargs.get("year")
-            race = kwargs.get("race")
-            session = kwargs.get("session", "R")
-
-            self._debug("🚀 啟動 CLI 詳細圈速分析數據生成")
-            self._debug(f"   參數: year={year}, race={race}, session={session}")
-
-            cli_function = self.config.cli_function
-            if not cli_function:
-                self._debug("❌ 配置中沒有 CLI 函數")
-                return False
-
-            force_mode = 28  # 功能 28: 詳細圈速分析
-            self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
-
-            self._stop_cli_worker()
-
-            self._cli_generation_attempted = True
-            self._pending_data_source = "cli-json"
-            worker = self.create_cli_worker(year, race, session, force_mode)
-            worker.finished.connect(self._on_cli_worker_finished)
-            worker.analysis_completed.connect(self._on_cli_analysis_completed)
-            worker.output_received.connect(self._on_cli_output_received)
-            worker.progress_updated.connect(self._on_cli_progress_updated)
-
-            self._cli_worker = worker
-            self.cli_worker = worker  # 相容舊版屬性
-            worker.start()
-
-            self._debug("✅ CLI 工作器已啟動")
-            return True
-
-        except Exception as e:
-            self._debug(f"CLI 執行異常: {e}")
-            import traceback
-            traceback.print_exc()
-            self._stop_cli_worker()
-            return False
+        """
+        [已禁用] 透過 CLI -f28 工具生成詳細圈速分析數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用,系統只允許通過 API 獲取數據
+        """
+        self._debug("⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug("💡 提示: 請使用 API 獲取車手圈速分析數據")
+        return False
     
     def _validate_data_format(self, raw_data: Any) -> bool:
         """驗證詳細圈速分析數據格式 (Function 28)"""

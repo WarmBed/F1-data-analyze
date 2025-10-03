@@ -58,6 +58,11 @@ class RPMDataManager(QObject):
             self._is_loading = True
             self.loading_progress.emit(0)
             self.status_changed.emit("開始載入RPM數據...")
+
+            # 保存當前上下文，以供遙測資料檢查
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
             
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":

@@ -85,6 +85,7 @@ class GuiTranslator:
             'driver1_label': {'zh': '車手1:', 'en': 'Driver 1:', 'ja': 'ドライバー1:'},
             'driver2_label': {'zh': '車手2:', 'en': 'Driver 2:', 'ja': 'ドライバー2:'},
             'lap_label': {'zh': '圈數:', 'en': 'Lap:', 'ja': 'ラップ:'},
+            'please_select': {'zh': '請選擇', 'en': 'Please Select', 'ja': '選択してください'},
             'none_option': {'zh': '無', 'en': 'None', 'ja': 'なし'},
             'fastest_lap_option': {'zh': '最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
             'tile_windows_action': {'zh': '平鋪視窗', 'en': 'Tile Windows', 'ja': 'ウィンドウを並べて表示'},
@@ -150,7 +151,7 @@ class GuiTranslator:
             
             # === 新增：QMessageBox 對話框翻譯鍵 ===
             # 關閉確認對話框
-            'confirm_exit_title': {'zh': '確認退出', 'en': 'Confirm Exit', 'ja': '終了確認'},
+            'confirm_exit': {'zh': '確認退出', 'en': 'Confirm Exit', 'ja': '終了確認'},
             'confirm_exit_message': {
                 'zh': '確定要退出 F1T 專業賽車分析工作站嗎？\n\n所有正在執行的分析將被停止。', 
                 'en': 'Are you sure you want to exit F1T Professional Racing Analysis Workstation?\n\nAll running analyses will be stopped.', 
@@ -163,11 +164,14 @@ class GuiTranslator:
             
             # 分析錯誤訊息
             'analysis_failed': {'zh': '分析失敗', 'en': 'Analysis Failed', 'ja': '分析失敗'},
-            'cli_analysis_error': {'zh': 'CLI 分析過程中發生錯誤', 'en': 'Error occurred during CLI analysis', 'ja': 'CLI分析中にエラーが発生しました'},
+            'cli_error': {'zh': 'CLI 分析過程中發生錯誤', 'en': 'Error occurred during CLI analysis', 'ja': 'CLI分析中にエラーが発生しました'},
             
             # 對話框類型標題
+            'info': {'zh': '提示', 'en': 'Information', 'ja': '情報'},
             'information': {'zh': '資訊', 'en': 'Information', 'ja': '情報'},
             'question': {'zh': '問題', 'en': 'Question', 'ja': '質問'},
+            'warning': {'zh': '警告', 'en': 'Warning', 'ja': '警告'},
+            'error': {'zh': '錯誤', 'en': 'Error', 'ja': 'エラー'},
             'tip': {'zh': '提示', 'en': 'Tip', 'ja': 'ヒント'},
             
             # API 相關訊息
@@ -176,14 +180,16 @@ class GuiTranslator:
             'api_restored': {'zh': 'API 已恢復', 'en': 'API Restored', 'ja': 'API復元'},
             
             # 使用者提示訊息
-            'no_charts_selected': {'zh': '沒有選擇任何圖表，將不會開啟視窗。', 'en': 'No charts selected. Window will not be opened.', 'ja': 'チャートが選択されていません。ウィンドウは開きません。'},
-            'no_driver_selected': {'zh': '請選擇至少一位車手。', 'en': 'Please select at least one driver.', 'ja': '少なくとも1人のドライバーを選択してください。'},
+            'no_chart_selected': {'zh': '沒有選擇任何圖表，將不會開啟視窗。', 'en': 'No chart selected. Window will not be opened.', 'ja': 'チャートが選択されていません。ウィンドウは開きません。'},
+            'select_driver': {'zh': '請選擇至少一位車手。', 'en': 'Please select at least one driver.', 'ja': '少なくとも1人のドライバーを選択してください。'},
             
             # 模組錯誤訊息
-            'module_unavailable': {'zh': '模組不可用', 'en': 'Module unavailable', 'ja': 'モジュールは利用できません'},
-            'track_analysis_unavailable': {'zh': '賽道分析模組不可用', 'en': 'Track analysis module unavailable', 'ja': 'トラック分析モジュールは利用できません'},
-            'cannot_find_mdi_area': {'zh': '無法找到當前 MDI 區域', 'en': 'Cannot find current MDI area', 'ja': '現在のMDIエリアが見つかりません'},
-            'cannot_open_window': {'zh': '無法開啟視窗', 'en': 'Cannot open window', 'ja': 'ウィンドウを開けません'},
+            'track_module_unavailable': {'zh': '賽道分析模組不可用', 'en': 'Track analysis module is not available', 'ja': 'トラック分析モジュールは利用できません'},
+            'mdi_area_not_found': {'zh': '無法找到當前 MDI 區域', 'en': 'Cannot find current MDI area', 'ja': '現在のMDIエリアが見つかりません'},
+            'track_window_error': {'zh': '無法開啟賽道分析視窗', 'en': 'Cannot open track analysis window', 'ja': 'トラック分析ウィンドウを開けません'},
+            
+            # 分析模組樹狀圖標題
+            'analysis_modules': {'zh': '分析模組', 'en': 'Analysis Modules', 'ja': '分析モジュール'},
             
             # 分析模組
             'lap_analysis': {'zh': '圈速分析', 'en': 'Lap Analysis', 'ja': 'ラップ分析'},
@@ -193,13 +199,78 @@ class GuiTranslator:
             
             # 事故分析模組
             'waiting_data_load': {'zh': '等待數據載入...', 'en': 'Waiting for data loading...', 'ja': 'データ読み込み待ち...'},
+            'accident_analysis_error': {'zh': '事故分析錯誤', 'en': 'Accident Analysis Error', 'ja': '事故分析エラー'},
+            'accident_comprehensive_analysis': {'zh': '事故綜合分析', 'en': 'Accident Comprehensive Analysis', 'ja': '事故総合分析'},
+            'accident_module_description': {'zh': 'F1 事故統計分析與可視化', 'en': 'F1 Accident Statistics Analysis and Visualization', 'ja': 'F1 事故統計分析と可視化'},
+            'invalid_load_parameters': {'zh': '載入參數不正確', 'en': 'Invalid load parameters', 'ja': 'ロードパラメータが無効'},
+            'local_data_format_error': {'zh': '本地資料格式錯誤', 'en': 'Local data format error', 'ja': 'ローカルデータフォーマットエラー'},
             'data_load_complete': {'zh': '✅ 數據載入完成', 'en': '✅ Data loaded successfully', 'ja': '✅ データ読み込み完了'},
             'data_cleared': {'zh': '數據已清除', 'en': 'Data cleared', 'ja': 'データがクリアされました'},
             'incident_type': {'zh': '事故類型', 'en': 'Incident Type', 'ja': '事故タイプ'},
             'count': {'zh': '次數', 'en': 'Count', 'ja': '回数'},
             'accident_comprehensive_analysis': {'zh': '🔥 事故綜合分析', 'en': '🔥 Accident Comprehensive Analysis', 'ja': '🔥 事故総合分析'},
+            
+            # Accident Analysis MDI 模組新增翻譯
+            'flag_type': {'zh': '旗標類型', 'en': 'Flag Type', 'ja': 'フラグタイプ'},
+            'reason': {'zh': '原因', 'en': 'Reason', 'ja': '理由'},
+            'track_sector': {'zh': '賽道區域', 'en': 'Track Sector', 'ja': 'トラックセクター'},
+            'driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'violation_type': {'zh': '違規類型', 'en': 'Violation Type', 'ja': '違反タイプ'},
+            'penalty': {'zh': '處罰', 'en': 'Penalty', 'ja': 'ペナルティ'},
+            'lap_number': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
+            'no_driver_involvement_data': {'zh': '暫無車手涉入數據', 'en': 'No driver involvement data', 'ja': 'ドライバー関与データなし'},
+            'no_time_distribution_data': {'zh': '無時間分佈數據', 'en': 'No time distribution data', 'ja': '時間分布データなし'},
+            'no_data_to_display': {'zh': '無數據可顯示', 'en': 'No data to display', 'ja': '表示するデータがありません'},
+            'lap_incident_distribution': {'zh': '圈數事故分佈', 'en': 'Lap Incident Distribution', 'ja': 'ラップ事故分布'},
+            'incident_count': {'zh': '事故數量', 'en': 'Incident Count', 'ja': '事故件数'},
+            'unknown': {'zh': '未知', 'en': 'Unknown', 'ja': '不明'},
+            'accident_module_info_desc': {'zh': '提供F1事故的綜合統計和分析', 'en': 'Provides comprehensive statistics and analysis of F1 accidents', 'ja': 'F1事故の包括的な統計と分析を提供'},
+            'sequence_number': {'zh': '序號', 'en': 'No.', 'ja': '番号'},
+            'lap': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
+            'time': {'zh': '時間', 'en': 'Time', 'ja': '時間'},
+            'event_description': {'zh': '事件描述', 'en': 'Event Description', 'ja': 'イベント説明'},
+            'category': {'zh': '類別', 'en': 'Category', 'ja': 'カテゴリー'},
+            'severity': {'zh': '嚴重程度', 'en': 'Severity', 'ja': '重大度'},
+            'impact_level': {'zh': '影響程度', 'en': 'Impact', 'ja': '影響度'},
+            'sector': {'zh': '區段', 'en': 'Sector', 'ja': 'セクター'},
+            'flags': {'zh': '旗幟', 'en': 'Flags', 'ja': 'フラグ'},
+            'drivers': {'zh': '車手', 'en': 'Drivers', 'ja': 'ドライバー'},
             'accident_comprehensive_analysis_title': {'zh': '事故綜合分析', 'en': 'Accident Comprehensive Analysis', 'ja': '事故総合分析'},
             'please_select_params': {'zh': '請選擇年份、賽事和賽段', 'en': 'Please select year, race and session', 'ja': '年、レース、セッションを選択してください'},
+            'accident_data_load_failed': {'zh': '事故分析資料載入失敗,請稍後再試。', 'en': 'Accident data failed to load, please try again later.', 'ja': '事故データの読み込みに失敗しました。後でもう一度お試しください。'},
+            'load_failed': {'zh': '載入失敗', 'en': 'Load failed', 'ja': '読み込み失敗'},
+            'all_categories': {'zh': '全部類別', 'en': 'All Categories', 'ja': 'すべてのカテゴリー'},
+            'all_severities': {'zh': '全部嚴重程度', 'en': 'All Severities', 'ja': 'すべての重大度'},
+            'all_impacts': {'zh': '全部影響程度', 'en': 'All Impacts', 'ja': 'すべての影響度'},
+            'refresh': {'zh': '刷新', 'en': 'Refresh', 'ja': '更新'},
+            'loading': {'zh': '載入中...', 'en': 'Loading...', 'ja': '読み込み中...'},
+            'no_incident_data': {'zh': '無事件數據', 'en': 'No incident data', 'ja': 'イベントデータなし'},
+            'loading_incident_data': {'zh': '載入事件數據中...', 'en': 'Loading incident data...', 'ja': 'イベントデータ読み込み中...'},
+            
+            # 事故分析分頁和搜尋
+            'accident_statistics': {'zh': '事故統計', 'en': 'Accident Statistics', 'ja': '事故統計'},
+            'detailed_records': {'zh': '詳細記錄', 'en': 'Detailed Records', 'ja': '詳細記録'},
+            'search_event_description': {'zh': '搜尋事件描述或關鍵字...', 'en': 'Search event description or keywords...', 'ja': 'イベント説明またはキーワードを検索...'},
+            'total_events': {'zh': '總事件', 'en': 'Total Events', 'ja': '総イベント'},
+            'pit_related': {'zh': 'PIT相關', 'en': 'PIT Related', 'ja': 'PIT関連'},
+            'track_limits': {'zh': '賽道限制', 'en': 'Track Limits', 'ja': 'トラックリミット'},
+            'investigation': {'zh': '調查', 'en': 'Investigation', 'ja': '調査'},
+            'penalty_cat': {'zh': '處罰', 'en': 'Penalty', 'ja': 'ペナルティ'},
+            'other': {'zh': '其他', 'en': 'Other', 'ja': 'その他'},
+            
+            # 事故統計卡片
+            'track_limit_violations': {'zh': '⚠️ Track Limit', 'en': '⚠️ Track Limit', 'ja': '⚠️ トラックリミット'},
+            'violations_count': {'zh': '(違規次數)', 'en': '(Violations)', 'ja': '(違反回数)'},
+            'double_yellow_flag': {'zh': '🟡🟡 雙黃旗', 'en': '🟡🟡 Double Yellow', 'ja': '🟡🟡 ダブルイエロー'},
+            'yellow_flag': {'zh': '🟡 黃旗', 'en': '🟡 Yellow Flag', 'ja': '🟡 イエローフラッグ'},
+            'red_flag': {'zh': '🔴 紅旗', 'en': '🔴 Red Flag', 'ja': '🔴 レッドフラッグ'},
+            'display_count': {'zh': '(出示次數)', 'en': '(Times)', 'ja': '(回数)'},
+            
+            # 事故統計卡片
+            'total_incidents_card': {'zh': '總事故數', 'en': 'Total Incidents', 'ja': '総事故数'},
+            'safety_car_count': {'zh': '安全車次數', 'en': 'Safety Car', 'ja': 'セーフティカー'},
+            'red_flag_count': {'zh': '紅旗次數', 'en': 'Red Flags', 'ja': 'レッドフラッグ'},
+            'avg_severity': {'zh': '平均嚴重程度', 'en': 'Avg Severity', 'ja': '平均深刻度'},
             
             # 右鍵選單
             'execute_analysis': {'zh': '執行分析', 'en': 'Execute Analysis', 'ja': '分析を実行'},
@@ -439,12 +510,18 @@ class GuiTranslator:
             
             # 圖表控制
             'select_chart': {'zh': '選擇圖表:', 'en': 'Select Chart:', 'ja': 'Select Chart:'},
+            'chart_type': {'zh': '圖表類型', 'en': 'Chart Type', 'ja': 'チャートタイプ'},
             
             # 降雨分析圖表選項
             'main_chart_rain_temperature': {'zh': '主要圖表 (降雨+氣溫)', 'en': 'Main Chart (Rain+Temperature)', 'ja': 'Main Chart (Rain+Temperature)'},
             'temperature_comparison_air_track': {'zh': '溫度對比 (氣溫vs賽道溫度)', 'en': 'Temperature Comparison (Air vs Track)', 'ja': 'Temperature Comparison (Air vs Track)'},
             'humidity_windspeed': {'zh': '濕度風速 (濕度+風速)', 'en': 'Humidity & Wind Speed', 'ja': 'Humidity & Wind Speed'},
             'pressure_changes': {'zh': '氣壓變化', 'en': 'Pressure Changes', 'ja': 'Pressure Changes'},
+            
+            # 降雨分析顯示選項
+            'display_options': {'zh': '顯示選項', 'en': 'Display Options', 'ja': '表示オプション'},
+            'show_grid_checkbox': {'zh': '顯示網格', 'en': 'Show Grid', 'ja': 'グリッド表示'},
+            'show_legend_checkbox': {'zh': '顯示圖例', 'en': 'Show Legend', 'ja': '凡例表示'},
             
             # Window management controls
             'close_all_windows': {'zh': '關閉所有視窗', 'en': 'Close All Windows', 'ja': 'すべてのウィンドウを閉じる'},

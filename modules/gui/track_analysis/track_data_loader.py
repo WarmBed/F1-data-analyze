@@ -97,39 +97,14 @@ class TrackUniversalDataLoader(UniversalDataLoader):
         return patterns
     
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """透過 CLI 工具生成數據"""
-        try:
-            year = kwargs.get("year")
-            race = kwargs.get("race")
-            session = kwargs.get("session")
-            
-            print(f"[TRACK_ANALYSIS] 呼叫 CLI -f2 生成賽道數據...")
-            
-            # 構建 CLI 命令
-            cmd = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "2",  # 賽道分析功能
-                "-y", str(year),
-                "-r", race,
-                "-s", session
-            ]
-            
-            print(f"[TRACK_ANALYSIS] CLI 命令: {' '.join(cmd)}")
-            
-            # 執行 CLI 命令
-            result = subprocess.run(cmd, capture_output=True, text=True, 
-                                  encoding='utf-8', errors='replace')
-            
-            if result.returncode == 0:
-                print(f"[TRACK_ANALYSIS] CLI 執行成功")
-                return True
-            else:
-                print(f"[TRACK_ANALYSIS] CLI 執行失敗: {result.stderr}")
-                return False
-                
-        except Exception as e:
-            print(f"[TRACK_ANALYSIS] CLI 執行錯誤: {e}")
-            return False
+        """
+        [已禁用] 透過 CLI 工具生成數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
+        """
+        print(f"[TRACK_ANALYSIS] ⚠️  [API-ONLY] CLI 調用已禁用")
+        print(f"[TRACK_ANALYSIS] 💡 提示: 請使用 API 獲取賽道分析數據")
+        return False
     
     def _validate_data_format(self, raw_data: Any) -> bool:
         """驗證數據格式"""

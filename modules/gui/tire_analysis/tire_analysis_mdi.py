@@ -471,60 +471,14 @@ class TireAnalysisDataManager(UniversalDataLoader):
         return self.process_loaded_data(data)
         
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """通過 CLI 生成數據"""
-        try:
-            year = kwargs.get('year')
-            race = kwargs.get('race') 
-            session = kwargs.get('session')
-            
-            self._debug(f"🚀 啟動 CLI 輪胎策略數據生成")
-            self._debug(f"   參數: year={year}, race={race}, session={session}")
-            
-            # 檢查配置中的 CLI 函數
-            cli_function = self.config.cli_function
-            if not cli_function:
-                self._debug("❌ 配置中沒有 CLI 函數")
-                return False
-            
-            # 使用標準化的 CliAnalysisWorker
-            force_mode = 26  # 功能26: 輪胎策略分析
-            
-            self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
-            
-            # 創建並啟動 CLI 工作器
-            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
-            
-            # 連接信號
-            def on_cli_finished():
-                self._debug("✅ CLI 工作器執行完成")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_completed(success, message):
-                self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_output(output):
-                self._debug(f"📤 CLI 輸出: {output}")
-            
-            self.cli_worker.finished.connect(on_cli_finished)
-            self.cli_worker.analysis_completed.connect(on_cli_completed)
-            self.cli_worker.output_received.connect(on_cli_output)
-            
-            # 啟動工作器
-            self.cli_worker.start()
-            self._debug(f"✅ CLI 工作器已啟動")
-            
-            return True
-            
-        except Exception as e:
-            self._error(f"CLI 生成失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+        """
+        [已禁用] 通過 CLI 生成數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用,系統只允許通過 API 獲取數據
+        """
+        self._debug("⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug("💡 提示: 請使用 API 獲取輪胎分析數據")
+        return False
         
     def process_loaded_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """處理載入的輪胎策略數據 - 支援多種 JSON 格式"""

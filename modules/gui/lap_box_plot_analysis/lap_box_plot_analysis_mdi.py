@@ -292,17 +292,32 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             pass
 
     def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        self._debug("========== API 成功回調 ==========")
+        self._debug(f"Payload 類型: {type(payload)}")
+        self._debug(f"Payload 鍵: {list(payload.keys()) if isinstance(payload, dict) else 'N/A'}")
+        
         try:
             raw_data = payload.get("data")
+            self._debug(f"原始數據類型: {type(raw_data)}")
+            self._debug(f"原始數據鍵: {list(raw_data.keys())[:10] if isinstance(raw_data, dict) else 'N/A'}")
+            
             meta = payload.get("meta", {})
             self._last_api_meta = meta or {}
             self._last_data_source = "api"
 
             if not self._validate_data_format(raw_data):
+                self._debug("❌ 數據驗證失敗")
                 raise ValueError("API 回傳數據格式不符合預期")
+            
+            self._debug("✅ 數據驗證通過")
 
             processed_data = self._process_data(raw_data)
+            self._debug(f"處理後數據類型: {type(processed_data)}")
+            self._debug(f"處理後數據鍵: {list(processed_data.keys()) if isinstance(processed_data, dict) else 'N/A'}")
+            
             if isinstance(processed_data, dict):
+                driver_count = len(processed_data.get('driver_laptimes', {}))
+                self._debug(f"車手數量: {driver_count}")
                 metadata = processed_data.setdefault("metadata", {})
                 metadata.setdefault("data_source", "api")
                 if self._last_api_meta:
@@ -311,35 +326,53 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             self._current_data = processed_data
             self._is_loading = False
             self.load_progress.emit(100)
-            self.status_changed.emit("已從 API 載入降雨分析資料")
+            self.status_changed.emit("已從 API 載入資料")
+            
+            self._debug("準備發出 data_loaded 信號...")
             self.data_loaded.emit(processed_data)
+            self._debug("✅ data_loaded 信號已發出")
+            self._debug("========== API 成功回調結束 ==========")
 
         except Exception as exc:
+            self._debug(f"❌ 處理 API 數據時發生異常: {exc}")
+            import traceback
+            traceback.print_exc()
             self._error(f"處理 API 數據失敗: {exc}")
             self._is_loading = False
             self.status_changed.emit("API 資料格式錯誤，改用本地資料")
             self._fallback_to_local(str(exc))
 
     def _on_api_error(self, message: str) -> None:
+        self._debug("========== API 錯誤回調 ==========")
+        self._debug(f"錯誤訊息: {message}")
         self._error(f"API 請求失敗: {message}")
         self._is_loading = False
         self.status_changed.emit("API 請求失敗，改用本地資料")
+        self._debug("開始執行本地 JSON 回退...")
         self._fallback_to_local(message)
 
     def _fallback_to_local(self, reason: str) -> None:
+        self._debug("========== 本地 JSON 回退流程 ==========")
+        self._debug(f"觸發原因: {reason}")
+        
         params = self._pending_params or {}
         if not params:
+            self._debug("❌ 缺少待處理參數")
             self.load_error.emit(f"API 載入失敗: {reason}")
             return
+
+        self._debug(f"待處理參數: {params}")
+        self._debug(f"允許本地回退: {self._allow_local_fallback}")
+        self._debug(f"回退策略原因: {self._fallback_policy_reason}")
 
         if not self._allow_local_fallback:
             self._last_data_source = "local-fallback-disabled"
             self._last_api_meta = {}
             message = (
                 "API 載入失敗，且本地 JSON 後備已被策略停用。"
-                " 如需啟用，請設定環境變數 F1T_ALLOW_RAIN_JSON_FALLBACK=1 或使用 set_local_fallback_allowed。"
+                " 如需啟用，請設定環境變數 F1T_ALLOW_BOXPLOT_JSON_FALLBACK=1 或使用 set_local_fallback_allowed。"
             )
-            self._debug(f"本地 JSON 後備被阻擋: {reason}")
+            self._debug(f"❌ 本地 JSON 後備被阻擋: {reason}")
             self._is_loading = False
             self.status_changed.emit("本地 JSON 後備已停用，請檢查 API 或手動啟用後備流程。")
             self.load_error.emit(message)
@@ -347,10 +380,21 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
 
         self._last_data_source = "local-json"
         self._last_api_meta = {}
-        self._debug(f"啟動本地 JSON/CLI 後備流程: {reason}")
-        self.status_changed.emit("使用本地 JSON/CLI 後備載入降雨資料...")
-        self.load_error.emit(f"API 載入失敗，使用本地資料: {reason}")
-        super().load_data(**params)
+        self._debug(f"✅ 啟動本地 JSON 後備流程")
+        self._debug("調用父類 load_data() 方法...")
+        self.status_changed.emit("使用本地 JSON 後備載入資料...")
+        
+        # 調用父類的 load_data (會搜尋本地 JSON)
+        result = super().load_data(**params)
+        self._debug(f"父類 load_data() 返回結果: {result}")
+        
+        if not result:
+            self._debug("❌ 父類 load_data() 返回 False")
+            self.load_error.emit(f"本地 JSON 載入失敗: {reason}")
+        else:
+            self._debug("✅ 父類 load_data() 返回 True")
+        
+        self._debug("========== 本地 JSON 回退流程結束 ===========")
 
     def _cleanup_api_worker(self) -> None:
         if self._api_worker:
@@ -408,60 +452,14 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         return self.process_loaded_data(data)
         
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """通過 CLI 生成數據"""
-        try:
-            year = kwargs.get('year')
-            race = kwargs.get('race') 
-            session = kwargs.get('session')
-            
-            self._debug(f"🚀 啟動 CLI 詳細圈速分析數據生成")
-            self._debug(f"   參數: year={year}, race={race}, session={session}")
-            
-            # 檢查配置中的 CLI 函數
-            cli_function = self.config.cli_function
-            if not cli_function:
-                self._debug("❌ 配置中沒有 CLI 函數")
-                return False
-            
-            # 使用標準化的 CliAnalysisWorker
-            force_mode = 28  # 功能28: 詳細圈速分析（Detailed Lap Time Analysis）
-            
-            self._debug(f"🔧 CLI 命令參數: -f {force_mode} -y {year} -r {race} -s {session}")
-            
-            # 創建並啟動 CLI 工作器
-            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
-            
-            # 連接信號
-            def on_cli_finished():
-                self._debug("✅ CLI 工作器執行完成")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_completed(success, message):
-                self._debug(f"✅ CLI 分析完成: {'成功' if success else '失敗'} - {message}")
-                if hasattr(self, 'cli_worker') and self.cli_worker:
-                    self.cli_worker.deleteLater()
-                    self.cli_worker = None
-            
-            def on_cli_output(output):
-                self._debug(f"📤 CLI 輸出: {output}")
-            
-            self.cli_worker.finished.connect(on_cli_finished)
-            self.cli_worker.analysis_completed.connect(on_cli_completed)
-            self.cli_worker.output_received.connect(on_cli_output)
-            
-            # 啟動工作器
-            self.cli_worker.start()
-            self._debug(f"✅ CLI 工作器已啟動")
-            
-            return True
-            
-        except Exception as e:
-            self._error(f"CLI 生成失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
+        """
+        [已禁用] 通過 CLI 生成數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用,系統只允許通過 API 獲取數據
+        """
+        self._debug("⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug("💡 提示: 請使用 API 獲取詳細圈速分析數據")
+        return False
         
     def process_loaded_data(self, data: Dict[str, Any]) -> Dict[str, Any]:
         """處理載入的圈速箱型圖數據"""
@@ -811,6 +809,12 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             self.current_race = race
             self.current_session = session
             
+            # 連接錯誤處理器 (只連接一次)
+            if not hasattr(self, '_error_handler_connected'):
+                if hasattr(self, 'data_manager') and self.data_manager:
+                    self.data_manager.load_error.connect(self._on_data_load_error)
+                    self._error_handler_connected = True
+            
             # 更新數據管理器參數
             if hasattr(self, 'data_manager') and self.data_manager:
                 print(f"[BOXPLOT_MDI] 更新數據管理器參數...")
@@ -827,12 +831,10 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                 )
                 print(f"[BOXPLOT_MDI] 數據載入結果: {result}")
                 
-                # 如果有數據，更新圖表
-                if result and hasattr(self, 'chart_widget') and self.chart_widget:
-                    current_data = self.data_manager.get_current_data()
-                    if current_data and isinstance(current_data, dict):
-                        print(f"[BOXPLOT_MDI] 更新圖表數據...")
-                        self.chart_widget.update_data(current_data)
+                if not result:
+                    print(f"[BOXPLOT_MDI] ⚠️ 數據載入請求未成功提交")
+                
+                # 注意: 數據載入是異步的,實際數據會通過 data_loaded 信號傳遞
             
             print(f"[BOXPLOT_MDI] 參數更新完成")
             return True
@@ -897,6 +899,41 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             print(f"[BOXPLOT_MDI] 更新過濾設定失敗: {e}")
             import traceback
             traceback.print_exc()
+    
+    def _on_data_load_error(self, error_message: str):
+        """處理數據載入錯誤 - 向用戶顯示友好的錯誤提示"""
+        print(f"[BOXPLOT_MDI] ❌ 數據載入錯誤: {error_message}")
+        
+        # 更新控制面板統計信息
+        if hasattr(self, 'control_widget') and self.control_widget:
+            self.control_widget.update_statistics("❌ 數據載入失敗")
+        
+        # 顯示詳細錯誤訊息給用戶
+        from PyQt5.QtWidgets import QMessageBox
+        
+        # 判斷錯誤類型並提供對應解決方案
+        if "API" in error_message and "本地" in error_message:
+            # API 失敗且本地 JSON 不存在
+            solution_text = (
+                f"無法載入圈速箱型圖數據:\n{error_message}\n\n"
+                "請執行以下操作之一:\n\n"
+                "方案 1: 啟動 API 服務器\n"
+                "   開啟新終端執行: python refactored_api.py\n"
+                "   然後點擊「重新載入」按鈕\n\n"
+                "方案 2: 手動生成數據檔案\n"
+                f"   執行: python f1_analysis_modular_main.py -f 28 -y {self.current_year} -r {self.current_race} -s {self.current_session}\n"
+                "   然後點擊「重新載入」按鈕"
+            )
+        else:
+            solution_text = f"數據載入失敗:\n{error_message}\n\n請檢查 API 服務器是否運行,或確認本地 JSON 檔案存在。"
+        
+        # 使用 warning 而非 critical 以保持 GUI 可用性
+        QMessageBox.warning(
+            self.main_widget,
+            "圈速箱型圖 - 數據載入失敗",
+            solution_text,
+            QMessageBox.Ok
+        )
     
     def _on_reload_requested(self):
         """重新載入數據"""

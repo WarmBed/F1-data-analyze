@@ -942,7 +942,7 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         layout.setSpacing(15)
         
         # 圈時間資訊
-        self.lap_time_label = QLabel("⏱️ 圈時間: N/A")
+        self.lap_time_label = QLabel(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
         self.lap_time_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.lap_time_label)
         
@@ -952,7 +952,7 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         layout.addWidget(separator1)
         
         # 輪胎配方資訊  
-        self.tyre_compound_label = QLabel("🛞 輪胎配方: N/A")
+        self.tyre_compound_label = QLabel(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
         self.tyre_compound_label.setStyleSheet("font-size: 11px; color: #2c3e50;")
         layout.addWidget(self.tyre_compound_label)
         
@@ -968,7 +968,7 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         tyre_life_layout.setSpacing(5)
         
         # 標籤
-        tyre_life_title = QLabel("🔄 圈數:")
+        tyre_life_title = QLabel(f"🔄 {tr('lap_number_short', '圈數')}:")
         tyre_life_title.setStyleSheet("font-size: 11px; color: #2c3e50;")
         tyre_life_layout.addWidget(tyre_life_title)
         
@@ -1124,14 +1124,14 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
                     driver2 = drivers[1]
                     
                     # 圈時間
-                    lap_time1 = driver1.get('lap_time', 'N/A')
-                    lap_time2 = driver2.get('lap_time', 'N/A')
-                    self.lap_time_label.setText(f"⏱️ 圈時間: {lap_time1} | {lap_time2}")
+                    lap_time1 = driver1.get('lap_time', tr('na', 'N/A'))
+                    lap_time2 = driver2.get('lap_time', tr('na', 'N/A'))
+                    self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {lap_time1} | {lap_time2}")
                     
                     # 輪胎配方
-                    compound1 = driver1.get('compound', 'N/A')
-                    compound2 = driver2.get('compound', 'N/A')
-                    self.tyre_compound_label.setText(f"🛞 輪胎配方: {compound1} | {compound2}")
+                    compound1 = driver1.get('compound', tr('na', 'N/A'))
+                    compound2 = driver2.get('compound', tr('na', 'N/A'))
+                    self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {compound1} | {compound2}")
                     
                     # 更新圈數輸入框（如果數據中有圈數信息）
                     if 'lap_number' in driver1 and 'lap_number' in driver2:
@@ -1142,26 +1142,26 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
                 # 單車手模式：顯示單一車手信息
                 else:
                     driver = drivers[0]
-                    lap_time = driver.get('lap_time', 'N/A')
-                    compound = driver.get('compound', 'N/A')
+                    lap_time = driver.get('lap_time', tr('na', 'N/A'))
+                    compound = driver.get('compound', tr('na', 'N/A'))
                     
                     # 更新圈數輸入框（單車手模式）
                     if 'lap_number' in driver:
                         lap_number = driver.get('lap_number', 1)
                         self.set_lap_numbers(lap_number, lap_number)
                     
-                    self.lap_time_label.setText(f"⏱️ 圈時間: {lap_time}")
-                    self.tyre_compound_label.setText(f"🛞 輪胎配方: {compound}")
+                    self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {lap_time}")
+                    self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {compound}")
             else:
                 # 沒有車手數據時的預設顯示
-                self.lap_time_label.setText("⏱️ 圈時間: N/A")
-                self.tyre_compound_label.setText("🛞 輪胎配方: N/A")
+                self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('na', 'N/A')}")
+                self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
             print(f"[ERROR] 更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
-            self.lap_time_label.setText("⏱️ 圈時間: 錯誤")
-            self.tyre_compound_label.setText("🛞 輪胎配方: 錯誤")
+            self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
+            self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
     
     def update_acceleration_data(self, data: Dict[str, Any]):
         """更新acceleration數據 - 採用速度分析的更新邏輯"""

@@ -567,65 +567,13 @@ class PitstopDataManager(QObject):
     
     def _generate_pitstop_data_via_cli(self, year: str, race: str, session: str) -> bool:
         """
-        透過 CLI 工具生成進站數據 - 使用非阻塞方式（類似賽道分析模組）
+        [已禁用] 透過 CLI 工具生成進站數據
         
-        Args:
-            year: 年份
-            race: 賽事名稱
-            session: 賽段代碼
-            
-        Returns:
-            bool: 請求是否成功提交（注意：不是生成是否成功）
+        ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
         """
-        try:
-            print(f"[CLI] [GENERATE] 開始生成進站數據: {year} {race} {session}")
-            
-            # 直接調用 CLI 分析腳本
-            import subprocess
-            import threading
-            
-            # 構建命令
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "3",  # 功能3: 車手最快進站時間排行榜
-                "-y", str(year),
-                "-r", race,
-                "-s", session
-            ]
-            
-            print(f"[CLI] [GENERATE] 執行命令: {' '.join(command)}")
-            
-            # 非阻塞執行
-            def run_cli():
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        print(f"[OK] [CLI_GEN] CLI 執行成功")
-                    else:
-                        print(f"[ERROR] [CLI_GEN] CLI 執行失敗: {stderr}")
-                        
-                except Exception as e:
-                    print(f"[ERROR] [CLI_GEN] CLI 執行異常: {e}")
-            
-            # 在後台執行 CLI
-            thread = threading.Thread(target=run_cli, daemon=True)
-            thread.start()
-            
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] [CLI_GEN] 啟動 CLI 失敗: {e}")
-            return False
+        print(f"[PITSTOP] ⚠️  [API-ONLY] CLI 調用已禁用")
+        print(f"[PITSTOP] 💡 提示: 請使用 API 獲取進站分析數據")
+        return False
     
     def _load_json_file(self, file_path: str) -> None:
         """
@@ -963,59 +911,14 @@ class PitstopDataManager(QObject):
             return False
     
     def _generate_team_data_via_cli(self, year: str, race: str, session: str) -> bool:
-        """透過CLI生成車隊進站數據"""
-        try:
-            import subprocess
-            import threading
-            
-            # 建構CLI命令 - 功能4: 車隊進站時間排行榜
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "4",  # 功能4: 車隊進站時間排行榜
-                "-y", str(year),
-                "-r", race,
-                "-s", session
-            ]
-            
-            print(f"[CLI] [TEAM_GENERATE] 執行車隊數據生成命令: {' '.join(command)}")
-            
-            # 非阻塞執行
-            def run_team_cli():
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        print(f"[OK] [TEAM_CLI_GEN] 車隊CLI 執行成功")
-                        # 🔧 修正：CLI執行成功後，通知主模組刷新
-                        # 使用信號機制，在主執行緒中處理
-                        print(f"[RELOAD] [TEAM_CLI_GEN] 發送車隊數據重新載入信號")
-                        self.team_data_reload_requested.emit()
-                    else:
-                        print(f"[ERROR] [TEAM_CLI_GEN] 車隊CLI 執行失敗: {stderr}")
-                        self.error_occurred.emit(f"車隊CLI生成失敗: {stderr}")
-                        
-                except Exception as e:
-                    print(f"[ERROR] [TEAM_CLI_GEN] 車隊CLI 執行異常: {e}")
-                    self.error_occurred.emit(f"車隊CLI執行異常: {str(e)}")
-            
-            # 在後台執行車隊 CLI
-            thread = threading.Thread(target=run_team_cli, daemon=True)
-            thread.start()
-            
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] [TEAM_CLI_GEN] 啟動車隊CLI失敗: {e}")
-            return False
+        """
+        [已禁用] 透過CLI生成車隊進站數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
+        """
+        print(f"[PITSTOP_TEAM] ⚠️  [API-ONLY] CLI 調用已禁用")
+        print(f"[PITSTOP_TEAM] 💡 提示: 請使用 API 獲取車隊進站數據")
+        return False
     
     def _trigger_reload_signal(self):
         """觸發重新載入信號給主模組"""
@@ -1191,58 +1094,14 @@ class PitstopDataManager(QObject):
             return False
 
     def _generate_driver_detailed_via_cli(self, year: str, race: str, session: str) -> bool:
-        """透過CLI生成車手進站詳細數據（後台執行）"""
-        try:
-            import subprocess
-            import threading
-            
-            # 建構CLI命令 - 功能5: 車手進站詳細記錄
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "5",  # 功能5: 車手進站詳細記錄
-                "-y", str(year),
-                "-r", race,
-                "-s", session
-            ]
-            
-            print(f"[CLI] [DRIVER_DETAILED_GENERATE] 執行車手詳細數據生成命令: {' '.join(command)}")
-            
-            # 非阻塞執行
-            def run_driver_detailed_cli():
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        print(f"[OK] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行成功")
-                        # 使用信號機制，在主執行緒中處理
-                        print(f"[RELOAD] [DRIVER_DETAILED_CLI_GEN] 發送車手詳細數據重新載入信號")
-                        self.driver_detailed_reload_requested.emit()
-                    else:
-                        print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行失敗: {stderr}")
-                        self.error_occurred.emit(f"車手詳細CLI生成失敗: {stderr}")
-                        
-                except Exception as e:
-                    print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 車手詳細CLI 執行異常: {e}")
-                    self.error_occurred.emit(f"車手詳細CLI執行異常: {str(e)}")
-            
-            # 在後台執行車手詳細 CLI
-            thread = threading.Thread(target=run_driver_detailed_cli, daemon=True)
-            thread.start()
-            
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] [DRIVER_DETAILED_CLI_GEN] 啟動車手詳細CLI失敗: {e}")
-            return False
+        """
+        [已禁用] 透過CLI生成車手進站詳細數據
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
+        """
+        print(f"[PITSTOP_DRIVER_DETAILED] ⚠️  [API-ONLY] CLI 調用已禁用")
+        print(f"[PITSTOP_DRIVER_DETAILED] 💡 提示: 請使用 API 獲取車手詳細進站數據")
+        return False
 
 class PitstopRankingWidget(QWidget):
     """進站排行榜主要內容Widget"""

@@ -33,6 +33,9 @@ from typing import Dict, List, Any, Optional, Tuple, Type
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+# 導入國際化函數
+from core.gui_i18n import tr
+
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSplitter, 
     QFrame, QGroupBox, QGridLayout, QPushButton, QStatusBar
@@ -929,7 +932,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'telemetry',
     AnalysisMDIConfig(
         analysis_type='telemetry',
-        display_name='遙測分析',
+        display_name=tr('telemetry_analysis', '遙測分析'),
         default_size=(1200, 800),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -943,7 +946,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'rain',
     AnalysisMDIConfig(
         analysis_type='rain',
-        display_name='降雨分析',
+        display_name=tr('rain_analysis', '降雨分析'),
         default_size=(1000, 700),
         requires_driver_params=False,
         requires_lap_params=False,
@@ -953,7 +956,6 @@ UniversalAnalysisMDI.register_mdi_module_type(
 )
 
 # 註冊事故分析 MDI 模組
-from core.gui_i18n import tr
 UniversalAnalysisMDI.register_mdi_module_type(
     'accident',
     AnalysisMDIConfig(
@@ -972,7 +974,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'pitstop',
     AnalysisMDIConfig(
         analysis_type='pitstop',
-        display_name='進站分析',
+        display_name=tr('pitstop_analysis', '進站分析'),
         default_size=(1100, 700),
         requires_driver_params=True,
         requires_lap_params=False,
@@ -986,7 +988,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'speed',
     AnalysisMDIConfig(
         analysis_type='speed',
-        display_name='速度分析',
+        display_name=tr('speed_analysis', '速度分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1000,7 +1002,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'brake',
     AnalysisMDIConfig(
         analysis_type='brake',
-        display_name='煞車分析',
+        display_name=tr('brake_analysis', '煞車分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1014,7 +1016,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'gear',
     AnalysisMDIConfig(
         analysis_type='gear',
-        display_name='齒輪分析',
+        display_name=tr('gear_analysis', '檔位分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1028,7 +1030,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'rpm',
     AnalysisMDIConfig(
         analysis_type='rpm',
-        display_name='RPM分析',
+        display_name=tr('rpm_analysis', 'RPM分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1042,7 +1044,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'throttle',
     AnalysisMDIConfig(
         analysis_type='throttle',
-        display_name='節流閥分析',
+        display_name=tr('throttle_analysis', '油門分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1056,7 +1058,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'acceleration',
     AnalysisMDIConfig(
         analysis_type='acceleration',
-        display_name='加速度分析',
+        display_name=tr('acceleration_analysis', '加速度分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1070,7 +1072,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'speeddiff',
     AnalysisMDIConfig(
         analysis_type='speeddiff',
-        display_name='速度差分析',
+        display_name=tr('speeddiff_analysis', '速度差異分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,
@@ -1084,7 +1086,7 @@ UniversalAnalysisMDI.register_mdi_module_type(
     'distancediff',
     AnalysisMDIConfig(
         analysis_type='distancediff',
-        display_name='距離差分析',
+        display_name=tr('distancediff_analysis', '距離差異分析'),
         default_size=(900, 600),
         requires_driver_params=True,
         requires_lap_params=True,

@@ -58,6 +58,11 @@ class speeddiffDataManager(QObject):
             self._is_loading = True
             self.loading_progress.emit(0)
             self.status_changed.emit("開始載入speeddiff數據...")
+
+            # 記錄當前上下文以支援遙測檢查
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
             
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":
@@ -532,6 +537,103 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
         
         # 使用QTimer延遲執行
         QTimer.singleShot(100, update_title)
+
+    def update_lap_parameters(self, year: str, race: str, session: str,
+                              driver1: str, driver2: Optional[str] = None,
+                              lap1: int = 1, lap2: Optional[int] = None,
+                              is_fastest: bool = False) -> bool:
+        """更新圈速分析參數並重新整理速度差資料"""
+        try:
+            print("[speeddiff_MDI] ========== 圈速參數更新 ==========")
+            print(f"[speeddiff_MDI] 收到參數: {year} {race} {session}")
+            print(f"[speeddiff_MDI] 車手: {driver1} vs {driver2}")
+            print(f"[speeddiff_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
+            print(f"[speeddiff_MDI] 最速圈: {is_fastest}")
+
+            if is_fastest and hasattr(self, '_ensure_telemetry_data_for_fastest_laps'):
+                fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
+                if fastest_laps:
+                    if driver1 in fastest_laps:
+                        lap1 = fastest_laps[driver1]
+                        print(f"[speeddiff_MDI] 🏁 {driver1} 最速圈: 第{lap1}圈")
+                    if driver2 and driver2 in fastest_laps:
+                        lap2 = fastest_laps[driver2]
+                        print(f"[speeddiff_MDI] 🏁 {driver2} 最速圈: 第{lap2}圈")
+                else:
+                    print("[speeddiff_MDI] ⚠️ 無法取得最速圈資訊，沿用當前圈數")
+
+            normalized_year = str(year)
+            normalized_driver2 = driver2 if driver2 else driver1
+            normalized_lap2 = lap2 if lap2 is not None else lap1
+
+            params_changed = (
+                self.current_year != normalized_year or
+                self.current_race != race or
+                self.current_session != session or
+                self.driver1 != driver1 or
+                self.driver2 != normalized_driver2 or
+                self.lap1 != lap1 or
+                self.lap2 != normalized_lap2
+            )
+
+            self.current_year = normalized_year
+            self.current_race = race
+            self.current_session = session
+            self.driver1 = driver1
+            self.driver2 = normalized_driver2
+            self.lap1 = lap1
+            self.lap2 = normalized_lap2
+
+            if hasattr(self.speeddiff_chart_widget, 'set_lap_numbers'):
+                self.speeddiff_chart_widget.set_lap_numbers(self.lap1, self.lap2)
+
+            self.update_window_title()
+
+            if not params_changed:
+                print("[speeddiff_MDI] ℹ️ 參數無變化，保持目前資料")
+                return True
+
+            if not self.data_manager:
+                print("[speeddiff_MDI] ❌ 數據管理器未初始化，無法更新")
+                return False
+
+            self.data_manager.current_year = self.current_year
+            self.data_manager.current_race = self.current_race
+            self.data_manager.current_session = self.current_session
+
+            print("[speeddiff_MDI] 🚀 重新載入speeddiff數據...")
+            success = self.data_manager.load_speeddiff_data(
+                year=self.current_year,
+                race=self.current_race,
+                session=self.current_session,
+                driver1=self.driver1,
+                driver2=self.driver2,
+                lap1=self.lap1,
+                lap2=self.lap2,
+                is_fastest=is_fastest
+            )
+
+            if success:
+                self.parameters_updated.emit({
+                    'year': self.current_year,
+                    'race': self.current_race,
+                    'session': self.current_session,
+                    'driver1': self.driver1,
+                    'driver2': self.driver2,
+                    'lap1': self.lap1,
+                    'lap2': self.lap2
+                })
+                print("[speeddiff_MDI] ✅ 圈速參數更新完成")
+                return True
+
+            print("[speeddiff_MDI] ❌ 數據載入失敗")
+            return False
+
+        except Exception as e:
+            print(f"[ERROR] [speeddiff_MDI] update_lap_parameters 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
     
     def get_default_size(self) -> tuple:
         """獲取預設視窗大小"""

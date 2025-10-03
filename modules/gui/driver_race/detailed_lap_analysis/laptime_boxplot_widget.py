@@ -599,16 +599,16 @@ class LapTimeBoxPlotWidget(QWidget):
                 self.status_label.setText(f"❌ Failed to load JSON: {e}")
     
     def _generate_via_cli(self, year, race, session):
-        """通過 CLI 生成數據"""
-        self._debug(f"準備通過 CLI 生成數據: {year} {race} {session}")
-        if self.status_label:
-            self.status_label.setText(f"⏳ Generating data via CLI...")
+        """
+        [已禁用] 通過 CLI 生成數據
         
-        # 創建 CLI Worker（使用 Function 28）
-        self.cli_worker = CliAnalysisWorker(year, race, session, force_mode=28)
-        self.cli_worker.analysis_completed.connect(self._on_cli_completed)
-        self.cli_worker.progress_updated.connect(self._on_cli_progress)
-        self.cli_worker.start()
+        ⚠️ API-ONLY 模式: 此方法已禁用,系統只允許通過 API 獲取數據
+        """
+        self._debug(f"⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug(f"💡 提示: 請使用 API 獲取數據")
+        if self.status_label:
+            self.status_label.setText(f"⚠️ CLI 調用已禁用 - 請使用 API")
+        return False
     
     def _transform_data_for_display(self, raw_data: Any) -> Any:
         """轉換數據為顯示格式"""

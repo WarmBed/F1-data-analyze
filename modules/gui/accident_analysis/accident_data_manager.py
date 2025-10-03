@@ -14,8 +14,10 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 try:
     from ..base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
+    from core.gui_i18n import tr
 except ImportError:  # pragma: no cover - fallback for relative import during packaging
     from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
+    from core.gui_i18n import tr
 
 
 class AccidentAnalysisApiWorker(QThread):
@@ -245,7 +247,7 @@ class AccidentDataManager(UniversalDataLoader):
 
         if not self._validate_load_parameters(params):
             self._error("載入參數驗證失敗")
-            self.error_occurred.emit("載入參數不正確")
+            self.error_occurred.emit(tr('invalid_load_parameters', 'Invalid load parameters'))
             return False
 
         self._is_loading = True
@@ -366,7 +368,7 @@ class AccidentDataManager(UniversalDataLoader):
 
     def _handle_local_data_loaded(self, data: Dict[str, Any]) -> None:
         if not isinstance(data, dict):
-            self.error_occurred.emit("本地資料格式錯誤")
+            self.error_occurred.emit(tr('local_data_format_error', 'Local data format error'))
             return
 
         normalized_data = self._normalize_incident_payload(data)
@@ -495,39 +497,14 @@ class AccidentDataManager(UniversalDataLoader):
         return patterns
 
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        try:
-            year = kwargs.get("year")
-            race = kwargs.get("race")
-            session = kwargs.get("session")
-            function_id = self._pending_function_id or getattr(
-                self.config, "api_function_id", "8"
-            )
-
-            try:
-                force_mode = int(float(function_id))
-            except Exception:  # pragma: no cover - fallback path
-                force_mode = 8
-
-            self._debug(
-                f"啟動 CLI 事故分析生成: -f {force_mode} -y {year} -r {race} -s {session}"
-            )
-            self.cli_worker = self.create_cli_worker(year, race, session, force_mode)
-
-            def on_cli_completed(success: bool, message: str) -> None:
-                if success:
-                    self._debug("CLI 事故分析生成完成，準備重新載入本地資料")
-                    self.statistics_reload_requested.emit()
-                    self.all_incidents_reload_requested.emit()
-                else:
-                    self.error_occurred.emit(message)
-
-            self.cli_worker.analysis_completed.connect(on_cli_completed)
-            self.cli_worker.start()
-            return True
-        except Exception as exc:  # pragma: no cover - reported to GUI
-            self._error(f"CLI 事故分析生成失敗: {exc}")
-            self.error_occurred.emit(str(exc))
-            return False
+        """
+        [已禁用] CLI 事故分析數據生成
+        
+        ⚠️ API-ONLY 模式: 此方法已禁用,系統只允許通過 API 獲取數據
+        """
+        self._debug("⚠️  [API-ONLY] CLI 調用已禁用")
+        self._debug("💡 提示: 請使用 API 獲取事故分析數據")
+        return False
 
     def _validate_data_format(self, raw_data: Any) -> bool:
         if not isinstance(raw_data, dict):

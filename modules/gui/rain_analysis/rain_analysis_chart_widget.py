@@ -673,12 +673,12 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             # 降雨圖例
             painter.setBrush(QBrush(RainChartTheme.RAINFALL_COLOR))
             painter.drawRect(legend_x, legend_y, 15, 15)
-            painter.drawText(legend_x + 20, legend_y + 12, "降雨")
+            painter.drawText(legend_x + 20, legend_y + 12, "Rainfall")
             
             # 氣溫圖例
             painter.setPen(QPen(RainChartTheme.AIR_TEMP_COLOR, 3))
             painter.drawLine(legend_x, legend_y + 25, legend_x + 15, legend_y + 25)
-            painter.drawText(legend_x + 20, legend_y + 30, "氣溫")
+            painter.drawText(legend_x + 20, legend_y + 30, "Air Temp")
             
         # 可以為其他圖表類型添加更多圖例
         
