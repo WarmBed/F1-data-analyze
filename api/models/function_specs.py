@@ -333,6 +333,15 @@ _FUNCTION_SPEC_LIST = [
         ],
         notes="GUI detailed lap view consumes the JSON; driver optional for single-driver runs.",
     ),
+    _make_spec(
+        "99",
+        name="Season Calendar Overview",
+        description="Returns completed and upcoming events for the selected season using FastF1 schedule data.",
+        required_params=["year"],
+        cli_flag_map={"year": "-y"},
+        cache_patterns=["season_calendar"],
+        notes="CLI function -f 99 exposes this calendar for GUI/API consumption.",
+    ),
 ]
 
 

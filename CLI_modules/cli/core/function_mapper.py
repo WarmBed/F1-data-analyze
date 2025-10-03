@@ -10,6 +10,7 @@ F1 Analysis Function Mapper - 統一功能映射器
 
 import os
 import sys
+from datetime import datetime
 from typing import Union, Dict, Any, Optional
 
 
@@ -90,6 +91,7 @@ class F1AnalysisFunctionMapper:
             51: self._execute_system_diagnostics,
             52: self._execute_performance_benchmarking,
             53: self._execute_data_integrity_check,
+            99: self._execute_season_calendar_analysis,
         }
         
         # 子功能映射表
@@ -255,9 +257,10 @@ class F1AnalysisFunctionMapper:
     def _check_data_loaded(self, function_id: Union[str, int]) -> bool:
         """檢查是否需要載入數據"""
         # 系統功能不需要檢查數據載入
-        system_functions = [18, 19, 20, 21, 22, 49, 50, 51, 52]
-        
-        if isinstance(function_id, int) and function_id in system_functions:
+        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "99"}
+
+        normalized_id = str(function_id)
+        if normalized_id in system_functions:
             return True
         
         # 其他功能需要檢查數據載入
@@ -2780,6 +2783,30 @@ class F1AnalysisFunctionMapper:
                 "total_functions": len(self.function_mapping) + len(self.sub_function_mapping)
             }
         }
+
+    def _execute_season_calendar_analysis(self, **kwargs):
+        """Function 99: 賽季賽程查詢"""
+
+        try:
+            from CLI_modules.cli.analyzer.season_calendar_analysis import generate_season_calendar
+
+            year = kwargs.get("year")
+            if not year:
+                if self.data_loader and getattr(self.data_loader, "year", None):
+                    year = self.data_loader.year
+                else:
+                    year = datetime.now().year
+
+            result = generate_season_calendar(int(year), save_json=True)
+            return self._standardize_result(result, 99, "賽季賽程查詢")
+
+        except Exception as exc:  # pragma: no cover - runtime safeguard
+            return {
+                "success": False,
+                "message": f"賽季賽程查詢失敗: {exc}",
+                "function_id": "99",
+                "data": None,
+            }
 
     # ===== 分拆的單一車手分析功能 (24-26) =====
     

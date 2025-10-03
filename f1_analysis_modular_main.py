@@ -1434,6 +1434,11 @@ class F1AnalysisModularCLI:
         print("    功能描述：檢查數據完整性")
         print("    輸入參數：檢查參數")
         print("    主要輸出：完整性報告")
+
+        print("\n99. [CALENDAR] 賽季賽程查詢 (Season Calendar Overview)")
+        print("    功能描述：列出指定年份已完成與即將進行的賽事")
+        print("    輸入參數：年份 (-y)")
+        print("    主要輸出：賽程 JSON 與摘要資訊")
         
         print("\n[SETTINGS]  設定功能 (字母選項)")
         print("=" * 80)
@@ -1529,19 +1534,25 @@ class F1AnalysisModularCLI:
         year = self.args.year if self.args.year else 2025
         race = self.args.race if self.args.race else "China"
         session = self.args.session if self.args.session else "R"
-        
+
+        function_id = str(self.args.function) if self.args.function else None
+        data_optional_functions = {"49", "50", "51", "52", "53", "99"}
+
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
-        
-        if not self.load_race_data_from_args(year, race, session):
-            print("[ERROR] 參數模式數據載入失敗")
-            if not self.last_error_message:
-                self.last_error_message = "賽事數據載入失敗"
-                self.last_error_details = {
-                    "year": year,
-                    "race": race,
-                    "session": session
-                }
-            return False
+
+        if function_id in data_optional_functions:
+            print(f"[INFO] 功能 {function_id} 不需要賽事數據，跳過 FastF1 載入流程")
+        else:
+            if not self.load_race_data_from_args(year, race, session):
+                print("[ERROR] 參數模式數據載入失敗")
+                if not self.last_error_message:
+                    self.last_error_message = "賽事數據載入失敗"
+                    self.last_error_details = {
+                        "year": year,
+                        "race": race,
+                        "session": session
+                    }
+                return False
         
         # 執行指定功能
         if self.args.function:
@@ -1605,6 +1616,9 @@ def create_argument_parser():
   
   # 執行事故分析功能8 (所有事件詳細列表)
   python f1_analysis_modular_main.py -y 2025 -r China -s R -f 8
+
+    # 查詢 2025 年賽程概覽 (無需賽事參數)
+    python f1_analysis_modular_main.py -f 99 -y 2025
   
   # 顯示支援的賽事列表
   python f1_analysis_modular_main.py --list-races

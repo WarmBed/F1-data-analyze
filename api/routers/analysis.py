@@ -40,8 +40,8 @@ SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys(), key=function_id_sort_key)
 async def execute_analysis(
     function_id: str = Query(..., description="分析功能 ID"),
     year: int = Query(..., ge=2024, le=2025, description="賽季年份"),
-    race: str = Query(..., min_length=3, description="賽事名稱"),
-    session: str = Query(..., description="會話類型 (R/Q/FP1/FP2/FP3)"),
+    race: Optional[str] = Query(None, min_length=3, description="賽事名稱"),
+    session: Optional[str] = Query(None, description="會話類型 (R/Q/FP1/FP2/FP3)"),
     driver1: Optional[str] = Query(None, min_length=3, max_length=3, description="主要車手代碼"),
     driver2: Optional[str] = Query(None, min_length=3, max_length=3, description="比較車手代碼"),
     force_refresh: bool = Query(False, description="強制重新執行分析"),
@@ -72,11 +72,12 @@ async def execute_analysis(
             })
 
         # 建構參數
-        params = {
-            "year": year,
-            "race": race,
-            "session": session
-        }
+        params = {"year": year}
+
+        if race:
+            params["race"] = race
+        if session:
+            params["session"] = session
         
         if driver1:
             params["driver1"] = driver1.upper()
@@ -93,9 +94,19 @@ async def execute_analysis(
             
         # 執行分析
         result = await analysis_service.execute_analysis(normalized_id, **params)
-        
+
         return result
-        
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "invalid_parameters",
+                "message": str(exc),
+                "function_id": function_id,
+            },
+        )
+
     except Exception as e:
         raise HTTPException(
             status_code=500,

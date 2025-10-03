@@ -74,6 +74,7 @@ class F1AnalysisCacheService:
             "14.3": ["driver_overtaking_analysis", "overtaking_analysis"],
             "14.4": ["driver_fastest_lap_ranking", "fastest_lap_report"],
             "14.9": ["all_drivers_comprehensive", "driver_comprehensive_full"],
+            "99": ["season_calendar"],
         }
         
         # 賽事名稱標準化映射
