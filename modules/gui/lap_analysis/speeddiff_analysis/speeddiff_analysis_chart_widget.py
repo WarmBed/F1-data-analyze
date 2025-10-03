@@ -113,13 +113,54 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         # 中鍵拖拉功能 (與速度分析一致)
         self.middle_dragging = False
         self.show_fixed_line = False
-        self.fixed_speed_value = None
+        self.fixed_distance_value = None
         
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
         
         self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
+
+    @property
+    def min_distance(self):
+        return self.min_speed
+
+    @min_distance.setter
+    def min_distance(self, value):
+        self.min_speed = value
+
+    @property
+    def max_distance(self):
+        return self.max_speed
+
+    @max_distance.setter
+    def max_distance(self, value):
+        self.max_speed = value
+
+    @property
+    def view_min_distance(self):
+        return self.view_min_speed
+
+    @view_min_distance.setter
+    def view_min_distance(self, value):
+        self.view_min_speed = value
+
+    @property
+    def view_max_distance(self):
+        return self.view_max_speed
+
+    @view_max_distance.setter
+    def view_max_distance(self, value):
+        self.view_max_speed = value
+
+    @property
+    def fixed_speed_value(self):
+        """向後兼容屬性：映射到固定距離值"""
+        return getattr(self, 'fixed_distance_value', None)
+
+    @fixed_speed_value.setter
+    def fixed_speed_value(self, value):
+        self.fixed_distance_value = value
     
     def set_speeddiff_data(self, speed: List[float], driver1_speeddiff: List[float], 
                      driver2_speeddiff: List[float], driver1_name: str = "Driver 1", 
@@ -177,7 +218,7 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         self.view_max_speeddiff = None
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
-        self.fixed_speed_value = None
+        self.fixed_distance_value = None
         print(f"[SPEEDDIFF_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()
         print(f"[SPEEDDIFF_CHART] ✅ reset_view() 完成")
@@ -242,14 +283,14 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         
         # 7. 繪製垂直標籤線 (置頂層) - 確保標籤不被遮擋
         # 7.1 繪製固定線
-        if self.show_fixed_line and self.fixed_speed_value is not None:
-            current_min_speed = self.view_min_speed if self.view_min_speed is not None else self.min_speed
-            current_max_speed = self.view_max_speed if self.view_max_speed is not None else self.max_speed
-            speed_range = current_max_speed - current_min_speed
+        if self.show_fixed_line and self.fixed_distance_value is not None:
+            current_min_distance = self.view_min_speed if self.view_min_speed is not None else self.min_speed
+            current_max_distance = self.view_max_speed if self.view_max_speed is not None else self.max_speed
+            distance_range = current_max_distance - current_min_distance
             
-            if speed_range > 0 and current_min_speed <= self.fixed_speed_value <= current_max_speed:
+            if distance_range > 0 and current_min_distance <= self.fixed_distance_value <= current_max_distance:
                 # 計算固定距離值對應的X位置
-                relative_pos = (self.fixed_speed_value - current_min_speed) / speed_range
+                relative_pos = (self.fixed_distance_value - current_min_distance) / distance_range
                 fixed_x = chart_rect.left() + relative_pos * chart_rect.width()
                 self._draw_tracking_line(painter, chart_rect, int(fixed_x), is_fixed=True)
         
@@ -527,7 +568,7 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
     def clear_fixed_line(self):
         """清除固定線條"""
         self.show_fixed_line = False
-        self.fixed_speed_value = None
+        self.fixed_distance_value = None
         self.update()
         
     def reset_data(self):
@@ -682,24 +723,24 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             
             if chart_rect.contains(event.pos()):
                 # 計算並保存實際的距離值
-                current_min_speed = self.view_min_speed if self.view_min_speed is not None else self.min_speed
-                current_max_speed = self.view_max_speed if self.view_max_speed is not None else self.max_speed
-                speed_range = current_max_speed - current_min_speed
+                current_min_distance = self.view_min_speed if self.view_min_speed is not None else self.min_speed
+                current_max_distance = self.view_max_speed if self.view_max_speed is not None else self.max_speed
+                distance_range = current_max_distance - current_min_distance
                 
-                if speed_range > 0:
+                if distance_range > 0:
                     relative_x = event.x() - chart_rect.left()
-                    self.fixed_speed_value = current_min_speed + (relative_x / chart_rect.width()) * speed_range
+                    self.fixed_distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
                     self.show_fixed_line = True
                     
                     # 使用連動管理器發送點擊連動信號
-                    linkage_manager.send_click_linkage(self.fixed_speed_value, sender=self)
+                    linkage_manager.send_click_linkage(self.fixed_distance_value, sender=self)
                     
                     self.update()
             
         elif event.button() == Qt.RightButton:
             # 右鍵點擊：清除固定線
             self.show_fixed_line = False
-            self.fixed_speed_value = None
+            self.fixed_distance_value = None
             
             # 使用連動管理器發送清除信號
             if linkage_manager and self.linkage_enabled:
@@ -717,7 +758,7 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         """滑鼠雙擊事件 - 清除固定線"""
         if event.button() == Qt.LeftButton:
             self.show_fixed_line = False
-            self.fixed_speed_value = None
+            self.fixed_distance_value = None
             
             # 使用連動管理器發送清除信號
             if linkage_manager and self.linkage_enabled:

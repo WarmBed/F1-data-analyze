@@ -3348,3 +3348,110 @@ cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (un
 🟡 黃旗事件詳細分析:
 2025-10-04 02:12:53 | ERROR | f1.console |    • 數據完整性: ❌ 不足
 2025-10-04 02:12:54 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-04 02:15:19 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:28 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:29 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:15:30 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAR  | Logan SARGEANT            | # 2 | Williams
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RIC  | Daniel RICCIARDO          | # 3 | RB
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PER  | Sergio PEREZ              | #11 | Red Bull Racing
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - MAG  | Kevin MAGNUSSEN           | #20 | Haas F1 Team
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | RB
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ZHO  | ZHOU Guanyu               | #24 | Kick Sauber
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Haas F1 Team
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Alpine
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Mercedes
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Ferrari
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOT  | Valtteri BOTTAS           | #77 | Kick Sauber
+2025-10-04 02:17:14 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-04 02:17:14 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-04 02:17:14 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAR  | Logan SARGEANT            | # 2 | Williams
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RIC  | Daniel RICCIARDO          | # 3 | RB
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PER  | Sergio PEREZ              | #11 | Red Bull Racing
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - MAG  | Kevin MAGNUSSEN           | #20 | Haas F1 Team
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | RB
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ZHO  | ZHOU Guanyu               | #24 | Kick Sauber
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Haas F1 Team
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Alpine
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Mercedes
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Ferrari
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOT  | Valtteri BOTTAS           | #77 | Kick Sauber
+2025-10-04 02:17:17 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-04 02:17:17 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-04 02:17:17 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-04 02:17:19 | ERROR | f1.console |    • 數據完整性: ❌ 不足
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAR  | Logan SARGEANT            | # 2 | Williams
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RIC  | Daniel RICCIARDO          | # 3 | RB
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PER  | Sergio PEREZ              | #11 | Red Bull Racing
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - MAG  | Kevin MAGNUSSEN           | #20 | Haas F1 Team
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | RB
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ZHO  | ZHOU Guanyu               | #24 | Kick Sauber
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Haas F1 Team
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Alpine
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Mercedes
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Ferrari
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOT  | Valtteri BOTTAS           | #77 | Kick Sauber
+2025-10-04 02:17:19 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-04 02:17:19 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-04 02:17:19 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - VER  | Max VERSTAPPEN            | # 1 | Red Bull Racing
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAR  | Logan SARGEANT            | # 2 | Williams
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RIC  | Daniel RICCIARDO          | # 3 | RB
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - NOR  | Lando NORRIS              | # 4 | McLaren
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - GAS  | Pierre GASLY              | #10 | Alpine
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PER  | Sergio PEREZ              | #11 | Red Bull Racing
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALO  | Fernando ALONSO           | #14 | Aston Martin
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - LEC  | Charles LECLERC           | #16 | Ferrari
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - STR  | Lance STROLL              | #18 | Aston Martin
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - MAG  | Kevin MAGNUSSEN           | #20 | Haas F1 Team
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - TSU  | Yuki TSUNODA              | #22 | RB
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ALB  | Alexander ALBON           | #23 | Williams
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - ZHO  | ZHOU Guanyu               | #24 | Kick Sauber
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HUL  | Nico HULKENBERG           | #27 | Haas F1 Team
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - OCO  | Esteban OCON              | #31 | Alpine
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - HAM  | Lewis HAMILTON            | #44 | Mercedes
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - SAI  | Carlos SAINZ              | #55 | Ferrari
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - RUS  | George RUSSELL            | #63 | Mercedes
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - BOT  | Valtteri BOTTAS           | #77 | Kick Sauber
+2025-10-04 02:17:28 | WARNING | f1.console | [WARNING]  僅 OpenF1 - PIA  | Oscar PIASTRI             | #81 | McLaren
+2025-10-04 02:17:28 | WARNING | f1.console |    [WARNING]  僅 FastF1: 0
+2025-10-04 02:17:28 | WARNING | f1.console |    [WARNING]  僅 OpenF1: 20

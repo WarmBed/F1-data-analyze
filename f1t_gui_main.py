@@ -5260,10 +5260,18 @@ class StyleHMainWindow(QMainWindow):
         self.chinese_action.triggered.connect(lambda: self.set_interface_language('zh'))
         language_menu.addAction(self.chinese_action)
         
+        # 日文選項
+        self.japanese_action = QAction('🇯🇵 日本語', self)
+        self.japanese_action.setCheckable(True)
+        self.japanese_action.triggered.connect(lambda: self.set_interface_language('ja'))
+        language_menu.addAction(self.japanese_action)
+        
         # 設定當前語言狀態
         current_lang = get_gui_language()
         if current_lang == 'en':
             self.english_action.setChecked(True)
+        elif current_lang == 'ja':
+            self.japanese_action.setChecked(True)
         else:
             self.chinese_action.setChecked(True)
         
@@ -11239,17 +11247,24 @@ class StyleHMainWindow(QMainWindow):
             if language == 'en':
                 self.english_action.setChecked(True)
                 self.chinese_action.setChecked(False)
+                self.japanese_action.setChecked(False)
                 message = "Interface language switched to English. Please restart the application for full effect."
+            elif language == 'ja':
+                self.english_action.setChecked(False)
+                self.chinese_action.setChecked(False)
+                self.japanese_action.setChecked(True)
+                message = "インターフェース言語が日本語に切り替わりました。完全に有効にするには、アプリケーションを再起動してください。"
             else:
                 self.english_action.setChecked(False)
                 self.chinese_action.setChecked(True)
+                self.japanese_action.setChecked(False)
                 message = "介面語言已切換為中文。請重新啟動應用程式以獲得完整效果。"
             
             # 更新功能表文字
             self.refresh_menu_text()
             
             # 顯示提示訊息
-            QMessageBox.information(self, "Language / 語言", message)
+            QMessageBox.information(self, "Language / 語言 / 言語", message)
             
             print(f"[LANGUAGE] 介面語言已切換為: {language}")
             
