@@ -18,7 +18,7 @@ Version: 3.1.0 (修正圖表繪製邏輯)
 import sys
 import math
 import traceback
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Set
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                             QComboBox, QCheckBox, QGroupBox, QGridLayout, QScrollArea,
                             QFrame, QSplitter)
@@ -28,6 +28,12 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics
 # 導入翻譯函數
 from core.gui_i18n import tr
 from core.gui_settings_manager import gui_settings_manager
+from .lap_filter_utils import (
+    extract_caution_laps,
+    lap_is_under_caution,
+    lap_is_pit_stop,
+    normalize_lap_number,
+)
 
 
 class ChartTheme:
@@ -693,6 +699,7 @@ class driverLapAnalysisChartWidget(QWidget):
         # 全域設定
         self.settings_manager = gui_settings_manager
         self.filter_pit_laps = True
+        self.filter_yellow_flags = True
         self._apply_boxplot_settings(self.settings_manager.get_boxplot_settings())
         self.settings_manager.boxplot_settings_changed.connect(self._on_boxplot_settings_changed)
         
@@ -799,36 +806,63 @@ class driverLapAnalysisChartWidget(QWidget):
             for i, driver in enumerate(self.selected_drivers):
                 if driver not in detailed_laptime_data:
                     continue
-                    
+
                 driver_data = detailed_laptime_data[driver]
                 lap_data = driver_data.get('detailed_lap_data', [])
-                
+
                 if not lap_data:
                     continue
-                
+
+                caution_laps = extract_caution_laps(driver_data)
+
                 # 創建數據點列表
                 data_points = []
+                filtered_pit = 0
+                filtered_caution = 0
+
                 for lap_info in lap_data:
-                    lap_num = lap_info.get('lap_number', 0)
+                    lap_num_raw = lap_info.get('lap_number', 0)
+                    lap_num_normalized = normalize_lap_number(lap_num_raw)
+                    lap_num_for_chart = lap_num_normalized if lap_num_normalized is not None else lap_num_raw
                     lap_time_sec = lap_info.get('lap_time_seconds', 0)
-                    
+
                     # 檢查數值有效性：不為 None 且大於 0
-                    if lap_time_sec is not None and lap_time_sec > 0:  # 過濾無效圈速
-                        if self.filter_pit_laps and self._is_pit_lap(driver_data, lap_info, lap_num):
-                            continue
-                        # 提取智能標記
-                        markers = self._extract_markers(driver_data, lap_num)
-                        
-                        data_point = ChartDataPoint(
-                            x=lap_num,
-                            y=lap_time_sec,
-                            metadata={'markers': markers, 'driver': driver}
-                        )
-                        data_points.append(data_point)
-                
+                    if lap_time_sec is None or lap_time_sec <= 0:
+                        continue
+
+                    if self.filter_yellow_flags and lap_is_under_caution(
+                        lap_num_raw,
+                        lap_info,
+                        caution_laps,
+                    ):
+                        filtered_caution += 1
+                        continue
+
+                    if self.filter_pit_laps and lap_is_pit_stop(
+                        lap_info,
+                        driver_data.get('smart_markers_summary'),
+                    ):
+                        filtered_pit += 1
+                        continue
+
+                    # 提取智能標記
+                    markers = self._extract_markers(driver_data, lap_info, caution_laps)
+
+                    data_point = ChartDataPoint(
+                        x=lap_num_for_chart,
+                        y=lap_time_sec,
+                        metadata={'markers': markers, 'driver': driver}
+                    )
+                    data_points.append(data_point)
+
+                if filtered_pit or filtered_caution:
+                    print(
+                        f"[LAPTIME_CHART] {driver}: filtered {filtered_pit} pit laps, {filtered_caution} caution laps"
+                    )
+
                 if data_points:
                     color = colors[i % len(colors)]
-                    
+
                     series = ChartSeries(
                         name=driver,
                         data=data_points,
@@ -845,87 +879,81 @@ class driverLapAnalysisChartWidget(QWidget):
             print(f"[LAPTIME_CHART] 圖表數據更新錯誤: {e}")
             traceback.print_exc()
     
-    def _extract_markers(self, driver_data: Dict, lap_num: int) -> List[str]:
+    def _extract_markers(
+        self,
+        driver_data: Dict,
+        lap_info: Dict[str, Any],
+        caution_laps: Optional[Set[int]] = None,
+    ) -> List[str]:
         """提取指定圈數的智能標記"""
-        markers = []
-        smart_markers = driver_data.get('smart_markers_summary', {})
-        
-        # 調試：顯示智能標記數據結構
-        if lap_num == 1:  # 只在第一圈顯示調試信息
+        markers: List[str] = []
+
+        lap_num_raw = lap_info.get('lap_number', 0)
+        lap_num = normalize_lap_number(lap_num_raw)
+        lookup_value = lap_num if lap_num is not None else lap_num_raw
+
+        smart_markers_summary = driver_data.get('smart_markers_summary', {})
+
+        # 調試：只在第一圈顯示數據結構
+        if lookup_value == 1:
             print(f"[LAPTIME_CHART_WIDGET] 智能標記數據結構:")
             print(f"[LAPTIME_CHART_WIDGET]   - driver_data 鍵: {list(driver_data.keys())}")
-            print(f"[LAPTIME_CHART_WIDGET]   - smart_markers_summary 鍵: {list(smart_markers.keys())}")
-            for key, value in smart_markers.items():
-                if isinstance(value, dict) and 'lap_numbers' in str(value):
-                    print(f"[LAPTIME_CHART_WIDGET]   - {key}: {value}")
-        
-        # 檢查各種標記類型 (修正後的結構)
+            print(f"[LAPTIME_CHART_WIDGET]   - smart_markers_summary 鍵: {list(smart_markers_summary.keys())}")
+
+        def _contains_lap(collection: Any) -> bool:
+            if not isinstance(collection, (list, tuple, set)):
+                return False
+            if lap_num is not None:
+                return any(normalize_lap_number(val) == lap_num for val in collection)
+            return lookup_value in collection
+
         # 進站檢測
-        pit_data = smart_markers.get('pit_stop_detection', {})
-        if lap_num in pit_data.get('pit_lap_numbers', []):
+        if lap_is_pit_stop(lap_info, smart_markers_summary):
             markers.append('P')
 
         # 輪胎更換檢測
-        tire_data = smart_markers.get('tire_change_detection', {})
-        if lap_num in tire_data.get('tire_change_lap_numbers', []):
+        tire_data = smart_markers_summary.get('tire_change_detection', {})
+        if _contains_lap(tire_data.get('tire_change_lap_numbers')):
             markers.append('T')
 
         # 最快圈檢測
-        fastest_data = smart_markers.get('fastest_lap_detection', {})
-        if lap_num in fastest_data.get('fastest_lap_numbers', []):
+        fastest_data = smart_markers_summary.get('fastest_lap_detection', {})
+        if _contains_lap(fastest_data.get('fastest_lap_numbers')):
             markers.append('F')
-        
-        # 賽道狀況檢測 - 根據 smart_markers 中的事故檢測數據
-        safety_data = smart_markers.get('accident_safety_detection', {})
-        incident_laps = safety_data.get('incident_lap_numbers', [])
-        
-        # 檢查是否在事故圈次列表中
-        if lap_num in incident_laps:
-            # 因為目前的數據結構沒有提供具體的 TrackStatus 信息
-            # 我們先使用通用的事故標記，未來可以根據更詳細的數據來區分
-            # TODO: 需要在 CLI 分析中提供更詳細的 TrackStatus 信息
-            markers.append('Y')  # 暫時使用黃旗作為通用事故標記
-            
-        # TODO: 未來可以加入特殊圈數檢測 (起跑、終點等)
-        # special_data = smart_markers.get('special_lap_marking', {})
-        # if lap_num in special_data.get('special_lap_numbers', []):
-        #     markers.append('S')  # 特殊圈
-            
+
+        # 賽道狀況檢測
+        if lap_is_under_caution(lap_num_raw, lap_info, caution_laps):
+            markers.append('Y')
+
         # 降雨檢測 - 與降雨分析模組邏輯一致
-        rain_data = smart_markers.get('rain_detection', {})
-        if lap_num in rain_data.get('rain_lap_numbers', []):
-            markers.append('W')  # 降雨標記（Weather）
-            
-        # 調試：顯示找到的標記
+        rain_data = smart_markers_summary.get('rain_detection', {})
+        if _contains_lap(rain_data.get('rain_lap_numbers')):
+            markers.append('W')
+
         if markers:
-            print(f"[LAPTIME_CHART_WIDGET] 圈 {lap_num} 找到標記: {markers}")
-            
+            print(f"[LAPTIME_CHART_WIDGET] 圈 {lookup_value} 找到標記: {markers}")
+
         return markers
 
     def _apply_boxplot_settings(self, settings: Dict[str, Any]) -> None:
         self.filter_pit_laps = settings.get('filter_pit_laps', True)
+        self.filter_yellow_flags = settings.get('filter_yellow_flags', True)
 
     def _on_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
-        previous_filter = self.filter_pit_laps
+        previous_filter = (
+            self.filter_pit_laps,
+            self.filter_yellow_flags,
+        )
         self._apply_boxplot_settings(settings)
 
-        if previous_filter != self.filter_pit_laps and self.chart_data:
+        current_filter = (
+            self.filter_pit_laps,
+            self.filter_yellow_flags,
+        )
+
+        if previous_filter != current_filter and self.chart_data:
             self._update_chart_data()
 
-    def _is_pit_lap(self, driver_data: Dict[str, Any], lap_info: Dict[str, Any], lap_num: int) -> bool:
-        """判斷是否為進站圈"""
-        smart_markers_summary = driver_data.get('smart_markers_summary', {})
-        pit_summary = smart_markers_summary.get('pit_stop_detection', {})
-        if lap_num in pit_summary.get('pit_lap_numbers', []):
-            return True
-
-        smart_markers = lap_info.get('smart_markers', {})
-        pit_detail = smart_markers.get('pit_stop_detection', {})
-        if isinstance(pit_detail, dict) and pit_detail.get('is_pit_lap', False):
-            return True
-
-        return False
-    
     def set_data(self, data: Dict[str, Any]):
         """兼容舊版介面"""
         self.update_data(data)

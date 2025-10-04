@@ -19,7 +19,8 @@ from PyQt5.QtWidgets import (
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
     QHeaderView, QDialog, QDialogButtonBox, QComboBox, QCheckBox,
     QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
-    QTabWidget, QScrollArea, QSplitter, QAbstractItemView, QLineEdit
+    QTabWidget, QScrollArea, QSplitter, QAbstractItemView, QLineEdit,
+    QBoxLayout,
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
@@ -48,6 +49,7 @@ class AccidentStatisticsWidget(QWidget):
         super().__init__()
         self.data_manager = data_manager
         self.statistics_data = {}
+        self._simplified_cards = False
         self.setup_ui()
         
     def setup_ui(self):
@@ -86,14 +88,27 @@ class AccidentStatisticsWidget(QWidget):
         layout.addLayout(self.status_layout)
     
     def resizeEvent(self, event):
-        """響應式設計：當視窗縮小時隱藏表格區域"""
+        """響應式調整：縮小時改為垂直堆疊，而非隱藏內容"""
         super().resizeEvent(event)
-        
-        # 設定最小寬度閾值 (當寬度小於此值時隱藏表格)
-        MIN_WIDTH_FOR_TABLES = 800
-        
+
+        if not hasattr(self, 'tables_layout'):
+            return
+
+        MIN_WIDTH_FOR_HORIZONTAL_LAYOUT = 820
+        MIN_WIDTH_FOR_SIMPLIFIED_CARDS = 760
+
+        if self.width() < MIN_WIDTH_FOR_HORIZONTAL_LAYOUT:
+            self.tables_layout.setDirection(QBoxLayout.TopToBottom)
+        else:
+            self.tables_layout.setDirection(QBoxLayout.LeftToRight)
+
+        simplified = self.width() < MIN_WIDTH_FOR_SIMPLIFIED_CARDS
+        if simplified != self._simplified_cards:
+            self._simplified_cards = simplified
+            self._update_card_display_mode()
+
         if hasattr(self, 'tables_container'):
-            if self.width() < MIN_WIDTH_FOR_TABLES:
+            if self._simplified_cards:
                 self.tables_container.hide()
             else:
                 self.tables_container.show()
@@ -105,10 +120,11 @@ class AccidentStatisticsWidget(QWidget):
         
         # Track Limit 違規卡片
         self.track_limit_card = self.create_stat_card(
-            tr("track_limit_violations", "⚠️ Track Limit"), 
-            "0", 
+            tr("track_limit_violations", "⚠️ Track Limit"),
+            "0",
             tr("violations_count", "(違規次數)"),
-            "#FF9800"  # 橙色主題
+            "#FF9800",
+            simple_title="⚠️▲",
         )
         cards_layout.addWidget(self.track_limit_card)
         
@@ -117,7 +133,8 @@ class AccidentStatisticsWidget(QWidget):
             tr("double_yellow_flag", "🟡🟡 雙黃旗"), 
             "0", 
             tr("display_count", "(出示次數)"),
-            "#FFC107"  # 黃色主題
+            "#FFC107",
+            simple_title="🟡🟡",
         )
         cards_layout.addWidget(self.double_yellow_card)
         
@@ -126,7 +143,8 @@ class AccidentStatisticsWidget(QWidget):
             tr("yellow_flag", "🟡 黃旗"), 
             "0", 
             tr("display_count", "(出示次數)"),
-            "#FFEB3B"  # 淺黃色主題
+            "#FFEB3B",
+            simple_title="🟡",
         )
         cards_layout.addWidget(self.yellow_flag_card)
         
@@ -135,13 +153,24 @@ class AccidentStatisticsWidget(QWidget):
             tr("red_flag", "🔴 紅旗"), 
             "0", 
             tr("display_count", "(出示次數)"),
-            "#F44336"  # 紅色主題
+            "#F44336",
+            simple_title="🔴",
         )
         cards_layout.addWidget(self.red_flag_card)
-        
+
+        self._update_card_display_mode()
+
         return cards_layout
         
-    def create_stat_card(self, title, value, subtitle, color):
+    def create_stat_card(
+        self,
+        title,
+        value,
+        subtitle,
+        color,
+        *,
+        simple_title: Optional[str] = None,
+    ):
         """創建統計卡片 (修正版：恢復原始背景、黃色文字改黑色、完全移除數值方框)"""
         card = QFrame()
         card.setFrameStyle(QFrame.StyledPanel)
@@ -205,13 +234,91 @@ class AccidentStatisticsWidget(QWidget):
         # 儲存標籤參考以便後續更新
         card.title_label = title_label
         card.value_label = value_label
+        card.full_title = title
+        card.simple_title = simple_title or title
+        card.full_title_stylesheet = title_label.styleSheet()
+        card.full_value_stylesheet = value_label.styleSheet()
+        card.text_color = text_color
+        card.simple_title_stylesheet = (
+            "\n".join(
+                [
+                    "font-size: 20px;",
+                    "font-weight: bold;",
+                    f"color: {text_color};",
+                    "background-color: transparent;",
+                    "border: none;",
+                    "margin: 0px;",
+                ]
+            )
+        )
+        card.simple_value_stylesheet = (
+            "\n".join(
+                [
+                    "font-size: 24px;",
+                    "font-weight: bold;",
+                    f"color: {text_color};",
+                    "margin: 4px 0;",
+                    "background-color: transparent;",
+                    "border: none;",
+                    "padding: 0px;",
+                ]
+            )
+        )
         # card.subtitle_label = subtitle_label  # 已隱藏
         
         return card
+
+    def _update_card_display_mode(self) -> None:
+        cards = [
+            getattr(self, "track_limit_card", None),
+            getattr(self, "double_yellow_card", None),
+            getattr(self, "yellow_flag_card", None),
+            getattr(self, "red_flag_card", None),
+        ]
+
+        widget_width = max(1, self.width())
+        emoji_font_size = max(16, min(40, int(widget_width * 0.045)))
+        value_font_size = max(14, min(36, int(widget_width * 0.04)))
+
+        for card in cards:
+            if not card or not hasattr(card, "title_label"):
+                continue
+
+            if self._simplified_cards:
+                card.title_label.setText(card.simple_title)
+                card.title_label.setStyleSheet(
+                    "\n".join(
+                        [
+                            f"font-size: {emoji_font_size}px;",
+                            "font-weight: bold;",
+                            f"color: {card.text_color};",
+                            "background-color: transparent;",
+                            "border: none;",
+                            "margin: 0px;",
+                        ]
+                    )
+                )
+                card.value_label.setStyleSheet(
+                    "\n".join(
+                        [
+                            f"font-size: {value_font_size}px;",
+                            "font-weight: bold;",
+                            f"color: {card.text_color};",
+                            "margin: 4px 0;",
+                            "background-color: transparent;",
+                            "border: none;",
+                            "padding: 0px;",
+                        ]
+                    )
+                )
+            else:
+                card.title_label.setText(card.full_title)
+                card.title_label.setStyleSheet(card.full_title_stylesheet)
+                card.value_label.setStyleSheet(card.full_value_stylesheet)
         
     def setup_flag_statistics_table(self):
         """設置旗標統計表格"""
-        group_box = QGroupBox("🚩 旗標統計詳情")
+        group_box = QGroupBox(tr('flag_statistics_details', '🚩 Flag Statistics Details'))
         group_box.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -256,7 +363,7 @@ class AccidentStatisticsWidget(QWidget):
         
     def setup_penalty_list_table(self):
         """設置處罰清單表格"""
-        group_box = QGroupBox("⚖️ 處罰清單")
+        group_box = QGroupBox(tr('penalty_list', '⚖️ Penalty List'))
         group_box.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -302,7 +409,7 @@ class AccidentStatisticsWidget(QWidget):
         
     def setup_time_distribution_chart(self):
         """設置時間分佈圖表區域 (按照規格ASCII圖表設計)"""
-        group_box = QGroupBox("📈 事故時間分佈圖表")
+        group_box = QGroupBox(tr('accident_time_distribution_chart', '📈 Accident Time Distribution Chart'))
         group_box.setStyleSheet("""
             QGroupBox {
                 font-size: 14px;
@@ -593,7 +700,7 @@ class AccidentStatisticsWidget(QWidget):
             for lap, count in sorted_laps:
                 labels_line += f"{lap:2}"
             chart_lines.append(labels_line)
-            chart_lines.append("     圈數")
+            chart_lines.append("     " + tr('lap_label', 'Lap'))
             
         return "\n".join(chart_lines)
         
@@ -612,12 +719,18 @@ class AccidentStatisticsWidget(QWidget):
         
         # 添加狀態標籤
         status_items = [
-            f"📊 總計: {total_accidents}起事故",
-            "📄 來源: JSON",
-            f"⏱️ 更新: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-            f"🎯 最危險圈數: {most_dangerous_period}",
-            f"🏁 最多涉入: {most_involved_driver}",
-            "🤖 智能生成: 開啟"
+            tr('status_total_accidents', '📊 Total: {count} accidents').format(count=total_accidents),
+            tr('status_data_source_json', '📄 Source: JSON'),
+            tr('status_last_updated', "⏱️ Updated: {timestamp}").format(
+                timestamp=datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            ),
+            tr('status_most_dangerous_lap', '🎯 Most risky lap: {lap}').format(
+                lap=most_dangerous_period
+            ),
+            tr('status_most_involved_driver', '🏁 Most involved: {driver}').format(
+                driver=most_involved_driver
+            ),
+            tr('status_ai_generation_enabled', '🤖 Smart insights: enabled'),
         ]
         
         for item in status_items:
@@ -650,7 +763,10 @@ class AccidentStatisticsWidget(QWidget):
         max_driver = max(driver_involvement, key=lambda x: x.get("incidents", 0))
         driver_code = max_driver.get("driver", "Unknown")
         incidents = max_driver.get("incidents", 0)
-        return f"{driver_code} ({incidents}次)"
+        return tr(
+            'most_involved_driver_format',
+            '{driver} ({count} incidents)'
+        ).format(driver=driver_code, count=incidents)
 
 
 class AccidentAnalysisModule(IAnalysisModule):

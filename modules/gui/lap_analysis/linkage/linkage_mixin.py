@@ -5,6 +5,7 @@
 """
 
 from typing import Optional, Callable
+import math
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QRect
 from PyQt5.QtWidgets import QPushButton, QToolBar
 from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont
@@ -264,16 +265,22 @@ class LapAnalysisLinkageDrawingMixin:
                 
                 # 車手1數據
                 if closest_idx < len(driver1_data):
-                    value1 = driver1_data[closest_idx]
+                    value1 = self._coerce_numeric(driver1_data[closest_idx])
                     painter.setPen(QPen(getattr(self, 'driver1_color', QColor(0, 0, 255)), 1))
-                    painter.drawText(label_x + 5, text_y, f"{driver1_name}: {value1:.1f} {data_label}")
+                    if value1 is not None:
+                        painter.drawText(label_x + 5, text_y, f"{driver1_name}: {value1:.1f} {data_label}")
+                    else:
+                        painter.drawText(label_x + 5, text_y, f"{driver1_name}: N/A {data_label}")
                 
                 # 車手2數據 (如果存在且不同)
                 if (driver2_data and closest_idx < len(driver2_data) and 
                     driver2_name != driver1_name):
-                    value2 = driver2_data[closest_idx]
+                    value2 = self._coerce_numeric(driver2_data[closest_idx])
                     painter.setPen(QPen(getattr(self, 'driver2_color', QColor(255, 0, 0)), 1))
-                    painter.drawText(label_x + 5, text_y + 15, f"{driver2_name}: {value2:.1f} {data_label}")
+                    if value2 is not None:
+                        painter.drawText(label_x + 5, text_y + 15, f"{driver2_name}: {value2:.1f} {data_label}")
+                    else:
+                        painter.drawText(label_x + 5, text_y + 15, f"{driver2_name}: N/A {data_label}")
     
     def _find_closest_data_index(self, distance_data: list, target_distance: float) -> Optional[int]:
         """找到最接近目標距離的數據索引"""
@@ -290,3 +297,15 @@ class LapAnalysisLinkageDrawingMixin:
                 closest_idx = i
                 
         return closest_idx
+
+    def _coerce_numeric(self, value) -> Optional[float]:
+        """嘗試將值轉換為有限浮點數，失敗時返回 None。"""
+        if value is None:
+            return None
+        try:
+            numeric = float(value)
+        except (TypeError, ValueError):
+            return None
+        if math.isnan(numeric) or math.isinf(numeric):
+            return None
+        return numeric

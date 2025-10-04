@@ -87,8 +87,8 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         
         # 🆕 使用基類的統一座標軸標題配置（使用翻譯）
         self.set_axis_titles(tr("lap_number_rain", "Lap Number"), tr("temperature_celsius", "Temperature (°C)"))
-        # 🎯 X軸標題在0點左邊水平顯示，Y軸標題在中間垂直顯示
-        self.set_axis_title_positions("bottom-left", "left-center")
+        # 🎯 X軸標題置中顯示，Y軸標題在中間垂直顯示
+        self.set_axis_title_positions("bottom-center", "left-center")
         
         # 🔍 除錯：確認座標軸標題設定
         print(f"[RAIN_AXIS_DEBUG] 座標軸標題設定:")
@@ -129,7 +129,7 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         
         # 圖表邊距 (優化間距配置)
         self.margin_left = 65   # 左邊距 (Y軸標籤) - 增加空間避免數值貼近曲線
-        self.margin_bottom = 50 # 下邊距 (X軸標籤+標題) - 保持50px給座標軸標題
+        self.margin_bottom = 70 # 下邊距 (X軸標籤+標題) - 增加空間避免標題貼近刻度
         self.margin_top = 20    # 上邊距 - 保持20px給圖例
         self.margin_right = 20  # 右邊距 - 保持20px給雙Y軸設計
         
@@ -323,12 +323,8 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             
         # 🆕 繪製基類的統一座標軸標題
         if self.show_axis_titles:
-            print(f"[RAIN_AXIS_DEBUG] 🎨 開始繪製座標軸標題")
-            print(f"  chart_rect: {self.chart_rect}")
-            print(f"  X軸標題: '{self.x_axis_title}' 位置: {self.x_title_position}")
-            print(f"  Y軸標題: '{self.y_axis_title}' 位置: {self.y_title_position}")
-            super()._draw_axis_titles(painter, self.chart_rect)
-            print(f"[RAIN_AXIS_DEBUG] ✅ 座標軸標題繪製完成")
+            print(f"[RAIN_AXIS_DEBUG] 🎨 自訂座標軸標題繪製")
+            self._draw_custom_axis_titles(painter)
         else:
             print(f"[RAIN_AXIS_DEBUG] ❌ 座標軸標題被停用 (show_axis_titles={self.show_axis_titles})")
             
@@ -413,17 +409,77 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
             x_min, x_max = self.view_min_lap, self.view_max_lap
         else:
             x_min, x_max = self.x_range
-        x_step = max(1, (x_max - x_min) // 8)
-        
+
+        chart_info = self.chart_data.get(self.current_chart_type, {}) if isinstance(self.chart_data, dict) else {}
+        raw_x_values = []
+        if isinstance(chart_info, dict):
+            raw_x_values = chart_info.get("x_data", []) or []
+
+        if raw_x_values:
+            # 轉換為整數圈數並保持順序
+            unique_x_values = []
+            seen = set()
+            for value in raw_x_values:
+                lap_value = int(round(value))
+                if lap_value not in seen:
+                    unique_x_values.append((value, lap_value))
+                    seen.add(lap_value)
+            unique_x_values.sort(key=lambda item: item[0])
+        else:
+            # 回退：根據範圍生成等距圈數
+            unique_x_values = []
+            if x_max > x_min:
+                step = max(1, int((x_max - x_min) / 20))
+                for lap in range(int(math.floor(x_min)), int(math.ceil(x_max)) + 1, step):
+                    unique_x_values.append((lap, int(lap)))
+
+        metrics = QFontMetrics(self.label_font)
+        min_spacing_px = max(48, metrics.horizontalAdvance("000") + 12)
+
         print(f"[RAIN_AXIS_DEBUG] 📊 X軸座標軸設置:")
         print(f"[RAIN_AXIS_DEBUG]   範圍: {x_min:.1f} - {x_max:.1f}")
-        print(f"[RAIN_AXIS_DEBUG]   間距: {x_step}")
-        print(f"[RAIN_AXIS_DEBUG]   標籤數量: {len(range(int(x_min), int(x_max) + 1, int(x_step)))}")
+        print(f"[RAIN_AXIS_DEBUG]   資料點: {len(unique_x_values)}")
+        print(f"[RAIN_AXIS_DEBUG]   最小間距(px): {min_spacing_px}")
+
+        drawn_positions: List[int] = []
+        total_labels = len(unique_x_values)
+
+        for index, (raw_value, display_value) in enumerate(unique_x_values):
+            x_pos = self._map_x_to_pixel(raw_value)
+
+            should_draw = index == 0 or index == total_labels - 1
+            if not should_draw:
+                should_draw = all(abs(x_pos - prev_pos) >= min_spacing_px for prev_pos in drawn_positions)
+
+            if not should_draw:
+                continue
+
+            label_text = str(display_value)
+            text_width = metrics.horizontalAdvance(label_text)
+            text_rect = QRect(
+                int(x_pos - text_width / 2) - 2,
+                self.chart_rect.bottom() + 5,
+                text_width + 4,
+                20
+            )
+            painter.drawText(text_rect, Qt.AlignCenter, label_text)
+            drawn_positions.append(x_pos)
         
-        for x_val in range(int(x_min), int(x_max) + 1, int(x_step)):
-            x_pos = self._map_x_to_pixel(x_val)
-            text_rect = QRect(x_pos - 20, self.chart_rect.bottom() + 5, 40, 20)
-            painter.drawText(text_rect, Qt.AlignCenter, str(int(x_val)))
+        # 確保至少顯示起點與終點標籤
+        if unique_x_values and len(drawn_positions) == 1:
+            raw_value, display_value = unique_x_values[-1]
+            x_pos = self._map_x_to_pixel(raw_value)
+            if all(abs(x_pos - prev_pos) >= min_spacing_px for prev_pos in drawn_positions):
+                label_text = str(display_value)
+                text_width = metrics.horizontalAdvance(label_text)
+                text_rect = QRect(
+                    int(x_pos - text_width / 2) - 2,
+                    self.chart_rect.bottom() + 5,
+                    text_width + 4,
+                    20
+                )
+                painter.drawText(text_rect, Qt.AlignCenter, label_text)
+                drawn_positions.append(x_pos)
             
         # 左Y軸標籤 (溫度) - 使用視圖範圍
         if self.view_min_temp is not None and self.view_max_temp is not None:
@@ -460,6 +516,31 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         #         painter.drawText(text_rect, Qt.AlignLeft | Qt.AlignVCenter, f"{y_val:.1f}")
         
     # � 座標軸標題繪製方法已移除，現在由基類統一處理
+
+    def _draw_custom_axis_titles(self, painter: QPainter):
+        """繪製經過間距調整的座標軸標題"""
+        painter.setFont(self.theme.AXIS_TITLE_FONT)
+        painter.setPen(QPen(RainChartTheme.TEXT_COLOR))
+
+        # X軸標題置中並與刻度保留距離
+        if self.x_axis_title:
+            title_width = max(120, self.theme.AXIS_TITLE_FONT.pointSize() * 10)
+            x_title_rect = QRect(
+                int(self.chart_rect.center().x() - title_width / 2),
+                self.chart_rect.bottom() + 28,
+                int(title_width),
+                20
+            )
+            painter.drawText(x_title_rect, Qt.AlignCenter, self.x_axis_title)
+
+        # Y軸標題保持垂直顯示
+        if self.y_axis_title:
+            painter.save()
+            painter.translate(self.chart_rect.left() - 40, self.chart_rect.center().y())
+            painter.rotate(-90)
+            y_title_rect = QRect(-60, -10, 120, 20)
+            painter.drawText(y_title_rect, Qt.AlignCenter, self.y_axis_title)
+            painter.restore()
                 
     def _draw_data(self, painter: QPainter):
         """繪製數據"""

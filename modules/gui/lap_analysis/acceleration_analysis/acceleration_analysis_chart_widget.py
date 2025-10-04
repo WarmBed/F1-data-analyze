@@ -342,7 +342,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         painter.save()
         painter.translate(15, rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-30, -5, 60, 15, Qt.AlignCenter, "加速度 (m/s²)")
+        painter.drawText(-30, -5, 60, 15, Qt.AlignCenter, tr('telemetry_acceleration', 'Acceleration (m/s²)'))
         painter.restore()
     
     def _draw_sectors(self, painter: QPainter, chart_rect: QRect):

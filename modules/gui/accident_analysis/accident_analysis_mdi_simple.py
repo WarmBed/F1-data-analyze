@@ -287,7 +287,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         # 分頁1: 事故統計總覽
         from core.gui_i18n import tr
         self.statistics_widget = AccidentStatisticsWidget(self.data_manager)
-        self.tab_widget.addTab(self.statistics_widget, f"📊 {tr('accident_statistics_overview', 'Statistics Overview')}")
+        self.tab_widget.addTab(self.statistics_widget, f"📊 {tr('accident_statistics', 'Accident Statistics')}")
         
         # 分頁2-5: 待後續開發 (簡化佔位符)
         tab_configs = [

@@ -14,6 +14,11 @@ import time
 from pathlib import Path
 from functools import partial
 from typing import Dict, List, Any, Optional, Tuple
+
+try:
+    import sip
+except ImportError:  # pragma: no cover
+    sip = None
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -307,9 +312,10 @@ class PitstopDataManager(QObject):
                     self._detail_is_loading = False
 
     def _on_api_error(self, message: str, *, kind: str) -> None:
-        print(f"[PITSTOP_MANAGER] API 請求失敗 ({kind}): {message}")
-        if not self._fallback_to_local(kind, message=message):
-            self.error_occurred.emit(f"API 請求失敗: {message}")
+        reason = self._stringify_error(message)
+        print(f"[PITSTOP_MANAGER] API 請求失敗 ({kind}): {reason}")
+        if not self._fallback_to_local(kind, message=reason):
+            self.error_occurred.emit(f"API 請求失敗: {reason}")
             if kind == "driver":
                 self._is_loading = False
             elif kind == "team":
@@ -362,6 +368,35 @@ class PitstopDataManager(QObject):
             return self._generate_driver_detailed_via_cli(year, race, session)
 
         return False
+
+    def _stringify_error(self, error_obj: Any) -> str:
+        if error_obj is None:
+            return "未知錯誤"
+
+        if isinstance(error_obj, str):
+            return error_obj
+
+        if isinstance(error_obj, BaseException):
+            base_message = str(error_obj)
+            return f"{type(error_obj).__name__}: {base_message}" if base_message else type(error_obj).__name__
+
+        if isinstance(error_obj, dict):
+            parts = []
+            for key in ("message", "error", "detail", "code", "status"):
+                value = error_obj.get(key)
+                if value:
+                    parts.append(f"{key}: {value}")
+            if parts:
+                return " | ".join(parts)
+            try:
+                return json.dumps(error_obj, ensure_ascii=False)
+            except TypeError:
+                return str(error_obj)
+
+        try:
+            return json.dumps(error_obj, ensure_ascii=False)
+        except TypeError:
+            return str(error_obj)
 
     # check_json_cache 方法已移除，改用 _find_pitstop_data_file
     
@@ -1193,23 +1228,12 @@ class PitstopRankingWidget(QWidget):
         table.setSelectionMode(QTableWidget.SingleSelection)
         table.setSortingEnabled(True)
         
-        # 設置欄位寬度 - 響應式設計，適應小視窗
+        # 自適應欄寬設定
         header = table.horizontalHeader()
-        
-        # 設定初始寬度
-        table.setColumnWidth(0, 30)   # 排名
-        table.setColumnWidth(1, 45)   # 車手代碼
-        table.setColumnWidth(2, 100)  # 車手全名
-        table.setColumnWidth(3, 60)   # 最快時間
-        table.setColumnWidth(4, 65)   # 與第一名差距
-        table.setColumnWidth(5, 40)   # 進站圈數
-        
-        # 所有欄位都設為可手動調整
-        for col in range(len(headers)):
-            header.setSectionResizeMode(col, QHeaderView.Interactive)
-        
-        # 🔧 新增：響應式調整功能已移除，改為手動調整
-        
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setStretchLastSection(True)
+        table.verticalHeader().setVisible(False)
+
         return table
     
     def create_status_panel(self) -> QWidget:
@@ -1367,6 +1391,10 @@ class PitstopRankingWidget(QWidget):
                             font.setBold(True)
                             item.setFont(font)
                             item.setBackground(QColor(255, 215, 0, 50))  # 淡金色背景
+
+            # 依內容自動調整欄寬並拉伸最後一欄
+            self.table_widget.resizeColumnsToContents()
+            self.table_widget.horizontalHeader().setStretchLastSection(True)
             
         except Exception as e:
             print(f"[ERROR] 填充表格失敗: {str(e)}")
@@ -1947,20 +1975,11 @@ class TeamPitstopRankingWidget(QWidget):
         self.table_widget.setSelectionBehavior(QTableWidget.SelectRows)
         self.table_widget.setSortingEnabled(True)
         
-        # 響應式列寬設定 - 允許手動調整
+        # 自適應欄寬設定
         header = self.table_widget.horizontalHeader()
-        
-        # 設定初始寬度
-        self.table_widget.setColumnWidth(0, 35)   # 排名
-        self.table_widget.setColumnWidth(1, 100)  # 車隊名稱
-        self.table_widget.setColumnWidth(2, 60)   # 最快時間
-        self.table_widget.setColumnWidth(3, 60)   # 最慢時間
-        self.table_widget.setColumnWidth(4, 50)   # 進站次數
-        self.table_widget.setColumnWidth(5, 80)   # 一致性分數
-        
-        # 所有欄位都設為可手動調整
-        for col in range(len(headers)):
-            header.setSectionResizeMode(col, QHeaderView.Interactive)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setStretchLastSection(True)
+        self.table_widget.verticalHeader().setVisible(False)
         
     def update_ranking_data(self, data: Dict[str, Any]):
         """更新車隊排行榜數據"""
@@ -2065,6 +2084,10 @@ class TeamPitstopRankingWidget(QWidget):
             consistency_item = QTableWidgetItem(f"{consistency:.2f}%")
             consistency_item.setTextAlignment(Qt.AlignCenter)
             self.table_widget.setItem(row, 5, consistency_item)
+
+        # 依內容自動調整欄寬並拉伸最後一欄
+        self.table_widget.resizeColumnsToContents()
+        self.table_widget.horizontalHeader().setStretchLastSection(True)
         
     def validate_team_data(self, data: Dict[str, Any]) -> bool:
         """驗證車隊進站數據格式"""
@@ -2149,6 +2172,16 @@ class DriverDetailedPitstopWidget(QWidget):
         self.summary_table = None        # 統一匯總表格
         self.current_data = {}           # 儲存當前數據
         self.setup_ui()
+
+    def _is_widget_alive(self, widget: Optional[QWidget]) -> bool:
+        if widget is None:
+            return False
+        if sip is None:
+            return True
+        try:
+            return not sip.isdeleted(widget)
+        except Exception:
+            return False
         
     def setup_ui(self):
         """設置使用者界面"""
@@ -2280,6 +2313,10 @@ class DriverDetailedPitstopWidget(QWidget):
                 self.summary_table.setItem(row, col_index, QTableWidgetItem(stats["fastest"]))
                 self.summary_table.setItem(row, col_index + 1, QTableWidgetItem(stats["slowest"]))
             
+            # 依內容自動調整欄寬
+            self.summary_table.resizeColumnsToContents()
+            self.summary_table.horizontalHeader().setStretchLastSection(True)
+
             # 設置表格到滾動區域
             self.table_scroll.setWidget(self.summary_table)
             
@@ -2321,35 +2358,16 @@ class DriverDetailedPitstopWidget(QWidget):
         if not self.summary_table:
             return
             
-        # 🎯 預設590px寬度配置 - 測試模式
-        total_columns = self.summary_table.columnCount()
-        
-        # 基本列寬度設定 - 針對590px優化
-        self.summary_table.setColumnWidth(0, 50)   # 車手 - 增加寬度
-        self.summary_table.setColumnWidth(1, 100)  # 車隊 - 增加寬度  
-        self.summary_table.setColumnWidth(2, 60)   # 總進站次數 - 增加寬度
-        
-        # 動態欄位寬度 - 進站記錄使用更寬的設定
-        for i in range(3, total_columns - 2):
-            self.summary_table.setColumnWidth(i, 70)  # 進站時間和圈數使用70px
-            
-        # 統計欄位寬度 - 加寬模式
-        if total_columns >= 2:
-            self.summary_table.setColumnWidth(total_columns - 2, 80)  # 最快時間
-            self.summary_table.setColumnWidth(total_columns - 1, 80)  # 最慢時間
-        
-        # 🎯 設置響應式拉伸策略 - 所有欄位可手動調整
+        # 自適應欄寬設定
         header = self.summary_table.horizontalHeader()
-        
-        # 所有欄位都設為可手動調整
-        for col in range(total_columns):
-            header.setSectionResizeMode(col, QHeaderView.Interactive)
+        header.setSectionResizeMode(QHeaderView.ResizeToContents)
+        header.setStretchLastSection(True)
+        self.summary_table.verticalHeader().setVisible(False)
         
         # 表格樣式設置
         self.summary_table.setAlternatingRowColors(True)
         self.summary_table.setSelectionBehavior(QTableWidget.SelectRows)
-        
-        print(f"[TABLE_CONFIG] 表格配置完成 - 欄數:{total_columns}, 預設總寬度:~590px")
+        print(f"[TABLE_CONFIG] 表格配置完成 - 欄數:{self.summary_table.columnCount()} (自適應欄寬)")
         
     def adjust_table_size(self):
         """調整表格大小以適應內容和容器"""
@@ -2423,12 +2441,21 @@ class DriverDetailedPitstopWidget(QWidget):
             
             # 添加狀態標籤
             status_items = [
-                f"📊 共 {total_drivers} 位車手",
-                "📄 來源: JSON",
-                f"⏱️ 更新: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                f"🎯 最快進站: {fastest_overall}",
-                f"🐌 最慢進站: {slowest_overall}",
-                "🤖 智能生成: 開啟"
+                tr("pit_detail_status_total_drivers", "📊 Total drivers: {count}").format(count=total_drivers),
+                tr("pit_detail_status_source_json", "📄 Source: JSON"),
+                tr(
+                    "pit_detail_status_updated_at",
+                    "⏱️ Updated: {timestamp}",
+                ).format(timestamp=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+                tr(
+                    "pit_detail_status_fastest",
+                    "🎯 Fastest stop: {time}",
+                ).format(time=fastest_overall),
+                tr(
+                    "pit_detail_status_slowest",
+                    "🐌 Slowest stop: {time}",
+                ).format(time=slowest_overall),
+                tr("pit_detail_status_ai_enabled", "🤖 Smart analysis: Enabled"),
             ]
             
             for item in status_items:
@@ -2493,13 +2520,13 @@ class DriverDetailedPitstopWidget(QWidget):
         print(f"[RESIZE_DEBUG] - Widget 高度: {widget_height}px")
         
         # 如果存在滾動區域，也列印其大小
-        if hasattr(self, 'table_scroll') and self.table_scroll:
+        if hasattr(self, 'table_scroll') and self._is_widget_alive(self.table_scroll):
             scroll_size = self.table_scroll.size()
             print(f"[RESIZE_DEBUG] - QScrollArea 寬度: {scroll_size.width()}px")
             print(f"[RESIZE_DEBUG] - QScrollArea 高度: {scroll_size.height()}px")
             
             # 如果存在表格，也列印表格大小
-            if hasattr(self, 'summary_table') and self.summary_table:
+            if hasattr(self, 'summary_table') and self._is_widget_alive(self.summary_table):
                 table_size = self.summary_table.size()
                 table_width = self.summary_table.width()
                 column_count = self.summary_table.columnCount()
@@ -2520,6 +2547,9 @@ class DriverDetailedPitstopWidget(QWidget):
                 
                 # 重新調整表格大小以適應新的視窗大小
                 self.adjust_table_size()
+            elif hasattr(self, 'summary_table') and not self._is_widget_alive(self.summary_table):
+                print("[RESIZE_DEBUG] - summary_table 已被釋放，重設為 None")
+                self.summary_table = None
         
         print(f"[RESIZE_DEBUG] ===== 視窗大小變化監控結束 =====")
     

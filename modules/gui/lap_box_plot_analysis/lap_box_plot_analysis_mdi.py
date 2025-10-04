@@ -23,7 +23,7 @@ import os
 import json
 import time
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Set
 import numpy as np
 
 from PyQt5.QtWidgets import (
@@ -31,13 +31,20 @@ from PyQt5.QtWidgets import (
     QGroupBox, QGridLayout, QPushButton, QComboBox,
     QCheckBox, QDoubleSpinBox, QFileDialog, QMessageBox
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
 
-# 導入翻譯函數
+# 導入翻譯函數與全域設定
 from core.gui_i18n import tr
+from core.gui_settings_manager import gui_settings_manager
+
+# 共用圈速過濾工具
+from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
+    extract_caution_laps,
+    lap_is_under_caution,
+)
 
 # 導入通用基礎類別
 try:
@@ -149,8 +156,12 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         self.filter_settings = {
             'filter_pit_laps': True,
             'filter_outliers': True,
-            'outlier_threshold': 1.5
+            'outlier_threshold': 1.5,
+            'filter_yellow_flags': True,
         }
+        self.settings_manager = gui_settings_manager
+        self._raw_data_cache: Optional[Dict[str, Any]] = None
+        self._suppress_global_sync = False
         
         self._api_base_url = self._determine_api_base_url()
         self._api_worker: Optional[LapTimeBoxPlotApiWorker] = None
@@ -165,6 +176,13 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         
         print(f"[BOXPLOT_DATA] 初始化完成, 搜索目錄: {self.config.search_directories}")
         print(f"[BOXPLOT_DATA] 文件模式: {self.config.file_patterns}")
+
+        # 套用全域系統設定
+        try:
+            self._apply_global_settings(self.settings_manager.get_boxplot_settings())
+            self.settings_manager.boxplot_settings_changed.connect(self._on_global_boxplot_settings_changed)
+        except Exception as exc:
+            self._debug(f"無法連結全域設定管理器: {exc}")
         
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
@@ -214,6 +232,31 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         self._fallback_policy_reason = reason or "手動覆寫"
         state = "啟用" if self._allow_local_fallback else "停用"
         self._debug(f"本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+
+    def _apply_global_settings(self, settings: Dict[str, Any]) -> None:
+        """Synchronize filter preferences with the System Settings dialog."""
+        if not isinstance(settings, dict):
+            return
+
+        updates: Dict[str, Any] = {}
+        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags"):
+            if key in settings and self.filter_settings.get(key) != settings[key]:
+                updates[key] = settings[key]
+
+        if updates:
+            self._debug(f"套用全域設定: {updates}")
+            # 防止重新觸發全域同步時又回寫設定
+            self._suppress_global_sync = True
+            try:
+                self.update_filter_settings(updates)
+            finally:
+                self._suppress_global_sync = False
+
+    def _on_global_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
+        """Handle updates coming from the System Settings dialog."""
+        if self._suppress_global_sync:
+            return
+        self._apply_global_settings(settings)
 
     def load_data_from_local(self, **kwargs) -> bool:
         """Force loading data via the legacy local JSON workflow for diagnostics."""
@@ -466,6 +509,9 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         try:
             if not isinstance(data, dict):
                 raise ValueError("數據格式不正確：必須是字典格式")
+
+            # 快取原始數據供後續重新處理（過濾設定變更時使用）
+            self._raw_data_cache = data
                 
             # 解析 JSON 結構 - 期望 all_drivers_detailed_laptime
             if "all_drivers_detailed_laptime" not in data:
@@ -526,6 +572,10 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             if not isinstance(detailed_laps, list):
                 continue
             
+            caution_laps: Optional[Set[int]] = None
+            if self.filter_settings.get('filter_yellow_flags', True):
+                caution_laps = extract_caution_laps(driver_data)
+
             lap_times = []
             for lap in detailed_laps:
                 if not isinstance(lap, dict):
@@ -546,6 +596,11 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
                 if lap_time_float <= 0:
                     continue
                 
+                # 過濾黃旗/安全車圈
+                if self.filter_settings.get('filter_yellow_flags', True):
+                    if lap_is_under_caution(lap.get('lap_number'), lap, caution_laps):
+                        continue
+
                 # 過濾進站圈
                 if self.filter_settings['filter_pit_laps']:
                     smart_markers = lap.get('smart_markers', {})
@@ -605,15 +660,30 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
     
     def update_filter_settings(self, settings: Dict[str, Any]):
         """更新過濾設定並重新處理數據"""
-        self.filter_settings.update(settings)
-        print(f"[BOXPLOT_DATA] 過濾設定已更新: {settings}")
-        
-        # 重新處理當前數據
-        if self._current_data:
-            processed = self.process_loaded_data(self._current_data)
+        if not isinstance(settings, dict):
+            return
+
+        updates: Dict[str, Any] = {}
+        for key, value in settings.items():
+            if key not in self.filter_settings:
+                continue
+            if self.filter_settings[key] != value:
+                self.filter_settings[key] = value
+                updates[key] = value
+
+        if not updates:
+            return
+
+        print(f"[BOXPLOT_DATA] 過濾設定已更新: {updates}")
+
+        if self._raw_data_cache:
+            processed = self.process_loaded_data(self._raw_data_cache)
+            self._current_data = processed
             self.data_loaded.emit(processed)
-        
-        self.filter_settings_changed.emit(settings)
+        else:
+            self._debug("尚未快取原始數據，跳過重新處理")
+
+        self.filter_settings_changed.emit(dict(self.filter_settings))
     
     def get_processed_data(self) -> Optional[Dict[str, Any]]:
         """獲取當前處理後的數據"""
@@ -735,6 +805,20 @@ class LapTimeBoxPlotControlWidget(QWidget):
         """更新統計資訊顯示"""
         self.stats_label.setText(stats_text)
 
+    def apply_settings(self, settings: Dict[str, Any]) -> None:
+        """同步控制面板狀態與全域系統設定。"""
+        if not isinstance(settings, dict):
+            return
+
+        with QSignalBlocker(self.filter_pit_checkbox):
+            self.filter_pit_checkbox.setChecked(settings.get('filter_pit_laps', True))
+
+        with QSignalBlocker(self.filter_outliers_checkbox):
+            self.filter_outliers_checkbox.setChecked(settings.get('filter_outliers', True))
+
+        with QSignalBlocker(self.iqr_spinbox):
+            self.iqr_spinbox.setValue(float(settings.get('outlier_threshold', 1.5)))
+
 
 class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     """
@@ -763,7 +847,11 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             
         super().__init__("laptime_boxplot", parent)
         print(f"[BOXPLOT_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
-        
+
+        # 控制面板與全域設定暫存
+        self.control_widget: Optional[QWidget] = None
+        self._pending_boxplot_settings: Optional[Dict[str, Any]] = None
+
         # 初始化模組組件
         print(f"[BOXPLOT_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
@@ -776,6 +864,14 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         
         # 設置響應式佈局
         self.set_responsive_layout()
+
+        # 與全域系統設定同步
+        self.settings_manager = gui_settings_manager
+        try:
+            self.settings_manager.boxplot_settings_changed.connect(self._on_global_boxplot_settings_changed)
+        except Exception as exc:
+            print(f"[BOXPLOT_MDI] 無法連接全域設定信號: {exc}")
+        self._on_global_boxplot_settings_changed(self.settings_manager.get_boxplot_settings())
         
     def create_data_manager(self) -> LapTimeBoxPlotDataManager:
         """創建圈速箱型圖數據管理器"""
@@ -786,6 +882,27 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         # 修正：傳入 None 而非 self（self 是 QObject，不是 QWidget）
         return LapTimeBoxPlotChartWidget(parent=None)
         
+    def create_additional_widgets(self) -> List[QWidget]:
+        """建立控制面板並掛載至主視窗。"""
+        widgets: List[QWidget] = []
+
+        try:
+            control_widget = self.create_control_widget()
+            self.control_widget = control_widget
+        except Exception as exc:
+            print(f"[BOXPLOT_MDI] 建立控制面板失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+            self.control_widget = None
+            control_widget = None
+
+        if control_widget is not None:
+            control_widget.setVisible(False)
+            if self._pending_boxplot_settings:
+                control_widget.apply_settings(self._pending_boxplot_settings)
+
+        return widgets
+
     def create_control_widget(self) -> LapTimeBoxPlotControlWidget:
         """創建圈速箱型圖控制面板"""
         # 修正：傳入 main_widget 而非 self
@@ -873,30 +990,54 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     def _on_filter_settings_changed(self, settings: Dict[str, Any]):
         """過濾設定變更處理"""
         print(f"[BOXPLOT_MDI] 過濾設定變更: {settings}")
-        
-        if not self.data_manager:
+
+        if not hasattr(self, 'settings_manager') or self.settings_manager is None:
             return
-        
+
+        # 以系統設定為真實資料來源，避免多重資料路徑
+        global_settings = self.settings_manager.get_boxplot_settings()
+        payload = dict(global_settings)
+        payload.setdefault('filter_yellow_flags', True)
+        payload.update({
+            'filter_pit_laps': settings.get('filter_pit_laps', payload.get('filter_pit_laps', True)),
+            'filter_outliers': settings.get('filter_outliers', payload.get('filter_outliers', True)),
+            'outlier_threshold': settings.get('outlier_threshold', payload.get('outlier_threshold', 1.5)),
+        })
+        self.settings_manager.update_boxplot_settings(**payload)
+
+    def _on_global_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
+        """全域系統設定更新時同步控制面板與圖表。"""
+        if not isinstance(settings, dict):
+            return
+
+        self._pending_boxplot_settings = dict(settings)
+
+        control_ready = hasattr(self, 'control_widget') and self.control_widget is not None
+        data_ready = hasattr(self, 'data_manager') and self.data_manager is not None
+        chart_ready = hasattr(self, 'chart_widget') and self.chart_widget is not None
+
+        if control_ready:
+            self.control_widget.apply_settings(settings)
+
+        if not data_ready:
+            return
+
         try:
-            # 更新數據管理器的過濾設定
             self.data_manager.update_filter_settings(settings)
-            
-            # 重新獲取處理後的數據
-            processed_data = self.data_manager.get_processed_data()
-            
-            # 更新圖表
-            if processed_data and self.chart_widget:
-                self.chart_widget.update_data(processed_data)
-                
-                # 更新控制面板統計
-                if self.control_widget:
-                    total_drivers = len(processed_data.get('driver_laptimes', {}))
-                    total_laps = sum(len(laps) for laps in processed_data.get('driver_laptimes', {}).values())
+
+            processed = self.data_manager.get_processed_data()
+            if processed and chart_ready:
+                self.chart_widget.update_data(processed)
+
+                if control_ready:
+                    driver_laptimes = processed.get('driver_laptimes', {}) or {}
+                    total_drivers = len(driver_laptimes)
+                    total_laps = sum(len(laps) for laps in driver_laptimes.values())
                     stats_text = f"✅ 車手: {total_drivers} | 圈數: {total_laps}"
                     self.control_widget.update_statistics(stats_text)
-            
-        except Exception as e:
-            print(f"[BOXPLOT_MDI] 更新過濾設定失敗: {e}")
+
+        except Exception as exc:
+            print(f"[BOXPLOT_MDI] 全域設定套用失敗: {exc}")
             import traceback
             traceback.print_exc()
     
@@ -1110,6 +1251,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                     "total_drivers": driver_count,
                     "total_laps": total_laps,
                     "filter_pit_laps": filter_settings.get('filter_pit_laps', True),
+                    "filter_yellow_flags": filter_settings.get('filter_yellow_flags', True),
                     "filter_outliers": filter_settings.get('filter_outliers', True),
                     "outlier_threshold": filter_settings.get('outlier_threshold', 1.5)
                 },

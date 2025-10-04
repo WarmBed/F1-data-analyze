@@ -18,7 +18,7 @@ Version: 3.1.0 (修正圖表繪製邏輯)
 import sys
 import math
 import traceback
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Set
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
                             QComboBox, QCheckBox, QGroupBox, QGridLayout, QScrollArea,
                             QFrame, QSplitter)
@@ -28,6 +28,11 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics
 # 導入翻譯函數
 from core.gui_i18n import tr
 from core.gui_settings_manager import gui_settings_manager
+from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
+    extract_caution_laps,
+    lap_is_pit_stop,
+    lap_is_under_caution,
+)
 
 
 class ChartTheme:
@@ -112,15 +117,26 @@ class LaptimeChartWidget(QWidget):
                 painter.drawText(self.rect(), Qt.AlignCenter, "Please select drivers to display lap time data")
                 return
             
-            # 計算繪製區域（動態邊距，適應小尺寸）
-            # 根據視窗大小動態調整邊距，與 Tire Analysis 一致
-            base_margin = min(self.width(), self.height()) * 0.08  # 8% 動態邊距
-            margin = max(20, min(60, int(base_margin)))  # 最小20px，最大60px
+            # 計算繪製區域（動態邊距，適應小尺寸並預留座標軸空間）
+            min_dimension = max(1, min(self.width(), self.height()))
+            base_margin = min_dimension * 0.08  # 8% 動態邊距
+            axis_font_size = max(8, min(11, int(min_dimension * 0.022)))
+            axis_font_preview = QFont("Microsoft YaHei", axis_font_size)
+            axis_metrics = QFontMetrics(axis_font_preview)
+            y_label_sample_width = axis_metrics.horizontalAdvance("000.0s") + 12
+            x_label_sample_height = axis_metrics.height() + 18
+            y_title_padding = axis_metrics.height() + 18
+            left_margin = max(32, min(90, int(base_margin * 1.3)), y_label_sample_width + y_title_padding)
+            right_margin = max(20, min(60, int(base_margin)))
+            top_margin = max(20, min(60, int(base_margin * 0.9)))
+            bottom_margin = max(32, min(80, int(base_margin * 1.2)), x_label_sample_height)
+            available_width = max(100, self.width() - left_margin - right_margin)
+            available_height = max(80, self.height() - top_margin - bottom_margin)
             chart_rect = QRect(
-                margin, 
-                margin, 
-                self.width() - 2 * margin, 
-                self.height() - 2 * margin
+                int(left_margin),
+                int(top_margin),
+                int(available_width),
+                int(available_height)
             )
             
             # 計算數據範圍
@@ -237,7 +253,11 @@ class LaptimeChartWidget(QWidget):
     def _draw_grid_and_axes(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
         """繪製網格和軸"""
         painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
-        
+
+        axis_label_font = QFont()
+        axis_label_font.setPointSize(8)
+        axis_metrics = QFontMetrics(axis_label_font)
+
         # 垂直網格線（圈數）
         for i in range(6):
             x = rect.left() + i * rect.width() / 5
@@ -247,12 +267,17 @@ class LaptimeChartWidget(QWidget):
             if i < 5:
                 lap = x_range[0] + i * (x_range[1] - x_range[0]) / 5
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                axis_font_size = max(7, min(10, int(min(self.width(), self.height()) * 0.02)))
-                font = QFont()
-                font.setPointSize(8)
-                painter.setFont(font)
+                painter.setFont(axis_label_font)
+                label_text = f"{int(round(lap))}"
+                text_width = axis_metrics.horizontalAdvance(label_text)
                 label_offset = max(15, int(self.height() * 0.025))  # 響應式標籤偏移
-                painter.drawText(int(x) - 15, rect.bottom() + label_offset, f"Lap {int(lap)}")
+                text_rect = QRect(
+                    int(x) - (text_width // 2) - 4,
+                    rect.bottom() + label_offset - axis_metrics.ascent(),
+                    text_width + 8,
+                    axis_metrics.height() + 4
+                )
+                painter.drawText(text_rect, Qt.AlignCenter, label_text)
                 painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
         
         # 水平網格線（圈速）
@@ -264,20 +289,26 @@ class LaptimeChartWidget(QWidget):
             if i < 5:
                 laptime = y_range[1] - i * (y_range[1] - y_range[0]) / 5
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-                axis_font_size = max(7, min(10, int(min(self.width(), self.height()) * 0.02)))
-                font = QFont()
-                font.setPointSize(8)
-                painter.setFont(font)
-                label_offset = max(30, int(self.width() * 0.04))  # 響應式標籤偏移
-                painter.drawText(rect.left() - label_offset, int(y) + 5, f"{laptime:.1f}s")
+                painter.setFont(axis_label_font)
+                label_text = f"{laptime:.1f}s"
+                text_width = axis_metrics.horizontalAdvance(label_text)
+                text_x = rect.left() - text_width - 8
+                if text_x < 0:
+                    text_x = 0
+                text_rect = QRect(
+                    int(text_x),
+                    int(y) - axis_metrics.ascent(),
+                    text_width + 12,
+                    axis_metrics.height() + 6
+                )
+                painter.drawText(text_rect, Qt.AlignRight | Qt.AlignVCenter, label_text)
                 painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
         
         # 繪製軸標題 - 響應式字體
         painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
-        title_font_size = max(8, min(12, int(min(self.width(), self.height()) * 0.025)))
-        font = QFont()
-        font.setPointSize(8)
-        painter.setFont(font)
+        title_font = QFont()
+        title_font.setPointSize(8)
+        painter.setFont(title_font)
         
         # X軸標題
         x_title_offset = max(20, int(self.height() * 0.04))
@@ -285,10 +316,11 @@ class LaptimeChartWidget(QWidget):
         
         # Y軸標題（旋轉）
         painter.save()
-        y_title_offset = max(25, int(self.width() * 0.03))
+        y_label_reserved = axis_metrics.horizontalAdvance("000.0s") + 12
+        y_title_offset = max(30, int(self.width() * 0.03), y_label_reserved + axis_metrics.height())
         painter.translate(rect.left() - y_title_offset, rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-30, 0, "Lap Time (sec)")
+        painter.drawText(-30, 0, f"{tr('lap_time', 'Lap Time')} (s)")
         painter.restore()
     
     def _draw_data_lines(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
@@ -693,7 +725,8 @@ class driverLapAnalysisChartWidget(QWidget):
         # 全域設定
         self.settings_manager = gui_settings_manager
         self.filter_pit_laps = True
-        self._apply_boxplot_settings(self.settings_manager.get_boxplot_settings())
+        self.filter_yellow_flags = True
+        self.apply_filter_settings(self.settings_manager.get_boxplot_settings(), trigger_update=False)
         self.settings_manager.boxplot_settings_changed.connect(self._on_boxplot_settings_changed)
         
         # 設置UI
@@ -741,6 +774,10 @@ class driverLapAnalysisChartWidget(QWidget):
                 print("[LAPTIME_CHART] 解包 charts_data")
             
             self.chart_data = data
+
+            incoming_filters = data.get('filter_settings') if isinstance(data, dict) else None
+            if isinstance(incoming_filters, dict):
+                self.apply_filter_settings(incoming_filters, trigger_update=False)
             
             # 獲取可用車手列表
             detailed_laptime_data = data.get('all_drivers_detailed_laptime', {})
@@ -773,6 +810,28 @@ class driverLapAnalysisChartWidget(QWidget):
         # 發射信號
         if drivers:
             self.driver_selected.emit(drivers[0])
+
+    def apply_filter_settings(self, settings: Dict[str, Any], *, trigger_update: bool = True) -> None:
+        """套用全域過濾設定並視需要更新圖表"""
+        if not isinstance(settings, dict):
+            return
+
+        updated = False
+
+        if "filter_pit_laps" in settings:
+            new_value = bool(settings.get("filter_pit_laps", True))
+            if new_value != self.filter_pit_laps:
+                self.filter_pit_laps = new_value
+                updated = True
+
+        if "filter_yellow_flags" in settings:
+            new_value = bool(settings.get("filter_yellow_flags", True))
+            if new_value != self.filter_yellow_flags:
+                self.filter_yellow_flags = new_value
+                updated = True
+
+        if updated and trigger_update and self.chart_data and self.selected_drivers:
+            self._update_chart_data()
     
     def _update_chart_data(self):
         """更新圖表數據"""
@@ -802,6 +861,8 @@ class driverLapAnalysisChartWidget(QWidget):
                     
                 driver_data = detailed_laptime_data[driver]
                 lap_data = driver_data.get('detailed_lap_data', [])
+                smart_summary = driver_data.get('smart_markers_summary', {})
+                caution_laps = extract_caution_laps(driver_data)
                 
                 if not lap_data:
                     continue
@@ -809,15 +870,24 @@ class driverLapAnalysisChartWidget(QWidget):
                 # 創建數據點列表
                 data_points = []
                 for lap_info in lap_data:
+                    if not isinstance(lap_info, dict):
+                        continue
+
                     lap_num = lap_info.get('lap_number', 0)
                     lap_time_sec = lap_info.get('lap_time_seconds', 0)
                     
                     # 檢查數值有效性：不為 None 且大於 0
                     if lap_time_sec is not None and lap_time_sec > 0:  # 過濾無效圈速
-                        if self.filter_pit_laps and self._is_pit_lap(driver_data, lap_info, lap_num):
+                        if (
+                            self.filter_yellow_flags
+                            and lap_is_under_caution(lap_num, lap_info, caution_laps)
+                        ):
+                            continue
+
+                        if self.filter_pit_laps and lap_is_pit_stop(lap_info, smart_summary):
                             continue
                         # 提取智能標記
-                        markers = self._extract_markers(driver_data, lap_num)
+                        markers = self._extract_markers(driver_data, lap_info, caution_laps, smart_summary)
                         
                         data_point = ChartDataPoint(
                             x=lap_num,
@@ -845,10 +915,17 @@ class driverLapAnalysisChartWidget(QWidget):
             print(f"[LAPTIME_CHART] 圖表數據更新錯誤: {e}")
             traceback.print_exc()
     
-    def _extract_markers(self, driver_data: Dict, lap_num: int) -> List[str]:
+    def _extract_markers(
+        self,
+        driver_data: Dict[str, Any],
+        lap_info: Dict[str, Any],
+        caution_laps: Optional[Set[int]] = None,
+        smart_summary: Optional[Dict[str, Any]] = None,
+    ) -> List[str]:
         """提取指定圈數的智能標記"""
         markers = []
-        smart_markers = driver_data.get('smart_markers_summary', {})
+        lap_num = lap_info.get('lap_number') if isinstance(lap_info, dict) else None
+        smart_markers = smart_summary or driver_data.get('smart_markers_summary', {})
         
         # 調試：顯示智能標記數據結構
         if lap_num == 1:  # 只在第一圈顯示調試信息
@@ -860,9 +937,7 @@ class driverLapAnalysisChartWidget(QWidget):
                     print(f"[LAPTIME_CHART_WIDGET]   - {key}: {value}")
         
         # 檢查各種標記類型 (修正後的結構)
-        # 進站檢測
-        pit_data = smart_markers.get('pit_stop_detection', {})
-        if lap_num in pit_data.get('pit_lap_numbers', []):
+        if lap_is_pit_stop(lap_info, smart_markers):
             markers.append('P')
 
         # 輪胎更換檢測
@@ -876,15 +951,8 @@ class driverLapAnalysisChartWidget(QWidget):
             markers.append('F')
         
         # 賽道狀況檢測 - 根據 smart_markers 中的事故檢測數據
-        safety_data = smart_markers.get('accident_safety_detection', {})
-        incident_laps = safety_data.get('incident_lap_numbers', [])
-        
-        # 檢查是否在事故圈次列表中
-        if lap_num in incident_laps:
-            # 因為目前的數據結構沒有提供具體的 TrackStatus 信息
-            # 我們先使用通用的事故標記，未來可以根據更詳細的數據來區分
-            # TODO: 需要在 CLI 分析中提供更詳細的 TrackStatus 信息
-            markers.append('Y')  # 暫時使用黃旗作為通用事故標記
+        if lap_is_under_caution(lap_num, lap_info, caution_laps or extract_caution_laps(driver_data)):
+            markers.append('Y')
             
         # TODO: 未來可以加入特殊圈數檢測 (起跑、終點等)
         # special_data = smart_markers.get('special_lap_marking', {})
@@ -903,29 +971,22 @@ class driverLapAnalysisChartWidget(QWidget):
         return markers
 
     def _apply_boxplot_settings(self, settings: Dict[str, Any]) -> None:
-        self.filter_pit_laps = settings.get('filter_pit_laps', True)
+        self.apply_filter_settings(settings, trigger_update=False)
 
     def _on_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
-        previous_filter = self.filter_pit_laps
+        previous = {
+            "filter_pit_laps": self.filter_pit_laps,
+            "filter_yellow_flags": self.filter_yellow_flags,
+        }
         self._apply_boxplot_settings(settings)
 
-        if previous_filter != self.filter_pit_laps and self.chart_data:
+        if (
+            self.chart_data
+            and (previous["filter_pit_laps"] != self.filter_pit_laps
+                 or previous["filter_yellow_flags"] != self.filter_yellow_flags)
+        ):
             self._update_chart_data()
 
-    def _is_pit_lap(self, driver_data: Dict[str, Any], lap_info: Dict[str, Any], lap_num: int) -> bool:
-        """判斷是否為進站圈"""
-        smart_markers_summary = driver_data.get('smart_markers_summary', {})
-        pit_summary = smart_markers_summary.get('pit_stop_detection', {})
-        if lap_num in pit_summary.get('pit_lap_numbers', []):
-            return True
-
-        smart_markers = lap_info.get('smart_markers', {})
-        pit_detail = smart_markers.get('pit_stop_detection', {})
-        if isinstance(pit_detail, dict) and pit_detail.get('is_pit_lap', False):
-            return True
-
-        return False
-    
     def set_data(self, data: Dict[str, Any]):
         """兼容舊版介面"""
         self.update_data(data)

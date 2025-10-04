@@ -264,7 +264,8 @@ class LapTimeBoxPlotChartWidget(QWidget):
         painter.save()
         painter.translate(5, self.chart_rect.center().y())  # 從 15 改為 5，增加距離
         painter.rotate(-90)
-        title_font = QFont("Arial", 11, QFont.Bold)
+        title_font = QFont()
+        title_font.setPointSize(8)
         painter.setFont(title_font)
         painter.drawText(
             QRect(-100, -10, 200, 20),

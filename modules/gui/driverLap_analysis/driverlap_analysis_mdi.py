@@ -5,6 +5,7 @@
 
 import os
 import time
+import copy
 from typing import Dict, Any, List, Optional, Tuple
 
 import requests
@@ -13,10 +14,16 @@ from PyQt5.QtCore import pyqtSignal, QObject, QThread
 
 # 導入翻譯函數
 from core.gui_i18n import tr
+from core.gui_settings_manager import gui_settings_manager
 
 # 導入基類
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
+    extract_caution_laps,
+    lap_is_pit_stop,
+    lap_is_under_caution,
+)
 
 
 class DetailedLapAnalysisApiWorker(QThread):
@@ -107,6 +114,8 @@ class DetailedLapAnalysisApiWorker(QThread):
 class driverLapAnalysisDataManager(UniversalDataLoader):
     """詳細圈速分析數據管理器 - 整合架構，支援 CLI Function 28"""
     
+    filter_settings_changed = pyqtSignal(dict)
+
     
     def __init__(self, parent=None):
         """
@@ -116,7 +125,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         # 註冊 laptime 分析類型（如果尚未註冊）
         if "laptime" not in UniversalDataLoader.ANALYSIS_TYPES:
             laptime_config = AnalysisConfig(
-                display_name="Detailed Lap Analysis",
+                display_name=tr("detailed_lap_analysis", "Detailed Lap Analysis"),
                 debug_prefix="[F28_DATA]",
                 data_source="api",
                 cli_function="28",  # CLI -f28: 詳細圈速分析
@@ -145,6 +154,17 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         self.selected_drivers = []  # 已選中的車手列表
         self.tire_strategy_data = {}  # 輪胎策略數據
         self.incident_markers = {}  # 事故標記數據
+
+        self.filter_settings = {
+            "filter_pit_laps": True,
+            "filter_yellow_flags": True,
+        }
+        self._filter_statistics: Dict[str, Dict[str, int]] = {}
+        self._raw_driver_payloads: Dict[str, Any] = {}
+        self._raw_driver_codes: List[str] = []
+        self._raw_data_snapshot: Optional[Dict[str, Any]] = None
+        self._suppress_global_sync = False
+        self.settings_manager = gui_settings_manager
         
         # 載入狀態控制
         self._loading = False
@@ -174,6 +194,12 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         # self.data_loader = driverLapUniversalDataLoader(parent=self)  # 分離架構（已廢棄）
         
         print(f"[LAPTIME_DATA_MANAGER] 詳細圈速分析數據管理器初始化完成")
+
+        try:
+            self._apply_global_settings(self.settings_manager.get_boxplot_settings())
+            self.settings_manager.boxplot_settings_changed.connect(self._on_global_boxplot_settings_changed)
+        except Exception as exc:
+            self._debug(f"無法連接全域設定: {exc}")
         
     def load_data(self, **kwargs) -> bool:
         """載入詳細圈速分析數據，優先使用 API，必要時回退到本地 JSON/CLI。"""
@@ -603,26 +629,34 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
 
             normalized_data, driver_payloads, driver_codes = self._normalize_driver_payload(data)
 
-            if not driver_payloads:
+            self._raw_data_snapshot = copy.deepcopy(normalized_data)
+            self._raw_driver_payloads = copy.deepcopy(driver_payloads)
+            self._raw_driver_codes = list(driver_codes)
+
+            filtered_payloads, filter_stats = self._apply_filters_to_cached_data(driver_payloads)
+            self._filter_statistics = filter_stats
+
+            if not filtered_payloads:
                 raise ValueError("找不到支援的詳細圈速分析數據格式")
 
             # 儲存完整的原始數據與車手資訊
             self.data = normalized_data
-            self.detailed_laptime_data = driver_payloads
+            self.detailed_laptime_data = filtered_payloads
 
-            self.available_drivers = driver_codes
+            filtered_driver_codes = list(filtered_payloads.keys())
+            self.available_drivers = filtered_driver_codes
 
-            if driver_codes:
-                print(f"使用 {len(driver_codes)} 位車手詳細圈速數據：{driver_codes}")
+            if filtered_driver_codes:
+                print(f"使用 {len(filtered_driver_codes)} 位車手詳細圈速數據：{filtered_driver_codes}")
 
             preferred_driver = None
             if isinstance(self._current_api_params, dict):
                 preferred_driver = self._current_api_params.get("selected_driver")
 
-            if preferred_driver and preferred_driver in driver_codes:
+            if preferred_driver and preferred_driver in filtered_driver_codes:
                 self.selected_drivers = [preferred_driver]
-            elif driver_codes:
-                self.selected_drivers = [driver_codes[0]]
+            elif filtered_driver_codes:
+                self.selected_drivers = [filtered_driver_codes[0]]
             else:
                 self.selected_drivers = []
 
@@ -641,9 +675,11 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 "summary": self.analysis_stats,
                 "metadata": data.get("metadata", {}),
                 "analysis_mode": data.get("analysis_mode", "all"),
-                "drivers_analyzed": normalized_data.get("drivers_analyzed", driver_codes or list(self.detailed_laptime_data.keys())),
+                "drivers_analyzed": normalized_data.get("drivers_analyzed", filtered_driver_codes or list(self.detailed_laptime_data.keys())),
                 "selected_drivers": list(self.selected_drivers),
-                "charts_data": self._prepare_detailed_laptime_chart_data()
+                "charts_data": self._prepare_detailed_laptime_chart_data(),
+                "filter_settings": dict(self.filter_settings),
+                "filter_statistics": copy.deepcopy(self._filter_statistics),
             }
             
             print(f"成功處理 {len(self.detailed_laptime_data)} 車手詳細圈速數據")
@@ -723,6 +759,180 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         if driver_codes and "drivers_analyzed" not in normalized:
             normalized["drivers_analyzed"] = driver_codes
         return normalized, driver_payloads, driver_codes
+
+    # ------------------------------------------------------------------
+    # 過濾器整合邏輯
+    # ------------------------------------------------------------------
+
+    def _apply_global_settings(self, settings: Dict[str, Any]) -> None:
+        if not isinstance(settings, dict):
+            return
+
+        self._suppress_global_sync = True
+        try:
+            self.update_filter_settings(
+                filter_pit_laps=settings.get("filter_pit_laps"),
+                filter_yellow_flags=settings.get("filter_yellow_flags"),
+                sync_global=False,
+                emit_signal=False,
+            )
+        finally:
+            self._suppress_global_sync = False
+
+    def _on_global_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
+        if self._suppress_global_sync:
+            return
+
+        self._suppress_global_sync = True
+        try:
+            self.update_filter_settings(
+                filter_pit_laps=settings.get("filter_pit_laps"),
+                filter_yellow_flags=settings.get("filter_yellow_flags"),
+                sync_global=False,
+            )
+        finally:
+            self._suppress_global_sync = False
+
+    def update_filter_settings(
+        self,
+        *,
+        filter_pit_laps: Optional[bool] = None,
+        filter_yellow_flags: Optional[bool] = None,
+        sync_global: bool = True,
+        emit_signal: bool = True,
+    ) -> bool:
+        new_settings = dict(self.filter_settings)
+
+        if filter_pit_laps is not None:
+            new_settings["filter_pit_laps"] = bool(filter_pit_laps)
+        if filter_yellow_flags is not None:
+            new_settings["filter_yellow_flags"] = bool(filter_yellow_flags)
+
+        if new_settings == self.filter_settings:
+            return False
+
+        self.filter_settings = new_settings
+
+        if sync_global and not self._suppress_global_sync:
+            try:
+                self.settings_manager.update_boxplot_settings(
+                    filter_pit_laps=self.filter_settings["filter_pit_laps"],
+                    filter_yellow_flags=self.filter_settings["filter_yellow_flags"],
+                )
+            except Exception as exc:
+                self._debug(f"無法同步全域設定: {exc}")
+
+        self._rebuild_processed_data()
+
+        if emit_signal:
+            self.filter_settings_changed.emit(dict(self.filter_settings))
+
+        return True
+
+    def _apply_filters_to_cached_data(
+        self, driver_payloads: Dict[str, Any]
+    ) -> Tuple[Dict[str, Any], Dict[str, Dict[str, int]]]:
+        filtered_payloads: Dict[str, Any] = {}
+        statistics: Dict[str, Dict[str, int]] = {}
+
+        for driver_code, payload in driver_payloads.items():
+            if not isinstance(payload, dict):
+                continue
+
+            laps = list(payload.get("detailed_lap_data", []))
+            filtered_laps: List[Any] = []
+            removed_pit = 0
+            removed_caution = 0
+            caution_laps = extract_caution_laps(payload)
+            smart_summary = payload.get("smart_markers_summary", {})
+
+            for lap in laps:
+                if not isinstance(lap, dict):
+                    filtered_laps.append(lap)
+                    continue
+                lap_number = lap.get("lap_number") if isinstance(lap, dict) else None
+                is_caution = lap_is_under_caution(lap_number, lap, caution_laps)
+                is_pit = lap_is_pit_stop(lap, smart_summary)
+
+                if self.filter_settings.get("filter_yellow_flags", True) and is_caution:
+                    removed_caution += 1
+                    continue
+
+                if self.filter_settings.get("filter_pit_laps", True) and is_pit:
+                    removed_pit += 1
+                    continue
+
+                filtered_laps.append(lap)
+
+            payload_copy = copy.deepcopy(payload)
+            payload_copy["detailed_lap_data"] = filtered_laps
+            payload_copy.setdefault("filters_applied", {})
+            payload_copy["filters_applied"].update(
+                {
+                    "filter_pit_laps": bool(self.filter_settings.get("filter_pit_laps", True)),
+                    "filter_yellow_flags": bool(self.filter_settings.get("filter_yellow_flags", True)),
+                    "removed_pit_laps": removed_pit,
+                    "removed_caution_laps": removed_caution,
+                    "remaining_laps": len(filtered_laps),
+                    "original_laps": len(laps),
+                }
+            )
+
+            filtered_payloads[driver_code] = payload_copy
+            statistics[driver_code] = {
+                "removed_pit_laps": removed_pit,
+                "removed_caution_laps": removed_caution,
+                "remaining_laps": len(filtered_laps),
+                "original_laps": len(laps),
+            }
+
+        return filtered_payloads, statistics
+
+    def _rebuild_processed_data(self) -> None:
+        if not self._raw_driver_payloads:
+            return
+
+        filtered_payloads, stats = self._apply_filters_to_cached_data(self._raw_driver_payloads)
+        self._filter_statistics = stats
+        self.detailed_laptime_data = filtered_payloads
+        self.available_drivers = list(filtered_payloads.keys())
+
+        if self.selected_drivers:
+            self.selected_drivers = [d for d in self.selected_drivers if d in self.available_drivers]
+        if not self.selected_drivers and self.available_drivers:
+            self.selected_drivers = [self.available_drivers[0]]
+
+        detailed_data = self._process_detailed_laptime_analysis_data()
+        charts_data = self._prepare_detailed_laptime_chart_data()
+
+        base_summary = self.analysis_stats or {}
+        base_metadata: Dict[str, Any] = {}
+        base_mode = "all"
+
+        if isinstance(self._cached_data, dict):
+            base_summary = self._cached_data.get("summary", base_summary)
+            base_metadata = self._cached_data.get("metadata", {})
+            base_mode = self._cached_data.get("analysis_mode", base_mode)
+        elif isinstance(self._raw_data_snapshot, dict):
+            base_metadata = self._raw_data_snapshot.get("metadata", {})
+
+        rebuilt_payload = {
+            "detailed_laptime_data": detailed_data,
+            "summary": base_summary,
+            "metadata": base_metadata,
+            "analysis_mode": base_mode,
+            "drivers_analyzed": self._raw_data_snapshot.get("drivers_analyzed", self.available_drivers)
+            if isinstance(self._raw_data_snapshot, dict)
+            else self.available_drivers,
+            "selected_drivers": list(self.selected_drivers),
+            "charts_data": charts_data,
+            "filter_settings": dict(self.filter_settings),
+            "filter_statistics": copy.deepcopy(self._filter_statistics),
+        }
+
+        self._cached_data = rebuilt_payload
+        self._current_data = rebuilt_payload
+        self.data_loaded.emit(rebuilt_payload)
     
     def _process_detailed_laptime_analysis_data(self) -> Dict[str, List]:
         """處理詳細圈速分析數據"""
@@ -813,6 +1023,8 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             "analysis_info": self.data.get("analysis_info", {}),
             "metadata": self.data.get("metadata", {}),
             "selected_drivers": list(self.selected_drivers),
+            "filter_settings": dict(self.filter_settings),
+            "filter_statistics": copy.deepcopy(self._filter_statistics),
         }
         
         print(f"圖表數據已準備：{len(chart_data['drivers_analyzed'])} 個車手")
@@ -941,7 +1153,9 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
     def create_data_manager(self):
         """創建數據管理器"""
         print(f"[LAPTIME_MDI] 創建詳細圈速分析數據管理器")
-        return driverLapAnalysisDataManager(parent=self)
+        manager = driverLapAnalysisDataManager(parent=self)
+        manager.filter_settings_changed.connect(self._on_filter_settings_changed)
+        return manager
         
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
         """覆蓋基類方法，返回英文標題"""
@@ -949,16 +1163,18 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
         race = race or self.current_race
         session = session or self.current_session
         
-        base_title = f"Detailed Lap Analysis - {year} {race} {session}"
+        translated_title = tr("detailed_lap_analysis", "Detailed Lap Analysis")
+        base_title = f"{translated_title} - {year} {race} {session}"
         
         if hasattr(self, 'driver1') and hasattr(self, 'driver2'):
             driver1 = getattr(self, 'driver1', 'VER')
             driver2 = getattr(self, 'driver2', 'VER')
-            
+
             if driver1 == driver2:
                 base_title += f" - {driver1}"
             else:
-                base_title += f" - {driver1} vs {driver2}"
+                vs_text = tr("versus", "vs")
+                base_title += f" - {driver1} {vs_text} {driver2}"
         
         return base_title
 
@@ -1009,6 +1225,11 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
             placeholder = QLabel("詳細圈速分析圖表載入失敗")
             placeholder.setAlignment(Qt.AlignCenter)
             return placeholder
+
+    def _on_filter_settings_changed(self, settings: Dict[str, Any]) -> None:
+        chart = getattr(self, "chart_widget", None)
+        if chart and hasattr(chart, "apply_filter_settings"):
+            chart.apply_filter_settings(settings)
 
 
 # 導入專用圖表組件

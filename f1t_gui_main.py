@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QSplitter, QLineEdit, QStatusBar, QLabel, QProgressBar, QGroupBox,
     QFrame, QToolBar, QAction, QMenuBar, QMenu, QGridLayout, QLCDNumber,
     QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox,
-    QListWidget, QListWidgetItem, QSpinBox
+    QListWidget, QListWidgetItem, QSpinBox, QSizePolicy
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect, QThread
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPainter, QPen, QBrush, QMouseEvent
@@ -42,6 +42,11 @@ from modules.gui.lap_analysis.linkage import linkage_manager
 # 導入 GUI 國際化模組
 from core.gui_i18n import tr, set_gui_language, get_gui_language, get_telemetry_option_text
 from core.gui_settings_manager import gui_settings_manager
+from core.runtime_status_resolver import (
+    RuntimeStatusResolver,
+    RuntimeStatusState,
+    RuntimeStatusView,
+)
 from modules.gui.shared.season_calendar_provider import (
     SeasonCalendarError,
     SeasonCalendarProvider,
@@ -732,7 +737,7 @@ class LapAnalysisOptionsDialog(QDialog):
         self.lap1_input = QLineEdit()
         self.lap1_input.setText("1")
         self.lap1_input.setFixedWidth(50)
-        self.lap1_input.setPlaceholderText("Lap")
+        self.lap1_input.setPlaceholderText(tr("lap", "Lap"))
         driver_layout.addWidget(lap1_label, 0, 2)
         driver_layout.addWidget(self.lap1_input, 0, 3)
         
@@ -740,7 +745,7 @@ class LapAnalysisOptionsDialog(QDialog):
         driver2_label = QLabel(tr("driver2_optional"))
         self.driver2_combo = QComboBox()
         self.driver2_combo.setFixedWidth(100)
-        self.driver2_combo.addItem("None")  # 第一個選項為無
+        self.driver2_combo.addItem(tr("none_option", "None"), None)  # 第一個選項為無
         driver_layout.addWidget(driver2_label, 1, 0)
         driver_layout.addWidget(self.driver2_combo, 1, 1)
         
@@ -749,18 +754,20 @@ class LapAnalysisOptionsDialog(QDialog):
         self.lap2_input = QLineEdit()
         self.lap2_input.setText("1")
         self.lap2_input.setFixedWidth(50)
-        self.lap2_input.setPlaceholderText("Lap")
+        self.lap2_input.setPlaceholderText(tr("lap", "Lap"))
         driver_layout.addWidget(lap2_label, 1, 2)
         driver_layout.addWidget(self.lap2_input, 1, 3)
         
         # 最速圈勾選框
-        self.fastest_lap_checkbox = QCheckBox("Fastest Lap")
+        self.fastest_lap_checkbox = QCheckBox(tr("fastest_lap_option", "Fastest Lap"))
+        self.fastest_lap_checkbox.setMinimumWidth(110)
+        self.fastest_lap_checkbox.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.fastest_lap_checkbox.setChecked(False)
         self.fastest_lap_checkbox.stateChanged.connect(self._on_fastest_lap_changed)
         driver_layout.addWidget(self.fastest_lap_checkbox, 0, 4, 2, 1)  # 跨兩行放在右邊
         
         # 設置列寬度比例
-        driver_layout.setColumnStretch(5, 1)  # 添加彈性空間
+        driver_layout.setColumnStretch(4, 1)  # 添加彈性空間
         
         layout.addWidget(driver_group)
         
@@ -777,21 +784,20 @@ class LapAnalysisOptionsDialog(QDialog):
         
         # 定義遙測選項
         self.telemetry_options = {
-            'speed_analysis': ('⚡ Speed Analysis', True),  # 設為預設選中
-            # 'speed': ('🏃 Speed', True),  # 移除速度選項
-            'brake': ('🛑 Brake', True),  # 設為預設選中
-            'throttle': ('⚡ Throttle', True),  # 設為預設選中
-            # 'steering': ('🎯 Steering', False),  # 移除轉向選項
-            'gear': ('⚙️ Gear', True),  # 設為預設選中
-            'rpm': ('🔄 RPM', True),  # 設為預設選中
-            'acceleration': ('📈 Acceleration', True),  # 設為預設選中
-            'speed_diff': ('📊 Speed Difference', True),  # 設為預設選中
-            'distancediff': ('📏 Distance Difference', True)  # 設為預設選中
+            "speed_analysis": ("⚡", "speed_analysis", True),
+            "brake": ("🛑", "brake_analysis", True),
+            "throttle": ("⚡", "throttle_analysis", True),
+            "gear": ("⚙️", "gear_analysis", True),
+            "rpm": ("🔄", "rpm_analysis", True),
+            "acceleration": ("📈", "acceleration_analysis", True),
+            "speed_diff": ("📊", "speeddiff_analysis", True),
+            "distancediff": ("📏", "distancediff_analysis", True),
         }
-        
+
         # 添加選項到列表
-        for key, (label, default_checked) in self.telemetry_options.items():
-            item = QListWidgetItem(label)
+        for key, (emoji, label_key, default_checked) in self.telemetry_options.items():
+            label_text = tr(label_key, label_key.replace("_", " ").title())
+            item = QListWidgetItem(f"{emoji} {label_text}")
             item.setData(Qt.UserRole, key)  # 存儲鍵值
             self.telemetry_list.addItem(item)
             if default_checked:
@@ -846,9 +852,23 @@ class LapAnalysisOptionsDialog(QDialog):
             import glob
             import os
             
-            # 獲取當前年份和賽事
-            year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
-            race = self.race_combo.currentText() if hasattr(self, 'race_combo') else "Japan"
+            # 獲取當前年份和賽事 - 從父視窗獲取
+            year = "2025"
+            race = "Japan"
+            
+            # 嘗試從父視窗獲取參數
+            try:
+                if self.parent() and hasattr(self.parent(), 'get_current_parameters'):
+                    params = self.parent().get_current_parameters()
+                    year = params.get('year', '2025')
+                    race = params.get('race', 'Japan')
+                    print(f"[DRIVERS] 從父視窗獲取參數: {year} {race}")
+            except Exception as param_error:
+                print(f"[DRIVERS] 無法從父視窗獲取參數 ({param_error})，使用預設值: {year} {race}")
+            
+            if hasattr(self, 'year_combo'):
+                year = self.year_combo.currentText()
+                race = self.race_combo.currentText()
             
             print(f"[DRIVERS] 從進站分析JSON載入車手列表: {year} {race}")
             
@@ -915,19 +935,20 @@ class LapAnalysisOptionsDialog(QDialog):
             # 添加車手到下拉式選單
             self.driver1_combo.clear()
             self.driver2_combo.clear()
-            
+
             # 車手2先加入"無"選項
-            self.driver2_combo.addItem(tr("none_option", "None"))
+            none_label = tr("none_option", "None")
+            self.driver2_combo.addItem(none_label, None)
             
             for driver in drivers:
-                self.driver1_combo.addItem(driver)
-                self.driver2_combo.addItem(driver)
+                self.driver1_combo.addItem(driver, driver)
+                self.driver2_combo.addItem(driver, driver)
             
             # 預設選擇
             if len(drivers) > 0:
                 self.driver1_combo.setCurrentIndex(0)  # 車手1選擇第一個車手
                 self.driver2_combo.setCurrentIndex(0)  # 車手2預設選擇"無"
-                print(f"[DRIVERS] ✅ 成功載入 {len(drivers)} 個車手，預設選擇: 車手1={drivers[0]}, 車手2=無")
+                print(f"[DRIVERS] ✅ 成功載入 {len(drivers)} 個車手，預設選擇: 車手1={drivers[0]}, 車手2={none_label}")
             
         except Exception as e:
             print(f"[ERROR] [DRIVERS] 載入車手列表失敗: {e}")
@@ -937,19 +958,19 @@ class LapAnalysisOptionsDialog(QDialog):
             
             self.driver1_combo.clear()
             self.driver2_combo.clear()
-            
-            # 車手2先加入"無"選項
-            self.driver2_combo.addItem(tr("none_option", "None"))
+
+            none_label = tr("none_option", "None")
+            self.driver2_combo.addItem(none_label, None)
             
             for driver in default_drivers:
-                self.driver1_combo.addItem(driver)
-                self.driver2_combo.addItem(driver)
+                self.driver1_combo.addItem(driver, driver)
+                self.driver2_combo.addItem(driver, driver)
             
             # 預設選擇
             if len(default_drivers) > 0:
                 self.driver1_combo.setCurrentIndex(0)  # 車手1選擇第一個車手
                 self.driver2_combo.setCurrentIndex(0)  # 車手2預設選擇"無"
-                print(f"[DRIVERS] 使用預設車手列表: 車手1={default_drivers[0]}, 車手2=無")
+                print(f"[DRIVERS] 使用預設車手列表: 車手1={default_drivers[0]}, 車手2={none_label}")
         
     def _on_fastest_lap_changed(self, state):
         """當最速圈勾選框變更時的處理"""
@@ -974,8 +995,11 @@ class LapAnalysisOptionsDialog(QDialog):
     
     def get_selected_drivers(self):
         """獲取選擇的車手和圈數資訊"""
-        driver1 = self.driver1_combo.currentText()
-        driver2 = self.driver2_combo.currentText()
+        driver1_data = self.driver1_combo.currentData()
+        driver1 = driver1_data if driver1_data else self.driver1_combo.currentText()
+
+        driver2_data = self.driver2_combo.currentData()
+        driver2 = driver2_data if driver2_data else self.driver2_combo.currentText()
         
         # 判斷是否選擇最速圈
         is_fastest_lap = self.fastest_lap_checkbox.isChecked()
@@ -985,7 +1009,7 @@ class LapAnalysisOptionsDialog(QDialog):
             # 這與CLI命令 python f1_analysis_modular_main.py -f 13 --lap1 99 --lap2 99 一致
             lap1_number = 99
             lap2_number = 99
-            lap_type = "最速圈"
+            lap_type = tr("fastest_lap_type", "Fastest Lap")
         else:
             # 嘗試解析車手1圈數輸入
             try:
@@ -999,10 +1023,10 @@ class LapAnalysisOptionsDialog(QDialog):
             except ValueError:
                 lap2_number = 1  # 預設值
                 
-            lap_type = "指定圈數"
+            lap_type = tr("specific_lap", "Specific Lap")
         
         # 如果車手2選擇了"無"，則返回None
-        if driver2 == "無":
+        if driver2_data is None:
             driver2 = None
             lap2_number = None
             
@@ -1031,7 +1055,8 @@ class LapAnalysisOptionsDialog(QDialog):
         for i in range(self.telemetry_list.count()):
             item = self.telemetry_list.item(i)
             key = item.data(Qt.UserRole)
-            default_checked = self.telemetry_options[key][1]
+            option_config = self.telemetry_options.get(key)
+            default_checked = option_config[2] if option_config else False
             if default_checked:
                 item.setSelected(True)
     
@@ -5072,6 +5097,41 @@ class ApiHealthWorker(QThread):
 
         self.result_ready.emit(summary)
 
+
+class ApiRuntimeWorker(QThread):
+    """Background worker that polls the analysis runtime endpoint."""
+
+    result_ready = pyqtSignal(dict)
+
+    def __init__(self, base_url: str, timeout: float = 5.0, parent=None):
+        super().__init__(parent)
+        self.base_url = base_url.rstrip('/')
+        self.timeout = timeout
+
+    def run(self):
+        endpoint = f"{self.base_url}/api/v2/analysis/status"
+        summary = {
+            "ok": False,
+            "payload": None,
+            "error": None,
+            "endpoint": endpoint,
+        }
+
+        try:
+            response = requests.get(endpoint, timeout=self.timeout)
+            response.raise_for_status()
+            payload = response.json()
+            summary["payload"] = payload
+            summary["ok"] = True
+        except requests.exceptions.RequestException as exc:
+            summary["error"] = str(exc)
+        except ValueError as exc:
+            summary["error"] = f"JSON decode error: {exc}"
+        except Exception as exc:  # pragma: no cover - defensive
+            summary["error"] = f"{type(exc).__name__}: {exc}"
+
+        self.result_ready.emit(summary)
+
 class StyleHMainWindow(QMainWindow):
     """風格H: 專業賽車分析工作站主視窗"""
     
@@ -5091,6 +5151,12 @@ class StyleHMainWindow(QMainWindow):
         self.api_mode_enabled = False
         self.api_base_url = None
         self.check_api_action = None
+        self.cli_status_label = None
+        self.api_runtime_timer = None
+        self._api_runtime_worker = None
+        self._api_runtime_worker_active = False
+        self._runtime_status_resolver = RuntimeStatusResolver()
+        self._last_cli_status_signature = None
 
         
         # GUI 語言會自動從設定檔載入，不需要強制設定
@@ -6863,7 +6929,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar_layout.setContentsMargins(10, 5, 10, 5)
         
         # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -6915,7 +6981,7 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -6990,7 +7056,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar_layout.setContentsMargins(10, 5, 10, 5)
         
         # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -7124,7 +7190,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar_layout.setContentsMargins(10, 5, 10, 5)
         
         # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -7317,6 +7383,10 @@ class StyleHMainWindow(QMainWindow):
         self.api_status_label = QLabel('[API] Pending')
         self.api_status_label.setObjectName('StatusApi')
         self.api_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
+        self.cli_status_label = QLabel('[CLI] IDLE')
+        self.cli_status_label.setObjectName('StatusCli')
+        self.cli_status_label.setStyleSheet('color: #95a5a6; font-weight: bold;')
+        self.cli_status_label.setToolTip('CLI 閒置，沒有正在執行的分析任務')
 
         self.time_label = QLabel(f"[TIME] {datetime.datetime.now().strftime('%H:%M:%S')}")
         self.time_label.setObjectName('StatusTime')
@@ -7324,6 +7394,8 @@ class StyleHMainWindow(QMainWindow):
         status_bar.addWidget(self.ready_label)
         status_bar.addWidget(QLabel(' | '))
         status_bar.addWidget(self.api_status_label)
+        status_bar.addWidget(QLabel(' | '))
+        status_bar.addWidget(self.cli_status_label)
         status_bar.addWidget(QLabel(' | '))
         status_bar.addWidget(self.time_label)
 
@@ -7371,12 +7443,17 @@ class StyleHMainWindow(QMainWindow):
             self.api_health_timer.timeout.connect(self.trigger_api_health_check)
             QTimer.singleShot(200, self.trigger_api_health_check)
             self.api_health_timer.start()
+            self.setup_api_runtime_monitor()
         except Exception as exc:
             logger.error('Failed to setup API health monitor: %s', exc)
             if self.api_status_label:
                 self.api_status_label.setText('[API] ERROR')
                 self.api_status_label.setStyleSheet('color: #e74c3c; font-weight: bold;')
                 self.api_status_label.setToolTip(str(exc))
+            if self.cli_status_label:
+                self.cli_status_label.setText('[CLI] UNKNOWN')
+                self.cli_status_label.setStyleSheet('color: #c0392b; font-weight: bold;')
+                self.cli_status_label.setToolTip(str(exc))
 
     def trigger_api_health_check(self, manual: bool = False) -> None:
         """Launch a background API health check."""
@@ -7486,6 +7563,85 @@ class StyleHMainWindow(QMainWindow):
     def manual_api_health_check(self) -> None:
         """Slot wired to the Tools menu to trigger manual health checks."""
         self.trigger_api_health_check(manual=True)
+
+    def setup_api_runtime_monitor(self) -> None:
+        """Initialise the periodic polling of the CLI runtime status."""
+        try:
+            if not self.api_base_url:
+                return
+            if self.api_runtime_timer:
+                self.api_runtime_timer.stop()
+                self.api_runtime_timer.deleteLater()
+            self.api_runtime_timer = QTimer(self)
+            self.api_runtime_timer.setInterval(5_000)
+            self.api_runtime_timer.timeout.connect(self.trigger_api_runtime_poll)
+            QTimer.singleShot(500, self.trigger_api_runtime_poll)
+            self.api_runtime_timer.start()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning('Failed to setup API runtime monitor: %s', exc)
+
+    def trigger_api_runtime_poll(self) -> None:
+        """Kick off a single runtime poll if no worker is currently running."""
+        if self._api_runtime_worker_active or not self.api_base_url:
+            return
+
+        try:
+            self._api_runtime_worker_active = True
+            self._api_runtime_worker = ApiRuntimeWorker(self.api_base_url, parent=self)
+            self._api_runtime_worker.result_ready.connect(self.on_api_runtime_result)
+            self._api_runtime_worker.finished.connect(self.on_api_runtime_finished)
+            self._api_runtime_worker.start()
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error('Failed to start API runtime worker: %s', exc)
+            self._api_runtime_worker_active = False
+
+    def on_api_runtime_result(self, summary: dict) -> None:
+        """Handle runtime status payloads and update the CLI indicator."""
+        try:
+            if not self.cli_status_label:
+                return
+
+            if summary.get('ok'):
+                payload = summary.get('payload')
+                view = self._runtime_status_resolver.resolve(payload)
+            else:
+                error_text = summary.get('error') or '無法取得 CLI 狀態'
+                view = RuntimeStatusView(
+                    state=RuntimeStatusState.UNKNOWN,
+                    label='[CLI] UNKNOWN',
+                    color='#c0392b',
+                    tooltip=error_text,
+                    active_task_count=0,
+                )
+
+            self._apply_cli_status_view(view)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error('Failed to process runtime summary: %s', exc)
+            fallback = RuntimeStatusView(
+                state=RuntimeStatusState.UNKNOWN,
+                label='[CLI] UNKNOWN',
+                color='#c0392b',
+                tooltip=str(exc),
+                active_task_count=0,
+            )
+            self._apply_cli_status_view(fallback)
+
+    def _apply_cli_status_view(self, view: RuntimeStatusView) -> None:
+        if not self.cli_status_label:
+            return
+
+        signature = (view.label, view.color, view.tooltip)
+        if signature == self._last_cli_status_signature:
+            return
+
+        self.cli_status_label.setText(view.label)
+        self.cli_status_label.setStyleSheet(f'color: {view.color}; font-weight: bold;')
+        self.cli_status_label.setToolTip(view.tooltip)
+        self._last_cli_status_signature = signature
+
+    def on_api_runtime_finished(self) -> None:
+        self._api_runtime_worker_active = False
+        self._api_runtime_worker = None
 
 
     def update_status_bar(self):
@@ -7623,7 +7779,7 @@ class StyleHMainWindow(QMainWindow):
         """)
         
         # 顯示所有資料按鈕
-        reset_btn = QPushButton("顯示所有資料")
+        reset_btn = QPushButton(tr("show_all_data", "Show All Data"))
         reset_btn.setFixedSize(120, 25)
         reset_btn.setStyleSheet("""
             QPushButton {
@@ -7803,12 +7959,17 @@ class StyleHMainWindow(QMainWindow):
         self.check_and_remove_welcome_page()
         
         # 特殊處理：遙測/圈速分析概覽直接調用 lap_analysis 方法（排除詳細圈速分析）
-        is_detailed_lap = ("詳細圈速分析" in function_name) or ("Detailed Lap Analysis" in function_name)
+        is_detailed_lap = (
+            ("詳細圈速分析" in function_name)
+            or ("Detailed Lap Analysis" in function_name)
+            or ("詳細ラップ分析" in function_name)
+        )
         if (not is_detailed_lap) and (
             ("圈速" in function_name)
             or ("遙測分析" in function_name)
             or ("Telemetry Analysis" in function_name)
             or ("Lap Analysis" in function_name)
+            or ("ラップ分析" in function_name)
         ):
             print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
@@ -8103,39 +8264,87 @@ class StyleHMainWindow(QMainWindow):
                 TRACK_ANALYSIS_AVAILABLE = False
                 print(f"警告: TrackAnalysisUniversal 不可用: {e}")
             
-            # 根據功能名稱映射到模組類型 (支援中英文)
-            module_mapping = {
-                # 中文映射
-                "進站分析": "pitstop_analysis",  # 進站分析映射
-                "事故分析": "accident_analysis",  # 事故分析映射
-                "速度分析": "speed_analysis",     # 速度分析映射
-                "油門分析": "throttle_analysis",  # 油門分析映射
-                "RPM分析": "rpm_analysis",       # RPM分析映射
-                "檔位分析": "gear_analysis",     # 檔位分析映射
-                "煞車分析": "brake_analysis",    # 煞車分析映射
-                "降雨分析": "rain_analysis",     # 降雨分析映射
-                "車手分析": "telemetry_analysis", # 車手分析映射 (原單場賽事總攬)
-                "車手排名": "telemetry_analysis", # 保留舊映射以維持相容
-                "賽道分析": "track_analysis",
-                # "遙測分析": 通過特殊處理路徑，不使用模組工廠
-                "輪胎策略分析": "tire_analysis", # 輪胎策略分析映射
-                "詳細圈速分析": "driverlap_analysis", # 詳細圈速分析映射
-                # 英文映射
-                "Pitstop Analysis": "pitstop_analysis",
-                "Accident Analysis": "accident_analysis",
-                "Speed Analysis": "speed_analysis",
-                "Throttle Analysis": "throttle_analysis",
-                "RPM Analysis": "rpm_analysis",
-                "Gear Analysis": "gear_analysis",
-                "Brake Analysis": "brake_analysis",
-                "Rain Analysis": "rain_analysis",
-                "Driver Analysis": "telemetry_analysis",
-                "Driver Ranking": "telemetry_analysis",
-                "Track Analysis": "track_analysis",
-                # "Telemetry Analysis": 通過特殊處理路徑，不使用模組工廠
-                "Tire Strategy Analysis": "tire_analysis",
-                "Detailed Lap Analysis": "driverlap_analysis",
+            # 根據功能名稱映射到模組類型，支援多語系顯示文字
+            module_alias_groups = {
+                "pitstop_analysis": [
+                    ("pitstop_analysis", "Pitstop Analysis"),
+                    "進站分析",
+                    "Pitstop Analysis",
+                    "ピットストップ分析",
+                ],
+                "accident_analysis": [
+                    ("accident_analysis", "Accident Analysis"),
+                    "事故分析",
+                    "Accident Analysis",
+                ],
+                "speed_analysis": [
+                    ("speed_analysis", "Speed Analysis"),
+                    "速度分析",
+                ],
+                "throttle_analysis": [
+                    ("throttle_analysis", "Throttle Analysis"),
+                    "油門分析",
+                    "スロットル分析",
+                ],
+                "rpm_analysis": [
+                    ("rpm_analysis", "RPM Analysis"),
+                    "RPM分析",
+                ],
+                "gear_analysis": [
+                    ("gear_analysis", "Gear Analysis"),
+                    "檔位分析",
+                    "ギア分析",
+                ],
+                "brake_analysis": [
+                    ("brake_analysis", "Brake Analysis"),
+                    "煞車分析",
+                    "ブレーキ分析",
+                ],
+                "rain_analysis": [
+                    ("rain_analysis", "Rain Analysis"),
+                    "雨況分析",
+                    "降雨分析",
+                ],
+                "telemetry_analysis": [
+                    ("telemetry_analysis", "Telemetry Analysis"),
+                    ("driver_analysis", "Driver Analysis"),
+                    ("driver_ranking", "Driver Ranking"),
+                    "車手分析",
+                    "車手排名",
+                    "單場賽事總攬",
+                ],
+                "track_analysis": [
+                    ("track_analysis", "Track Analysis"),
+                    "賽道分析",
+                    "トラック分析",
+                ],
+                "tire_analysis": [
+                    ("tire_analysis", "Tire Analysis"),
+                    ("tire_strategy_analysis", "Tire Strategy Analysis"),
+                    "輪胎分析",
+                    "輪胎策略分析",
+                    "タイヤ戦略分析",
+                ],
+                "driverlap_analysis": [
+                    ("detailed_lap_analysis", "Detailed Lap Analysis"),
+                    "詳細圈速分析",
+                    "詳細ラップ分析",
+                ],
             }
+
+            module_mapping = {}
+
+            def _register_module_alias(alias_value, module_type):
+                if isinstance(alias_value, str) and alias_value:
+                    module_mapping[alias_value] = module_type
+
+            for module_type, aliases in module_alias_groups.items():
+                for alias in aliases:
+                    if isinstance(alias, tuple):
+                        translated_value = tr(alias[0], alias[1])
+                        _register_module_alias(translated_value, module_type)
+                    else:
+                        _register_module_alias(alias, module_type)
             
             # 尋找匹配的模組類型
             module_type = None
@@ -9254,24 +9463,26 @@ class StyleHMainWindow(QMainWindow):
                 is_fastest_lap = driver_info['is_fastest_lap']
                 
                 if not selected_charts:
-                    from core.gui_i18n import tr
                     QMessageBox.information(self, tr('info', 'Information'), tr('no_chart_selected', 'No chart selected. Window will not be opened.'))
                     return
                 
                 if not driver1:
-                    from core.gui_i18n import tr
                     QMessageBox.information(self, tr('info', 'Information'), tr('select_driver', 'Please select at least one driver.'))
                     return
                 
+                none_display = tr("none_option", "None")
+                lap_word = tr("lap", "Lap")
+                fastest_label = tr("fastest_lap_type", "Fastest Lap")
+
                 print(f"[圈速分析] 使用者選擇的圖表: {selected_charts}")
-                print(f"[圈速分析] 選擇的車手: 車手1={driver1}, 車手2={driver2 if driver2 else '無'}")
+                print(f"[圈速分析] 選擇的車手: 車手1={driver1}, 車手2={driver2 if driver2 else none_display}")
                 if is_fastest_lap:
-                    print(f"[圈速分析] 圈數設定: 最速圈")
+                    print(f"[圈速分析] 圈數設定: {fastest_label}")
                 else:
                     if driver2:
-                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}圈, 車手2第{lap2_number}圈")
+                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}")
                     else:
-                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}圈")
+                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}")
                 
                 # 為每個選擇的圖表類型創建視窗
                 for chart_type in selected_charts:
@@ -9284,12 +9495,12 @@ class StyleHMainWindow(QMainWindow):
                 
                 driver_summary = f"車手: {driver1}" + (f" vs {driver2}" if driver2 else "")
                 if is_fastest_lap:
-                    lap_summary = "最速圈"
+                    lap_summary = fastest_label
                 else:
                     if driver2:
-                        lap_summary = f"車手1第{lap1_number}圈, 車手2第{lap2_number}圈"
+                        lap_summary = f"車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}"
                     else:
-                        lap_summary = f"第{lap1_number}圈"
+                        lap_summary = f"第{lap1_number}{lap_word}"
                 print(f"[OK] 圈速分析完成，已開啟 {len(selected_charts)} 個遙測圖表視窗 ({driver_summary}, {lap_summary})")
             else:
                 print(f"[圈速分析] 使用者取消了分析")
@@ -12496,6 +12707,8 @@ class StyleHMainWindow(QMainWindow):
         try:
             if hasattr(self, 'api_health_timer') and self.api_health_timer:
                 self.api_health_timer.stop()
+                self.api_health_timer.deleteLater()
+                self.api_health_timer = None
             if hasattr(self, '_api_health_worker') and self._api_health_worker:
                 try:
                     self._api_health_worker.result_ready.disconnect(self.on_api_health_result)
@@ -12507,6 +12720,26 @@ class StyleHMainWindow(QMainWindow):
                     pass
                 self._api_health_worker = None
             self._api_health_worker_active = False
+
+            if hasattr(self, 'api_runtime_timer') and self.api_runtime_timer:
+                self.api_runtime_timer.stop()
+                self.api_runtime_timer.deleteLater()
+                self.api_runtime_timer = None
+            if hasattr(self, '_api_runtime_worker') and self._api_runtime_worker:
+                try:
+                    self._api_runtime_worker.result_ready.disconnect(self.on_api_runtime_result)
+                except Exception:
+                    pass
+                try:
+                    self._api_runtime_worker.finished.disconnect(self.on_api_runtime_finished)
+                except Exception:
+                    pass
+                if self._api_runtime_worker.isRunning():
+                    self._api_runtime_worker.requestInterruption()
+                    self._api_runtime_worker.wait(300)
+                self._api_runtime_worker.deleteLater()
+                self._api_runtime_worker = None
+            self._api_runtime_worker_active = False
 
             print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
             

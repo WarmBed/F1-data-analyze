@@ -56,16 +56,31 @@ class GuiTranslator:
             
             # 遙測分析對話框
             'telemetry_options_title': {'zh': '遙測分析選項', 'en': 'Telemetry Analysis Options', 'ja': 'テレメトリー分析オプション'},
+            'detailed_lap_options_title': {'zh': '詳細圈速分析選項', 'en': 'Detailed Lap Analysis Options', 'ja': '詳細ラップ分析オプション'},
+            'select_analysis_type': {'zh': '請選擇分析類型', 'en': 'Please select analysis type', 'ja': '分析タイプを選択してください'},
+            'analysis_type': {'zh': '分析類型', 'en': 'Analysis Type', 'ja': '分析タイプ'},
             'select_telemetry_charts': {'zh': '請選擇要顯示的遙測圖表', 'en': 'Please select telemetry charts to display', 'ja': '表示するテレメトリーチャートを選択してください'},
             'driver_lap_selection': {'zh': '車手與圈數選擇', 'en': 'Driver & Lap Selection', 'ja': 'ドライバーとラップの選択'},
             'driver1_required': {'zh': '車手1 (必選):', 'en': 'Driver 1 (Required):', 'ja': 'ドライバー1（必須）:'},
             'driver2_optional': {'zh': '車手2 (選用):', 'en': 'Driver 2 (Optional):', 'ja': 'ドライバー2（オプション）:'},
             'lap_number': {'zh': '圈數:', 'en': 'Lap:', 'ja': 'ラップ:'},
             'telemetry_options': {'zh': '遙測選項', 'en': 'Telemetry Options', 'ja': 'テレメトリーオプション'},
+            'detail_lap_analysis': {'zh': '詳細圈速分析（表格）', 'en': 'Detailed Lap Analysis (Table)', 'ja': '詳細ラップ分析（表形式）'},
+            'lap_time_box_plot': {'zh': '圈速箱型圖（可視化）', 'en': 'Lap Time Box Plot (Visualization)', 'ja': 'ラップタイム箱ひげ図（可視化）'},
+            'detail_analysis_desc': {
+                'zh': '詳細圈速分析：逐圈顯示數據表格',
+                'en': 'Detailed Lap Analysis: Shows lap-by-lap data table',
+                'ja': '詳細ラップ分析：周回ごとのデータテーブルを表示'
+            },
+            'box_plot_desc': {
+                'zh': '圈速箱型圖：可視化所有車手的圈速分佈',
+                'en': 'Lap Time Box Plot: Visualizes lap time distribution for all drivers',
+                'ja': 'ラップタイム箱ひげ図：全ドライバーのラップタイム分布を可視化'
+            },
             
             # 按鈕
             'select_all': {'zh': '全選', 'en': 'Select All', 'ja': 'すべて選択'},
-            'select_none': {'zh': '全不選', 'en': 'Clear All', 'ja': 'すべてクリア'},
+            'select_none': {'zh': '全不選', 'en': 'Select None', 'ja': 'すべて解除'},
             'restore_default': {'zh': '恢復預設', 'en': 'Restore Default', 'ja': 'デフォルトに戻す'},
             'ok': {'zh': '確定', 'en': 'OK', 'ja': 'OK'},
             'cancel': {'zh': '取消', 'en': 'Cancel', 'ja': 'キャンセル'},
@@ -88,6 +103,7 @@ class GuiTranslator:
             'please_select': {'zh': '請選擇', 'en': 'Please Select', 'ja': '選択してください'},
             'none_option': {'zh': '無', 'en': 'None', 'ja': 'なし'},
             'fastest_lap_option': {'zh': '最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
+            'versus': {'zh': '對', 'en': 'vs', 'ja': '対'},
             'tile_windows_action': {'zh': '平鋪視窗', 'en': 'Tile Windows', 'ja': 'ウィンドウを並べて表示'},
             'cascade_windows_action': {'zh': '層疊視窗', 'en': 'Cascade Windows', 'ja': 'ウィンドウを重ねて表示'},
             'sync_checkbox_main': {'zh': '[LINK] 接收主程式同步 (年份/賽事/賽段)', 'en': '[LINK] Receive Main Window Sync (Year/Race/Session)', 'ja': '[LINK] Receive Main Window Sync (Year/Race/Session)'},
@@ -128,23 +144,23 @@ class GuiTranslator:
             'gear_value': {'zh': '檔位', 'en': 'gear', 'ja': 'ギア'},
             
             # acceleration 分析專用
-            'acceleration_chart_title': {'zh': '🔄 加速度分析圖表', 'en': '🔄 Acceleration Analysis Chart', 'ja': '🔄 加速度分析チャート'},
-            'acceleration_chart_loading': {'zh': '加速度圖表組件正在載入中...', 'en': 'Acceleration chart component loading...', 'ja': '加速度チャートコンポーネント読み込み中...'},
-            'acceleration_value': {'zh': '加速度', 'en': 'acceleration', 'ja': '加速度'},
-            'telemetry_acceleration': {'zh': '加速度 (m/s²)', 'en': 'Acceleration (m/s²)', 'ja': '加速度 (m/s²)'},
+            'acceleration_chart_title': {'zh': '🔄 加速度分析圖表', 'en': '🔄 Acceleration Analysis Chart', 'ja': '🔄 アクセラレーション分析チャート'},
+            'acceleration_chart_loading': {'zh': '加速度圖表組件正在載入中...', 'en': 'Acceleration chart component loading...', 'ja': 'アクセラレーションチャートコンポーネント読み込み中...'},
+            'acceleration_value': {'zh': '加速度', 'en': 'acceleration', 'ja': 'アクセラレーション'},
+            'telemetry_acceleration': {'zh': '加速度 (m/s²)', 'en': 'Acceleration (m/s²)', 'ja': 'アクセラレーション (m/s²)'},
             
             # speeddiff 分析專用
-            'speeddiff_chart_title': {'zh': '🔄 速度差分析圖表', 'en': '🔄 Speed Diff Analysis Chart', 'ja': '🔄 速度差分析チャート'},
-            'speeddiff_chart_loading': {'zh': '速度差圖表組件正在載入中...', 'en': 'Speed diff chart component loading...', 'ja': '速度差チャートコンポーネント読み込み中...'},
-            'speeddiff_value': {'zh': '速度差', 'en': 'speed diff', 'ja': '速度差'},
-            'loading_speeddiff_data': {'zh': '開始載入速度差數據...', 'en': 'Loading speed diff data...', 'ja': '速度差データを読み込み中...'},
+            'speeddiff_chart_title': {'zh': '🔄 速度差分析圖表', 'en': '🔄 Speed Diff Analysis Chart', 'ja': '🔄 スピード差分析チャート'},
+            'speeddiff_chart_loading': {'zh': '速度差圖表組件正在載入中...', 'en': 'Speed diff chart component loading...', 'ja': 'スピード差チャートコンポーネント読み込み中...'},
+            'speeddiff_value': {'zh': '速度差', 'en': 'speed diff', 'ja': 'スピード差'},
+            'loading_speeddiff_data': {'zh': '開始載入速度差數據...', 'en': 'Loading speed diff data...', 'ja': 'スピード差データを読み込み中...'},
             
             # distancediff 分析專用
-            'distancediff_chart_title': {'zh': '🔄 距離差分析圖表', 'en': '🔄 Distance Diff Analysis Chart', 'ja': '🔄 距離差分析チャート'},
-            'distancediff_chart_loading': {'zh': '距離差圖表組件正在載入中...', 'en': 'Distance diff chart component loading...', 'ja': '距離差チャートコンポーネント読み込み中...'},
-            'distancediff_value': {'zh': '距離差', 'en': 'distance diff', 'ja': '距離差'},
-            'loading_distancediff_data': {'zh': '開始載入距離差數據...', 'en': 'Loading distance diff data...', 'ja': '距離差データを読み込み中...'},
-            'loading_acceleration_data': {'zh': '開始載入加速度數據...', 'en': 'Loading acceleration data...', 'ja': '加速度データを読み込み中...'},
+            'distancediff_chart_title': {'zh': '🔄 距離差分析圖表', 'en': '🔄 Distance Diff Analysis Chart', 'ja': '🔄 ディスタンス差分析チャート'},
+            'distancediff_chart_loading': {'zh': '距離差圖表組件正在載入中...', 'en': 'Distance diff chart component loading...', 'ja': 'ディスタンス差チャートコンポーネント読み込み中...'},
+            'distancediff_value': {'zh': '距離差', 'en': 'distance diff', 'ja': 'ディスタンス差'},
+            'loading_distancediff_data': {'zh': '開始載入距離差數據...', 'en': 'Loading distance diff data...', 'ja': 'ディスタンス差データを読み込み中...'},
+            'loading_acceleration_data': {'zh': '開始載入加速度數據...', 'en': 'Loading acceleration data...', 'ja': 'アクセラレーションデータを読み込み中...'},
             
             # 通用狀態
             'cleared': {'zh': '已清除', 'en': 'Cleared', 'ja': 'クリア済み'},
@@ -249,7 +265,7 @@ class GuiTranslator:
             'loading_incident_data': {'zh': '載入事件數據中...', 'en': 'Loading incident data...', 'ja': 'イベントデータ読み込み中...'},
             
             # 事故分析分頁和搜尋
-            'accident_statistics': {'zh': '事故統計', 'en': 'Accident Statistics', 'ja': '事故統計'},
+            'accident_statistics': {'zh': '事故統計', 'en': 'Accident Statistics', 'ja': '事故統計データ'},
             'detailed_records': {'zh': '詳細記錄', 'en': 'Detailed Records', 'ja': '詳細記録'},
             'search_event_description': {'zh': '搜尋事件描述或關鍵字...', 'en': 'Search event description or keywords...', 'ja': 'イベント説明またはキーワードを検索...'},
             'total_events': {'zh': '總事件', 'en': 'Total Events', 'ja': '総イベント'},
@@ -319,23 +335,23 @@ class GuiTranslator:
                 'en': 'F1 racing gear analysis with dual driver comparison',
                 'ja': 'F1レーシングギア分析、2ドライバー比較対応'
             },
-            'speeddiff_analysis': {'zh': '速度差異分析', 'en': 'Speed Diff Analysis', 'ja': '速度差分析'},
+            'speeddiff_analysis': {'zh': '速度差異分析', 'en': 'Speed Diff Analysis', 'ja': 'スピード差分析'},
             'speeddiff_analysis_description': {
                 'zh': 'F1賽車速度差異對比分析工具',
                 'en': 'F1 racing speed difference analysis tool',
-                'ja': 'F1レーシング速度差分析ツール'
+                'ja': 'F1レーシングスピード差分析ツール'
             },
-            'distancediff_analysis': {'zh': '距離差異分析', 'en': 'Distance Diff Analysis', 'ja': '距離差分析'},
+            'distancediff_analysis': {'zh': '距離差異分析', 'en': 'Distance Diff Analysis', 'ja': 'ディスタンス差分析'},
             'distancediff_analysis_description': {
                 'zh': 'F1賽車距離差異對比分析工具',
                 'en': 'F1 racing distance difference analysis tool',
-                'ja': 'F1レーシング距離差分析ツール'
+                'ja': 'F1レーシングディスタンス差分析ツール'
             },
-            'acceleration_analysis': {'zh': '加速度分析', 'en': 'Acceleration Analysis', 'ja': '加速度分析'},
+            'acceleration_analysis': {'zh': '加速度分析', 'en': 'Acceleration Analysis', 'ja': 'アクセラレーション分析'},
             'acceleration_analysis_description': {
                 'zh': 'F1賽車加速度分析模組',
                 'en': 'F1 racing acceleration analysis module',
-                'ja': 'F1レーシング加速度分析モジュール'
+                'ja': 'F1レーシングアクセラレーション分析モジュール'
             },
             
             # 統計面板通用標籤
@@ -346,14 +362,14 @@ class GuiTranslator:
             'lap_number_label': {'zh': '🔄 圈數:', 'en': '🔄 Lap:', 'ja': '🔄 ラップ:'},
             
             # 速度差分析專用標籤
-            'speed_diff_kmh': {'zh': '速度差距 (km/h)', 'en': 'Speed Diff (km/h)', 'ja': '速度差 (km/h)'},
+            'speed_diff_kmh': {'zh': '速度差距 (km/h)', 'en': 'Speed Diff (km/h)', 'ja': 'スピード差 (km/h)'},
             'leading': {'zh': '領先', 'en': 'Leading', 'ja': '先行'},
             'zero_line': {'zh': '零點線', 'en': 'Zero Line', 'ja': 'ゼロライン'},
             'speeddiff_window_title': {'zh': '⚡ 速度差分析', 'en': '⚡ Speed Diff Analysis', 'ja': '⚡ 速度差分析'},
             
             # 累積距離差分析專用標籤
-            'distance_diff_m': {'zh': '距離差距 (m)', 'en': 'Distance Diff (m)', 'ja': '距離差 (m)'},
-            'distancediff_window_title': {'zh': '📏 累積距離差分析', 'en': '📏 Distance Diff Analysis', 'ja': '📏 距離差分析'},
+            'distance_diff_m': {'zh': '距離差距 (m)', 'en': 'Distance Diff (m)', 'ja': 'ディスタンス差 (m)'},
+            'distancediff_window_title': {'zh': '📏 累積距離差分析', 'en': '📏 Distance Diff Analysis', 'ja': '📏 ディスタンス差分析'},
             
             # 表格標題
             'item': {'zh': '項目', 'en': 'Item', 'ja': '項目'},
@@ -386,7 +402,7 @@ class GuiTranslator:
             'loading_brake_data': {'zh': '開始載入煞車數據...', 'en': 'Loading brake data...', 'ja': 'ブレーキデータを読み込み中...'},
             'loading_rpm_data': {'zh': '開始載入RPM數據...', 'en': 'Loading RPM data...', 'ja': 'RPMデータを読み込み中...'},
             'loading_gear_data': {'zh': '開始載入檔位數據...', 'en': 'Loading gear data...', 'ja': 'ギアデータを読み込み中...'},
-            'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': 'Detailed Lap Analysis'},
+            'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
             'driver_analysis': {'zh': '車手分析', 'en': 'Driver Analysis', 'ja': 'ドライバー分析'},
             'driver_ranking': {'zh': '車手排名', 'en': 'Driver Ranking', 'ja': 'Driver Ranking'},
             'tire_strategy_analysis': {'zh': '輪胎策略分析', 'en': 'Tire Strategy Analysis', 'ja': 'Tire Strategy Analysis'},
@@ -526,7 +542,7 @@ class GuiTranslator:
             
             # Window management controls
             'close_all_windows': {'zh': '關閉所有視窗', 'en': 'Close All Windows', 'ja': 'すべてのウィンドウを閉じる'},
-            'show_all_data': {'zh': '顯示所有資料', 'en': 'Show All Data', 'ja': 'Show All Data'},
+            'show_all_data': {'zh': '顯示所有資料', 'en': 'Show All Data', 'ja': '全データ表示'},
             
             # Rain analysis specific axis labels
             'temperature_celsius': {'zh': '溫度 (°C)', 'en': 'Temperature (°C)', 'ja': 'Temperature (°C)'},
@@ -625,6 +641,17 @@ class GuiTranslator:
             'penalty_event': {'zh': '處罰事件', 'en': 'Penalty Event', 'ja': 'Penalty Event'},
             'safety_status': {'zh': '安全狀況', 'en': 'Safety Status', 'ja': 'Safety Status'},
             'no_accidents_found': {'zh': '本場比賽未發現任何事故記錄，安全狀況優良！', 'en': 'No accident records found, excellent safety status!', 'ja': 'No accident records found, excellent safety status!'},
+            'flag_statistics_details': {'zh': '🚩 旗標統計詳情', 'en': '🚩 Flag Statistics Details', 'ja': '🚩 フラッグ統計詳細'},
+            'penalty_list': {'zh': '⚖️ 處罰清單', 'en': '⚖️ Penalty List', 'ja': '⚖️ ペナルティリスト'},
+            'accident_time_distribution_chart': {'zh': '📈 事故時間分佈圖表', 'en': '📈 Accident Time Distribution Chart', 'ja': '📈 アクシデント時間分布チャート'},
+            'lap_label': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
+            'status_total_accidents': {'zh': '📊 總計: {count}起事故', 'en': '📊 Total: {count} accidents', 'ja': '📊 合計: {count}件の事故'},
+            'status_data_source_json': {'zh': '📄 來源: JSON', 'en': '📄 Source: JSON', 'ja': '📄 ソース: JSON'},
+            'status_last_updated': {'zh': '⏱️ 更新: {timestamp}', 'en': '⏱️ Updated: {timestamp}', 'ja': '⏱️ 更新: {timestamp}'},
+            'status_most_dangerous_lap': {'zh': '🎯 最危險圈數: {lap}', 'en': '🎯 Most risky lap: {lap}', 'ja': '🎯 最も危険なラップ: {lap}'},
+            'status_most_involved_driver': {'zh': '🏁 最多涉入: {driver}', 'en': '🏁 Most involved: {driver}', 'ja': '🏁 最多関与: {driver}'},
+            'status_ai_generation_enabled': {'zh': '🤖 智能生成: 開啟', 'en': '🤖 Smart insights: enabled', 'ja': '🤖 スマートインサイト: 有効'},
+            'most_involved_driver_format': {'zh': '{driver} ({count}次)', 'en': '{driver} ({count} incidents)', 'ja': '{driver} ({count}件)'},
             'main_risk_type': {'zh': '主要風險類型', 'en': 'Main Risk Type', 'ja': 'Main Risk Type'},
             'most_common_severity': {'zh': '最常見的事故嚴重程度', 'en': 'Most common accident severity', 'ja': 'Most common accident severity'},
             'critical_incidents_count': {'zh': '關鍵事件數量', 'en': 'Critical Incidents Count', 'ja': 'Critical Incidents Count'},
@@ -746,14 +773,14 @@ class GuiTranslator:
             # 遙測分析選項對話框
             'telemetry_options_title': {'zh': '遙測分析選項', 'en': 'Telemetry Analysis Options', 'ja': 'テレメトリー分析オプション'},
             'select_telemetry_charts': {'zh': '請選擇要顯示的遙測圖表', 'en': 'Please select telemetry charts to display', 'ja': '表示するテレメトリーチャートを選択してください'},
-            'driver_lap_selection': {'zh': '車手和圈數選擇', 'en': 'Driver and Lap Selection', 'ja': 'Driver and Lap Selection'},
+            'driver_lap_selection': {'zh': '車手和圈數選擇', 'en': 'Driver and Lap Selection', 'ja': 'ドライバーとラップの選択'},
             'driver1_required': {'zh': '車手1 (必選):', 'en': 'Driver 1 (Required):', 'ja': 'ドライバー1（必須）:'},
             'driver2_optional': {'zh': '車手2 (選用):', 'en': 'Driver 2 (Optional):', 'ja': 'ドライバー2（オプション）:'},
             'lap_number': {'zh': '圈數:', 'en': 'Lap:', 'ja': 'ラップ:'},
             'fastest_lap': {'zh': '最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
             'telemetry_options': {'zh': '遙測選項', 'en': 'Telemetry Options', 'ja': 'テレメトリーオプション'},
             'select_all': {'zh': '全選', 'en': 'Select All', 'ja': 'すべて選択'},
-            'select_none': {'zh': '全不選', 'en': 'Select None', 'ja': 'Select None'},
+            'select_none': {'zh': '全不選', 'en': 'Select None', 'ja': 'すべて解除'},
             'restore_default': {'zh': '恢復預設', 'en': 'Restore Default', 'ja': 'デフォルトに戻す'},
             'ok': {'zh': '確定', 'en': 'OK', 'ja': 'OK'},
             'lap': {'zh': '圈', 'en': 'Lap', 'ja': 'ラップ'},
