@@ -51,7 +51,9 @@ class TestWindow(QMainWindow):
         """創建詳細圈速分析視窗"""
         try:
             self.monitor.log_event("開始導入模組")
-            from modules.gui.driverLap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
+            from modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi import (
+                driverLapAnalysisMDI,
+            )
             self.monitor.log_event("模組導入成功")
             
             self.monitor.log_event("創建 MDI 實例")

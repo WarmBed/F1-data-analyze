@@ -16,7 +16,9 @@ if "F1T_DISABLE_LAPTIME_API" in os.environ:
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMdiArea, QMdiSubWindow
 from PyQt5.QtCore import QTimer
 
-from modules.gui.driverLap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
+from modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi import (
+    driverLapAnalysisMDI,
+)
 
 class TestMainWindow(QMainWindow):
     """測試主視窗 - 模擬主 GUI 環境"""

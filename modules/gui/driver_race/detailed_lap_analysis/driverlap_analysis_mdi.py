@@ -17,9 +17,9 @@ from core.gui_i18n import tr
 from core.gui_settings_manager import gui_settings_manager
 
 # 導入基類
-from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI
-from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
-from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
+from ...base.universal_analysis_mdi_base import UniversalAnalysisMDI
+from ...base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+from .lap_filter_utils import (
     extract_caution_laps,
     lap_is_pit_stop,
     lap_is_under_caution,

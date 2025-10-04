@@ -24,15 +24,17 @@ from PyQt5.QtCore import pyqtSignal
 
 # 導入介面和基類
 try:
-    from ..interfaces.analysis_module import IAnalysisModule
-except ImportError:
+    from ...interfaces.analysis_module import IAnalysisModule
+except ImportError:  # pragma: no cover - fallback for standalone execution
     from modules.gui.interfaces.analysis_module import IAnalysisModule
 
 # 導入通用詳細圈速分析模組
 try:
     from .driverlap_analysis_mdi import driverLapAnalysisMDI
-except ImportError:
-    from modules.gui.driverLap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
+except ImportError:  # pragma: no cover - fallback when package not installed
+    from modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi import (
+        driverLapAnalysisMDI,
+    )
 
 
 class driverLapAnalysisModule(IAnalysisModule):
@@ -64,7 +66,7 @@ class driverLapAnalysisModule(IAnalysisModule):
         
         # 組件實例
         self._detailed_laptime_analysis_core = None
-        self._main_widget = None
+        self._main_widget: Optional[QWidget] = None
         self._data_loader = None
         
         # 參數提供者 (由外部設置)

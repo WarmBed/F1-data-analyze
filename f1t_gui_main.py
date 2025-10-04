@@ -8133,7 +8133,7 @@ class StyleHMainWindow(QMainWindow):
         """建立圈速箱型圖視窗並加入 MDI (使用新版 API 化模組)。"""
         try:
             print(f"[BOXPLOT] 🚀 啟動新版 API 化圈速箱型圖模組...")
-            from modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
+            from modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
                 LapTimeBoxPlotAnalysis,
             )
             print(f"[BOXPLOT] ✅ 新版模組導入成功")
@@ -8253,7 +8253,7 @@ class StyleHMainWindow(QMainWindow):
             import modules.gui.accident_analysis.accident_analysis_mdi  # 事故分析模組
             import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
-            import modules.gui.driverLap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
+            import modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
             
             # 賽道分析模組導入與註冊
             try:
@@ -8684,7 +8684,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "driverlap_analysis":
                     try:
                         print(f"[DEBUG] [MODULE_FACTORY] 開始創建詳細圈速分析模組...")
-                        from modules.gui.driverLap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
+                        from modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
                         print(f"[OK] [MODULE_FACTORY] 詳細圈速分析 MDI 導入成功")
                         
                         # 直接創建 MDI 實例，不再需要包裝模組
