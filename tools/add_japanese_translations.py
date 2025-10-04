@@ -63,7 +63,7 @@ JA_TRANSLATIONS = {
     
     # 工作站
     'F1T Racing Analysis Workstation': 'F1Tレーシング分析ワークステーション',
-    'F1T Professional Racing Analysis Workstation v8.0': 'F1Tプロフェッショナルレーシング分析ワークステーション v8.0',
+    'F1 TelemetryStation Pro v0.0': 'F1 TelemetryStation Pro v0.0',
     
     # 狀態訊息
     'Ready': '準備完了',

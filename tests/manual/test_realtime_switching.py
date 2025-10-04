@@ -86,7 +86,7 @@ def test_complete_switching():
         ('year_label', 'Year:'),
         ('race_label', 'Race:'),
         # 視窗標題
-        ('main_window_title', 'F1T Professional Racing Analysis Workstation v8.0'),
+    ('main_window_title', 'F1 TelemetryStation Pro v0.0'),
     ]
     
     print("\n切換順序: en -> zh -> ja -> en")

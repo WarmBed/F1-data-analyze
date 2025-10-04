@@ -5137,7 +5137,7 @@ class StyleHMainWindow(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        print("[INIT] 🚀 開始初始化 F1T 主視窗...")
+        print("[INIT] 🚀 開始初始化 F1 TelemetryStation Pro 主視窗...")
         # API health monitor attributes
         self.ready_label = None
         self.api_status_label = None
@@ -5162,7 +5162,7 @@ class StyleHMainWindow(QMainWindow):
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
         
-        self.setWindowTitle("F1T Professional Racing Analysis Workstation v8.0 - Style H")
+        self.setWindowTitle("F1 TelemetryStation Pro v0.0")
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
@@ -6847,7 +6847,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.setSpacing(20)
         
         # 主標題
-        title_label = QLabel(tr("main_title", "[FINISH] F1T Professional Racing Analysis Workstation"))
+        title_label = QLabel(tr("main_title", "[FINISH] F1 TelemetryStation Pro"))
         title_label.setAlignment(Qt.AlignCenter)
         title_label.setStyleSheet("""
             QLabel {
@@ -6872,7 +6872,7 @@ class StyleHMainWindow(QMainWindow):
         welcome_layout.addWidget(subtitle_label)
         
         # 歡迎信息
-        info_label = QLabel(tr("welcome_info", "💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0"))
+        info_label = QLabel(tr("welcome_info", "💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0"))
         info_label.setAlignment(Qt.AlignCenter)
         info_label.setStyleSheet("""
             QLabel {
@@ -7400,7 +7400,7 @@ class StyleHMainWindow(QMainWindow):
         status_bar.addWidget(self.time_label)
 
         # Version information segment
-        version_label = QLabel('F1T Professional v8.0')
+        version_label = QLabel('F1 TelemetryStation Pro v0.0')
         version_label.setObjectName('VersionInfo')
         status_bar.addPermanentWidget(version_label)
 

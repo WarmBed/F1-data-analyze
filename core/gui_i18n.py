@@ -52,7 +52,7 @@ class GuiTranslator:
         """載入翻譯字典"""
         return {
             # 主視窗元素
-            'main_window': {'zh': 'F1T 賽車分析工作站', 'en': 'F1T Racing Analysis Workstation', 'ja': 'F1Tレーシング分析ワークステーション'},
+            'main_window': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
             
             # 遙測分析對話框
             'telemetry_options_title': {'zh': '遙測分析選項', 'en': 'Telemetry Analysis Options', 'ja': 'テレメトリー分析オプション'},
@@ -169,9 +169,9 @@ class GuiTranslator:
             # 關閉確認對話框
             'confirm_exit': {'zh': '確認退出', 'en': 'Confirm Exit', 'ja': '終了確認'},
             'confirm_exit_message': {
-                'zh': '確定要退出 F1T 專業賽車分析工作站嗎？\n\n所有正在執行的分析將被停止。', 
-                'en': 'Are you sure you want to exit F1T Professional Racing Analysis Workstation?\n\nAll running analyses will be stopped.', 
-                'ja': 'F1Tプロフェッショナルレーシング分析ワークステーションを終了してもよろしいですか？\n\n実行中のすべての分析が停止されます。'
+                'zh': '確定要退出 F1 TelemetryStation Pro 嗎？\n\n所有正在執行的分析將被停止。', 
+                'en': 'Are you sure you want to exit F1 TelemetryStation Pro?\n\nAll running analyses will be stopped.', 
+                'ja': 'F1 TelemetryStation Pro を終了してもよろしいですか？\n\n実行中のすべての分析が停止されます。'
             },
             
             # 按鈕選項
@@ -496,9 +496,9 @@ class GuiTranslator:
             'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
             
             # 歡迎頁面
-            'main_title': {'zh': 'F1T 專業賽車分析工作站', 'en': 'F1T Professional Racing Analysis Workstation', 'ja': 'F1T Professional Racing Analysis Workstation'},
+            'main_title': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
             'subtitle': {'zh': '專業級 F1 數據分析平台', 'en': 'Professional F1 Data Analysis Platform', 'ja': 'Professional F1 Data Analysis Platform'},
-            'welcome_info': {'zh': '💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 13.0', 'en': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0', 'ja': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 13.0'},
+            'welcome_info': {'zh': '💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 0.0', 'en': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0', 'ja': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0'},
             
             # 統計和數據
             'statistics_data': {'zh': '統計數據', 'en': 'Statistics Data', 'ja': 'Statistics Data'},
@@ -587,7 +587,7 @@ class GuiTranslator:
             'maximize_restore': {'zh': '最大化/還原', 'en': 'Maximize/Restore', 'ja': 'Maximize/Restore'},
             'popout': {'zh': '彈出為獨立視窗', 'en': 'Pop Out as Independent Window', 'ja': 'Pop Out as Independent Window'},
             'window_settings': {'zh': '視窗設定', 'en': 'Window Settings', 'ja': 'Window Settings'},
-            'forced_close_gui': {'zh': 'F1T GUI 已強制關閉', 'en': 'F1T GUI has been force closed', 'ja': 'F1T GUI has been force closed'},
+            'forced_close_gui': {'zh': 'F1 TelemetryStation Pro GUI 已強制關閉', 'en': 'F1 TelemetryStation Pro GUI has been force closed', 'ja': 'F1 TelemetryStation Pro GUI has been force closed'},
             
             # Tooltips
             'sync_main_window_tooltip': {'zh': '接收主程式同步：啟用 (綠色) / 停用 (紅色)', 'en': 'Receive Main Window Sync: Enabled (Green) / Disabled (Red)', 'ja': 'Receive Main Window Sync: Enabled (Green) / Disabled (Red)'},
@@ -723,7 +723,7 @@ class GuiTranslator:
             'format_grouped_by_driver': {'zh': '直接在data下按車手分組', 'en': 'Directly grouped by driver under data', 'ja': 'Directly grouped by driver under data'},
             
             # 主視窗
-            'main_window_title': {'zh': 'F1T 專業賽車分析工作站 v8.0', 'en': 'F1T Professional Racing Analysis Workstation v8.0', 'ja': 'F1Tプロフェッショナルレーシング分析ワークステーション v8.0'},
+            'main_window_title': {'zh': 'F1 TelemetryStation Pro v0.0', 'en': 'F1 TelemetryStation Pro v0.0', 'ja': 'F1 TelemetryStation Pro v0.0'},
             'ready': {'zh': '就緒', 'en': 'Ready', 'ja': '準備完了'},
             'close_all_windows': {'zh': '關閉所有視窗', 'en': 'Close All Windows', 'ja': 'すべてのウィンドウを閉じる'},
             'show_all_windows': {'zh': '顯示所有視窗', 'en': 'Show All Windows', 'ja': 'すべてのウィンドウを表示'},

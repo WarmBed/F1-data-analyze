@@ -5083,3 +5083,165 @@ lls
 2025-10-04 14:25:23 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
 2025-10-04 14:25:23 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
 2025-10-04 23:23:52 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:37 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:59 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:59 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:42:59 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:00 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:00 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:00 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:00 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+mExit)
+�驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+��失敗
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+�失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:04 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:04 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:36 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:36 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:43:36 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:36 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:36 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | WARNING | f1.console | [WARNING] 找不到車手 PER 的數據
+2025-10-05 00:43:36 | WARNING | f1.console | [WARNING] 無法找到車手 PER 的最速圈，使用第1圈
+2025-10-05 00:43:36 | ERROR | f1.console | ❌ 找不到車手 PER 的數據
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 車手遙測對比分析執行失敗: 雙車手遙測比較分析失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [WARNING] 詳細遙測比較結果驗證失敗，嘗試基本比較...
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:36 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 基本車手比較也失敗: No module named 'modules.base'
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 功能 13 執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 參數化模式功能執行失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 錯誤信息: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.console | [ERROR] 分析執行失敗: 車手對比分析失敗: 詳細遙測比較結果驗證失敗
+2025-10-05 00:43:36 | ERROR | f1.cli.main | CLI 執行失敗詳情: {'function_id': '13', 'result': {'success': False, 'message': '車手對比分析失敗: 詳細遙測比較結果驗證失敗', 'function_id': '13'}}
+2025-10-05 00:43:36 | WARNING | f1.console | [WARN] CLI 已以狀態碼 1 結束 (互動模式下已抑制 SystemExit)
+2025-10-05 00:44:26 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:26 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:27 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手1距離數據不是遞增的，正在排序...
+2025-10-05 00:44:29 | WARNING | f1.console |    ⚠️ 車手2距離數據不是遞增的，正在排序...
