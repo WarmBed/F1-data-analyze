@@ -906,6 +906,18 @@ class TrackAnalysisModule(QWidget):
         self.show_labels_checkbox.stateChanged.connect(self.update_display_options)
         options_layout.addWidget(self.show_labels_checkbox)
         
+        # 連動游標顯示
+        self.show_linkage_cursor_checkbox = QCheckBox("同步游標")
+        self.show_linkage_cursor_checkbox.setChecked(True)
+        self.show_linkage_cursor_checkbox.stateChanged.connect(self.update_marker_display_options)
+        options_layout.addWidget(self.show_linkage_cursor_checkbox)
+
+        # 固定游標顯示
+        self.show_fixed_cursor_checkbox = QCheckBox("固定游標")
+        self.show_fixed_cursor_checkbox.setChecked(True)
+        self.show_fixed_cursor_checkbox.stateChanged.connect(self.update_marker_display_options)
+        options_layout.addWidget(self.show_fixed_cursor_checkbox)
+        
         options_layout.addStretch()
         
         main_layout.addWidget(options_row)
@@ -922,6 +934,9 @@ class TrackAnalysisModule(QWidget):
         # self.track_map.setMinimumSize(400, 300) - 尺寸限制已移除
         map_layout.addWidget(self.track_map)
         
+        # 套用初始游標顯示設定
+        self.update_marker_display_options()
+        
         parent_splitter.addWidget(map_container)
     
     def create_track_map_area_only(self, parent_layout):
@@ -935,6 +950,8 @@ class TrackAnalysisModule(QWidget):
         self.track_map.show_finish_point = False     # 隱藏結束點
         self.track_map.show_distance_markers = False # 隱藏距離標記
         self.track_map.show_track_labels = False     # 隱藏標籤
+        
+        self.update_marker_display_options()
         
         parent_layout.addWidget(self.track_map)
     
@@ -1378,18 +1395,43 @@ class TrackAnalysisModule(QWidget):
         self.start_analysis_workflow()
     
     def update_display_options(self):
-        """Update track map display options - fixed settings, no checkbox control"""
+        """Update track map display options based on checkbox selections"""
         if hasattr(self, 'track_map'):
-            # 固定顯示選項：只顯示起始點
-            show_start = True    # 始終顯示起始點
-            show_finish = False  # 始終隱藏結束點
-            show_markers = False # 始終隱藏距離標記
-            show_labels = False  # 始終隱藏標籤
-            
-            # 更新地圖顯示選項
+            show_start = True
+            show_finish = False
+            show_markers = False
+            show_labels = False
+
+            if hasattr(self, 'show_start_checkbox'):
+                show_start = self.show_start_checkbox.isChecked()
+            if hasattr(self, 'show_finish_checkbox'):
+                show_finish = self.show_finish_checkbox.isChecked()
+            if hasattr(self, 'show_markers_checkbox'):
+                show_markers = self.show_markers_checkbox.isChecked()
+            if hasattr(self, 'show_labels_checkbox'):
+                show_labels = self.show_labels_checkbox.isChecked()
+
             self.track_map.set_display_options(show_start, show_finish, show_markers, show_labels)
-            
-            print(f"[TRACK] 固定顯示選項: 起始點={show_start}, 結束點={show_finish}, 距離標記={show_markers}, 標籤={show_labels}")
+
+            print(
+                f"[TRACK] 顯示選項更新: 起始點={show_start}, 結束點={show_finish}, 距離標記={show_markers}, 標籤={show_labels}"
+            )
+
+    def update_marker_display_options(self):
+        """更新同步/固定游標顯示設定"""
+        if not hasattr(self, 'track_map'):
+            return
+
+        dynamic_visible = True
+        fixed_visible = True
+
+        if hasattr(self, 'show_linkage_cursor_checkbox'):
+            dynamic_visible = self.show_linkage_cursor_checkbox.isChecked()
+        if hasattr(self, 'show_fixed_cursor_checkbox'):
+            fixed_visible = self.show_fixed_cursor_checkbox.isChecked()
+
+        self.track_map.set_dynamic_marker_visibility(dynamic_visible)
+        self.track_map.set_fixed_marker_visibility(fixed_visible)
     
     def export_track_map(self):
         """匯出賽道地圖"""

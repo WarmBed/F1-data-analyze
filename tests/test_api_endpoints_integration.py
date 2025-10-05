@@ -79,7 +79,8 @@ def test_analysis_execute_endpoints(case: Dict[str, Any]) -> None:
 
     assert body.get("success") is True, body
     assert body.get("message")
-    assert body.get("function_spec", {}).get("function_id") == case["function_id"]
+    spec_id = body.get("function_spec", {}).get("function_id")
+    assert str(spec_id) == str(case["function_id"])
     assert body.get("data"), "Expected data payload to be present"
     assert body.get("source") in {"cache", "cli", "cli_failed", "service_error"}
 

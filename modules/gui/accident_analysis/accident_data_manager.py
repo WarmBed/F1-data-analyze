@@ -261,6 +261,16 @@ class AccidentDataManager(UniversalDataLoader):
             f"透過 API 載入事故分析資料 (功能 {self._pending_function_id})..."
         )
 
+        if not self._is_api_available():
+            self._debug("API 健康檢查失敗，跳過背景執行緒啟動")
+            self._is_loading = False
+            self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
+            if self._allow_local_fallback:
+                self._fallback_to_local("API 不可用")
+                return True
+            self.error_occurred.emit("API 服務不可用且未啟用本地 JSON 後備")
+            return False
+
         try:
             self._start_api_request()
             return True
@@ -541,6 +551,25 @@ class AccidentDataManager(UniversalDataLoader):
                 self._debug(f"讀取 api_config.json 失敗: {exc}")
 
         return "http://127.0.0.1:8000"
+
+    def _is_api_available(self) -> bool:
+        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip("/")
+        health_url = f"{base_url}/api/v2/health"
+        try:
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code != 200:
+                return False
+            payload = response.json()
+            if isinstance(payload, dict):
+                status = str(payload.get("status") or payload.get("state") or "").lower()
+                if status in {"ok", "healthy", "ready", "pass"}:
+                    return True
+                if payload.get("success") is True:
+                    return True
+            return True
+        except Exception as exc:
+            self._debug(f"API 健康檢查失敗: {exc}")
+            return False
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_ACCIDENT_JSON_FALLBACK")

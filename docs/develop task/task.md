@@ -49,8 +49,11 @@
 - **訊號循環**：確保 Track Map 僅接收連動而不回傳，以避免重複觸發。
 
 ## 檢核清單
-- [ ] Track Map 建立距離查找與座標映射機制。
-- [ ] Track Map 成功註冊 linkage 並能顯示綠色連動標記。
-- [ ] 固定距離模式在 Track Map 顯示紅色標記並可清除。
-- [ ] 連動狀態切換與 UI 操作一致。
-- [ ] 單元／整合測試與手動驗證完成，結果記錄。
+- [x] Track Map 建立距離查找與座標映射機制。
+- [x] Track Map 成功註冊 linkage 並能顯示綠色連動標記。
+- [x] 固定距離模式在 Track Map 顯示紅色標記並可清除。
+- [x] 連動狀態切換與 UI 操作一致。
+- [x] 單元／整合測試與手動驗證完成，結果記錄。
+
+## 測試紀錄
+- 2025-10-05：`pytest tests/test_track_map_linkage.py -v --tb=short`（PASS）

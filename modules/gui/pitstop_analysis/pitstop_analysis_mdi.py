@@ -188,6 +188,25 @@ class PitstopDataManager(QObject):
             return False, f"環境變數 F1T_ALLOW_PITSTOP_JSON_FALLBACK={env_value}"
         return False, "預設策略 (API 優先，不允許本地回退)"
 
+    def _is_api_available(self) -> bool:
+        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip('/')
+        health_url = f"{base_url}/api/v2/health"
+        try:
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code != 200:
+                return False
+            payload = response.json()
+            if isinstance(payload, dict):
+                status = str(payload.get("status") or payload.get("state") or "").lower()
+                if status in {"ok", "healthy", "ready", "pass"}:
+                    return True
+                if payload.get("success") is True:
+                    return True
+            return True
+        except Exception as exc:
+            print(f"[PITSTOP_MANAGER] API 健康檢查失敗: {exc}")
+            return False
+
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         self._allow_local_fallback = bool(allowed)
         self._fallback_policy_reason = reason or "手動覆寫"
@@ -777,6 +796,15 @@ class PitstopDataManager(QObject):
             self._api_base_url = self._determine_api_base_url()
             self.loading_progress.emit(15)
             self.status_changed.emit("正在透過 API 載入車手進站數據...")
+            if not self._is_api_available():
+                print("[PITSTOP_MANAGER] API 健康檢查失敗，取消背景執行緒啟動")
+                self._is_loading = False
+                self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
+                if self._fallback_to_local("driver", message="API 不可用"):
+                    return True
+                self.error_occurred.emit("API 服務不可用，且無法回退本地資料")
+                return False
+
             self._start_api_request(
                 "driver",
                 function_id=3,
@@ -875,6 +903,15 @@ class PitstopDataManager(QObject):
             }
             self._api_base_url = self._determine_api_base_url()
             self.status_changed.emit("正在透過 API 載入車隊進站數據...")
+            if not self._is_api_available():
+                print("[PITSTOP_MANAGER] API 健康檢查失敗 (team)")
+                self._team_is_loading = False
+                self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
+                if self._fallback_to_local("team", message="API 不可用"):
+                    return True
+                self.error_occurred.emit("API 服務不可用，且未找到本地車隊數據")
+                return False
+
             self._start_api_request(
                 "team",
                 function_id=4,
@@ -1045,6 +1082,15 @@ class PitstopDataManager(QObject):
             }
             self._api_base_url = self._determine_api_base_url()
             self.status_changed.emit("正在透過 API 載入車手詳細進站數據...")
+            if not self._is_api_available():
+                print("[PITSTOP_MANAGER] API 健康檢查失敗 (driver-detail)")
+                self._detail_is_loading = False
+                self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
+                if self._fallback_to_local("detail", message="API 不可用"):
+                    return True
+                self.error_occurred.emit("API 服務不可用，且未找到本地車手詳細數據")
+                return False
+
             self._start_api_request(
                 "detail",
                 function_id=5,

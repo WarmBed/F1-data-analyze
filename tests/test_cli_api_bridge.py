@@ -28,7 +28,7 @@ def test_function_specs_basic_properties():
 
 def test_build_cli_command_mapping():
     service = SimpleF1AnalysisService()
-    spec = FUNCTION_SPECS[13]
+    spec = FUNCTION_SPECS["13"]
     params = {
         "year": 2025,
         "race": "Japan",

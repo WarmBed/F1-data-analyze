@@ -11864,3 +11864,1883 @@ Time', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 
 2025-10-05 01:59:13 | INFO | f1.console | [OK] 參數化模式功能執行完成
 2025-10-05 01:59:13 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs HAM, 圈數: 56 vs 41)
 2025-10-05 01:59:13 | INFO | f1.console | [STATS] 結果數據大小: 187486 字元
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:49 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:50 | INFO | f1.cli.main | F1 CLI 控制台初始化完成
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot i2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+ocation)
+ort name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown l2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+======================================
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+============================================
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+4
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+====
+lyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+�支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | ERROR | f1.console | [WARNING] 部分模組導入失敗: cannot import name 'run_single_driver_comprehensive_analysis' from 'modules' (unknown location)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 獨立分析模組導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 基礎依賴包導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器導入成功！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器創建成功！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 初始化兼容F1分析實例...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] F1分析實例初始化完成
+2025-10-05 12:35:51 | INFO | f1.console |    - 超車分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - DNF分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console |    - 彎道分析器: [SUCCESS]
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Analysis CLI - 模組化版本 (映射表同步版) v5.4
+2025-10-05 12:35:51 | INFO | f1.console |  F1 Telemetry Analysis - Enhanced Race Display Edition
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console |  [F1]  基於 FastF1 和 OpenF1 的專業F1遙測分析系統
+2025-10-05 12:35:51 | INFO | f1.console |  [STATS]  完全模組化設計，支援2024-2025年賽季數據
+2025-10-05 12:35:51 | INFO | f1.console |  [CALENDAR]  新增賽事日期與完整名稱顯示功能
+2025-10-05 12:35:51 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:51 | INFO | f1.console | 
+[OK] 模組化F1分析系統已啟動 (參數化模式)
+2025-10-05 12:35:51 | INFO | f1.console | [FILES] 模組目錄: C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules
+2025-10-05 12:35:51 | INFO | f1.console | [PYTHON] Python版本: 3.13.5
+2025-10-05 12:35:51 | INFO | f1.console | 
+[START] 參數模式啟動...
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [TOOL] 參數化模式 - F1分析系統核心
+2025-10-05 12:35:51 | INFO | f1.console | ============================================================
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 載入參數: Year=2025, Race=China, Session=R
+2025-10-05 12:35:51 | INFO | f1.console | 
+[STATS] 從參數載入 2025 China R 數據...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 兼容數據載入器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [CACHE] 從快取載入資料: f1_analysis_cache/f1_data_2025_China_R.pkl
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+ VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+��...
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+��入器
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈�2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 快取資料載入成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] 賽事數據載入完成！
+2025-10-05 12:35:51 | INFO | f1.console | [OK] OpenF1 分析器初始化成功
+2025-10-05 12:35:51 | INFO | f1.console | [OK] F1分析實例已更新
+2025-10-05 12:35:51 | INFO | f1.console | [TARGET] 執行功能: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 執行功能編號: 13
+2025-10-05 12:35:51 | INFO | f1.console | [START] 開始執行車手對比分析...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手1圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手2圈數設為99，查找最速圈...
+2025-10-05 12:35:51 | INFO | f1.console | [INFO] 車手 VER 最速圈: 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console | [STATS] 雙車手比較模式: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console | [BALANCE] 執行詳細遙測比較分析: VER vs VER
+2025-10-05 12:35:51 | INFO | f1.console |    • 圈數: 第 56 圈 vs 第 56 圈
+2025-10-05 12:35:51 | INFO | f1.console |    • 包含: 速度/RPM/油門/煞車/檔位/加速度/速度差/距離差對比
+2025-10-05 12:35:51 | INFO | f1.console | [SUCCESS] 使用現有的數據載入器
+2025-10-05 12:35:51 | INFO | f1.console | 🚀 開始執行雙車手遙測比較分析...
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手1: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 車手2: VER (第56圈)
+2025-10-05 12:35:51 | INFO | f1.console |    • 比較模式: 不同圈數比較
+2025-10-05 12:35:51 | INFO | f1.console | 🔄 重新計算 - 開始遙測數據分析...
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+0 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.02025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+ 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+0 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+- 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+6 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+51.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+ 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Brake 範圍: 0.00 - 1.00
+00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100.2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+74.67
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+6 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 562025-10-05 12:35:52025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+7.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+.
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+��範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 -2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console | 📊 分析雙車手遙測數據...
+00
+� 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+ 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+�: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+ -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Speed 範圍: 58.00 - 315.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+eleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Speed 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 58.05 - 314.90
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [270.7857152  272.81539259 274.29465035 275.00518875 276.76189699]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+, 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+ate', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+ottle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 RPM 範圍: 5651.00 - 12029.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+0 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 RPM 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+:
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 5728.56 - 11974.67
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [10767.8214528  10821.60790359 10877.45597937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console | 📊 位置距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+937 10936.10636941
+ 10972.11888826]
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Brake 範圍: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Brake 數據有效: True
+, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 位置距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 1.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [0. 0. 0. 0. 0.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 nGear 範圍: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+5 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 nGear 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [7. 7. 7. 7. 7.]
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 1.00 - 8.00
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 52025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 位置距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+- 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Throttle 範圍: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Throttle 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: 0.00 - 100.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [100. 100. 100. 100. 100.]
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手1 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |    車手2 距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |    🔧 開始插值計算...
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2 Acceleration 範圍: -54.17 - 22.57
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手1距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       排序後車手2距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離數組長度: 500
+2025-10-05 12:35:54 | INFO | f1.console |       共同距離範圍: 0.06 - 5396.00
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console |       車手1 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console |       車手2 Acceleration 數據有效: True
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |    ✅ 插值完成，輸出範圍:
+2025-10-05 12:35:54 | INFO | f1.console |       車手1: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console |       車手2: nan - nan
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+2025-10-05 12:35:54 | INFO | f1.console |       車手1前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console |       車手2前5個值: [       nan 3.96825328 2.64649614 1.3942928  3.22419813]
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 遙測欄位: ['Date', 'SessionTime', 'DriverAhead', 'DistanceToDriverAhead', 'Time', 'RPM', 'Speed', 'nGear', 'Throttle', 'Brake', 'DRS', 'Source', 'Distance', 'RelativeDistance', 'Status', 'X', 'Y', 'Z', 'Acceleration']
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 數據形狀: (730, 19)
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console | 📊 VER 時間範圍: 0 days 00:00:00 到 0 days 00:01:35.488000
+m
+2025-10-05 12:35:54 | INFO | f1.console | 🔄 計算位置和累積距離差...
+, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:54 | INFO | f1.console | ✅ 距離差計算完成，數據點數: 500
+2025-10-05 12:35:54 | INFO | f1.console | 📊 位置距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📊 累積距離差統計: 最大=0.00m, 最小=0.00m, 平均=0.00m
+2025-10-05 12:35:54 | INFO | f1.console | 📈 生成雙車手比較圖表...
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 緩存狀態: [REFRESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 緩存狀態: [REFRESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+ESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 📊 比較圖表已保存: cache\comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+] 新建
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 
+================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+�摘要
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 📊 [詳細] 雙車手遙測比較數據摘要
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | ================================================================================
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 緩存狀態: [REFRESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+�目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | +-----------------+----------+----------+
+| 項目            | 車手1    | 車手2    |
++-----------------+----------+----------+
+| 🏎️ 車手         | VER      | VER      |
+| 🏁 圈數         | 第 56 圈 | 第 56 圈 |
+| ⏱️ 圈時間       | 1:35.488 | 1:35.488 |
+| 🛞 輪胎配方     | HARD     | HARD     |
+| 🔄 輪胎使用圈數 | 43.0     | 43.0     |
++-----------------+----------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 
+📈 速度差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | +------------+-------------+
+| 統計項目   | 數值 (km/h) |
++------------+-------------+
+| 最大速度差 | 0.00        |
+| 最小速度差 | 0.00        |
+| 平均速度差 | 0.00        |
++------------+-------------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console | 
+📍 賽道累積距離差分析 (VER - VER):
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console | 📍 位置距離差:
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | +------------+----------+
+| 統計項目   | 數值 (m) |
++------------+----------+
+| 最大位置差 | 0.00     |
+| 最小位置差 | 0.00     |
+| 平均位置差 | 0.00     |
++------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | 📊 累積距離差:
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console | +----------------+----------+
+| 統計項目       | 數值 (m) |
++----------------+----------+
+| 最大累積距離差 | 0.00     |
+| 最小累積距離差 | 0.00     |
+| 平均累積距離差 | 0.00     |
++----------------+----------+
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | 
+📊 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console |    • comparison_telemetry_VER_VER_2025_China_R_Lap1_20251005_123555.png
+2025-10-05 12:35:56 | INFO | f1.console | 📊 雙車手遙測比較分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 遙測參數比較數量: 6
+��元
+2025-10-05 12:35:56 | INFO | f1.console |    • 速度差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 距離差分析: ✅ 完成
+2025-10-05 12:35:56 | INFO | f1.console |    • 生成圖表數量: 1
+2025-10-05 12:35:56 | INFO | f1.console |    • 數據完整性: ✅ 良好
+2025-10-05 12:35:56 | INFO | f1.console | ✅ 雙車手遙測比較分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 
+💾 JSON 遙測比較結果已保存到: json\comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 📄 檔案名: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 🔄 使用統一命名格式: comparison_telemetry_VER_VER_2025_China_R_Lap99_Lap99.json
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 緩存狀態: [REFRESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console | 💾 分析結果已緩存
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 車手遙測對比分析結果摘要：
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行狀態: [OK] 成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 功能編號: 13
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+2025-10-05 12:35:56 | INFO | f1.console |    • 分析類型: N/A
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+] 新建
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console |    • 執行時間: N/A
+執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+2025-10-05 12:35:56 | INFO | f1.console |    • 緩存狀態: [REFRESH] 新建
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 車手遙測對比分析分析完成！
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 功能 13 執行成功
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [OK] 參數化模式功能執行完成
+2025-10-05 12:35:56 | INFO | f1.console | [INFO] 執行摘要: 雙車手遙測比較分析完成 (車手: VER vs VER, 圈數: 56 vs 56)
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元
+2025-10-05 12:35:56 | INFO | f1.console | [STATS] 結果數據大小: 164048 字元

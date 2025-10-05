@@ -829,6 +829,16 @@ def get_gui_language():
     """取得當前 GUI 語言"""
     return _gui_translator.get_language()
 
+
+def set_current_language(language):
+    """向後相容別名，等同於 set_gui_language"""
+    return set_gui_language(language)
+
+
+def get_current_language():
+    """向後相容別名，等同於 get_gui_language"""
+    return get_gui_language()
+
 def tr(key, default=None):
     """
     翻譯函數的簡寫

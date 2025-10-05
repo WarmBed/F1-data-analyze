@@ -197,6 +197,26 @@ class RainAnalysisDataManager(UniversalDataLoader):
             return False, f"環境變數 F1T_ALLOW_RAIN_JSON_FALLBACK={env_value}"
         return False, "預設策略 (API 優先，不允許本地回退)"
 
+    def _is_api_available(self) -> bool:
+        """Quick health check to avoid spawning orphaned API worker threads."""
+        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip('/')
+        health_url = f"{base_url}/api/v2/health"
+        try:
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code != 200:
+                return False
+            payload = response.json()
+            if isinstance(payload, dict):
+                status = str(payload.get("status") or payload.get("state") or "").lower()
+                if status in {"ok", "healthy", "ready", "pass"}:
+                    return True
+                if payload.get("success") is True:
+                    return True
+            return True
+        except Exception as exc:
+            self._debug(f"API 健康檢查失敗: {exc}")
+            return False
+
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle whether local JSON fallback is allowed."""
         self._allow_local_fallback = bool(allowed)
@@ -238,6 +258,15 @@ class RainAnalysisDataManager(UniversalDataLoader):
         self._debug(f"透過 API 載入降雨資料: base_url={self._api_base_url}, params={self._pending_params}")
         self.load_progress.emit(5)
         self.status_changed.emit("正在透過 API 載入降雨分析資料...")
+
+        if not self._is_api_available():
+            self._debug("API 健康檢查失敗，跳過背景執行緒啟動")
+            self._is_loading = False
+            self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
+            if self._allow_local_fallback:
+                return super().load_data(**kwargs)
+            self.load_error.emit("API 服務不可用且未啟用本地 JSON 後備")
+            return False
 
         try:
             self._start_api_request(self._pending_params)

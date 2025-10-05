@@ -539,7 +539,17 @@ class TelemetryDataLoader(QObject):
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
-        return False, "預設策略 (API 優先，不允許本地後備)"
+        return True, "預設策略 (允許本地 JSON 後備)"
+
+    def _is_api_available(self) -> bool:
+        try:
+            health_url = f"{self._api_base_url}/health"
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code == 200:
+                return True
+            return response.status_code < 500
+        except Exception:
+            return False
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         self._allow_local_fallback = bool(allowed)
@@ -641,6 +651,11 @@ class TelemetryDataLoader(QObject):
         self._api_base_url = self._determine_api_base_url()
         self._debug(f"🚀 呼叫 API: {self._api_base_url}/api/v2/analysis/execute")
         self._debug(f"參數: {worker_params}")
+
+        if not self._is_api_available():
+            self._debug("API 健康檢查失敗，啟動本地後備流程")
+            self._fallback_to_local("API 服務未啟動", request_token)
+            return
 
         self._cleanup_api_worker()
 

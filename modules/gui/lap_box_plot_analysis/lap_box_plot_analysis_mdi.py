@@ -226,6 +226,16 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         # 修正：預設允許本地 JSON 後備（開發模式）
         return True, "預設策略 (允許本地 JSON 後備)"
 
+    def _is_api_available(self) -> bool:
+        try:
+            health_url = f"{self._api_base_url}/health"
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code == 200:
+                return True
+            return response.status_code < 500
+        except Exception:
+            return False
+
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle whether local JSON fallback is allowed."""
         self._allow_local_fallback = bool(allowed)
@@ -294,6 +304,12 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         self.status_changed.emit("正在透過 API 載入降雨分析資料...")
 
         try:
+            if not self._is_api_available():
+                self._debug("API 健康檢查失敗，使用本地 JSON 後備")
+                self.status_changed.emit("偵測到 API 服務未啟動，改用本地資料")
+                self._is_loading = False
+                return super().load_data(**kwargs)
+
             self._start_api_request(self._pending_params)
             return True
         except Exception as exc:
@@ -310,6 +326,13 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
 
     def _start_api_request(self, params: Dict[str, Any]) -> None:
         """Spawn the background worker that contacts the REST API."""
+        if not self._is_api_available():
+            self._debug("API 健康檢查失敗，啟動本地後備流程")
+            self._is_loading = False
+            self._last_data_source = "local-json"
+            super().load_data(**params)
+            return
+
         self._cleanup_api_worker()
 
         worker_params = {

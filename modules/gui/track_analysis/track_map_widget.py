@@ -17,6 +17,7 @@ Date: 2025-10-02
 from __future__ import annotations
 
 from typing import Dict, Any, List, Optional, Tuple
+from bisect import bisect_left
 
 from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize
 from PyQt5.QtGui import (
@@ -28,6 +29,12 @@ from PyQt5.QtGui import (
     QPen,
 )
 from PyQt5.QtWidgets import QWidget
+
+# 連動管理器 (Lap Analysis linkage)
+try:
+    from modules.gui.lap_analysis.linkage import linkage_manager
+except ImportError:
+    linkage_manager = None
 
 
 class TrackMapWidget(QWidget):
@@ -59,8 +66,29 @@ class TrackMapWidget(QWidget):
         self._grid_spacing: float = 500.0  # 公尺
         self._max_grid_lines: int = 12
 
+        # 連動狀態
+        self._linkage_registered: bool = False
+        self._master_linkage_enabled: bool = True
+        self._dynamic_marker_visible: bool = True
+        self._fixed_marker_visible: bool = True
+
+        # 連動標記資料
+        self._distance_lookup: List[Tuple[float, float, float]] = []
+        self._distance_values: List[float] = []
+        self._distance_scale: float = 1.0
+        self._raw_distance_range: Tuple[float, float] = (0.0, 0.0)
+        self._dynamic_marker_distance: Optional[float] = None
+        self._dynamic_marker_world: Optional[Tuple[float, float]] = None
+        self._fixed_marker_distance: Optional[float] = None
+        self._fixed_marker_world: Optional[Tuple[float, float]] = None
+
+        # 記錄最後一次收到的連動訊號 (for debug/diagnostics)
+        self._last_linkage_relative_y: float = 0.5
+
         self.setMouseTracking(True)
         self.setStyleSheet("background-color: white; border: 1px solid #ccc;")
+
+        self._register_linkage()
 
     # ------------------------------------------------------------------
     # 資料載入與設定
@@ -79,6 +107,9 @@ class TrackMapWidget(QWidget):
                 bounds = self._calculate_bounds_from_positions(self.position_data)
 
             self.track_bounds = bounds if isinstance(bounds, dict) else None
+            self._build_distance_lookup()
+            self._clear_dynamic_marker()
+            self._clear_fixed_marker()
 
             if self.track_bounds:
                 self._pending_fit = True
@@ -102,6 +133,9 @@ class TrackMapWidget(QWidget):
         """兼容 legacy API。"""
         self.position_data = position_data or []
         self.track_bounds = track_bounds or self._calculate_bounds_from_positions(self.position_data)
+        self._build_distance_lookup()
+        self._clear_dynamic_marker()
+        self._clear_fixed_marker()
         self._pending_fit = True
         self.fit_to_view()
         self.update()
@@ -137,6 +171,10 @@ class TrackMapWidget(QWidget):
         self.scale_factor = self._base_scale
         self._pending_fit = False
         self.update()
+
+    def calculate_scale(self) -> None:
+        """Legacy compatibility wrapper for older modules."""
+        self.fit_to_view()
 
     def set_zoom(self, zoom_factor: float) -> None:
         if zoom_factor <= 0.0:
@@ -233,6 +271,9 @@ class TrackMapWidget(QWidget):
         if self.show_distance_markers:
             self._draw_distance_markers(painter, points)
 
+        # 在路徑繪製後呈現同步標記
+        self._draw_markers(painter)
+
     def _draw_grid(self, painter: QPainter) -> None:
         if not self.track_bounds:
             return
@@ -304,7 +345,8 @@ class TrackMapWidget(QWidget):
         step = max(1, len(points) // 8)
         for idx in range(step, len(points) - 1, step):
             painter.drawEllipse(points[idx], 3, 3)
-            distance_m = self.position_data[idx].get("distance_m")
+            distance_raw = self._extract_distance(self.position_data[idx])
+            distance_m = self._normalize_distance(distance_raw)
             if distance_m is not None:
                 painter.setFont(QFont("Arial", 7))
                 painter.setPen(QPen(QColor(0, 0, 120)))
@@ -362,6 +404,10 @@ class TrackMapWidget(QWidget):
         self.scale_factor = 1.0
         self.offset_x = 0.0
         self.offset_y = 0.0
+        self._distance_lookup = []
+        self._distance_values = []
+        self._clear_dynamic_marker()
+        self._clear_fixed_marker()
         self.update()
 
     def get_track_info(self) -> Dict[str, Any]:
@@ -376,6 +422,258 @@ class TrackMapWidget(QWidget):
             return
         self._pending_fit = True
         self.fit_to_view()
+
+    # ------------------------------------------------------------------
+    # 連動整合
+    # ------------------------------------------------------------------
+    def _register_linkage(self) -> None:
+        if linkage_manager is not None and not self._linkage_registered:
+            try:
+                linkage_manager.register_module(self, "track_map")
+                self._master_linkage_enabled = linkage_manager.is_master_linkage_enabled()
+                self._linkage_registered = True
+                print("[TRACK_MAP] 已註冊至 linkage_manager，主連動狀態:", self._master_linkage_enabled)
+            except Exception as exc:
+                print(f"[TRACK_MAP] linkage 註冊失敗: {exc}")
+
+    def _unregister_linkage(self) -> None:
+        if linkage_manager is not None and self._linkage_registered:
+            try:
+                linkage_manager.unregister_module(self)
+                print("[TRACK_MAP] 已自 linkage_manager 解除註冊")
+            finally:
+                self._linkage_registered = False
+
+    def closeEvent(self, event) -> None:  # noqa: D401 - Qt override
+        self._unregister_linkage()
+        super().closeEvent(event)
+
+    # linkage manager 會呼叫 set_master_linkage_enabled 或 on_master_linkage_changed
+    def set_master_linkage_enabled(self, enabled: bool) -> None:
+        self._master_linkage_enabled = bool(enabled)
+        if not self._master_linkage_enabled:
+            self._clear_dynamic_marker(update_view=False)
+            self._clear_fixed_marker(update_view=False)
+        self.update()
+
+    def on_master_linkage_changed(self, enabled: bool) -> None:
+        self.set_master_linkage_enabled(enabled)
+
+    # linkage signals -------------------------------------------------
+    def on_x_linkage_received(self, distance_value: float, y_relative: float) -> None:
+        if not self._master_linkage_enabled:
+            return
+        self._last_linkage_relative_y = y_relative
+        self._update_dynamic_marker(distance_value)
+
+    def on_x_linkage_clear(self) -> None:
+        self._clear_dynamic_marker()
+
+    def on_click_linkage_received(self, distance_value: float) -> None:
+        if not self._master_linkage_enabled:
+            return
+        self._update_fixed_marker(distance_value)
+
+    def on_click_linkage_clear(self) -> None:
+        self._clear_fixed_marker()
+
+    # ------------------------------------------------------------------
+    # 標記狀態與繪製
+    # ------------------------------------------------------------------
+    def set_dynamic_marker_visibility(self, visible: bool) -> None:
+        self._dynamic_marker_visible = bool(visible)
+        self.update()
+
+    def set_fixed_marker_visibility(self, visible: bool) -> None:
+        self._fixed_marker_visible = bool(visible)
+        self.update()
+
+    def get_marker_state(self) -> Dict[str, Any]:
+        return {
+            "dynamic_distance": self._dynamic_marker_distance,
+            "dynamic_world": self._dynamic_marker_world,
+            "fixed_distance": self._fixed_marker_distance,
+            "fixed_world": self._fixed_marker_world,
+            "dynamic_visible": self._dynamic_marker_visible,
+            "fixed_visible": self._fixed_marker_visible,
+            "master_enabled": self._master_linkage_enabled,
+        }
+
+    def _draw_markers(self, painter: QPainter) -> None:
+        if not self.track_bounds:
+            return
+
+        if (
+            self._dynamic_marker_world
+            and self._master_linkage_enabled
+            and self._dynamic_marker_visible
+        ):
+            x, y = self.world_to_screen(*self._dynamic_marker_world)
+            painter.setBrush(QBrush(QColor(0, 180, 0, 220)))
+            painter.setPen(QPen(QColor(0, 120, 0), 2))
+            painter.drawEllipse(QPointF(x, y), 6, 6)
+
+        if (
+            self._fixed_marker_world
+            and self._master_linkage_enabled
+            and self._fixed_marker_visible
+        ):
+            x, y = self.world_to_screen(*self._fixed_marker_world)
+            painter.setBrush(QBrush(QColor(220, 60, 60, 230)))
+            painter.setPen(QPen(QColor(160, 30, 30), 2))
+            painter.drawEllipse(QPointF(x, y), 7, 7)
+
+    def _update_dynamic_marker(self, distance_value: float) -> None:
+        world_pos = self._find_world_coordinate(distance_value)
+        if world_pos:
+            self._dynamic_marker_distance = float(distance_value)
+            self._dynamic_marker_world = world_pos
+        else:
+            self._dynamic_marker_distance = None
+            self._dynamic_marker_world = None
+        self.update()
+
+    def _update_fixed_marker(self, distance_value: float) -> None:
+        world_pos = self._find_world_coordinate(distance_value)
+        if world_pos:
+            self._fixed_marker_distance = float(distance_value)
+            self._fixed_marker_world = world_pos
+        else:
+            self._fixed_marker_distance = None
+            self._fixed_marker_world = None
+        self.update()
+
+    def _clear_dynamic_marker(self, update_view: bool = True) -> None:
+        self._dynamic_marker_distance = None
+        self._dynamic_marker_world = None
+        if update_view:
+            self.update()
+
+    def _clear_fixed_marker(self, update_view: bool = True) -> None:
+        self._fixed_marker_distance = None
+        self._fixed_marker_world = None
+        if update_view:
+            self.update()
+
+    # ------------------------------------------------------------------
+    # 距離索引與座標計算
+    # ------------------------------------------------------------------
+    def _build_distance_lookup(self) -> None:
+        entries: List[Tuple[float, float, float]] = []
+        last_distance: Optional[float] = None
+        skipped = 0
+
+        for record in self.position_data:
+            distance = self._extract_distance(record)
+            if distance is None:
+                skipped += 1
+                continue
+
+            x = record.get("position_x")
+            y = record.get("position_y")
+            if not isinstance(x, (int, float)) or not isinstance(y, (int, float)):
+                skipped += 1
+                continue
+
+            # 強制確保距離遞增，若資料逆序則略做調整
+            if last_distance is not None and distance < last_distance:
+                distance = last_distance
+
+            entries.append((float(distance), float(x), float(y)))
+            last_distance = distance
+
+        entries.sort(key=lambda item: item[0])
+        if entries:
+            self._raw_distance_range = (entries[0][0], entries[-1][0])
+        else:
+            self._raw_distance_range = (0.0, 0.0)
+
+        self._distance_scale = self._determine_distance_scale(entries)
+        if self._distance_scale != 1.0:
+            entries = [(item[0] * self._distance_scale, item[1], item[2]) for item in entries]
+
+        self._distance_lookup = entries
+        self._distance_values = [item[0] for item in entries]
+
+        if skipped and entries:
+            print(f"[TRACK_MAP] 距離索引建立完成: {len(entries)} 筆有效資料，忽略 {skipped} 筆缺失或不合法資料")
+        elif not entries:
+            print("[TRACK_MAP] ⚠️ 無法建立距離索引：缺少 distance 資料")
+        else:
+            print(f"[TRACK_MAP] 建立距離索引: {len(entries)} 筆有效資料")
+        if entries and self._distance_scale != 1.0:
+            print(
+                "[TRACK_MAP] ⚙️ 自動距離縮放：原始最大距離 "
+                f"{self._raw_distance_range[1]:.2f} → 正規化 {self._distance_values[-1]:.2f} 公尺"
+            )
+
+    def _extract_distance(self, record: Dict[str, Any]) -> Optional[float]:
+        for key in (
+            "distance_m",
+            "distance",
+            "lap_distance",
+            "path_distance",
+            "s",
+        ):
+            value = record.get(key)
+            if isinstance(value, (int, float)):
+                return float(value)
+        return None
+
+    def _determine_distance_scale(self, entries: List[Tuple[float, float, float]]) -> float:
+        if not entries:
+            return 1.0
+
+        max_distance = entries[-1][0]
+        if max_distance <= 0:
+            return 1.0
+
+        scale = 1.0
+        scaled_max = max_distance
+        while scaled_max > 10000:
+            scale *= 0.1
+            scaled_max *= 0.1
+
+        # Avoid tiny floating noise; treat near-1 as 1
+        if abs(scale - 1.0) < 1e-6:
+            return 1.0
+        return scale
+
+    def _normalize_distance(self, raw_distance: Optional[float]) -> Optional[float]:
+        if raw_distance is None:
+            return None
+        return raw_distance * self._distance_scale
+
+    def _find_world_coordinate(self, distance_value: float) -> Optional[Tuple[float, float]]:
+        if not self._distance_lookup:
+            return None
+
+        distance = float(distance_value)
+        idx = bisect_left(self._distance_values, distance)
+
+        if idx <= 0:
+            base = self._distance_lookup[0]
+            return base[1], base[2]
+        if idx >= len(self._distance_lookup):
+            base = self._distance_lookup[-1]
+            return base[1], base[2]
+
+        prev_entry = self._distance_lookup[idx - 1]
+        next_entry = self._distance_lookup[idx]
+        prev_dist, prev_x, prev_y = prev_entry
+        next_dist, next_x, next_y = next_entry
+
+        if next_dist == prev_dist:
+            return prev_x, prev_y
+
+        ratio = (distance - prev_dist) / (next_dist - prev_dist)
+        ratio = max(0.0, min(1.0, ratio))
+        interp_x = prev_x + (next_x - prev_x) * ratio
+        interp_y = prev_y + (next_y - prev_y) * ratio
+        return interp_x, interp_y
+
+    def get_distance_scale(self) -> float:
+        return self._distance_scale
 
 
 __all__ = ["TrackMapWidget"]

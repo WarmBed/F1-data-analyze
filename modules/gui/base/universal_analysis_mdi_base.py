@@ -112,6 +112,16 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def register_mdi_module_type(cls, module_type: str, config: AnalysisMDIConfig):
         """註冊新的 MDI 模組類型"""
         cls.MDI_MODULE_TYPES[module_type] = config
+
+    @classmethod
+    def get_registered_types(cls) -> List[str]:
+        """返回目前已註冊的分析模組類型列表"""
+        return list(cls.MDI_MODULE_TYPES.keys())
+
+    @classmethod
+    def get_mdi_config(cls, module_type: str) -> Optional[AnalysisMDIConfig]:
+        """取得指定分析模組類型的設定，若不存在則回傳 None"""
+        return cls.MDI_MODULE_TYPES.get(module_type)
     
     def __init__(self, analysis_type: str, parent=None):
         """

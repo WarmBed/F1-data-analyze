@@ -134,7 +134,7 @@ class TelemetryDataManager(QObject):
         self._pending_params: Dict[str, Any] = {}
         self._cli_generation_context: Dict[str, Any] = {}
         self._api_base_url = self._determine_api_base_url()
-        self._api_timeout = 75.0
+        self._api_timeout = 10.0
         self._api_worker: Optional[TelemetryAnalysisApiWorker] = None
         self._allow_local_fallback, self._fallback_policy_reason = self._resolve_local_fallback_policy()
         self._last_data_source: str = "unknown"
@@ -182,6 +182,19 @@ class TelemetryDataManager(QObject):
         try:
             self.loading_progress.emit(10)
             self.status_changed.emit("正在透過 API 載入遙測分析資料...")
+
+            if not self._is_api_available():
+                msg = "偵測到 API 服務未啟動，改用本地 JSON 後備"
+                print(f"[TELEMETRY] {msg}")
+                self.status_changed.emit(msg)
+                if self._fallback_to_local("API 服務未啟動"):
+                    return True
+
+                self.error_occurred.emit("找不到可用的遙測資料來源，請啟動 API 或提供本地 JSON")
+                self.loading_finished.emit()
+                self._is_loading = False
+                return False
+
             self._start_api_request(self._pending_params)
             return True
         except Exception as exc:
@@ -212,6 +225,18 @@ class TelemetryDataManager(QObject):
 
         return "http://127.0.0.1:8000"
 
+    def _is_api_available(self) -> bool:
+        """快速檢查 API 是否可連線 (避免在測試環境中長時間等待)。"""
+        try:
+            health_url = f"{self._api_base_url}/health"
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code == 200:
+                return True
+            # 任何非 5xx 回應都視為服務可達（表示伺服器存在但端點不同）
+            return response.status_code < 500
+        except Exception:
+            return False
+
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")
         if env_value is not None:
@@ -219,7 +244,7 @@ class TelemetryDataManager(QObject):
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
-        return False, "預設策略 (API 優先，不允許本地回退)"
+        return True, "預設策略 (允許本地 JSON 後備)"
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         self._allow_local_fallback = bool(allowed)
@@ -373,16 +398,14 @@ class TelemetryDataManager(QObject):
             )
             return True
 
-        print("[AUTO_GEN] 找不到遙測JSON，觸發CLI自動生成")
+        print("[TELEMETRY] 找不到遙測JSON，且 CLI 生成在 API-ONLY 模式下已禁用")
         self.loading_progress.emit(40)
-        self.status_changed.emit("未找到現有遙測 JSON，啟動 CLI 生成流程")
-        self._cli_generation_context = {
-            "fallback_reason": fallback_reason,
-            "force_refresh": params.get("force_refresh", False),
-            "generated_via_cli": True,
-            "data_source": "local-json",
-        }
-        return self._generate_telemetry_via_cli(year, race, session, force_refresh=params.get("force_refresh", False))
+        self.status_changed.emit("未找到本地遙測 JSON，請先啟動 API 或手動生成資料")
+        self.error_occurred.emit(
+            "找不到遙測資料檔案，且自動 CLI 生成已禁用。請啟動 API 或手動執行 CLI 生成 JSON 後重試。"
+        )
+        self._is_loading = False
+        return False
     
     def _find_telemetry_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋遙測分析數據檔案"""
@@ -617,34 +640,14 @@ class TelemetryDataManager(QObject):
             return False
     
     def _generate_telemetry_via_cli(self, year: str, race: str, session: str, force_refresh: bool = False) -> bool:
-        """透過CLI生成遙測分析數據（後台執行）"""
-        try:
-            # 儲存參數供後續使用
-            self._generation_params = {
-                "year": year,
-                "race": race,
-                "session": session,
-                "force_refresh": force_refresh,
-            }
-            
-            # 啟動 CLI 生成
-            success = self._start_cli_generation(year, race, session)
-            
-            if success:
-                # 啟動定時器檢查檔案是否生成完成
-                self._start_generation_monitoring(year, race, session)
-            else:
-                self.error_occurred.emit(f"啟動 CLI 生成失敗: {year} {race} {session}")
-                self._is_loading = False
-                
-            return success
-                
-        except Exception as e:
-            error_msg = f"CLI執行異常: {str(e)}"
-            print(f"[CLI_EXCEPTION] {error_msg}")
-            self.error_occurred.emit(error_msg)
-            self._is_loading = False
-            return False
+        """透過 CLI 生成遙測分析數據（已於 API-ONLY 模式中禁用）"""
+        print("[TELEMETRY] ⚠️  [API-ONLY] CLI 調用已禁用，無法自動生成遙測數據")
+        print("[TELEMETRY] 💡 請使用 API 取得最新資料或手動執行 CLI 後再重試")
+        self.error_occurred.emit(
+            "API 載入失敗且本地無快取。請手動執行 CLI 生成遙測 JSON 或啟動 API 後重試。"
+        )
+        self._is_loading = False
+        return False
     
     def _start_cli_generation(self, year: str, race: str, session: str) -> bool:
         """啟動 CLI 生成流程 - 非阻塞方式"""

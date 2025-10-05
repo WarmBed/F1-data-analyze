@@ -29,7 +29,7 @@ from PyQt5.QtWidgets import (
     QGroupBox, QGridLayout, QPushButton, QComboBox,
     QCheckBox, QSpinBox, QSlider, QMessageBox
 )
-from PyQt5.QtCore import Qt, pyqtSignal, QThread
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
@@ -287,7 +287,18 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
-        return False, "預設策略 (API 優先，不允許本地回退)"
+        return True, "預設策略 (允許本地 JSON 後備)"
+
+    def _is_api_available(self) -> bool:
+        """快速檢查 API 是否可用，以避免測試時殘留背景執行緒。"""
+        try:
+            health_url = f"{self._api_base_url}/health"
+            response = requests.get(health_url, timeout=2.0)
+            if response.status_code == 200:
+                return True
+            return response.status_code < 500
+        except Exception:
+            return False
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle local JSON fallback policy."""
@@ -334,12 +345,20 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         self.status_changed.emit("正在透過 API 載入賽道分析資料...")
 
         try:
+            if not self._is_api_available():
+                self._debug("API 健康檢查失敗，改用本地 JSON 後備")
+                self.status_changed.emit("偵測到 API 服務未啟動，改用本地資料")
+                self._last_data_source = "local-json"
+                self._is_loading = False
+                return super().load_data(**kwargs)
+
             self._start_api_request(self._pending_params)
             return True
         except Exception as exc:
             self._error(f"啟動 API 請求失敗: {exc}")
             self._is_loading = False
             self.status_changed.emit("API 載入失敗，改用本地資料")
+            self._last_data_source = "local-json"
             return super().load_data(**kwargs)
 
     def set_api_base_url(self, base_url: Optional[str]) -> None:
@@ -576,6 +595,8 @@ class TrackAnalysisControlWidget(QWidget):
     zoom_changed = pyqtSignal(float)  # 縮放倍率變更
     show_grid_changed = pyqtSignal(bool)  # 網格顯示切換
     show_markers_changed = pyqtSignal(bool)  # 標記顯示切換
+    dynamic_marker_visibility_changed = pyqtSignal(bool)  # 連動游標顯示
+    fixed_marker_visibility_changed = pyqtSignal(bool)  # 固定游標顯示
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -616,6 +637,16 @@ class TrackAnalysisControlWidget(QWidget):
         self.show_markers_check.setChecked(True)
         self.show_markers_check.toggled.connect(self.show_markers_changed.emit)
         options_layout.addWidget(self.show_markers_check)
+
+        self.show_linkage_cursor_check = QCheckBox("同步游標")
+        self.show_linkage_cursor_check.setChecked(True)
+        self.show_linkage_cursor_check.toggled.connect(self.dynamic_marker_visibility_changed.emit)
+        options_layout.addWidget(self.show_linkage_cursor_check)
+
+        self.show_fixed_cursor_check = QCheckBox("固定游標")
+        self.show_fixed_cursor_check.setChecked(True)
+        self.show_fixed_cursor_check.toggled.connect(self.fixed_marker_visibility_changed.emit)
+        options_layout.addWidget(self.show_fixed_cursor_check)
         
         options_group.setLayout(options_layout)
         layout.addWidget(options_group)
@@ -685,6 +716,18 @@ class TrackAnalysisControlWidget(QWidget):
         
         self.track_info_label.setText(info_text)
 
+    def set_marker_visibility(self, dynamic_visible: bool, fixed_visible: bool) -> None:
+        with QSignalBlocker(self.show_linkage_cursor_check):
+            self.show_linkage_cursor_check.setChecked(bool(dynamic_visible))
+        with QSignalBlocker(self.show_fixed_cursor_check):
+            self.show_fixed_cursor_check.setChecked(bool(fixed_visible))
+
+    def get_marker_visibility(self) -> Tuple[bool, bool]:
+        return (
+            self.show_linkage_cursor_check.isChecked(),
+            self.show_fixed_cursor_check.isChecked(),
+        )
+
 
 class TrackAnalysisUniversal(UniversalAnalysisMDI):
     """
@@ -711,6 +754,10 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         
         # 調用父類初始化
         super().__init__(analysis_type, main_window)
+
+        # Marker visibility state shared between control panel與賽道地圖
+        self._dynamic_marker_visible: bool = True
+        self._fixed_marker_visible: bool = True
         
         # 檢查組件是否可用
         if TrackUniversalDataLoader is None or TrackMapWidget is None:
@@ -734,6 +781,10 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             return placeholder
         
         track_map = TrackMapWidget(parent=self.main_widget)
+        if hasattr(track_map, "set_dynamic_marker_visibility"):
+            track_map.set_dynamic_marker_visibility(getattr(self, "_dynamic_marker_visible", True))
+        if hasattr(track_map, "set_fixed_marker_visibility"):
+            track_map.set_fixed_marker_visibility(getattr(self, "_fixed_marker_visible", True))
         print("[TRACK_ANALYSIS_MDI] 創建 TrackMapWidget")
         return track_map
     
@@ -746,6 +797,15 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         control_panel.zoom_changed.connect(self._on_zoom_changed)
         control_panel.show_grid_changed.connect(self._on_show_grid_changed)
         control_panel.show_markers_changed.connect(self._on_show_markers_changed)
+        control_panel.dynamic_marker_visibility_changed.connect(self._on_dynamic_marker_visibility_changed)
+        control_panel.fixed_marker_visibility_changed.connect(self._on_fixed_marker_visibility_changed)
+
+        control_panel.set_marker_visibility(
+            getattr(self, "_dynamic_marker_visible", True),
+            getattr(self, "_fixed_marker_visible", True),
+        )
+        self._on_dynamic_marker_visibility_changed(getattr(self, "_dynamic_marker_visible", True))
+        self._on_fixed_marker_visibility_changed(getattr(self, "_fixed_marker_visible", True))
         
         self.control_panel = control_panel
         print("[TRACK_ANALYSIS_MDI] 創建控制面板")
@@ -891,6 +951,18 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         print(f"[TRACK_ANALYSIS_MDI] 標記顯示: {show}")
         if self.chart_widget and hasattr(self.chart_widget, 'set_show_markers'):
             self.chart_widget.set_show_markers(show)
+
+    def _on_dynamic_marker_visibility_changed(self, visible: bool):
+        """同步游標顯示切換"""
+        self._dynamic_marker_visible = bool(visible)
+        if self.chart_widget and hasattr(self.chart_widget, 'set_dynamic_marker_visibility'):
+            self.chart_widget.set_dynamic_marker_visibility(self._dynamic_marker_visible)
+
+    def _on_fixed_marker_visibility_changed(self, visible: bool):
+        """固定游標顯示切換"""
+        self._fixed_marker_visible = bool(visible)
+        if self.chart_widget and hasattr(self.chart_widget, 'set_fixed_marker_visibility'):
+            self.chart_widget.set_fixed_marker_visibility(self._fixed_marker_visible)
 
 
 # 在模組導入時註冊到模組工廠
