@@ -114,7 +114,8 @@ def check_calendar_freshness(*, all_years: bool = True) -> Dict[str, Any]:
     
     # 根據模式選擇搜尋模式
     if all_years:
-        pattern = "season_calendar_2020-2025_*.json"
+        # 🔧 FIX: 更新搜尋模式以匹配新的檔案命名
+        pattern = "season_calendar_multi_year_*.json"
     else:
         current_year = datetime.now().year
         pattern = f"season_calendar_{current_year}_*.json"
@@ -412,7 +413,10 @@ def _generate_multi_year_calendar(*, save_json: bool = True, force: bool = False
             result = generate_season_calendar(year, save_json=False)
             
             if result["success"]:
-                all_seasons_data[str(year)] = result
+                # 🔧 修復: 只存儲事件列表,避免雙層嵌套
+                # 舊: all_seasons_data[str(year)] = result  ← 會導致 data['2024']['data']
+                # 新: all_seasons_data[str(year)] = result["data"]  ← 直接存儲事件列表
+                all_seasons_data[str(year)] = result["data"]
                 total_events += result["metadata"]["total_rounds"]
                 total_completed += result["metadata"]["completed_rounds"]
                 total_upcoming += result["metadata"]["upcoming_rounds"]
@@ -420,20 +424,12 @@ def _generate_multi_year_calendar(*, save_json: bool = True, force: bool = False
                       f"({result['metadata']['completed_rounds']} 已完成)")
             else:
                 print(f"   ⚠️  失敗: {result['message']}")
-                all_seasons_data[str(year)] = {
-                    "success": False,
-                    "message": result["message"],
-                    "metadata": {"year": year},
-                    "data": []
-                }
+                # 失敗時存儲空列表
+                all_seasons_data[str(year)] = []
         except Exception as exc:
             print(f"   ❌ 錯誤: {exc}")
-            all_seasons_data[str(year)] = {
-                "success": False,
-                "message": f"查詢失敗: {exc}",
-                "metadata": {"year": year},
-                "data": []
-            }
+            # 錯誤時存儲空列表
+            all_seasons_data[str(year)] = []
     
     # 建立總結報告
     response: SeasonCalendarResult = {
@@ -463,7 +459,10 @@ def _generate_multi_year_calendar(*, save_json: bool = True, force: bool = False
         try:
             json_dir = _ensure_json_dir()
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-            filename = json_dir / f"season_calendar_2020-2025_{timestamp}.json"
+            # 🔧 FIX: 移除年份範圍,避免 API 緩存匹配失敗
+            # 舊: season_calendar_2020-2025_{timestamp}.json
+            # 新: season_calendar_multi_year_{timestamp}.json
+            filename = json_dir / f"season_calendar_multi_year_{timestamp}.json"
             with filename.open("w", encoding="utf-8") as handle:
                 json.dump(response, handle, ensure_ascii=False, indent=2)
             response["metadata"]["output_file"] = str(filename)

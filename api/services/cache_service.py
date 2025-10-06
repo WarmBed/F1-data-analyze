@@ -188,6 +188,12 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}{pattern_base}*{year}*{race_full}*.json",
                     f"{self.json_dir}{pattern_base}*{year}*{race}*.json"
                 ]
+            elif function_id == "99":  # 🔧 FIX: 賽季日曆 - 特殊處理多年 JSON
+                search_patterns = [
+                    f"{self.json_dir}season_calendar_multi_year_*.json",  # 優先多年格式
+                    f"{self.json_dir}season_calendar_{year}_*.json",      # 單年格式
+                    f"{self.json_dir}season_calendar_*.json"              # 任何賽季日曆
+                ]
             else:  # 一般分析
                 search_patterns = [
                     f"{self.json_dir}{pattern_base}*{year}*{race}*{session}*.json",
@@ -579,15 +585,23 @@ class F1AnalysisCacheService:
         file_info = result.get("file_info") if isinstance(result, dict) else None
 
         if year not in (None, "*"):
-            year_match = self._candidate_matches(
-                year,
-                metadata_candidates,
-                ["year", "season"],
-                normalize=lambda v: str(v),
-            )
-            if not year_match:
-                if not self._file_info_matches_year(file_info, year):
-                    return False
+            # 🔧 FIX: 特殊處理多年賽季日曆 JSON
+            # 檢查 data 字段中是否有年份鍵 (如 data['2024'])
+            data_field = result.get("data")
+            if isinstance(data_field, dict) and str(year) in data_field:
+                # 多年格式: {"data": {"2024": {...}, "2025": {...}}}
+                pass  # 年份匹配成功
+            else:
+                # 標準格式: 檢查 metadata
+                year_match = self._candidate_matches(
+                    year,
+                    metadata_candidates,
+                    ["year", "season"],
+                    normalize=lambda v: str(v),
+                )
+                if not year_match:
+                    if not self._file_info_matches_year(file_info, year):
+                        return False
 
 
         if session not in (None, "*"):

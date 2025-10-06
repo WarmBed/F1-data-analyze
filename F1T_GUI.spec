@@ -5,7 +5,7 @@ a = Analysis(
     ['f1t_gui_main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[],  # GUI 使用 API-ONLY 模式,不打包 JSON
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
