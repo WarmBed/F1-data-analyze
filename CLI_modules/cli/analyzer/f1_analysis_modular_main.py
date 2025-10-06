@@ -1671,8 +1671,8 @@ def create_argument_parser():
     )
     
     # 賽事參數
-    parser.add_argument('-y', '--year', type=int, choices=[2024, 2025], 
-                       help='賽季年份 (2024 或 2025)')
+    parser.add_argument('-y', '--year', type=int, choices=list(range(2020, 2026)), 
+                       help='賽季年份 (2020-2025，與 API 和功能 99 一致)')
     parser.add_argument('-r', '--race', type=str,
                        help='賽事名稱 (如: China, Bahrain, Australia 等)')
     parser.add_argument('-s', '--session', type=str,

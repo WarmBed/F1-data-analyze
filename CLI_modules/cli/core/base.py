@@ -18,6 +18,7 @@ from datetime import datetime
 import json
 import pickle
 import requests
+import tempfile
 
 
 def setup_matplotlib_chinese(dark_theme=False):
@@ -126,8 +127,56 @@ import time
 from pathlib import Path
 from prettytable import PrettyTable
 
-# 啟用 fastf1 快取
-fastf1.Cache.enable_cache('cache')
+# 啟用 fastf1 快取（在 GUI 打包環境中安全處理）
+def _resolve_cache_directory(cache_dir_name: str = "cache") -> Path:
+    """決定 FastF1 快取實際使用的資料夾。"""
+    env_override = os.getenv("F1T_FASTF1_CACHE_DIR")
+    if env_override:
+        return Path(env_override)
+
+    # PyInstaller / 打包模式：改寫到 AppData (或 home/.f1t)
+    if getattr(sys, "frozen", False):
+        base_dir = os.getenv("LOCALAPPDATA")
+        if base_dir:
+            return Path(base_dir) / "F1TelemetryStationPro" / "fastf1_cache"
+        return Path.home() / ".f1t" / "fastf1_cache"
+
+    # 原始碼模式：使用專案根目錄下的 cache
+    try:
+        project_root = Path(__file__).resolve().parents[3]
+    except IndexError:
+        project_root = Path.cwd()
+    return project_root / cache_dir_name
+
+
+def _enable_fastf1_cache(cache_dir_name: str = "cache") -> None:
+    disable_flag = os.getenv("F1T_DISABLE_FASTF1_CACHE", "").strip().lower()
+    if disable_flag in {"1", "true", "yes", "on"}:
+        print("[INFO] FastF1 快取已透過環境變數停用")
+        return
+
+    cache_path = _resolve_cache_directory(cache_dir_name)
+
+    try:
+        cache_path.mkdir(parents=True, exist_ok=True)
+    except Exception as exc:
+        fallback_path = Path(tempfile.gettempdir()) / "f1t_fastf1_cache"
+        try:
+            fallback_path.mkdir(parents=True, exist_ok=True)
+            cache_path = fallback_path
+            print(f"[WARNING] 快取目錄建立失敗 ({exc})，改用 {cache_path}")
+        except Exception as fallback_exc:
+            print(f"[WARNING] 無法建立 FastF1 快取目錄 ({fallback_exc})，將在無快取模式下執行。")
+            return
+
+    try:
+        fastf1.Cache.enable_cache(str(cache_path.resolve()))
+        print(f"[INFO] FastF1 快取已啟用: {cache_path.resolve()}")
+    except Exception as exc:
+        print(f"[WARNING] 無法啟用 FastF1 快取 ({exc})。已改為無快取模式。")
+
+
+_enable_fastf1_cache()
 
 # 設置請求超時時間（避免卡住）
 # 注意：fastf1.api 在未來版本可能會被移除或更改

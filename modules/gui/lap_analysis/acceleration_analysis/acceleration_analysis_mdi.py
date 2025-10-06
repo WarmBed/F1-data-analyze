@@ -843,6 +843,43 @@ class accelerationAnalysisModule(IAnalysisModule):
     
     # ========== 遙測分析整合功能 ==========
     
+    
+    def _check_and_load_telemetry_if_needed(self, year: Optional[str] = None,
+                                            race: Optional[str] = None,
+                                            session: Optional[str] = None) -> bool:
+        """確保遙測分析資料可用，遵循 API-ONLY 模式
+        
+        ⚠️ API-ONLY 模式：此方法只檢查本地 JSON 緩存，不自動創建視窗
+        若數據不存在，應通過 API 或提示用戶手動操作
+        """
+        try:
+            target_year = str(year or self.current_year or "").strip()
+            target_race = (race or self.current_race or "").strip()
+            target_session = str(session or self.current_session or "").strip()
+
+            print(f"[acceleration_MDI] 🔍 [API-ONLY] 檢查遙測分析本地緩存: {{target_year}} {{target_race}} {{target_session}}")
+
+            # ✅ 允許：檢查本地 JSON 緩存
+            telemetry_file = self._find_telemetry_analysis_file(
+                year=target_year,
+                race=target_race,
+                session=target_session
+            )
+            if telemetry_file:
+                print(f"[acceleration_MDI] 📂 [API-ONLY] 找到本地遙測分析緩存: {{telemetry_file}}")
+                return True
+
+            # ❌ 禁止：自動創建視窗或啟動 CLI
+            # 改為僅提示用戶通過 API 或主視窗遙測模組獲取數據
+            print("⚠️ [acceleration_MDI] [API-ONLY] 遙測分析數據不存在於本地緩存")
+            print("💡 [acceleration_MDI] [API-ONLY] 提示：請先透過主視窗遙測模組或 REST API 獲取遙測數據")
+            print("💡 [acceleration_MDI] [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 8")
+            return False
+
+        except Exception as e:
+            print(f"[ERROR] [acceleration_MDI] _check_and_load_telemetry_if_needed 失敗: {{e}}")
+            return False
+
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
         """確保最速圈數據的遙測分析可用 - 與速度分析相同功能"""
         try:
@@ -924,11 +961,10 @@ class accelerationAnalysisModule(IAnalysisModule):
                             main_window.mdi_area.setActiveSubWindow(sub_window)
                             return True
                     
-                    # 如果沒有遙測分析視窗，嘗試創建一個
-                    print(f"[acceleration_MDI] 📡 嘗試創建遙測分析視窗...")
-                    if hasattr(main_window, 'create_telemetry_analysis'):
-                        main_window.create_telemetry_analysis()
-                        return True
+                    # API-ONLY 模式：不自動創建視窗
+                    print(f"[acceleration_MDI] � [API-ONLY] 未找到現有遙測分析視窗")
+                    print(f"[acceleration_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
+                    return False
             
             # 方法2: 透過資料管理器觸發 API 生成遙測分析數據
             data_manager = getattr(self, 'data_manager', None)

@@ -5,11 +5,10 @@ TelemetryDataLoader 基類使用示例
 """
 
 import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from PyQt5.QtCore import QObject, pyqtSignal
-from telemetry_data_loader_base import TelemetryDataLoader, create_telemetry_loader
+
+from .telemetry_data_loader_base import TelemetryDataLoader, create_telemetry_loader
 
 class ExampleUsage(QObject):
     """使用示例類"""

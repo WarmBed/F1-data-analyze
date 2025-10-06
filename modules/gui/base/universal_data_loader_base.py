@@ -175,6 +175,28 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
         
         self._debug(f"初始化 {self.config.display_name} 載入器")
+
+    # ========== 本地儲存策略工具 ==========
+
+    def _local_storage_enabled(self) -> bool:
+        """檢查是否允許使用本地 JSON/快取資料夾。"""
+        allowed = getattr(self, "_allow_local_fallback", None)
+        if allowed is None:
+            return True
+        return bool(allowed)
+
+    def _get_search_directories(self) -> List[str]:
+        """回傳實際要搜尋的資料夾清單。"""
+        if not self._local_storage_enabled():
+            return []
+
+        unique_paths: List[str] = []
+        for path in self._base_paths:
+            if not path:
+                continue
+            if path not in unique_paths:
+                unique_paths.append(path)
+        return unique_paths
     
     def _debug(self, message: str):
         """統一的除錯輸出"""
@@ -365,7 +387,12 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
             self._debug(f"🔍 搜尋條件: {kwargs}")
             
             # 搜尋目錄
-            self._debug(f"📂 搜尋目錄: {self._base_paths}")
+            search_directories = self._get_search_directories()
+            if not search_directories:
+                self._debug("🚫 本地 JSON 後備已停用，跳過檔案搜尋流程")
+                return None
+
+            self._debug(f"📂 搜尋目錄: {search_directories}")
             
             # 構建檔案名稱搜尋模式
             filename_patterns = self._build_filename_patterns(**kwargs)
@@ -374,7 +401,7 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
             self._debug("🔍 開始精確搜尋...")
             found_file = None
             
-            for search_dir in self._base_paths:
+            for search_dir in search_directories:
                 self._debug(f"📂 搜尋目錄: {search_dir}")
                 
                 if not os.path.exists(search_dir):

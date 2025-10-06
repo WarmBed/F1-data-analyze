@@ -72,7 +72,7 @@ async def get_cache_status() -> Dict[str, Any]:
 @router.get("/search")
 async def search_cache(
     function_id: int = Query(..., ge=1, le=52, description="分析功能 ID"),
-    year: Optional[int] = Query(None, ge=2024, le=2025, description="賽季年份"),
+    year: Optional[int] = Query(None, ge=2020, le=2025, description="賽季年份 (2020-2025)"),
     race: Optional[str] = Query(None, min_length=3, description="賽事名稱"),
     session: Optional[str] = Query(None, description="會話類型"),
     driver1: Optional[str] = Query(None, min_length=3, max_length=3, description="車手代碼1"),

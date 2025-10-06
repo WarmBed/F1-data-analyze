@@ -39,7 +39,7 @@ SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys(), key=function_id_sort_key)
 @router.post("/execute")
 async def execute_analysis(
     function_id: str = Query(..., description="分析功能 ID"),
-    year: int = Query(..., ge=2024, le=2025, description="賽季年份"),
+    year: int = Query(..., ge=2020, le=2025, description="賽季年份 (2020-2025)"),
     race: Optional[str] = Query(None, min_length=3, description="賽事名稱"),
     session: Optional[str] = Query(None, description="會話類型 (R/Q/FP1/FP2/FP3)"),
     driver1: Optional[str] = Query(None, min_length=3, max_length=3, description="主要車手代碼"),
@@ -53,7 +53,7 @@ async def execute_analysis(
     執行 F1 分析功能
     
     - **function_id**: 分析功能 ID (1-52)
-    - **year**: 賽季年份 (2024-2025)
+    - **year**: 賽季年份 (2020-2025，與 CLI 功能一致)
     - **race**: 賽事名稱 (例如: Japan, Italy)
     - **session**: 會話類型 (R=正賽, Q=排位賽, FP1/2/3=練習賽)
     - **driver1**: 主要車手代碼 (3字母, 例如: VER)

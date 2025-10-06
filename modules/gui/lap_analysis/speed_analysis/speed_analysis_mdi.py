@@ -118,29 +118,17 @@ class SpeedDataManager(QObject):
             return False
 
     def _check_and_load_telemetry_if_needed(self):
-        """檢查並在需要時載入遙測分析"""
+        """檢查本地遙測分析數據（API-ONLY 模式：不自動創建視窗）"""
         try:
-            print(f"📞 [SPEED_MDI] 調用主視窗開啟遙測分析...")
+            print(f"� [SPEED_MDI] [API-ONLY] 檢查本地遙測分析數據...")
             
-            # 通過主視窗調用遙測分析
-            if hasattr(self, 'parent_window') and self.parent_window:
-                if hasattr(self.parent_window, 'open_telemetry_analysis'):
-                    self.parent_window.open_telemetry_analysis()
-                    print(f"✅ [SPEED_MDI] 遙測分析已觸發")
-                    return True
-                elif hasattr(self.parent_window, 'create_telemetry_analysis_tab'):
-                    self.parent_window.create_telemetry_analysis_tab()
-                    print(f"✅ [SPEED_MDI] 遙測分析已觸發")
-                    return True
-                else:
-                    print(f"❌ [SPEED_MDI] 主視窗沒有遙測分析方法")
-                    return False
-            else:
-                print(f"❌ [SPEED_MDI] 找不到主視窗引用")
-                return False
+            # API-ONLY 模式：僅檢查本地數據，不自動創建視窗
+            print(f"💡 [SPEED_MDI] 提示：如需遙測分析，請手動開啟遙測分析模組")
+            print(f"💡 [SPEED_MDI] 或使用 API 獲取遙測數據")
+            return False
                 
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 觸發遙測分析時發生錯誤: {e}")
+            print(f"❌ [SPEED_MDI] 檢查遙測數據時發生錯誤: {e}")
             return False
 
     def _get_fastest_lap_number(self, driver: str) -> int:
@@ -986,6 +974,43 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[ERROR] [SPEED_MDI] get_current_data 失敗: {e}")
             return None
 
+    
+    def _check_and_load_telemetry_if_needed(self, year: Optional[str] = None,
+                                            race: Optional[str] = None,
+                                            session: Optional[str] = None) -> bool:
+        """確保遙測分析資料可用，遵循 API-ONLY 模式
+        
+        ⚠️ API-ONLY 模式：此方法只檢查本地 JSON 緩存，不自動創建視窗
+        若數據不存在，應通過 API 或提示用戶手動操作
+        """
+        try:
+            target_year = str(year or self.current_year or "").strip()
+            target_race = (race or self.current_race or "").strip()
+            target_session = str(session or self.current_session or "").strip()
+
+            print(f"[speed_MDI] 🔍 [API-ONLY] 檢查遙測分析本地緩存: {{target_year}} {{target_race}} {{target_session}}")
+
+            # ✅ 允許：檢查本地 JSON 緩存
+            telemetry_file = self._find_telemetry_analysis_file(
+                year=target_year,
+                race=target_race,
+                session=target_session
+            )
+            if telemetry_file:
+                print(f"[speed_MDI] 📂 [API-ONLY] 找到本地遙測分析緩存: {{telemetry_file}}")
+                return True
+
+            # ❌ 禁止：自動創建視窗或啟動 CLI
+            # 改為僅提示用戶通過 API 或主視窗遙測模組獲取數據
+            print("⚠️ [speed_MDI] [API-ONLY] 遙測分析數據不存在於本地緩存")
+            print("💡 [speed_MDI] [API-ONLY] 提示：請先透過主視窗遙測模組或 REST API 獲取遙測數據")
+            print("💡 [speed_MDI] [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 8")
+            return False
+
+        except Exception as e:
+            print(f"[ERROR] [speed_MDI] _check_and_load_telemetry_if_needed 失敗: {{e}}")
+            return False
+
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
         """確保遙測分析數據存在，並獲取最速圈數據
         
@@ -1075,11 +1100,10 @@ class SpeedAnalysisModule(IAnalysisModule):
                             main_window.mdi_area.setActiveSubWindow(sub_window)
                             return True
                     
-                    # 如果沒有遙測分析視窗，嘗試創建一個
-                    print(f"[SPEED_MDI] 📡 嘗試創建遙測分析視窗...")
-                    if hasattr(main_window, 'create_telemetry_analysis'):
-                        main_window.create_telemetry_analysis()
-                        return True
+                    # API-ONLY 模式：不自動創建視窗
+                    print(f"[SPEED_MDI] � [API-ONLY] 未找到現有遙測分析視窗")
+                    print(f"[SPEED_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
+                    return False
             
             # 方法2: 透過 API 直接生成遙測分析數據（Function 13）
             print(f"[SPEED_MDI] 🔧 透過 API 生成遙測分析數據（Function 13）...")

@@ -21,14 +21,9 @@ Date: 2025-09-09
 Version: 2.0.0 (重構版本)
 """
 
-import sys
-import os
 from typing import Dict, List, Any, Optional
 
-# 添加上級目錄到路徑以便導入基類
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-
-from telemetry_data_loader_base import TelemetryDataLoader
+from ..telemetry_data_loader_base import TelemetryDataLoader
 
 class SpeedAnalysisDataLoader(TelemetryDataLoader):
     """速度分析數據載入器 - 基於 TelemetryDataLoader 基類的輕量級包裝器"""

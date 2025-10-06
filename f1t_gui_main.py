@@ -5838,6 +5838,12 @@ class StyleHMainWindow(QMainWindow):
                 continue
 
             window_title = sub_window.windowTitle()
+            
+            # ✅ 修復：過濾進站分析視窗，避免誤認為 lap_analysis 模組
+            if any(keyword in window_title for keyword in ["進站分析", "Pitstop", "ピットストップ"]):
+                print(f"[LAP_CONTROL] ⏭️  跳過非遙測模組 (Pitstop): {window_title}")
+                continue
+            
             widget = sub_window.widget()
 
             # 依序檢查可用的模組引用

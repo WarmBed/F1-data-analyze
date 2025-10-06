@@ -79,6 +79,30 @@
       "request": "launch",
       "command": "${workspaceFolder}\\cloudflared\\cloudflared.exe --config ${workspaceFolder}\\cloudflared\\config.yml tunnel run myfastapi",
       "cwd": "${workspaceFolder}\\cloudflared"
+    },
+    {
+      "name": "📦 打包 EXE (PyInstaller)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "python -m PyInstaller F1T_GUI.spec",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 建置",
+        "order": 1
+      }
+    },
+    {
+      "name": "📦 清理並重新打包 EXE",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "powershell -NoProfile -Command \"Remove-Item dist -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue; python -m PyInstaller F1T_GUI.spec\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 建置",
+        "order": 2
+      }
     }
   ],
   "compounds": [

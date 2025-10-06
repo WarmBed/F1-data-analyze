@@ -789,45 +789,33 @@ class BrakeAnalysisModule(IAnalysisModule):
     def _check_and_load_telemetry_if_needed(self, year: Optional[str] = None,
                                             race: Optional[str] = None,
                                             session: Optional[str] = None) -> bool:
-        """確保遙測分析資料可用，遵循 API-ONLY 模式"""
+        """確保遙測分析資料可用，遵循 API-ONLY 模式
+        
+        ⚠️ API-ONLY 模式：此方法只檢查本地 JSON 緩存，不自動創建視窗
+        若數據不存在，應通過 API 或提示用戶手動操作
+        """
         try:
             target_year = str(year or self.current_year or "").strip()
             target_race = (race or self.current_race or "").strip()
             target_session = str(session or self.current_session or "").strip()
 
-            print(f"[brake_MDI] 🔍 檢查遙測分析: {target_year} {target_race} {target_session}")
+            print(f"[brake_MDI] 🔍 [API-ONLY] 檢查遙測分析本地緩存: {target_year} {target_race} {target_session}")
 
+            # ✅ 允許：檢查本地 JSON 緩存
             telemetry_file = self._find_telemetry_analysis_file(
                 year=target_year,
                 race=target_race,
                 session=target_session
             )
             if telemetry_file:
-                print(f"[brake_MDI] 📂 已存在遙測分析檔案: {telemetry_file}")
+                print(f"[brake_MDI] 📂 [API-ONLY] 找到本地遙測分析緩存: {telemetry_file}")
                 return True
 
-            main_window = self._get_main_window()
-            if main_window:
-                for method_name in (
-                    "open_telemetry_analysis",
-                    "create_telemetry_analysis",
-                    "create_telemetry_analysis_tab"
-                ):
-                    if hasattr(main_window, method_name):
-                        handler = getattr(main_window, method_name)
-                        try:
-                            handler()
-                            print(f"[brake_MDI] 🚀 透過主視窗觸發 {method_name}")
-                            return True
-                        except TypeError:
-                            try:
-                                handler(target_year, target_race, target_session)
-                                print(f"[brake_MDI] 🚀 透過主視窗觸發 {method_name}，並傳入會話參數")
-                                return True
-                            except Exception as inner_error:
-                                print(f"[brake_MDI] ⚠️ 呼叫 {method_name} 失敗: {inner_error}")
-
-            print("⚠️ [brake_MDI] 未能自動載入遙測分析，請使用主視窗遙測模組或 REST API 先取得資料")
+            # ❌ 禁止：自動創建視窗或啟動 CLI
+            # 改為僅提示用戶通過 API 或主視窗遙測模組獲取數據
+            print("⚠️ [brake_MDI] [API-ONLY] 遙測分析數據不存在於本地緩存")
+            print("💡 [brake_MDI] [API-ONLY] 提示：請先透過主視窗遙測模組或 REST API 獲取遙測數據")
+            print("💡 [brake_MDI] [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 8")
             return False
 
         except Exception as e:
@@ -926,15 +914,15 @@ class BrakeAnalysisModule(IAnalysisModule):
                             main_window.mdi_area.setActiveSubWindow(sub_window)
                             return True
                     
-                    # 如果沒有遙測分析視窗，嘗試創建一個
-                    print(f"[brake_MDI] 📡 嘗試創建遙測分析視窗...")
-                    if hasattr(main_window, 'create_telemetry_analysis'):
-                        main_window.create_telemetry_analysis()
-                        return True
+                    # API-ONLY 模式：不自動創建視窗
+                    print(f"[brake_MDI] 💡 [API-ONLY] 未找到現有遙測分析視窗")
+                    print(f"[brake_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
+                    return False
             
-            # 方法2: 透過統一 API 流程提示使用者載入資料
-            print(f"[brake_MDI] � 透過主視窗/API 流程載入遙測分析數據...")
+            # 方法2: 透過 API 檢查本地數據（不自動創建）
+            print(f"[brake_MDI] 🔍 檢查本地遙測分析數據...")
             return self._check_and_load_telemetry_if_needed()
+            
             
         except Exception as e:
             print(f"[ERROR] [brake_MDI] _trigger_telemetry_analysis 失敗: {e}")

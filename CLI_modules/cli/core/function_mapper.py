@@ -2824,19 +2824,36 @@ class F1AnalysisFunctionMapper:
         }
 
     def _execute_season_calendar_analysis(self, **kwargs):
-        """Function 99: 賽季賽程查詢"""
+        """Function 99: 賽季賽程查詢 (支援 2020-2025 批量查詢 + 12小時智能刷新)"""
 
         try:
-            from CLI_modules.cli.analyzer.season_calendar_analysis import generate_season_calendar
+            from CLI_modules.cli.analyzer.season_calendar_analysis import (
+                generate_season_calendar,
+                check_calendar_freshness
+            )
 
-            year = kwargs.get("year")
-            if not year:
-                if self.data_loader and getattr(self.data_loader, "year", None):
-                    year = self.data_loader.year
-                else:
-                    year = datetime.now().year
-
-            result = generate_season_calendar(int(year), save_json=True)
+            # 檢查是否要批量查詢 2020-2025
+            all_years = kwargs.get("all_years", True)  # 預設啟用批量查詢
+            force = kwargs.get("force", False)  # 是否強制重新生成
+            
+            if all_years:
+                # 批量查詢 2020-2025 (含智能刷新檢查)
+                print("\n🎯 啟用批量查詢模式: 2020-2025 年所有賽季")
+                print("🔍 智能刷新機制: 12 小時自動檢查\n")
+                
+                result = generate_season_calendar(save_json=True, all_years=True, force=force)
+            else:
+                # 單一年份查詢（原始模式）
+                year = kwargs.get("year")
+                if not year:
+                    if self.data_loader and getattr(self.data_loader, "year", None):
+                        year = self.data_loader.year
+                    else:
+                        year = datetime.now().year
+                
+                print(f"\n🎯 單一年份查詢模式: {year} 年")
+                result = generate_season_calendar(int(year), save_json=True)
+            
             return self._standardize_result(result, 99, "賽季賽程查詢")
 
         except Exception as exc:  # pragma: no cover - runtime safeguard

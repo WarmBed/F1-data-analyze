@@ -91,7 +91,7 @@ async def get_cache_status():
     response_model=Dict[str, Any])
 async def search_cache(
     function_id: int = Query(..., description="功能 ID (1-52)", ge=1, le=52),
-    year: int = Query(..., description="賽季年份", ge=2024, le=2025),
+    year: int = Query(..., description="賽季年份 (2020-2025)", ge=2020, le=2025),
     race: str = Query(..., description="賽事名稱", min_length=3, max_length=50),
     session: str = Query(..., description="會話類型 (R/Q/FP1/FP2/FP3/S/SQ)", 
                         regex="^(R|Q|FP1|FP2|FP3|S|SQ)$"),

@@ -157,7 +157,7 @@ class SeasonCalendarProvider:
         if payload is None:
             raise SeasonCalendarError(f"無法取得 {year} 年的賽季日曆資料 (API 與本地 JSON 皆不可用)")
 
-        events = self._transform_payload(payload)
+        events = self._transform_payload(payload, year=year)
         self._cache[year] = events
         return events
 
@@ -190,24 +190,100 @@ class SeasonCalendarProvider:
             return None
 
     def _load_latest_json(self, year: int) -> Optional[Dict[str, Any]]:
-        pattern = f"season_calendar_{year}_"
+        """載入最新的季節日曆 JSON，支援單年和多年格式"""
         if not JSON_DIR.exists():
             return None
-        candidates = sorted(
-            (p for p in JSON_DIR.glob("season_calendar_*.json") if pattern in p.name),
+        
+        # 搜尋所有 season_calendar JSON 檔案
+        all_candidates = sorted(
+            JSON_DIR.glob("season_calendar_*.json"),
             key=lambda path: path.stat().st_mtime,
             reverse=True,
         )
-        for candidate in candidates:
+        
+        for candidate in all_candidates:
             try:
-                return json.loads(candidate.read_text(encoding="utf-8"))
-            except Exception:
+                payload = json.loads(candidate.read_text(encoding="utf-8"))
+                
+                # 檢查是否包含指定年份的數據
+                if self._payload_contains_year(payload, year):
+                    print(f"[SEASON] 從本地 JSON 載入: {candidate.name} (年份: {year})")
+                    return payload
+                    
+            except Exception as e:
+                print(f"[SEASON] 讀取 {candidate.name} 失敗: {e}")
                 continue
+        
+        print(f"[SEASON] 未找到包含 {year} 年的本地 JSON 檔案")
         return None
+    
+    def _payload_contains_year(self, payload: Dict[str, Any], year: int) -> bool:
+        """檢查 payload 是否包含指定年份的數據"""
+        if not isinstance(payload, dict):
+            return False
+        
+        data = payload.get("data")
+        if not data:
+            return False
+        
+        # 多年嵌套格式: {"data": {"2020": {...}, "2025": {...}}}
+        if isinstance(data, dict) and str(year) in data:
+            return True
+        
+        # 單年格式: {"data": [{...}, {...}]}
+        if isinstance(data, list):
+            # 檢查 metadata 中的年份
+            metadata = payload.get("metadata", {})
+            if metadata.get("year") == year:
+                return True
+        
+        return False
 
-    def _transform_payload(self, payload: Dict[str, Any]) -> List[SeasonEvent]:
+    def _transform_payload(self, payload: Dict[str, Any], year: Optional[int] = None) -> List[SeasonEvent]:
+        """轉換 payload 為 SeasonEvent 列表，支援單年和多年格式"""
         events: List[SeasonEvent] = []
-        raw_events = self._extract_event_records(payload.get("data"))
+        
+        print(f"[DEBUG] _transform_payload called with year={year}")
+        print(f"[DEBUG] payload top keys: {list(payload.keys())}")
+        
+        # 先解開可能的 API 包裝層
+        # API 回應格式: {"data": {"data": {"2025": {...}}}}
+        # 本地 JSON 格式: {"data": {"2025": {...}}}
+        data_container = payload.get("data")
+        print(f"[DEBUG] data_container type: {type(data_container)}")
+        if isinstance(data_container, dict):
+            print(f"[DEBUG] data_container keys: {list(data_container.keys())[:10]}")  # 只顯示前10個
+        
+        # 檢查是否有雙層嵌套（API 格式）
+        if isinstance(data_container, dict) and "data" in data_container:
+            # 如果內層還有 "data" key，且是字典（包含年份 keys），則解開一層
+            inner_data = data_container.get("data")
+            # 修正：檢查 key 是否為年份格式（4位數字字符串）
+            if isinstance(inner_data, dict) and any(str(k).isdigit() and len(str(k)) == 4 for k in inner_data.keys()):
+                data_container = inner_data
+        
+        # 處理多年嵌套格式
+        if isinstance(data_container, dict) and year is not None:
+            # 多年格式: {"data": {"2020": {...}, "2025": {...}}}
+            year_str = str(year)
+            print(f"[DEBUG] 尋找年份 {year_str}")
+            print(f"[DEBUG] data_container keys: {list(data_container.keys())}")
+            print(f"[DEBUG] {year_str} in keys: {year_str in data_container}")
+            if year_str in data_container:
+                year_data = data_container[year_str]
+                # 遞迴處理單年數據
+                if isinstance(year_data, dict):
+                    raw_events = self._extract_event_records(year_data.get("data"))
+                else:
+                    raw_events = self._extract_event_records(year_data)
+            else:
+                print(f"[SEASON] payload 中未找到 {year} 年的數據")
+                print(f"[SEASON] 可用的年份: {list(data_container.keys())}")
+                return events
+        else:
+            # 單年格式: {"data": [{...}, {...}]}
+            raw_events = self._extract_event_records(data_container)
+        
         if not raw_events:
             return events
 
