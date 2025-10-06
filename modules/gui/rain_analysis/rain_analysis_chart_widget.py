@@ -19,6 +19,8 @@ Version: 1.0.0
 
 import sys
 import math
+import logging
+from core.logger import get_logger
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
@@ -62,6 +64,10 @@ class RainChartTheme(ChartTheme):
     
     # 圖表背景（向後兼容）
     RAIN_CHART_BG = QColor(250, 251, 252)       # 淺背景
+
+
+# 使用集中式 logger (f1.gui.rain_chart)
+logger = get_logger("rain_chart", component="gui")
 
 
 class RainAnalysisChartWidget(TelemetryChartWidgetBase):
@@ -188,38 +194,34 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
         
     def update_data(self, data: Dict[str, Any]):
         """更新數據（基類優先方法）"""
-        print(f"✅ [RAIN_CHART] update_data 被調用!")
-        print(f"   - 自身類型: {type(self)}")
-        print(f"   - 數據類型: {type(data)}")
-        print(f"   - 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-        import traceback
-        print(f"🔍 [RAIN_CHART] update_data 調用堆棧:")
-        traceback.print_stack(limit=3)
+        if logger.isEnabledFor(logging.DEBUG):
+            keys = list(data.keys()) if isinstance(data, dict) else "Not a dict"
+            logger.debug("update_data called type=%s keys=%s", type(data), keys)
         self.update_chart_data(data)
         
     def set_data(self, *args, **kwargs):
         """設置圖表數據（兼容基類接口）"""
-        print(f"⚠️ [RAIN_CHART] set_data 被調用!")
-        print(f"   - 自身類型: {type(self)}")
-        print(f"   - 位置參數數量: {len(args)}")
-        print(f"   - 關鍵字參數: {list(kwargs.keys())}")
-        print(f"   - 參數類型: {[type(arg) for arg in args]}")
-        import traceback
-        print(f"🔍 [RAIN_CHART] set_data 調用堆棧:")
-        traceback.print_stack(limit=5)
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "set_data invoked type=%s args=%d kwargs=%s",
+                type(self),
+                len(args),
+                list(kwargs.keys()),
+            )
         
         # 如果只有一個參數且是字典，使用我們的方法
         if len(args) == 1 and isinstance(args[0], dict) and not kwargs:
-            print(f"   - ✅ 單字典參數，轉向 update_chart_data")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("set_data forwarding single dict argument to update_chart_data")
             self.update_chart_data(args[0])
         else:
-            print(f"   - ⚠️ 多參數調用，可能是基類接口")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("set_data detected multi-argument usage; delegating to super")
             # 嘗試調用父類方法
             try:
                 super().set_data(*args, **kwargs)
             except Exception as e:
-                print(f"   - ❌ 父類調用失敗: {e}")
-                print(f"   - 🔄 嘗試作為單一數據處理")
+                logger.warning("set_data fallback due to error: %s", e)
                 if args:
                     self.update_chart_data(args[0] if isinstance(args[0], dict) else {'data': args[0]})
         

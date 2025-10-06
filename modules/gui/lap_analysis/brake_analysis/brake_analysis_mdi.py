@@ -42,6 +42,7 @@ class BrakeDataManager(QObject):
         self.current_session = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None
         
     def load_brake_data(self, year: str, race: str, session: str, 
                       driver1: str = "VER", driver2: str = "VER",
@@ -143,79 +144,40 @@ class BrakeDataManager(QObject):
         self.error_occurred.emit(error_msg)
     
     def _check_and_load_telemetry_if_needed(self):
-        """檢查並載入遙測分析數據（最速圈用）"""
+        """檢查遙測分析數據（最速圈用）"""
         try:
             print(f"[brake_MDI_DATA] 🔍 檢查遙測分析數據可用性...")
-            
-            # 檢查是否已有遙測分析檔案
+
+            # 優先交由模組層統一處理（符合 API-ONLY 政策）
+            module_ref = getattr(self, "module_ref", None)
+            if module_ref:
+                return module_ref._check_and_load_telemetry_if_needed(
+                    year=self.current_year,
+                    race=self.current_race,
+                    session=self.current_session
+                )
+
+            # 後備檢查：嘗試在本地搜尋既有 JSON（不產生新數據）
             telemetry_patterns = [
                 f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
                 f"telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
                 f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}.json"
             ]
-            
+
             search_dirs = ["json", "json_exports", "cache"]
-            telemetry_file = None
-            
             for directory in search_dirs:
                 if os.path.exists(directory):
                     for pattern in telemetry_patterns:
                         file_path = os.path.join(directory, pattern)
                         if os.path.exists(file_path):
-                            telemetry_file = file_path
-                            print(f"📁 [brake_MDI_DATA] 找到現有遙測檔案: {telemetry_file}")
+                            print(f"📁 [brake_MDI_DATA] 找到現有遙測檔案: {file_path}")
                             return True
-            
-            # 如果沒有找到，通過CLI生成Function 12數據
-            print(f"[brake_MDI_DATA] � 未找到遙測數據，通過CLI生成...")
-            return self._generate_telemetry_via_cli()
-            
+
+            print("⚠️ [brake_MDI_DATA] API-ONLY 模式下未找到遙測檔案，請先透過主視窗遙測模組或 REST API 取得資料")
+            return False
+
         except Exception as e:
             print(f"❌ [brake_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
-            return False
-    
-    def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據（Function 12）"""
-        try:
-            import subprocess
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            print(f"[brake_MDI_DATA] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為brake分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
-            )
-            
-            stdout, stderr = process.communicate(timeout=300)  # 5分鐘超時
-            
-            if process.returncode == 0:
-                print(f"[brake_MDI_DATA] ✅ 遙測分析CLI執行成功")
-                time.sleep(2)  # 等待檔案寫入完成
-                return True
-            else:
-                print(f"[brake_MDI_DATA] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[brake_MDI_DATA] ⏰ 遙測分析CLI執行超時")
-            return False
-        except Exception as e:
-            print(f"[ERROR] [brake_MDI_DATA] _generate_telemetry_via_cli 失敗: {e}")
             return False
     
     def _get_fastest_lap_number(self, driver: str) -> int:
@@ -352,6 +314,7 @@ class BrakeAnalysisModule(IAnalysisModule):
             
             # 創建數據管理器
             self.data_manager = BrakeDataManager()
+            self.data_manager.module_ref = self
             self.data_manager.data_loaded.connect(self._update_chart)
             self.data_manager.error_occurred.connect(self._handle_error)
             
@@ -823,6 +786,54 @@ class BrakeAnalysisModule(IAnalysisModule):
     
     # ========== 遙測分析整合功能 ==========
     
+    def _check_and_load_telemetry_if_needed(self, year: Optional[str] = None,
+                                            race: Optional[str] = None,
+                                            session: Optional[str] = None) -> bool:
+        """確保遙測分析資料可用，遵循 API-ONLY 模式"""
+        try:
+            target_year = str(year or self.current_year or "").strip()
+            target_race = (race or self.current_race or "").strip()
+            target_session = str(session or self.current_session or "").strip()
+
+            print(f"[brake_MDI] 🔍 檢查遙測分析: {target_year} {target_race} {target_session}")
+
+            telemetry_file = self._find_telemetry_analysis_file(
+                year=target_year,
+                race=target_race,
+                session=target_session
+            )
+            if telemetry_file:
+                print(f"[brake_MDI] 📂 已存在遙測分析檔案: {telemetry_file}")
+                return True
+
+            main_window = self._get_main_window()
+            if main_window:
+                for method_name in (
+                    "open_telemetry_analysis",
+                    "create_telemetry_analysis",
+                    "create_telemetry_analysis_tab"
+                ):
+                    if hasattr(main_window, method_name):
+                        handler = getattr(main_window, method_name)
+                        try:
+                            handler()
+                            print(f"[brake_MDI] 🚀 透過主視窗觸發 {method_name}")
+                            return True
+                        except TypeError:
+                            try:
+                                handler(target_year, target_race, target_session)
+                                print(f"[brake_MDI] 🚀 透過主視窗觸發 {method_name}，並傳入會話參數")
+                                return True
+                            except Exception as inner_error:
+                                print(f"[brake_MDI] ⚠️ 呼叫 {method_name} 失敗: {inner_error}")
+
+            print("⚠️ [brake_MDI] 未能自動載入遙測分析，請使用主視窗遙測模組或 REST API 先取得資料")
+            return False
+
+        except Exception as e:
+            print(f"[ERROR] [brake_MDI] _check_and_load_telemetry_if_needed 失敗: {e}")
+            return False
+
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
         """確保最速圈數據的遙測分析可用 - 與速度分析相同功能"""
         try:
@@ -852,27 +863,42 @@ class BrakeAnalysisModule(IAnalysisModule):
             print(f"[ERROR] [brake_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
             return None
     
-    def _find_telemetry_analysis_file(self) -> Optional[str]:
-        """尋找遙測分析JSON檔案 - 與速度分析相同功能"""
+    def _find_telemetry_analysis_file(self, year: Optional[str] = None,
+                                      race: Optional[str] = None,
+                                      session: Optional[str] = None) -> Optional[str]:
+        """尋找遙測分析JSON檔案"""
         try:
-            # 構建可能的檔案名稱模式
-            year = self.current_year
-            race = self.current_race.replace(' ', '_')
-            session = self.current_session
-            
-            # 檢查JSON目錄
+            target_year = str(year or self.current_year or "").strip()
+            target_race_raw = (race or self.current_race or "").strip()
+            target_session = str(session or self.current_session or "").strip()
+
+            if not (target_year and target_race_raw and target_session):
+                print("⚠️ [brake_MDI] 遙測檔案搜尋缺少必要參數")
+                return None
+
+            race_key = (target_race_raw
+                        .replace(' ', '_')
+                        .replace('/', '_')
+                        .replace('-', '_'))
+
+            candidate_prefixes = [
+                f"telemetry_analysis_{target_year}_{race_key}_{target_session}",
+                f"all_drivers_telemetry_analysis_{target_year}_{race_key}_{target_session}",
+                f"all_drivers_telemetry_analysis_{target_year}_{race_key}"
+            ]
+
             json_dir = "json"
             if os.path.exists(json_dir):
                 for filename in os.listdir(json_dir):
-                    if (filename.startswith(f"telemetry_analysis_{year}_{race}_{session}") and 
-                        filename.endswith('.json')):
+                    if (filename.endswith('.json') and
+                            any(filename.startswith(prefix) for prefix in candidate_prefixes)):
                         full_path = os.path.join(json_dir, filename)
                         print(f"[brake_MDI] 📂 找到遙測分析檔案: {full_path}")
                         return full_path
-            
-            print(f"[brake_MDI] 📂 未找到遙測分析檔案")
+
+            print(f"[brake_MDI] 📂 未找到遙測分析檔案 ({target_year} {race_key} {target_session})")
             return None
-            
+
         except Exception as e:
             print(f"[ERROR] [brake_MDI] _find_telemetry_analysis_file 失敗: {e}")
             return None
@@ -906,8 +932,8 @@ class BrakeAnalysisModule(IAnalysisModule):
                         main_window.create_telemetry_analysis()
                         return True
             
-            # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            print(f"[brake_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
+            # 方法2: 透過統一 API 流程提示使用者載入資料
+            print(f"[brake_MDI] � 透過主視窗/API 流程載入遙測分析數據...")
             return self._check_and_load_telemetry_if_needed()
             
         except Exception as e:

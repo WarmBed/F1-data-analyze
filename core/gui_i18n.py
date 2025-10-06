@@ -53,6 +53,36 @@ class GuiTranslator:
         return {
             # 主視窗元素
             'main_window': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
+            'help_menu': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
+            'open_help_center': {'zh': '使用說明...', 'en': 'User Guide...', 'ja': '使用ガイド...'},
+            'about_action': {'zh': '關於 F1T', 'en': 'About F1T', 'ja': 'F1T について'},
+            'about_message': {
+                'zh': (
+                    "F1 TelemetryStation Pro\n\n"
+                    "一個專業的 Formula 1 遙測分析工作站\n"
+                    "提供全面的賽事數據分析能力。\n\n"
+                    "A professional Formula 1 telemetry analysis workstation\n"
+                    "providing comprehensive race data analysis capabilities.\n\n"
+                    "GitHub:\n"
+                    "https://github.com/WarmBed/F1-TelemetryStation-Pro/tree/main"
+                ),
+                'en': (
+                    "F1 TelemetryStation Pro\n\n"
+                    "A professional Formula 1 telemetry analysis workstation\n"
+                    "providing comprehensive race data analysis capabilities.\n\n"
+                    "GitHub:\n"
+                    "https://github.com/WarmBed/F1-TelemetryStation-Pro/tree/main"
+                ),
+                'ja': (
+                    "F1 TelemetryStation Pro\n\n"
+                    "プロフェッショナルな Formula 1 テレメトリー分析ワークステーション\n"
+                    "包括的なレースデータ分析機能を提供します。\n\n"
+                    "A professional Formula 1 telemetry analysis workstation\n"
+                    "providing comprehensive race data analysis capabilities.\n\n"
+                    "GitHub:\n"
+                    "https://github.com/WarmBed/F1-TelemetryStation-Pro/tree/main"
+                ),
+            },
             
             # 遙測分析對話框
             'telemetry_options_title': {'zh': '遙測分析選項', 'en': 'Telemetry Analysis Options', 'ja': 'テレメトリー分析オプション'},
@@ -177,6 +207,19 @@ class GuiTranslator:
             # 按鈕選項
             'yes': {'zh': '是', 'en': 'Yes', 'ja': 'はい'},
             'no': {'zh': '否', 'en': 'No', 'ja': 'いいえ'},
+            'cancel': {'zh': '取消', 'en': 'Cancel', 'ja': 'キャンセル'},
+            
+            # === 更新進度對話框翻譯 ===
+            'update_progress_title': {'zh': '更新進度', 'en': 'Update Progress', 'ja': '更新進度'},
+            'update_progress_preparing': {'zh': '準備序列化更新分析模組...', 'en': 'Preparing to update analysis modules...', 'ja': '分析モジュールの更新を準備中...'},
+            'update_progress_updating': {'zh': '正在更新', 'en': 'Updating', 'ja': '更新中'},
+            'update_progress_no_windows': {'zh': '沒有需要更新的分析視窗', 'en': 'No analysis windows to update', 'ja': '更新する分析ウィンドウがありません'},
+            'update_progress_no_telemetry': {
+                'zh': '沒有需要更新的遙測分析視窗\n（已跳過 {0} 個非遙測模組）',
+                'en': 'No telemetry analysis windows to update\n({0} non-telemetry modules skipped)',
+                'ja': '更新するテレメトリー分析ウィンドウがありません\n（{0}個の非テレメトリーモジュールをスキップ）'
+            },
+            'update': {'zh': '更新', 'en': 'Update', 'ja': '更新'},
             
             # 分析錯誤訊息
             'analysis_failed': {'zh': '分析失敗', 'en': 'Analysis Failed', 'ja': '分析失敗'},
@@ -422,6 +465,16 @@ class GuiTranslator:
             # File Menu 項目
             'open_session': {'zh': '開啟會話...', 'en': 'Open Session...', 'ja': 'セッションを開く...'},
             'save_workspace': {'zh': '儲存工作區', 'en': 'Save Workspace', 'ja': 'ワークスペースを保存'},
+            'load_workspace_dev': {
+                'zh': '載入工作區…（開發中）',
+                'en': 'Load Workspace… (In Development)',
+                'ja': 'ワークスペースを読み込み…（開発中）'
+            },
+            'save_workspace_dev': {
+                'zh': '儲存工作區（開發中）',
+                'en': 'Save Workspace (In Development)',
+                'ja': 'ワークスペースを保存（開発中）'
+            },
             'export_report': {'zh': '匯出報告...', 'en': 'Export Report...', 'ja': 'レポートをエクスポート...'},
             'exit': {'zh': '結束', 'en': 'Exit', 'ja': '終了'},
             

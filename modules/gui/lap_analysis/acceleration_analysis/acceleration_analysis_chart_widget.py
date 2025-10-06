@@ -121,9 +121,9 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             all_accelerations.extend(driver2_acceleration)
             
         if all_accelerations:
-            # 過濾掉NaN和無限值
+            # 🔧 修復：過濾掉 None、NaN 和無限值
             valid_accelerations = [acc for acc in all_accelerations 
-                                   if not (math.isnan(acc) or math.isinf(acc))]
+                                   if acc is not None and not (math.isnan(acc) or math.isinf(acc))]
             
             if valid_accelerations:
                 # 加速度數據範圍計算 (單位：m/s²)

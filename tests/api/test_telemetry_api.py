@@ -21,7 +21,7 @@ def test_api_endpoint():
     print("=" * 80)
     
     # API 配置
-    base_url = "http://127.0.0.1:8000"
+    base_url = "https://api.f1telemetrystationpro.org"
     endpoint = f"{base_url}/api/v2/analysis/execute"
     
     # 測試參數
@@ -154,7 +154,7 @@ def test_gui_integration():
         print("🧪 Telemetry Comparison API 測試")
         print("=" * 80)
 
-        base_url = "http://127.0.0.1:8000"
+        base_url = "https://api.f1telemetrystationpro.org"
         endpoint = f"{base_url}/api/v2/analysis/execute"
 
         params = {

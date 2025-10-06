@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 __all__ = [
     "SeasonCalendarError",
@@ -31,7 +32,7 @@ __all__ = [
 
 
 API_ENDPOINT = "/api/v2/analysis/execute"
-DEFAULT_BASE_URL = "http://127.0.0.1:8000"
+DEFAULT_BASE_URL = "https://api.f1telemetrystationpro.org"
 CONFIG_PATH = Path("config/api_config.json")
 JSON_DIR = Path(os.getenv("F1_ANALYSIS_JSON_DIR", "json"))
 
@@ -164,18 +165,10 @@ class SeasonCalendarProvider:
     # Internal helpers
     # ------------------------------------------------------------------
     def _determine_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return env_url
-        if CONFIG_PATH.exists():
-            try:
-                config_data = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-                api_url = config_data.get("api_base_url")
-                if api_url:
-                    return str(api_url)
-            except Exception:
-                pass
-        return DEFAULT_BASE_URL
+        return resolve_api_base_url(
+            config_path=CONFIG_PATH,
+            event_logger=lambda message: print(f"[SEASON] {message}"),
+        )
 
     def _fetch_from_api(self, year: int) -> Optional[Dict[str, Any]]:
         try:

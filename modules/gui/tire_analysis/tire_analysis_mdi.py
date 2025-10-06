@@ -33,6 +33,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QFont
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -57,7 +58,7 @@ class TireAnalysisApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 60.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 
@@ -171,21 +172,7 @@ class TireAnalysisDataManager(UniversalDataLoader):
 
     def _determine_api_base_url(self) -> str:
         """Resolve the API base URL from environment variables or configuration."""
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path('config/api_config.json')
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding='utf-8'))
-                api_url = config_data.get('api_base_url')
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
@@ -199,12 +186,23 @@ class TireAnalysisDataManager(UniversalDataLoader):
 
     def _is_api_available(self) -> bool:
         """Check REST API availability before spawning background threads."""
-        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip('/')
-        health_url = f"{base_url}/api/v2/health"
+        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
+        health_url = f"{base_url}/api/v2/system/health"
         try:
             response = requests.get(health_url, timeout=2.0)
             if response.status_code != 200:
-                return False
+                legacy_url = f"{base_url}/api/v2/health"
+                legacy_response = requests.get(legacy_url, timeout=2.0)
+                if legacy_response.status_code != 200:
+                    return False
+                payload = legacy_response.json()
+                if isinstance(payload, dict):
+                    status = str(payload.get("status") or payload.get("state") or "").lower()
+                    if status in {"ok", "healthy", "ready", "pass"}:
+                        return True
+                    if payload.get("success") is True:
+                        return True
+                return True
             payload = response.json()
             if isinstance(payload, dict):
                 status = str(payload.get("status") or payload.get("state") or "").lower()
@@ -591,31 +589,100 @@ class TireAnalysisDataManager(UniversalDataLoader):
         
         # 處理所有車手的輪胎策略數據
         for driver_code, driver_data in self.tire_data.items():
-            if isinstance(driver_data, dict) and "stint_analysis" in driver_data:
-                stint_data = driver_data["stint_analysis"]
-                
-                driver_info = {
-                    "driver": driver_code,
-                    "stints": [],
-                    "total_laps": 0,
-                    "compounds_used": set()
+            if not isinstance(driver_data, dict):
+                continue
+
+            stint_data = (
+                driver_data.get("stint_analysis")
+                or driver_data.get("corrected_stint_analysis")
+                or driver_data.get("original_stint_analysis")
+                or driver_data.get("stints")
+                or []
+            )
+
+            if not stint_data:
+                continue
+
+            driver_info = {
+                "driver": driver_code,
+                "stints": [],
+                "total_laps": 0,
+                "compounds_used": set(),
+            }
+
+            for index, stint in enumerate(stint_data, start=1):
+                if not isinstance(stint, dict):
+                    continue
+
+                stint_number = (
+                    stint.get("stint_number")
+                    or stint.get("stint")
+                    or index
+                )
+                compound = (
+                    stint.get("compound")
+                    or stint.get("tyre_compound")
+                    or "UNKNOWN"
+                )
+                start_lap = (
+                    stint.get("start_lap")
+                    or stint.get("lap_start")
+                    or stint.get("startLap")
+                    or 1
+                )
+                end_lap = (
+                    stint.get("end_lap")
+                    or stint.get("lap_end")
+                    or stint.get("endLap")
+                    or start_lap
+                )
+
+                laps = stint.get("laps")
+                if laps is None:
+                    length = stint.get("length")
+                    if length is not None:
+                        laps = length
+                    else:
+                        try:
+                            laps = max(0, int(end_lap) - int(start_lap) + 1)
+                        except Exception:
+                            laps = 0
+
+                avg_laptime = (
+                    stint.get("avg_laptime")
+                    or stint.get("avg_lap_time")
+                    or stint.get("avg_time")
+                    or 0.0
+                )
+
+                stint_info = {
+                    "stint_number": int(stint_number),
+                    "compound": compound,
+                    "start_lap": int(start_lap) if isinstance(start_lap, (int, float)) or str(start_lap).isdigit() else start_lap,
+                    "end_lap": int(end_lap) if isinstance(end_lap, (int, float)) or str(end_lap).isdigit() else end_lap,
+                    "laps": int(laps) if isinstance(laps, (int, float)) else laps,
+                    "avg_laptime": float(avg_laptime) if isinstance(avg_laptime, (int, float)) else avg_laptime,
                 }
-                
-                for stint in stint_data:
-                    stint_info = {
-                        "stint_number": stint.get("stint", 1),
-                        "compound": stint.get("compound", "UNKNOWN"),
-                        "start_lap": stint.get("start_lap", 1),
-                        "end_lap": stint.get("end_lap", 1),
-                        "laps": stint.get("laps", 0),
-                        "avg_laptime": stint.get("avg_laptime", 0.0)
-                    }
-                    driver_info["stints"].append(stint_info)
-                    driver_info["compounds_used"].add(stint_info["compound"])
-                
-                driver_info["total_laps"] = sum(stint["laps"] for stint in driver_info["stints"])
-                driver_info["compounds_used"] = list(driver_info["compounds_used"])
-                drivers_data.append(driver_info)
+
+                driver_info["stints"].append(stint_info)
+                driver_info["compounds_used"].add(compound)
+
+            if not driver_info["stints"]:
+                continue
+
+            if driver_data.get("driver_summary"):
+                total_laps = driver_data["driver_summary"].get("total_laps")
+            else:
+                total_laps = None
+
+            if total_laps is None:
+                total_laps = sum(
+                    stint.get("laps", 0) for stint in driver_info["stints"] if isinstance(stint, dict)
+                )
+
+            driver_info["total_laps"] = total_laps or 0
+            driver_info["compounds_used"] = sorted(driver_info["compounds_used"])
+            drivers_data.append(driver_info)
         
         return {
             "drivers": drivers_data,
@@ -737,7 +804,14 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
     支援輪胎配方、Stint 和進站策略的視覺化和分析。
     """
     
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        year: Optional[int] = None,
+        race: Optional[str] = None,
+        session: Optional[str] = None,
+        parent=None,
+        **kwargs,
+    ):
         print(f"[TIRE_MDI] TireAnalysisUniversal 開始初始化...")
         
         # 註冊輪胎策略分析模組類型
@@ -753,22 +827,32 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
                 chart_types=["primary", "stint_comparison", "compound_analysis", "strategy_overview"]
             )
             UniversalAnalysisMDI.register_mdi_module_type("tire_analysis", tire_config)
-            
+
         super().__init__("tire_analysis", parent)
         print(f"[TIRE_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
-        
+
         # 初始化模組組件
         print(f"[TIRE_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
             print(f"[TIRE_MDI] ❌ 模組組件初始化失敗")
             return
-        
+
         print(f"[TIRE_MDI] ✅ 模組組件初始化完成")
         print(f"[TIRE_MDI] 數據管理器: {self.data_manager}")
         print(f"[TIRE_MDI] 圖表組件: {self.chart_widget}")
-        
+
         # 參照遙測分析：設置響應式佈局
         self.set_responsive_layout()
+
+        if year is not None:
+            self.current_year = str(year)
+        if race is not None:
+            self.current_race = race
+        if session is not None:
+            self.current_session = session
+
+        if kwargs:
+            self._debug(f"忽略未使用的初始化參數: {kwargs}")
         
     def create_data_manager(self) -> TireAnalysisDataManager:
         """創建輪胎策略分析數據管理器"""
@@ -884,8 +968,20 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
         """參照遙測分析：設置響應式佈局"""
         try:
             # 設置大小策略
-            from PyQt5.QtWidgets import QSizePolicy
-            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            from PyQt5.QtWidgets import QSizePolicy, QWidget
+
+            target_widget = None
+            if hasattr(self, 'main_widget') and isinstance(getattr(self, 'main_widget'), QWidget):
+                target_widget = self.main_widget
+            elif hasattr(self, 'get_widget'):
+                candidate = self.get_widget()
+                if isinstance(candidate, QWidget):
+                    target_widget = candidate
+
+            if target_widget:
+                target_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            else:
+                print("[tire_MDI] ⚠️ 無法取得主要 Widget，略過 sizePolicy 設定")
             
             # 確保圖表組件也有正確的大小策略
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -953,7 +1049,7 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
             tire_summary = self.data_manager.get_tire_summary()
             
             return {
-                "module": "下雨分析",
+                "module": "輪胎策略分析",
                 "parameters": {
                     "year": self.current_year,
                     "race": self.current_race,
@@ -963,7 +1059,7 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
                     "total_laps": tire_summary.get("total_laps", 0),
                     "tire_laps": tire_summary.get("tire_laps", 0),
                     "tire_percentage": tire_summary.get("tire_percentage", 0.0),
-                    "has_weather_data": tire_summary.get("has_tire_data", False)
+                    "has_tire_data": tire_summary.get("has_tire_data", False)
                 },
                 "generated_at": self.get_current_timestamp()
             }
@@ -985,3 +1081,9 @@ def register_tire_analysis_module():
 
 # 自動註冊
 register_tire_analysis_module()
+
+
+class TireAnalysisModule(TireAnalysisUniversal):
+    """向後相容的別名，供既有匯入路徑使用"""
+
+    pass

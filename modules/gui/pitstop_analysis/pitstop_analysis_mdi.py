@@ -30,6 +30,7 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -58,7 +59,7 @@ class PitstopAnalysisApiWorker(QThread):
         parent=None,
     ):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.function_id = int(function_id)
         self.params = dict(params)
         self.label = label
@@ -163,21 +164,9 @@ class PitstopDataManager(QObject):
         )
         
     def _determine_api_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path("config/api_config.json")
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding="utf-8"))
-                api_url = config_data.get("api_base_url")
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                print(f"[PITSTOP_MANAGER] 讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(
+            event_logger=lambda message: print(f"[PITSTOP_MANAGER] {message}")
+        )
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_PITSTOP_JSON_FALLBACK")
@@ -189,12 +178,23 @@ class PitstopDataManager(QObject):
         return False, "預設策略 (API 優先，不允許本地回退)"
 
     def _is_api_available(self) -> bool:
-        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip('/')
-        health_url = f"{base_url}/api/v2/health"
+        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
+        health_url = f"{base_url}/api/v2/system/health"
         try:
             response = requests.get(health_url, timeout=2.0)
             if response.status_code != 200:
-                return False
+                legacy_url = f"{base_url}/api/v2/health"
+                legacy_response = requests.get(legacy_url, timeout=2.0)
+                if legacy_response.status_code != 200:
+                    return False
+                payload = legacy_response.json()
+                if isinstance(payload, dict):
+                    status = str(payload.get("status") or payload.get("state") or "").lower()
+                    if status in {"ok", "healthy", "ready", "pass"}:
+                        return True
+                    if payload.get("success") is True:
+                        return True
+                return True
             payload = response.json()
             if isinstance(payload, dict):
                 status = str(payload.get("status") or payload.get("state") or "").lower()

@@ -28,6 +28,7 @@ F1T 是一個專業的 Formula 1 遙測分析系統，採用**雙重架構**設�
 - **統一架構**：任何新的 GUI 分析模組必須以 Rain Analysis 為範例，遵循 `UniversalAnalysisMDI` + `UniversalDataLoader` 的通用架構，保持資料載入器與 MDI 管理分層一致。
 - **變更前任務追蹤**：在修改或新增模組前，先於 `tasks/` 目錄建立對應的 `task.md` 描述目標、清單與測試計畫，更新進度直至完成。
 - **單項驗證**：每項任務完成後必須執行針對該變更的單項測試或手動驗證，確認無誤才能合併或交付。
+- **公開 API 網域強制**：所有 GUI 模組的 HTTP 請求必須指向 `https://api.f1telemetrystationpro.org`，禁止自動回退至 `localhost`、內網或未經核准的網域。
 - **回應篇幅**：在撰寫說明或回覆時，不需節省字數或 token；以完整、細緻的內容回覆使用者需求。
 
 ### 1. **禁用模擬數據政策**
@@ -39,6 +40,7 @@ F1T 是一個專業的 Formula 1 遙測分析系統，採用**雙重架構**設�
 - **Windows 環境**：統一使用 PowerShell 命令，絕不使用 CMD
 - **腳本執行**：所有批次檔案和自動化使用 PowerShell 語法
 - **終端整合**：VS Code 任務配置為 PowerShell 環境
+- **Python 指令執行**：`python -c ...`、`python script.py` 等命令必須在 PowerShell 終端直接執行，切勿在 Python REPL 中再次輸入 `python` 觸發 SyntaxError
 
 ### 3. **不需要節省token**
 - **完整回覆**：在回答問題或撰寫說明時，不需節省字數或 token
@@ -50,6 +52,7 @@ F1T 是一個專業的 Formula 1 遙測分析系統，採用**雙重架構**設�
 - **僅允許 API 獲取數據**：GUI 只能通過 REST API (`refactored_api.py`) 獲取分析數據
 - **本地 JSON 讀取**：允許讀取已存在的 JSON 檔案，但不可自動生成
 - **手動 CLI 執行**：開發時需要新數據，必須手動在終端執行 CLI 命令
+- **對外 API 網域**：正式服務統一使用 `https://api.f1telemetrystationpro.org`
 
 **禁止的模式**：
 ```python
@@ -299,7 +302,8 @@ self.api_worker.start()
 ```python
 # 啟動 API 服務器
 python APIserver.py
-# 可在以下位置訪問：http://localhost:8000
+# 可在以下位置訪問（本地開發）：http://localhost:8000
+# 正式對外服務網址：https://api.f1telemetrystationpro.org
 ```
 
 **主要 API 端點：**

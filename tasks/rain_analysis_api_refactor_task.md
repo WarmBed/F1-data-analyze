@@ -22,5 +22,5 @@
 - （可選）在 API 服務開啟時於 GUI 內手動載入 Rain Analysis，驗證 API 與後備模式切換。
 
 ## 備註
-- API 基底網址以環境變數 `F1_API_BASE_URL` 優先，其次讀取 `config/api_config.json`，預設為 `http://127.0.0.1:8000`。
+- API 基底網址以環境變數 `F1_API_BASE_URL` 優先，其次讀取 `config/api_config.json`，預設為 `https://api.f1telemetrystationpro.org`。
 - 若 API 返回 `success=False` 或格式不正確，須立即退回本地 JSON/CLI 管線，避免 GUI 無資料可用。

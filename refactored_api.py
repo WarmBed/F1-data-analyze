@@ -17,6 +17,8 @@ from typing import Final
 import uvicorn
 from fastapi import FastAPI
 
+import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
+
 from api.middleware.cors import RateLimitMiddleware
 from api.middleware.handlers import setup_cors_middleware, setup_custom_middleware
 from api.routers import api_router

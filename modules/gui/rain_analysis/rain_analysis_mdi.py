@@ -33,6 +33,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QFont
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -57,7 +58,7 @@ class RainAnalysisApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 20.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 
@@ -171,21 +172,7 @@ class RainAnalysisDataManager(UniversalDataLoader):
     
     def _determine_api_base_url(self) -> str:
         """Resolve the API base URL from environment variables or configuration."""
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path('config/api_config.json')
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding='utf-8'))
-                api_url = config_data.get('api_base_url')
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
@@ -199,12 +186,24 @@ class RainAnalysisDataManager(UniversalDataLoader):
 
     def _is_api_available(self) -> bool:
         """Quick health check to avoid spawning orphaned API worker threads."""
-        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip('/')
-        health_url = f"{base_url}/api/v2/health"
+        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
+        health_url = f"{base_url}/api/v2/system/health"
         try:
             response = requests.get(health_url, timeout=2.0)
             if response.status_code != 200:
-                return False
+                # 後相容性：嘗試舊版健康檢查端點
+                legacy_url = f"{base_url}/api/v2/health"
+                legacy_response = requests.get(legacy_url, timeout=2.0)
+                if legacy_response.status_code != 200:
+                    return False
+                payload = legacy_response.json()
+                if isinstance(payload, dict):
+                    status = str(payload.get("status") or payload.get("state") or "").lower()
+                    if status in {"ok", "healthy", "ready", "pass"}:
+                        return True
+                    if payload.get("success") is True:
+                        return True
+                return True
             payload = response.json()
             if isinstance(payload, dict):
                 status = str(payload.get("status") or payload.get("state") or "").lower()
@@ -657,7 +656,14 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
     支援多種天氣數據的視覺化和分析。
     """
     
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        year: Optional[int] = None,
+        race: Optional[str] = None,
+        session: Optional[str] = None,
+        parent=None,
+        **kwargs,
+    ):
         print(f"[RAIN_MDI] RainAnalysisUniversal 開始初始化...")
         
         # 註冊下雨分析模組類型
@@ -689,6 +695,18 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         
         # 參照遙測分析：設置響應式佈局
         self.set_responsive_layout()
+
+        # 儲存初始參數但避免在建構時即觸發資料載入
+        if year is not None:
+            self.current_year = str(year)
+        if race is not None:
+            self.current_race = race
+        if session is not None:
+            self.current_session = session
+
+        # 吸收額外關鍵字參數，維持向後相容
+        if kwargs:
+            self._debug(f"忽略未使用的初始化參數: {kwargs}")
         
     def create_data_manager(self) -> RainAnalysisDataManager:
         """創建下雨分析數據管理器"""
@@ -811,8 +829,20 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         """參照遙測分析：設置響應式佈局"""
         try:
             # 設置大小策略
-            from PyQt5.QtWidgets import QSizePolicy
-            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            from PyQt5.QtWidgets import QSizePolicy, QWidget
+
+            target_widget = None
+            if hasattr(self, 'main_widget') and isinstance(getattr(self, 'main_widget'), QWidget):
+                target_widget = self.main_widget
+            elif hasattr(self, 'get_widget'):
+                candidate = self.get_widget()
+                if isinstance(candidate, QWidget):
+                    target_widget = candidate
+
+            if target_widget:
+                target_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            else:
+                self._debug("⚠️ 無法取得主要 Widget，略過 sizePolicy 設定")
             
             # 確保圖表組件也有正確的大小策略
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -919,3 +949,9 @@ def register_rain_analysis_module():
 
 # 自動註冊
 register_rain_analysis_module()
+
+
+class RainAnalysisModule(RainAnalysisUniversal):
+    """向後相容的別名，供既有匯入路徑使用"""
+
+    pass

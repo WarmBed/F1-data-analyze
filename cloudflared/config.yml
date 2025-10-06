@@ -1,0 +1,7 @@
+tunnel: myfastapi
+credentials-file: C:\Users\mike2\.cloudflared\be9ac594-f997-42cf-8edf-6199adfa1849.json
+
+ingress:
+  - hostname: api.f1telemetrystationpro.org
+    service: http://localhost:8000
+  - service: http_status:404

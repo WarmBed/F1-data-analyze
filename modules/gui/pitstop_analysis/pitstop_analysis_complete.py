@@ -14,6 +14,7 @@ F1 Pitstop Strategy Analysis Module - Complete Recreation
 
 import os
 import sys
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import pickle
@@ -22,24 +23,23 @@ from prettytable import PrettyTable
 import json
 
 # 確保能夠導入基礎模組
+# 確保可導入基礎模組
+ROOT_DIR = Path(__file__).resolve().parents[3]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
 try:
-    from .base import F1AnalysisBase
+    from CLI_modules.cli.core.base import F1AnalysisBase
 except ImportError:
-    try:
-        from base import F1AnalysisBase
-    except ImportError:
-        print("[ERROR] 無法導入基礎模組 F1AnalysisBase")
-        sys.exit(1)
+    print("[ERROR] 無法導入基礎模組 F1AnalysisBase")
+    F1AnalysisBase = object
 
 # 導入 OpenF1 分析器 - 優先使用 OpenF1 API
 try:
-    from .openf1_data_analyzer import F1OpenDataAnalyzer
+    from CLI_modules.cli.core.openf1_data_analyzer import F1OpenDataAnalyzer
 except ImportError:
-    try:
-        from openf1_data_analyzer import F1OpenDataAnalyzer
-    except ImportError:
-        print("[WARNING] 無法導入 OpenF1 數據分析器，將只使用 FastF1 分析")
-        F1OpenDataAnalyzer = None
+    print("[WARNING] 無法導入 OpenF1 數據分析器，將只使用 FastF1 分析")
+    F1OpenDataAnalyzer = None
 
 
 def format_time(time_obj):

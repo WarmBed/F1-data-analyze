@@ -7,6 +7,7 @@ F1 Independent Accident Analysis Module - Complete Replication
 
 import os
 import sys
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import re
@@ -15,16 +16,15 @@ from datetime import datetime
 import traceback
 
 # 確保能夠導入基礎模組
+ROOT_DIR = Path(__file__).resolve().parents[3]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
+
 try:
-    from .base import F1AnalysisBase
+    from CLI_modules.cli.core.base import F1AnalysisBase
 except ImportError:
-    # 如果相對導入失敗，嘗試絕對導入
-    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-    try:
-        from modules.base import F1AnalysisBase
-    except ImportError:
-        print("[ERROR] 無法導入基礎模組")
-        F1AnalysisBase = object
+    print("[ERROR] 無法導入基礎模組")
+    F1AnalysisBase = object
 
 # 註解：F1AccidentAnalyzer 將在本文件中定義，不需要外部導入
 

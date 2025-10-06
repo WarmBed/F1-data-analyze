@@ -41,6 +41,7 @@ import pandas as pd
 import subprocess
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
+from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
 
 
@@ -54,7 +55,7 @@ class TelemetryApiWorker(QThread):
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0,
                  request_token: Optional[int] = None, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
         self.request_token = request_token
@@ -423,11 +424,13 @@ class TelemetryDataLoader(QObject):
         try:
             self._debug("========== 搜尋遙測分析檔案 ==========")
             self._debug(f"🔍 搜尋條件:")
-            self._debug(f"   📅 年份: {year}")
-            self._debug(f"   🏁 賽事: {race}")
-            self._debug(f"   🏁 賽段: {session}")
+            self._debug(f"   📅 年份: {year} (type: {type(year).__name__})")
+            self._debug(f"   🏁 賽事: {race} (type: {type(race).__name__})")
+            self._debug(f"   🏁 賽段: {session} (type: {type(session).__name__})")
             self._debug(f"   🏎️ 車手1: {driver1} (第{lap1}圈)")
             self._debug(f"   🏎️ 車手2: {driver2} (第{lap2}圈)")
+            self._debug(f"   🔑 race 參數 repr: {repr(race)}")
+            self._debug(f"   🔑 race 參數 bytes: {race.encode('utf-8') if isinstance(race, str) else 'N/A'}")
             
             # 搜尋目錄
             search_dirs = ["json", "json_exports", "cache"]
@@ -515,22 +518,7 @@ class TelemetryDataLoader(QObject):
     # ========== API 載入邏輯 ========== 
 
     def _determine_api_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = os.path.join("config", "api_config.json")
-        if os.path.exists(config_path):
-            try:
-                with open(config_path, "r", encoding="utf-8") as f:
-                    config_data = json.load(f)
-                api_url = config_data.get("api_base_url")
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")

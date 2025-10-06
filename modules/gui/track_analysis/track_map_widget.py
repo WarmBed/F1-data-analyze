@@ -72,6 +72,9 @@ class TrackMapWidget(QWidget):
         self._dynamic_marker_visible: bool = True
         self._fixed_marker_visible: bool = True
 
+        # 個別連動開關狀態
+        self._linkage_enabled: bool = True
+
         # 連動標記資料
         self._distance_lookup: List[Tuple[float, float, float]] = []
         self._distance_values: List[float] = []
@@ -461,21 +464,42 @@ class TrackMapWidget(QWidget):
 
     # linkage signals -------------------------------------------------
     def on_x_linkage_received(self, distance_value: float, y_relative: float) -> None:
-        if not self._master_linkage_enabled:
+        if not self._master_linkage_enabled or not self._linkage_enabled:
             return
         self._last_linkage_relative_y = y_relative
         self._update_dynamic_marker(distance_value)
 
     def on_x_linkage_clear(self) -> None:
+        if not self._linkage_enabled:
+            return
         self._clear_dynamic_marker()
 
     def on_click_linkage_received(self, distance_value: float) -> None:
-        if not self._master_linkage_enabled:
+        if not self._master_linkage_enabled or not self._linkage_enabled:
             return
         self._update_fixed_marker(distance_value)
 
     def on_click_linkage_clear(self) -> None:
+        if not self._linkage_enabled:
+            return
         self._clear_fixed_marker()
+
+    def set_linkage_enabled(self, enabled: bool) -> None:
+        new_state = bool(enabled)
+        if self._linkage_enabled == new_state:
+            return
+
+        self._linkage_enabled = new_state
+
+        if not new_state:
+            # 關閉時清除現有標記但保留可見性設定
+            self._clear_dynamic_marker(update_view=False)
+            self._clear_fixed_marker(update_view=False)
+        # 重新繪製以反映狀態變化
+        self.update()
+
+    def is_linkage_enabled(self) -> bool:
+        return self._linkage_enabled
 
     # ------------------------------------------------------------------
     # 標記狀態與繪製

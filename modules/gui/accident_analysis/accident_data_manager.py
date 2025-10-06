@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import requests
+from core.api_base_url import resolve_api_base_url
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 try:
@@ -37,7 +38,7 @@ class AccidentAnalysisApiWorker(QThread):
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip("/")
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip("/")
         self.function_id = str(function_id)
         self.params = dict(params)
         self.timeout = float(timeout)
@@ -536,29 +537,26 @@ class AccidentDataManager(UniversalDataLoader):
     # ------------------------------------------------------------------
 
     def _determine_api_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip("/")
-
-        config_path = Path("config/api_config.json")
-        if config_path.exists():
-            try:
-                config = json.loads(config_path.read_text(encoding="utf-8"))
-                api_url = config.get("api_base_url")
-                if api_url:
-                    return str(api_url).rstrip("/")
-            except Exception as exc:  # pragma: no cover - logging only
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _is_api_available(self) -> bool:
-        base_url = (self._api_base_url or "http://127.0.0.1:8000").rstrip("/")
-        health_url = f"{base_url}/api/v2/health"
+        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
+        health_url = f"{base_url}/api/v2/system/health"
         try:
             response = requests.get(health_url, timeout=2.0)
             if response.status_code != 200:
-                return False
+                legacy_url = f"{base_url}/api/v2/health"
+                legacy_response = requests.get(legacy_url, timeout=2.0)
+                if legacy_response.status_code != 200:
+                    return False
+                payload = legacy_response.json()
+                if isinstance(payload, dict):
+                    status = str(payload.get("status") or payload.get("state") or "").lower()
+                    if status in {"ok", "healthy", "ready", "pass"}:
+                        return True
+                    if payload.get("success") is True:
+                        return True
+                return True
             payload = response.json()
             if isinstance(payload, dict):
                 status = str(payload.get("status") or payload.get("state") or "").lower()

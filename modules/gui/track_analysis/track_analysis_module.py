@@ -24,6 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Optional, Tuple
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
@@ -188,21 +189,11 @@ class TrackAnalysisWorkerThread(QThread):
         self.last_api_metadata: Dict[str, Any] = {}
 
     def _determine_api_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
         config_path = Path(project_root) / "config" / "api_config.json"
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding="utf-8"))
-                api_url = config_data.get("api_base_url")
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                print(f"[TRACK_ANALYSIS] 讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(
+            config_path=config_path,
+            event_logger=lambda message: print(f"[TRACK_ANALYSIS] {message}"),
+        )
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_TRACK_JSON_FALLBACK")

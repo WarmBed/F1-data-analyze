@@ -33,6 +33,8 @@ from typing import Dict, List, Any, Optional, Tuple, Type
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+import sip
+
 # 導入國際化函數
 from core.gui_i18n import tr
 
@@ -173,6 +175,8 @@ class UniversalAnalysisMDI(IAnalysisModule):
         # 狀態
         self._initialized = False
         self._debug_prefix = f"{analysis_type.upper()}_MDI"
+        self._cleanup_performed = False
+        self._destroyed = False
         
         self._debug(f"初始化 {self.config.display_name} MDI 模組")
     
@@ -551,6 +555,52 @@ class UniversalAnalysisMDI(IAnalysisModule):
         # 如果圖表組件支援車手變更
         if hasattr(self.chart_widget, 'drivers_changed'):
             self.chart_widget.drivers_changed.connect(self._on_drivers_changed)
+
+    def _disconnect_data_manager_signals(self):
+        """斷開數據管理器信號以避免已銷毀物件被回呼"""
+        if not hasattr(self, 'data_manager') or not self.data_manager:
+            return
+
+        signal_mapping = {
+            'data_loaded': self._update_chart,
+            'error_occurred': self._handle_error,
+            'loading_progress': self._update_progress,
+            'status_changed': self._update_status,
+        }
+
+        for signal_name, slot in signal_mapping.items():
+            try:
+                signal = getattr(self.data_manager, signal_name, None)
+                if signal:
+                    signal.disconnect(slot)
+            except (TypeError, RuntimeError):  # signal already disconnected or deleted
+                continue
+
+    def _disconnect_chart_widget_signals(self):
+        """斷開圖表組件信號"""
+        if not hasattr(self, 'chart_widget') or not self.chart_widget:
+            return
+
+        if hasattr(self.chart_widget, 'lap_numbers_changed'):
+            try:
+                self.chart_widget.lap_numbers_changed.disconnect(self._on_lap_numbers_changed)
+            except (TypeError, RuntimeError):
+                pass
+
+        if hasattr(self.chart_widget, 'drivers_changed'):
+            try:
+                self.chart_widget.drivers_changed.disconnect(self._on_drivers_changed)
+            except (TypeError, RuntimeError):
+                pass
+
+    @staticmethod
+    def _is_widget_valid(widget) -> bool:
+        if widget is None:
+            return False
+        try:
+            return not sip.isdeleted(widget)
+        except Exception:
+            return True
     
     def _setup_initial_parameters(self):
         """設置初始參數"""
@@ -577,6 +627,17 @@ class UniversalAnalysisMDI(IAnalysisModule):
         main_splitter = QSplitter(Qt.Vertical)
         
         # 圖表區域
+        if self.chart_widget and not self._is_widget_valid(self.chart_widget):
+            self._debug("🛠️  檢測到已失效的圖表組件，重新建立")
+            self._disconnect_chart_widget_signals()
+            try:
+                self.chart_widget = self.create_chart_widget()
+            except Exception as create_exc:
+                self._error(f"重新建立圖表組件失敗: {create_exc}")
+                self.chart_widget = None
+            else:
+                self._connect_chart_widget_signals()
+
         if self.chart_widget:
             chart_frame = QFrame()
             chart_frame.setFrameStyle(QFrame.StyledPanel)
@@ -624,12 +685,20 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def _load_data_with_current_parameters(self):
         """使用當前參數載入數據"""
+        if getattr(self, '_cleanup_performed', False):
+            self._debug("🛑 模組已釋放，略過數據載入")
+            return
+
         print(f"🚨 [BASE_CRITICAL] _load_data_with_current_parameters 被調用")
         print(f"🚨 [BASE_CRITICAL] self.data_manager = {self.data_manager}")
         print(f"🚨 [BASE_CRITICAL] type(self.data_manager) = {type(self.data_manager)}")
         
         if not self.data_manager:
             print(f"🚨 [BASE_CRITICAL] data_manager 為 None，返回")
+            return
+
+        if not self._is_widget_valid(getattr(self, 'main_widget', None)):
+            self._debug("🛑 主要視窗已被釋放，取消數據載入")
             return
         
         try:
@@ -684,6 +753,14 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def _update_chart(self, data: dict):
         """更新圖表數據"""
         try:
+            if getattr(self, '_cleanup_performed', False):
+                self._debug("🛑 已清理的模組忽略圖表更新")
+                return
+
+            if not self._is_widget_valid(self.chart_widget):
+                self._debug("🛑 圖表組件已被釋放，忽略更新")
+                return
+
             self._debug("📊 更新圖表數據")
             self._debug(f"🔍 圖表組件詳細信息:")
             self._debug(f"   - 組件類型: {type(self.chart_widget)}")
@@ -719,18 +796,24 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def _handle_error(self, error_message: str):
         """處理錯誤"""
+        if getattr(self, '_cleanup_performed', False):
+            return
         self._error(f"數據載入錯誤: {error_message}")
         self.module_error.emit(error_message)
         self._update_status(f"錯誤: {error_message}")
     
     def _update_progress(self, progress: int):
         """更新進度（狀態列已隱藏）"""
+        if getattr(self, '_cleanup_performed', False):
+            return
         # 狀態列已隱藏，不顯示進度訊息
         if self.status_bar:
             self.status_bar.showMessage(f"載入中... {progress}%")
     
     def _update_status(self, message: str):
         """更新狀態（狀態列已隱藏）"""
+        if getattr(self, '_cleanup_performed', False):
+            return
         # 狀態列已隱藏，不顯示狀態訊息
         if self.status_bar:
             self.status_bar.showMessage(message)
@@ -738,6 +821,8 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def _on_lap_numbers_changed(self, lap1: int, lap2: int):
         """處理圈數變更"""
         if self.config.requires_lap_params:
+            if getattr(self, '_cleanup_performed', False):
+                return
             self.lap1 = lap1
             self.lap2 = lap2
             self._debug(f"圈數更新: {lap1} vs {lap2}")
@@ -746,6 +831,8 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def _on_drivers_changed(self, driver1: str, driver2: str):
         """處理車手變更"""
         if self.config.requires_driver_params:
+            if getattr(self, '_cleanup_performed', False):
+                return
             self.driver1 = driver1
             self.driver2 = driver2
             self._debug(f"車手更新: {driver1} vs {driver2}")
@@ -782,6 +869,15 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def cleanup(self):
         """清理資源 - 參照速度分析模組增強版"""
         try:
+            if getattr(self, '_cleanup_performed', False):
+                return
+
+            self._cleanup_performed = True
+            self._destroyed = True
+
+            self._disconnect_data_manager_signals()
+            self._disconnect_chart_widget_signals()
+
             # 從分析模組管理器解除註冊
             if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
                 try:
@@ -803,6 +899,7 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 # 清理數據管理器
                 if hasattr(self.data_manager, 'cleanup'):
                     self.data_manager.cleanup()
+                self.data_manager = None
                     
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 # 🔧 修復：從連動管理器中取消註冊圖表組件
@@ -818,10 +915,14 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 if hasattr(self.chart_widget, 'cleanup'):
                     self.chart_widget.cleanup()
                 self.chart_widget.deleteLater()
+                self.chart_widget = None
                 
             if hasattr(self, 'main_widget') and self.main_widget:
                 # 清理主要組件
                 self.main_widget.deleteLater()
+                self.main_widget = None
+
+            self.parent_window = None
                 
             self._debug("✅ 資源清理完成")
             

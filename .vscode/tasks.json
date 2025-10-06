@@ -221,6 +221,33 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": []
+        },
+        {
+            "label": "🌐 啟動 Cloudflare Tunnel",
+            "type": "shell",
+            "command": "${workspaceFolder}\\cloudflared\\cloudflared.exe",
+            "args": [
+                "--config",
+                "${workspaceFolder}\\cloudflared\\config.yml",
+                "tunnel",
+                "run",
+                "myfastapi"
+            ],
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated",
+                "showReuseMessage": false,
+                "clear": true,
+                "close": false
+            },
+            "options": {
+                "cwd": "${workspaceFolder}\\cloudflared"
+            },
+            "problemMatcher": [],
+            "isBackground": true
         }
     ]
 }

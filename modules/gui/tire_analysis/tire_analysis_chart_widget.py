@@ -22,6 +22,7 @@ Version: 1.0.0
 
 import sys
 import math
+import logging
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton
 from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint
@@ -29,6 +30,8 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics, QMo
 
 # 導入翻譯函數
 from core.gui_i18n import tr
+# 導入集中式 logger
+from core.logger import get_logger
 
 
 class TireChartTheme:
@@ -72,6 +75,9 @@ class TireAnalysisChartWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # 使用集中式 logger (符合 f1.* 命名空間)
+        self._logger = get_logger("tire_chart", component="gui")
+        
         # 數據存儲
         self.stint_data = []
         self.driver_data = {}
@@ -98,7 +104,7 @@ class TireAnalysisChartWidget(QWidget):
         # 設置最小尺寸 - 與降雨分析一致
         self.setMinimumSize(200, 100)
         
-        print("[TIRE_CHART] 輪胎策略圖表組件初始化完成")
+        self._logger.debug("[TIRE_CHART] 輪胎策略圖表組件初始化完成")
     
     def update_data(self, data: Dict[str, Any], selected_driver: str = None):
         """更新圖表數據"""
@@ -106,10 +112,10 @@ class TireAnalysisChartWidget(QWidget):
             # 兼容 processed_data 格式：若上層傳入的是包含 charts_data 的包裝結構
             if isinstance(data, dict) and 'charts_data' in data and 'all_drivers_tire_strategy' not in data:
                 data = data.get('charts_data', {})
-                print("[TIRE_CHART] 解包 charts_data -> 原始 JSON")
-            
-            print(f"[TIRE_CHART] 收到數據更新: {type(data)}")
-            print(f"[TIRE_CHART] 選中車手: {selected_driver}")
+                self._logger.debug("[TIRE_CHART] 解包 charts_data -> 原始 JSON")
+
+            self._logger.debug("[TIRE_CHART] 收到數據更新: %s", type(data))
+            self._logger.debug("[TIRE_CHART] 選中車手: %s", selected_driver)
             
             self.chart_data = data
             self.stint_data = []
@@ -128,7 +134,11 @@ class TireAnalysisChartWidget(QWidget):
                            data.get('tire_analysis', {}))
             drivers_analyzed = data.get('drivers_analyzed', list(tire_analysis.keys()))
             
-            print(f"[TIRE_CHART] 可用車手: {drivers_analyzed} (共 {len(drivers_analyzed)} 位)")
+            self._logger.debug(
+                "[TIRE_CHART] 可用車手: %s (共 %s 位)",
+                drivers_analyzed,
+                len(drivers_analyzed),
+            )
             
             # 處理所有車手的數據，不只是單一車手
             self.all_drivers_stint_data = {}
@@ -153,15 +163,21 @@ class TireAnalysisChartWidget(QWidget):
                         stint['driver'] = driver
                     
                     self.all_drivers_stint_data[driver] = driver_stints
-                    print(f"  {driver}: {len(driver_stints)} 個 Stint")
-                    
+                    self._logger.debug("  %s: %s 個 Stint", driver, len(driver_stints))
+
                     # 調試：檢查數據來源和品質
                     if len(driver_stints) > 0:
                         first_stint = driver_stints[0]
                         compound = first_stint.get('compound') or first_stint.get('tire_compound')
-                        print(f"    [{driver}] 第一個Stint配方: {compound}, 圈數: {first_stint.get('start_lap', '?')}-{first_stint.get('end_lap', '?')}")
+                        self._logger.debug(
+                            "    [%s] 第一個Stint配方: %s, 圈數: %s-%s",
+                            driver,
+                            compound,
+                            first_stint.get('start_lap', '?'),
+                            first_stint.get('end_lap', '?'),
+                        )
                     else:
-                        print(f"    ⚠️ [{driver}] 沒有有效的Stint數據")
+                        self._logger.warning("    [%s] 沒有有效的Stint數據", driver)
             
             # 為了向後相容性，設定第一個車手的數據為主要顯示數據
             if selected_driver and selected_driver in self.all_drivers_stint_data:
@@ -173,12 +189,15 @@ class TireAnalysisChartWidget(QWidget):
                 self.stint_data = self.all_drivers_stint_data.get(selected_driver, [])
                 self.chart_data['current_driver'] = selected_driver
             
-            print(f"[TIRE_CHART] 主要顯示車手: {selected_driver}")
-            print(f"[TIRE_CHART] 總共載入 {len(self.all_drivers_stint_data)} 位車手的輪胎策略數據")
+            self._logger.debug("[TIRE_CHART] 主要顯示車手: %s", selected_driver)
+            self._logger.debug(
+                "[TIRE_CHART] 總共載入 %s 位車手的輪胎策略數據",
+                len(self.all_drivers_stint_data),
+            )
             
             # 如果沒有 Stint 數據，使用示例數據
             if not self.stint_data:
-                print("[TIRE_CHART] 沒有找到 Stint 數據，使用示例數據")
+                self._logger.warning("[TIRE_CHART] 沒有找到 Stint 數據，使用示例數據")
                 self.stint_data = [
                     {
                         'stint_number': 1,
@@ -221,15 +240,16 @@ class TireAnalysisChartWidget(QWidget):
                 self.min_lap = min(stint['start_lap'] for stint in self.stint_data)
                 self.max_lap = max(stint['end_lap'] for stint in self.stint_data)
             
-            print(f"[TIRE_CHART] 圈數範圍: {self.min_lap}-{self.max_lap}")
-            print(f"[TIRE_CHART] 顯示 {len(self.all_drivers_stint_data) if hasattr(self, 'all_drivers_stint_data') else 0} 位車手的輪胎策略")
+            self._logger.debug("[TIRE_CHART] 圈數範圍: %s-%s", self.min_lap, self.max_lap)
+            self._logger.debug(
+                "[TIRE_CHART] 顯示 %s 位車手的輪胎策略",
+                len(self.all_drivers_stint_data) if hasattr(self, 'all_drivers_stint_data') else 0,
+            )
             
             self.update()
             
-        except Exception as e:
-            print(f"[TIRE_CHART] 數據更新錯誤: {e}")
-            import traceback
-            traceback.print_exc()
+        except Exception:  # noqa: BLE001
+            self._logger.exception("[TIRE_CHART] 數據更新錯誤")
     
     def paintEvent(self, event):
         """繪製圖表"""
@@ -339,13 +359,23 @@ class TireAnalysisChartWidget(QWidget):
                 
                 # 數據驗證：修正明顯錯誤的 end_lap
                 if end_lap <= start_lap:
-                    print(f"[TIRE_CHART] 檢測到錯誤 end_lap: driver={driver}, start={start_lap}, end={stint['end_lap']}")
+                    self._logger.warning(
+                        "[TIRE_CHART] 檢測到錯誤 end_lap: driver=%s, start=%s, end=%s",
+                        driver,
+                        start_lap,
+                        stint['end_lap'],
+                    )
                     
                     if 'length' in stint and stint['length'] > 0:
                         # 使用 length 字段重新計算 end_lap
                         length = stint.get('length', 1)
                         end_lap = start_lap + length - 1
-                        print(f"[TIRE_CHART] 使用 length 修正: driver={driver}, length={length}, 新end={end_lap}")
+                        self._logger.debug(
+                            "[TIRE_CHART] 使用 length 修正: driver=%s, length=%s, 新end=%s",
+                            driver,
+                            length,
+                            end_lap,
+                        )
                     else:
                         # 嘗試根據車手在該配方上的總圈數估算
                         compound = (stint.get('compound') or 
@@ -358,24 +388,29 @@ class TireAnalysisChartWidget(QWidget):
                             if compound in tire_perf:
                                 laps_used = tire_perf[compound].get('laps_used', 15)
                                 end_lap = start_lap + laps_used - 1
-                                print(f"[TIRE_CHART] 使用 tire_performance 修正: driver={driver}, compound={compound}, laps_used={laps_used}, 新end={end_lap}")
+                                self._logger.debug("[TIRE_CHART] 使用 tire_performance 修正: driver=%s, compound=%s, laps_used=%s, 新end=%s", driver, compound, laps_used, end_lap)
                             else:
                                 # 最後的備用方案：估算合理圈數
                                 end_lap = start_lap + 15
-                                print(f"[TIRE_CHART] 使用默認估算: driver={driver}, 新end={end_lap}")
+                                self._logger.debug("[TIRE_CHART] 使用默認估算: driver=%s, 新end=%s", driver, end_lap)
                         else:
                             end_lap = start_lap + 15
-                            print(f"[TIRE_CHART] 使用默認估算: driver={driver}, 新end={end_lap}")
+                            self._logger.debug("[TIRE_CHART] 使用默認估算: driver=%s, 新end=%s", driver, end_lap)
                     
                     # 確保修正後的 end_lap 不會超過比賽總圈數（通常是53圈）
                     if end_lap > 60:
                         end_lap = 53
-                        print(f"[TIRE_CHART] 限制最大圈數: driver={driver}, 最終end={end_lap}")
+                        self._logger.debug("[TIRE_CHART] 限制最大圈數: driver=%s, 最終end=%s", driver, end_lap)
                     
                     # 如果修正後仍然無效，強制設置一個最小值
-                    if end_lap <= start_lap:
-                        end_lap = start_lap + 5  # 至少5圈
-                        print(f"[TIRE_CHART] 強制最小值: driver={driver}, 最終end={end_lap}")
+                    if end_lap < start_lap:
+                        self._logger.debug(
+                            "[TIRE_CHART] 修正異常stint範圍: driver=%s, start=%s, end=%s -> end調整為單圈", 
+                            driver,
+                            start_lap,
+                            end_lap,
+                        )
+                        end_lap = start_lap
                 
                 # 支援多種配方字段格式
                 compound = (stint.get('compound') or 
@@ -459,10 +494,15 @@ class TireAnalysisChartWidget(QWidget):
                 if driver_times:
                     fastest_driver = min(driver_times, key=lambda x: x[1])  # 找最快時間
                     fastest_per_compound[compound] = fastest_driver[0]  # 只保存車手名
-                    print(f"[TIRE_CHART] {compound} 最快車手: {fastest_driver[0]} ({fastest_driver[1]:.3f}s)")
+                    self._logger.debug(
+                        "[TIRE_CHART] %s 最快車手: %s (%.3fs)",
+                        compound,
+                        fastest_driver[0],
+                        fastest_driver[1],
+                    )
             
-        except Exception as e:
-            print(f"[TIRE_CHART] 計算最快車手失敗: {e}")
+        except Exception:  # noqa: BLE001
+            self._logger.exception("[TIRE_CHART] 計算最快車手失敗")
         
         return fastest_per_compound
     
@@ -481,8 +521,12 @@ class TireAnalysisChartWidget(QWidget):
                     return tire_perf[compound]['fastest_lap_time']
             
             return None
-        except Exception as e:
-            print(f"[TIRE_CHART] 獲取最佳圈速失敗: driver={driver}, compound={compound}, error={e}")
+        except Exception:  # noqa: BLE001
+            self._logger.exception(
+                "[TIRE_CHART] 獲取最佳圈速失敗: driver=%s, compound=%s",
+                driver,
+                compound,
+            )
             return None
     
     def _format_lap_time(self, lap_time_seconds: float) -> str:
@@ -497,8 +541,11 @@ class TireAnalysisChartWidget(QWidget):
             
             # 格式化為 M:SS.00
             return f"{minutes}:{seconds:05.2f}"
-        except Exception as e:
-            print(f"[TIRE_CHART] 格式化圈速失敗: {lap_time_seconds}, error={e}")
+        except Exception:  # noqa: BLE001
+            self._logger.exception(
+                "[TIRE_CHART] 格式化圈速失敗: %s",
+                lap_time_seconds,
+            )
             return ""
 
     def _draw_legend(self, painter: QPainter):
@@ -534,7 +581,10 @@ class TireAnalysisChartWidget(QWidget):
             clicked_stint = self._get_stint_at_position(event.pos())
             if clicked_stint:
                 self.stint_selected.emit(clicked_stint['stint_number'], clicked_stint)
-                print(f"[TIRE_CHART] 選中 Stint {clicked_stint['stint_number']}")
+                self._logger.debug(
+                    "[TIRE_CHART] 選中 Stint %s",
+                    clicked_stint['stint_number'],
+                )
     
     def _get_stint_at_position(self, pos: QPoint) -> Optional[Dict]:
         """獲取指定位置的 Stint 數據"""
@@ -608,8 +658,10 @@ if __name__ == "__main__":
     }
     
     # 連接測試信號
+    demo_logger = get_logger("tire_chart.demo", component="gui")
+
     def on_stint_selected(stint_num, stint_data):
-        print(f"選中 Stint {stint_num}: {stint_data}")
+        demo_logger.debug("選中 Stint %s: %s", stint_num, stint_data)
     
     widget.stint_selected.connect(on_stint_selected)
     
@@ -617,5 +669,5 @@ if __name__ == "__main__":
     widget.update_data(test_data)
     widget.show()
     
-    print("輪胎策略圖表組件測試啟動")
+    demo_logger.info("輪胎策略圖表組件測試啟動")
     sys.exit(app.exec_())

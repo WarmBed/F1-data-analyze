@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import pandas as pd
@@ -381,7 +381,7 @@ class AllDriversStraightLineSpeedAnalysis:
             "year": self.year,
             "race": self.race,
             "session": self.session,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "drivers_total": total_drivers,
         }
 

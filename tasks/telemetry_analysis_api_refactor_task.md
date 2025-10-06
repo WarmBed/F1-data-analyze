@@ -23,6 +23,6 @@
 - （選擇）模擬 API 失敗並確認環境變數 `F1T_ALLOW_TELEMETRY_JSON_FALLBACK=1` 時可正確退回 CLI/JSON。
 
 ## 備註
-- API 基底網址優先取自環境變數 `F1_API_BASE_URL`，其次讀取 `config/api_config.json`，預設為 `http://127.0.0.1:8000`。
+- API 基底網址優先取自環境變數 `F1_API_BASE_URL`，其次讀取 `config/api_config.json`，預設為 `https://api.f1telemetrystationpro.org`。
 - 本地回退策略可透過環境變數 `F1T_ALLOW_TELEMETRY_JSON_FALLBACK` 或 `set_local_fallback_allowed()` 手動調整。
 - CLI 後備仍依賴既有的 Function 12 實作，產生的 JSON 會自動標記為 `data_source = "local-json"` 並附上回退原因。

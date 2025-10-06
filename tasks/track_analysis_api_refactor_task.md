@@ -26,6 +26,6 @@
 
 ## 備註
 - 本地後備策略透過 `F1T_ALLOW_TRACK_JSON_FALLBACK` 或 GUI 呼叫 `set_local_fallback_allowed()` 控制；預設停用。
-- API 基底網址優先讀取 `F1_API_BASE_URL`，次選 `config/api_config.json` 的 `api_base_url`，最後以 `http://127.0.0.1:8000` 作為預設。
+- API 基底網址優先讀取 `F1_API_BASE_URL`，次選 `config/api_config.json` 的 `api_base_url`，最後以 `https://api.f1telemetrystationpro.org` 作為預設。
 - 新增 metadata 標記 `metadata-inferred-from-track-filename` 以記錄快取服務的參數推斷來源。
 - 2025-10-02：`TrackAnalysisDataManager` 已改為 API 優先流程，新增 `TrackAnalysisApiWorker` 與回退策略設定，待後續實測與 UI 校正。

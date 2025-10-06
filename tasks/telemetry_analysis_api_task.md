@@ -148,7 +148,7 @@
 ### API 配置
 ```python
 # TelemetryDataManager.__init__
-self._api_base_url = self._determine_api_base_url()  # "http://127.0.0.1:8000"
+self._api_base_url = self._determine_api_base_url()  # "https://api.f1telemetrystationpro.org"
 self._api_timeout = 75.0
 ```
 

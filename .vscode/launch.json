@@ -11,9 +11,9 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}",
         "PYTHONIOENCODING": "utf-8",
-        "F1_API_HOST": "127.0.0.1",
-        "F1_API_PORT": "8000",
-        "F1_API_BASE_URL": "http://127.0.0.1:8000"
+    "F1_API_HOST": "127.0.0.1",
+    "F1_API_PORT": "8000",
+    "F1_API_BASE_URL": "https://api.f1telemetrystationpro.org"
       },
       "justMyCode": false,
       "stopOnEntry": false
@@ -72,16 +72,67 @@
       ],
       "justMyCode": false,
       "stopOnEntry": false
+    },
+    {
+      "name": "🌐 Cloudflare Tunnel",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\cloudflared\\cloudflared.exe --config ${workspaceFolder}\\cloudflared\\config.yml tunnel run myfastapi",
+      "cwd": "${workspaceFolder}\\cloudflared"
     }
   ],
   "compounds": [
     {
-      "name": "Run GUI + API",
+      "name": "🎯 只啟動 GUI",
+      "configurations": [
+        "Python: GUI"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 開發模式",
+        "order": 1
+      }
+    },
+    {
+      "name": "🚀 GUI + API (本地開發)",
       "configurations": [
         "Python: API server",
         "Python: GUI"
       ],
-      "stopAll": true
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 開發模式",
+        "order": 2
+      }
+    },
+    {
+      "name": "🌐 API + Cloudflare Tunnel (對外開放)",
+      "configurations": [
+        "Python: API server",
+        "🌐 Cloudflare Tunnel"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 生產模式",
+        "order": 1
+      }
+    },
+    {
+      "name": "🌍 完整系統 (API + Tunnel + GUI)",
+      "configurations": [
+        "Python: API server",
+        "🌐 Cloudflare Tunnel",
+        "Python: GUI"
+      ],
+      "stopAll": true,
+      "presentation": {
+        "hidden": false,
+        "group": "F1T - 生產模式",
+        "order": 2
+      }
     }
   ]
 }

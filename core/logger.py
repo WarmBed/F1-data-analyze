@@ -88,6 +88,7 @@ def setup_logging(
     config: Optional[Dict[str, Any]] = None,
     log_dir: Optional[PathLike] = None,
     patch_print: bool = True,
+    console_level: Optional[Union[str, int]] = None,
     force: bool = False,
 ) -> None:
     """Configure the global logging behaviour.
@@ -102,6 +103,8 @@ def setup_logging(
             ``./logs``.
         patch_print: When ``True`` (default) replace :func:`print` with an
             adapter that routes messages through the logging system.
+        console_level: Optional override for the console handler log level.
+            When ``None`` the handler inherits ``level``.
         force: When ``True`` re-apply configuration even if logging is already
             initialised.
     """
@@ -115,8 +118,15 @@ def setup_logging(
         level_normalised = _normalise_level(level)
         target_dir = _resolve_log_dir(log_dir)
 
+        console_level_normalised = _normalise_level(console_level) if console_level is not None else None
+
         if config is None:
-            config_dict = _build_default_config(component_normalised, level_normalised, target_dir)
+            config_dict = _build_default_config(
+                component_normalised,
+                level_normalised,
+                target_dir,
+                console_level_normalised,
+            )
         else:
             config_dict = config
 
@@ -152,10 +162,22 @@ def restore_print() -> None:
         _PRINT_PATCHED = False
 
 
-def _build_default_config(component: str, level: str, log_dir: Path) -> Dict[str, Any]:
+def _build_default_config(
+    component: str,
+    level: str,
+    log_dir: Path,
+    console_level: Optional[str] = None,
+) -> Dict[str, Any]:
     log_dir.mkdir(parents=True, exist_ok=True)
-    base_filename = log_dir / f"f1_{component}.log"
-    error_filename = log_dir / f"f1_{component}_error.log"
+    
+    # 使用日期式檔名：f1_gui_2025-10-06.log
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+    base_filename = log_dir / f"f1_{component}_{today}.log"
+    error_filename = log_dir / f"f1_{component}_error_{today}.log"
+
+    # 🚫 停用 console handler - 不再輸出到終端機
+    console_level_value = console_level or level
 
     return {
         "version": 1,
@@ -168,45 +190,48 @@ def _build_default_config(component: str, level: str, log_dir: Path) -> Dict[str
             },
         },
         "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "level": level,
-                "formatter": "console",
-                "stream": "ext://sys.stdout",
-            },
+            # ⚠️ Console handler 已停用 - 不輸出到終端機
+            # "console": {
+            #     "class": "logging.StreamHandler",
+            #     "level": console_level_value,
+            #     "formatter": "console",
+            #     "stream": "ext://sys.stdout",
+            # },
             "file": {
-                "class": "logging.handlers.RotatingFileHandler",
+                "class": "logging.handlers.TimedRotatingFileHandler",
                 "level": level,
                 "formatter": "detailed",
                 "filename": str(base_filename),
-                "maxBytes": 5 * 1024 * 1024,
-                "backupCount": 5,
+                "when": "midnight",  # 每天午夜自動切換新檔案
+                "interval": 1,
+                "backupCount": 30,  # 保留 30 天的日誌
                 "encoding": "utf-8",
             },
             "error_file": {
-                "class": "logging.handlers.RotatingFileHandler",
+                "class": "logging.handlers.TimedRotatingFileHandler",
                 "level": "WARNING",
                 "formatter": "detailed",
                 "filename": str(error_filename),
-                "maxBytes": 5 * 1024 * 1024,
-                "backupCount": 3,
+                "when": "midnight",
+                "interval": 1,
+                "backupCount": 30,
                 "encoding": "utf-8",
             },
         },
         "loggers": {
             "f1": {
-                "handlers": ["console", "file", "error_file"],
+                "handlers": ["file", "error_file"],  # ❌ 移除 "console"
                 "level": level,
                 "propagate": False,
             },
             "f1.console": {
-                "handlers": ["console", "file", "error_file"],
+                "handlers": ["file", "error_file"],  # ❌ 移除 "console"
                 "level": level,
                 "propagate": False,
             },
         },
         "root": {
-            "handlers": ["console"],
+            "handlers": [],  # ❌ 根 logger 也不輸出到 console
             "level": "WARNING",
         },
     }

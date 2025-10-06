@@ -9,6 +9,7 @@ import copy
 from typing import Dict, Any, List, Optional, Tuple
 
 import requests
+from core.api_base_url import resolve_api_base_url
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 
@@ -42,7 +43,7 @@ class DetailedLapAnalysisApiWorker(QThread):
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip("/")
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip("/")
         self.params = dict(params)
         self.timeout = float(timeout)
 
@@ -314,8 +315,19 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
 
     def _determine_api_base_url(self) -> str:
         """取得 API 基底網址，預設使用本機 FastAPI 服務。"""
-        override = os.getenv("F1T_API_BASE_URL") or os.getenv("F1T_LAPTIME_API_BASE")
-        base_url = (override or "http://127.0.0.1:8000").rstrip("/")
+        preferred: List[tuple[str, str]] = []
+        override = os.getenv("F1T_API_BASE_URL")
+        if override:
+            preferred.append(("環境變數 F1T_API_BASE_URL", override))
+
+        legacy_override = os.getenv("F1T_LAPTIME_API_BASE")
+        if legacy_override:
+            preferred.append(("環境變數 F1T_LAPTIME_API_BASE", legacy_override))
+
+        base_url = resolve_api_base_url(
+            event_logger=self._debug,
+            preferred_urls=preferred or None,
+        )
         self._debug(f"API base URL: {base_url}")
         return base_url
 

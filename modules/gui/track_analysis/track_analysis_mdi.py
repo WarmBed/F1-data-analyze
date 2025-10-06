@@ -33,6 +33,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數
 try:
@@ -68,7 +69,7 @@ class TrackAnalysisApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 30.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 
@@ -263,21 +264,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def _determine_api_base_url(self) -> str:
         """Resolve API base URL from environment/config."""
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path('config/api_config.json')
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding='utf-8'))
-                api_url = config_data.get('api_base_url')
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
@@ -728,6 +715,10 @@ class TrackAnalysisControlWidget(QWidget):
             self.show_fixed_cursor_check.isChecked(),
         )
 
+    def set_linkage_controls_enabled(self, enabled: bool) -> None:
+        self.show_linkage_cursor_check.setEnabled(enabled)
+        self.show_fixed_cursor_check.setEnabled(enabled)
+
 
 class TrackAnalysisUniversal(UniversalAnalysisMDI):
     """
@@ -737,7 +728,15 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     提供賽道地圖可視化和位置數據分析功能。
     """
     
-    def __init__(self, main_window=None):
+    def __init__(
+        self,
+        year: Optional[int] = None,
+        race: Optional[str] = None,
+        session: Optional[str] = None,
+        main_window=None,
+        parent=None,
+        **kwargs,
+    ):
         # 先註冊 track_analysis 模組類型（如果尚未註冊）
         analysis_type = "track_analysis"
         if analysis_type not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
@@ -753,20 +752,34 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             UniversalAnalysisMDI.register_mdi_module_type(analysis_type, config)
         
         # 調用父類初始化
-        super().__init__(analysis_type, main_window)
+        mdi_parent = main_window if main_window is not None else parent
+        super().__init__(analysis_type, mdi_parent)
 
         # Marker visibility state shared between control panel與賽道地圖
         self._dynamic_marker_visible: bool = True
         self._fixed_marker_visible: bool = True
-        
+        self._linkage_enabled: bool = True
+        self._saved_marker_visibility: Tuple[bool, bool] = (True, True)
+
         # 檢查組件是否可用
         if TrackUniversalDataLoader is None or TrackMapWidget is None:
             print("[ERROR] TrackAnalysisUniversal: 缺少必要組件")
-        
+
         # 初始化模組（創建數據管理器、圖表組件等）
         self.initialize_module()
-        
+
         print(f"[TRACK_ANALYSIS_MDI] 初始化完成")
+
+        # 儲存初始參數以供後續使用，避免即時載入資料
+        if year is not None:
+            self.current_year = str(year)
+        if race is not None:
+            self.current_race = race
+        if session is not None:
+            self.current_session = session
+
+        if kwargs:
+            self._debug(f"忽略未使用的初始化參數: {kwargs}")
     
     def create_data_manager(self):
         """創建數據管理器 - UniversalAnalysisMDI 需要此方法"""
@@ -780,11 +793,13 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             placeholder.setAlignment(Qt.AlignCenter)
             return placeholder
         
-        track_map = TrackMapWidget(parent=self.main_widget)
+        track_map = TrackMapWidget()
         if hasattr(track_map, "set_dynamic_marker_visibility"):
             track_map.set_dynamic_marker_visibility(getattr(self, "_dynamic_marker_visible", True))
         if hasattr(track_map, "set_fixed_marker_visibility"):
             track_map.set_fixed_marker_visibility(getattr(self, "_fixed_marker_visible", True))
+        if hasattr(track_map, "set_linkage_enabled"):
+            track_map.set_linkage_enabled(getattr(self, "_linkage_enabled", True))
         print("[TRACK_ANALYSIS_MDI] 創建 TrackMapWidget")
         return track_map
     
@@ -804,6 +819,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             getattr(self, "_dynamic_marker_visible", True),
             getattr(self, "_fixed_marker_visible", True),
         )
+        control_panel.set_linkage_controls_enabled(getattr(self, "_linkage_enabled", True))
         self._on_dynamic_marker_visibility_changed(getattr(self, "_dynamic_marker_visible", True))
         self._on_fixed_marker_visibility_changed(getattr(self, "_fixed_marker_visible", True))
         
@@ -963,6 +979,56 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         self._fixed_marker_visible = bool(visible)
         if self.chart_widget and hasattr(self.chart_widget, 'set_fixed_marker_visibility'):
             self.chart_widget.set_fixed_marker_visibility(self._fixed_marker_visible)
+
+    # === 連動控制 ===
+
+    def set_linkage_enabled(self, enabled: bool) -> None:
+        new_state = bool(enabled)
+        if getattr(self, "_linkage_enabled", True) == new_state:
+            return
+
+        if not new_state:
+            self._saved_marker_visibility = (
+                getattr(self, "_dynamic_marker_visible", True),
+                getattr(self, "_fixed_marker_visible", True),
+            )
+            self._dynamic_marker_visible = False
+            self._fixed_marker_visible = False
+        else:
+            saved_dynamic, saved_fixed = getattr(self, "_saved_marker_visibility", (True, True))
+            self._dynamic_marker_visible = saved_dynamic
+            self._fixed_marker_visible = saved_fixed
+
+        self._linkage_enabled = new_state
+
+        if self.chart_widget and hasattr(self.chart_widget, "set_linkage_enabled"):
+            self.chart_widget.set_linkage_enabled(new_state)
+            if hasattr(self.chart_widget, "set_dynamic_marker_visibility"):
+                self.chart_widget.set_dynamic_marker_visibility(self._dynamic_marker_visible)
+            if hasattr(self.chart_widget, "set_fixed_marker_visibility"):
+                self.chart_widget.set_fixed_marker_visibility(self._fixed_marker_visible)
+
+        if hasattr(self, 'control_panel') and self.control_panel:
+            self.control_panel.set_linkage_controls_enabled(new_state)
+            self.control_panel.set_marker_visibility(
+                self._dynamic_marker_visible,
+                self._fixed_marker_visible,
+            )
+
+        # 重新整理狀態
+        if not new_state:
+            # 確保 UI 立即清除標記
+            if self.chart_widget and hasattr(self.chart_widget, "update"):
+                self.chart_widget.update()
+
+    def is_linkage_enabled(self) -> bool:
+        return getattr(self, "_linkage_enabled", True)
+
+
+class TrackAnalysisModule(TrackAnalysisUniversal):
+    """向後相容的別名，供既有匯入路徑使用"""
+
+    pass
 
 
 # 在模組導入時註冊到模組工廠

@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
+from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
 
@@ -230,22 +231,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         return collapsed.strip("_") or "value"
 
     def _determine_api_base_url(self) -> str:
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = os.path.join("config", "api_config.json")
-        if os.path.exists(config_path):
-            try:
-                with open(config_path, "r", encoding="utf-8") as config_file:
-                    config_data = json.load(config_file)
-                api_url = config_data.get("api_base_url")
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
 
 __all__ = ["StraightLineSpeedDataLoader"]

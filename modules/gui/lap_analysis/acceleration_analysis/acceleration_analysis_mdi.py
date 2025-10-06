@@ -38,6 +38,8 @@ class AccelerationDataManager(QObject):
         self.current_year = None
         self.current_race = None
         self.current_session = None
+        self.current_driver1 = None
+        self.current_driver2 = None
         self.loading = False
         self._is_loading = False
         
@@ -63,6 +65,8 @@ class AccelerationDataManager(QObject):
             self.current_year = str(year)
             self.current_race = race
             self.current_session = session
+            self.current_driver1 = driver1
+            self.current_driver2 = driver2 or driver1
             
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":
@@ -164,56 +168,41 @@ class AccelerationDataManager(QObject):
                             print(f"📁 [acceleration_MDI_DATA] 找到現有遙測檔案: {telemetry_file}")
                             return True
             
-            # 如果沒有找到，通過CLI生成Function 12數據
-            print(f"[acceleration_MDI_DATA] � 未找到遙測數據，通過CLI生成...")
-            return self._generate_telemetry_via_cli()
+            # 如果沒有找到，透過 API 觸發 Function 13 生成
+            print(f"[acceleration_MDI_DATA] 📡 未找到遙測數據，透過 API 觸發生成...")
+            return self._generate_telemetry_via_api()
             
         except Exception as e:
             print(f"❌ [acceleration_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
             return False
     
-    def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據（Function 12）"""
+    def _generate_telemetry_via_api(self) -> bool:
+        """透過 REST API 生成遙測分析數據（Function 13）"""
         try:
-            import subprocess
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            print(f"[acceleration_MDI_DATA] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為acceleration分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
+            from modules.gui.lap_analysis.linkage.telemetry_generation_helper import (
+                ensure_telemetry_analysis_via_api,
             )
-            
-            stdout, stderr = process.communicate(timeout=300)  # 5分鐘超時
-            
-            if process.returncode == 0:
-                print(f"[acceleration_MDI_DATA] ✅ 遙測分析CLI執行成功")
-                time.sleep(2)  # 等待檔案寫入完成
+
+            success, message = ensure_telemetry_analysis_via_api(
+                year=int(self.current_year),
+                race=self.current_race,
+                session=self.current_session,
+                driver1=self.current_driver1 or "VER",
+                driver2=self.current_driver2 or self.current_driver1 or "VER",
+                parent=self,
+                timeout_ms=65000,
+                is_fastest_lap=True,
+            )
+
+            if success:
+                print("[acceleration_MDI_DATA] ✅ 遙測分析已透過 API 生成")
                 return True
-            else:
-                print(f"[acceleration_MDI_DATA] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[acceleration_MDI_DATA] ⏰ 遙測分析CLI執行超時")
+
+            print(f"[acceleration_MDI_DATA] ❌ 遙測分析 API 生成失敗: {message}")
             return False
+
         except Exception as e:
-            print(f"[ERROR] [acceleration_MDI_DATA] _generate_telemetry_via_cli 失敗: {e}")
+            print(f"[ERROR] [acceleration_MDI_DATA] _generate_telemetry_via_api 失敗: {e}")
             return False
     
     def _get_fastest_lap_number(self, driver: str) -> int:
@@ -864,7 +853,11 @@ class accelerationAnalysisModule(IAnalysisModule):
             
             if not telemetry_file:
                 print(f"[acceleration_MDI] 📡 遙測分析數據不存在，開始自動載入...")
-                success = self._check_and_load_telemetry_if_needed()
+                success = False
+                if getattr(self, 'data_manager', None) and hasattr(self.data_manager, '_check_and_load_telemetry_if_needed'):
+                    success = self.data_manager._check_and_load_telemetry_if_needed()
+                else:
+                    print("[acceleration_MDI] ⚠️ 未初始化資料管理器，無法觸發遙測載入")
                 if success:
                     # 重新檢查檔案
                     telemetry_file = self._find_telemetry_analysis_file()
@@ -937,9 +930,14 @@ class accelerationAnalysisModule(IAnalysisModule):
                         main_window.create_telemetry_analysis()
                         return True
             
-            # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            print(f"[acceleration_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
-            return self._check_and_load_telemetry_if_needed()
+            # 方法2: 透過資料管理器觸發 API 生成遙測分析數據
+            data_manager = getattr(self, 'data_manager', None)
+            if data_manager and hasattr(data_manager, '_check_and_load_telemetry_if_needed'):
+                print(f"[acceleration_MDI] � 透過資料管理器觸發遙測 API 生成...")
+                return data_manager._check_and_load_telemetry_if_needed()
+
+            print("[acceleration_MDI] ❌ 找不到資料管理器，無法觸發遙測分析")
+            return False
             
         except Exception as e:
             print(f"[ERROR] [acceleration_MDI] _trigger_telemetry_analysis 失敗: {e}")

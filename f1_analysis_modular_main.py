@@ -16,7 +16,11 @@ import argparse
 from typing import Optional, Union, Dict, Any
 from datetime import datetime
 
+import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
+
 from core.logger import setup_logging, get_logger
+from core.cli_language import resolve_cli_language
+from core.cli_help_catalog import iter_cli_help_lines
 
 setup_logging(component="cli")
 logger = get_logger("main", component="cli")
@@ -169,6 +173,10 @@ class F1AnalysisModularCLI:
         self.args = args  # 保存命令行參數
         self.last_error_message: Optional[str] = None
         self.last_error_details: Optional[Dict[str, Any]] = None
+        preferred_language = getattr(args, "language", None) if args else None
+        if preferred_language and preferred_language.lower() in {"auto", "default"}:
+            preferred_language = None
+        self.preferred_language = resolve_cli_language(preferred_language)
         
         # 初始化F1分析實例
         self._initialize_f1_analysis_instance()

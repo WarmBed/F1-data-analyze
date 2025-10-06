@@ -22,6 +22,6 @@
 - （可選）啟動 API 服務後於 GUI 中切換事故分析模組，驗證 API 載入與回退行為。
 
 ## 備註
-- API 基底網址以 `F1_API_BASE_URL` 環境變數優先，再讀取 `config/api_config.json`，預設為 `http://127.0.0.1:8000`。
+- API 基底網址以 `F1_API_BASE_URL` 環境變數優先，再讀取 `config/api_config.json`，預設為 `https://api.f1telemetrystationpro.org`。
 - 若 API 回傳格式錯誤或成功標記為 False 必須立即回退至本地 JSON/CLI 管線，維持 GUI 可用性。
 - 2025-10-05：調整事故詳細列表 Widget 以支援多種 API/JSON 結構，自動擴充 `all_incidents` 欄位並修正事件資料驗證流程，同步新增 CLI 檔名正規化（含 session 標籤）。

@@ -35,6 +35,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數與全域設定
 from core.gui_i18n import tr
@@ -64,7 +65,7 @@ class LapTimeBoxPlotApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 
@@ -197,21 +198,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
     
     def _determine_api_base_url(self) -> str:
         """Resolve the API base URL from environment variables or configuration."""
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path('config/api_config.json')
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding='utf-8'))
-                api_url = config_data.get('api_base_url')
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
@@ -828,7 +815,14 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     支援所有車手的圈速分佈視覺化和統計分析。
     """
     
-    def __init__(self, parent=None):
+    def __init__(
+        self,
+        year: Optional[int] = None,
+        race: Optional[str] = None,
+        session: Optional[str] = None,
+        parent=None,
+        **kwargs,
+    ):
         print(f"[BOXPLOT_MDI] LapTimeBoxPlotAnalysis 開始初始化...")
         
         # 註冊圈速箱型圖模組類型
@@ -844,7 +838,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                 chart_types=["boxplot"]
             )
             UniversalAnalysisMDI.register_mdi_module_type("laptime_boxplot", boxplot_config)
-            
+
         super().__init__("laptime_boxplot", parent)
         print(f"[BOXPLOT_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
 
@@ -857,11 +851,11 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         if not self.initialize_module():
             print(f"[BOXPLOT_MDI] ❌ 模組組件初始化失敗")
             return
-        
+
         print(f"[BOXPLOT_MDI] ✅ 模組組件初始化完成")
         print(f"[BOXPLOT_MDI] 數據管理器: {self.data_manager}")
         print(f"[BOXPLOT_MDI] 圖表組件: {self.chart_widget}")
-        
+
         # 設置響應式佈局
         self.set_responsive_layout()
 
@@ -872,6 +866,16 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         except Exception as exc:
             print(f"[BOXPLOT_MDI] 無法連接全域設定信號: {exc}")
         self._on_global_boxplot_settings_changed(self.settings_manager.get_boxplot_settings())
+
+        if year is not None:
+            self.current_year = str(year)
+        if race is not None:
+            self.current_race = race
+        if session is not None:
+            self.current_session = session
+
+        if kwargs:
+            self._debug(f"忽略未使用的初始化參數: {kwargs}")
         
     def create_data_manager(self) -> LapTimeBoxPlotDataManager:
         """創建圈速箱型圖數據管理器"""
@@ -1295,3 +1299,9 @@ def register_boxplot_analysis_module():
 
 # 自動註冊
 register_boxplot_analysis_module()
+
+
+class LapBoxPlotAnalysisModule(LapTimeBoxPlotAnalysis):
+    """向後相容的別名，供既有匯入路徑使用"""
+
+    pass

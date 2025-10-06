@@ -1081,59 +1081,49 @@ class SpeedAnalysisModule(IAnalysisModule):
                         main_window.create_telemetry_analysis()
                         return True
             
-            # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            print(f"[SPEED_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
-            return self._generate_telemetry_via_cli()
+            # 方法2: 透過 API 直接生成遙測分析數據（Function 13）
+            print(f"[SPEED_MDI] 🔧 透過 API 生成遙測分析數據（Function 13）...")
+            return self._generate_telemetry_via_api()
             
         except Exception as e:
             print(f"[ERROR] [SPEED_MDI] _trigger_telemetry_analysis 失敗: {e}")
             return False
 
-    def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據（Function 12）"""
+    def _generate_telemetry_via_api(self) -> bool:
+        """透過 REST API 生成遙測分析數據（Function 13）"""
         try:
-            import subprocess
-            import threading
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析（正確的遙測數據來源）
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            print(f"[SPEED_MDI] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為速度分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
+            from modules.gui.lap_analysis.linkage.telemetry_generation_helper import (
+                ensure_telemetry_analysis_via_api,
             )
-            
-            stdout, stderr = process.communicate(timeout=120)  # 2分鐘超時
-            
-            if process.returncode == 0:
-                print(f"[SPEED_MDI] ✅ 遙測分析CLI執行成功")
-                # 等待檔案寫入完成
-                time.sleep(2)
+
+            year = self.current_year or "2025"
+            race = self.current_race or "Japan"
+            session = self.current_session or "R"
+            driver1 = (self.driver1 or "VER").upper()
+            driver2 = (self.driver2 or driver1).upper()
+
+            parent = self.data_manager if hasattr(self, "data_manager") else None
+
+            success, message = ensure_telemetry_analysis_via_api(
+                year=int(year),
+                race=race,
+                session=session,
+                driver1=driver1,
+                driver2=driver2,
+                parent=parent,
+                timeout_ms=65000,
+                is_fastest_lap=True,
+            )
+
+            if success:
+                print("[SPEED_MDI] ✅ 遙測分析已透過 API 生成")
                 return True
-            else:
-                print(f"[SPEED_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[SPEED_MDI] ⏰ 遙測分析CLI執行超時")
-            process.kill()
+
+            print(f"[SPEED_MDI] ❌ 遙測分析 API 生成失敗: {message}")
             return False
+
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _generate_telemetry_via_cli 失敗: {e}")
+            print(f"[ERROR] [SPEED_MDI] _generate_telemetry_via_api 失敗: {e}")
             return False
 
     def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:

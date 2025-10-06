@@ -77,6 +77,68 @@ def report_analysis_results(data, analysis_type="analysis"):
     return True
 
 
+def standardize_race_name(event_name: str) -> str:
+    """統一賽事名稱以匹配 OpenF1 API 搜尋格式"""
+    if not event_name:
+        return "unknown"
+
+    race_name_mapping = {
+        "bahrain grand prix": "bahrain",
+        "bahrain": "bahrain",
+        "saudi arabian grand prix": "saudi arabia",
+        "saudi arabia": "saudi arabia",
+        "australian grand prix": "australia",
+        "australia": "australia",
+        "japanese grand prix": "japan",
+        "japan": "japan",
+        "chinese grand prix": "china",
+        "china": "china",
+        "monaco grand prix": "monaco",
+        "monaco": "monaco",
+        "spanish grand prix": "spain",
+        "spain": "spain",
+        "canadian grand prix": "canada",
+        "canada": "canada",
+        "austrian grand prix": "austria",
+        "austria": "austria",
+        "french grand prix": "france",
+        "france": "france",
+        "hungarian grand prix": "hungary",
+        "hungary": "hungary",
+        "belgian grand prix": "belgium",
+        "belgium": "belgium",
+        "italian grand prix": "italy",
+        "italy": "italy",
+        "singapore grand prix": "singapore",
+        "singapore": "singapore",
+        "russian grand prix": "russia",
+        "russia": "russia",
+        "turkish grand prix": "turkey",
+        "turkey": "turkey",
+        "united states grand prix": "usa",
+        "united states": "usa",
+        "mexican grand prix": "mexico",
+        "mexico": "mexico",
+        "brazilian grand prix": "brazil",
+        "brazil": "brazil",
+        "abu dhabi grand prix": "abu dhabi",
+        "abu dhabi": "abu dhabi",
+    }
+
+    normalized = event_name.strip().lower()
+
+    if normalized in race_name_mapping:
+        return race_name_mapping[normalized]
+
+    if normalized.endswith("grand prix"):
+        base_name = normalized.replace("grand prix", "").strip()
+        if base_name in race_name_mapping:
+            return race_name_mapping[base_name]
+        return base_name
+
+    return normalized
+
+
 def run_team_pitstop_ranking(data_loader, show_detailed_output=True):
     """執行車隊進站時間排行榜分析 - 功能4 (Function 15 標準)
     
@@ -210,8 +272,13 @@ def analyze_team_pitstop_performance(data_loader, session_info):
         openf1_analyzer = F1OpenDataAnalyzer()
         
         # 根據年份和比賽名稱找到對應的 session_key
+        raw_event_name = session_info.get('event_name', 'Unknown')
+        normalized_race_name = standardize_race_name(raw_event_name)
+
+        print(f"[DEBUG] Race name標準化: '{raw_event_name}' -> '{normalized_race_name}'")
+
         race_session = openf1_analyzer.find_race_session_by_name(
-            session_info.get('year'), session_info.get('event_name')
+            session_info.get('year'), normalized_race_name
         )
         
         if not race_session:

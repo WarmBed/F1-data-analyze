@@ -35,6 +35,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
+from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數與全域設定
 from core.gui_i18n import tr
@@ -64,7 +65,7 @@ class LapTimeBoxPlotApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "http://127.0.0.1:8000").rstrip('/')
+        self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 
@@ -197,21 +198,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
     
     def _determine_api_base_url(self) -> str:
         """Resolve the API base URL from environment variables or configuration."""
-        env_url = os.getenv("F1_API_BASE_URL")
-        if env_url:
-            return str(env_url).rstrip('/')
-
-        config_path = Path('config/api_config.json')
-        if config_path.exists():
-            try:
-                config_data = json.loads(config_path.read_text(encoding='utf-8'))
-                api_url = config_data.get('api_base_url')
-                if api_url:
-                    return str(api_url).rstrip('/')
-            except Exception as exc:
-                self._debug(f"讀取 api_config.json 失敗: {exc}")
-
-        return "http://127.0.0.1:8000"
+        return resolve_api_base_url(event_logger=self._debug)
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
