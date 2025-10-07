@@ -18,6 +18,7 @@ import uvicorn
 from fastapi import FastAPI
 
 import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
+from core.logger import setup_logging, get_logger  # 整合統一日誌系統
 
 from api.middleware.cors import RateLimitMiddleware
 from api.middleware.handlers import setup_cors_middleware, setup_custom_middleware
@@ -33,7 +34,14 @@ API_VERSION: Final[str] = "2.0.0"
 
 def create_app() -> FastAPI:
     """Instantiate and configure the FastAPI application."""
-
+    
+    # 🆕 初始化統一的日誌系統 (component="api")
+    setup_logging(
+        component="api",
+        level=os.getenv("F1_LOG_LEVEL", "INFO"),
+        patch_print=False,  # API 不需要 patch print
+    )
+    
     app = FastAPI(
         title=API_TITLE,
         description=API_DESCRIPTION,
@@ -54,7 +62,10 @@ def create_app() -> FastAPI:
 
     @app.on_event("startup")
     async def _on_startup() -> None:  # pragma: no cover - light side effect
-        logging.getLogger("f1_api").info("F1 Analysis API v%s initialised", API_VERSION)
+        logger = get_logger(component="api")
+        logger.info("🚀 F1 Analysis API v%s 已啟動 | 日誌系統: core.logger (統一配置)", API_VERSION)
+        logger.info("📂 日誌檔案: logs/f1_api_YYYY-MM-DD.log")
+        logger.info("📊 API 端點: /docs (Swagger), /redoc (ReDoc)")
 
     return app
 

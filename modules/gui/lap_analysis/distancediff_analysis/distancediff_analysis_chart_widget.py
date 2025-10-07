@@ -16,8 +16,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
 
-# 導入全域信號管理器
+# 導入國際化模組
 from core.gui_i18n import tr
+
+# 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
 except ImportError:
@@ -123,8 +125,33 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
     
     def set_distancediff_data(self, distance: List[float], driver1_distancediff: List[float], 
                      driver2_distancediff: List[float], driver1_name: str = "Driver 1", 
-                     driver2_name: str = "Driver 2", sectors: List[Dict] = None):
-        """設置distancediff數據"""
+                     driver2_name: str = "Driver 2", sectors: List[Dict] = None,
+                     lap1: int = None, lap2: int = None):
+        """設置distancediff數據
+        
+        Args:
+            distance: 距離數據
+            driver1_distancediff: 累積距離差數據
+            driver2_distancediff: (unused for single-curve mode)
+            driver1_name: 距離差標籤名稱
+            driver2_name: (unused for single-curve mode)
+            sectors: 賽道區段信息
+            lap1: 車手1的圈數（用於雙圈比較模式）
+            lap2: 車手2的圈數（用於雙圈比較模式）
+        """
+        # 🆕 雙圈比較模式判斷（對於距離差，標籤會顯示 "VER 第10圈 vs 第50圈"）
+        if lap1 is not None and lap2 is not None and lap1 != lap2:
+            # 提取原始車手名稱（如 "VER vs LEC" → "VER" or單車手）
+            if " vs " in driver1_name:
+                driver_codes = driver1_name.split(" vs ")
+                if len(driver_codes) == 2 and driver_codes[0] == driver_codes[1]:
+                    # 同車手雙圈比較
+                    original_driver = driver_codes[0]
+                    # ✅ 使用 tr() 進行國際化 - vs 格式（單行標籤）
+                    lap_vs_format = tr('lap_vs_lap_format', '{driver} 第{lap1}圈 vs 第{lap2}圈')
+                    driver1_name = lap_vs_format.format(driver=original_driver, lap1=lap1, lap2=lap2)
+                    print(f"[DISTANCEDIFF_CHART] 🔄 雙圈比較模式: {driver1_name}")
+        
         self.distance_data = distance
         self.driver1_distancediff = driver1_distancediff
         self.driver2_distancediff = driver2_distancediff
@@ -519,16 +546,65 @@ class distancediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             text_y = label_y + 15
             painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
-            # 顯示車手distancediff資訊
+            # 顯示 distancediff 資訊（僅顯示數值，不顯示車手名稱）
             for i, (driver_name, distancediff, color) in enumerate(drivers_to_show):
                 painter.setPen(QPen(color, 1))
-                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{driver_name}: {distancediff:.1f} m")
+                # ✅ 僅顯示數值
+                painter.drawText(label_x + 5, text_y + 15 + (i * 15), f"{tr('distance_diff_label', '距離差')}: {distancediff:.1f} m")
     
     def clear_fixed_line(self):
         """清除固定線條"""
         self.show_fixed_line = False
         self.fixed_distance_value = None
         self.update()
+    
+    def _draw_linkage_label(self, painter, chart_rect, x_pos, distance_data, 
+                          driver1_name, driver2_name, driver1_data, driver2_data, data_label):
+        """
+        覆寫連動標籤繪製方法 - DistanceDiff 專用
+        僅顯示數值，不顯示車手名稱和圈數
+        """
+        from PyQt5.QtCore import Qt
+        from PyQt5.QtGui import QColor, QFont, QBrush, QPen
+        
+        label_width = 160
+        label_height = 45  # 減少高度（只有距離和數值兩行）
+        label_x = x_pos + 10
+        
+        # 使用同步的Y軸位置計算標籤位置
+        label_y = chart_rect.bottom() - int(self.linkage_y_relative * chart_rect.height()) - label_height // 2
+        
+        # 確保標籤不會超出圖表區域
+        label_y = max(chart_rect.top() + 10, min(label_y, chart_rect.bottom() - label_height - 10))
+        
+        # 如果標籤會超出右邊界，則放在線的左邊
+        if label_x + label_width > chart_rect.right():
+            label_x = x_pos - label_width - 10
+            
+        # 繪製標籤背景
+        painter.setBrush(QBrush(QColor(255, 255, 255, 230)))
+        painter.setPen(QPen(QColor(128, 128, 128), 1))
+        painter.drawRect(label_x, label_y, label_width, label_height)
+        
+        # 繪製距離資訊
+        painter.setPen(QPen(QColor(50, 50, 50), 1))
+        painter.setFont(QFont("Arial", 9))
+        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
+        
+        # 顯示當前位置的數據資訊（僅數值）
+        if distance_data and driver1_data:
+            closest_idx = self._find_closest_data_index(distance_data, self.linkage_distance_value)
+            
+            if closest_idx is not None and closest_idx < len(driver1_data):
+                value1 = self._coerce_numeric(driver1_data[closest_idx])
+                painter.setPen(QPen(getattr(self, 'driver1_color', QColor(0, 100, 200)), 1))
+                text_y = label_y + 30
+                
+                if value1 is not None:
+                    # ✅ 僅顯示數值，不顯示車手名稱
+                    painter.drawText(label_x + 5, text_y, f"{tr('distance_diff_label', '距離差')}: {value1:.1f} {data_label}")
+                else:
+                    painter.drawText(label_x + 5, text_y, f"{tr('distance_diff_label', '距離差')}: N/A")
         
     def reset_data(self):
         """重置所有數據和視圖"""
@@ -1225,11 +1301,18 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
             print(f"[distancediff_CHART] 參考: {reference}")
             
             # 設置車手名稱（距離差分析為單一曲線）
+            lap1 = None
+            lap2 = None
             if drivers and len(drivers) >= 2:
+                # 🆕 提取圈數信息（用於雙圈比較模式判斷）
+                lap1 = drivers[0].get('lap_number')
+                lap2 = drivers[1].get('lap_number')
                 driver1_name = f"{drivers[0].get('code', 'Driver1')} vs {drivers[1].get('code', 'Driver2')}"
+                print(f"[distancediff_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
                 print(f"[distancediff_CHART] 距離差標籤: {driver1_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
+                lap1 = drivers[0].get('lap_number')
                 print(f"[distancediff_CHART] 單車手模式: {driver1_name}")
             
             # 距離差分析總是單一累積距離差曲線模式
@@ -1250,7 +1333,9 @@ class distancediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
                 driver2_distancediff=[],  # 空的第二條曲線
                 driver1_name=driver1_name,
                 driver2_name="",  # 空的第二個名稱
-                sectors=sectors
+                sectors=sectors,
+                lap1=lap1,  # 🆕 傳遞圈數信息
+                lap2=lap2   # 🆕 傳遞圈數信息
             )
             print(f"[distancediff_CHART] ✅ 圖表更新完成")
             

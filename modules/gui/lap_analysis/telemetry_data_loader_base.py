@@ -452,14 +452,16 @@ class TelemetryDataLoader(QObject):
                     matches = glob.glob(search_pattern)
                     
                     if matches:
-                        # 如果有多個匹配，選擇最新的
-                        found_file = max(matches, key=os.path.getmtime)
-                        self._debug(f"✅ 找到檔案: {found_file}")
-                        self._debug(f"📊 匹配檔案數量: {len(matches)}")
+                        # 精確匹配模式：直接選擇找到的檔案（應該只有一個）
+                        found_file = matches[0] if len(matches) == 1 else max(matches, key=os.path.getmtime)
+                        self._debug(f"✅ 找到檔案: {os.path.basename(found_file)}")
+                        
                         if len(matches) > 1:
+                            self._debug(f"⚠️  警告: 精確模式匹配到多個檔案 ({len(matches)} 個)，選擇最新的")
                             self._debug("📋 所有匹配檔案:")
                             for match in matches:
-                                self._debug(f"     - {match}")
+                                marker = "👉" if match == found_file else "  "
+                                self._debug(f"     {marker} {os.path.basename(match)}")
                         break
                     else:
                         self._debug(f"   ❌ 模式 {i} 無匹配")
@@ -492,23 +494,20 @@ class TelemetryDataLoader(QObject):
         lap2_safe = lap2 if lap2 is not None else lap1_safe
 
         if driver2_norm and driver2_norm != driver1_norm:
-            # 雙車手對比檔案 - 優先精確搜尋，保留部分萬用字元備援
+            # 🆕 雙車手對比檔案 - 只使用精確搜尋（移除萬用字元回退）
             filename_patterns = [
                 f"comparison_telemetry_{driver1_norm}_{driver2_norm}_{year}_{race}_{session}_Lap{lap1_safe}_Lap{lap2_safe}.json",
-                f"comparison_telemetry_{driver1_norm}_{driver2_norm}_{year}_{race}_{session}_Lap{lap1_safe}_Lap*.json",
-                f"comparison_telemetry_{driver1_norm}_{driver2_norm}_{year}_{race}_{session}_Lap*_Lap{lap2_safe}.json",
-                f"comparison_telemetry_{driver1_norm}_{driver2_norm}_{year}_{race}_{session}_Lap*_Lap*.json"
+                # ❌ 移除萬用字元模式，檔案不存在時將通過 API 生成
             ]
-            self._debug("🔄 雙車手檔案搜尋模式:")
+            self._debug("🔄 雙車手檔案搜尋模式（精確匹配）:")
         else:
-            # 單車手檔案 - 同時支援新版與舊版命名
+            # 🆕 同車手檔案 - 只使用精確搜尋（移除萬用字元回退）
             filename_patterns = [
                 f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap{lap1_safe}.json",
                 f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap{lap1_safe}_Lap{lap2_safe}.json",
-                f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap*.json",
-                f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap*_Lap*.json"
+                # ❌ 移除萬用字元模式，檔案不存在時將通過 API 生成
             ]
-            self._debug("🏎️ 單車手檔案搜尋模式:")
+            self._debug("🏎️ 同車手檔案搜尋模式（精確匹配）:")
 
         for i, pattern in enumerate(filename_patterns, 1):
             self._debug(f"   {i}. {pattern}")

@@ -5705,16 +5705,16 @@ class StyleHMainWindow(QMainWindow):
         # 更新按鈕動作（稍後動態添加）
         self.update_all_action = None
         
-        # 🔄 修改：移除即時連接，改為手動更新模式
-        # 控件變更時立即觸發更新 - 重新啟用自動更新功能
-        # 現在：車手選擇變更時自動更新所有分析模組
-        self.driver1_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
-        self.driver2_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
-        self.lap1_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
-        self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
-        self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
+        # 🔄 手動更新模式：控件變更不會自動觸發更新
+        # 用戶必須手動點擊 "Update All Analysis" 按鈕才會更新所有模組
+        # 已移除自動連接：
+        # self.driver1_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        # self.driver2_combo.currentTextChanged.connect(self.on_lap_parameters_changed)
+        # self.lap1_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        # self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
+        # self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
         
-        print("[LAP_CONTROL] ✅ 遙測分析控件創建完成（自動更新模式已啟用）")
+        print("[LAP_CONTROL] ✅ 遙測分析控件創建完成（手動更新模式已啟用）")
     
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
@@ -6513,10 +6513,16 @@ class StyleHMainWindow(QMainWindow):
                 print(f"[LAP_CONTROL] 🏁 圈數2: 恢復為1")
 
     def on_lap_parameters_changed(self):
-        """圈速參數變更時自動更新所有分析"""
-        print("[LAP_CONTROL] 🔄 圈速參數已變更，準備自動更新...")
+        """
+        圈速參數變更處理器（手動更新模式）
         
-        # 詳細調試：記錄當前所有參數值
+        ⚠️ 注意：此方法已停用自動更新功能
+        現在僅用於記錄參數變更，不會觸發實際更新
+        用戶必須手動點擊 "Update All Analysis" 按鈕才會更新
+        """
+        print("[LAP_CONTROL] � 圈速參數已變更（手動更新模式，不自動更新）")
+        
+        # 記錄當前參數值（僅用於調試）
         try:
             driver1 = self.driver1_combo.currentText() if hasattr(self, 'driver1_combo') else "未知"
             driver2 = self.driver2_combo.currentText() if hasattr(self, 'driver2_combo') else "未知"
@@ -6530,33 +6536,14 @@ class StyleHMainWindow(QMainWindow):
             print(f"[LAP_CONTROL]   🏁 圈數1: {lap1}")
             print(f"[LAP_CONTROL]   🏁 圈數2: {lap2}")
             print(f"[LAP_CONTROL]   ⚡ 最速圈: {is_fastest}")
-            
-            # 檢查發送者控件
-            sender = self.sender()
-            if sender:
-                sender_name = sender.objectName() if hasattr(sender, 'objectName') and sender.objectName() else type(sender).__name__
-                print(f"[LAP_CONTROL] 📤 觸發控件: {sender_name}")
-                if hasattr(sender, 'currentText'):
-                    print(f"[LAP_CONTROL] 📤 觸發值: '{sender.currentText()}'")
-                elif hasattr(sender, 'value'):
-                    print(f"[LAP_CONTROL] 📤 觸發值: {sender.value()}")
-                elif hasattr(sender, 'isChecked'):
-                    print(f"[LAP_CONTROL] 📤 觸發值: {sender.isChecked()}")
-            else:
-                print("[LAP_CONTROL] 📤 觸發控件: 未知（無發送者）")
+            print(f"[LAP_CONTROL] � 提示: 請點擊 'Update All Analysis' 按鈕以應用更改")
                 
         except Exception as e:
-            print(f"[LAP_CONTROL] ❌ 參數調試時發生錯誤: {e}")
+            print(f"[LAP_CONTROL] ❌ 參數記錄時發生錯誤: {e}")
         
-        # 延遲更新，避免用戶快速調整時頻繁觸發
-        if hasattr(self, '_lap_update_timer'):
-            self._lap_update_timer.stop()
-        
-        from PyQt5.QtCore import QTimer
-        self._lap_update_timer = QTimer()
-        self._lap_update_timer.setSingleShot(True)
-        self._lap_update_timer.timeout.connect(self.update_all_lap_analysis)
-        self._lap_update_timer.start(500)  # 500毫秒延遲
+        # ⚠️ 已移除自動更新邏輯
+        # 不再啟動計時器或調用 update_all_lap_analysis()
+        # 用戶必須手動點擊更新按鈕
         
     def create_left_panel(self):
         """創建左側面板 (僅包含功能樹)。"""
@@ -10294,6 +10281,46 @@ class StyleHMainWindow(QMainWindow):
                         print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}")
                     else:
                         print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}")
+                
+                # 🆕 將對話框的選擇同步到主視窗參數欄
+                try:
+                    # 同步 Driver 1
+                    if driver1 and hasattr(self, 'driver1_combo'):
+                        index = self.driver1_combo.findText(driver1)
+                        if index >= 0:
+                            self.driver1_combo.setCurrentIndex(index)
+                            print(f"[同步] Driver 1 → {driver1}")
+                    
+                    # 同步 Driver 2
+                    if hasattr(self, 'driver2_combo'):
+                        if driver2:
+                            index = self.driver2_combo.findText(driver2)
+                            if index >= 0:
+                                self.driver2_combo.setCurrentIndex(index)
+                                print(f"[同步] Driver 2 → {driver2}")
+                        else:
+                            # Driver 2 為 None，設定為第一個選項（通常是空或 None）
+                            self.driver2_combo.setCurrentIndex(0)
+                            print(f"[同步] Driver 2 → None")
+                    
+                    # 同步 Lap 1
+                    if lap1_number and hasattr(self, 'lap1_spinbox'):
+                        self.lap1_spinbox.setValue(lap1_number)
+                        print(f"[同步] Lap 1 → {lap1_number}")
+                    
+                    # 同步 Lap 2
+                    if lap2_number and hasattr(self, 'lap2_spinbox'):
+                        self.lap2_spinbox.setValue(lap2_number)
+                        print(f"[同步] Lap 2 → {lap2_number}")
+                    
+                    # 同步 Fastest Lap 選項
+                    if hasattr(self, 'fastest_lap_checkbox'):
+                        self.fastest_lap_checkbox.setChecked(is_fastest_lap)
+                        print(f"[同步] Fastest Lap → {is_fastest_lap}")
+                    
+                    print(f"[同步] ✅ 主視窗參數已同步")
+                except Exception as sync_error:
+                    print(f"[同步] ⚠️ 參數同步失敗: {sync_error}")
                 
                 # 為每個選擇的圖表類型創建視窗
                 for chart_type in selected_charts:

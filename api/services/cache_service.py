@@ -131,25 +131,25 @@ class F1AnalysisCacheService:
         print(f"[CACHE] 搜尋功能 {normalized_id} 的緩存結果...")
         print(f"[CACHE] 參數: {params}")
         
-        # 策略 1: 精確匹配
+        # 🆕 只使用策略 1: 精確匹配（已禁用模糊匹配和相似匹配）
         exact_result = self._search_exact_match(normalized_id, **params)
         if exact_result:
             print(f"[CACHE] ✅ 精確匹配成功")
             return self._enhance_cache_result(exact_result, "exact_match")
         
-        # 策略 2: 模糊匹配 (同功能、同賽事)
-        fuzzy_result = self._search_fuzzy_match(normalized_id, **params)
-        if fuzzy_result:
-            print(f"[CACHE] ✅ 模糊匹配成功")
-            return self._enhance_cache_result(fuzzy_result, "fuzzy_match")
+        # ❌ 策略 2: 模糊匹配 - 已禁用（避免載入錯誤圈數）
+        # fuzzy_result = self._search_fuzzy_match(normalized_id, **params)
+        # if fuzzy_result:
+        #     print(f"[CACHE] ✅ 模糊匹配成功")
+        #     return self._enhance_cache_result(fuzzy_result, "fuzzy_match")
         
-        # 策略 3: 相似分析 (同功能、類似參數)
-        similar_result = self._search_similar_analysis(normalized_id, **params)
-        if similar_result:
-            print(f"[CACHE] ✅ 相似匹配成功")
-            return self._enhance_cache_result(similar_result, "similar_match")
+        # ❌ 策略 3: 相似分析 - 已禁用（避免載入錯誤圈數）
+        # similar_result = self._search_similar_analysis(normalized_id, **params)
+        # if similar_result:
+        #     print(f"[CACHE] ✅ 相似匹配成功")
+        #     return self._enhance_cache_result(similar_result, "similar_match")
         
-        print(f"[CACHE] ❌ 未找到任何匹配的緩存結果")
+        print(f"[CACHE] ❌ 未找到任何匹配的緩存結果（已禁用模糊匹配）")
         return None
     
     def _search_exact_match(self, function_id: str, **params) -> Optional[Dict]:
@@ -175,13 +175,30 @@ class F1AnalysisCacheService:
         
         for pattern_base in patterns:
             # 不同功能有不同的檔案命名模式
-            if function_id == "13":  # 車手比較分析
-                search_patterns = [
-                    f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_*.json",
-                    f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}_*.json",  # 反向順序
-                    f"{self.json_dir}{pattern_base}*{driver1}*{driver2}*{year}*{race}*{session}*.json",
-                    f"{self.json_dir}{pattern_base}*{driver2}*{driver1}*{year}*{race}*{session}*.json"
-                ]
+            if function_id == "13":  # 🔧 車手比較分析 - 精確圈數匹配
+                # 🆕 根據 lap1/lap2 參數決定搜尋模式
+                if lap1 is not None and lap2 is not None:
+                    # 精確雙圈匹配模式
+                    search_patterns = [
+                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json",
+                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}_Lap{lap2}_Lap{lap1}.json",  # 反向順序
+                    ]
+                    print(f"[CACHE] 🎯 精確雙圈匹配模式: Lap{lap1}_Lap{lap2}")
+                elif lap1 is not None:
+                    # 精確單圈匹配模式
+                    search_patterns = [
+                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}.json",
+                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
+                    ]
+                    print(f"[CACHE] 🎯 精確單圈匹配模式: Lap{lap1}")
+                else:
+                    # ❌ 移除萬用字元模式（改為精確匹配或無圈數）
+                    search_patterns = [
+                        # 只搜尋沒有圈數後綴的檔案
+                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}.json",
+                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}.json",
+                    ]
+                    print(f"[CACHE] 🎯 無圈數模式")
             elif function_id in {"3", "4", "5"}:  # 進站相關分析
                 race_full = self._get_race_full_name(race, year)
                 search_patterns = [
@@ -201,10 +218,13 @@ class F1AnalysisCacheService:
                 ]
             
             for pattern in search_patterns:
+                print(f"[CACHE] 🔍 搜尋模式: {os.path.basename(pattern)}")
                 files = glob.glob(pattern)
                 if not files:
+                    print(f"[CACHE] ❌ 無匹配檔案")
                     continue
-
+                
+                print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
                     if not self._file_matches_race(file_path, race):

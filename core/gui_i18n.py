@@ -192,6 +192,24 @@ class GuiTranslator:
             'loading_distancediff_data': {'zh': '開始載入距離差數據...', 'en': 'Loading distance diff data...', 'ja': 'ディスタンス差データを読み込み中...'},
             'loading_acceleration_data': {'zh': '開始載入加速度數據...', 'en': 'Loading acceleration data...', 'ja': 'アクセラレーションデータを読み込み中...'},
             
+            # === 圈數標籤格式化 (Lap Label Formatting) ===
+            # 用於單車手不同圈數比較時的圖例標籤
+            'lap_label_format': {'zh': '{driver} - 第{lap}圈', 'en': '{driver} - Lap {lap}', 'ja': '{driver} - {lap}周目'},
+            
+            # 🆕 單車手雙圈模式 - 僅顯示圈數（不含車手代碼）
+            'lap_only_format': {'zh': '第{lap}圈', 'en': 'Lap {lap}', 'ja': '{lap}周目'},
+            
+            # 🆕 SpeedDiff/DistanceDiff 專用 - vs 格式（單行標籤）
+            'lap_vs_lap_format': {'zh': '{driver} 第{lap1}圈 vs 第{lap2}圈', 'en': '{driver} Lap {lap1} vs Lap {lap2}', 'ja': '{driver} {lap1}周目 vs {lap2}周目'},
+            
+            # 🆕 Tooltip 標籤
+            'speed_diff_label': {'zh': '速度差', 'en': 'Speed Diff', 'ja': '速度差'},
+            'distance_diff_label': {'zh': '距離差', 'en': 'Distance Diff', 'ja': '距離差'},
+            
+            'lap_vs_format': {'zh': '{driver} 第{lap1}圈 vs 第{lap2}圈', 'en': '{driver} Lap {lap1} vs Lap {lap2}', 'ja': '{driver} {lap1}周目 vs {lap2}周目'},
+            'leading': {'zh': '領先', 'en': 'Leading', 'ja': 'リード'},
+            'zero_line': {'zh': '零點線', 'en': 'Zero Line', 'ja': 'ゼロライン'},
+            
             # 通用狀態
             'cleared': {'zh': '已清除', 'en': 'Cleared', 'ja': 'クリア済み'},
             
@@ -406,8 +424,6 @@ class GuiTranslator:
             
             # 速度差分析專用標籤
             'speed_diff_kmh': {'zh': '速度差距 (km/h)', 'en': 'Speed Diff (km/h)', 'ja': 'スピード差 (km/h)'},
-            'leading': {'zh': '領先', 'en': 'Leading', 'ja': '先行'},
-            'zero_line': {'zh': '零點線', 'en': 'Zero Line', 'ja': 'ゼロライン'},
             'speeddiff_window_title': {'zh': '⚡ 速度差分析', 'en': '⚡ Speed Diff Analysis', 'ja': '⚡ 速度差分析'},
             
             # 累積距離差分析專用標籤
@@ -557,6 +573,10 @@ class GuiTranslator:
             'statistics_data': {'zh': '統計數據', 'en': 'Statistics Data', 'ja': 'Statistics Data'},
             'season_statistics': {'zh': '[CHART] 賽季統計數據\n• 總圈數: 1,247\n• 平均圈速: 1:18.456\n• 最快圈速: 1:16.123', 'en': '[CHART] Season Statistics\n• Total Laps: 1,247\n• Average Lap Time: 1:18.456\n• Fastest Lap: 1:16.123', 'ja': '[CHART] Season Statistics\n• Total Laps: 1,247\n• Average Lap Time: 1:18.456\n• Fastest Lap: 1:16.123'},
             'data_overview': {'zh': '[STATS] 數據總覽', 'en': '[STATS] Data Overview', 'ja': '[STATS] Data Overview'},
+            
+            # === 賽程日曆相關 (Race Calendar) ===
+            # 未開賽賽事後綴標籤（用於賽事下拉選單）
+            'season_calendar_upcoming_suffix': {'zh': '[未開賽]', 'en': '[Upcoming]', 'ja': '[未開催]'},
             
             # 統計卡片
             'track_limit_violations': {'zh': '⚠️ Track Limit', 'en': '⚠️ Track Limit', 'ja': '⚠️ Track Limit'},

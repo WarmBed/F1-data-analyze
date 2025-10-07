@@ -19,6 +19,9 @@ from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWhe
 # 導入國際化模組
 from core.gui_i18n import tr
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -99,8 +102,32 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
     
     def set_brake_data(self, distance: List[float], driver1_brake: List[float], 
                      driver2_brake: List[float], driver1_name: str = "Driver 1", 
-                     driver2_name: str = "Driver 2", sectors: List[Dict] = None):
-        """設置brake數據"""
+                     driver2_name: str = "Driver 2", sectors: List[Dict] = None,
+                     lap1: int = None, lap2: int = None):
+        """設置brake數據
+        
+        Args:
+            distance: 圈速距離數據
+            driver1_brake: 車手1的brake數據
+            driver2_brake: 車手2的brake數據
+            driver1_name: 車手1名稱
+            driver2_name: 車手2名稱
+            sectors: 賽道區段信息
+            lap1: 車手1的圈數（用於雙圈比較模式）
+            lap2: 車手2的圈數（用於雙圈比較模式）
+        """
+        # 🆕 雙圈比較模式判斷
+        is_single_driver_dual_lap = False
+        if lap1 is not None and lap2 is not None and lap1 != lap2 and driver1_name == driver2_name:
+            # 同車手不同圈數 → 雙圈比較模式
+            is_single_driver_dual_lap = True
+            original_driver = driver1_name
+            # ✅ 使用 tr() 進行國際化 - 僅顯示圈數
+            lap_format = tr('lap_only_format', '第{lap}圈')
+            driver1_name = lap_format.format(lap=lap1)
+            driver2_name = lap_format.format(lap=lap2)
+            print(f"[BRAKE_CHART] 🔄 雙圈比較模式: {original_driver} {driver1_name} vs {driver2_name}")
+        
         self.distance_data = distance
         self.driver1_brake = driver1_brake
         self.driver2_brake = driver2_brake
@@ -1172,24 +1199,40 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             print(f"[brake_CHART] 車手2 brake數據點: {len(driver2_brake)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
+            lap1 = None
+            lap2 = None
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
+                # 🆕 提取圈數信息（用於雙圈比較模式判斷）
+                lap1 = drivers[0].get('lap_number')
+                lap2 = drivers[1].get('lap_number')
+                print(f"[brake_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
                 print(f"[brake_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
+                lap1 = drivers[0].get('lap_number')
                 print(f"[brake_CHART] 單車手模式: {driver1_name}")
             
-            # 檢測是否為單車手模式或相同車手比較
+            # 🆕 雙圈比較模式判斷邏輯
             is_single_driver_mode = False
+            is_dual_lap_mode = False
+            
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
                 print(f"[brake_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
-                # 相同車手比較（如 VER vs VER）
-                is_single_driver_mode = True
-                print(f"[brake_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
+                # 相同車手：需要進一步判斷是單車手還是雙圈比較
+                if lap1 is not None and lap2 is not None and lap1 != lap2:
+                    # 🆕 同車手不同圈數 → 雙圈比較模式
+                    is_dual_lap_mode = True
+                    is_single_driver_mode = False
+                    print(f"[brake_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                else:
+                    # 同車手相同圈數或無圈數信息 → 單車手模式
+                    is_single_driver_mode = True
+                    print(f"[brake_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
@@ -1200,6 +1243,10 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 # 清空車手2的數據，只顯示車手1
                 driver2_brake = []
                 driver2_name = ""  # 單車手模式才清空車手2名稱
+                lap2 = None  # 清空 lap2
+            elif is_dual_lap_mode:
+                print(f"[brake_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                # 保持雙車手模式，但標籤會在 set_brake_data 中修改
             else:
                 # 雙車手模式 - 保持車手名稱不變
                 print(f"[brake_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
@@ -1219,7 +1266,9 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_brake=driver2_brake,
                 driver1_name=driver1_name,
                 driver2_name=driver2_name,
-                sectors=sectors
+                sectors=sectors,
+                lap1=lap1,  # 🆕 傳遞圈數信息
+                lap2=lap2   # 🆕 傳遞圈數信息
             )
             print(f"[brake_CHART] ✅ 圖表更新完成")
             

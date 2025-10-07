@@ -70,6 +70,9 @@ class ChartSeries:
 class LaptimeChartWidget(QWidget):
     """專用的圈速圖表繪製組件"""
     
+    # 🆕 信號定義
+    pinned_tooltips_changed = pyqtSignal(int, str)  # (固定數量, 時間差文字)
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         self.series_list = []
@@ -89,6 +92,28 @@ class LaptimeChartWidget(QWidget):
             # 已停用的標記
             # 'A': QColor(220, 53, 69),  # 紅色 - 事故/危險 (已拆分為具體類型)
         }
+        
+        # 🆕 圖例拖移功能變數
+        self.legend_dragging = False
+        self.legend_drag_start = QPoint()
+        self.legend_offset = QPoint(0, 0)  # 圖例的偏移位置
+        self.legend_rect = QRect()  # 圖例的矩形區域
+        
+        # 🆕 圖例顯示控制變數
+        self.legend_show_markers = True  # True: 顯示完整圖例, False: 僅顯示車手
+        
+        # 🆕 Tooltip 相關變數
+        self.setMouseTracking(True)  # 啟用滑鼠追蹤以顯示 Tooltip
+        self.hover_point = None  # 當前懸停的數據點
+        self.hover_screen_pos = None  # 當前懸停點的螢幕座標（用於視覺反饋）
+        self.hover_tooltip_text = ""  # 自繪 Tooltip 文字
+        self.chart_rect = QRect()  # 圖表繪製區域（用於座標轉換）
+        self.x_range = (0, 1)  # X 軸範圍
+        self.y_range = (0, 1)  # Y 軸範圍
+        
+        # 🆕 固定 Tooltip 功能（左鍵點擊固定，最多2個）
+        self.pinned_tooltips = []  # 固定的 Tooltip 列表 [{point, screen_pos, text, lap_time}, ...]
+        self.max_pinned = 2  # 最多固定2個
         
         print("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
     
@@ -119,18 +144,24 @@ class LaptimeChartWidget(QWidget):
                 return
             
             # 計算繪製區域（動態邊距，適應小尺寸）
-            # 根據視窗大小動態調整邊距，與 Tire Analysis 一致
+            # 根據視窗大小動態調整邊距，左側需要更多空間給 Y 軸標籤和標題
             base_margin = min(self.width(), self.height()) * 0.08  # 8% 動態邊距
             margin = max(20, min(60, int(base_margin)))  # 最小20px，最大60px
+            left_margin = max(95, int(self.width() * 0.12))  # 左側邊距：最小95px或視窗12%（增加空間）
             chart_rect = QRect(
+                left_margin,  # 使用較大的左側邊距
                 margin, 
-                margin, 
-                self.width() - 2 * margin, 
+                self.width() - left_margin - margin,  # 調整寬度
                 self.height() - 2 * margin
             )
             
+            # 保存圖表區域和數據範圍供 Tooltip 使用
+            self.chart_rect = chart_rect
+            
             # 計算數據範圍
             x_min, x_max, y_min, y_max = self._calculate_data_range()
+            self.x_range = (x_min, x_max)  # 保存供 Tooltip 使用
+            self.y_range = (y_min, y_max)  # 保存供 Tooltip 使用
             
             if x_min >= x_max or y_min >= y_max:
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
@@ -149,8 +180,27 @@ class LaptimeChartWidget(QWidget):
             # 繪製智能標記
             self._draw_smart_markers(painter, chart_rect, (x_min, x_max), (y_min, y_max))
             
+            # 🆕 繪製懸停點高亮（在圖例之前，避免被圖例遮擋）
+            if self.hover_screen_pos:
+                painter.setPen(QPen(QColor(255, 100, 100), 3))  # 紅色外框
+                painter.setBrush(Qt.NoBrush)
+                painter.drawEllipse(self.hover_screen_pos, 12, 12)  # 繪製高亮圓圈
+            
             # 繪製圖例 (重疊模式，右上角覆蓋)
             self._draw_legend(painter)
+            
+            # 🆕 繪製固定的 Tooltip（使用不同顏色標示）
+            for pinned in self.pinned_tooltips:
+                # 繪製固定點的高亮（藍色外框）
+                painter.setPen(QPen(QColor(0, 123, 255), 3))  # 藍色外框
+                painter.setBrush(Qt.NoBrush)
+                painter.drawEllipse(pinned['screen_pos'], 12, 12)
+                # 繪製固定的 Tooltip（藍色背景）
+                self._draw_custom_tooltip(painter, pinned['screen_pos'], pinned['text'], is_pinned=True)
+            
+            # 🆕 繪製懸停 Tooltip（黃色背景，最後繪製確保在最上層）
+            if self.hover_tooltip_text and self.hover_screen_pos:
+                self._draw_custom_tooltip(painter, self.hover_screen_pos, self.hover_tooltip_text, is_pinned=False)
             
         except Exception as e:
             print(f"[LAPTIME_CHART_WIDGET] 繪製錯誤: {e}")
@@ -266,7 +316,7 @@ class LaptimeChartWidget(QWidget):
             y = rect.top() + i * rect.height() / 5
             painter.drawLine(rect.left(), int(y), rect.right(), int(y))
             
-            # Y軸標籤 - 響應式字體
+            # Y軸標籤 - 響應式字體，調整位置使其在Y軸線和標題之間
             if i < 5:
                 laptime = y_range[1] - i * (y_range[1] - y_range[0]) / 5
                 painter.setPen(QPen(ChartTheme.TEXT_COLOR, 1))
@@ -274,7 +324,8 @@ class LaptimeChartWidget(QWidget):
                 font = QFont()
                 font.setPointSize(8)
                 painter.setFont(font)
-                label_offset = max(30, int(self.width() * 0.04))  # 響應式標籤偏移
+                # 調整標籤偏移量：應該在Y軸標題和Y軸線之間
+                label_offset = max(45, int(self.width() * 0.06))  # 減少偏移量，更靠近Y軸線
                 painter.drawText(rect.left() - label_offset, int(y) + 5, f"{laptime:.1f}s")
                 painter.setPen(QPen(ChartTheme.GRID_COLOR, 1))
         
@@ -289,12 +340,12 @@ class LaptimeChartWidget(QWidget):
         x_title_offset = max(20, int(self.height() * 0.04))
         painter.drawText(rect.center().x() - 30, rect.bottom() + x_title_offset, tr("lap_number_axis", "Lap Number"))
         
-        # Y軸標題（旋轉）
+        # Y軸標題（旋轉）- 位置應該在Y軸數值的外側（更遠離圖表）
         painter.save()
-        y_title_offset = max(25, int(self.width() * 0.03))
+        y_title_offset = max(80, int(self.width() * 0.105))  # 增加偏移量，確保在數值外側
         painter.translate(rect.left() - y_title_offset, rect.center().y())
         painter.rotate(-90)
-        painter.drawText(-30, 0, "Lap Time (sec)")
+        painter.drawText(-50, 0, "Lap Time (sec)")  # 調整文字位置
         painter.restore()
     
     def _draw_data_lines(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
@@ -417,29 +468,34 @@ class LaptimeChartWidget(QWidget):
         painter.drawPolygon(points)
     
     def _draw_legend(self, painter: QPainter):
-        """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.0]"""
+        """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.1 - 支援顯示/隱藏]"""
         if not self.series_list:
             print(f"[LEGEND_DEBUG] ⚠️ 沒有數據系列，跳過圖例繪製")
             return
         
-        print(f"[LEGEND_DEBUG] 🎨 使用圖例版本 3.0 - 強制白色背景調試版")
+        print(f"[LEGEND_DEBUG] 🎨 使用圖例版本 3.1 - 支援顯示/隱藏標記")
         print(f"[LEGEND_DEBUG] 數據系列數量: {len(self.series_list)}")
+        print(f"[LEGEND_DEBUG] 標記顯示狀態: {self.legend_show_markers}")
         
         # 計算圖例尺寸和位置
         driver_count = len(self.series_list)
-        marker_count = 6  # P, F, T, Y, S, R (移除了 PT 組合標記)
+        marker_count = 5 if self.legend_show_markers else 0  # 隱藏時不計算標記
         
-        # 內容尺寸計算 - 調整寬度
+        # 內容尺寸計算 - 根據顯示模式調整
         content_width = 140  # 減少寬度，不再需要適應 "進站+換胎"
-        header_height = 22 * 2        # 兩個標題
+        header_height = 22 if self.legend_show_markers else 22  # 僅 Drivers 標題
         driver_height = driver_count * 20   # 每個車手20px
-        marker_height = marker_count * 22   # 每個標記22px
-        padding = 20                  # 內邊距
-        content_height = header_height + driver_height + marker_height + padding
+        marker_height = marker_count * 22 if self.legend_show_markers else 0   # 隱藏時不顯示標記
+        padding = 20 if self.legend_show_markers else 10  # 隱藏時減少內邊距
+        separator_height = 12 if self.legend_show_markers else 0  # 分隔線高度
+        content_height = header_height + driver_height + separator_height + marker_height + padding
         
-        # 位置：右上角，小幅偏移
-        legend_x = self.width() - content_width - 15
-        legend_y = 15
+        # 位置：右上角，小幅偏移 + 用戶拖移的偏移量
+        legend_x = self.width() - content_width - 15 + self.legend_offset.x()
+        legend_y = 15 + self.legend_offset.y()
+        
+        # 🆕 保存圖例矩形區域供滑鼠事件使用
+        self.legend_rect = QRect(legend_x, legend_y, content_width, content_height)
         
         print(f"[LEGEND_DEBUG] 圖例位置: ({legend_x}, {legend_y})")
         print(f"[LEGEND_DEBUG] 圖例尺寸: {content_width} x {content_height}")
@@ -495,40 +551,42 @@ class LaptimeChartWidget(QWidget):
             painter.drawText(content_x + square_size + 8, current_y + 3, series.name)
             current_y += line_spacing
         
-        # 分隔線
-        current_y += max(4, font_size//2)
-        painter.setPen(QPen(QColor(160, 160, 160), 1))
-        painter.drawLine(content_x, current_y, content_x + content_width - 20, current_y)
-        current_y += max(8, font_size)
-        
-        # 移除智能標記圖例標題，直接顯示標記內容
-        # current_y += max(18, font_size * 2)  # 移除標題的垂直空間
-        
-        # 智能標記內容
-        marker_content_font = QFont()
-        marker_content_font.setPointSize(8)
-        painter.setFont(marker_content_font)
-        markers_info = [
+        # 🆕 僅在顯示標記模式下繪製分隔線和標記
+        if self.legend_show_markers:
+            # 分隔線
+            current_y += max(4, font_size//2)
+            painter.setPen(QPen(QColor(160, 160, 160), 1))
+            painter.drawLine(content_x, current_y, content_x + content_width - 20, current_y)
+            current_y += max(8, font_size)
+            
+            # 移除智能標記圖例標題，直接顯示標記內容
+            # current_y += max(18, font_size * 2)  # 移除標題的垂直空間
+            
+            # 智能標記內容
+            marker_content_font = QFont()
+            marker_content_font.setPointSize(8)
+            painter.setFont(marker_content_font)
+            markers_info = [
             ('P', 'Pit Stop', self.marker_colors['P']),
             ('F', 'Fastest Lap', self.marker_colors['F']),
-            ('T', 'Tire Change', self.marker_colors.get('T', QColor(138, 43, 226))),
+            # ('T', 'Tire Change', self.marker_colors.get('T', QColor(138, 43, 226))),  # 已移除
             ('Y', 'Yellow Flag', self.marker_colors.get('Y', QColor(255, 193, 7))),      # 黃色
             ('S', 'Safety Car', self.marker_colors.get('S', QColor(128, 128, 128))),   # 灰色
             ('R', 'Red Flag', self.marker_colors.get('R', QColor(220, 53, 69))),      # 紅色
-            ('W', 'Rain', self.marker_colors.get('W', QColor(100, 149, 237))),    # 矢車菊藍
-            # ('PT', '進站+換胎', self.marker_colors['P']),  # 已移除組合標記
-            # ('A', '事故/危險', self.marker_colors['A']),  # 已停用，拆分為具體類型
-        ]
-        
-        for marker_type, description, color in markers_info:
-            # 標記示例 - 改進版本，解決文字超出問題
-            marker_pos = QPoint(content_x + square_size//2, current_y - 1)
-            self._draw_legend_marker_improved(painter, marker_pos, marker_type, color, font_size)
+            # ('W', 'Rain', self.marker_colors.get('W', QColor(100, 149, 237))),    # 矢車菊藍 - 已移除
+                # ('PT', '進站+換胎', self.marker_colors['P']),  # 已移除組合標記
+                # ('A', '事故/危險', self.marker_colors['A']),  # 已停用，拆分為具體類型
+            ]
             
-            # 標記說明文字 - 只顯示描述，不重複字母
-            painter.setPen(QPen(QColor(40, 40, 40), 1))
-            painter.drawText(content_x + square_size + 8, current_y + 3, f"- {description}")
-            current_y += line_spacing  # 使用響應式行距
+            for marker_type, description, color in markers_info:
+                # 標記示例 - 改進版本，解決文字超出問題
+                marker_pos = QPoint(content_x + square_size//2, current_y - 1)
+                self._draw_legend_marker_improved(painter, marker_pos, marker_type, color, font_size)
+                
+                # 標記說明文字 - 只顯示描述，不重複字母
+                painter.setPen(QPen(QColor(40, 40, 40), 1))
+                painter.drawText(content_x + square_size + 8, current_y + 3, f"- {description}")
+                current_y += line_spacing  # 使用響應式行距
     
     def _draw_legend_marker_improved(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor, font_size: int = 10):
         """在圖例中繪製標記示例 - 純文字版本，支援組合標記"""
@@ -559,6 +617,277 @@ class LaptimeChartWidget(QWidget):
             
         # elif marker_type == 'A':  # 事故/危險 (已停用)
         #     painter.drawText(position.x() - 5, position.y() + 3, "A")
+    
+    # 🆕 滑鼠事件處理 - 圖例拖移功能和顯示切換
+    def mouseDoubleClickEvent(self, event):
+        """雙擊圖例切換顯示/隱藏標記"""
+        if event.button() == Qt.LeftButton:
+            if self.legend_rect.contains(event.pos()):
+                self.legend_show_markers = not self.legend_show_markers
+                print(f"[LEGEND] 切換標記顯示狀態: {self.legend_show_markers}")
+                self.update()  # 重繪圖表
+                event.accept()
+                return
+        super().mouseDoubleClickEvent(event)
+    
+    def mousePressEvent(self, event):
+        """滑鼠按下事件 - 檢查是否點擊圖例 / 固定 Tooltip / 清除固定"""
+        if event.button() == Qt.LeftButton:
+            # 優先處理圖例拖移
+            if self.legend_rect.contains(event.pos()):
+                self.legend_dragging = True
+                self.legend_drag_start = event.pos() - self.legend_offset
+                self.setCursor(Qt.ClosedHandCursor)  # 改變游標為抓取狀
+                event.accept()
+                return
+            
+            # 🆕 左鍵點擊固定 Tooltip（最多2個）
+            if self.hover_point and self.hover_screen_pos:
+                self._pin_tooltip()
+                event.accept()
+                return
+        
+        elif event.button() == Qt.RightButton:
+            # 🆕 右鍵清除所有固定的 Tooltip
+            if self.pinned_tooltips:
+                self.pinned_tooltips.clear()
+                print("[TOOLTIP] 🗑️ 已清除所有固定 Tooltip")
+                self._update_time_diff_display()  # 🆕 清空時間差顯示
+                self.update()
+                event.accept()
+                return
+        
+        super().mousePressEvent(event)
+    
+    def mouseMoveEvent(self, event):
+        """滑鼠移動事件 - 拖移圖例 + 顯示數據點 Tooltip"""
+        if self.legend_dragging:
+            # 計算新的偏移量
+            new_offset = event.pos() - self.legend_drag_start
+            
+            # 限制圖例不超出視窗範圍
+            max_x = self.width() - self.legend_rect.width() - 15
+            max_y = self.height() - self.legend_rect.height() - 15
+            min_x = -self.width() + self.legend_rect.width() + 30
+            min_y = -15
+            
+            new_offset.setX(max(min_x, min(max_x, new_offset.x())))
+            new_offset.setY(max(min_y, min(max_y, new_offset.y())))
+            
+            self.legend_offset = new_offset
+            self.update()  # 重繪圖表
+            event.accept()
+            return
+        elif self.legend_rect.contains(event.pos()):
+            # 滑鼠懸停在圖例上，顯示可移動提示
+            self.setCursor(Qt.OpenHandCursor)
+        else:
+            self.setCursor(Qt.ArrowCursor)
+            # 🆕 檢查是否懸停在數據點上
+            self._check_hover_point(event.pos())
+        
+        super().mouseMoveEvent(event)
+    
+    def mouseReleaseEvent(self, event):
+        """滑鼠釋放事件 - 結束拖移"""
+        if event.button() == Qt.LeftButton and self.legend_dragging:
+            self.legend_dragging = False
+            self.setCursor(Qt.ArrowCursor)
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+    
+    def _pin_tooltip(self):
+        """固定當前懸停的 Tooltip（最多2個）"""
+        if not self.hover_point or not self.hover_screen_pos:
+            return
+        
+        # 檢查是否已經固定過這個點
+        for pinned in self.pinned_tooltips:
+            if pinned['point'] == self.hover_point:
+                print("[TOOLTIP] ⚠️ 此點已固定")
+                return
+        
+        # 如果已達到最大固定數量，移除最舊的
+        if len(self.pinned_tooltips) >= self.max_pinned:
+            removed = self.pinned_tooltips.pop(0)
+            print(f"[TOOLTIP] 🗑️ 移除最舊的固定點")
+        
+        # 提取圈速時間（用於計算時間差）
+        lap_time = self.hover_point.y  # 假設 y 值就是圈速秒數
+        
+        # 固定新的 Tooltip
+        pinned_data = {
+            'point': self.hover_point,
+            'screen_pos': QPoint(self.hover_screen_pos),
+            'text': self.hover_tooltip_text,
+            'lap_time': lap_time
+        }
+        self.pinned_tooltips.append(pinned_data)
+        print(f"[TOOLTIP] 📌 已固定 Tooltip ({len(self.pinned_tooltips)}/{self.max_pinned})")
+        
+        # 🆕 更新時間差顯示
+        self._update_time_diff_display()
+        
+        self.update()
+    
+    def get_pinned_time_diff(self) -> Optional[str]:
+        """獲取兩個固定點的時間差（供外部使用）"""
+        if len(self.pinned_tooltips) != 2:
+            return None
+        
+        time1 = self.pinned_tooltips[0]['lap_time']
+        time2 = self.pinned_tooltips[1]['lap_time']
+        diff = abs(time2 - time1)
+        
+        # 格式化時間差
+        if diff >= 60:
+            minutes = int(diff // 60)
+            seconds = diff % 60
+            return f"+{minutes}:{seconds:06.3f}"
+        else:
+            return f"+{diff:.3f}s"
+    
+    def _update_time_diff_display(self):
+        """更新時間差顯示（通過信號通知父容器）"""
+        pinned_count = len(self.pinned_tooltips)
+        time_diff_text = ""
+        
+        if pinned_count == 2:
+            time_diff = self.get_pinned_time_diff()
+            if time_diff:
+                time_diff_text = f"Diff: {time_diff}"
+                print(f"[TOOLTIP] ⏱️ 時間差: {time_diff}")
+        
+        # 發射信號通知父容器
+        self.pinned_tooltips_changed.emit(pinned_count, time_diff_text)
+    
+    def _draw_custom_tooltip(self, painter: QPainter, anchor_pos: QPoint, text: str, is_pinned: bool = False):
+        """繪製自訂 Tooltip（直接在圖表上繪製）"""
+        # 分割多行文字
+        lines = text.split('\n')
+        
+        # 計算 Tooltip 尺寸
+        font = QFont()
+        font.setPointSize(10)
+        font.setBold(True)
+        painter.setFont(font)
+        fm = QFontMetrics(font)
+        
+        max_width = 0
+        total_height = 0
+        line_heights = []
+        
+        for line in lines:
+            line_width = fm.horizontalAdvance(line)
+            line_height = fm.height()
+            max_width = max(max_width, line_width)
+            line_heights.append(line_height)
+            total_height += line_height
+        
+        # 內邊距
+        padding = 8
+        tooltip_width = max_width + 2 * padding
+        tooltip_height = total_height + 2 * padding
+        
+        # 計算 Tooltip 位置（在懸停點右上方）
+        offset_x = 15
+        offset_y = -15
+        tooltip_x = anchor_pos.x() + offset_x
+        tooltip_y = anchor_pos.y() + offset_y - tooltip_height
+        
+        # 確保 Tooltip 不超出視窗
+        if tooltip_x + tooltip_width > self.width():
+            tooltip_x = anchor_pos.x() - tooltip_width - 15
+        if tooltip_y < 0:
+            tooltip_y = anchor_pos.y() + 15
+        
+        # 繪製背景（懸停=淺黃色，固定=淺藍色）
+        tooltip_rect = QRect(tooltip_x, tooltip_y, tooltip_width, tooltip_height)
+        painter.setPen(QPen(QColor(50, 50, 50), 2))
+        if is_pinned:
+            painter.setBrush(QBrush(QColor(173, 216, 230, 230)))  # 淺藍色（固定）
+        else:
+            painter.setBrush(QBrush(QColor(255, 255, 200, 230)))  # 淺黃色（懸停）
+        painter.drawRoundedRect(tooltip_rect, 5, 5)
+        
+        # 繪製文字
+        painter.setPen(QPen(QColor(0, 0, 0), 1))
+        current_y = tooltip_y + padding
+        
+        for i, line in enumerate(lines):
+            painter.drawText(
+                tooltip_x + padding,
+                current_y + line_heights[i] - fm.descent(),
+                line
+            )
+            current_y += line_heights[i]
+    
+    def _check_hover_point(self, mouse_pos: QPoint):
+        """檢查滑鼠是否懸停在數據點上並顯示 Tooltip"""
+        if not self.series_list or not self.chart_rect.isValid():
+            self.setToolTip("")
+            self.hover_point = None
+            self.hover_screen_pos = None
+            return
+        
+        # 搜索半徑（像素）- 增大到 20px 使更容易觸發
+        search_radius = 20
+        closest_point = None
+        closest_distance = search_radius
+        closest_series_name = ""
+        closest_screen_pos = None
+        
+        # 遍歷所有數據系列和數據點
+        for series in self.series_list:
+            for data_point in series.data:
+                # 座標轉換：數據座標 → 螢幕座標
+                screen_x = self.chart_rect.left() + (data_point.x - self.x_range[0]) * self.chart_rect.width() / (self.x_range[1] - self.x_range[0])
+                screen_y = self.chart_rect.bottom() - (data_point.y - self.y_range[0]) * self.chart_rect.height() / (self.y_range[1] - self.y_range[0])
+                
+                screen_point = QPoint(int(screen_x), int(screen_y))
+                
+                # 計算滑鼠與數據點的距離
+                dx = mouse_pos.x() - screen_point.x()
+                dy = mouse_pos.y() - screen_point.y()
+                distance = (dx * dx + dy * dy) ** 0.5
+                
+                # 找到最近的點
+                if distance < closest_distance:
+                    closest_distance = distance
+                    closest_point = data_point
+                    closest_series_name = series.name
+                    closest_screen_pos = screen_point
+        
+        # 如果找到懸停的點，顯示 Tooltip
+        if closest_point:
+            lap_number = int(closest_point.x)
+            lap_time = closest_point.y
+            
+            # 格式化時間（秒 → 分:秒.毫秒）
+            minutes = int(lap_time // 60)
+            seconds = lap_time % 60
+            
+            if minutes > 0:
+                time_str = f"{minutes}:{seconds:06.3f}"
+            else:
+                time_str = f"{seconds:.3f}s"
+            
+            # 顯示 Tooltip（同時使用 Qt 原生和自繪）
+            tooltip_text = f"{closest_series_name} - Lap {lap_number}\nLap Time: {time_str}"
+            self.setToolTip(tooltip_text)  # Qt 原生 Tooltip（備用）
+            self.hover_point = closest_point
+            self.hover_screen_pos = closest_screen_pos
+            self.hover_tooltip_text = tooltip_text  # 自繪 Tooltip 文字
+            print(f"[TOOLTIP] ✅ 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
+            self.update()  # 重繪以顯示高亮圓圈和 Tooltip
+        else:
+            self.setToolTip("")  # 清除 Tooltip
+            if self.hover_point:  # 只有當之前有懸停點時才重繪
+                self.hover_point = None
+                self.hover_screen_pos = None
+                self.hover_tooltip_text = ""
+                self.update()  # 重繪以清除高亮圓圈和 Tooltip
 
 
 class DriverSelectionWidget(QWidget):
@@ -603,6 +932,11 @@ class DriverSelectionWidget(QWidget):
         self.clear_button.clicked.connect(self._clear_selections)
         self.clear_button.setMaximumWidth(60)  # 縮小按鈕
         
+        # 🆕 時間差顯示標籤（在 Clear 按鈕旁邊）
+        self.time_diff_label = QLabel("")
+        self.time_diff_label.setStyleSheet("QLabel { font-weight: bold; color: #0066cc; padding: 5px; }")
+        self.time_diff_label.setMinimumWidth(150)
+        
         # 匯出按鈕已移除 - 根據使用者要求
         # self.export_button = QPushButton(tr('export_button', 'Export'))
         # self.export_button.clicked.connect(self._export_chart)
@@ -610,10 +944,21 @@ class DriverSelectionWidget(QWidget):
         
         # driver_layout.addWidget(self.export_button)  # 已移除
         driver_layout.addWidget(self.clear_button)
+        driver_layout.addWidget(self.time_diff_label)  # 🆕 添加時間差標籤
         driver_layout.addStretch()  # 推到左邊
         
         layout.addLayout(driver_layout)
         layout.addStretch()
+    
+    def set_chart_widget(self, chart_widget: 'LaptimeChartWidget'):
+        """設置圖表組件並連接信號"""
+        self.chart_widget = chart_widget
+        # 🆕 連接圖表的固定 Tooltip 變化信號到時間差標籤更新
+        self.chart_widget.pinned_tooltips_changed.connect(self._on_pinned_changed)
+    
+    def _on_pinned_changed(self, count: int, diff_text: str):
+        """處理固定 Tooltip 變化事件"""
+        self.time_diff_label.setText(diff_text)
         
     def update_available_drivers(self, drivers: List[str]):
         """更新可用車手列表"""
@@ -723,6 +1068,9 @@ class driverLapAnalysisChartWidget(QWidget):
         
         # 下方：專用圖表組件
         self.chart_widget = LaptimeChartWidget()
+        
+        # 🆕 連接圖表組件到車手選擇器（用於時間差顯示）
+        self.driver_selection.set_chart_widget(self.chart_widget)
         
         # 添加到主布局
         main_layout.addWidget(self.driver_selection)

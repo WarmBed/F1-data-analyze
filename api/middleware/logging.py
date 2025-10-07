@@ -3,34 +3,26 @@
 F1 Analysis API - 日誌中間件
 記錄所有 API 請求和響應
 
-版本: 2.0 (重構版)
+版本: 3.0 (整合統一日誌系統)
 作者: F1 Analysis Team
+更新: 2025-10-07 - 整合 core.logger
 """
 
 import time
-import json
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from typing import Callable
-import logging
+
+from core.logger import get_logger
 
 
 class LoggingMiddleware(BaseHTTPMiddleware):
-    """日誌記錄中間件"""
+    """API 日誌記錄中間件 - 使用統一的日誌系統"""
     
-    def __init__(self, app, logger_name: str = "f1_api"):
+    def __init__(self, app):
         super().__init__(app)
-        self.logger = logging.getLogger(logger_name)
-        
-        # 配置日誌格式
-        if not self.logger.handlers:
-            handler = logging.StreamHandler()
-            formatter = logging.Formatter(
-                '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
-            self.logger.setLevel(logging.INFO)
+        # 使用統一的日誌系統 (component="api")
+        self.logger = get_logger(component="api")
     
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """處理請求和響應日誌"""

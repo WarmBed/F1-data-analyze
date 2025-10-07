@@ -19,6 +19,9 @@ from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWhe
 # 導入國際化模組
 from core.gui_i18n import tr
 
+# 導入國際化模組
+from core.gui_i18n import tr
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -118,14 +121,28 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         
     def set_speed_data(self, distance: List[float], driver1_speed: List[float], 
                       driver2_speed: List[float], driver1_name: str = "Driver 1", 
-                      driver2_name: str = "Driver 2", sectors: List[Dict] = None):
-        """設置速度數據"""
+                      driver2_name: str = "Driver 2", sectors: List[Dict] = None,
+                      lap1: int = None, lap2: int = None):
+        """
+        設置速度數據
+        
+        Parameters:
+            distance: 距離數據
+            driver1_speed: 車手1速度數據
+            driver2_speed: 車手2速度數據
+            driver1_name: 車手1名稱
+            driver2_name: 車手2名稱
+            sectors: 賽道分段信息
+            lap1: 車手1圈數（用於雙圈比較模式）
+            lap2: 車手2圈數（用於雙圈比較模式）
+        """
         print(f"[SPEED_CHART] ========== set_speed_data 被調用 ==========")
         print(f"[SPEED_CHART] 📏 distance 點數: {len(distance) if distance else 0}")
         print(f"[SPEED_CHART] 🏎️ driver1_speed 點數: {len(driver1_speed) if driver1_speed else 0}")
         print(f"[SPEED_CHART] 🏎️ driver2_speed 點數: {len(driver2_speed) if driver2_speed else 0}")
         print(f"[SPEED_CHART] 👤 driver1_name: {driver1_name}")
         print(f"[SPEED_CHART] 👤 driver2_name: {driver2_name}")
+        print(f"[SPEED_CHART] 🔢 lap1: {lap1}, lap2: {lap2}")
         
         # 強制重置視圖狀態
         self.view_min_distance = None
@@ -140,12 +157,44 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.distance_data = distance
         self.driver1_speed = driver1_speed
         self.driver2_speed = driver2_speed
-        self.driver1_name = driver1_name
-        self.driver2_name = driver2_name
         self.sectors = sectors or []
         
-        # 判斷單車手模式：空的 driver2_speed 或空的 driver2_name 表示單車手模式
-        self.is_single_driver = (not driver2_speed or driver2_name == "" or driver1_name == driver2_name)
+        # 🆕 雙圈比較模式：判斷是否為同車手不同圈數比較
+        is_dual_lap_mode = False
+        if driver1_name == driver2_name and lap1 is not None and lap2 is not None and lap1 != lap2:
+            # 同車手不同圈數 → 雙圈比較模式
+            is_dual_lap_mode = True
+            original_driver = driver1_name
+            # ✅ 使用 tr() 進行國際化 - 僅顯示圈數
+            lap_format = tr('lap_only_format', '第{lap}圈')
+            self.driver1_name = lap_format.format(lap=lap1)
+            self.driver2_name = lap_format.format(lap=lap2)
+            print(f"[SPEED_CHART] 🔄 雙圈比較模式: {original_driver} {self.driver1_name} vs {self.driver2_name}")
+            print(f"[SPEED_CHART] 🔄 雙圈比較模式: {self.driver1_name} vs {self.driver2_name}")
+        else:
+            # 正常模式：直接使用車手名稱
+            self.driver1_name = driver1_name
+            self.driver2_name = driver2_name
+        
+        # 判斷單車手模式：
+        # 1. 空的 driver2_speed 或空的 driver2_name → 單車手模式
+        # 2. 相同車手且相同圈數 → 單車手模式
+        # 3. 相同車手但不同圈數 → 雙圈比較模式（不是單車手模式）
+        if not driver2_speed or driver2_name == "":
+            self.is_single_driver = True
+        elif driver1_name == driver2_name:
+            if lap1 is not None and lap2 is not None and lap1 != lap2:
+                # 同車手不同圈數 → 雙圈比較模式
+                self.is_single_driver = False
+                print(f"[SPEED_CHART] 🔍 雙圈比較模式（同車手不同圈數）")
+            else:
+                # 同車手相同圈數或無圈數信息 → 單車手模式
+                self.is_single_driver = True
+                print(f"[SPEED_CHART] 🔍 單車手模式（同車手相同圈數）")
+        else:
+            # 不同車手 → 雙車手比較模式
+            self.is_single_driver = False
+            
         print(f"[SPEED_CHART] 🔍 單車手模式: {self.is_single_driver}")
         
         # 計算數據範圍
@@ -1283,22 +1332,38 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             print(f"[SPEED_CHART_WIDGET] 👤 driver2_name: {driver2_name}")
             
             # 如果有車手信息，使用車手代碼作為名稱
+            lap1 = None
+            lap2 = None
             if len(drivers) >= 2:
                 driver1_name = drivers[0].get('code', driver1_name)
                 driver2_name = drivers[1].get('code', driver2_name)
+                # 🆕 提取圈數信息（用於雙圈比較模式判斷）
+                lap1 = drivers[0].get('lap_number')
+                lap2 = drivers[1].get('lap_number')
+                print(f"[SPEED_CHART_WIDGET] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
+                lap1 = drivers[0].get('lap_number')
             
-            # 檢測是否為單車手模式或相同車手比較
+            # 🆕 雙圈比較模式判斷邏輯
             is_single_driver_mode = False
+            is_dual_lap_mode = False
+            
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
                 print(f"[SPEED_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
-                # 相同車手比較（如 VER vs VER）
-                is_single_driver_mode = True
-                print(f"[SPEED_CHART] 🔍 檢測到相同車手比較: {driver1_name} vs {driver2_name}")
+                # 相同車手：需要進一步判斷是單車手還是雙圈比較
+                if lap1 is not None and lap2 is not None and lap1 != lap2:
+                    # 🆕 同車手不同圈數 → 雙圈比較模式
+                    is_dual_lap_mode = True
+                    is_single_driver_mode = False
+                    print(f"[SPEED_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                else:
+                    # 同車手相同圈數或無圈數信息 → 單車手模式
+                    is_single_driver_mode = True
+                    print(f"[SPEED_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
@@ -1306,11 +1371,16 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             
             if is_single_driver_mode:
                 print(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
-                # 設置單車手模式標記 - 與油門分析一致
+                # 設置單車手模式標記
                 self.is_single_driver = True
                 # 清空車手2的數據，只顯示車手1
                 driver2_speed = []
                 driver2_name = ""  # 單車手模式才清空車手2名稱
+                lap2 = None  # 清空 lap2
+            elif is_dual_lap_mode:
+                print(f"[SPEED_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                # 保持雙車手模式，但標籤會在 set_speed_data 中修改
+                self.is_single_driver = False
             else:
                 # 雙車手模式 - 保持車手名稱不變
                 self.is_single_driver = False
@@ -1324,7 +1394,9 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_speed=driver2_speed,
                 driver1_name=driver1_name,
                 driver2_name=driver2_name,
-                sectors=sectors
+                sectors=sectors,
+                lap1=lap1,  # 🆕 傳遞圈數信息
+                lap2=lap2   # 🆕 傳遞圈數信息
             )
             print(f"[SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成")
             
