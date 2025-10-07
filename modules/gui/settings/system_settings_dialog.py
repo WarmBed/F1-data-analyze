@@ -60,7 +60,7 @@ class SystemSettingsDialog(QDialog):
         boxplot_layout.setContentsMargins(10, 10, 10, 10)
         boxplot_layout.setSpacing(12)
 
-        boxplot_group = QGroupBox(tr("boxplot_settings_group", "Lap Time Box Plot"))
+        boxplot_group = QGroupBox(tr("boxplot_settings_group", "Box Plot Analysis"))
         group_layout = QFormLayout(boxplot_group)
         group_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         group_layout.setHorizontalSpacing(18)
@@ -73,7 +73,7 @@ class SystemSettingsDialog(QDialog):
             tr("boxplot_filter_outliers", "Filter statistical outliers (IQR)")
         )
         group_layout.addRow(self.filter_outliers_checkbox)
-        
+
         self.filter_yellow_flags_checkbox = QCheckBox(
             tr("boxplot_filter_yellow_flags", "Filter yellow flag laps")
         )
@@ -96,6 +96,16 @@ class SystemSettingsDialog(QDialog):
         )
 
         boxplot_layout.addWidget(boxplot_group)
+
+        info_label = QLabel(
+            tr(
+                "boxplot_settings_info",
+                "Settings apply to both lap time and throttle box plot modules.",
+            )
+        )
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet("color: #666666; font-size: 11px;")
+        boxplot_layout.addWidget(info_label)
         boxplot_layout.addStretch(1)
 
         # Helper actions
@@ -109,7 +119,8 @@ class SystemSettingsDialog(QDialog):
         helper_layout.addStretch(1)
 
         boxplot_layout.addLayout(helper_layout)
-        self.tab_widget.addTab(boxplot_tab, tr("boxplot_settings_tab", "Lap Time Box Plot"))
+
+        self.tab_widget.addTab(boxplot_tab, tr("boxplot_settings_tab", "Box Plot Analysis"))
 
         # Button box
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)

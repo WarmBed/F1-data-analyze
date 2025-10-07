@@ -238,6 +238,34 @@ class GuiTranslator:
                 'ja': '更新するテレメトリー分析ウィンドウがありません\n（{0}個の非テレメトリーモジュールをスキップ）'
             },
             'update': {'zh': '更新', 'en': 'Update', 'ja': '更新'},
+
+            # 系統設定
+            'system_settings_title': {'zh': '系統設定', 'en': 'System Settings', 'ja': 'システム設定'},
+            'boxplot_settings_tab': {'zh': '箱型圖分析', 'en': 'Box Plot Analysis', 'ja': '箱ひげ図分析'},
+            'boxplot_settings_group': {'zh': '箱型圖全域設定', 'en': 'Box Plot Global Settings', 'ja': '箱ひげ図グローバル設定'},
+            'boxplot_settings_info': {
+                'zh': '設定會同步套用至圈速與油門箱型圖模組。',
+                'en': 'Settings apply to both lap time and throttle box plot modules.',
+                'ja': '設定はラップタイムとスロットルの箱ひげ図モジュールの両方に適用されます。'
+            },
+            'boxplot_filter_pit': {'zh': '過濾進站圈', 'en': 'Filter pit laps', 'ja': 'ピットラップを除外'},
+            'boxplot_filter_outliers': {
+                'zh': '過濾統計異常值 (IQR)',
+                'en': 'Filter statistical outliers (IQR)',
+                'ja': '統計的外れ値 (IQR) を除外'
+            },
+            'boxplot_filter_yellow_flags': {
+                'zh': '過濾黃旗圈',
+                'en': 'Filter yellow flag laps',
+                'ja': 'イエローフラッグ周回を除外'
+            },
+            'boxplot_outlier_threshold': {'zh': '異常值閾值', 'en': 'Outlier threshold', 'ja': '外れ値の閾値'},
+            'boxplot_outlier_threshold_hint': {
+                'zh': '設定用於異常值判定的 IQR 倍數',
+                'en': 'Interquartile Range multiplier for outlier detection',
+                'ja': '外れ値判定用の IQR 乗数を設定'
+            },
+            'reset_defaults': {'zh': '恢復預設', 'en': 'Reset Defaults', 'ja': 'デフォルトに戻す'},
             
             # 分析錯誤訊息
             'analysis_failed': {'zh': '分析失敗', 'en': 'Analysis Failed', 'ja': '分析失敗'},
@@ -274,6 +302,92 @@ class GuiTranslator:
             'accident_analysis': {'zh': '事故分析', 'en': 'Accident Analysis', 'ja': '事故分析'},
             'rain_analysis': {'zh': '雨況分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
             'laptime_boxplot': {'zh': '圈速箱型圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイムボックスプロット'},
+            'throttle_box_plot': {'zh': '油門箱型圖', 'en': 'Throttle Box Plot', 'ja': 'スロットル箱ひげ図'},
+            'throttle_box_plot.export_dialog_title': {
+                'zh': '儲存油門箱型圖',
+                'en': 'Save Throttle Box Plot',
+                'ja': 'スロットル箱ひげ図を保存'
+            },
+            'throttle_box_plot.export_success_title': {
+                'zh': '匯出成功',
+                'en': 'Export Successful',
+                'ja': 'エクスポート成功'
+            },
+            'throttle_box_plot.export_success_body': {
+                'zh': '圖表已成功匯出。',
+                'en': 'Chart exported successfully.',
+                'ja': 'チャートが正常にエクスポートされました。'
+            },
+            'throttle_box_plot.export_failed_title': {
+                'zh': '匯出失敗',
+                'en': 'Export Failed',
+                'ja': 'エクスポート失敗'
+            },
+            'throttle_box_plot.export_failed_body': {
+                'zh': '無法匯出圖表，請嘗試其他檔名或位置。',
+                'en': 'Unable to export chart. Please try another file name or location.',
+                'ja': 'チャートをエクスポートできませんでした。別のファイル名または保存先をお試しください。'
+            },
+            'throttle_box_plot.y_axis_title': {
+                'zh': '全油門持續時間 (秒)',
+                'en': 'Full Throttle Duration (seconds)',
+                'ja': 'フルスロットル継続時間（秒）'
+            },
+            'throttle_box_plot.no_data': {
+                'zh': '沒有可用的油門資料',
+                'en': 'No throttle data available',
+                'ja': '利用可能なスロットルデータがありません'
+            },
+            'throttle_box_plot.stat_median': {'zh': '中位數', 'en': 'Median', 'ja': '中央値'},
+            'throttle_box_plot.stat_mean': {'zh': '平均值', 'en': 'Mean', 'ja': '平均値'},
+            'throttle_box_plot.stat_q1': {'zh': 'Q1', 'en': 'Q1', 'ja': '第1四分位数'},
+            'throttle_box_plot.stat_q3': {'zh': 'Q3', 'en': 'Q3', 'ja': '第3四分位数'},
+            'throttle_box_plot.stat_count': {'zh': '取樣數', 'en': 'Samples', 'ja': 'サンプル数'},
+            'throttle_analysis_options_title': {
+                'zh': '油門分析選項',
+                'en': 'Throttle Analysis Options',
+                'ja': 'スロットル分析オプション'
+            },
+            'throttle_analysis_options_description': {
+                'zh': '請選擇要開啟的油門分析視圖。',
+                'en': 'Select the throttle analysis views you want to open.',
+                'ja': '開きたいスロットル分析ビューを選択してください。'
+            },
+            'throttle_analysis_option_box_plot': {
+                'zh': '油門箱型圖',
+                'en': 'Throttle Box Plot',
+                'ja': 'スロットル箱ひげ図'
+            },
+            'throttle_analysis_option_line_chart': {
+                'zh': '油門折線圖（即將推出）',
+                'en': 'Throttle Line Chart (coming soon)',
+                'ja': 'スロットル折れ線グラフ（近日公開）'
+            },
+            'throttle_analysis_option_line_chart_hint': {
+                'zh': '油門折線圖模組仍在開發中，將於未來更新提供。',
+                'en': 'The throttle line chart module is under development and will arrive in a future update.',
+                'ja': 'スロットル折れ線グラフモジュールは開発中で、今後の更新で提供予定です。'
+            },
+            'throttle_box_plot_desc': {
+                'zh': '油門箱型圖：視覺化全油門使用分佈情況',
+                'en': 'Throttle Box Plot: Visualizes throttle usage distribution',
+                'ja': 'スロットル箱ひげ図: スロットル使用分布を可視化'
+            },
+            'throttle_line_chart_desc': {
+                'zh': '油門折線圖：顯示時間序列油門曲線（即將推出）',
+                'en': 'Throttle Line Chart: Time-series throttle view (coming soon)',
+                'ja': 'スロットル折れ線グラフ: スロットルを時系列で表示（近日公開）'
+            },
+            'throttle_line_chart_placeholder_title': {
+                'zh': '油門折線圖',
+                'en': 'Throttle Line Chart',
+                'ja': 'スロットル折れ線グラフ'
+            },
+            'throttle_line_chart_placeholder_body': {
+                'zh': '油門折線圖模組仍在開發中，敬請期待。',
+                'en': 'The throttle line chart module is still under development. Stay tuned!',
+                'ja': 'スロットル折れ線グラフモジュールは現在開発中です。リリースをお待ちください。'
+            },
             
             # 事故分析模組
             'waiting_data_load': {'zh': '等待數據載入...', 'en': 'Waiting for data loading...', 'ja': 'データ読み込み待ち...'},

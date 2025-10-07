@@ -343,6 +343,15 @@ _FUNCTION_SPEC_LIST = [
         notes="Feeds the global straight-line speed chart for lap analysis modules.",
     ),
     _make_spec(
+        "54",
+        name="Throttle Box Plot Analysis",
+        description="Generates box plot data for full-throttle duration per driver with outlier filtering.",
+        required_params=["year", "race", "session"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
+        cache_patterns=["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
+        notes="Provides per-driver full-throttle duration statistics for GUI box plot visualization.",
+    ),
+    _make_spec(
         "99",
         name="Season Calendar Overview",
         description="Returns completed and upcoming events for the selected season using FastF1 schedule data.",

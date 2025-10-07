@@ -6597,6 +6597,7 @@ class StyleHMainWindow(QMainWindow):
         single_group.setExpanded(True)
         QTreeWidgetItem(single_group, [tr("lap_analysis", "Lap Analysis")])
         QTreeWidgetItem(single_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
+        QTreeWidgetItem(single_group, [tr("throttle_analysis", "Throttle Analysis")])
         
         layout.addWidget(tree)
         
@@ -8152,6 +8153,28 @@ class StyleHMainWindow(QMainWindow):
             self.lap_analysis()
             return
 
+        is_throttle_overview = (
+            ("油門分析" in function_name)
+            or ("Throttle Analysis" in function_name)
+            or ("スロットル分析" in function_name)
+        )
+
+        if is_throttle_overview:
+            throttle_selection = self._prompt_throttle_analysis_options()
+
+            if throttle_selection is None:
+                print("[THROTTLE] 使用者取消油門分析選項對話框")
+                return
+
+            if throttle_selection.get("line_chart"):
+                self._show_throttle_line_chart_placeholder()
+
+            if throttle_selection.get("box_plot"):
+                function_name = tr("throttle_box_plot", "Throttle Box Plot")
+            else:
+                print("[THROTTLE] 未選擇任何可用的油門分析模組，結束建立流程")
+                return
+
         # 獲取當前活動的分頁
         current_tab = self.tab_widget.currentWidget()
         if current_tab is None:
@@ -8417,6 +8440,45 @@ class StyleHMainWindow(QMainWindow):
                 logger.debug("Unable to tag module with factory type %s: %s", module_type, exc)
         return module
 
+    def _prompt_throttle_analysis_options(self):
+        """顯示油門分析選項並回傳使用者選擇。"""
+        try:
+            from modules.gui.Throttle_analysis.throttle_analysis_options_dialog import (
+                ThrottleAnalysisOptionsDialog,
+            )
+        except ImportError as exc:
+            print(f"[THROTTLE] 無法載入油門分析選項對話框: {exc}")
+            return {"box_plot": True, "line_chart": False}
+
+        dialog = ThrottleAnalysisOptionsDialog(self)
+        result = dialog.exec_()
+
+        if result != QDialog.Accepted:
+            return None
+
+        selected_types = dialog.get_selected_types()
+        selection = {
+            "box_plot": ThrottleAnalysisOptionsDialog.TYPE_BOX_PLOT in selected_types,
+            "line_chart": ThrottleAnalysisOptionsDialog.TYPE_LINE_CHART in selected_types,
+        }
+
+        if not selection["box_plot"] and not selection["line_chart"]:
+            selection["box_plot"] = True
+
+        print(f"[THROTTLE] 選項結果: {selection}")
+        return selection
+
+    def _show_throttle_line_chart_placeholder(self):
+        """顯示油門折線圖尚未開發的提示訊息。"""
+        QMessageBox.information(
+            self,
+            tr("throttle_line_chart_placeholder_title", "Throttle Line Chart"),
+            tr(
+                "throttle_line_chart_placeholder_body",
+                "Throttle line chart module is still under development and will be available in a future update.",
+            ),
+        )
+
     def _prompt_detailed_lap_options(self):
         """顯示詳細圈速分析選項並回傳使用者選擇。"""
         try:
@@ -8601,6 +8663,13 @@ class StyleHMainWindow(QMainWindow):
                     ("throttle_analysis", "Throttle Analysis"),
                     "油門分析",
                     "スロットル分析",
+                ],
+                "throttle_box_plot": [
+                    ("throttle_box_plot", "Throttle Box Plot"),
+                    ("throttle_box_plot_analysis", "Throttle Box Plot Analysis"),
+                    "油門箱型圖",
+                    "Throttle Box Plot",
+                    "スロットル箱ひげ図",
                 ],
                 "rpm_analysis": [
                     ("rpm_analysis", "RPM Analysis"),
@@ -8861,6 +8930,66 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 油門分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+
+                # 油門箱型圖分析模組
+                elif module_type == "throttle_box_plot":
+                    try:
+                        from modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_module import (
+                            ThrottleBoxPlotAnalysisModule,
+                        )
+
+                        print(f"[OK] [MODULE_FACTORY] 創建油門箱型圖分析模組實例")
+
+                        module = ThrottleBoxPlotAnalysisModule(parent=self)
+                        module.parameter_provider = parameter_provider
+
+                        current_year_value = None
+                        current_race = None
+                        current_session = None
+
+                        if parameter_provider:
+                            current_year_value = parameter_provider.get_current_year()
+                            try:
+                                current_year = int(current_year_value)
+                            except (TypeError, ValueError):
+                                current_year = current_year_value
+
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+
+                            print(
+                                f"[INIT] [MODULE_FACTORY] 油門箱型圖模組參數預設為: {module.current_year} {module.current_race} {module.current_session}"
+                            )
+
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 油門箱型圖模組初始化成功")
+                            if parameter_provider:
+                                sync_year = current_year_value
+                                try:
+                                    sync_year_int = int(sync_year)
+                                except (TypeError, ValueError):
+                                    sync_year_int = sync_year
+
+                                update_year = sync_year_int if sync_year_int is not None else module.current_year
+
+                                try:
+                                    module.update_parameters(update_year, current_race, current_session)
+                                except Exception as sync_exc:
+                                    print(f"[WARN] [MODULE_FACTORY] 油門箱型圖模組參數同步失敗: {sync_exc}")
+
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

@@ -91,6 +91,7 @@ class F1AnalysisFunctionMapper:
             51: self._execute_system_diagnostics,
             52: self._execute_performance_benchmarking,
             53: self._execute_data_integrity_check,
+            54: self._execute_driver_throttle_ratio,
             99: self._execute_season_calendar_analysis,
         }
         
@@ -2822,6 +2823,49 @@ class F1AnalysisFunctionMapper:
                 "total_functions": len(self.function_mapping) + len(self.sub_function_mapping)
             }
         }
+
+    def _execute_driver_throttle_ratio(self, **kwargs):
+        """Function 54: 全車手每圈油門比例分析"""
+
+        try:
+            from CLI_modules.cli.analyzer.driver_throttle_ratio import (
+                DEFAULT_COAST_THRESHOLD,
+                DEFAULT_FULL_THROTTLE_THRESHOLD,
+                run_driver_throttle_ratio_analysis,
+            )
+        except ImportError as exc:
+            message = f"無法載入油門分析模組: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "54",
+                "data": None,
+            }
+
+        threshold = kwargs.get("threshold") or kwargs.get("full_throttle_threshold")
+        coast_threshold = kwargs.get("coast_threshold")
+        show_summary = kwargs.get("show_summary", True)
+        save_json = kwargs.get("save_json", True)
+
+        try:
+            result = run_driver_throttle_ratio_analysis(
+                data_loader=self.data_loader,
+                threshold=float(threshold) if threshold is not None else DEFAULT_FULL_THROTTLE_THRESHOLD,
+                coast_threshold=float(coast_threshold) if coast_threshold is not None else DEFAULT_COAST_THRESHOLD,
+                show_summary=bool(show_summary),
+                save_json=bool(save_json),
+            )
+            return self._standardize_result(result, 54, "全車手每圈油門比例分析")
+        except Exception as exc:  # pragma: no cover - runtime safeguard
+            message = f"全車手油門比例分析失敗: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "54",
+                "data": None,
+            }
 
     def _execute_season_calendar_analysis(self, **kwargs):
         """Function 99: 賽季賽程查詢 (支援 2020-2025 批量查詢 + 12小時智能刷新)"""
