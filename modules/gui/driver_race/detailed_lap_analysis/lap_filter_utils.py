@@ -148,7 +148,14 @@ def lap_is_pit_stop(
     lap_info: Dict[str, Any],
     smart_markers_summary: Optional[Dict[str, Any]] = None,
 ) -> bool:
-    """Determine whether the provided lap data corresponds to a pit stop lap."""
+    """Determine whether the provided lap data corresponds to a pit stop lap.
+    
+    Uses multiple detection methods:
+    1. smart_markers_summary.pit_stop_detection (if available)
+    2. pit_out_time (indicates pit out lap)
+    3. pit_status field (if not None/normal)
+    4. stint change + tyre_life=1 (tire change detection)
+    """
 
     if not isinstance(lap_info, dict):
         return False
@@ -156,6 +163,7 @@ def lap_is_pit_stop(
     lap_raw = lap_info.get("lap_number")
     lap_int = normalize_lap_number(lap_raw)
 
+    # Method 1: Check smart_markers_summary (original logic)
     summary = smart_markers_summary
     if summary is None and isinstance(lap_info.get("smart_markers_summary"), dict):
         summary = lap_info.get("smart_markers_summary")
@@ -179,5 +187,20 @@ def lap_is_pit_stop(
         pit_detail = smart_markers.get("pit_stop_detection", {})
         if isinstance(pit_detail, dict) and pit_detail.get("is_pit_lap", False):
             return True
+
+    # 🔧 FIX: Backup detection methods (for Function 54 JSON without smart_markers)
+    
+    # Method 2: Check pit_out_time (pit out lap)
+    if lap_info.get("pit_out_time") is not None:
+        return True
+    
+    # Method 3: Check pit_in_time (pit in lap)
+    if lap_info.get("pit_in_time") is not None:
+        return True
+    
+    # Method 4: Check pit_status field
+    pit_status = lap_info.get("pit_status")
+    if pit_status and str(pit_status).strip().lower() not in {"", "none", "normal"}:
+        return True
 
     return False

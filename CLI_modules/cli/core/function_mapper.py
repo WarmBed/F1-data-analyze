@@ -90,8 +90,9 @@ class F1AnalysisFunctionMapper:
             50: self._execute_cache_optimization,
             51: self._execute_system_diagnostics,
             52: self._execute_performance_benchmarking,
-            53: self._execute_data_integrity_check,
+            53: self._execute_ideal_lap_analysis,
             54: self._execute_driver_throttle_ratio,
+            98: self._execute_team_color_analysis,
             99: self._execute_season_calendar_analysis,
         }
         
@@ -258,7 +259,7 @@ class F1AnalysisFunctionMapper:
     def _check_data_loaded(self, function_id: Union[str, int]) -> bool:
         """檢查是否需要載入數據"""
         # 系統功能不需要檢查數據載入
-        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "99"}
+        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "98", "99"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -2806,6 +2807,61 @@ class F1AnalysisFunctionMapper:
     def _execute_performance_benchmarking(self, **kwargs):
         """效能基準測試"""
         return {"success": True, "message": "效能基準測試功能開發中", "function_id": "50"}
+
+    def _execute_ideal_lap_analysis(self, **kwargs):
+        """Function 53: 全車手理想圈分析"""
+
+        try:
+            from CLI_modules.cli.analyzer.ideal_lap_analysis import IdealLapAnalyzer
+        except ImportError as exc:  # pragma: no cover - module import guard
+            message = f"無法載入理想圈分析模組: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "53",
+                "data": None,
+            }
+
+        if self.data_loader is None:
+            return {
+                "success": False,
+                "message": "理想圈分析失敗：資料載入器未就緒",
+                "function_id": "53",
+                "data": None,
+            }
+
+        debug = kwargs.get("debug") if "debug" in kwargs else True
+        save_json = kwargs.get("save_json", True)
+
+        analyzer = IdealLapAnalyzer(self.data_loader, debug=bool(debug))
+
+        if not analyzer.load_data():
+            return {
+                "success": False,
+                "message": "理想圈分析失敗：無可用圈速資料",
+                "function_id": "53",
+                "data": None,
+            }
+
+        driver_results = analyzer.analyze_all_drivers()
+        payload = analyzer.build_json(driver_results)
+
+        output_file = None
+        if payload.get("success") and save_json:
+            output_file = analyzer.save_json(payload)
+            if output_file:
+                payload["output_file"] = output_file
+
+        result = {
+            "success": payload.get("success", False),
+            "message": payload.get("message", "理想圈分析完成") if payload.get("success") else payload.get("message", "理想圈分析失敗"),
+            "data": payload,
+            "output_file": output_file,
+            "cache_used": False,
+        }
+
+        return self._standardize_result(result, 53, "全車手理想圈分析")
     
     def _execute_data_integrity_check(self, **kwargs):
         """數據完整性檢查"""
@@ -2864,6 +2920,39 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": message,
                 "function_id": "54",
+                "data": None,
+            }
+
+    def _execute_team_color_analysis(self, **kwargs):
+        """Function 98: 顏色配置輸出 (FastF1 團隊/車手色票)"""
+
+        try:
+            from CLI_modules.cli.analyzer.team_color_analysis import generate_team_color_report
+
+            colormap = kwargs.get("colormap") or kwargs.get("palette") or "fastf1"
+            include_drivers = kwargs.get("include_drivers", True)
+            save_json = kwargs.get("save_json", True)
+
+            year = kwargs.get("year")
+            if year is None and self.data_loader and getattr(self.data_loader, "year", None):
+                year = self.data_loader.year
+            if year is None:
+                year = datetime.now().year
+
+            result = generate_team_color_report(
+                year=int(year),
+                colormap=str(colormap),
+                save_json=bool(save_json),
+                include_drivers=bool(include_drivers),
+            )
+
+            return self._standardize_result(result, 98, "顏色配置輸出")
+
+        except Exception as exc:  # pragma: no cover - runtime safeguard
+            return {
+                "success": False,
+                "message": f"顏色配置輸出失敗: {exc}",
+                "function_id": "98",
                 "data": None,
             }
 

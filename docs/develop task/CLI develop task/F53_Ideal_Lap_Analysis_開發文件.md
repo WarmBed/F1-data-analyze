@@ -28,7 +28,6 @@
 **與最快圈比較**:
 ```
 潛在進步空間 = 最快圈時間 - 理想圈時間
-一致性分數 = (理想圈時間 / 最快圈時間) × 100%
 區間效率 = 各區間在最快圈中的表現 vs 理想區間時間
 ```
 
@@ -39,7 +38,7 @@
 ### CLI 參數規格
 
 ```powershell
-python f1_analysis_modular_main.py -f 53 -y <YEAR> -r <RACE> -s <SESSION> [-d <DRIVER>]
+python f1_analysis_modular_main.py -f 53 -y <YEAR> -r <RACE> -s <SESSION>
 ```
 
 | 參數 | 必填 | 說明 | 範例 |
@@ -48,18 +47,8 @@ python f1_analysis_modular_main.py -f 53 -y <YEAR> -r <RACE> -s <SESSION> [-d <D
 | `-y` / `--year` | ✅ | 賽季年份 | `2024`, `2025` |
 | `-r` / `--race` | ✅ | 賽事名稱 | `Japan`, `Monaco`, `Bahrain` |
 | `-s` / `--session` | ✅ | 賽事階段 | `R` (正賽), `Q` (排位賽), `FP1/2/3` |
-| `-d` / `--driver` | ❌ | 車手代碼 (可選) | `VER`, `LEC`, `HAM` |
 
-### 參數行為
-
-1. **指定車手模式** (`-d` 提供):
-   - 僅分析指定車手的理想圈
-   - 輸出單一車手的詳細分析結果
-
-2. **全車手模式** (`-d` 未提供):
-   - 分析所有參賽車手的理想圈
-   - 輸出全車手的理想圈排名比較
-   - 包含車手間的理想圈差距分析
+> Function 53 只提供**全車手模式**：執行時會一次載入該場次所有車手的圈速資料，並輸出跨車手的理想圈排名及比較分析。
 
 ---
 
@@ -101,14 +90,13 @@ python f1_analysis_modular_main.py -f 53 -y <YEAR> -r <RACE> -s <SESSION> [-d <D
 ┌─────────────────────────────────────────────────────────────┐
 │ 步驟 5: 比較分析                                              │
 │ - 計算時間差距: gap = fastest_lap_time - ideal_lap_time      │
-│ - 計算一致性分數: consistency = (ideal / fastest) × 100%     │
 │ - 分析每個區間的效率: sector_efficiency[i] = ...             │
 │ - 判定哪些區間在最快圈中達到最佳                              │
 └─────────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────────┐
 │ 步驟 6: 統計計算                                              │
-│ - 計算每個區間的標準差 (一致性指標)                           │
+│ - 計算每個區間的統計值 (平均、標準差等)                       │
 │ - 計算區間改進潛力                                            │
 │ - 識別最具改進空間的區間                                      │
 └─────────────────────────────────────────────────────────────┘
@@ -125,7 +113,7 @@ python f1_analysis_modular_main.py -f 53 -y <YEAR> -r <RACE> -s <SESSION> [-d <D
 
 ### 詳細演算法實現
 
-#### 1. 單一車手理想圈計算
+#### 單一車手理想圈計算（內部邏輯）
 
 ```python
 def calculate_ideal_lap(driver_laps):
@@ -196,7 +184,6 @@ def calculate_ideal_lap(driver_laps):
         
         # 6. 計算比較指標
         time_gap = fastest_lap_time - ideal_lap_time
-        consistency_score = (ideal_lap_time / fastest_lap_time) * 100
         
         # 7. 區間效率分析
         sector_efficiency = {}
@@ -244,7 +231,6 @@ def calculate_ideal_lap(driver_laps):
             },
             'comparison': {
                 'time_gap': round(time_gap, 3),
-                'consistency_score': round(consistency_score, 2),
                 'potential_improvement': round(time_gap, 3),
                 'sector_efficiency': sector_efficiency
             },
@@ -256,7 +242,7 @@ def calculate_ideal_lap(driver_laps):
     return None
 ```
 
-#### 2. 全車手理想圈排名
+#### 全車手理想圈排名輸出
 
 ```python
 def calculate_all_drivers_ideal_laps(session):
@@ -287,7 +273,6 @@ def calculate_all_drivers_ideal_laps(session):
                 'ideal_lap_time': ideal_lap_data['ideal_lap']['total_time'],
                 'fastest_lap_time': ideal_lap_data['fastest_lap']['total_time'],
                 'time_gap': ideal_lap_data['comparison']['time_gap'],
-                'consistency_score': ideal_lap_data['comparison']['consistency_score'],
                 'details': ideal_lap_data
             })
     
@@ -311,176 +296,16 @@ def calculate_all_drivers_ideal_laps(session):
 
 ## 📤 JSON 輸出格式
 
-### 1. 單一車手模式輸出
+### 全車手模式輸出
 
-**檔案命名**: `ideal_lap_analysis_{year}_{race}_{session}_{driver}_{timestamp}.json`
-
-```json
-{
-  "metadata": {
-    "function_id": 53,
-    "function_name": "Ideal Lap Analysis",
-    "year": 2024,
-    "race": "Japan",
-    "session": "R",
-    "driver": "VER",
-    "analysis_timestamp": "2025-10-07T14:30:00.123456",
-    "api_source": "FastF1",
-    "data_version": "1.0.0"
-  },
-  "analysis_result": {
-    "driver_info": {
-      "driver_code": "VER",
-      "driver_name": "Max VERSTAPPEN",
-      "team": "Red Bull Racing",
-      "car_number": 1
-    },
-    "ideal_lap": {
-      "total_time": 91.368,
-      "formatted_time": "1:31.368",
-      "sectors": {
-        "sector_1": {
-          "time_seconds": 25.123,
-          "formatted_time": "25.123s",
-          "lap_number": 15,
-          "percentage_of_lap": 27.5
-        },
-        "sector_2": {
-          "time_seconds": 38.456,
-          "formatted_time": "38.456s",
-          "lap_number": 23,
-          "percentage_of_lap": 42.1
-        },
-        "sector_3": {
-          "time_seconds": 27.789,
-          "formatted_time": "27.789s",
-          "lap_number": 18,
-          "percentage_of_lap": 30.4
-        }
-      }
-    },
-    "fastest_lap": {
-      "total_time": 91.625,
-      "formatted_time": "1:31.625",
-      "lap_number": 23,
-      "sectors": {
-        "sector_1": {
-          "time_seconds": 25.123,
-          "formatted_time": "25.123s"
-        },
-        "sector_2": {
-          "time_seconds": 38.598,
-          "formatted_time": "38.598s"
-        },
-        "sector_3": {
-          "time_seconds": 27.904,
-          "formatted_time": "27.904s"
-        }
-      }
-    },
-    "comparison": {
-      "time_gap": 0.257,
-      "formatted_gap": "+0.257s",
-      "consistency_score": 99.72,
-      "consistency_rating": "Excellent",
-      "potential_improvement": 0.257,
-      "sector_efficiency": {
-        "sector_1": {
-          "ideal_time": 25.123,
-          "fastest_lap_time": 25.123,
-          "gap": 0.000,
-          "is_optimal": true,
-          "efficiency_percentage": 100.00,
-          "status": "Perfect"
-        },
-        "sector_2": {
-          "ideal_time": 38.456,
-          "fastest_lap_time": 38.598,
-          "gap": 0.142,
-          "is_optimal": false,
-          "efficiency_percentage": 99.63,
-          "status": "Near Optimal",
-          "improvement_potential": 0.142
-        },
-        "sector_3": {
-          "ideal_time": 27.789,
-          "fastest_lap_time": 27.904,
-          "gap": 0.115,
-          "is_optimal": false,
-          "efficiency_percentage": 99.59,
-          "status": "Near Optimal",
-          "improvement_potential": 0.115
-        }
-      },
-      "optimal_sectors_count": 1,
-      "total_sectors": 3,
-      "optimal_percentage": 33.33
-    },
-    "statistics": {
-      "total_laps_analyzed": 53,
-      "valid_laps": 48,
-      "sectors": {
-        "sector_1": {
-          "mean": 25.678,
-          "std_dev": 0.234,
-          "min": 25.123,
-          "max": 26.789,
-          "range": 1.666,
-          "consistency_rating": "Good"
-        },
-        "sector_2": {
-          "mean": 39.012,
-          "std_dev": 0.456,
-          "min": 38.456,
-          "max": 40.234,
-          "range": 1.778,
-          "consistency_rating": "Average"
-        },
-        "sector_3": {
-          "mean": 28.123,
-          "std_dev": 0.189,
-          "min": 27.789,
-          "max": 28.901,
-          "range": 1.112,
-          "consistency_rating": "Excellent"
-        }
-      }
-    },
-    "insights": {
-      "overall_assessment": "Driver shows excellent consistency with 99.72% efficiency. Sector 1 achieved perfect performance in fastest lap.",
-      "strongest_sector": "sector_3",
-      "weakest_sector": "sector_2",
-      "improvement_opportunities": [
-        "Sector 2 has 0.142s improvement potential",
-        "Sector 3 has 0.115s improvement potential"
-      ],
-      "consistency_highlights": [
-        "Sector 1: Perfect execution in fastest lap",
-        "Sector 3: Excellent consistency (std_dev: 0.189s)"
-      ]
-    }
-  },
-  "export_info": {
-    "file_format": "JSON",
-    "encoding": "UTF-8",
-    "generated_by": "F1T CLI Function 53",
-    "cli_version": "1.0.0"
-  }
-}
-```
-
----
-
-### 2. 全車手模式輸出
-
-**檔案命名**: `ideal_lap_ranking_{year}_{race}_{session}_all_drivers_{timestamp}.json`
+**檔案命名**: `ideal_lap_ranking_{year}_{race}_{session}.json`
 
 ```json
 {
   "metadata": {
     "function_id": 53,
     "function_name": "Ideal Lap Analysis - All Drivers",
-    "year": 2024,
+    "year": 2025,
     "race": "Japan",
     "session": "R",
     "analysis_timestamp": "2025-10-07T14:30:00.123456",
@@ -493,8 +318,7 @@ def calculate_all_drivers_ideal_laps(session):
       "fastest_ideal_lap": 91.368,
       "slowest_ideal_lap": 94.567,
       "average_ideal_lap": 92.789,
-      "ideal_lap_spread": 3.199,
-      "average_consistency_score": 98.45
+      "ideal_lap_spread": 3.199
     },
     "ranking": [
       {
@@ -506,8 +330,6 @@ def calculate_all_drivers_ideal_laps(session):
         "fastest_lap_time": 91.625,
         "time_gap": 0.257,
         "gap_to_leader": 0.000,
-        "consistency_score": 99.72,
-        "optimal_sectors": 1,
         "sector_breakdown": {
           "sector_1": {
             "time": 25.123,
@@ -521,6 +343,40 @@ def calculate_all_drivers_ideal_laps(session):
             "time": 27.789,
             "is_optimal_in_fastest": false
           }
+        },
+        "laps": [
+          {
+            "lap_number": 15,
+            "lap_time_seconds": 92.345,
+            "lap_time_formatted": "1:32.345",
+            "sector_times": {
+              "s1": 25.456,
+              "s2": 38.567,
+              "s3": 28.322
+            },
+            "is_valid": true
+          },
+          {
+            "lap_number": 23,
+            "lap_time_seconds": 91.625,
+            "lap_time_formatted": "1:31.625",
+            "sector_times": {
+              "s1": 25.123,
+              "s2": 38.598,
+              "s3": 27.904
+            },
+            "is_valid": true
+          }
+          // ...其餘圈次
+        ],
+        "ideal_lap_detail": {
+          "total_time": 91.368,
+          "formatted_time": "1:31.368",
+          "sector_sources": {
+            "s1": { "lap": 15, "time": 25.123 },
+            "s2": { "lap": 23, "time": 38.456 },
+            "s3": { "lap": 18, "time": 27.789 }
+          }
         }
       },
       {
@@ -532,8 +388,6 @@ def calculate_all_drivers_ideal_laps(session):
         "fastest_lap_time": 91.789,
         "time_gap": 0.333,
         "gap_to_leader": 0.088,
-        "consistency_score": 99.58,
-        "optimal_sectors": 2,
         "sector_breakdown": {
           "sector_1": {
             "time": 25.234,
@@ -547,24 +401,32 @@ def calculate_all_drivers_ideal_laps(session):
             "time": 27.655,
             "is_optimal_in_fastest": false
           }
+        },
+        "laps": [ /* 同上，列出實際圈速與區段時間 */ ],
+        "ideal_lap_detail": {
+          "total_time": 91.456,
+          "formatted_time": "1:31.456",
+          "sector_sources": {
+            "s1": { "lap": 20, "time": 25.234 },
+            "s2": { "lap": 21, "time": 38.567 },
+            "s3": { "lap": 18, "time": 27.655 }
+          }
         }
       }
-      // ... 其他車手數據
+      // ...其餘車手
     ],
     "team_analysis": {
       "Red Bull Racing": {
         "drivers": ["VER", "PER"],
         "average_ideal_lap": 91.567,
-        "average_consistency": 99.45,
         "best_driver": "VER"
       },
       "Ferrari": {
         "drivers": ["LEC", "SAI"],
         "average_ideal_lap": 91.678,
-        "average_consistency": 99.23,
         "best_driver": "LEC"
       }
-      // ... 其他車隊
+      // ...其他車隊
     },
     "sector_comparison": {
       "sector_1": {
@@ -601,6 +463,10 @@ def calculate_all_drivers_ideal_laps(session):
   }
 }
 ```
+
+> 每位車手的資料皆包含：
+> - `laps`：該場次所有有效圈的圈速與三段時間，可支援後續分析或 GUI 繪圖。
+> - `ideal_lap_detail`：整合理想圈總時間與各區段來源圈次。
 
 ---
 
@@ -656,32 +522,7 @@ def format_lap_time(seconds):
         return f"{remaining_seconds:.3f}s"
 ```
 
-### 3. 一致性評級
-
-```python
-def get_consistency_rating(consistency_score):
-    """
-    根據一致性分數給予評級
-    
-    Args:
-        consistency_score: float - 一致性分數 (0-100)
-        
-    Returns:
-        str - 評級字串
-    """
-    if consistency_score >= 99.5:
-        return "Excellent"
-    elif consistency_score >= 99.0:
-        return "Very Good"
-    elif consistency_score >= 98.5:
-        return "Good"
-    elif consistency_score >= 98.0:
-        return "Average"
-    else:
-        return "Needs Improvement"
-```
-
-### 4. 異常處理
+### 3. 異常處理
 
 ```python
 def safe_calculate_ideal_lap(driver_laps, driver_code):
@@ -715,34 +556,6 @@ def safe_calculate_ideal_lap(driver_laps, driver_code):
 
 ---
 
-## 🎨 GUI 繪圖建議
-
-### 推薦的視覺化圖表
-
-1. **理想圈 vs 最快圈比較圖** (Bar Chart)
-   - X 軸: 區間 (S1, S2, S3, Total)
-   - Y 軸: 時間 (秒)
-   - 兩組柱狀圖: 理想圈、最快圈
-
-2. **區間效率雷達圖** (Radar Chart)
-   - 三個軸: Sector 1, 2, 3
-   - 顯示各區間的效率百分比
-
-3. **全車手理想圈排名** (Horizontal Bar Chart)
-   - Y 軸: 車手代碼
-   - X 軸: 理想圈時間
-   - 顏色: 車隊顏色
-
-4. **一致性分數儀表板** (Gauge Chart)
-   - 顯示 0-100% 的一致性分數
-   - 顏色分級: 綠色 (>99%), 黃色 (98-99%), 紅色 (<98%)
-
-5. **區間時間分佈圖** (Box Plot)
-   - 顯示每個區間的時間分佈
-   - 標示最佳時間點
-
----
-
 ## 📝 開發檢查清單
 
 ### Phase 1: 核心演算法實現 ✅
@@ -754,7 +567,6 @@ def safe_calculate_ideal_lap(driver_laps, driver_code):
 - [ ] 實現異常處理機制
 
 ### Phase 2: JSON 輸出格式 ✅
-- [ ] 設計單一車手 JSON 結構
 - [ ] 設計全車手 JSON 結構
 - [ ] 實現 JSON 序列化函數
 - [ ] 實現檔案命名規則
@@ -763,23 +575,17 @@ def safe_calculate_ideal_lap(driver_laps, driver_code):
 ### Phase 3: CLI 整合 ✅
 - [ ] 在 `function_mapper.py` 註冊 Function 53
 - [ ] 實現 CLI 參數解析
-- [ ] 實現單一車手模式
 - [ ] 實現全車手模式
 - [ ] 實現進度顯示
 
 ### Phase 4: 測試與驗證 ✅
-- [ ] 測試單一車手模式 (VER, 2024 Japan R)
-- [ ] 測試全車手模式 (2024 Japan R)
+- [ ] 測試全車手模式 (2025 Japan R)
 - [ ] 驗證 JSON 格式正確性
 - [ ] 測試異常情況處理
 - [ ] 效能測試 (大數據量)
 
 ### Phase 5: 文檔與發布 ✅
-- [ ] 完成 API 文檔
-- [ ] 完成使用範例
-- [ ] 更新 README.md
-- [ ] 更新 CHANGELOG.md
-- [ ] 發布 v1.0.0
+- [ ] 更新此開發文件
 
 ---
 
@@ -788,11 +594,11 @@ def safe_calculate_ideal_lap(driver_laps, driver_code):
 ### 測試案例
 
 ```powershell
-# 測試 1: 單一車手 - VER (2024 日本站正賽)
-python f1_analysis_modular_main.py -f 53 -y 2024 -r Japan -s R -d VER
+# 測試 1: 全車手 (2025 日本站正賽)
+python f1_analysis_modular_main.py -f 53 -y 2025 -r Japan -s R
 
-# 測試 2: 單一車手 - LEC (2024 摩納哥站排位賽)
-python f1_analysis_modular_main.py -f 53 -y 2024 -r Monaco -s Q -d LEC
+# 測試 2: 全車手 (2024 摩納哥站排位賽)
+python f1_analysis_modular_main.py -f 53 -y 2024 -r Monaco -s Q
 
 # 測試 3: 全車手 (2024 巴林站正賽)
 python f1_analysis_modular_main.py -f 53 -y 2024 -r Bahrain -s R
@@ -808,57 +614,15 @@ python f1_analysis_modular_main.py -f 53 -y 2024 -r InvalidRace -s R
 
 ```
 json/
-├── ideal_lap_analysis_2024_Japan_R_VER_20251007_143000.json
-├── ideal_lap_analysis_2024_Monaco_Q_LEC_20251007_143100.json
-├── ideal_lap_ranking_2024_Bahrain_R_all_drivers_20251007_143200.json
-└── ideal_lap_ranking_2025_Australia_Q_all_drivers_20251007_143300.json
+├── ideal_lap_ranking_2025_Japan_R.json
+├── ideal_lap_ranking_2024_Monaco_Q.json
+├── ideal_lap_ranking_2024_Bahrain_R.json
+└── ideal_lap_ranking_2025_Australia_Q.json
 ```
 
 ---
 
-## 📊 效能考量
-
-### 預估執行時間
-
-| 模式 | 資料量 | 預估時間 |
-|------|--------|----------|
-| 單一車手 | ~50 圈 | 0.5-1 秒 |
-| 全車手 (20 位) | ~1000 圈 | 3-5 秒 |
-
-### 記憶體使用
-
-- 單一車手: ~10 MB
-- 全車手: ~50 MB
-
-### 優化建議
-
-1. 使用 `pandas` 向量化操作
-2. 避免不必要的迴圈
-3. 快取中間計算結果
-4. 使用 `numba` 加速關鍵計算 (選擇性)
-
----
-
-## 🚀 未來擴展功能
-
-### v1.1.0 計畫
-- [ ] 理想圈趨勢分析 (整個賽季)
-- [ ] 輪胎類型對理想圈的影響
-- [ ] 燃油負載修正
-
-### v1.2.0 計畫
-- [ ] 機器學習預測理想圈
-- [ ] 賽道條件對理想圈的影響
-- [ ] 多賽事理想圈比較
-
-### v2.0.0 計畫
-- [ ] 即時理想圈計算 (Live Timing)
-- [ ] 理想圈視覺化動畫
-- [ ] 賽車模擬整合
-
----
-
-## 📚 參考資料
+##  參考資料
 
 ### FastF1 API 文檔
 - [Laps API](https://docs.fastf1.dev/core.html#laps)

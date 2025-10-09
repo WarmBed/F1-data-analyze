@@ -15,6 +15,7 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSpinBox,  # 新增：用於整數設定
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -122,6 +123,120 @@ class SystemSettingsDialog(QDialog):
 
         self.tab_widget.addTab(boxplot_tab, tr("boxplot_settings_tab", "Box Plot Analysis"))
 
+        # ========== 新增：Throttle Line Chart 分頁 ==========
+        throttle_tab = QWidget()
+        throttle_layout = QVBoxLayout(throttle_tab)
+        throttle_layout.setContentsMargins(10, 10, 10, 10)
+        throttle_layout.setSpacing(12)
+
+        # 顯示選項群組
+        display_group = QGroupBox(tr("throttle_display_group", "Display Options"))
+        display_layout = QFormLayout(display_group)
+        display_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        display_layout.setHorizontalSpacing(18)
+        display_layout.setVerticalSpacing(10)
+
+        self.throttle_show_full_duration_checkbox = QCheckBox(
+            tr("throttle_show_full_duration", "Show Full Throttle Duration (s)")
+        )
+        display_layout.addRow(self.throttle_show_full_duration_checkbox)
+
+        self.throttle_show_ratio_checkbox = QCheckBox(
+            tr("throttle_show_ratio", "Show Full Throttle %")
+        )
+        display_layout.addRow(self.throttle_show_ratio_checkbox)
+
+        self.throttle_show_average_checkbox = QCheckBox(
+            tr("throttle_show_average", "Show Average Throttle %")
+        )
+        display_layout.addRow(self.throttle_show_average_checkbox)
+
+        self.throttle_show_delta_checkbox = QCheckBox(
+            tr("throttle_show_delta", "Show Lap Time Δ vs Best")
+        )
+        display_layout.addRow(self.throttle_show_delta_checkbox)
+
+        throttle_layout.addWidget(display_group)
+
+        # 圈速分析群組
+        laptime_group = QGroupBox(tr("throttle_laptime_group", "Lap Time Analysis"))
+        laptime_layout = QFormLayout(laptime_group)
+        laptime_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        laptime_layout.setHorizontalSpacing(18)
+        laptime_layout.setVerticalSpacing(10)
+
+        self.throttle_rolling_average_checkbox = QCheckBox(
+            tr("throttle_rolling_average", "Enable Rolling Average")
+        )
+        laptime_layout.addRow(self.throttle_rolling_average_checkbox)
+
+        self.throttle_rolling_window_spinbox = QSpinBox()
+        self.throttle_rolling_window_spinbox.setRange(2, 12)
+        self.throttle_rolling_window_spinbox.setSingleStep(1)
+        self.throttle_rolling_window_spinbox.setSuffix(" laps")
+        self.throttle_rolling_window_spinbox.setToolTip(
+            tr("throttle_rolling_window_hint", "Number of laps for moving average calculation")
+        )
+        laptime_layout.addRow(
+            QLabel(tr("throttle_rolling_window", "Rolling Window")),
+            self.throttle_rolling_window_spinbox,
+        )
+
+        throttle_layout.addWidget(laptime_group)
+
+        # 門檻值群組
+        threshold_group = QGroupBox(tr("throttle_threshold_group", "Threshold Highlighting"))
+        threshold_layout = QFormLayout(threshold_group)
+        threshold_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        threshold_layout.setHorizontalSpacing(18)
+        threshold_layout.setVerticalSpacing(10)
+
+        self.throttle_highlight_threshold_checkbox = QCheckBox(
+            tr("throttle_highlight_threshold", "Highlight laps ≥ threshold")
+        )
+        threshold_layout.addRow(self.throttle_highlight_threshold_checkbox)
+
+        self.throttle_threshold_percent_spinbox = QSpinBox()
+        self.throttle_threshold_percent_spinbox.setRange(50, 100)
+        self.throttle_threshold_percent_spinbox.setSingleStep(5)
+        self.throttle_threshold_percent_spinbox.setSuffix(" %")
+        self.throttle_threshold_percent_spinbox.setToolTip(
+            tr("throttle_threshold_percent_hint", "Full Throttle % threshold for highlighting")
+        )
+        threshold_layout.addRow(
+            QLabel(tr("throttle_threshold_percent", "Threshold Percent")),
+            self.throttle_threshold_percent_spinbox,
+        )
+
+        throttle_layout.addWidget(threshold_group)
+
+        # 說明文字
+        throttle_info_label = QLabel(
+            tr(
+                "throttle_settings_info",
+                "Default settings for Throttle Line Chart module. Driver selection remains in the module window.",
+            )
+        )
+        throttle_info_label.setWordWrap(True)
+        throttle_info_label.setStyleSheet("color: #666666; font-size: 11px;")
+        throttle_layout.addWidget(throttle_info_label)
+        throttle_layout.addStretch(1)
+
+        # 重置預設值按鈕
+        throttle_helper_layout = QHBoxLayout()
+        throttle_helper_layout.setContentsMargins(0, 0, 0, 0)
+        throttle_helper_layout.setSpacing(8)
+
+        self.throttle_reset_defaults_button = QPushButton(tr("reset_defaults", "Reset Defaults"))
+        self.throttle_reset_defaults_button.clicked.connect(self._reset_throttle_defaults)
+        throttle_helper_layout.addWidget(self.throttle_reset_defaults_button)
+        throttle_helper_layout.addStretch(1)
+
+        throttle_layout.addLayout(throttle_helper_layout)
+
+        self.tab_widget.addTab(throttle_tab, tr("throttle_settings_tab", "Throttle Line Chart"))
+        # ========== Throttle Line Chart 分頁結束 ==========
+
         # Button box
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accept)
@@ -138,11 +253,43 @@ class SystemSettingsDialog(QDialog):
         self.filter_yellow_flags_checkbox.setChecked(settings.get("filter_yellow_flags", True))
         self.outlier_threshold_spinbox.setValue(settings.get("outlier_threshold", 1.5))
 
+        # 載入 Throttle Line Chart 設定
+        throttle_settings = self._settings_manager.get_throttle_line_chart_settings()
+        self.throttle_show_full_duration_checkbox.setChecked(
+            throttle_settings.get("show_full_duration", False)
+        )
+        self.throttle_show_ratio_checkbox.setChecked(throttle_settings.get("show_ratio", True))
+        self.throttle_show_average_checkbox.setChecked(throttle_settings.get("show_average", True))
+        self.throttle_show_delta_checkbox.setChecked(throttle_settings.get("show_delta", False))
+        self.throttle_rolling_average_checkbox.setChecked(
+            throttle_settings.get("rolling_average", False)
+        )
+        self.throttle_rolling_window_spinbox.setValue(
+            int(throttle_settings.get("rolling_window", 3))
+        )
+        self.throttle_highlight_threshold_checkbox.setChecked(
+            throttle_settings.get("highlight_threshold", True)
+        )
+        self.throttle_threshold_percent_spinbox.setValue(
+            int(throttle_settings.get("threshold_percent", 90))
+        )
+
     def _reset_defaults(self) -> None:
         self.filter_pit_checkbox.setChecked(True)
         self.filter_outliers_checkbox.setChecked(True)
         self.filter_yellow_flags_checkbox.setChecked(True)
         self.outlier_threshold_spinbox.setValue(1.5)
+
+    def _reset_throttle_defaults(self) -> None:
+        """重置 Throttle Line Chart 預設值"""
+        self.throttle_show_full_duration_checkbox.setChecked(False)
+        self.throttle_show_ratio_checkbox.setChecked(True)
+        self.throttle_show_average_checkbox.setChecked(True)
+        self.throttle_show_delta_checkbox.setChecked(False)
+        self.throttle_rolling_average_checkbox.setChecked(False)
+        self.throttle_rolling_window_spinbox.setValue(3)
+        self.throttle_highlight_threshold_checkbox.setChecked(True)
+        self.throttle_threshold_percent_spinbox.setValue(90)
 
     def _on_accept(self) -> None:
         self._settings_manager.update_boxplot_settings(
@@ -151,4 +298,17 @@ class SystemSettingsDialog(QDialog):
             filter_yellow_flags=self.filter_yellow_flags_checkbox.isChecked(),
             outlier_threshold=float(self.outlier_threshold_spinbox.value()),
         )
+        
+        # 儲存 Throttle Line Chart 設定
+        self._settings_manager.update_throttle_line_chart_settings(
+            show_full_duration=self.throttle_show_full_duration_checkbox.isChecked(),
+            show_ratio=self.throttle_show_ratio_checkbox.isChecked(),
+            show_average=self.throttle_show_average_checkbox.isChecked(),
+            show_delta=self.throttle_show_delta_checkbox.isChecked(),
+            rolling_average=self.throttle_rolling_average_checkbox.isChecked(),
+            rolling_window=int(self.throttle_rolling_window_spinbox.value()),
+            highlight_threshold=self.throttle_highlight_threshold_checkbox.isChecked(),
+            threshold_percent=float(self.throttle_threshold_percent_spinbox.value()),
+        )
+        
         self.accept()

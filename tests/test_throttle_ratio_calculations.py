@@ -43,3 +43,22 @@ def test_calculate_metrics_requires_multiple_samples():
     assert result["coasting_duration_s"] is None
     assert result["full_throttle_ratio"] is None
     assert result["data_status"] == "insufficient"
+
+
+def test_calculate_metrics_uses_explicit_lap_number():
+    telemetry = pd.DataFrame(
+        {
+            "Time": [0.0, 1.0, 2.0],
+            "Throttle": [0.2, 0.8, 0.4],
+        }
+    )
+
+    result = calculate_throttle_metrics_from_telemetry(
+        telemetry,
+        lap_time_seconds=2.0,
+        threshold=0.9,
+        coast_threshold=0.2,
+        lap_number=12,
+    )
+
+    assert result["lap_number"] == 12

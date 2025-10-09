@@ -111,6 +111,7 @@ class LapTimeBoxPlotApiWorker(QThread):
                 "function_spec": payload.get("function_spec"),
                 "latency_ms": round(latency_ms, 2),
                 "base_url": self.base_url,
+                "params": dict(query_params),
             }
 
             self.progress.emit(90)

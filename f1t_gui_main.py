@@ -28,8 +28,6 @@ import importlib
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import requests
-import sys
-import os
 
 import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
 
@@ -61,6 +59,7 @@ from modules.gui.shared.season_calendar_provider import (
     SeasonCalendarProvider,
     SeasonEvent,
 )
+from modules.gui.themes import ColorPaletteError, color_palette_provider
 
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
@@ -4319,84 +4318,252 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         selected_items = self.selectedItems()
         
-        # 過濾出葉節點（可分析的項目）
-        analyzable_items = [item for item in selected_items if item.childCount() == 0]
+        # 過濾出葉節點（可分析的項目）- 排除父項目和禁用項目
+        analyzable_items = [
+            item for item in selected_items 
+            if item.childCount() == 0 and (item.flags() & Qt.ItemIsEnabled)
+        ]
         
-        if not analyzable_items:
-            return
+        # 檢查是否有頂層項目（父項目）
+        has_parent_items = any(item.childCount() > 0 for item in selected_items)
         
         menu = QMenu(self)
         menu.setObjectName("ContextMenu")
         
         if len(analyzable_items) == 1:
-            # 單選選單
-            analyze_action = menu.addAction(f"🚀 {tr('execute_analysis', '執行分析')} - {analyzable_items[0].text(0)}")
+            # 單選選單（葉節點）
+            analyze_action = menu.addAction(f"{tr('execute_analysis', '執行分析')} - {analyzable_items[0].text(0).strip()}")
             analyze_action.triggered.connect(lambda: self.analyze_function(analyzable_items[0].text(0)))
             
             menu.addSeparator()
             
-            export_action = menu.addAction(f"📊 {tr('export_data', '匯出數據')} - {analyzable_items[0].text(0)}")
-            export_action.triggered.connect(lambda: self.export_function(analyzable_items[0].text(0)))
+            # 全展開樹狀圖
+            expand_action = menu.addAction(tr('expand_all_tree', '全展開樹狀圖'))
+            expand_action.triggered.connect(self.expandAll)
+            
+            # 全關閉樹狀圖
+            collapse_action = menu.addAction(tr('collapse_all_tree', '全關閉樹狀圖'))
+            collapse_action.triggered.connect(self.collapseAll)
             
             menu.addSeparator()
             
-            help_action = menu.addAction(f"❓ {tr('help', '說明')} - {analyzable_items[0].text(0)}")
+            help_action = menu.addAction(f"{tr('help', '說明')} - {analyzable_items[0].text(0).strip()}")
             help_action.triggered.connect(lambda: self.show_help(analyzable_items[0].text(0)))
             
-        else:
-            # 多選選單
-            analyze_action = menu.addAction(f"🚀 {tr('batch_execute_analysis', '批量執行分析')} ({len(analyzable_items)} {tr('modules', '個模組')})")
+        elif len(analyzable_items) > 1:
+            # 多選選單（多個葉節點）
+            analyze_action = menu.addAction(f"{tr('batch_execute_analysis', '批量執行分析')} ({len(analyzable_items)} {tr('modules', '個模組')})")
             analyze_action.triggered.connect(lambda: self.analyze_multiple_functions(analyzable_items))
             
             menu.addSeparator()
             
-            export_action = menu.addAction(f"📊 {tr('batch_export_data', '批量匯出數據')} ({len(analyzable_items)} {tr('modules', '個模組')})")
-            export_action.triggered.connect(lambda: self.export_multiple_functions(analyzable_items))
+            # 全展開樹狀圖
+            expand_action = menu.addAction(tr('expand_all_tree', '全展開樹狀圖'))
+            expand_action.triggered.connect(self.expandAll)
+            
+            # 全關閉樹狀圖
+            collapse_action = menu.addAction(tr('collapse_all_tree', '全關閉樹狀圖'))
+            collapse_action.triggered.connect(self.collapseAll)
             
             menu.addSeparator()
             
             # 顯示選中的項目列表
             selected_submenu = menu.addMenu(f"{tr('selected_modules', '已選擇的模組')} ({len(analyzable_items)} {tr('items', '個')})")
             for item in analyzable_items:
-                item_action = selected_submenu.addAction(f"• {item.text(0)}")
+                clean_name = item.text(0).strip()
+                item_action = selected_submenu.addAction(f"{clean_name}")
                 item_action.setEnabled(False)  # 僅用於顯示，不可點擊
+        
+        else:
+            # 只選中了父項目或禁用項目
+            # 顯示灰色的執行分析選項
+            if len(selected_items) == 1:
+                item_name = selected_items[0].text(0).strip()
+                analyze_action = menu.addAction(f"{tr('execute_analysis', '執行分析')} - {item_name}")
+                analyze_action.setEnabled(False)  # 設為灰色不可點擊
+            else:
+                analyze_action = menu.addAction(tr('select_specific_module', '請選擇具體的分析模組'))
+                analyze_action.setEnabled(False)
+            
+            menu.addSeparator()
+            
+            # 全展開樹狀圖（可用）
+            expand_action = menu.addAction(tr('expand_all_tree', '全展開樹狀圖'))
+            expand_action.triggered.connect(self.expandAll)
+            
+            # 全關閉樹狀圖（可用）
+            collapse_action = menu.addAction(tr('collapse_all_tree', '全關閉樹狀圖'))
+            collapse_action.triggered.connect(self.collapseAll)
+            
+            menu.addSeparator()
+            
+            # 說明（灰色）
+            if len(selected_items) == 1:
+                help_action = menu.addAction(f"{tr('help', '說明')} - {selected_items[0].text(0).strip()}")
+                help_action.setEnabled(False)
         
         menu.exec_(self.mapToGlobal(position))
     
     def analyze_multiple_functions(self, items):
-        """批量分析多個功能"""
-        print(f"[BATCH_ANALYSIS] 開始批量分析 {len(items)} 個模組")
+        """批量分析多個功能（智能過濾父項目）"""
+        # 二次過濾：確保只處理葉節點（沒有子項目的項目）
+        leaf_items = [item for item in items if item.childCount() == 0]
         
-        for item in items:
-            function_name = item.text(0)
+        if not leaf_items:
+            print(f"[BATCH_ANALYSIS] 沒有可執行的葉節點")
+            return
+        
+        # 計算被過濾掉的父項目數量
+        filtered_count = len(items) - len(leaf_items)
+        if filtered_count > 0:
+            print(f"[BATCH_ANALYSIS] 已過濾掉 {filtered_count} 個父項目")
+        
+        print(f"[BATCH_ANALYSIS] 開始批量分析 {len(leaf_items)} 個模組")
+        
+        for item in leaf_items:
+            function_name = item.text(0).strip()
             print(f"[BATCH_ANALYSIS] 正在創建: {function_name}")
-            self.analyze_function(function_name)
+            # 傳遞 batch_mode=True 防止彈出對話框
+            self.analyze_function(function_name, batch_mode=True)
             
-        print(f"[BATCH_ANALYSIS] 批量分析完成，共創建了 {len(items)} 個分析視窗")
+        print(f"[BATCH_ANALYSIS] 批量分析完成，共創建了 {len(leaf_items)} 個分析視窗")
     
     def export_multiple_functions(self, items):
         """批量匯出多個功能的數據"""
-        print(f"[BATCH_EXPORT] 開始批量匯出 {len(items)} 個模組的數據")
+        # 只處理葉節點
+        leaf_items = [item for item in items if item.childCount() == 0]
         
-        for item in items:
-            function_name = item.text(0)
+        print(f"[BATCH_EXPORT] 開始批量匯出 {len(leaf_items)} 個模組的數據")
+        
+        for item in leaf_items:
+            function_name = item.text(0).strip()
             print(f"[BATCH_EXPORT] 正在匯出: {function_name}")
             self.export_function(function_name)
             
         print(f"[BATCH_EXPORT] 批量匯出完成")
     
-    def analyze_function(self, function_name):
-        """分析單個功能"""
-        #print(f"[分析] 執行功能: {function_name}")
+    def analyze_function(self, function_name, batch_mode=False):
+        """分析單個功能（支援批量模式）
         
-        if self.main_window:
-            # 特殊處理：賽道分析使用專門的方法（支援中英文）
-            if function_name in ["賽道分析", "Track Analysis"]:
-                print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
-                self.main_window.open_track_analysis_window()
-            else:
-                # 創建新的分析視窗並添加到當前活動的分頁中
-                self.main_window.create_analysis_window(function_name)
+        ⚠️ 父項目政策 (2025-10-03):
+        - 父項目是路標（導航元素），不應觸發任何分析模組
+        - 只有葉節點（子項目）才會開啟實際的分析視窗
+        - 批量操作已通過 childCount() == 0 過濾掉父項目
+        """
+        if not self.main_window:
+            return
+        
+        # 清理項目名稱（移除前綴和多餘空白）
+        clean_name = function_name.strip()
+        
+        # 移除前綴標記: (L), (D), (T)
+        for prefix in ["(L) ", "(D) ", "(T) "]:
+            if clean_name.startswith(prefix):
+                clean_name = clean_name[len(prefix):]
+                break
+        
+        print(f"[TREE_CLICK] 項目: {clean_name} (原始: {function_name}), 批量模式: {batch_mode}")
+        
+        # ========== 父項目禁用政策 ==========
+        # 父項目清單（這些項目只作為導航，不觸發任何操作）
+        parent_items = [
+            "Lap Analysis", "Lap Analysis (Telemetry)", "圈速分析", "圈速分析（遙測）",
+            "Detailed Lap Analysis", "詳細圈速分析",
+            "Throttle Analysis", "油門分析",
+            "Ideal Lap Analysis", "理想圈分析"
+        ]
+        
+        if not batch_mode and clean_name in parent_items:
+            print(f"[TREE_CLICK] ⚠️ 父項目 '{clean_name}' 不執行任何操作（僅作為路標）")
+            return
+        
+        # ========== 子項目處理（直接開啟對應模組）==========
+        params = self.main_window.get_current_parameters()
+        
+        # Lap Analysis 子模組 - 使用預設車手
+        if clean_name in ["Speed Analysis", "速度分析"]:
+            self.main_window.create_telemetry_window(
+                "speed_analysis", params, 
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Brake Analysis", "煞車分析"]:
+            self.main_window.create_telemetry_window(
+                "brake", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Gear Analysis", "檔位分析"]:
+            self.main_window.create_telemetry_window(
+                "gear", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["RPM Analysis", "轉速分析"]:
+            self.main_window.create_telemetry_window(
+                "rpm", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Acceleration Analysis", "加速度分析"]:
+            self.main_window.create_telemetry_window(
+                "acceleration", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Speed Diff Analysis", "速度差分析"]:
+            self.main_window.create_telemetry_window(
+                "speed_diff", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Distance Diff Analysis", "距離差分析"]:
+            self.main_window.create_telemetry_window(
+                "distancediff", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        elif clean_name in ["Throttle Analysis", "油門分析"]:
+            # Lap Analysis 下的 Throttle Analysis 子模組（不是父項目）
+            print(f"[TREE_CLICK] 開啟油門遙測分析（Lap Analysis 子模組）")
+            self.main_window.create_telemetry_window(
+                "throttle", params,
+                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+            )
+        
+        # Detailed Lap Analysis 子模組
+        elif clean_name in ["Detailed Lap Table", "詳細圈速表格"]:
+            print(f"[TREE_CLICK] 開啟詳細圈速表格（模組工廠模式）")
+            # ✅ 使用統一的 create_analysis_window 入口（支援模組工廠）
+            self.main_window.create_analysis_window(clean_name)
+        
+        elif clean_name in ["Lap Time Box Plot", "圈速箱線圖", "圈速箱型圖"]:
+            print(f"[TREE_CLICK] 開啟圈速箱線圖（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        # Throttle Analysis 子模組（父項目的子視圖）
+        elif clean_name in ["Throttle Box Plot", "油門箱線圖", "油門箱型圖"]:
+            print(f"[TREE_CLICK] 開啟油門箱線圖（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        elif clean_name in ["Throttle Line Chart", "油門折線圖"]:
+            print(f"[TREE_CLICK] 開啟油門折線圖（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        # Ideal Lap Analysis 子模組
+        elif clean_name in ["Ranking Table", "排名表格", "理想圈排名"]:
+            print(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        # Track Analysis 特殊處理
+        elif clean_name in ["Track Analysis", "賽道分析"]:
+            print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
+            self.main_window.open_track_analysis_window()
+        
+        else:
+            # 未知模組，使用原有邏輯
+            print(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
+            self.main_window.create_analysis_window(function_name)
         
     def export_function(self, function_name):
         """匯出單個功能的數據"""
@@ -5202,7 +5369,7 @@ class StyleHMainWindow(QMainWindow):
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
         
-        self.setWindowTitle("F1 TelemetryStation Pro v0.0")
+        self.setWindowTitle("F1 TelemetryStation Pro V0.2.1")
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
@@ -5243,7 +5410,9 @@ class StyleHMainWindow(QMainWindow):
             "Las Vegas": "Las Vegas",
             "Abu Dhabi": "Abu Dhabi",
         }
-        
+        self._color_palette_provider = color_palette_provider
+        self._initialize_color_palette()
+
         print("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
         print("[INIT] 🎨 開始應用樣式...")
@@ -5269,7 +5438,33 @@ class StyleHMainWindow(QMainWindow):
         
         # 延遲檢查遙測分析控件狀態 (2秒後執行，確保所有視窗都已初始化)
         QTimer.singleShot(2000, self.check_and_show_lap_controls_if_needed)
-        
+
+    def _initialize_color_palette(self) -> None:
+        """Fetch the colour palette from the API (or fall back to defaults)."""
+        target_year = datetime.datetime.now().year
+        try:
+            self._color_palette_provider.ensure_loaded(year=target_year)
+        except ColorPaletteError as exc:
+            print(f"[INIT] ❌ 顏色配置載入失敗 (已禁用預設色票): {exc}")
+            self._show_palette_error_message(str(exc))
+            return
+        except Exception as exc:
+            print(f"[INIT] ❌ 顏色配置載入失敗: {exc}")
+            self._show_palette_error_message(str(exc))
+            return
+
+        error = self._color_palette_provider.last_error()
+        if error:
+            print(f"[INIT] ⚠️ 顏色配置載入失敗，使用內建顏色: {error}")
+        else:
+            print(f"[INIT] 🎨 顏色配置載入完成 (year={target_year})")
+
+    def _show_palette_error_message(self, message: str) -> None:
+        try:
+            QMessageBox.warning(self, "Color Palette Error", message)
+        except Exception:
+            print(f"[INIT] ⚠️ 顏色錯誤提示失敗: {message}")
+
     def init_ui(self):
         """初始化用戶界面"""
         # 創建菜單欄
@@ -6579,25 +6774,67 @@ class StyleHMainWindow(QMainWindow):
         tree = ContextMenuTreeWidget(self)
         tree.setObjectName("ProfessionalFunctionTree")
         tree.setHeaderHidden(True)
-        tree.setIndentation(8)
+        tree.setIndentation(12)  # 增加縮排以容納三層結構
         tree.setRootIsDecorated(True)
         
-        # 基礎分析模組
-        basic_group = QTreeWidgetItem(tree, [tr("single_race_analysis", "Single Race Analysis")])
-        basic_group.setExpanded(True)
-        QTreeWidgetItem(basic_group, [tr("rain_analysis", "Rain Analysis")])
-        QTreeWidgetItem(basic_group, [tr("track_analysis", "Track Analysis")])
-        QTreeWidgetItem(basic_group, [tr("pitstop_analysis", "Pitstop Analysis")])
-        QTreeWidgetItem(basic_group, [tr("accident_analysis", "Accident Analysis")])
-        # QTreeWidgetItem(basic_group, [tr("driver_analysis", "Driver Analysis")])  # 隱藏：功能尚未啟用
-        QTreeWidgetItem(basic_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
+        # ========== Race Overview Analysis ==========
+        race_overview_group = QTreeWidgetItem(tree, [tr("race_overview_analysis", "Race Overview Analysis")])
+        race_overview_group.setExpanded(True)
+        QTreeWidgetItem(race_overview_group, [tr("rain_analysis", "Rain Analysis")])
+        QTreeWidgetItem(race_overview_group, [tr("track_analysis", "Track Analysis")])
+        QTreeWidgetItem(race_overview_group, [tr("pitstop_analysis", "Pitstop Analysis")])
+        QTreeWidgetItem(race_overview_group, [tr("accident_analysis", "Accident Analysis")])
+        QTreeWidgetItem(race_overview_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         
-        # 單場賽事車手分析模組
-        single_group = QTreeWidgetItem(tree, [tr("single_race_driver_analysis", "🚗 Single Race Driver Analysis")])
-        single_group.setExpanded(True)
-        QTreeWidgetItem(single_group, [tr("lap_analysis", "Lap Analysis")])
-        QTreeWidgetItem(single_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
-        QTreeWidgetItem(single_group, [tr("throttle_analysis", "Throttle Analysis")])
+        # ========== Driver Performance Analysis ==========
+        driver_performance_group = QTreeWidgetItem(tree, [tr("driver_performance_analysis", "Driver Performance Analysis")])
+        driver_performance_group.setExpanded(True)
+        
+        # Lap Analysis (Telemetry) - 8 個子模組
+        lap_analysis = QTreeWidgetItem(driver_performance_group, [tr("lap_analysis", "Lap Analysis (Telemetry)")])
+        lap_analysis.setExpanded(False)  # 預設收合
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("speed_analysis", "Speed Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("brake_analysis", "Brake Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("throttle_analysis_sub", "Throttle Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("gear_analysis", "Gear Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("rpm_analysis", "RPM Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("acceleration_analysis", "Acceleration Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("speed_diff_analysis", "Speed Diff Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("distance_diff_analysis", "Distance Diff Analysis")])
+        
+        # Detailed Lap Analysis - 2 個視圖
+        detailed_lap = QTreeWidgetItem(driver_performance_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
+        detailed_lap.setExpanded(False)
+        QTreeWidgetItem(detailed_lap, ["    (D) " + tr("detailed_lap_table", "Detailed Lap Table")])
+        QTreeWidgetItem(detailed_lap, ["    (D) " + tr("lap_time_box_plot_sub", "Lap Time Box Plot")])
+        
+        # Throttle Analysis - 2 個視圖
+        throttle_analysis = QTreeWidgetItem(driver_performance_group, [tr("throttle_analysis", "Throttle Analysis")])
+        throttle_analysis.setExpanded(False)
+        QTreeWidgetItem(throttle_analysis, ["    (T) " + tr("throttle_box_plot", "Throttle Box Plot")])
+        QTreeWidgetItem(throttle_analysis, ["    (T) " + tr("throttle_line_chart", "Throttle Line Chart")])
+        
+        # Ideal Lap Analysis - 3 個子模組
+        ideal_lap = QTreeWidgetItem(driver_performance_group, [tr("ideal_lap_analysis", "Ideal Lap Analysis")])
+        ideal_lap.setExpanded(False)
+        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_ranking_table", "Ranking Table")])
+        
+        # Coming Soon 項目（灰色顯示）
+        from PyQt5.QtGui import QColor
+        heatmap_item = QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_heatmap", "Sector Heat Map (Coming Soon)")])
+        heatmap_item.setForeground(0, QColor("#999999"))
+        heatmap_item.setFlags(heatmap_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
+        
+        comparison_item = QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison (Coming Soon)")])
+        comparison_item.setForeground(0, QColor("#999999"))
+        comparison_item.setFlags(comparison_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
+        
+        # ========== Multi-Season Analysis ==========
+        multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
+        multi_season_group.setExpanded(False)
+        future_item = QTreeWidgetItem(multi_season_group, ["    " + tr("coming_soon", "Coming Soon...")])
+        future_item.setForeground(0, QColor("#999999"))
+        future_item.setFlags(future_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
         
         layout.addWidget(tree)
         
@@ -7585,10 +7822,7 @@ class StyleHMainWindow(QMainWindow):
         status_bar.addWidget(QLabel(' | '))
         status_bar.addWidget(self.time_label)
 
-        # Version information segment
-        version_label = QLabel('F1 TelemetryStation Pro v0.0')
-        version_label.setObjectName('VersionInfo')
-        status_bar.addPermanentWidget(version_label)
+        # Version information segment - 已移除右下角版本顯示
 
         # Refresh status information
         self.update_status_bar()
@@ -8136,6 +8370,95 @@ class StyleHMainWindow(QMainWindow):
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
         
+        # ✅ 優先檢查：理想圈分析（避免被 "Lap Analysis" 誤判）
+        is_ideal_lap_analysis = (
+            ("理想圈分析" in function_name)
+            or ("Ideal Lap Analysis" in function_name)
+            or ("理想ラップ分析" in function_name)
+        )
+
+        if is_ideal_lap_analysis:
+            print(f"[IDEAL_LAP] 🏁 檢測到理想圈分析請求: {function_name}")
+            
+            # 顯示選項對話框
+            ideal_lap_selection = self._prompt_ideal_lap_options()
+            if ideal_lap_selection is None:
+                print("[IDEAL_LAP] 使用者取消理想圈分析選項對話框")
+                return
+            if not ideal_lap_selection:
+                print("[IDEAL_LAP] 未選擇任何理想圈分析模組")
+                return
+
+            print(f"[IDEAL_LAP] ✅ 使用者選擇了 {len(ideal_lap_selection)} 個分析類型: {ideal_lap_selection}")
+            
+            # 查找當前分頁中的 MDI 區域（與 detailed lap 相同方式）
+            current_tab = self.tab_widget.currentWidget()
+            if not current_tab:
+                print("[IDEAL_LAP] ❌ 無法取得當前分頁")
+                return
+                
+            mdi_area = None
+            if isinstance(current_tab, CustomMdiArea):
+                mdi_area = current_tab
+            else:
+                for child in current_tab.findChildren(CustomMdiArea):
+                    mdi_area = child
+                    break
+                    
+            if mdi_area is None:
+                print("[IDEAL_LAP] ❌ 無法找到 MDI 區域")
+                return
+            
+            # 獲取當前參數
+            current_year = self.get_selected_year()
+            current_race = self.get_selected_race_key()
+            current_session = self.get_selected_session_code()
+            print(f"[IDEAL_LAP] 📋 賽事參數: {current_year} {current_race} {current_session}")
+            
+            from modules.gui.ideal_lap_analysis.ideal_lap_options_dialog import IdealLapAnalysisOptionsDialog
+            
+            # 為每個選擇的分析類型創建視窗
+            for analysis_type in ideal_lap_selection:
+                print(f"[IDEAL_LAP] 🚀 創建分析視窗: {analysis_type}")
+                
+                try:
+                    if analysis_type == IdealLapAnalysisOptionsDialog.TYPE_RANKING_TABLE:
+                        # 創建排名表格模組
+                        self._create_ideal_lap_ranking_window(
+                            mdi_area,
+                            current_year,
+                            current_race,
+                            current_session
+                        )
+                    
+                    elif analysis_type == IdealLapAnalysisOptionsDialog.TYPE_SECTOR_HEATMAP:
+                        print(f"[IDEAL_LAP] ⚠️ 分段熱力圖模組尚未實作")
+                        QMessageBox.information(
+                            self,
+                            "開發中",
+                            "分段熱力圖模組尚未實作\n請等待後續版本更新"
+                        )
+                    
+                    elif analysis_type == IdealLapAnalysisOptionsDialog.TYPE_SECTOR_COMPARISON:
+                        print(f"[IDEAL_LAP] ⚠️ 分段比較模組尚未實作")
+                        QMessageBox.information(
+                            self,
+                            "開發中",
+                            "分段比較模組尚未實作\n請等待後續版本更新"
+                        )
+                    
+                except Exception as e:
+                    print(f"[IDEAL_LAP] ❌ 創建分析視窗失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    QMessageBox.critical(
+                        self,
+                        "錯誤",
+                        f"創建理想圈分析視窗時發生錯誤:\n{str(e)}"
+                    )
+            
+            return
+        
         # 特殊處理：遙測/圈速分析概覽直接調用 lap_analysis 方法（排除詳細圈速分析）
         is_detailed_lap = (
             ("詳細圈速分析" in function_name)
@@ -8469,15 +8792,121 @@ class StyleHMainWindow(QMainWindow):
         return selection
 
     def _show_throttle_line_chart_placeholder(self):
-        """顯示油門折線圖尚未開發的提示訊息。"""
-        QMessageBox.information(
-            self,
-            tr("throttle_line_chart_placeholder_title", "Throttle Line Chart"),
-            tr(
-                "throttle_line_chart_placeholder_body",
-                "Throttle line chart module is still under development and will be available in a future update.",
-            ),
-        )
+        """顯示油門折線圖（現已實現）"""
+        # 改為直接調用實際的油門折線圖模組
+        self._create_throttle_line_chart_window()
+
+    def _create_throttle_line_chart_window(self):
+        """創建油門折線圖分析視窗"""
+        print("[THROTTLE_LINE] 開始創建油門折線圖視窗...")
+        
+        # 獲取當前參數
+        current_tab = self.tab_widget.currentWidget()
+        if current_tab is None:
+            print("[THROTTLE_LINE] 錯誤: 無活動分頁")
+            QMessageBox.warning(self, "錯誤", "無活動分頁")
+            return
+
+        # 🔧 修復：使用 MainWindowParameterProvider 獲取參數（參考其他模組）
+        parameter_provider = MainWindowParameterProvider(self)
+        current_year = parameter_provider.get_current_year()
+        current_race = parameter_provider.get_current_race()
+        current_session = parameter_provider.get_current_session()
+
+        if not all([current_year, current_race, current_session]):
+            print(f"[THROTTLE_LINE] 錯誤: 參數不完整 Year={current_year}, Race={current_race}, Session={current_session}")
+            QMessageBox.warning(
+                self,
+                "參數錯誤",
+                "無法獲取當前年份、賽事或會話資訊\n請先選擇賽事資料"
+            )
+            return
+
+        print(f"[THROTTLE_LINE] 參數: {current_year} {current_race} {current_session}")
+
+        # 獲取 MDI 區域
+        mdi_area = None
+        if isinstance(current_tab, CustomMdiArea):
+            mdi_area = current_tab
+        else:
+            for child in current_tab.findChildren(CustomMdiArea):
+                mdi_area = child
+                break
+
+        if mdi_area is None:
+            print("[THROTTLE_LINE] 錯誤: 找不到MDI區域")
+            QMessageBox.warning(self, "錯誤", "找不到MDI區域")
+            return
+
+        print("[THROTTLE_LINE] 開始創建油門折線圖模組...")
+
+        try:
+            from modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_module import (
+                ThrottleLineChartModule,
+            )
+
+            # 設置當前參數
+            try:
+                year_int = int(current_year)
+            except (TypeError, ValueError):
+                year_int = current_year
+
+            print(f"[THROTTLE_LINE] 模組參數: {year_int} {current_race} {current_session}")
+
+            # 創建模組實例（直接傳入參數）
+            module = ThrottleLineChartModule(
+                parent=self,
+                year=year_int,
+                race=current_race,
+                session=current_session
+            )
+            
+            # 設置參數提供者
+            module.parameter_provider = parameter_provider
+
+            # 獲取 widget
+            widget = module.get_widget()
+
+            if widget:
+                print("[THROTTLE_LINE] ✅ 模組初始化成功")
+                
+                # 獲取視窗標題
+                window_title = module.get_window_title()
+                
+                # 創建 MDI 子視窗
+                sub_window = PopoutSubWindow(window_title, mdi_area, module)
+                sub_window.setWidget(widget)
+                
+                # 設置模組的父視窗引用
+                module.set_parent_window(sub_window)
+                
+                # 設置視窗大小
+                width, height = module.get_default_size()
+                sub_window.resize(width, height)
+                
+                # 添加到 MDI 區域
+                mdi_area.addSubWindow(sub_window)
+                sub_window.show()
+                
+                print(f"[THROTTLE_LINE] ✅ 油門折線圖視窗已創建: {window_title}")
+                
+            else:
+                print("[THROTTLE_LINE] ❌ 模組初始化失敗")
+                QMessageBox.warning(
+                    self,
+                    "初始化失敗",
+                    "油門折線圖模組初始化失敗\n請檢查日誌"
+                )
+
+        except Exception as e:
+            print(f"[THROTTLE_LINE] ❌ 創建失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            QMessageBox.critical(
+                self,
+                "創建失敗",
+                f"創建油門折線圖視窗時發生錯誤:\n{str(e)}"
+            )
 
     def _prompt_detailed_lap_options(self):
         """顯示詳細圈速分析選項並回傳使用者選擇。"""
@@ -8506,6 +8935,37 @@ class StyleHMainWindow(QMainWindow):
 
         print(f"[DETAILED_LAP] 選項結果: {selection}")
         return selection
+
+    def _prompt_ideal_lap_options(self):
+        """
+        顯示理想圈分析選項對話框並回傳使用者選擇
+        
+        Returns:
+            list[str] | None: 選中的分析類型列表，取消則返回 None
+        """
+        try:
+            from modules.gui.ideal_lap_analysis import IdealLapAnalysisOptionsDialog
+        except ImportError as exc:
+            print(f"[IDEAL_LAP] ❌ 無法載入選項對話框: {exc}")
+            import traceback
+            traceback.print_exc()
+            return None
+
+        dialog = IdealLapAnalysisOptionsDialog(self)
+        result = dialog.exec_()
+
+        if result != QDialog.Accepted:
+            print("[IDEAL_LAP] 使用者取消對話框")
+            return None
+
+        selected_types = dialog.get_selected_types()
+        
+        if not selected_types:
+            print("[IDEAL_LAP] ⚠️ 未選擇任何分析類型")
+            return None
+
+        print(f"[IDEAL_LAP] ✅ 選項結果: {selected_types}")
+        return selected_types
 
     def _create_detailed_lap_boxplot_window(self, mdi_area, year, race, session):
         """建立圈速箱型圖視窗並加入 MDI (使用新版 API 化模組)。"""
@@ -8558,6 +9018,115 @@ class StyleHMainWindow(QMainWindow):
             print(f"[BOXPLOT] 🖼️ 創建 MDI 子視窗...")
             sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             sub_window.setWidget(analysis_module.get_widget())
+            
+            # 設置模組的父視窗引用
+            analysis_module.set_parent_window(sub_window)
+            
+            # 設置視窗尺寸
+            width, height = analysis_module.get_default_size()
+            sub_window.resize(width, height)
+            print(f"[BOXPLOT] 📐 設置視窗尺寸: {width}x{height}")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            print(f"[BOXPLOT] ✅ 已添加到 MDI 區域")
+            
+            # 連接關閉信號
+            if hasattr(sub_window, 'window_closed'):
+                sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
+            
+            # 添加到追蹤列表
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.append(sub_window)
+            
+            # 顯示視窗
+            sub_window.show()
+            print(f"[BOXPLOT] 🎉 圈速箱型圖視窗創建完成！")
+            
+            return sub_window
+            
+        except Exception as exc:
+            message = f"建立圈速箱型圖視窗時發生錯誤: {exc}"
+            print(f"[BOXPLOT] ❌ {message}")
+            self.show_error_message("Lap Time Box Plot", message)
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _create_ideal_lap_ranking_window(self, mdi_area, year, race, session):
+        """建立理想圈排名表格視窗並加入 MDI"""
+        try:
+            print(f"[IDEAL_LAP_RANKING] 🚀 啟動理想圈排名表格模組...")
+            from modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_module import IdealLapRankingTableModule
+            print(f"[IDEAL_LAP_RANKING] ✅ 模組導入成功")
+        except ImportError as exc:
+            message = f"無法載入理想圈排名表格模組: {exc}"
+            print(f"[IDEAL_LAP_RANKING] ❌ {message}")
+            QMessageBox.critical(self, "模組載入失敗", message)
+            import traceback
+            traceback.print_exc()
+            return None
+
+        try:
+            print(f"[IDEAL_LAP_RANKING] 🔧 創建模組實例...")
+            # 創建模組實例
+            analysis_module = IdealLapRankingTableModule(
+                parent=self,
+                year=year,
+                race=race,
+                session=session
+            )
+            print(f"[IDEAL_LAP_RANKING] ✅ 模組實例創建成功")
+            
+            # 初始化模組
+            print(f"[IDEAL_LAP_RANKING] 🚀 初始化模組...")
+            if not analysis_module.initialize_module(parent_widget=self):
+                raise RuntimeError("Module initialization failed")
+            print(f"[IDEAL_LAP_RANKING] ✅ 模組初始化成功！")
+            
+            # 獲取模組標題
+            window_title = analysis_module.get_title()
+            print(f"[IDEAL_LAP_RANKING] 📝 視窗標題: {window_title}")
+            
+            # 創建子視窗
+            print(f"[IDEAL_LAP_RANKING] 🖼️ 創建 MDI 子視窗...")
+            sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
+            sub_window.setWidget(analysis_module.get_widget())
+            
+            # 設置視窗尺寸
+            width, height = analysis_module.get_default_size()
+            sub_window.resize(width, height)
+            print(f"[IDEAL_LAP_RANKING] 📐 設置視窗尺寸: {width}x{height}")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            print(f"[IDEAL_LAP_RANKING] ✅ 已添加到 MDI 區域")
+            
+            # 連接關閉信號
+            if hasattr(sub_window, 'window_closed'):
+                sub_window.window_closed.connect(lambda: self.on_subwindow_closed(sub_window))
+            
+            # 添加到追蹤列表
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.append(sub_window)
+            
+            # 顯示視窗
+            sub_window.show()
+            print(f"[IDEAL_LAP_RANKING] 🎉 理想圈排名表格視窗創建完成！")
+            
+            # 載入資料
+            print(f"[IDEAL_LAP_RANKING] 📊 開始載入資料...")
+            analysis_module.load_data()
+            
+            return sub_window
+            
+        except Exception as exc:
+            message = f"建立理想圈排名表格視窗時發生錯誤: {exc}"
+            print(f"[IDEAL_LAP_RANKING] ❌ {message}")
+            QMessageBox.critical(self, "創建失敗", message)
+            import traceback
+            traceback.print_exc()
+            return None
             
             # 設置模組的父視窗引用
             analysis_module.set_parent_window(sub_window)
@@ -8668,8 +9237,14 @@ class StyleHMainWindow(QMainWindow):
                     ("throttle_box_plot", "Throttle Box Plot"),
                     ("throttle_box_plot_analysis", "Throttle Box Plot Analysis"),
                     "油門箱型圖",
+                    "油門箱線圖",  # 樹節點別名
                     "Throttle Box Plot",
                     "スロットル箱ひげ図",
+                ],
+                "throttle_line_chart": [
+                    ("throttle_line_chart", "Throttle Line Chart"),
+                    "油門折線圖",  # 樹節點別名
+                    "スロットル折れ線グラフ",
                 ],
                 "rpm_analysis": [
                     ("rpm_analysis", "RPM Analysis"),
@@ -8712,8 +9287,22 @@ class StyleHMainWindow(QMainWindow):
                 ],
                 "driverlap_analysis": [
                     ("detailed_lap_analysis", "Detailed Lap Analysis"),
+                    ("detailed_lap_table", "Detailed Lap Table"),  # 樹節點別名
                     "詳細圈速分析",
+                    "詳細圈速表格",  # 中文樹節點
                     "詳細ラップ分析",
+                ],
+                "laptime_box_plot": [
+                    ("laptime_box_plot", "Lap Time Box Plot"),
+                    ("lap_time_boxplot", "Lap Time BoxPlot"),
+                    "圈速箱線圖",  # 樹節點別名
+                    "圈速箱型圖",
+                ],
+                "ideal_lap_ranking": [
+                    ("ideal_lap_ranking", "Ideal Lap Ranking"),
+                    ("ranking_table", "Ranking Table"),
+                    "排名表格",  # 樹節點別名
+                    "理想圈排名",
                 ],
             }
 
@@ -8994,6 +9583,47 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 油門折線圖分析模組
+                elif module_type == "throttle_line_chart":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建油門折線圖模組...")
+                        from modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_mdi import (
+                            ThrottleLineChartMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 油門折線圖 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = ThrottleLineChartMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 油門折線圖 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 油門折線圖模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 油門折線圖模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
                 # 處理檔位分析模組
                 elif module_type == "gear_analysis":
                     try:
@@ -9141,6 +9771,9 @@ class StyleHMainWindow(QMainWindow):
                         module = driverLapAnalysisMDI(parent=self)
                         print(f"✅ [MODULE_FACTORY] 詳細圈速分析 MDI 實例創建成功")
                         
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
                         # 設置參數
                         if parameter_provider:
                             current_year = int(parameter_provider.get_current_year())
@@ -9149,14 +9782,102 @@ class StyleHMainWindow(QMainWindow):
                             
                             print(f"[INIT] [MODULE_FACTORY] 詳細圈速分析模組參數預設為: {current_year} {current_race} {current_session}")
                             
-                            # 使用統一的參數更新方法
-                            if hasattr(module, 'update_parameters'):
-                                module.update_parameters(str(current_year), current_race, current_session)
+                            # 直接設置參數（與直接模式一致）
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # ✅ 初始化模組（關鍵步驟）
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組初始化失敗")
+                            return None
                         
                         print(f"[OK] [MODULE_FACTORY] 詳細圈速分析模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理圈速箱線圖模組
+                elif module_type == "laptime_box_plot":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建圈速箱線圖模組...")
+                        from modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
+                            LapTimeBoxPlotAnalysis
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 圈速箱線圖 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = LapTimeBoxPlotAnalysis(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 圈速箱線圖 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 圈速箱線圖模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 圈速箱線圖模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理理想圈排名表格模組
+                elif module_type == "ideal_lap_ranking":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建理想圈排名表格模組...")
+                        from modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_mdi import (
+                            IdealLapRankingTableMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 理想圈排名表格 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = IdealLapRankingTableMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 理想圈排名表格 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 理想圈排名表格模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 理想圈排名表格模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -10486,6 +11207,9 @@ class StyleHMainWindow(QMainWindow):
         print(f"[CREATE_DEBUG] 車手: {driver1} vs {driver2}")
         print(f"[CREATE_DEBUG] 圈數: {lap1_number} vs {lap2_number}")
         
+        # 檢查並移除歡迎頁面（首次使用分析功能時）
+        self.check_and_remove_welcome_page()
+        
         # 獲取當前分頁的 MDI 區域 - 提前定義避免變量未定義錯誤
         current_mdi_area = self.get_current_mdi_area()
         if not current_mdi_area:
@@ -10517,12 +11241,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化速度分析模組...")
@@ -10663,12 +11387,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化RPM分析模組...")
@@ -10816,12 +11540,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化檔位分析模組...")
@@ -10968,12 +11692,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化速度差分析模組...")
@@ -11121,12 +11845,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化加速度分析模組...")
@@ -11274,12 +11998,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化油門分析模組...")
@@ -11384,12 +12108,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化距離差分析模組...")
@@ -11532,12 +12256,12 @@ class StyleHMainWindow(QMainWindow):
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
-                    analysis_module.driver2 = driver2 if driver2 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
                     analysis_module.lap1 = lap1_number if lap1_number else 1
-                    analysis_module.lap2 = lap2_number if lap2_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
                     
                     print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2}圈")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
                     print(f"[CREATE_DEBUG] 🚀 初始化煞車分析模組...")

@@ -254,36 +254,40 @@ class TireAnalysisChartWidget(QWidget):
     def paintEvent(self, event):
         """繪製圖表"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 清空背景
-        painter.fillRect(self.rect(), TireChartTheme.BACKGROUND)
-        
-        # 計算圖表區域 - 優化邊距
-        chart_rect = QRect(
-            35,  # 左邊距：車手標籤需要空間
-            15,  # 上邊距：減少不必要的空白
-            self.width() - 45,  # 右邊距：只留10px
-            self.height() - 70  # 下邊距：為X軸標籤和標題預留空間
-        )
-        
-        # 繪製圖表背景
-        painter.fillRect(chart_rect, TireChartTheme.CHART_BACKGROUND)
-        
-        if not self.stint_data:
-            # 沒有數據時顯示提示
-            painter.setPen(QPen(TireChartTheme.TEXT_COLOR))
-            painter.drawText(chart_rect, Qt.AlignCenter, "等待輪胎策略數據...")
-            return
-        
-        # 繪製座標軸
-        self._draw_axes(painter, chart_rect)
-        
-        # 繪製 Stint 長條
-        self._draw_stints(painter, chart_rect)
-        
-        # 繪製圖例 (已取消顯示)
-        # self._draw_legend(painter)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
+            
+            # 清空背景
+            painter.fillRect(self.rect(), TireChartTheme.BACKGROUND)
+            
+            # 計算圖表區域 - 優化邊距
+            chart_rect = QRect(
+                35,  # 左邊距：車手標籤需要空間
+                15,  # 上邊距：減少不必要的空白
+                self.width() - 45,  # 右邊距：只留10px
+                self.height() - 70  # 下邊距：為X軸標籤和標題預留空間
+            )
+            
+            # 繪製圖表背景
+            painter.fillRect(chart_rect, TireChartTheme.CHART_BACKGROUND)
+            
+            if not self.stint_data:
+                # 沒有數據時顯示提示
+                painter.setPen(QPen(TireChartTheme.TEXT_COLOR))
+                painter.drawText(chart_rect, Qt.AlignCenter, "等待輪胎策略數據...")
+                return
+            
+            # 繪製座標軸
+            self._draw_axes(painter, chart_rect)
+            
+            # 繪製 Stint 長條
+            self._draw_stints(painter, chart_rect)
+            
+            # 繪製圖例 (已取消顯示)
+            # self._draw_legend(painter)
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
     
     def _draw_axes(self, painter: QPainter, chart_rect: QRect):
         """繪製座標軸"""

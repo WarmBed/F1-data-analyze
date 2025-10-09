@@ -95,8 +95,8 @@ class GuiTranslator:
             'driver2_optional': {'zh': '車手2 (選用):', 'en': 'Driver 2 (Optional):', 'ja': 'ドライバー2（オプション）:'},
             'lap_number': {'zh': '圈數:', 'en': 'Lap:', 'ja': 'ラップ:'},
             'telemetry_options': {'zh': '遙測選項', 'en': 'Telemetry Options', 'ja': 'テレメトリーオプション'},
-            'detail_lap_analysis': {'zh': '詳細圈速分析（表格）', 'en': 'Detailed Lap Analysis (Table)', 'ja': '詳細ラップ分析（表形式）'},
-            'lap_time_box_plot': {'zh': '圈速箱型圖（可視化）', 'en': 'Lap Time Box Plot (Visualization)', 'ja': 'ラップタイム箱ひげ図（可視化）'},
+            'detail_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
+            'lap_time_box_plot': {'zh': '圈速箱型圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイム箱ひげ図'},
             'detail_analysis_desc': {
                 'zh': '詳細圈速分析：逐圈顯示數據表格',
                 'en': 'Detailed Lap Analysis: Shows lap-by-lap data table',
@@ -359,9 +359,9 @@ class GuiTranslator:
                 'ja': 'スロットル箱ひげ図'
             },
             'throttle_analysis_option_line_chart': {
-                'zh': '油門折線圖（即將推出）',
-                'en': 'Throttle Line Chart (coming soon)',
-                'ja': 'スロットル折れ線グラフ（近日公開）'
+                'zh': '油門折線圖',
+                'en': 'Throttle Line Chart',
+                'ja': 'スロットル折れ線グラフ'
             },
             'throttle_analysis_option_line_chart_hint': {
                 'zh': '油門折線圖模組仍在開發中，將於未來更新提供。',
@@ -470,6 +470,8 @@ class GuiTranslator:
             'help': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
             'batch_execute_analysis': {'zh': '批量執行分析', 'en': 'Batch Execute Analysis', 'ja': 'バッチ分析実行'},
             'batch_export_data': {'zh': '批量匯出數據', 'en': 'Batch Export Data', 'ja': 'バッチデータエクスポート'},
+            'expand_all_tree': {'zh': '全展開樹狀圖', 'en': 'Expand All', 'ja': 'すべて展開'},
+            'collapse_all_tree': {'zh': '全關閉樹狀圖', 'en': 'Collapse All', 'ja': 'すべて折りたたむ'},
             'modules': {'zh': '個模組', 'en': 'modules', 'ja': 'モジュール'},
             'selected_modules': {'zh': '已選擇的模組', 'en': 'Selected Modules', 'ja': '選択されたモジュール'},
             'items': {'zh': '個', 'en': 'items', 'ja': '個'},
@@ -670,9 +672,43 @@ class GuiTranslator:
             # 功能樹標題
             'analysis_modules': {'zh': '分析模組', 'en': 'Analysis Modules', 'ja': '分析モジュール'},
             
-            # 功能樹項目
+            # 功能樹項目 - 主分類
+            'race_overview_analysis': {'zh': '賽事總覽分析', 'en': 'Race Overview Analysis', 'ja': 'レース概要分析'},
+            'driver_performance_analysis': {'zh': '車手表現分析', 'en': 'Driver Performance Analysis', 'ja': 'ドライバーパフォーマンス分析'},
+            'multi_season_analysis': {'zh': '多賽季分析', 'en': 'Multi-Season Analysis', 'ja': 'マルチシーズン分析'},
+            
+            # 功能樹項目 - 舊版（保留兼容性）
             'single_race_analysis': {'zh': '單場賽事分析', 'en': 'Single Race Analysis', 'ja': '単一レース分析'},
             'single_race_driver_analysis': {'zh': '🚗 單場賽事車手分析', 'en': '🚗 Single Race Driver Analysis', 'ja': '🚗 単一レースドライバー分析'},
+            
+            # Lap Analysis 子模組
+            'speed_analysis': {'zh': '速度分析', 'en': 'Speed Analysis', 'ja': '速度分析'},
+            'brake_analysis': {'zh': '煞車分析', 'en': 'Brake Analysis', 'ja': 'ブレーキ分析'},
+            'throttle_analysis_sub': {'zh': '油門分析', 'en': 'Throttle Analysis', 'ja': 'スロットル分析'},
+            'gear_analysis': {'zh': '檔位分析', 'en': 'Gear Analysis', 'ja': 'ギア分析'},
+            'rpm_analysis': {'zh': '轉速分析', 'en': 'RPM Analysis', 'ja': 'RPM分析'},
+            'acceleration_analysis': {'zh': '加速度分析', 'en': 'Acceleration Analysis', 'ja': '加速度分析'},
+            'speed_diff_analysis': {'zh': '速度差分析', 'en': 'Speed Diff Analysis', 'ja': '速度差分析'},
+            'distance_diff_analysis': {'zh': '距離差分析', 'en': 'Distance Diff Analysis', 'ja': '距離差分析'},
+            
+            # Detailed Lap Analysis 子模組
+            'detailed_lap_table': {'zh': '詳細圈速表格', 'en': 'Detailed Lap Table', 'ja': '詳細ラップテーブル'},
+            'lap_time_box_plot_sub': {'zh': '圈速箱線圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイム箱ひげ図'},
+            
+            # Throttle Analysis 子模組
+            'throttle_box_plot': {'zh': '油門箱線圖', 'en': 'Throttle Box Plot', 'ja': 'スロットル箱ひげ図'},
+            'throttle_line_chart': {'zh': '油門折線圖', 'en': 'Throttle Line Chart', 'ja': 'スロットルライン'},
+            
+            # Ideal Lap Analysis 子模組
+            'ideal_lap_ranking_table': {'zh': '排名表格', 'en': 'Ranking Table', 'ja': 'ランキングテーブル'},
+            'ideal_lap_sector_heatmap': {'zh': '分段熱力圖', 'en': 'Sector Heat Map', 'ja': 'セクターヒートマップ'},
+            'ideal_lap_sector_comparison': {'zh': '分段比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
+            
+            # 通用項目
+            'coming_soon': {'zh': '即將推出...', 'en': 'Coming Soon...', 'ja': '近日公開...'},
+            'select_specific_module': {'zh': '請選擇具體的分析模組', 'en': 'Please select specific analysis module', 'ja': '具体的な分析モジュールを選択してください'},
+            
+            # 其他功能項目
             'pitstop_analysis': {'zh': '進站分析', 'en': 'Pitstop Analysis', 'ja': 'ピットストップ分析'},
             'driver_ranking': {'zh': '車手排名', 'en': 'Driver Ranking', 'ja': 'ドライバーランキング'},
             'tire_strategy_analysis': {'zh': '輪胎策略分析', 'en': 'Tire Strategy Analysis', 'ja': 'タイヤ戦略分析'},
@@ -973,6 +1009,76 @@ class GuiTranslator:
             'lap': {'zh': '圈', 'en': 'Lap', 'ja': 'ラップ'},
             'fastest_lap_type': {'zh': '最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
             'specific_lap': {'zh': '指定圈數', 'en': 'Specific Lap', 'ja': '特定ラップ'},
+            
+            # ========== Ideal Lap 分析模組翻譯 (2025-10-09) ==========
+            
+            # Options Dialog (對話框標題與描述)
+            'ideal_lap_options_title': {'zh': '理想圈分析選項', 'en': 'Ideal Lap Analysis Options', 'ja': '理想ラップ分析オプション'},
+            'select_ideal_lap_analysis_type': {'zh': '請選擇要開啟的理想圈分析類型。', 'en': 'Please select the ideal lap analysis types you want to open.', 'ja': '開きたい理想ラップ分析タイプを選択してください。'},
+            'analysis_type': {'zh': '分析類型', 'en': 'Analysis Type', 'ja': '分析タイプ'},
+            
+            # Options Dialog - 分析選項
+            'ranking_table': {'zh': '排名表格', 'en': 'Ranking Table', 'ja': 'ランキングテーブル'},
+            'sector_heatmap': {'zh': '分段熱力圖', 'en': 'Sector Heatmap', 'ja': 'セクターヒートマップ'},
+            'sector_comparison': {'zh': '分段比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
+            
+            # Options Dialog - 描述
+            'ranking_table_desc': {'zh': '排名表格：顯示所有車手的理想圈排名', 'en': 'Ranking Table: Shows ideal lap ranking for all drivers', 'ja': 'ランキングテーブル: 全ドライバーの理想ラップランキングを表示'},
+            'sector_heatmap_desc': {'zh': '分段熱力圖：視覺化分段表現（開發中）', 'en': 'Sector Heatmap: Visualizes sector performance (under development)', 'ja': 'セクターヒートマップ: セクター性能を可視化（開発中）'},
+            'sector_comparison_desc': {'zh': '分段比較：比較車手間的分段差異（開發中）', 'en': 'Sector Comparison: Compares sector differences between drivers (under development)', 'ja': 'セクター比較: ドライバー間のセクター差異を比較（開発中）'},
+            
+            # Ranking Table Widget - 統計摘要面板
+            'race_statistics_summary': {'zh': '📊 賽事統計摘要', 'en': '📊 Race Statistics Summary', 'ja': '📊 レース統計サマリー'},
+            'total_drivers': {'zh': '總車手數', 'en': 'Total Drivers', 'ja': '総ドライバー数'},
+            'session_fastest_lap': {'zh': '全場最速實際圈', 'en': 'Session Fastest Lap', 'ja': 'セッション最速ラップ'},
+            'fastest_ideal_lap': {'zh': '最快理想圈', 'en': 'Fastest Ideal Lap', 'ja': '最速理想ラップ'},
+            'ideal_lap_range': {'zh': '理想圈範圍', 'en': 'Ideal Lap Range', 'ja': '理想ラップ範囲'},
+            'average_gap': {'zh': '平均差異', 'en': 'Average Gap', 'ja': '平均ギャップ'},
+            'perfect_lap_rate': {'zh': '完美單圈達成率', 'en': 'Perfect Lap Rate', 'ja': '完璧ラップ達成率'},
+            
+            # Ranking Table Widget - 表格欄位標題
+            'table_header_position': {'zh': '排名', 'en': 'Pos', 'ja': '順位'},
+            'table_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'table_header_fastest_lap': {'zh': '車手最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
+            'table_header_ideal_lap': {'zh': '理想圈', 'en': 'Ideal Lap', 'ja': '理想ラップ'},
+            'table_header_gap': {'zh': '差異', 'en': 'Gap', 'ja': 'ギャップ'},
+            'table_header_gap_to_fastest': {'zh': '與全場最速差距', 'en': 'Gap to Session Fastest', 'ja': 'セッション最速との差'},
+            'table_header_sector_breakdown': {'zh': '分段', 'en': 'Sectors', 'ja': 'セクター'},
+            'table_header_action': {'zh': '操作', 'en': 'Action', 'ja': 'アクション'},
+            
+            # Ranking Table Widget - 按鈕與工具列
+            'export_csv': {'zh': '📊 匯出 CSV', 'en': '📊 Export CSV', 'ja': '📊 CSV出力'},
+            'detail_button': {'zh': '詳情', 'en': 'Details', 'ja': '詳細'},
+            'status_ready': {'zh': '就緒', 'en': 'Ready', 'ja': '準備完了'},
+            'status_loaded_drivers': {'zh': '已載入 {count} 位車手', 'en': 'Loaded {count} drivers', 'ja': '{count}人のドライバーを読み込みました'},
+            'status_table_cleared': {'zh': '表格已清空', 'en': 'Table cleared', 'ja': 'テーブルをクリアしました'},
+            
+            # Ranking Table Widget - Tooltip 內容
+            'tooltip_no_fastest_lap_data': {'zh': '無最速圈資料', 'en': 'No fastest lap data', 'ja': '最速ラップデータなし'},
+            'tooltip_fastest_lap': {'zh': '最速圈: {time}', 'en': 'Fastest Lap: {time}', 'ja': '最速ラップ: {time}'},
+            'tooltip_fastest_lap_with_number': {'zh': '最速圈: {time} (Lap {lap_num})', 'en': 'Fastest Lap: {time} (Lap {lap_num})', 'ja': '最速ラップ: {time} (Lap {lap_num})'},
+            'tooltip_no_ideal_lap_data': {'zh': '無理想圈資料', 'en': 'No ideal lap data', 'ja': '理想ラップデータなし'},
+            'tooltip_ideal_lap': {'zh': '理想圈: {time}', 'en': 'Ideal Lap: {time}', 'ja': '理想ラップ: {time}'},
+            'tooltip_sector_detail': {'zh': 'S{sector_num}: {time}s (Lap {lap_num})', 'en': 'S{sector_num}: {time}s (Lap {lap_num})', 'ja': 'S{sector_num}: {time}s (Lap {lap_num})'},
+            'tooltip_gap_cannot_calculate': {'zh': '無法計算差異', 'en': 'Cannot calculate gap', 'ja': 'ギャップを計算できません'},
+            'tooltip_gap_value': {'zh': '差異: +{gap}s (+{percentage}%)', 'en': 'Gap: +{gap}s (+{percentage}%)', 'ja': 'ギャップ: +{gap}s (+{percentage}%)'},
+            'tooltip_gap_near_perfect': {'zh': '評估: 接近完美單圈', 'en': 'Assessment: Near perfect lap', 'ja': '評価: ほぼ完璧なラップ'},
+            'tooltip_gap_moderate': {'zh': '評估: 有中等提升空間', 'en': 'Assessment: Moderate improvement potential', 'ja': '評価: 中程度の改善余地あり'},
+            'tooltip_gap_significant': {'zh': '評估: 有明顯改善空間', 'en': 'Assessment: Significant improvement potential', 'ja': '評価: 大幅な改善余地あり'},
+            
+            # Ranking Table Widget - 除錯與錯誤訊息
+            'export_not_implemented': {'zh': '[TABLE_WIDGET] 匯出功能尚未實作', 'en': '[TABLE_WIDGET] Export feature not yet implemented', 'ja': '[TABLE_WIDGET] エクスポート機能は未実装'},
+            'table_populate_failed': {'zh': '[TABLE_WIDGET] 填充表格失敗', 'en': '[TABLE_WIDGET] Failed to populate table', 'ja': '[TABLE_WIDGET] テーブルの入力に失敗しました'},
+            'statistics_update_failed': {'zh': '[TABLE_WIDGET] 更新統計面板失敗', 'en': '[TABLE_WIDGET] Failed to update statistics panel', 'ja': '[TABLE_WIDGET] 統計パネルの更新に失敗しました'},
+            'set_row_data_failed': {'zh': '[TABLE_WIDGET] 設置行資料失敗', 'en': '[TABLE_WIDGET] Failed to set row data', 'ja': '[TABLE_WIDGET] 行データの設定に失敗しました'},
+            
+            # Ideal Lap MDI - 視窗標題
+            'ideal_lap_ranking_window_title': {'zh': '理想圈排名表格 - {year} {race} {session}', 'en': 'Ideal Lap Ranking - {year} {race} {session}', 'ja': '理想ラップランキング - {year} {race} {session}'},
+            'ideal_lap_module_description': {'zh': 'F1 理想圈排名分析', 'en': 'F1 Ideal Lap Ranking Analysis', 'ja': 'F1 理想ラップランキング分析'},
+            
+            # 通用字串
+            'na': {'zh': 'N/A', 'en': 'N/A', 'ja': 'N/A'},
+            'unknown': {'zh': '未知', 'en': 'Unknown', 'ja': '不明'},
         }
     
     def t(self, key, default=None):

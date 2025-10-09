@@ -22,6 +22,7 @@ from core.logger import setup_logging, get_logger
 from core.cli_language import resolve_cli_language
 from core.cli_help_catalog import iter_cli_help_lines
 
+# CLI 模式：使用 logger 系統，print() 會被重定向到 log 檔案
 setup_logging(component="cli")
 logger = get_logger("main", component="cli")
 logger.info("F1 CLI 控制台初始化完成")
@@ -575,6 +576,10 @@ class F1AnalysisModularCLI:
             elif hasattr(self.args, 'no_detailed_output') and self.args.no_detailed_output:
                 show_detailed_output = False
             
+            colormap = getattr(self.args, 'colormap', None)
+            save_json_flag = not getattr(self.args, 'no_save_json', False)
+            include_driver_colors = not getattr(self.args, 'no_driver_colors', False)
+
             result = mapper.execute_function_by_number(
                 function_id,
                 year=self.args.year,
@@ -586,7 +591,10 @@ class F1AnalysisModularCLI:
                 lap1=getattr(self.args, 'lap1', None),
                 lap2=getattr(self.args, 'lap2', None),
                 corner=getattr(self.args, 'corner', None),
-                show_detailed_output=show_detailed_output
+                show_detailed_output=show_detailed_output,
+                colormap=colormap,
+                save_json=save_json_flag,
+                include_drivers=include_driver_colors
             )
             
             if result.get("success", False):
@@ -1544,7 +1552,10 @@ class F1AnalysisModularCLI:
         session = self.args.session if self.args.session else "R"
 
         function_id = str(self.args.function) if self.args.function else None
-        data_optional_functions = {"49", "50", "51", "52", "53", "99"}
+        # 系統功能和工具功能不需要載入賽事數據
+        # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 98: API 健康檢查, 99: 賽季賽程查詢
+        # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
+        data_optional_functions = {"49", "50", "51", "52", "98", "99"}
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 
@@ -1718,7 +1729,13 @@ def create_argument_parser():
     parser.add_argument('--silent', action='store_true',
                        help='靜默模式：隱藏所有表格和統計輸出，僅執行分析並保存結果')
     parser.add_argument('--version', action='version', version='F1 Analysis CLI v5.3')
-    
+    parser.add_argument('--colormap', choices=['fastf1', 'official'],
+                       help='顏色配置輸出時使用的色盤 (fastf1 或 official)')
+    parser.add_argument('--no-save-json', action='store_true',
+                       help='工具模式僅顯示結果，不輸出 JSON 檔案')
+    parser.add_argument('--no-driver-colors', action='store_true',
+                       help='顏色配置輸出時僅生成車隊色票，不包含車手')
+
     return parser
 
 def main() -> int:

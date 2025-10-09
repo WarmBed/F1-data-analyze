@@ -75,6 +75,7 @@ class F1AnalysisCacheService:
             "14.4": ["driver_fastest_lap_ranking", "fastest_lap_report"],
             "14.9": ["all_drivers_comprehensive", "driver_comprehensive_full"],
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
+            "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
             "99": ["season_calendar"],
         }

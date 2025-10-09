@@ -8,21 +8,23 @@ from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                              QMenu, QAction, QDialog, QFormLayout, 
                              QDoubleSpinBox, QPushButton, QDialogButtonBox,
                              QCheckBox, QGroupBox, QGridLayout, QSpinBox)
-from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QPoint
+from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QPoint, QRect
 from PyQt5.QtGui import QFont, QPalette, QColor, QPainter, QPen, QBrush
 import json
+import math  # 用於數據點距離計算
 
 
 class ChartDataSeries:
     """圖表數據系列類別"""
     
-    def __init__(self, name, x_data, y_data, color="white", line_width=2, y_axis="left"):
+    def __init__(self, name, x_data, y_data, color="white", line_width=2, y_axis="left", line_style=Qt.SolidLine):
         self.name = name
         self.x_data = x_data  # X軸數據列表
         self.y_data = y_data  # Y軸數據列表
         self.color = color    # 線條顏色
         self.line_width = line_width
         self.y_axis = y_axis  # "left" 或 "right" (雙Y軸支援)
+        self.line_style = line_style  # 線條樣式：Qt.SolidLine, Qt.DashLine, Qt.DotLine 等
         
     def get_x_range(self):
         """獲取X軸數據範圍"""
@@ -72,7 +74,8 @@ class UniversalChartWidget(QWidget):
         self.x_axis_label = "X軸"
         self.left_y_unit = ""
         self.right_y_unit = ""
-        self.x_unit = ""
+        self.x_unit = None
+        self.default_x_unit = "分鐘"
         
         # 顯示控制
         self.show_grid = True
@@ -97,9 +100,27 @@ class UniversalChartWidget(QWidget):
         self.dragging = False
         self.last_drag_pos = QPoint()
         
+        # 圖例拖拉功能
+        self.legend_dragging = False
+        self.legend_drag_offset = QPoint()
+        self.legend_position = QPoint(10, 30)  # 圖例初始位置
+        self.legend_rect = None  # 圖例矩形區域（用於碰撞檢測）
+        
         # 固定虛線功能
         self.fixed_vertical_lines = []  # 存儲固定的垂直線 [(x_pos, left_y_value, right_y_value), ...]
         self.show_value_tooltips = True  # 是否顯示數值提示
+        
+        # 🆕 數據點互動功能（參考 Detailed Lap Analysis）
+        self.hover_data_point = None  # 當前懸停的數據點 {'series_idx': int, 'point_idx': int, 'x': float, 'y': float, 'screen_pos': QPoint}
+        self.pinned_data_points = []  # 固定的數據點列表（最多2個），每個元素: {'series_idx', 'point_idx', 'x', 'y', 'screen_pos', 'tooltip_rect', 'custom_pos'}
+        self.data_point_search_radius = 20  # 數據點檢測半徑（像素）
+        self.data_point_radius = 3  # 數據點繪製半徑（像素）
+        self.show_data_points = True  # 是否顯示數據點（線+點模式）
+        
+        # 🆕 Tooltip 拖動功能
+        self.dragging_tooltip = False  # 是否正在拖動 tooltip
+        self.dragging_tooltip_index = -1  # 正在拖動的 tooltip 索引
+        self.tooltip_drag_offset = QPoint(0, 0)  # tooltip 拖動偏移量
         
         # 座標軸範圍控制 - 支援使用者自訂範圍
         self.manual_x_range = None      # (min, max) 或 None 表示自動
@@ -345,7 +366,7 @@ class UniversalChartWidget(QWidget):
             self._cached_right_y_range = (0, 1)
     
     def set_axis_labels(self, x_label, left_y_label, right_y_label="", 
-                       x_unit="", left_y_unit="", right_y_unit=""):
+                       x_unit=None, left_y_unit="", right_y_unit=""):
         """設置軸標籤和單位"""
         self.x_axis_label = x_label
         self.left_y_axis_label = left_y_label
@@ -513,71 +534,78 @@ class UniversalChartWidget(QWidget):
     def paintEvent(self, event):
         """繪製圖表 - 優化版本，減少重複處理"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 設定標誌防止在paintEvent中觸發無限循環
-        self._in_paint_event = True
-        
-        # 白色背景 (白色主題)
-        painter.fillRect(self.rect(), QColor(255, 255, 255))
-        
-        # 獲取圖表繪製區域（不再在paintEvent中調整尺寸）
-        chart_area = self.get_chart_area()
-        
-        # 防止無效的圖表區域
-        if chart_area.width() <= 0 or chart_area.height() <= 0:
-            painter.setPen(QPen(QColor(0, 0, 0), 1))  # 黑色文字
-            painter.setFont(QFont("Arial", 12))
-            painter.drawText(self.rect().center(), "視窗太小無法顯示圖表")
-            self._in_paint_event = False  # 清除標誌
-            return
-        
-        # 繪製坐標軸
-        self.draw_axes(painter, chart_area)
-        
-        # 如果沒有數據，顯示提示訊息
-        if not self.data_series:
-            painter.setPen(QPen(QColor(200, 200, 200), 1))
-            painter.setFont(QFont("Arial", max(self.axis_font_size + 2, 12)))
-            message = f"正在載入數據..."
-            text_rect = painter.fontMetrics().boundingRect(message)
-            center_x = chart_area.center().x() - text_rect.width() // 2
-            center_y = chart_area.center().y()
-            painter.drawText(center_x, center_y, message)
-            self._in_paint_event = False  # 清除標誌
-            return
-        
-        # 設定裁切區域為圖表區域
-        painter.setClipRect(chart_area)
-        
-        # 繪製網格
-        if self.show_grid:
-            self.draw_grid(painter, chart_area)
-        
-        # 繪製數據曲線 (包含降雨背景)
-        self.draw_data_series(painter, chart_area)
-        
-        # 清除標誌
-        self._in_paint_event = False
-        
-        # 繪製動態滑鼠追蹤虛線
-        if self.mouse_x >= 0 and chart_area.contains(QPoint(self.mouse_x, chart_area.center().y())):
-            painter.setPen(QPen(QColor(128, 128, 128), 2, Qt.DashLine))  # 灰色虛線
-            painter.drawLine(self.mouse_x, chart_area.top(), self.mouse_x, chart_area.bottom())
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
             
-            # 顯示當前滑鼠位置的數值
-            if self.show_value_tooltips:
-                self.draw_mouse_values(painter, chart_area, self.mouse_x)
-        
-        # 繪製固定垂直虛線
-        self.draw_fixed_vertical_lines(painter, chart_area)
-        
-        # 取消裁切
-        painter.setClipping(False)
-        
-        # 繪製圖例
-        if self.show_legend:
-            self.draw_legend(painter)
+            # 設定標誌防止在paintEvent中觸發無限循環
+            self._in_paint_event = True
+            
+            # 白色背景 (白色主題)
+            painter.fillRect(self.rect(), QColor(255, 255, 255))
+            
+            # 獲取圖表繪製區域（不再在paintEvent中調整尺寸）
+            chart_area = self.get_chart_area()
+            
+            # 防止無效的圖表區域
+            if chart_area.width() <= 0 or chart_area.height() <= 0:
+                painter.setPen(QPen(QColor(0, 0, 0), 1))  # 黑色文字
+                painter.setFont(QFont("Arial", 12))
+                painter.drawText(self.rect().center(), "視窗太小無法顯示圖表")
+                self._in_paint_event = False  # 清除標誌
+                return
+            
+            # 繪製坐標軸
+            self.draw_axes(painter, chart_area)
+            
+            # 如果沒有數據，顯示提示訊息
+            if not self.data_series:
+                painter.setPen(QPen(QColor(200, 200, 200), 1))
+                painter.setFont(QFont("Arial", max(self.axis_font_size + 2, 12)))
+                message = f"正在載入數據..."
+                text_rect = painter.fontMetrics().boundingRect(message)
+                center_x = chart_area.center().x() - text_rect.width() // 2
+                center_y = chart_area.center().y()
+                painter.drawText(center_x, center_y, message)
+                self._in_paint_event = False  # 清除標誌
+                return
+            
+            # 設定裁切區域為圖表區域
+            painter.setClipRect(chart_area)
+            
+            # 繪製網格
+            if self.show_grid:
+                self.draw_grid(painter, chart_area)
+            
+            # 繪製數據曲線 (包含降雨背景)
+            self.draw_data_series(painter, chart_area)
+            
+            # 清除標誌
+            self._in_paint_event = False
+            
+            # 繪製動態滑鼠追蹤虛線
+            if self.mouse_x >= 0 and chart_area.contains(QPoint(self.mouse_x, chart_area.center().y())):
+                painter.setPen(QPen(QColor(128, 128, 128), 2, Qt.DashLine))  # 灰色虛線
+                painter.drawLine(self.mouse_x, chart_area.top(), self.mouse_x, chart_area.bottom())
+                
+                # 顯示當前滑鼠位置的數值
+                if self.show_value_tooltips:
+                    self.draw_mouse_values(painter, chart_area, self.mouse_x)
+            
+            # 繪製固定垂直虛線
+            self.draw_fixed_vertical_lines(painter, chart_area)
+            
+            # 🆕 繪製懸停和固定的數據點（線+點互動）
+            self.draw_hover_and_pinned_data_points(painter, chart_area)
+            
+            # 取消裁切
+            painter.setClipping(False)
+            
+            # 繪製圖例
+            if self.show_legend:
+                self.draw_legend(painter)
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
     
     def draw_axes(self, painter, chart_area):
         """繪製坐標軸"""
@@ -610,8 +638,8 @@ class UniversalChartWidget(QWidget):
         # 軸標題
         painter.setFont(QFont("Arial", self.label_font_size))
         
-        # X軸標題 (顯示分鐘單位)
-        x_label_text = f"{self.x_axis_label} (分鐘)"
+        unit = self.default_x_unit if self.x_unit is None else self.x_unit
+        x_label_text = f"{self.x_axis_label} ({unit})" if unit else self.x_axis_label
         painter.drawText(chart_area.center().x() - 50, self.height() - 5, x_label_text)
         
         # 左Y軸標題
@@ -1018,8 +1046,8 @@ class UniversalChartWidget(QWidget):
         if color.lightness() < 100:  # 如果顏色太暗
             color = color.lighter(200)  # 調亮200%
         
-        # 移除DEBUG輸出防止無限循環
-        painter.setPen(QPen(color, series.line_width))
+        # 設定畫筆（包含線條樣式）
+        painter.setPen(QPen(color, series.line_width, series.line_style))
         
         # 轉換數據點為螢幕座標並繪製
         points = []
@@ -1074,28 +1102,165 @@ class UniversalChartWidget(QWidget):
         #     print(f"[DEBUG] 第一個點: ({points[0].x()}, {points[0].y()})")
         #     print(f"[DEBUG] 最後一個點: ({points[-1].x()}, {points[-1].y()})")
         
-        # 繪製連續線條
+        # 繪製連續線條和數據點
         line_count = 0
         for i in range(len(points) - 1):
             painter.drawLine(points[i], points[i + 1])
             line_count += 1
         
+        # 🆕 繪製數據點（線+點模式）
+        if self.show_data_points:
+            for point in points:
+                # 🔧 跳過包含 NaN 的點
+                if not (math.isnan(point.x()) or math.isnan(point.y())):
+                    painter.drawEllipse(point, self.data_point_radius, self.data_point_radius)
+        
         # print(f"[DEBUG] 繪製了 {line_count} 條線段")
     
     def draw_fixed_vertical_lines(self, painter, chart_area):
-        """繪製固定的垂直虛線和數值標籤"""
+        """繪製固定的垂直虛線（不顯示座標數值）"""
         if not self.fixed_vertical_lines:
             return
         
         painter.setPen(QPen(QColor(255, 100, 100), 3, Qt.DashDotLine))  # 紅色虛點線
-        painter.setFont(QFont("Arial", 10))
         
         for line in self.fixed_vertical_lines:
-            # 繪製垂直線
+            # 只繪製垂直線，不顯示數值標籤
             painter.drawLine(line['screen_x'], chart_area.top(), line['screen_x'], chart_area.bottom())
+    
+    def draw_hover_and_pinned_data_points(self, painter, chart_area):
+        """繪製懸停和固定的數據點高亮圈與 Tooltip（參考 Detailed Lap Analysis）"""
+        # 繪製固定的數據點（淺藍色圓圈）
+        if self.pinned_data_points:
+            painter.setPen(QPen(QColor(100, 150, 255), 2))  # 藍色邊框
+            painter.setBrush(QBrush(Qt.NoBrush))  # 不填充
             
-            # 繪製數值標籤
-            self.draw_value_labels(painter, chart_area, line['screen_x'], line['data_x'], line['left_y'], line['right_y'])
+            for pinned in self.pinned_data_points:
+                screen_pos = pinned['screen_pos']
+                painter.drawEllipse(screen_pos, 12, 12)  # 繪製高亮圓圈
+        
+        # 繪製懸停的數據點（黃色圓圈）
+        if self.hover_data_point:
+            painter.setPen(QPen(QColor(255, 200, 0), 2))  # 黃色邊框
+            painter.setBrush(QBrush(Qt.NoBrush))
+            screen_pos = self.hover_data_point['screen_pos']
+            painter.drawEllipse(screen_pos, 12, 12)  # 繪製高亮圓圈
+            
+            # 繪製懸停 Tooltip
+            self._draw_data_point_tooltip(painter, self.hover_data_point, is_pinned=False)
+        
+        # 繪製固定 Tooltip
+        for i, pinned in enumerate(self.pinned_data_points):
+            self._draw_data_point_tooltip(painter, pinned, is_pinned=True, pinned_index=i)
+    
+    def _draw_data_point_tooltip(self, painter, data_point, is_pinned=False, pinned_index=-1):
+        """
+        繪製數據點 Tooltip（參考 Detailed Lap Analysis）
+        
+        Args:
+            painter: QPainter 物件
+            data_point: 數據點資訊字典
+            is_pinned: 是否為固定的 tooltip
+            pinned_index: 如果是固定 tooltip，其在 pinned_data_points 中的索引
+        """
+        series_idx = data_point['series_idx']
+        point_idx = data_point['point_idx']
+        x_val = data_point['x']
+        y_val = data_point['y']
+        screen_pos = data_point['screen_pos']
+        
+        # 獲取系列名稱
+        series_name = self.data_series[series_idx].name if series_idx < len(self.data_series) else "未知"
+        
+        # 🆕 嘗試使用自定義的 tooltip 格式化方法（Throttle Line Chart 專用）
+        lines = []
+        lap_number = int(round(x_val))  # X 軸通常是 Lap 編號
+        if hasattr(self, 'format_tooltip_for_data_point'):
+            # 新版本：傳入 series_name 參數（支援雙車手模式）
+            try:
+                lines = self.format_tooltip_for_data_point(lap_number, series_name)
+            except TypeError:
+                # 向下相容：舊版本不接受 series_name 參數
+                lines = self.format_tooltip_for_data_point(lap_number)
+        
+        # 如果沒有自定義方法或返回空列表，使用默認格式
+        if not lines:
+            lines = [
+                f"系列: {series_name}",
+                f"X: {x_val:.2f}",
+                f"Y: {y_val:.2f}",
+            ]
+        
+        # 計算 Tooltip 尺寸
+        fm = painter.fontMetrics()
+        max_width = 0
+        total_height = 0
+        line_heights = []
+        
+        for line in lines:
+            line_width = fm.horizontalAdvance(line)
+            line_height = fm.height()
+            max_width = max(max_width, line_width)
+            line_heights.append(line_height)
+            total_height += line_height
+        
+        # 內邊距
+        padding = 8
+        tooltip_width = max_width + 2 * padding
+        tooltip_height = total_height + 2 * padding
+        
+        # 🆕 檢查是否有自訂位置
+        if is_pinned and 'custom_pos' in data_point and data_point['custom_pos'] is not None:
+            # 使用自訂位置
+            tooltip_x = data_point['custom_pos'].x()
+            tooltip_y = data_point['custom_pos'].y()
+        else:
+            # 計算預設 Tooltip 位置（在數據點右上方）
+            offset_x = 15
+            offset_y = -15
+            tooltip_x = screen_pos.x() + offset_x
+            tooltip_y = screen_pos.y() + offset_y - tooltip_height
+            
+            # 確保 Tooltip 不超出視窗
+            if tooltip_x + tooltip_width > self.width():
+                tooltip_x = screen_pos.x() - tooltip_width - 15
+            if tooltip_y < 0:
+                tooltip_y = screen_pos.y() + 15
+        
+        # 🆕 儲存 tooltip 矩形（用於拖動檢測）
+        tooltip_rect = QRect(tooltip_x, tooltip_y, tooltip_width, tooltip_height)
+        if is_pinned and pinned_index >= 0:
+            data_point['tooltip_rect'] = tooltip_rect
+        
+        # 🆕 如果是固定 tooltip，繪製連接線（數據點 → tooltip）
+        if is_pinned:
+            painter.save()
+            painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.DashLine))
+            # 從數據點繪製到 tooltip 的中心
+            tooltip_center_x = tooltip_x + tooltip_width // 2
+            tooltip_center_y = tooltip_y + tooltip_height // 2
+            painter.drawLine(screen_pos.x(), screen_pos.y(), tooltip_center_x, tooltip_center_y)
+            painter.restore()
+        
+        # 繪製背景（懸停=淺黃色，固定=淺藍色）
+        painter.setPen(QPen(QColor(50, 50, 50), 2))
+        if is_pinned:
+            painter.setBrush(QBrush(QColor(173, 216, 230, 230)))  # 淺藍色（固定）
+        else:
+            painter.setBrush(QBrush(QColor(255, 255, 200, 230)))  # 淺黃色（懸停）
+        painter.drawRoundedRect(tooltip_rect, 5, 5)
+        
+        # 繪製文字
+        painter.setPen(QPen(QColor(0, 0, 0), 1))
+        current_y = tooltip_y + padding
+        
+        for i, line in enumerate(lines):
+            painter.drawText(
+                tooltip_x + padding,
+                current_y + line_heights[i] - fm.descent(),
+                line
+            )
+            current_y += line_heights[i]
     
     def draw_mouse_values(self, painter, chart_area, screen_x):
         """繪製滑鼠位置的即時數值"""
@@ -1141,6 +1306,128 @@ class UniversalChartWidget(QWidget):
         if right_y is not None and self.show_right_y_axis:
             painter.drawText(label_x + 5, label_y + 45, f"右Y: {right_y:.2f}")
     
+    def _check_hover_data_point(self, mouse_pos):
+        """檢查滑鼠是否懸停在數據點上（參考 Detailed Lap Analysis）"""
+        if not self.data_series:
+            self.hover_data_point = None
+            return
+        
+        chart_area = self.get_chart_area()
+        if not chart_area.isValid():
+            self.hover_data_point = None
+            return
+        
+        # 搜索最近的數據點
+        closest_distance = self.data_point_search_radius
+        closest_point = None
+        
+        for series_idx, series in enumerate(self.data_series):
+            for point_idx, (x_val, y_val) in enumerate(zip(series.x_data, series.y_data)):
+                # 🔧 跳過 NaN 值
+                if math.isnan(x_val) or math.isnan(y_val):
+                    continue
+                
+                # 座標轉換：數據座標 → 螢幕座標
+                screen_x, screen_y = self._data_to_screen(x_val, y_val, series.y_axis, chart_area)
+                
+                # 🔧 檢查轉換結果是否為 NaN
+                if math.isnan(screen_x) or math.isnan(screen_y):
+                    continue
+                
+                screen_point = QPoint(int(screen_x), int(screen_y))
+                
+                # 計算滑鼠與數據點的距離
+                distance = math.sqrt((mouse_pos.x() - screen_x)**2 + (mouse_pos.y() - screen_y)**2)
+                
+                if distance < closest_distance:
+                    closest_distance = distance
+                    closest_point = {
+                        'series_idx': series_idx,
+                        'point_idx': point_idx,
+                        'x': x_val,
+                        'y': y_val,
+                        'screen_pos': screen_point
+                    }
+        
+        self.hover_data_point = closest_point
+    
+    def _data_to_screen(self, x_val, y_val, y_axis, chart_area):
+        """數據座標轉換為螢幕座標"""
+        # 獲取數據範圍
+        x_range = self.get_overall_x_range()
+        left_y_range = self.get_overall_left_y_range()
+        right_y_range = self.get_overall_right_y_range() if self.show_right_y_axis else (0, 1)
+        
+        x_min, x_max = x_range
+        left_y_min, left_y_max = left_y_range
+        right_y_min, right_y_max = right_y_range
+        
+        # 選擇 Y 軸範圍
+        if y_axis == "right":
+            y_min, y_max = right_y_min, right_y_max
+            y_scale = self.right_y_scale
+            y_offset = self.right_y_offset
+        else:
+            y_min, y_max = left_y_min, left_y_max
+            y_scale = self.y_scale
+            y_offset = self.y_offset
+        
+        # X 座標轉換
+        visible_x_range = (x_max - x_min) / self.x_scale
+        visible_x_center = x_min + (x_max - x_min) * 0.5
+        x_offset_factor = -self.x_offset / (chart_area.width() * self.x_scale)
+        visible_x_center += (x_max - x_min) * x_offset_factor
+        visible_x_min = visible_x_center - visible_x_range * 0.5
+        visible_x_max = visible_x_center + visible_x_range * 0.5
+        
+        if visible_x_max != visible_x_min:
+            x_progress = (x_val - visible_x_min) / (visible_x_max - visible_x_min)
+            screen_x = chart_area.left() + x_progress * chart_area.width()
+        else:
+            screen_x = chart_area.left()
+        
+        # Y 座標轉換
+        visible_y_range = (y_max - y_min) / y_scale
+        visible_y_center = y_min + (y_max - y_min) * 0.5
+        y_offset_factor = -y_offset / (chart_area.height() * y_scale)
+        visible_y_center += (y_max - y_min) * y_offset_factor
+        visible_y_min = visible_y_center - visible_y_range * 0.5
+        visible_y_max = visible_y_center + visible_y_range * 0.5
+        
+        if visible_y_max != visible_y_min:
+            y_progress = (y_val - visible_y_min) / (visible_y_max - visible_y_min)
+            screen_y = chart_area.bottom() - y_progress * chart_area.height()
+        else:
+            screen_y = chart_area.bottom()
+        
+        return screen_x, screen_y
+    
+    def _pin_data_point(self):
+        """固定當前懸停的數據點（最多2個）"""
+        if not self.hover_data_point:
+            return
+        
+        # 檢查是否已固定（避免重複）
+        for pinned in self.pinned_data_points:
+            if (pinned['series_idx'] == self.hover_data_point['series_idx'] and
+                pinned['point_idx'] == self.hover_data_point['point_idx']):
+                print("[DEBUG] 該數據點已固定，跳過")
+                return
+        
+        # 限制最多2個固定點
+        if len(self.pinned_data_points) >= 2:
+            # 移除最舊的固定點
+            removed = self.pinned_data_points.pop(0)
+            print(f"[DEBUG] 固定點已達上限，移除最舊的: 系列{removed['series_idx']} 點{removed['point_idx']}")
+        
+        # 添加新的固定點，初始化 tooltip_rect 和 custom_pos
+        new_pinned = dict(self.hover_data_point)
+        new_pinned['tooltip_rect'] = None  # 將在繪製時計算
+        new_pinned['custom_pos'] = None  # 自訂位置，初始為 None（使用預設位置）
+        self.pinned_data_points.append(new_pinned)
+        print(f"[DEBUG] 📌 固定數據點: 系列{self.hover_data_point['series_idx']} 點{self.hover_data_point['point_idx']}")
+        self.update()
+    
     def reset_view(self):
         """重置視圖縮放和偏移到預設值"""
         print(f"[DEBUG] 重置通用圖表視圖")
@@ -1154,6 +1441,10 @@ class UniversalChartWidget(QWidget):
         # 清除固定虛線
         self.fixed_vertical_lines.clear()
         
+        # 🆕 清除固定數據點
+        self.pinned_data_points.clear()
+        self.hover_data_point = None
+        
         # 重置滑鼠狀態
         self.mouse_x = -1
         self.mouse_y = -1
@@ -1161,7 +1452,7 @@ class UniversalChartWidget(QWidget):
         self.setCursor(Qt.ArrowCursor)
         
         self.update()
-        print(f"[DEBUG] 通用圖表視圖已重置，清除了固定虛線")
+        print(f"[DEBUG] 通用圖表視圖已重置，清除了固定虛線和數據點")
     
     def fit_to_view(self):
         """調整視圖以適應所有數據"""
@@ -1184,36 +1475,101 @@ class UniversalChartWidget(QWidget):
         print(f"[DEBUG] 數值提示: {'開啟' if self.show_value_tooltips else '關閉'}")
     
     def draw_legend(self, painter):
-        """繪製圖例"""
+        """繪製可拖拉的圖例"""
         if not self.data_series:
+            self.legend_rect = None
             return
         
         painter.setPen(QPen(QColor(0, 0, 0), 1))  # 黑色圖例文字
-        painter.setFont(QFont("Arial", self.legend_font_size))
+        font = QFont("Arial", self.legend_font_size)
+        painter.setFont(font)
         
-        legend_x = 10
-        legend_y = 30
+        # 計算圖例尺寸
         line_height = 20
+        padding = 8
+        color_line_width = 20
+        text_offset = 25
         
+        # 計算所有文字的最大寬度
+        max_text_width = 0
+        for series in self.data_series:
+            # 不再顯示軸標示 (左/右)
+            text = series.name
+            text_width = painter.fontMetrics().width(text)
+            max_text_width = max(max_text_width, text_width)
+        
+        # 計算圖例矩形
+        legend_width = color_line_width + text_offset + max_text_width + padding * 2
+        legend_height = len(self.data_series) * line_height + padding * 2
+        
+        legend_x = self.legend_position.x()
+        legend_y = self.legend_position.y()
+        
+        # 儲存圖例矩形供碰撞檢測使用
+        from PyQt5.QtCore import QRect
+        self.legend_rect = QRect(legend_x - padding, legend_y - padding, 
+                                  legend_width, legend_height)
+        
+        # 繪製半透明背景
+        painter.save()
+        painter.setBrush(QBrush(QColor(255, 255, 255, 220)))  # 白色半透明背景
+        painter.setPen(QPen(QColor(100, 100, 100), 1))  # 灰色邊框
+        painter.drawRoundedRect(self.legend_rect, 5, 5)
+        painter.restore()
+        
+        # 繪製圖例項目
         for i, series in enumerate(self.data_series):
             y_pos = legend_y + i * line_height
             
-            # 繪製顏色線條
+            # 繪製顏色線條（包含線條樣式）
             color = QColor(series.color) if isinstance(series.color, str) else series.color
-            painter.setPen(QPen(color, series.line_width))
-            painter.drawLine(legend_x, y_pos, legend_x + 20, y_pos)
+            painter.setPen(QPen(color, series.line_width, series.line_style))
+            painter.drawLine(legend_x, y_pos, legend_x + color_line_width, y_pos)
             
             # 繪製系列名稱
             painter.setPen(QPen(QColor(0, 0, 0), 1))  # 黑色圖例文字
-            axis_indicator = " (右)" if series.y_axis == "right" else " (左)"
-            painter.drawText(legend_x + 25, y_pos + 5, series.name + axis_indicator)
+            # 不再顯示軸標示 (左/右)
+            painter.drawText(legend_x + text_offset, y_pos + 5, series.name)
     
     # 滑鼠事件處理系統 - 完整版
     def mousePressEvent(self, event):
-        """滑鼠按下事件 - 處理拖拉和固定虛線"""
+        """滑鼠按下事件 - 處理圖例拖拉、tooltip 拖動、數據點固定、圖表拖拉和固定虛線"""
+        # 優先檢查是否點擊圖例（阻止所有其他互動）
+        if self.legend_rect and self.legend_rect.contains(event.pos()):
+            if event.button() == Qt.LeftButton:
+                # 開始拖拉圖例
+                self.legend_dragging = True
+                self.legend_drag_offset = event.pos() - self.legend_position
+                self.setCursor(Qt.ClosedHandCursor)
+                print(f"[DEBUG] 開始拖拉圖例")
+            # 無論按哪個按鈕，點擊圖例時都阻止後續處理
+            event.accept()
+            return
+        
+        # 檢查是否在圖表區域
         chart_area = self.get_chart_area()
         if chart_area.contains(event.pos()):
             if event.button() == Qt.LeftButton:
+                # 🆕 【最優先】檢查是否點擊已固定的 tooltip 框（用於拖動）
+                for i, pinned_point in enumerate(self.pinned_data_points):
+                    tooltip_rect = pinned_point.get('tooltip_rect')
+                    if tooltip_rect and tooltip_rect.contains(event.pos()):
+                        # 開始拖動此 tooltip
+                        self.dragging_tooltip = True
+                        self.dragging_tooltip_index = i
+                        self.tooltip_drag_offset = event.pos() - QPoint(tooltip_rect.x(), tooltip_rect.y())
+                        self.setCursor(Qt.ClosedHandCursor)
+                        print(f"[DEBUG] 🎯 開始拖動 Tooltip #{i}")
+                        event.accept()
+                        return
+                
+                # 🆕 其次檢查是否點擊數據點（參考 Detailed Lap Analysis）
+                if self.hover_data_point and self.show_data_points:
+                    # 固定當前懸停的數據點（最多2個）
+                    self._pin_data_point()
+                    event.accept()
+                    return
+                
                 modifiers = event.modifiers()
                 
                 if modifiers & Qt.ControlModifier:
@@ -1221,24 +1577,65 @@ class UniversalChartWidget(QWidget):
                     self.add_fixed_vertical_line(event.pos())
                     print(f"[DEBUG] 固定垂直虛線於 X={event.x()}")
                 else:
-                    # 純左鍵: 開始拖拉
+                    # 純左鍵: 開始拖拉圖表
                     self.dragging = True
                     self.last_drag_pos = event.pos()
                     self.setCursor(Qt.ClosedHandCursor)
-                    print(f"[DEBUG] 開始拖拉模式")
+                    print(f"[DEBUG] 開始拖拉圖表")
                 
                 event.accept()
             elif event.button() == Qt.RightButton:
+                # 🆕 右鍵清除所有固定的數據點
+                if self.pinned_data_points:
+                    self.pinned_data_points.clear()
+                    print("[DEBUG] 🗑️ 已清除所有固定數據點")
+                    self.update()
+                    event.accept()
+                    return
+                
                 # 右鍵: 顯示座標軸設定選單
                 self.show_axis_context_menu(event.pos())
                 event.accept()
     
     def mouseMoveEvent(self, event):
-        """滑鼠移動事件 - 處理虛線追蹤和拖拉"""
+        """滑鼠移動事件 - 處理圖例拖拉、tooltip 拖動、數據點檢測、圖表拖拉和虛線追蹤"""
+        # 優先處理圖例拖拉
+        if self.legend_dragging:
+            # 更新圖例位置
+            new_pos = event.pos() - self.legend_drag_offset
+            # 限制圖例在視窗範圍內
+            if self.legend_rect:
+                new_pos.setX(max(0, min(new_pos.x(), self.width() - self.legend_rect.width())))
+                new_pos.setY(max(0, min(new_pos.y(), self.height() - self.legend_rect.height())))
+            self.legend_position = new_pos
+            self.update()
+            event.accept()
+            return
+        
+        # 🆕 處理 tooltip 拖動
+        if self.dragging_tooltip and 0 <= self.dragging_tooltip_index < len(self.pinned_data_points):
+            # 計算新位置（滑鼠位置 - 拖動偏移量）
+            new_pos = event.pos() - self.tooltip_drag_offset
+            
+            # 更新 custom_pos
+            self.pinned_data_points[self.dragging_tooltip_index]['custom_pos'] = new_pos
+            
+            print(f"[DEBUG] 🖱️ 拖動 Tooltip #{self.dragging_tooltip_index} 到 ({new_pos.x()}, {new_pos.y()})")
+            self.update()
+            event.accept()
+            return
+        
+        # 檢查滑鼠是否懸停在圖例上（顯示手型游標）
+        if self.legend_rect and self.legend_rect.contains(event.pos()):
+            self.setCursor(Qt.OpenHandCursor)
+        elif not self.dragging:
+            self.setCursor(Qt.ArrowCursor)
+        
+        # 處理圖表區域
         chart_area = self.get_chart_area()
         if chart_area.contains(event.pos()):
             if self.dragging:
-                # 拖拉模式
+                # 圖表拖拉模式
                 delta = event.pos() - self.last_drag_pos
                 
                 # 更新偏移量
@@ -1250,6 +1647,10 @@ class UniversalChartWidget(QWidget):
                 self.last_drag_pos = event.pos()
                 self.update()
             else:
+                # 🆕 檢查是否懸停在數據點上（參考 Detailed Lap Analysis）
+                if self.show_data_points:
+                    self._check_hover_data_point(event.pos())
+                
                 # 正常虛線追蹤模式
                 self.mouse_x = event.x()
                 self.mouse_y = event.y()
@@ -1258,12 +1659,28 @@ class UniversalChartWidget(QWidget):
         event.accept()
     
     def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖拉"""
-        if event.button() == Qt.LeftButton and self.dragging:
-            self.dragging = False
-            self.setCursor(Qt.ArrowCursor)
-            print(f"[DEBUG] 結束拖拉模式")
-            event.accept()
+        """滑鼠釋放事件 - 結束拖拉和 tooltip 拖動"""
+        if event.button() == Qt.LeftButton:
+            if self.legend_dragging:
+                # 結束圖例拖拉
+                self.legend_dragging = False
+                self.setCursor(Qt.ArrowCursor)
+                print(f"[DEBUG] 圖例拖拉結束，位置: ({self.legend_position.x()}, {self.legend_position.y()})")
+                event.accept()
+            elif self.dragging_tooltip:
+                # 🆕 結束 tooltip 拖動
+                print(f"[DEBUG] ✅ Tooltip 拖動結束，最終位置已儲存")
+                self.dragging_tooltip = False
+                self.dragging_tooltip_index = -1
+                self.tooltip_drag_offset = QPoint(0, 0)
+                self.setCursor(Qt.ArrowCursor)
+                event.accept()
+            elif self.dragging:
+                # 結束圖表拖拉
+                self.dragging = False
+                self.setCursor(Qt.ArrowCursor)
+                print(f"[DEBUG] 圖表拖拉結束")
+                event.accept()
     
     def add_fixed_vertical_line(self, pos):
         """添加固定垂直虛線並計算Y軸值"""

@@ -300,6 +300,7 @@ class ModuleTypes:
     TELEMETRY_SPEEDDIFF = "telemetry_speeddiff"        # 遙測分析 - 速度差異分析
     TELEMETRY_ANALYSIS = "telemetry_analysis"          # 遙測分析 - 綜合分析
     THROTTLE_BOX_PLOT = "throttle_box_plot"            # 油門箱型圖分析
+    THROTTLE_LINE_CHART = "throttle_line_chart"         # 油門折線圖分析（單車手）
     TRACK_MAP = "track_map"                            # 賽道地圖
     LAP_ANALYSIS = "lap_analysis"                      # 單圈分析
     PITSTOP_ANALYSIS = "pitstop_analysis"              # 進站分析

@@ -203,43 +203,47 @@ class ThrottleChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
     def paintEvent(self, event):
         """繪製圖表"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 清空背景
-        painter.fillRect(self.rect(), QColor(255, 255, 255))
-        
-        # 計算圖表區域
-        chart_rect = QRect(
-            self.margin_left,
-            self.margin_top,
-            self.width() - self.margin_left - self.margin_right,
-            self.height() - self.margin_top - self.margin_bottom
-        )
-        
-        # 繪製背景
-        painter.fillRect(chart_rect, QColor(248, 249, 250))
-        
-        # 繪製順序很重要 - 後繪製的會覆蓋先繪製的
-        self._draw_grid(painter, chart_rect)
-        self._draw_axes(painter, chart_rect)
-        self._draw_throttle_curves(painter, chart_rect)
-        self._draw_sectors(painter, chart_rect)
-        
-        # 繪製連動線 (來自其他圖表的X軸連動)
-        if hasattr(self, 'show_linkage_line') and self.show_linkage_line and self.linkage_distance_value is not None:
-            # 調用混入類的連動線繪製方法
-            self.draw_linkage_line(painter, chart_rect, 
-                                 self.distance_data, 
-                                 self.driver1_name, self.driver2_name,
-                                 self.driver1_throttle, self.driver2_throttle, 
-                                 "%")
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
             
-        # 繪製圖例
-        self._draw_legend(painter)
-        
-        # 繪製垂直線在最頂層（最後繪製，確保可見性）
-        if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
-            self._draw_mouse_tracker(painter, chart_rect)
+            # 清空背景
+            painter.fillRect(self.rect(), QColor(255, 255, 255))
+            
+            # 計算圖表區域
+            chart_rect = QRect(
+                self.margin_left,
+                self.margin_top,
+                self.width() - self.margin_left - self.margin_right,
+                self.height() - self.margin_top - self.margin_bottom
+            )
+            
+            # 繪製背景
+            painter.fillRect(chart_rect, QColor(248, 249, 250))
+            
+            # 繪製順序很重要 - 後繪製的會覆蓋先繪製的
+            self._draw_grid(painter, chart_rect)
+            self._draw_axes(painter, chart_rect)
+            self._draw_throttle_curves(painter, chart_rect)
+            self._draw_sectors(painter, chart_rect)
+            
+            # 繪製連動線 (來自其他圖表的X軸連動)
+            if hasattr(self, 'show_linkage_line') and self.show_linkage_line and self.linkage_distance_value is not None:
+                # 調用混入類的連動線繪製方法
+                self.draw_linkage_line(painter, chart_rect, 
+                                     self.distance_data, 
+                                     self.driver1_name, self.driver2_name,
+                                     self.driver1_throttle, self.driver2_throttle, 
+                                     "%")
+                
+            # 繪製圖例
+            self._draw_legend(painter)
+            
+            # 繪製垂直線在最頂層（最後繪製，確保可見性）
+            if self.show_fixed_line or (self.mouse_x > 0 and self.mouse_y > 0):
+                self._draw_mouse_tracker(painter, chart_rect)
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
         
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""

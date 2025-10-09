@@ -121,52 +121,56 @@ class BoxPlotCanvas(QWidget):
     # ------------------------------------------------------------------
     def paintEvent(self, event):  # type: ignore[override]
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.fillRect(self.rect(), self._background_color)
-        painter.setFont(self._label_font)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.fillRect(self.rect(), self._background_color)
+            painter.setFont(self._label_font)
 
-        if not self._box_items:
-            painter.setPen(self._axis_color)
-            painter.drawText(self.rect(), Qt.AlignCenter, "No data available")
-            return
+            if not self._box_items:
+                painter.setPen(self._axis_color)
+                painter.drawText(self.rect(), Qt.AlignCenter, "No data available")
+                return
 
-        vmin, vmax = self._value_range
-        ticks = self._generate_ticks(vmin, vmax)
+            vmin, vmax = self._value_range
+            ticks = self._generate_ticks(vmin, vmax)
 
-        metrics = painter.fontMetrics()
-        tick_label_width = max(
-            (metrics.horizontalAdvance(f"{value:.2f}") for value in ticks),
-            default=metrics.horizontalAdvance("0.00"),
-        )
+            metrics = painter.fontMetrics()
+            tick_label_width = max(
+                (metrics.horizontalAdvance(f"{value:.2f}") for value in ticks),
+                default=metrics.horizontalAdvance("0.00"),
+            )
 
-        longest_driver = max(
-            (item.get("driver", "") for item in self._box_items),
-            key=len,
-            default="Driver",
-        )
-        driver_text_width = max(metrics.horizontalAdvance(longest_driver), metrics.horizontalAdvance("VER"))
-        driver_label_block = metrics.height() * 2 + int(driver_text_width * 0.6)
+            longest_driver = max(
+                (item.get("driver", "") for item in self._box_items),
+                key=len,
+                default="Driver",
+            )
+            driver_text_width = max(metrics.horizontalAdvance(longest_driver), metrics.horizontalAdvance("VER"))
+            driver_label_block = metrics.height() * 2 + int(driver_text_width * 0.6)
 
-        margins = {
-            "left": max(82, tick_label_width + 42),
-            "right": 48,
-            "top": 36,
-            "bottom": max(110, driver_label_block + 42),
-        }
+            margins = {
+                "left": max(82, tick_label_width + 42),
+                "right": 48,
+                "top": 36,
+                "bottom": max(110, driver_label_block + 42),
+            }
 
-        chart_rect = QRectF(
-            self.rect().left() + margins["left"],
-            self.rect().top() + margins["top"],
-            max(1.0, self.rect().width() - margins["left"] - margins["right"]),
-            max(1.0, self.rect().height() - margins["top"] - margins["bottom"]),
-        )
+            chart_rect = QRectF(
+                self.rect().left() + margins["left"],
+                self.rect().top() + margins["top"],
+                max(1.0, self.rect().width() - margins["left"] - margins["right"]),
+                max(1.0, self.rect().height() - margins["top"] - margins["bottom"]),
+            )
 
-        self._hover_regions = []
+            self._hover_regions = []
 
-        self._draw_grid(painter, chart_rect, ticks)
-        self._draw_boxes(painter, chart_rect)
-        self._draw_axes(painter, chart_rect, margins)
-        self._draw_driver_labels(painter, chart_rect)
+            self._draw_grid(painter, chart_rect, ticks)
+            self._draw_boxes(painter, chart_rect)
+            self._draw_axes(painter, chart_rect, margins)
+            self._draw_driver_labels(painter, chart_rect)
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
 
     # ------------------------------------------------------------------
     # 協助函式：繪製各元素

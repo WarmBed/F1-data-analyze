@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """
-ThrottleBoxPlotAnalysis - F1T 全油門秒數箱型圖分析模組
+ThrottleBoxPlotAnalysis - F1T 全油門百分比箱型圖分析模組
 =======================================================
 
 基於通用 MDI 架構實現，提供：
-- 每位車手全油門時間的箱型圖可視化
+- 每位車手全油門百分比的箱型圖可視化（使用 full_throttle_ratio）
 - IQR 方法異常值過濾
 - 進站圈/黃旗圈過濾
 - 圖表匯出與統計摘要
 
 資料來源：CLI Function 54 (Lap Throttle Ratio Per Driver)
 作者: F1T Team
-日期: 2025-10-07
-版本: 1.0.0
+日期: 2025-10-08 (百分比模式更新)
+版本: 1.1.0
 """
 
 from __future__ import annotations
@@ -112,6 +112,7 @@ class ThrottleBoxPlotApiWorker(QThread):
                 "function_spec": payload.get("function_spec"),
                 "latency_ms": round(latency_ms, 2),
                 "base_url": self.base_url,
+                "params": dict(query_params),
             }
 
             self.progress.emit(90)
@@ -481,14 +482,16 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
                 if data_status and str(data_status).lower() not in {"ok", "valid"}:
                     continue
 
-                duration = lap.get("full_throttle_duration_s")
-                if duration is None:
+                # 🔄 改用 full_throttle_ratio (百分比模式)
+                throttle_ratio = lap.get("full_throttle_ratio")
+                if throttle_ratio is None:
                     continue
                 try:
-                    duration_float = float(duration)
+                    # 轉換為百分比 (0-1 → 0-100%)
+                    percentage = float(throttle_ratio) * 100.0
                 except (TypeError, ValueError):
                     continue
-                if duration_float <= 0:
+                if percentage < 0 or percentage > 100:
                     continue
 
                 lap_number = lap.get("lap_number")
@@ -507,7 +510,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
                     if pit_status and str(pit_status).strip().lower() not in {"", "none", "normal", "ok"}:
                         continue
 
-                durations.append(duration_float)
+                durations.append(percentage)
 
             if durations:
                 result[driver_code] = durations
@@ -536,6 +539,8 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             if not values:
                 continue
             stats[driver] = {
+                "min": float(np.min(values)),
+                "max": float(np.max(values)),
                 "mean": float(np.mean(values)),
                 "median": float(np.median(values)),
                 "q1": float(np.percentile(values, 25)),

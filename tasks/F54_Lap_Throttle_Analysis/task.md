@@ -1,7 +1,7 @@
 # Task: Function 54 – Lap Throttle Ratio Analysis
 
 **建立日期**: 2025-10-07  
-**狀態**: 📝 規劃中  
+**狀態**: � 進行中  
 **負責人**: _TBD_  
 **關聯功能**: CLI Function 54、GUI 油門箱型圖、GUI 油門折線圖  
 **依賴專案**: FastF1 / OpenF1 API、既有 UniversalDataLoader 架構、UniversalChartWidget
@@ -136,4 +136,5 @@
 ---
 
 > 更新紀錄：
+> - 2025-10-08：Function 54 修正：`_calculate_lap_metrics_from_telemetry` 現在保留外層圈號（telemetry 無 `LapNumber` 時不再回落到 0），新增 `lap_number` 參數並補齊單元測試；同日完成單車手油門折線圖「圈數為 X 軸」與車手下拉選擇功能，且在 GUI 端保留圈序 fallback。通過 `test_throttle_ratio_calculations.py`、`tests/gui/test_throttle_line_chart_data_loader.py`。
 > - 2025-10-07：建立初版任務描述，整合 CLI 與 GUI 需求。

@@ -292,43 +292,47 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
     def paintEvent(self, event):
         """繪製圖表"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)  # 抗鋸齒
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)  # 平滑變換
-        
-        # 計算繪製區域
-        self._calculate_chart_areas()
-        
-        # 繪製背景
-        self._draw_background(painter)
-        
-        # 繪製網格
-        if self.show_grid:
-            self._draw_grid(painter)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)  # 抗鋸齒
+            painter.setRenderHint(QPainter.SmoothPixmapTransform)  # 平滑變換
             
-        # 繪製座標軸
-        self._draw_axes(painter)
-        
-        # 繪製數據
-        self._draw_data(painter)
-        
-        # 參照遙測分析：繪製固定線
-        if self.show_fixed_line and self.fixed_lap_value is not None:
-            self._draw_fixed_line(painter)
-        
-        # 繪製圖例
-        if self.show_legend:
-            self._draw_legend(painter)
+            # 計算繪製區域
+            self._calculate_chart_areas()
             
-        # 繪製工具提示
-        if self.tooltip_visible:
-            self._draw_tooltip(painter)
+            # 繪製背景
+            self._draw_background(painter)
             
-        # 🆕 繪製基類的統一座標軸標題
-        if self.show_axis_titles:
-            print(f"[RAIN_AXIS_DEBUG] 🎨 自訂座標軸標題繪製")
-            self._draw_custom_axis_titles(painter)
-        else:
-            print(f"[RAIN_AXIS_DEBUG] ❌ 座標軸標題被停用 (show_axis_titles={self.show_axis_titles})")
+            # 繪製網格
+            if self.show_grid:
+                self._draw_grid(painter)
+                
+            # 繪製座標軸
+            self._draw_axes(painter)
+            
+            # 繪製數據
+            self._draw_data(painter)
+            
+            # 參照遙測分析：繪製固定線
+            if self.show_fixed_line and self.fixed_lap_value is not None:
+                self._draw_fixed_line(painter)
+            
+            # 繪製圖例
+            if self.show_legend:
+                self._draw_legend(painter)
+                
+            # 繪製工具提示
+            if self.tooltip_visible:
+                self._draw_tooltip(painter)
+                
+            # 🆕 繪製基類的統一座標軸標題
+            if self.show_axis_titles:
+                print(f"[RAIN_AXIS_DEBUG] 🎨 自訂座標軸標題繪製")
+                self._draw_custom_axis_titles(painter)
+            else:
+                print(f"[RAIN_AXIS_DEBUG] ❌ 座標軸標題被停用 (show_axis_titles={self.show_axis_titles})")
+        finally:
+            # 🔑 關鍵修復：確保 painter 總是被正確結束
+            painter.end()
             
     def _calculate_chart_areas(self):
         """計算圖表區域（與遙測分析一致）"""

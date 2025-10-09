@@ -16,14 +16,29 @@ class BoxPlotSettings:
     filter_yellow_flags: bool = True  # 新增：過濾黃旗圈
 
 
+@dataclass(frozen=True)
+class ThrottleLineChartSettings:
+    """Throttle Line Chart 預設顯示設定"""
+    show_full_duration: bool = False
+    show_ratio: bool = True
+    show_average: bool = True
+    show_delta: bool = False
+    rolling_average: bool = False
+    rolling_window: int = 3
+    highlight_threshold: bool = True
+    threshold_percent: float = 90.0
+
+
 class GuiSettingsManager(QObject):
     """Centralized GUI settings manager with signal-based updates."""
 
     boxplot_settings_changed = pyqtSignal(dict)
+    throttle_line_chart_settings_changed = pyqtSignal(dict)  # 新增：Throttle Line Chart 設定變更訊號
 
     def __init__(self) -> None:
         super().__init__()
         self._boxplot_settings: BoxPlotSettings = BoxPlotSettings()
+        self._throttle_line_chart_settings: ThrottleLineChartSettings = ThrottleLineChartSettings()  # 新增
 
     # ------------------------------------------------------------------
     # Box plot settings
@@ -50,6 +65,38 @@ class GuiSettingsManager(QObject):
 
         self._boxplot_settings = BoxPlotSettings(**current)
         self.boxplot_settings_changed.emit(self.get_boxplot_settings())
+
+    # ------------------------------------------------------------------
+    # Throttle Line Chart settings
+    # ------------------------------------------------------------------
+    def get_throttle_line_chart_settings(self) -> Dict[str, float | bool | int]:
+        """取得 Throttle Line Chart 設定"""
+        settings = {
+            "show_full_duration": self._throttle_line_chart_settings.show_full_duration,
+            "show_ratio": self._throttle_line_chart_settings.show_ratio,
+            "show_average": self._throttle_line_chart_settings.show_average,
+            "show_delta": self._throttle_line_chart_settings.show_delta,
+            "rolling_average": self._throttle_line_chart_settings.rolling_average,
+            "rolling_window": self._throttle_line_chart_settings.rolling_window,
+            "highlight_threshold": self._throttle_line_chart_settings.highlight_threshold,
+            "threshold_percent": self._throttle_line_chart_settings.threshold_percent,
+        }
+        return settings
+
+    def update_throttle_line_chart_settings(self, **kwargs) -> None:
+        """更新 Throttle Line Chart 設定"""
+        current = self.get_throttle_line_chart_settings()
+        changed = False
+        for key, value in kwargs.items():
+            if key in current and current[key] != value:
+                current[key] = value
+                changed = True
+
+        if not changed:
+            return
+
+        self._throttle_line_chart_settings = ThrottleLineChartSettings(**current)
+        self.throttle_line_chart_settings_changed.emit(self.get_throttle_line_chart_settings())
 
     # ------------------------------------------------------------------
     # Dialog helpers

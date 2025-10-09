@@ -134,9 +134,11 @@ class ThrottleAnalysisOptionsDialog(QDialog):
         item1.setData(Qt.UserRole, self.TYPE_BOX_PLOT)
         self.analysis_list.addItem(item1)
 
-        item2 = QListWidgetItem("📈 " + tr("throttle_analysis_option_line_chart", "Throttle Line Chart (coming soon)"))
+        # ✅ Throttle Line Chart 已實現！移除 "coming soon" 並啟用
+        item2 = QListWidgetItem("📈 " + tr("throttle_analysis_option_line_chart", "Throttle Line Chart"))
         item2.setData(Qt.UserRole, self.TYPE_LINE_CHART)
-        item2.setFlags(item2.flags() & ~Qt.ItemIsEnabled)
+        # 移除禁用標記，現在可以選擇了！
+        # item2.setFlags(item2.flags() & ~Qt.ItemIsEnabled)  # ← 已移除
         self.analysis_list.addItem(item2)
 
         self.analysis_list.setCurrentRow(0)
@@ -163,7 +165,7 @@ class ThrottleAnalysisOptionsDialog(QDialog):
 
         desc_label = QLabel(
             "• " + tr("throttle_box_plot_desc", "Throttle Box Plot: Visualizes throttle usage distribution") + "\n"
-            "• " + tr("throttle_line_chart_desc", "Throttle Line Chart: Time-series throttle view (coming soon)")
+            "• " + tr("throttle_line_chart_desc", "Throttle Line Chart: Time-series throttle view with dual synchronized charts")
         )
         desc_label.setStyleSheet("""
             color: #777777;

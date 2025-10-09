@@ -1,0 +1,242 @@
+2025-10-08 22:31:36 | INFO | f1.gui.main | F1T GUI 控制台初始化完成 - 日誌系統已啟用 (INFO level, 僅檔案輸出)
+2025-10-08 22:31:36 | INFO | f1.console | [OK] [MODULE_FACTORY] Speed analysis module registered
+2025-10-08 22:31:36 | INFO | f1.gui.main | F1T GUI 控制台初始化完成 - 日誌系統已啟用 (INFO level, 僅檔案輸出)
+2025-10-08 22:31:37 | INFO | f1.console | [OK] [MODULE_FACTORY] RPM analysis module registered
+2025-10-08 22:31:37 | INFO | f1.console | [OK] [MODULE_FACTORY] Throttle analysis module registered
+2025-10-08 22:31:37 | INFO | f1.console | [ANALYSIS_MANAGER] Lap analysis module manager initialized
+2025-10-08 22:31:37 | INFO | f1.console | [MAIN] 🚀 啟動 F1T 專業賽車分析工作站...
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] 🚀 開始初始化 F1 TelemetryStation Pro 主視窗...
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ 視窗標題已設定
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ 分析追蹤屬性已初始化
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ 子視窗追蹤列表已初始化
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ MDI區域引用已初始化
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ 工作區儲存紀錄已初始化
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] ✅ 遙測分析狀態追蹤已初始化
+2025-10-08 22:31:37 | INFO | f1.console | [SEASON] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] 🔧 開始初始化用戶界面...
+2025-10-08 22:31:37 | INFO | f1.console | [INIT] 🔧 開始創建專業工具欄...
+2025-10-08 22:31:37 | INFO | f1.console | [LAP_CONTROL] 🏗️ 創建遙測分析控件...
+2025-10-08 22:31:37 | INFO | f1.console | [LAP_CONTROL] ✅ 遙測分析控件創建完成（手動更新模式已啟用）
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] ✅ 專業工具欄創建完成
+2025-10-08 22:31:39 | INFO | f1.console | [TAB_DEBUG] TabButtonsContainer 已隱藏: True
+2025-10-08 22:31:39 | INFO | f1.console | [TOOLBAR_STATUS] 沒有活動的分析模組，已清除工具欄狀態
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] 🎨 開始應用樣式...
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] 🔗 開始整合連動管理器...
+2025-10-08 22:31:39 | INFO | f1.console | [LINKAGE_INTEGRATION] ✅ 全域信號已連接到連動管理器
+2025-10-08 22:31:39 | INFO | f1.console | [LINKAGE_INTEGRATION] ✅ 連動管理器整合完成
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] [API] Initialising health monitor...
+2025-10-08 22:31:39 | INFO | f1.gui.main | [API-URL] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] [API] Health monitor active
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] ✅ 連動管理器整合完成
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] ✅ 主視窗初始化完成！
+2025-10-08 22:31:39 | INFO | f1.console | [INIT] ⏰ 設置延遲檢查機制 (1秒後執行)...
+2025-10-08 22:31:39 | INFO | f1.gui.main | Starting API health check (manual=False, base=https://api.f1telemetrystationpro.org)
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] ⏰ 延遲檢查機制啟動 - 開始檢查標籤隱藏狀態...
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] 檢查標籤隱藏狀態...
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] QTabBar 可見性: False
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] QTabBar 高度: 0
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] 隱藏後 QTabBar 高度: 0
+2025-10-08 22:31:40 | INFO | f1.console | [TAB_HIDE] ✅ 標籤隱藏檢查完成
+2025-10-08 22:31:41 | INFO | f1.console | [OK] 找到當前 MDI 區域: WelcomeMDIArea
+2025-10-08 22:31:41 | INFO | f1.console | [LAP_CONTROL] ℹ️ 未發現遙測分析視窗，不顯示控件
+2025-10-08 22:31:41 | INFO | f1.gui.main | API health online (latency=939.4 ms)
+2025-10-08 22:31:42 | INFO | f1.console | [SINGLE_SELECT] 已選擇分析模組: Throttle Analysis
+2025-10-08 22:31:42 | INFO | f1.console | [SINGLE_SELECT] 💡 提示：右鍵點擊可執行分析
+2025-10-08 22:31:42 | INFO | f1.console | [LINK] [DEBUG] 嘗試註冊MDI區域: AnalysisMDIArea
+2025-10-08 22:31:42 | INFO | f1.console | [LINK] [DEBUG] 當前已註冊的MDI區域數量: 0
+2025-10-08 22:31:42 | INFO | f1.console | [LINK] [DEBUG] 主視窗類型: StyleHMainWindow
+2025-10-08 22:31:42 | INFO | f1.console | [OK] [MDI] MDI區域已註冊: AnalysisMDIArea
+2025-10-08 22:31:42 | INFO | f1.console | [OK] [MDI] 註冊後MDI區域總數: 1
+2025-10-08 22:31:42 | INFO | f1.console | [OK] [MDI] 已註冊分析MDI區域: AnalysisMDIArea
+2025-10-08 22:31:42 | INFO | f1.console | [TOOLBAR_STATUS] 沒有活動的分析模組，已清除工具欄狀態
+2025-10-08 22:31:42 | INFO | f1.console | [THROTTLE_DIALOG] ThrottleAnalysisOptionsDialog 已初始化
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_DIALOG] 使用者選擇的分析類型: ['line_chart']
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_DIALOG] 使用者確認選擇: Throttle Line Chart
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_DIALOG] 使用者選擇的分析類型: ['line_chart']
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE] 選項結果: {'box_plot': False, 'line_chart': True}
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] 開始創建油門折線圖視窗...
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] 參數: 2025 Australia R
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] 開始創建油門折線圖模組...
+2025-10-08 22:31:46 | INFO | f1.console | [OK] 詳細圈速分析模組 - 整合架構載入成功
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] 模組參數: 2025 Australia R
+2025-10-08 22:31:46 | INFO | f1.console | 🚨 [MDI_INIT] 請求分析類型: throttle_line_chart_single_driver
+2025-10-08 22:31:46 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'acceleration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'throttle_line_chart_single_driver']
+2025-10-08 22:31:46 | INFO | f1.console | 🚨 [MDI_INIT] laptime是否在MDI_MODULE_TYPES中: True
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] 初始化 Throttle Line Chart (Single Driver) MDI 模組
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] 初始化 Throttle Line Chart (Single Driver) 模組
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 初始化 Throttle Line Chart (Single Driver) 載入器
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 本地 JSON 後備已啟用 (策略: 預設策略 (允許本地 JSON 後備))
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] ⚙️ [Settings] No changes detected (pit=True, yellow=True)
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] ⚙️ [Settings] No changes detected (pit=True, yellow=True)
+2025-10-08 22:31:46 | INFO | f1.console | [ANALYSIS_MANAGER] Registering module: throttle_line_chart_single_driver_analysis_1793699136144 (type: throttle_line_chart_single_driver)
+2025-10-08 22:31:46 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: throttle_line_chart_single_driver_analysis_1793699136144
+2025-10-08 22:31:46 | INFO | f1.console | [ANALYSIS_MANAGER] Registered chart widget: ThrottleLineChartView
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] ✅ 已註冊到分析模組管理器: throttle_line_chart_single_driver_analysis_1793699136144
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] ✅ Throttle Line Chart (Single Driver) 模組初始化完成
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 透過 API 載入油門資料: base_url=https://api.f1telemetrystationpro.org, params={'year': 2025, 'race': 'Australia', 'session': 'R', 'driver': 'VER'}
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] ✅ 模組初始化成功
+2025-10-08 22:31:46 | INFO | f1.console | [LINK] [INIT] Throttle Line Chart (Single Driver) - 2025 Australia R - VER 已找到主視窗引用
+2025-10-08 22:31:46 | INFO | f1.console | [SYNC] [INIT] Throttle Line Chart (Single Driver) - 2025 Australia R - VER 已連接模組同步信號
+2025-10-08 22:31:46 | INFO | f1.console | [SYNC] [INIT] 進行初始參數同步: 2025 Australia R
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE-LINE DEBUG] 已有載入請求執行中，忽略新的請求
+2025-10-08 22:31:46 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Throttle Line Chart (Single Driver) - 2025 Australia R - VER' 初始化完成 - 包含調整大小支援
+2025-10-08 22:31:46 | INFO | f1.console | [GREEN] 接收同步初始化為啟動狀態
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] 🏷️ 視窗標題已更新為: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE_LINE] ✅ 油門折線圖視窗已創建: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:31:46 | INFO | f1.console | [THROTTLE] 未選擇任何可用的油門分析模組，結束建立流程
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 找到 1 個子視窗，其中 1 個可見
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 準備排列 1 個視窗
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] MDI區域大小: 2227x1235
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 可用空間: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 視窗數量: 1
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 初始計算 cols: 1
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 計算得到 rows: 1
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 每個視窗尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 調整後視窗尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 開始排列 1 個視窗，配置: 1行 x 1列
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 預檢查視窗設定 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [TILE CHECK] 視窗 0: 最小尺寸(0x0), 尺寸策略(5x5)
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 預檢查完成 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 視窗 0: 位置(10, 10) 尺寸(2207, 1215)
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 視窗 0 實際尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 開始最終尺寸同步 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [TILE SYNC] 視窗 0 當前尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE SYNC] 統一目標尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE SYNC] 視窗 0 最終尺寸: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 尺寸同步完成 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 子視窗邊距檢查 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] 子視窗 0: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG]   MDI邊距: left=2, top=4, right=2, bottom=2
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG]   frameGeometry: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG]   geometry: 2207x1215
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG]   邊框差異: width=0, height=0
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG]   內部widget尺寸: 2203x1209
+2025-10-08 22:31:47 | INFO | f1.console | [TILE DEBUG] ========== 邊距檢查完成 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE-LINE DEBUG] ========== API 成功回調 ==========
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE-LINE DEBUG] API 元數據: source=cache, latency=1813.02ms
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE-LINE DEBUG] 🏁 [Flag Markers] pit_laps=[3, 4, 5, 35, 47], flag_labels={1: 'S', 2: 'S', 3: 'S', 4: 'S', 5: 'S', 6: 'S', 7: 'S', 33: 'Y', 34: 'S', 35: 'S', 36: 'S', 37: 'S', 38: 'S', 39: 'S', 40: 'S', 41: 'S', 44: 'Y', 45: 'Y', 47: 'S', 48: 'S', 49: 'S', 50: 'S', 51: 'S'}
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE-LINE DEBUG] 🔧 [Filter Status] filter_pit_laps=True, filter_yellow_flags=True
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] 📊 更新圖表數據
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI]    - 組件類型: <class 'modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_mdi.ThrottleLineChartView'>
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI]    - 組件模組: modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_mdi
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI]    - 有 update_data: True
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI]    - 有 set_data: False
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] ✅ 使用 update_data 方法
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI]    - update_data 方法來源: <function ThrottleLineChartView.update_data at 0x000001A1A0CBA3E0>
+2025-10-08 22:31:47 | INFO | f1.console | 🧹 已手動清除降雨標記
+2025-10-08 22:31:47 | INFO | f1.console | 🧹 已手動清除降雨標記
+2025-10-08 22:31:47 | INFO | f1.console | [TOOLBAR_STATUS] 已更新: Throttle Line Chart (Single Driver) |  |  | 
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE_LINE_CHART_SINGLE_DRIVER_MDI] 已更新工具欄狀態: Throttle Line Chart (Single Driver)
+2025-10-08 22:31:47 | INFO | f1.console | [THROTTLE-LINE DEBUG] ✅ API 數據載入完成
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] 初始化 Throttle Line Chart (Single Driver) 載入器
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] 本地 JSON 後備已啟用 (策略: 預設策略 (允許本地 JSON 後備))
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] ⚙️ [Settings] No changes detected (pit=True, yellow=True)
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] ⚙️ [Settings] No changes detected (pit=True, yellow=True)
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] 使用預設公開 API 網域 https://api.f1telemetrystationpro.org
+2025-10-08 22:32:04 | INFO | f1.console | [THROTTLE-LINE DEBUG] 透過 API 載入油門資料: base_url=https://api.f1telemetrystationpro.org, params={'year': '2025', 'race': 'Australia', 'session': 'R', 'driver': 'STR', 'force_refresh': False}
+2025-10-08 22:32:06 | INFO | f1.console | [THROTTLE-LINE DEBUG] ========== API 成功回調 ==========
+2025-10-08 22:32:06 | INFO | f1.console | [THROTTLE-LINE DEBUG] API 元數據: source=cache, latency=2075.35ms
+2025-10-08 22:32:06 | INFO | f1.console | [THROTTLE-LINE DEBUG] 🏁 [Flag Markers] pit_laps=[3, 4, 5, 34, 45], flag_labels={1: 'S', 2: 'S', 3: 'S', 4: 'S', 5: 'S', 6: 'S', 7: 'S', 33: 'S', 34: 'S', 35: 'S', 36: 'S', 37: 'S', 38: 'S', 39: 'S', 40: 'S', 41: 'S', 44: 'Y', 45: 'Y', 47: 'S', 48: 'S', 49: 'S', 50: 'S', 51: 'S'}
+2025-10-08 22:32:06 | INFO | f1.console | [THROTTLE-LINE DEBUG] 🔧 [Filter Status] filter_pit_laps=True, filter_yellow_flags=True
+2025-10-08 22:32:06 | INFO | f1.console | 🧹 已手動清除降雨標記
+2025-10-08 22:32:06 | INFO | f1.console | 🧹 已手動清除降雨標記
+2025-10-08 22:32:06 | INFO | f1.console | ✅ [Driver2 Data Loaded] Successfully loaded data for STR
+2025-10-08 22:32:06 | INFO | f1.console | [THROTTLE-LINE DEBUG] ✅ API 數據載入完成
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 找到 1 個子視窗，其中 1 個可見
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 準備排列 1 個視窗
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] MDI區域大小: 2227x1235
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 可用空間: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗數量: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 初始計算 cols: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 計算得到 rows: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 每個視窗尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 調整後視窗尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 開始排列 1 個視窗，配置: 1行 x 1列
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 預檢查視窗設定 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE CHECK] 視窗 0: 最小尺寸(0x0), 尺寸策略(5x5)
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 預檢查完成 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗 0: 位置(10, 10) 尺寸(2207, 1215)
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗 0 實際尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 開始最終尺寸同步 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 視窗 0 當前尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 統一目標尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 視窗 0 最終尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 尺寸同步完成 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 子視窗邊距檢查 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 子視窗 0: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   MDI邊距: left=2, top=4, right=2, bottom=2
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   frameGeometry: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   geometry: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   邊框差異: width=0, height=0
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   內部widget尺寸: 2203x1209
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 邊距檢查完成 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 找到 1 個子視窗，其中 1 個可見
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 準備排列 1 個視窗
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] MDI區域大小: 2227x1235
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 可用空間: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗數量: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 初始計算 cols: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 計算得到 rows: 1
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 每個視窗尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 調整後視窗尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 開始排列 1 個視窗，配置: 1行 x 1列
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 預檢查視窗設定 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE CHECK] 視窗 0: 最小尺寸(0x0), 尺寸策略(5x5)
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 預檢查完成 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗 0: 位置(10, 10) 尺寸(2207, 1215)
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 視窗 0 實際尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 開始最終尺寸同步 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 視窗 0 當前尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 統一目標尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE SYNC] 視窗 0 最終尺寸: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 尺寸同步完成 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 子視窗邊距檢查 ==========
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] 子視窗 0: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   MDI邊距: left=2, top=4, right=2, bottom=2
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   frameGeometry: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   geometry: 2207x1215
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   邊框差異: width=0, height=0
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG]   內部widget尺寸: 2203x1209
+2025-10-08 22:32:07 | INFO | f1.console | [TILE DEBUG] ========== 邊距檢查完成 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 找到 1 個子視窗，其中 1 個可見
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 準備排列 1 個視窗
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] MDI區域大小: 2227x1235
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 可用空間: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 視窗數量: 1
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 初始計算 cols: 1
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 計算得到 rows: 1
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 每個視窗尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 調整後視窗尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 開始排列 1 個視窗，配置: 1行 x 1列
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 預檢查視窗設定 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE CHECK] 視窗 0: 最小尺寸(0x0), 尺寸策略(5x5)
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 預檢查完成 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 視窗 0: 位置(10, 10) 尺寸(2207, 1215)
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 視窗 0 實際尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 開始最終尺寸同步 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE SYNC] 視窗 0 當前尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE SYNC] 統一目標尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE SYNC] 視窗 0 最終尺寸: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 尺寸同步完成 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 子視窗邊距檢查 ==========
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] 子視窗 0: Throttle Line Chart (Single Driver) - 2025 Australia R - VER
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG]   MDI邊距: left=2, top=4, right=2, bottom=2
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG]   frameGeometry: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG]   geometry: 2207x1215
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG]   邊框差異: width=0, height=0
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG]   內部widget尺寸: 2203x1209
+2025-10-08 22:32:08 | INFO | f1.console | [TILE DEBUG] ========== 邊距檢查完成 ==========
+2025-10-08 22:32:11 | INFO | f1.console | [MAIN] 🛑 接收到關閉請求，開始清理資源...
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] 🔄 停止所有分析進程...
+2025-10-08 22:32:12 | INFO | f1.console | [CLEANUP] ℹ️ 沒有活動的分析請求需要清理
+2025-10-08 22:32:12 | INFO | f1.console | [CLEANUP] 🧹 CLI分析管理器已清理所有資源
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] 🪟 關閉所有子視窗...
+2025-10-08 22:32:12 | INFO | f1.console | [CLEANUP] ℹ️ 沒有活動的分析請求需要清理
+2025-10-08 22:32:12 | INFO | f1.console | [CLEANUP] 🧹 CLI分析管理器已清理所有資源
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] 🔧 CLI 分析管理器已清理
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] 🗑️ 垃圾回收完成
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] ✅ 資源清理完成，程序即將退出
+2025-10-08 22:32:12 | INFO | f1.console | [MAIN] 🛑 F1T 程序正常退出

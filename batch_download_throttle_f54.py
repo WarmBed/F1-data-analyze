@@ -46,6 +46,9 @@ JSON_OUTPUT_DIR = "json"
 # 預估每場比賽耗時（秒）
 ESTIMATED_TIME_PER_RACE = 110
 
+# 下載年份（依照排列順序處理）。預設為 2025 → 2024。
+TARGET_YEARS = [2025, 2024]
+
 # ==================== 賽季賽程資料 ====================
 
 RACE_CALENDAR = {
@@ -110,10 +113,11 @@ def format_time(seconds: float) -> str:
     else:
         return f"{seconds/3600:.1f}小時"
 
-def get_total_races() -> int:
-    """計算總賽事數量"""
+def get_total_races(years: List[int]) -> int:
+    """計算指定年份的總賽事數量"""
     total = 0
-    for year, races in RACE_CALENDAR.items():
+    for year in years:
+        races = RACE_CALENDAR.get(year, [])
         total += len(races) * len(SESSIONS)
     return total
 
@@ -208,7 +212,8 @@ def main():
     print("\n" + "="*80)
     print("🏎️  F1 Throttle Ratio 批次下載工具 (Function 54)")
     print("="*80)
-    print(f"📅 目標年份: 2020-2025")
+    target_years_label = ", ".join(str(year) for year in TARGET_YEARS)
+    print(f"📅 目標年份: {target_years_label}")
     print(f"🏁 會話類型: {', '.join(SESSIONS)}")
     print(f"📁 輸出目錄: {JSON_OUTPUT_DIR}")
     print(f"🔄 強制重新生成: {'是' if FORCE_REGENERATE else '否'}")
@@ -219,12 +224,24 @@ def main():
     
     # 建立任務列表
     tasks = []
-    for year in sorted(RACE_CALENDAR.keys()):
-        for race in RACE_CALENDAR[year]:
+    missing_years = []
+    for year in TARGET_YEARS:
+        races = RACE_CALENDAR.get(year)
+        if not races:
+            missing_years.append(year)
+            continue
+        for race in races:
             for session in SESSIONS:
                 tasks.append((year, race, session))
+
+    if missing_years:
+        print(f"⚠️  未在 RACE_CALENDAR 找到以下年份，將跳過: {', '.join(str(y) for y in missing_years)}")
     
     total_tasks = len(tasks)
+    if total_tasks == 0:
+        print("❌ 未找到可處理的賽事，請確認 TARGET_YEARS 或 RACE_CALENDAR 配置。")
+        return
+
     print(f"📊 總計 {total_tasks} 場比賽待處理")
     print(f"⏱️  預估總耗時: {format_time(total_tasks * ESTIMATED_TIME_PER_RACE)}\n")
     

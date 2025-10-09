@@ -11,7 +11,7 @@ from api.services.simple_analysis_service import SimpleF1AnalysisService
 
 
 def test_function_specs_basic_properties():
-    expected_ids = {"1", "2", "13", "26", "28", "99"}
+    expected_ids = {"1", "2", "13", "26", "28", "98", "99"}
     actual_ids = set(FUNCTION_SPECS.keys())
     assert expected_ids.issubset(actual_ids)
 
@@ -24,6 +24,10 @@ def test_function_specs_basic_properties():
     calendar_spec = FUNCTION_SPECS["99"]
     assert calendar_spec.required_params == ["year"]
     assert calendar_spec.cli_flag_map.get("year") == "-y"
+
+    color_spec = FUNCTION_SPECS["98"]
+    assert color_spec.optional_params == ["year", "colormap"]
+    assert color_spec.cli_flag_map.get("colormap") == "--colormap"
 
 
 def test_build_cli_command_mapping():

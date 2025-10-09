@@ -33,34 +33,13 @@ from typing import Dict, List, Any, Optional, Tuple
 
 # 匯入多國語言支援
 from core.gui_i18n import tr
+from modules.gui.themes import color_palette_provider
 
 
 class LapTimeBoxPlotChartWidget(QWidget):
     """圈速箱型圖圖表組件 (純 PyQt5 QPainter 實現)"""
     
-    # 2025 賽季車隊配色（20位車手） - 轉換為 QColor
-    TEAM_COLORS = {
-        'VER': QColor(54, 113, 198),    # Red Bull Racing - 藍色
-        'PER': QColor(54, 113, 198),
-        'LEC': QColor(232, 0, 45),      # Ferrari - 紅色
-        'SAI': QColor(232, 0, 45),
-        'HAM': QColor(39, 244, 210),    # Mercedes - 青綠色
-        'RUS': QColor(39, 244, 210),
-        'NOR': QColor(255, 128, 0),     # McLaren - 橘色
-        'PIA': QColor(255, 128, 0),
-        'ALO': QColor(34, 153, 113),    # Aston Martin - 綠色
-        'STR': QColor(34, 153, 113),
-        'GAS': QColor(94, 143, 170),    # Alpine - 藍色
-        'OCO': QColor(94, 143, 170),
-        'HUL': QColor(182, 186, 189),   # Haas - 灰色
-        'MAG': QColor(182, 186, 189),
-        'TSU': QColor(102, 146, 255),   # RB - 淺藍色
-        'RIC': QColor(102, 146, 255),
-        'BOT': QColor(82, 226, 82),     # Kick Sauber - 綠色
-        'ZHO': QColor(82, 226, 82),
-        'ALB': QColor(100, 196, 255),   # Williams - 淺藍色
-        'SAR': QColor(100, 196, 255),
-    }
+    DEFAULT_COLOR = QColor(128, 128, 128)
     
     # 信號
     chart_clicked = pyqtSignal(str)  # 點擊車手箱型圖時發射車手代碼
@@ -117,6 +96,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
             self.current_data = data
             self.driver_laptimes = data.get('driver_laptimes', {})
             self.statistics = data.get('statistics', {})
+            self._ensure_palette_for_data(data)
             
             if not self.driver_laptimes:
                 print("[WARNING] [BOXPLOT_CHART] 沒有圈速數據")
@@ -134,6 +114,38 @@ class LapTimeBoxPlotChartWidget(QWidget):
             import traceback
             traceback.print_exc()
             
+    def _ensure_palette_for_data(self, data: Dict[str, Any]) -> None:
+        """Ensure the colour palette matches the data source season."""
+        if not isinstance(data, dict):
+            return
+
+        metadata = data.get("metadata", {}) or {}
+        target_year = None
+
+        api_meta = metadata.get("api")
+        if isinstance(api_meta, dict):
+            params = api_meta.get("params")
+            if isinstance(params, dict):
+                target_year = params.get("year") or params.get("season_year")
+
+        if target_year is None:
+            target_year = metadata.get("season_year") or metadata.get("year")
+
+        try:
+            if target_year is not None:
+                color_palette_provider.ensure_loaded(year=int(target_year))
+            else:
+                color_palette_provider.ensure_loaded()
+        except Exception:
+            pass
+
+    def _driver_color(self, driver: str) -> QColor:
+        """Return the colour for the specified driver code."""
+        color = color_palette_provider.get_driver_color(driver, format="qcolor")
+        if isinstance(color, QColor):
+            return QColor(color)
+        return QColor(self.DEFAULT_COLOR)
+
     def _calculate_y_range(self):
         """計算 Y 軸的合適範圍"""
         if not self.driver_laptimes:
@@ -160,44 +172,48 @@ class LapTimeBoxPlotChartWidget(QWidget):
     def paintEvent(self, event):
         """繪製事件"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
-        
-        # 更新圖表區域
-        self.chart_rect = QRect(
-            self.margin_left,
-            self.margin_top,
-            self.width() - self.margin_left - self.margin_right,
-            self.height() - self.margin_top - self.margin_bottom
-        )
-        
-        # 繪製背景
-        self._draw_background(painter)
-        
-        # 繪製網格
-        self._draw_grid(painter)
-        
-        # 繪製座標軸
-        self._draw_axes(painter)
-        
-        # 繪製座標軸標籤
-        self._draw_axis_labels(painter)
-        
-        # 繪製數據
-        if self.driver_laptimes:
-            self._draw_box_plots(painter)
-        else:
-            self._draw_no_data_message(painter)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform)
             
-        # 繪製標題 (已隱藏)
-        # self._draw_title(painter)
-        
-        # 繪製圖例 (已隱藏)
-        # self._draw_legend(painter)
-        
-        # 繪製工具提示
-        if self.hover_driver:
-            self._draw_tooltip(painter)
+            # 更新圖表區域
+            self.chart_rect = QRect(
+                self.margin_left,
+                self.margin_top,
+                self.width() - self.margin_left - self.margin_right,
+                self.height() - self.margin_top - self.margin_bottom
+            )
+            
+            # 繪製背景
+            self._draw_background(painter)
+            
+            # 繪製網格
+            self._draw_grid(painter)
+            
+            # 繪製座標軸
+            self._draw_axes(painter)
+            
+            # 繪製座標軸標籤
+            self._draw_axis_labels(painter)
+            
+            # 繪製數據
+            if self.driver_laptimes:
+                self._draw_box_plots(painter)
+            else:
+                self._draw_no_data_message(painter)
+                
+            # 繪製標題 (已隱藏)
+            # self._draw_title(painter)
+            
+            # 繪製圖例 (已隱藏)
+            # self._draw_legend(painter)
+            
+            # 繪製工具提示
+            if self.hover_driver:
+                self._draw_tooltip(painter)
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
             
     def _draw_background(self, painter: QPainter):
         """繪製背景"""
@@ -365,7 +381,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
                 return self.chart_rect.bottom() - (ratio * self.chart_rect.height())
             
             # 獲取車隊配色
-            team_color = self.TEAM_COLORS.get(driver, QColor(128, 128, 128))
+            team_color = self._driver_color(driver)
             
             # 檢查是否懸停
             is_hovered = (driver == self.hover_driver)

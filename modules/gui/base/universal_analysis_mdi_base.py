@@ -626,6 +626,11 @@ class UniversalAnalysisMDI(IAnalysisModule):
         # 主要內容區域
         main_splitter = QSplitter(Qt.Vertical)
         
+        # 額外組件區域（控制面板）- 移到圖表上方
+        additional_widgets = self.create_additional_widgets()
+        for widget in additional_widgets:
+            main_splitter.addWidget(widget)
+        
         # 圖表區域
         if self.chart_widget and not self._is_widget_valid(self.chart_widget):
             self._debug("🛠️  檢測到已失效的圖表組件，重新建立")
@@ -646,19 +651,15 @@ class UniversalAnalysisMDI(IAnalysisModule):
             chart_layout.addWidget(self.chart_widget)
             main_splitter.addWidget(chart_frame)
         
-        # 額外組件區域
-        additional_widgets = self.create_additional_widgets()
-        for widget in additional_widgets:
-            main_splitter.addWidget(widget)
-        
         layout.addWidget(main_splitter)
         
         # 狀態列已隱藏 - 提供更簡潔的界面
         self.status_bar = None
         
-        # 設置預設比例（圖表佔大部分空間）
+        # 設置預設比例（控制面板小，圖表佔大部分空間）
         if main_splitter.count() > 1:
-            sizes = [800] + [200] * (main_splitter.count() - 1)
+            # 第一個是控制面板（50px），其餘是圖表（平分剩餘空間）
+            sizes = [50] + [800 // (main_splitter.count() - 1)] * (main_splitter.count() - 1)
             main_splitter.setSizes(sizes)
     
     def _register_to_analysis_manager(self):
@@ -1220,6 +1221,20 @@ UniversalAnalysisMDI.register_mdi_module_type(
         requires_lap_params=False,
         supports_single_driver=True,
         supports_dual_driver=True
+    )
+)
+
+# 註冊油門折線圖分析 MDI 模組
+UniversalAnalysisMDI.register_mdi_module_type(
+    'throttle_line',
+    AnalysisMDIConfig(
+        analysis_type='throttle_line',
+        display_name=tr('throttle_line_chart', 'Throttle Line Chart'),
+        default_size=(1400, 900),
+        requires_driver_params=True,
+        requires_lap_params=False,
+        supports_single_driver=True,
+        supports_dual_driver=False
     )
 )
 

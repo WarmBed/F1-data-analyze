@@ -333,7 +333,7 @@ _FUNCTION_SPEC_LIST = [
         ],
         notes="GUI detailed lap view consumes the JSON; driver optional for single-driver runs.",
     ),
-    _make_spec(
+_make_spec(
         "48",
         name="All Drivers Straight-Line Speed",
         description="Calculates the maximum straight-line speed achieved by every driver in the session.",
@@ -343,6 +343,15 @@ _FUNCTION_SPEC_LIST = [
         notes="Feeds the global straight-line speed chart for lap analysis modules.",
     ),
     _make_spec(
+        "53",
+        name="Ideal Lap Analysis (All Drivers)",
+        description="Builds per-driver ideal lap from fastest sector times and provides rankings and comparisons.",
+        required_params=["year", "race", "session"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
+        cache_patterns=["ideal_lap_ranking", "ideal_lap"],
+        notes="CLI function -f 53. Outputs ideal_lap_ranking_{year}_{race}_{session}.json",
+    ),
+    _make_spec(
         "54",
         name="Throttle Box Plot Analysis",
         description="Generates box plot data for full-throttle duration per driver with outlier filtering.",
@@ -350,6 +359,16 @@ _FUNCTION_SPEC_LIST = [
         cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
         cache_patterns=["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
         notes="Provides per-driver full-throttle duration statistics for GUI box plot visualization.",
+    ),
+    _make_spec(
+        "98",
+        name="Team Colour Export",
+        description="Returns FastF1 team and driver colour mappings for the selected season.",
+        required_params=[],
+        optional_params=["year", "colormap"],
+        cli_flag_map={"year": "-y", "colormap": "--colormap"},
+        cache_patterns=["team_colors", "driver_colors"],
+        notes="CLI function -f 98 exposes this colour palette for GUI/API consumption.",
     ),
     _make_spec(
         "99",

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 """
-ThrottleBoxPlotAnalysisModule - F1T 全油門秒數箱型圖分析模組
+ThrottleBoxPlotAnalysisModule - F1T 全油門百分比箱型圖分析模組
 =============================================================
 
 提供與主系統一致的通用介面，整合油門箱型圖 MDI 視窗。
 依循 UniversalAnalysisMDI + UniversalDataLoader 架構，支援：
 - API-ONLY 模式資料載入 (Function 54)
+- 百分比模式顯示 (full_throttle_ratio)
 - 多國語言顯示
 - MDI 視窗同步設定
 
 作者: F1T Team
-日期: 2025-10-07
-版本: 1.0.0
+日期: 2025-10-08 (百分比模式更新)
+版本: 1.1.0
 """
 
 from __future__ import annotations

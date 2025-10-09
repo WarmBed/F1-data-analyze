@@ -565,138 +565,143 @@ class TrackMapWidget(QWidget):
     def paintEvent(self, event):
         """繪製賽道地圖"""
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
-        # 清空背景
-        painter.fillRect(self.rect(), QColor(240, 240, 240))
-        
-        # 調試輸出
-        data_count = len(self.position_data) if self.position_data else 0
-        has_bounds = bool(self.track_bounds)
-        print(f"[TRACK_MAP] paintEvent: 數據檢查 - 位置點數={data_count}, 有邊界={has_bounds}")
-        
-        if not self.position_data or not self.track_bounds:
-            # 顯示提示文字
-            painter.setPen(QPen(QColor(100, 100, 100)))
-            painter.setFont(QFont("Arial", 12))
-            
-            if data_count > 0:
-                painter.drawText(self.rect(), Qt.AlignCenter, 
-                               f"賽道數據已載入\n{data_count} 個位置點\n等待邊界資訊...")
-                print(f"[TRACK_MAP] paintEvent: 有 {data_count} 個位置點但沒有邊界資訊")
-            else:
-                painter.drawText(self.rect(), Qt.AlignCenter, 
-                               "等待賽道數據載入...")
-                print("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
-            return
-        
         try:
-            # 每次繪製時檢查是否需要重新計算縮放
-            if (self.scale_factor <= 0 or 
-                self.width() != getattr(self, '_last_width', 0) or 
-                self.height() != getattr(self, '_last_height', 0)):
-                print(f"[TRACK_MAP] paintEvent: 檢測到尺寸變化，重新計算縮放")
-                self.calculate_scale()
-                self._last_width = self.width()
-                self._last_height = self.height()
+            painter.setRenderHint(QPainter.Antialiasing)
             
-            print(f"[TRACK_MAP] paintEvent: 開始繪製，包含 {len(self.position_data)} 個位置點")
-            print(f"[TRACK_MAP] paintEvent: 當前縮放因子 {self.scale_factor:.3f}, 偏移 ({self.offset_x:.1f}, {self.offset_y:.1f})")
+            # 清空背景
+            painter.fillRect(self.rect(), QColor(240, 240, 240))
             
-            # 繪製賽道路線
-            if len(self.position_data) > 1:
-                points = []
-                for record in self.position_data:
-                    x = record.get('position_x', 0)
-                    y = record.get('position_y', 0)
-                    screen_x, screen_y = self.world_to_screen(x, y)
-                    points.append(QPointF(screen_x, screen_y))
+            # 調試輸出
+            data_count = len(self.position_data) if self.position_data else 0
+            has_bounds = bool(self.track_bounds)
+            print(f"[TRACK_MAP] paintEvent: 數據檢查 - 位置點數={data_count}, 有邊界={has_bounds}")
+            
+            if not self.position_data or not self.track_bounds:
+                # 顯示提示文字
+                painter.setPen(QPen(QColor(100, 100, 100)))
+                painter.setFont(QFont("Arial", 12))
                 
-                print(f"[TRACK_MAP] paintEvent: 轉換得到 {len(points)} 個螢幕座標點")
-                if len(points) >= 2:
-                    print(f"[TRACK_MAP] paintEvent: 第一個點 ({points[0].x():.1f}, {points[0].y():.1f}), 最後一個點 ({points[-1].x():.1f}, {points[-1].y():.1f})")
+                if data_count > 0:
+                    painter.drawText(self.rect(), Qt.AlignCenter, 
+                                   f"賽道數據已載入\n{data_count} 個位置點\n等待邊界資訊...")
+                    print(f"[TRACK_MAP] paintEvent: 有 {data_count} 個位置點但沒有邊界資訊")
+                else:
+                    painter.drawText(self.rect(), Qt.AlignCenter, 
+                                   "等待賽道數據載入...")
+                    print("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
+                return
+            
+            try:
+                # 每次繪製時檢查是否需要重新計算縮放
+                if (self.scale_factor <= 0 or 
+                    self.width() != getattr(self, '_last_width', 0) or 
+                    self.height() != getattr(self, '_last_height', 0)):
+                    print(f"[TRACK_MAP] paintEvent: 檢測到尺寸變化，重新計算縮放")
+                    self.calculate_scale()
+                    self._last_width = self.width()
+                    self._last_height = self.height()
                 
-                # 創建平滑的賽道路徑
-                path = QPainterPath()
-                if len(points) >= 2:
-                    path.moveTo(points[0])
+                print(f"[TRACK_MAP] paintEvent: 開始繪製，包含 {len(self.position_data)} 個位置點")
+                print(f"[TRACK_MAP] paintEvent: 當前縮放因子 {self.scale_factor:.3f}, 偏移 ({self.offset_x:.1f}, {self.offset_y:.1f})")
+                
+                # 繪製賽道路線
+                if len(self.position_data) > 1:
+                    points = []
+                    for record in self.position_data:
+                        x = record.get('position_x', 0)
+                        y = record.get('position_y', 0)
+                        screen_x, screen_y = self.world_to_screen(x, y)
+                        points.append(QPointF(screen_x, screen_y))
                     
-                    # 使用二次貝茲曲線創建平滑路徑
-                    for i in range(1, len(points)):
-                        if i < len(points) - 1:
-                            # 計算控制點，使曲線更平滑
-                            control_point = QPointF(
-                                (points[i].x() + points[i+1].x()) / 2,
-                                (points[i].y() + points[i+1].y()) / 2
-                            )
-                            path.quadTo(points[i], control_point)
-                        else:
-                            # 最後一個點直接連接
-                            path.lineTo(points[i])
-                
-                # 繪製平滑的賽道線條
-                painter.setPen(QPen(QColor(50, 50, 200), 4))  # 稍微加粗線條
-                painter.drawPath(path)
-                
-                # 繪製賽道邊框 (淺色)
-                painter.setPen(QPen(QColor(100, 100, 255), 1))
-                painter.drawPath(path)
-                
-                # 繪製起始點 (綠色，稍大)
-                if points and self.show_start_point:
-                    painter.setBrush(QBrush(QColor(0, 200, 0)))
-                    painter.setPen(QPen(QColor(0, 150, 0), 2))
-                    painter.drawEllipse(int(points[0].x()) - 6, int(points[0].y()) - 6, 12, 12)
+                    print(f"[TRACK_MAP] paintEvent: 轉換得到 {len(points)} 個螢幕座標點")
+                    if len(points) >= 2:
+                        print(f"[TRACK_MAP] paintEvent: 第一個點 ({points[0].x():.1f}, {points[0].y():.1f}), 最後一個點 ({points[-1].x():.1f}, {points[-1].y():.1f})")
                     
-                    # 起始點標籤
-                    if self.show_track_labels:
-                        painter.setPen(QPen(QColor(0, 100, 0)))
-                        painter.setFont(QFont("Arial", 8, QFont.Bold))
-                        painter.drawText(int(points[0].x()) + 10, int(points[0].y()) - 5, "START")
-                
-                # 繪製結束點 (紅色，稍大)
-                if len(points) > 1 and self.show_finish_point:
-                    painter.setBrush(QBrush(QColor(200, 0, 0)))
-                    painter.setPen(QPen(QColor(150, 0, 0), 2))
-                    painter.drawEllipse(int(points[-1].x()) - 6, int(points[-1].y()) - 6, 12, 12)
+                    # 創建平滑的賽道路徑
+                    path = QPainterPath()
+                    if len(points) >= 2:
+                        path.moveTo(points[0])
+                        
+                        # 使用二次貝茲曲線創建平滑路徑
+                        for i in range(1, len(points)):
+                            if i < len(points) - 1:
+                                # 計算控制點，使曲線更平滑
+                                control_point = QPointF(
+                                    (points[i].x() + points[i+1].x()) / 2,
+                                    (points[i].y() + points[i+1].y()) / 2
+                                )
+                                path.quadTo(points[i], control_point)
+                            else:
+                                # 最後一個點直接連接
+                                path.lineTo(points[i])
                     
-                    # 結束點標籤
-                    if self.show_track_labels:
-                        painter.setPen(QPen(QColor(100, 0, 0)))
-                        painter.setFont(QFont("Arial", 8, QFont.Bold))
-                        painter.drawText(int(points[-1].x()) + 10, int(points[-1].y()) - 5, "FINISH")
+                    # 繪製平滑的賽道線條
+                    painter.setPen(QPen(QColor(50, 50, 200), 4))  # 稍微加粗線條
+                    painter.drawPath(path)
+                    
+                    # 繪製賽道邊框 (淺色)
+                    painter.setPen(QPen(QColor(100, 100, 255), 1))
+                    painter.drawPath(path)
+                    
+                    # 繪製起始點 (綠色，稍大)
+                    if points and self.show_start_point:
+                        painter.setBrush(QBrush(QColor(0, 200, 0)))
+                        painter.setPen(QPen(QColor(0, 150, 0), 2))
+                        painter.drawEllipse(int(points[0].x()) - 6, int(points[0].y()) - 6, 12, 12)
+                        
+                        # 起始點標籤
+                        if self.show_track_labels:
+                            painter.setPen(QPen(QColor(0, 100, 0)))
+                            painter.setFont(QFont("Arial", 8, QFont.Bold))
+                            painter.drawText(int(points[0].x()) + 10, int(points[0].y()) - 5, "START")
+                    
+                    # 繪製結束點 (紅色，稍大)
+                    if len(points) > 1 and self.show_finish_point:
+                        painter.setBrush(QBrush(QColor(200, 0, 0)))
+                        painter.setPen(QPen(QColor(150, 0, 0), 2))
+                        painter.drawEllipse(int(points[-1].x()) - 6, int(points[-1].y()) - 6, 12, 12)
+                        
+                        # 結束點標籤
+                        if self.show_track_labels:
+                            painter.setPen(QPen(QColor(100, 0, 0)))
+                            painter.setFont(QFont("Arial", 8, QFont.Bold))
+                            painter.drawText(int(points[-1].x()) + 10, int(points[-1].y()) - 5, "FINISH")
+                    
+                    # 繪製距離標記點 (每隔幾個點)
+                    if self.show_distance_markers:
+                        painter.setBrush(QBrush(QColor(0, 0, 200)))
+                        painter.setPen(QPen(QColor(0, 0, 150), 1))
+                        step = max(1, len(points) // 8)  # 約8個標記點
+                        for i in range(0, len(points), step):
+                            if i > 0 and i < len(points) - 1:  # 跳過起始和結束點
+                                painter.drawEllipse(int(points[i].x()) - 3, int(points[i].y()) - 3, 6, 6)
+                                
+                                # 顯示距離標記
+                                if i < len(self.position_data):
+                                    distance_km = self.position_data[i].get('distance_m', 0) / 1000
+                                    if distance_km > 0:
+                                        painter.setPen(QPen(QColor(0, 0, 100)))
+                                        painter.setFont(QFont("Arial", 7))
+                                        painter.drawText(int(points[i].x()) + 5, int(points[i].y()) + 15, f"{distance_km:.1f}km")
+                    
+                    print(f"[TRACK_MAP] paintEvent: ✅ 平滑賽道線條和標記繪製完成")
                 
-                # 繪製距離標記點 (每隔幾個點)
-                if self.show_distance_markers:
-                    painter.setBrush(QBrush(QColor(0, 0, 200)))
-                    painter.setPen(QPen(QColor(0, 0, 150), 1))
-                    step = max(1, len(points) // 8)  # 約8個標記點
-                    for i in range(0, len(points), step):
-                        if i > 0 and i < len(points) - 1:  # 跳過起始和結束點
-                            painter.drawEllipse(int(points[i].x()) - 3, int(points[i].y()) - 3, 6, 6)
-                            
-                            # 顯示距離標記
-                            if i < len(self.position_data):
-                                distance_km = self.position_data[i].get('distance_m', 0) / 1000
-                                if distance_km > 0:
-                                    painter.setPen(QPen(QColor(0, 0, 100)))
-                                    painter.setFont(QFont("Arial", 7))
-                                    painter.drawText(int(points[i].x()) + 5, int(points[i].y()) + 15, f"{distance_km:.1f}km")
+                # 隱藏圖例繪製
+                # self.draw_legend(painter)
                 
-                print(f"[TRACK_MAP] paintEvent: ✅ 平滑賽道線條和標記繪製完成")
-            
-            # 隱藏圖例繪製
-            # self.draw_legend(painter)
-            
-            print("[TRACK_MAP] paintEvent: ✅ 賽道地圖繪製完成")
-            
-        except Exception as e:
-            print(f"[ERROR] paintEvent: 繪製賽道地圖時發生錯誤: {e}")
-            import traceback
-            traceback.print_exc()
-            painter.setPen(QPen(QColor(200, 0, 0)))
-            painter.setFont(QFont("Arial", 10))
-            painter.drawText(10, 20, f"繪製錯誤: {str(e)}")
+                print("[TRACK_MAP] paintEvent: ✅ 賽道地圖繪製完成")
+                
+            except Exception as e:
+                print(f"[ERROR] paintEvent: 繪製賽道地圖時發生錯誤: {e}")
+                import traceback
+                traceback.print_exc()
+                # 在異常時也繪製錯誤訊息（在 painter.end() 之前）
+                painter.setPen(QPen(QColor(200, 0, 0)))
+                painter.setFont(QFont("Arial", 10))
+                painter.drawText(10, 20, f"繪製錯誤: {str(e)}")
+        finally:
+            # 🔑 確保總是釋放 QPainter 資源
+            painter.end()
     
     def mousePressEvent(self, event):
         """處理滑鼠點擊事件"""

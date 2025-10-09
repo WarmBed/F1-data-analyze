@@ -1,17 +1,17 @@
 """
-ThrottleBoxPlotChartWidget - 全油門秒數箱型圖圖表組件 (純 PyQt5 實現)
+ThrottleBoxPlotChartWidget - 全油門百分比箱型圖圖表組件 (純 PyQt5 實現)
 
 功能：
 - 使用 PyQt5 QPainter 繪製箱型圖（100% Qt 原生）
-- 顯示所有車手的全油門秒數分布
+- 顯示所有車手的全油門百分比分布（使用 full_throttle_ratio）
 - 應用車隊配色方案
 - 顯示統計資訊（中位數、Q1、Q3、鬚線、異常值）
 - 支援圖表匯出（PNG, JPG）
 - 支援多國語言（i18n）
 
 作者: F1T Team
-日期: 2025-10-07
-版本: 1.0.0
+日期: 2025-10-08 (百分比模式更新)
+版本: 1.1.0
 """
 
 from typing import Dict, List, Any, Optional, Tuple
@@ -33,33 +33,13 @@ from PyQt5.QtGui import (
 
 # 匯入多國語言支援
 from core.gui_i18n import tr
+from modules.gui.themes import color_palette_provider
 
 
 class ThrottleBoxPlotChartWidget(QWidget):
     """全油門秒數箱型圖圖表組件 (純 PyQt5 QPainter 實現)"""
 
-    TEAM_COLORS = {
-        "VER": QColor(54, 113, 198),
-        "PER": QColor(54, 113, 198),
-        "LEC": QColor(232, 0, 45),
-        "SAI": QColor(232, 0, 45),
-        "HAM": QColor(39, 244, 210),
-        "RUS": QColor(39, 244, 210),
-        "NOR": QColor(255, 128, 0),
-        "PIA": QColor(255, 128, 0),
-        "ALO": QColor(34, 153, 113),
-        "STR": QColor(34, 153, 113),
-        "GAS": QColor(94, 143, 170),
-        "OCO": QColor(94, 143, 170),
-        "HUL": QColor(182, 186, 189),
-        "MAG": QColor(182, 186, 189),
-        "TSU": QColor(102, 146, 255),
-        "RIC": QColor(102, 146, 255),
-        "BOT": QColor(82, 226, 82),
-        "ZHO": QColor(82, 226, 82),
-        "ALB": QColor(100, 196, 255),
-        "SAR": QColor(100, 196, 255),
-    }
+    DEFAULT_COLOR = QColor(128, 128, 128)
 
     chart_clicked = pyqtSignal(str)
 
@@ -98,6 +78,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
             self.current_data = data
             self.driver_throttle_durations = data.get("driver_throttle_durations", {}) or {}
             self.statistics = data.get("statistics", {}) or {}
+            self._ensure_palette_for_data(data)
 
             if not self.driver_throttle_durations:
                 print("[WARNING] [THROTTLE_CHART] 沒有油門數據")
@@ -113,6 +94,38 @@ class ThrottleBoxPlotChartWidget(QWidget):
             import traceback
 
             traceback.print_exc()
+
+    def _ensure_palette_for_data(self, data: Dict[str, Any]) -> None:
+        """Ensure the colour palette is ready for the dataset season."""
+        if not isinstance(data, dict):
+            return
+
+        metadata = data.get("metadata", {}) or {}
+        target_year = None
+
+        api_meta = metadata.get("api")
+        if isinstance(api_meta, dict):
+            params = api_meta.get("params")
+            if isinstance(params, dict):
+                target_year = params.get("year") or params.get("season_year")
+
+        if target_year is None:
+            target_year = metadata.get("season_year") or metadata.get("year")
+
+        try:
+            if target_year is not None:
+                color_palette_provider.ensure_loaded(year=int(target_year))
+            else:
+                color_palette_provider.ensure_loaded()
+        except Exception:
+            pass
+
+    def _driver_color(self, driver: str) -> QColor:
+        """Return the colour for the given driver code."""
+        color = color_palette_provider.get_driver_color(driver, format="qcolor")
+        if isinstance(color, QColor):
+            return QColor(color)
+        return QColor(self.DEFAULT_COLOR)
 
     def _calculate_y_range(self):
         if not self.driver_throttle_durations:
@@ -138,28 +151,32 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.Antialiasing)
-        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        try:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.SmoothPixmapTransform)
 
-        self.chart_rect = QRect(
-            self.margin_left,
-            self.margin_top,
-            self.width() - self.margin_left - self.margin_right,
-            self.height() - self.margin_top - self.margin_bottom,
-        )
+            self.chart_rect = QRect(
+                self.margin_left,
+                self.margin_top,
+                self.width() - self.margin_left - self.margin_right,
+                self.height() - self.margin_top - self.margin_bottom,
+            )
 
-        self._draw_background(painter)
-        self._draw_grid(painter)
-        self._draw_axes(painter)
-        self._draw_axis_labels(painter)
+            self._draw_background(painter)
+            self._draw_grid(painter)
+            self._draw_axes(painter)
+            self._draw_axis_labels(painter)
 
-        if self.driver_throttle_durations:
-            self._draw_box_plots(painter)
-        else:
-            self._draw_no_data_message(painter)
+            if self.driver_throttle_durations:
+                self._draw_box_plots(painter)
+            else:
+                self._draw_no_data_message(painter)
 
-        if self.hover_driver:
-            self._draw_tooltip(painter)
+            if self.hover_driver:
+                self._draw_tooltip(painter)
+        finally:
+            # 🔑 關鍵修復：確保 painter 總是被正確結束
+            painter.end()
 
     def _draw_background(self, painter: QPainter):
         painter.fillRect(self.rect(), QColor(250, 250, 250))
@@ -186,7 +203,8 @@ class ThrottleBoxPlotChartWidget(QWidget):
         for i in range(num_y_labels + 1):
             y_pos = self.chart_rect.top() + (self.chart_rect.height() * i / num_y_labels)
             value = self.y_max - ((self.y_max - self.y_min) * i / num_y_labels)
-            label = f"{value:.2f}s"
+            # 🔄 百分比模式：顯示百分比符號
+            label = f"{value:.1f}%"
             painter.drawText(
                 QRect(5, int(y_pos) - 10, self.margin_left - 10, 20),
                 Qt.AlignRight | Qt.AlignVCenter,
@@ -202,7 +220,8 @@ class ThrottleBoxPlotChartWidget(QWidget):
         painter.drawText(
             QRect(-120, -10, 240, 20),
             Qt.AlignCenter,
-            tr("throttle_box_plot.y_axis_title", "Full Throttle Duration (seconds)"),
+            # 🔄 百分比模式：修改 Y 軸標題
+            tr("throttle_box_plot.y_axis_title", "Full Throttle Duration (%)"),
         )
         painter.restore()
 
@@ -259,7 +278,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
                 ratio = (value - self.y_min) / (self.y_max - self.y_min)
                 return self.chart_rect.bottom() - (ratio * self.chart_rect.height())
 
-            team_color = self.TEAM_COLORS.get(driver, QColor(128, 128, 128))
+            team_color = self._driver_color(driver)
             is_hovered = driver == self.hover_driver
 
             box_rect = QRectF(
@@ -276,7 +295,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
             painter.setPen(QPen(Qt.black, 2 if is_hovered else 1.5))
             painter.drawRect(box_rect)
 
-            painter.setPen(QPen(QColor(220, 20, 20), 3))
+            painter.setPen(QPen(Qt.black, 3))
             painter.drawLine(
                 QPoint(int(x_center - box_width / 2), int(duration_to_y(median))),
                 QPoint(int(x_center + box_width / 2), int(duration_to_y(median))),
@@ -295,7 +314,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
                 QPoint(int(x_center + box_width / 3), int(duration_to_y(whisker_min))),
             )
 
-            painter.setPen(QPen(QColor(180, 50, 50), 5))
+            painter.setPen(QPen(Qt.black, 5))
             for outlier in outliers:
                 y = duration_to_y(outlier)
                 painter.drawPoint(QPoint(int(x_center), int(y)))
@@ -334,10 +353,13 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
         tooltip_lines = [
             f"{tr('driver', 'Driver')}: {self.hover_driver}",
-            f"{tr('throttle_box_plot.stat_median', 'Median')}: {stats.get('median', 0):.2f}s",
-            f"{tr('throttle_box_plot.stat_mean', 'Mean')}: {stats.get('mean', 0):.2f}s",
-            f"{tr('throttle_box_plot.stat_q1', 'Q1')}: {stats.get('q1', 0):.2f}s",
-            f"{tr('throttle_box_plot.stat_q3', 'Q3')}: {stats.get('q3', 0):.2f}s",
+            # 🔄 百分比模式：統計數據顯示百分比
+            f"{tr('throttle_box_plot.stat_min', 'Min')}: {stats.get('min', 0):.1f}%",
+            f"{tr('throttle_box_plot.stat_q1', 'Q1')}: {stats.get('q1', 0):.1f}%",
+            f"{tr('throttle_box_plot.stat_median', 'Median')}: {stats.get('median', 0):.1f}%",
+            f"{tr('throttle_box_plot.stat_q3', 'Q3')}: {stats.get('q3', 0):.1f}%",
+            f"{tr('throttle_box_plot.stat_max', 'Max')}: {stats.get('max', 0):.1f}%",
+            f"{tr('throttle_box_plot.stat_mean', 'Mean')}: {stats.get('mean', 0):.1f}%",
             f"{tr('throttle_box_plot.stat_count', 'Samples')}: {stats.get('count', 0)}",
         ]
         tooltip_text = "\n".join(tooltip_lines)
