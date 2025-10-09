@@ -1076,6 +1076,14 @@ class GuiTranslator:
             'ideal_lap_ranking_window_title': {'zh': '理想圈排名表格 - {year} {race} {session}', 'en': 'Ideal Lap Ranking - {year} {race} {session}', 'ja': '理想ラップランキング - {year} {race} {session}'},
             'ideal_lap_module_description': {'zh': 'F1 理想圈排名分析', 'en': 'F1 Ideal Lap Ranking Analysis', 'ja': 'F1 理想ラップランキング分析'},
             
+            # Sector Comparison - 表格欄位標題
+            'sector_comparison_header_position': {'zh': '排名', 'en': 'Pos', 'ja': '順位'},
+            'sector_comparison_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'sector_comparison_header_s1_delta': {'zh': 'S1 差異', 'en': 'S1 Delta', 'ja': 'S1 差分'},
+            'sector_comparison_header_s2_delta': {'zh': 'S2 差異', 'en': 'S2 Delta', 'ja': 'S2 差分'},
+            'sector_comparison_header_s3_delta': {'zh': 'S3 差異', 'en': 'S3 Delta', 'ja': 'S3 差分'},
+            'sector_comparison_header_cumulative': {'zh': '累積總差異', 'en': 'Cumulative Delta', 'ja': '累積差分'},
+            
             # 通用字串
             'na': {'zh': 'N/A', 'en': 'N/A', 'ja': 'N/A'},
             'unknown': {'zh': '未知', 'en': 'Unknown', 'ja': '不明'},

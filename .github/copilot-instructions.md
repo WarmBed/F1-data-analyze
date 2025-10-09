@@ -24,6 +24,85 @@ F1T 是一個專業的 Formula 1 遙測分析系統，採用**雙重架構**設�
 
 ## 🎯 核心開發原則
 
+### 🚨 **絕對禁止的開發行為** (2025-10-10 更新)
+
+#### 1. **假設性編程（零容忍）** ⚠️ 新增
+- ❌ **禁止假設方法存在**：不得假設任何方法、屬性或類別存在
+- ❌ **禁止創造性命名**：不得自行創造方法名稱（如 `update_chart()`）
+- ✅ **必須驗證後調用**：每次調用方法前必須用 `grep_search` 或 `read_file` 驗證
+- ✅ **完全複製參考**：必須完全複製參考實現的方法調用模式
+
+**錯誤範例**：
+```python
+# ❌ 錯誤：假設 update_chart() 存在
+self.chart_widget.update_chart(data)  # 沒有驗證，直接調用
+```
+
+**正確範例**：
+```python
+# ✅ 正確步驟 1: 用 grep_search 搜索 Widget 的方法
+# 發現實際方法是 draw_comparison_bars()
+
+# ✅ 正確步驟 2: 閱讀參考實現的調用方式
+# ranking_table 調用 _on_data_loaded() → populate_table()
+
+# ✅ 正確步驟 3: 完全複製調用模式
+self._on_data_loaded(api_data)  # 調用實際存在的方法
+```
+
+#### 2. **跳過測試（零容忍）** ⚠️ 新增
+- ❌ **禁止未測試就交付**：任何代碼必須通過測試才能交付用戶
+- ❌ **禁止假設能運行**：不得假設代碼邏輯正確就能運行
+- ✅ **三階段測試**：必須執行 Import → 方法驗證 → 功能測試
+- ✅ **測試通過才交付**：所有測試通過才能向用戶交付代碼
+
+**強制測試流程**：
+```markdown
+階段 1: 模組創建後（5 分鐘內）
+- [ ] Import 測試通過
+- [ ] Widget 方法列表驗證
+- [ ] MDI 初始化測試通過
+- [ ] 所有引用的方法已確認存在
+
+階段 2: GUI 整合後（10 分鐘內）
+- [ ] GUI 啟動無錯誤
+- [ ] 選單項目顯示正確
+- [ ] 點擊無 AttributeError
+- [ ] 點擊無 TypeError
+
+階段 3: 功能測試（15 分鐘內）
+- [ ] API 調用成功
+- [ ] 圖表正常繪製
+- [ ] 錯誤處理正確觸發
+- [ ] 無任何未處理異常
+```
+
+#### 3. **基類誤用（零容忍）** ⚠️ 新增
+- ❌ **禁止假設基類類型**：不得假設 MDI 是 QWidget
+- ❌ **禁止自創錯誤處理**：不得直接用 `QMessageBox(self, ...)`
+- ✅ **檢查繼承鏈**：必須檢查基類的實際類型
+- ✅ **使用基類方法**：必須使用基類提供的 `_show_error()` 等方法
+
+**錯誤範例**：
+```python
+# ❌ 錯誤：假設 self 是 QWidget
+QMessageBox.warning(self, "標題", "訊息")  # TypeError!
+```
+
+**正確範例**：
+```python
+# ✅ 正確步驟 1: 檢查 ranking_table 的錯誤處理
+# 發現使用 _show_error() 方法
+
+# ✅ 正確步驟 2: 實現 _show_error() 方法
+def _show_error(self, title: str, message: str):
+    parent = self.chart_widget if hasattr(self, 'chart_widget') else None
+    QMessageBox.critical(parent, title, message)
+
+# ✅ 正確步驟 3: 使用基類方法
+self._show_error("標題", "訊息")
+```
+
 ### GUI 模組開發政策
 - **統一架構**：任何新的 GUI 分析模組必須以 Rain Analysis 為範例，遵循 `UniversalAnalysisMDI` + `UniversalDataLoader` 的通用架構，保持資料載入器與 MDI 管理分層一致。
 - **變更前任務追蹤**：在修改或新增模組前，先於 `tasks/` 目錄建立對應的 `task.md` 描述目標、清單與測試計畫，更新進度直至完成。

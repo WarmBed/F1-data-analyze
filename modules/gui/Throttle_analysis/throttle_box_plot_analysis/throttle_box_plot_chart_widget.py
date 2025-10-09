@@ -195,7 +195,8 @@ class ThrottleBoxPlotChartWidget(QWidget):
         painter.drawLine(self.chart_rect.bottomLeft(), self.chart_rect.topLeft())
 
     def _draw_axis_labels(self, painter: QPainter):
-        font = QFont("Arial", 9)
+        font = QFont()
+        font.setPointSize(8)
         painter.setFont(font)
         painter.setPen(QPen(QColor(70, 70, 70)))
 
@@ -319,7 +320,8 @@ class ThrottleBoxPlotChartWidget(QWidget):
                 y = duration_to_y(outlier)
                 painter.drawPoint(QPoint(int(x_center), int(y)))
 
-            label_font = QFont("Arial", 8)
+            label_font = QFont()
+            label_font.setPointSize(8)
             painter.setFont(label_font)
             painter.setPen(QPen(Qt.black))
             painter.drawText(
@@ -336,7 +338,10 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
     def _draw_no_data_message(self, painter: QPainter):
         painter.setPen(QPen(QColor(120, 120, 120), 1))
-        painter.setFont(QFont("Arial", 10, QFont.Bold))
+        font = QFont()
+        font.setPointSize(8)
+        font.setBold(True)
+        painter.setFont(font)
         painter.drawText(
             self.chart_rect,
             Qt.AlignCenter,
@@ -367,7 +372,8 @@ class ThrottleBoxPlotChartWidget(QWidget):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
 
-        font = QFont("Arial", 9)
+        font = QFont()
+        font.setPointSize(8)
         painter.setFont(font)
         metrics = QFontMetrics(font)
         text_width = max(metrics.width(line) for line in tooltip_lines) + 16

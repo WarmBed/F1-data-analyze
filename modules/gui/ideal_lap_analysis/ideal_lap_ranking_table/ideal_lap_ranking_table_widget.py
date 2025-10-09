@@ -13,11 +13,11 @@ Ideal Lap Ranking Table Widget
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
-    QPushButton, QHeaderView, QAbstractItemView, QGroupBox, QLabel,
-    QGridLayout
+    QHeaderView, QAbstractItemView, QGroupBox, QLabel,
+    QGridLayout, QStyledItemDelegate, QStyleOptionViewItem
 )
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QColor, QFont, QBrush
+from PyQt5.QtCore import pyqtSignal, Qt, QRect
+from PyQt5.QtGui import QColor, QFont, QBrush, QPainter
 from typing import Dict, List, Any, Optional
 
 # 導入翻譯系統
@@ -27,6 +27,58 @@ except ImportError:
     # 降級方案：如果找不到翻譯系統，使用預設英文
     def tr(key, default=None):
         return default if default else key
+
+# ✅ 導入共用顏色配置
+try:
+    from ..shared_colors import get_gap_color, get_team_color, get_competitiveness_color, TEAM_COLORS
+except ImportError:
+    from modules.gui.ideal_lap_analysis.shared_colors import get_gap_color, get_team_color, get_competitiveness_color, TEAM_COLORS
+
+
+class SectorMarksDelegate(QStyledItemDelegate):
+    """
+    自訂 Delegate：用於繪製混合顏色的分段標記
+    - ✓ (綠色) = 該分段在最速圈中已經是最佳狀態
+    - ✗ (黑色) = 該分段在最速圈中還有提升空間
+    """
+    
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index):
+        """
+        自訂繪製：逐字符繪製不同顏色
+        """
+        # 獲取文字內容
+        text = index.data(Qt.DisplayRole)
+        if not text:
+            super().paint(painter, option, index)
+            return
+        
+        # 啟用反鋸齒
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 設定字體（8pt，與其他欄位一致）
+        font = QFont()
+        font.setPointSize(8)
+        painter.setFont(font)
+        
+        # 計算文字區域（置中）
+        text_rect = option.rect
+        fm = painter.fontMetrics()
+        text_width = fm.horizontalAdvance(text)
+        text_height = fm.height()
+        
+        # 計算起始 X 座標（置中）
+        x = text_rect.x() + (text_rect.width() - text_width) // 2
+        y = text_rect.y() + (text_rect.height() + text_height) // 2 - fm.descent()
+        
+        # 逐字符繪製
+        for char in text:
+            if char == "✓":
+                painter.setPen(QColor(0, 150, 0))  # 綠色
+            else:  # ✗
+                painter.setPen(QColor(0, 0, 0))  # 黑色
+            
+            painter.drawText(x, y, char)
+            x += fm.horizontalAdvance(char)  # 移動到下一個字符位置
 
 
 class IdealLapRankingTableWidget(QWidget):
@@ -42,8 +94,7 @@ class IdealLapRankingTableWidget(QWidget):
     - 統計摘要面板
     """
     
-    # 信號定義
-    detail_requested = pyqtSignal(str)  # 發射車手代碼以顯示詳情
+    # 已移除 detail_requested 信號（Action 欄已移除）
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -53,19 +104,7 @@ class IdealLapRankingTableWidget(QWidget):
         self._ranking_data = []
         self._summary_data = {}
         
-        # FastF1 官方車隊顏色（2025 賽季）
-        self._team_colors = {
-            "Red Bull Racing": QColor("#3671C6"),
-            "Ferrari": QColor("#E8002D"),
-            "Mercedes": QColor("#27F4D2"),
-            "McLaren": QColor("#FF8000"),
-            "Aston Martin": QColor("#229971"),
-            "Alpine": QColor("#FF87BC"),
-            "Williams": QColor("#64C4FF"),
-            "RB": QColor("#6692FF"),
-            "Kick Sauber": QColor("#52E252"),
-            "Haas F1 Team": QColor("#B6BABD"),
-        }
+        # ✅ 移除本地車隊顏色定義，使用共用配置
         
         # 初始化 UI
         self._init_ui()
@@ -76,17 +115,13 @@ class IdealLapRankingTableWidget(QWidget):
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
         
-        # 1. 統計摘要面板
-        self.summary_panel = self._create_summary_panel()
-        layout.addWidget(self.summary_panel)
-        
-        # 2. 主表格
+        # 1. 主表格
         self.table = self._create_table()
         layout.addWidget(self.table, 1)  # 給予彈性空間
         
-        # 3. 底部工具列
-        toolbar = self._create_toolbar()
-        layout.addWidget(toolbar)
+        # 2. 統計摘要面板（移到下方）
+        self.summary_panel = self._create_summary_panel()
+        layout.addWidget(self.summary_panel)
     
     def _create_summary_panel(self) -> QGroupBox:
         """創建統計摘要面板"""
@@ -130,7 +165,7 @@ class IdealLapRankingTableWidget(QWidget):
         """創建主表格"""
         table = QTableWidget()
         
-        # 設置欄位（已移除「車隊」欄位）
+        # 設置欄位（已移除「車隊」和「操作」欄位）
         columns = [
             tr('table_header_position', '排名'),           # 0: position
             tr('table_header_driver', '車手'),             # 1: driver (背景色)
@@ -138,8 +173,7 @@ class IdealLapRankingTableWidget(QWidget):
             tr('table_header_ideal_lap', '理想圈'),        # 3: ideal_lap_time
             tr('table_header_gap', '差異'),                # 4: time_gap (梯度顏色)
             tr('table_header_gap_to_fastest', '與全場最速差距'),  # 5: gap_to_session_fastest
-            tr('table_header_sector_breakdown', '分段'),   # 6: sector_breakdown
-            tr('table_header_action', '操作')              # 7: 詳情按鈕
+            tr('table_header_sector_breakdown', '分段')    # 6: sector_breakdown
         ]
         
         table.setColumnCount(len(columns))
@@ -151,8 +185,10 @@ class IdealLapRankingTableWidget(QWidget):
         table.setSelectionMode(QAbstractItemView.SingleSelection)
         table.setAlternatingRowColors(True)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        # ✅ 禁用選擇功能
+        table.setSelectionMode(QAbstractItemView.NoSelection)
         
-        # 設置欄位寬度
+        # 設置欄位寬度（7 欄：已移除 Team 欄與 Action 欄）
         table.setColumnWidth(0, 60)   # 排名
         table.setColumnWidth(1, 100)  # 車手（加寬以顯示車隊顏色）
         table.setColumnWidth(2, 120)  # 車手最速圈
@@ -160,33 +196,15 @@ class IdealLapRankingTableWidget(QWidget):
         table.setColumnWidth(4, 100)  # 差異
         table.setColumnWidth(5, 150)  # 與全場最速差距
         table.setColumnWidth(6, 90)   # 分段
-        table.setColumnWidth(7, 80)   # 操作
         
         # 設置表頭
         header = table.horizontalHeader()
         header.setStretchLastSection(True)  # 最後一欄自動伸展
         
+        # ✅ 為 Sectors 欄位（第 6 欄）設置自訂 Delegate
+        table.setItemDelegateForColumn(6, SectorMarksDelegate(table))
+        
         return table
-    
-    def _create_toolbar(self) -> QWidget:
-        """創建底部工具列"""
-        toolbar = QWidget()
-        layout = QHBoxLayout(toolbar)
-        layout.setContentsMargins(0, 0, 0, 0)
-        
-        # 匯出按鈕
-        self.btn_export = QPushButton(tr('export_csv', '📊 匯出 CSV'))
-        self.btn_export.clicked.connect(self._on_export_clicked)
-        layout.addWidget(self.btn_export)
-        
-        # 彈性空間
-        layout.addStretch()
-        
-        # 狀態標籤
-        self.lbl_status = QLabel(tr('status_ready', '就緒'))
-        layout.addWidget(self.lbl_status)
-        
-        return toolbar
     
     # ========== 公開方法 ==========
     
@@ -208,7 +226,7 @@ class IdealLapRankingTableWidget(QWidget):
                 self._set_row_data(row, driver)
             
             self.table.setSortingEnabled(True)  # 重新啟用排序
-            self.lbl_status.setText(tr('status_loaded_drivers', '已載入 {count} 位車手').format(count=row_count))
+            print(f"[TABLE_WIDGET] ✅ 已載入 {row_count} 位車手")
             
         except Exception as e:
             print(f"❌ {tr('table_populate_failed', '[TABLE_WIDGET] 填充表格失敗')}: {e}")
@@ -297,7 +315,7 @@ class IdealLapRankingTableWidget(QWidget):
         """清空表格"""
         self.table.setRowCount(0)
         self._ranking_data = []
-        self.lbl_status.setText(tr('status_table_cleared', '表格已清空'))
+        print("[TABLE_WIDGET] 表格已清空")
     
     # ========== 私有方法 ==========
     
@@ -322,8 +340,8 @@ class IdealLapRankingTableWidget(QWidget):
             driver_item = QTableWidgetItem(driver_code)
             driver_item.setTextAlignment(Qt.AlignCenter)
             driver_item.setBackground(self._get_team_color(team))
-            # 設置前景色為白色以提高可讀性
-            driver_item.setForeground(QBrush(QColor(255, 255, 255)))
+            # 設置前景色為黑色以提高可讀性
+            driver_item.setForeground(QBrush(QColor(0, 0, 0)))
             # 車隊名稱顯示在 Tooltip
             driver_item.setToolTip(f"{driver_code} - {team}")
             self.table.setItem(row, 1, driver_item)
@@ -357,31 +375,29 @@ class IdealLapRankingTableWidget(QWidget):
             gap_item.setToolTip(self._create_gap_tooltip(gap, ideal_lap, fastest_lap))
             self.table.setItem(row, 4, gap_item)
             
-            # 5. 與全場最速差距（套用競爭力顏色）
+            # 5. 與全場最速差距（套用統一顏色標準）
             gap_to_fastest = driver.get("gap_to_session_fastest")
             if gap_to_fastest is not None:
                 gap_fastest_item = QTableWidgetItem()
                 gap_fastest_item.setData(Qt.DisplayRole, gap_to_fastest)
                 gap_fastest_item.setText(f"+{gap_to_fastest:.3f}s")
                 gap_fastest_item.setTextAlignment(Qt.AlignCenter)
-                gap_fastest_item.setBackground(self._get_competitiveness_color(gap_to_fastest))
+                # ✅ 修正：使用統一的 gap_color 標準，而非 competitiveness_color
+                gap_fastest_item.setBackground(self._get_gap_color(gap_to_fastest))
                 self.table.setItem(row, 5, gap_fastest_item)
             else:
                 gap_fastest_item = QTableWidgetItem("N/A")
                 gap_fastest_item.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(row, 5, gap_fastest_item)
             
-            # 6. 分段標記
+            # 6. 分段標記（打勾綠色，XX 黑色）
             sector_marks = self._get_sector_marks(driver.get("sector_breakdown", {}))
             sector_item = QTableWidgetItem(sector_marks)
             sector_item.setTextAlignment(Qt.AlignCenter)
+            # ✅ Delegate 會自動處理顏色繪製，不需要 setForeground
             self.table.setItem(row, 6, sector_item)
             
-            # 7. 操作按鈕
-            detail_btn = QPushButton(tr('detail_button', '詳情'))
-            detail_btn.setMaximumWidth(60)
-            detail_btn.clicked.connect(lambda checked, d=driver_code: self.detail_requested.emit(d))
-            self.table.setCellWidget(row, 7, detail_btn)
+            # 已移除操作按鈕（Action 欄）
             
         except Exception as e:
             print(f"❌ {tr('set_row_data_failed', '[TABLE_WIDGET] 設置行資料失敗')} (row {row}): {e}")
@@ -406,52 +422,16 @@ class IdealLapRankingTableWidget(QWidget):
         return f"{minutes}:{secs:06.3f}"
     
     def _get_team_color(self, team: str) -> QColor:
-        """
-        獲取車隊顏色
-        
-        Args:
-            team: 車隊名稱
-            
-        Returns:
-            QColor: 車隊顏色
-        """
-        return self._team_colors.get(team, QColor(128, 128, 128))  # 預設灰色
+        """獲取車隊顏色（使用共用配置）"""
+        return get_team_color(team)
     
     def _get_gap_color(self, gap: float) -> QColor:
-        """
-        根據差異返回梯度顏色（綠-黃-紅）
-        
-        Args:
-            gap: 差異（秒）
-            
-        Returns:
-            QColor: 顏色
-        """
-        if gap < 0.2:
-            return QColor(144, 238, 144)  # 淺綠色 (接近完美)
-        elif gap < 0.5:
-            return QColor(255, 255, 153)  # 淺黃色 (中等提升空間)
-        else:
-            return QColor(255, 182, 193)  # 淺紅色 (有明顯改善空間)
+        """根據差異返回梯度顏色（使用共用配置）"""
+        return get_gap_color(gap)
     
     def _get_competitiveness_color(self, gap: float) -> QColor:
-        """
-        根據與全場最速差距返回競爭力顏色
-        
-        Args:
-            gap: 與全場最速的差距（秒）
-            
-        Returns:
-            QColor: 顏色
-        """
-        if gap < 0.5:
-            return QColor(34, 139, 34)    # 深綠色 (極具競爭力)
-        elif gap < 1.0:
-            return QColor(144, 238, 144)  # 淺綠色 (具競爭力)
-        elif gap < 2.0:
-            return QColor(255, 255, 153)  # 黃色 (中游)
-        else:
-            return QColor(255, 182, 193)  # 紅色 (落後)
+        """根據與全場最速差距返回競爭力顏色（使用共用配置）"""
+        return get_competitiveness_color(gap)
     
     def _get_sector_marks(self, sector_breakdown: Dict[str, Any]) -> str:
         """
@@ -562,10 +542,6 @@ class IdealLapRankingTableWidget(QWidget):
     
     # ========== 事件處理 ==========
     
-    def _on_export_clicked(self):
-        """處理匯出按鈕點擊"""
-        print(tr('export_not_implemented', '[TABLE_WIDGET] 匯出功能尚未實作'))
-        # TODO: 實作 CSV 匯出功能
 
 
 # ========== 測試代碼 ==========

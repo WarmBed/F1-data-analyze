@@ -4555,6 +4555,10 @@ class ContextMenuTreeWidget(QTreeWidget):
             print(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
+        elif clean_name in ["Sector Comparison", "分段對比", "分段比較", "理想圈分段對比"]:
+            print(f"[TREE_CLICK] 開啟理想圈分段對比（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
         # Track Analysis 特殊處理
         elif clean_name in ["Track Analysis", "賽道分析"]:
             print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
@@ -5369,7 +5373,7 @@ class StyleHMainWindow(QMainWindow):
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
         
-        self.setWindowTitle("F1 TelemetryStation Pro V0.2.1")
+        self.setWindowTitle("F1 TelemetryStation Pro V0.3.0")
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
@@ -6390,6 +6394,17 @@ class StyleHMainWindow(QMainWindow):
         window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
         print(f"[LAP_CONTROL] 📊 圈速分析視窗已關閉: {window_title}")
         
+        # ✅ 修復：調用模組的清理方法（如果存在）
+        if hasattr(window_object, 'cleanup'):
+            try:
+                print(f"[LAP_CONTROL] 🧹 調用模組清理方法: {window_title}")
+                window_object.cleanup()
+                print(f"[LAP_CONTROL] ✅ 模組清理成功: {window_title}")
+            except Exception as e:
+                print(f"[ERROR] [LAP_CONTROL] 模組清理失敗: {e}")
+                import traceback
+                traceback.print_exc()
+        
         # 如果是分析模組，確保清理相關引用
         if hasattr(window_object, '_sub_window'):
             sub_window = window_object._sub_window
@@ -6818,16 +6833,13 @@ class StyleHMainWindow(QMainWindow):
         ideal_lap = QTreeWidgetItem(driver_performance_group, [tr("ideal_lap_analysis", "Ideal Lap Analysis")])
         ideal_lap.setExpanded(False)
         QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_ranking_table", "Ranking Table")])
+        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison")])  # ✅ 已啟用
         
         # Coming Soon 項目（灰色顯示）
         from PyQt5.QtGui import QColor
         heatmap_item = QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_heatmap", "Sector Heat Map (Coming Soon)")])
         heatmap_item.setForeground(0, QColor("#999999"))
         heatmap_item.setFlags(heatmap_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
-        
-        comparison_item = QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison (Coming Soon)")])
-        comparison_item.setForeground(0, QColor("#999999"))
-        comparison_item.setFlags(comparison_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
         
         # ========== Multi-Season Analysis ==========
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
@@ -9304,6 +9316,13 @@ class StyleHMainWindow(QMainWindow):
                     "排名表格",  # 樹節點別名
                     "理想圈排名",
                 ],
+                "ideal_lap_sector_comparison": [
+                    ("ideal_lap_sector_comparison", "Ideal Lap Sector Comparison"),
+                    ("sector_comparison", "Sector Comparison"),
+                    "分段對比",  # 樹節點別名
+                    "分段比較",
+                    "理想圈分段對比",
+                ],
             }
 
             module_mapping = {}
@@ -9878,6 +9897,47 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理理想圈分段對比模組
+                elif module_type == "ideal_lap_sector_comparison":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建理想圈分段對比模組...")
+                        from modules.gui.ideal_lap_analysis.ideal_lap_sector_comparison.ideal_lap_sector_comparison_mdi import (
+                            IdealLapSectorComparisonMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 理想圈分段對比 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = IdealLapSectorComparisonMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 理想圈分段對比 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 理想圈分段對比模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 理想圈分段對比模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

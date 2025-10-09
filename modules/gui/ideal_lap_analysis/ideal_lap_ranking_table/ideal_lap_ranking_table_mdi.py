@@ -296,8 +296,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         # ⚠️ parent 必須傳 None，因為 UniversalAnalysisMDI 不是 QWidget
         widget = IdealLapRankingTableWidget(parent=None)
         
-        # 連接信號
-        widget.detail_requested.connect(self._on_detail_requested)
+        # 已移除 detail_requested 信號連接（Action 欄已移除）
         
         print("[IDEAL_LAP_MDI] ✅ 表格元件已創建")
         return widget
@@ -317,11 +316,6 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         self.btn_reload = QPushButton("🔄 重新載入")
         self.btn_reload.clicked.connect(self._on_reload_clicked)
         control_layout.addWidget(self.btn_reload)
-        
-        # 匯出按鈕
-        self.btn_export = QPushButton("📊 匯出 CSV")
-        self.btn_export.clicked.connect(self._on_export_clicked)
-        control_layout.addWidget(self.btn_export)
         
         # 彈性空間
         control_layout.addStretch()
@@ -403,10 +397,10 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             error_msg: 錯誤訊息
         """
         print(f"❌ [IDEAL_LAP_MDI] 載入錯誤: {error_msg}")
-        # 透過 Widget 更新狀態
+        # ✅ 只在狀態標籤顯示錯誤，不彈出對話框（API-ONLY 模式）
         if hasattr(self.chart_widget, 'lbl_control_status'):
             self.chart_widget.lbl_control_status.setText(f"錯誤: {error_msg}")
-        self._show_error("資料載入失敗", error_msg)
+        # ❌ 移除彈窗：self._show_error("資料載入失敗", error_msg)
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):
@@ -423,22 +417,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
     
     # ========== 事件處理 ==========
     
-    @pyqtSlot(str)
-    def _on_detail_requested(self, driver_code: str):
-        """
-        處理詳情請求
-        
-        Args:
-            driver_code: 車手代碼
-        """
-        print(f"[IDEAL_LAP_MDI] 請求查看車手詳情: {driver_code}")
-        # TODO: 實作跳轉到車手詳細分析視窗
-        parent = self.chart_widget if hasattr(self, 'chart_widget') else None
-        QMessageBox.information(
-            parent,
-            "車手詳情",
-            f"車手 {driver_code} 的詳細分析功能尚未實作"
-        )
+    # 已移除 _on_detail_requested 方法（Action 欄已移除）
     
     def _on_reload_clicked(self):
         """處理重新載入按鈕點擊"""
@@ -450,15 +429,6 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         
         # 重新載入
         self.load_initial_data()
-    
-    def _on_export_clicked(self):
-        """處理匯出按鈕點擊"""
-        print("[IDEAL_LAP_MDI] 匯出功能尚未實作")
-        QMessageBox.information(
-            self,
-            "匯出功能",
-            "CSV 匯出功能尚未實作"
-        )
     
     # ========== 公開方法 ==========
     

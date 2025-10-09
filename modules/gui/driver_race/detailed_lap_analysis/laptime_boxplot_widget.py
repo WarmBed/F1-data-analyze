@@ -82,7 +82,8 @@ class BoxPlotCanvas(QWidget):
         self._background_color = QColor("#ffffff")  # 白色背景
         self._axis_color = QColor("#555555")
         self._grid_color = QColor("#e0e0e0")
-        self._label_font = QFont("Microsoft JhengHei", 9)
+        self._label_font = QFont()
+        self._label_font.setPointSize(8)
 
     # ------------------------------------------------------------------
     # 資料設定
@@ -943,7 +944,8 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     # 設置字體
-    font = QFont("Arial", 9)
+    font = QFont()
+    font.setPointSize(8)
     app.setFont(font)
     
     # 創建測試視窗

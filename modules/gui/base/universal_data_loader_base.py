@@ -250,9 +250,10 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
                 self._debug("❌ 找不到現有數據檔案")
                 self._debug("⚠️  [API-ONLY 模式] 禁止呼叫 CLI 生成數據")
                 self._debug("💡 提示: 請透過 API 獲取數據或手動執行 CLI 生成檔案")
-                # 禁止 CLI 調用 - 返回錯誤
-                self.load_error.emit("找不到數據檔案且 CLI 調用已禁用，請使用 API 獲取數據")
+                # ✅ 修正：靜默處理，不彈出錯誤視窗，讓用戶使用 API 獲取數據
+                self._debug("📡 建議: 使用 API 獲取數據或確保已預先生成 JSON 檔案")
                 self._is_loading = False
+                # 不發送錯誤信號，避免彈出錯誤視窗
                 return False
             else:
                 self._debug("✅ 找到現有檔案，準備載入")
