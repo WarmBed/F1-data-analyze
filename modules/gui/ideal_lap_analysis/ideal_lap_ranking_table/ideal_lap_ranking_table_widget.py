@@ -14,25 +14,83 @@ Ideal Lap Ranking Table Widget
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QHeaderView, QAbstractItemView, QGroupBox, QLabel,
-    QGridLayout, QStyledItemDelegate, QStyleOptionViewItem
+    QGridLayout, QStyledItemDelegate, QStyleOptionViewItem, QStyle
 )
 from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QColor, QFont, QBrush, QPainter
 from typing import Dict, List, Any, Optional
 
-# 導入翻譯系統
-try:
-    from core.gui_i18n import tr
-except ImportError:
-    # 降級方案：如果找不到翻譯系統，使用預設英文
-    def tr(key, default=None):
-        return default if default else key
+from core.gui_i18n import tr
+from modules.gui.ideal_lap_analysis.shared_colors import (
+    get_team_color,
+    get_gap_color,
+    get_competitiveness_color,
+)
 
-# ✅ 導入共用顏色配置
-try:
-    from ..shared_colors import get_gap_color, get_team_color, get_competitiveness_color, TEAM_COLORS
-except ImportError:
-    from modules.gui.ideal_lap_analysis.shared_colors import get_gap_color, get_team_color, get_competitiveness_color, TEAM_COLORS
+
+class SectorTimeDelegate(QStyledItemDelegate):
+    """自訂 Delegate：雙列顯示最速與理想分段時間"""
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index):
+        data = index.data(Qt.UserRole)
+
+        painter.save()
+
+        # 背景填色，支援選取狀態
+        if option.state & QStyle.State_Selected:
+            painter.fillRect(option.rect, option.palette.highlight())
+        else:
+            painter.fillRect(option.rect, option.palette.base())
+
+        fastest_text = None
+        ideal_text = None
+        if isinstance(data, dict):
+            fastest_text = data.get('fastest_text')
+            ideal_text = data.get('ideal_text')
+
+        rect = option.rect.adjusted(0, 4, 0, -4)
+        fm = painter.fontMetrics()
+        line_height = fm.height()
+
+        lines = []
+        if fastest_text:
+            lines.append(('fastest', fastest_text))
+        else:
+            lines.append(('na', tr('na', 'N/A')))
+
+        if ideal_text:
+            lines.append(('ideal', ideal_text))
+
+        total_height = line_height * len(lines)
+        start_y = rect.y() + (rect.height() - total_height) / 2 + line_height - fm.descent()
+
+        current_y = start_y
+        for role, text in lines:
+            if role == 'fastest':
+                painter.setPen(QColor(0, 0, 0))
+            elif role == 'ideal':
+                painter.setPen(QColor(30, 90, 200))
+            else:
+                painter.setPen(QColor(120, 120, 120))
+
+            self._draw_text_line(painter, rect, text, current_y)
+            current_y += line_height
+
+        painter.restore()
+
+    def _draw_text_line(self, painter: QPainter, rect: QRect, text: str, baseline_y: float):
+        fm = painter.fontMetrics()
+        text_width = fm.horizontalAdvance(text)
+        x = rect.x() + (rect.width() - text_width) / 2
+        painter.drawText(int(x), int(baseline_y), text)
+
+    def _draw_centered_text(self, painter: QPainter, rect: QRect, text: str):
+        fm = painter.fontMetrics()
+        text_width = fm.horizontalAdvance(text)
+        text_height = fm.height()
+        x = rect.x() + (rect.width() - text_width) / 2
+        y = rect.y() + (rect.height() + text_height) / 2 - fm.descent()
+        painter.drawText(int(x), int(y), text)
 
 
 class SectorMarksDelegate(QStyledItemDelegate):
@@ -86,7 +144,7 @@ class IdealLapRankingTableWidget(QWidget):
     理想圈排名表格元件
     
     顯示所有車手的理想圈排名，包含：
-    - 10 欄位表格（排名、車手、車隊、最速圈、理想圈、差異等）
+    - 11 欄位表格（排名、車手、車隊、最速圈、理想圈、S1/S2/S3、差異等）
     - 車隊顏色編碼
     - 差異梯度顏色
     - 競爭力顏色
@@ -165,15 +223,19 @@ class IdealLapRankingTableWidget(QWidget):
         """創建主表格"""
         table = QTableWidget()
         
-        # 設置欄位（已移除「車隊」和「操作」欄位）
+        # 設置欄位（新增車隊與分段資訊）
         columns = [
             tr('table_header_position', '排名'),           # 0: position
             tr('table_header_driver', '車手'),             # 1: driver (背景色)
-            tr('table_header_fastest_lap', '車手最速圈'),  # 2: fastest_lap_time
-            tr('table_header_ideal_lap', '理想圈'),        # 3: ideal_lap_time
-            tr('table_header_gap', '差異'),                # 4: time_gap (梯度顏色)
-            tr('table_header_gap_to_fastest', '與全場最速差距'),  # 5: gap_to_session_fastest
-            tr('table_header_sector_breakdown', '分段')    # 6: sector_breakdown
+            tr('table_header_team', '車隊'),               # 2: team
+            tr('table_header_fastest_lap', '車手最速圈'),  # 3: fastest_lap_time
+            tr('table_header_ideal_lap', '理想圈'),        # 4: ideal_lap_time
+            tr('table_header_s1', 'S1'),                   # 5: sector 1
+            tr('table_header_s2', 'S2'),                   # 6: sector 2
+            tr('table_header_s3', 'S3'),                   # 7: sector 3
+            tr('table_header_gap', '差異'),                # 8: time_gap (梯度顏色)
+            tr('table_header_gap_to_fastest', '與全場最速差距'),  # 9: gap_to_session_fastest
+            tr('table_header_sector_breakdown', '分段')    # 10: sector_breakdown
         ]
         
         table.setColumnCount(len(columns))
@@ -188,21 +250,31 @@ class IdealLapRankingTableWidget(QWidget):
         # ✅ 禁用選擇功能
         table.setSelectionMode(QAbstractItemView.NoSelection)
         
-        # 設置欄位寬度（7 欄：已移除 Team 欄與 Action 欄）
+        # 設置欄位寬度（11 欄）
         table.setColumnWidth(0, 60)   # 排名
-        table.setColumnWidth(1, 100)  # 車手（加寬以顯示車隊顏色）
-        table.setColumnWidth(2, 120)  # 車手最速圈
-        table.setColumnWidth(3, 120)  # 理想圈
-        table.setColumnWidth(4, 100)  # 差異
-        table.setColumnWidth(5, 150)  # 與全場最速差距
-        table.setColumnWidth(6, 90)   # 分段
-        
+        table.setColumnWidth(1, 100)  # 車手（套用車隊顏色）
+        table.setColumnWidth(2, 130)  # 車隊
+        table.setColumnWidth(3, 120)  # 車手最速圈
+        table.setColumnWidth(4, 120)  # 理想圈
+        table.setColumnWidth(5, 110)  # S1
+        table.setColumnWidth(6, 110)  # S2
+        table.setColumnWidth(7, 110)  # S3
+        table.setColumnWidth(8, 100)  # 差異
+        table.setColumnWidth(9, 150)  # 與全場最速差距
+        table.setColumnWidth(10, 90)  # 分段
+
         # 設置表頭
         header = table.horizontalHeader()
         header.setStretchLastSection(True)  # 最後一欄自動伸展
-        
-        # ✅ 為 Sectors 欄位（第 6 欄）設置自訂 Delegate
-        table.setItemDelegateForColumn(6, SectorMarksDelegate(table))
+
+        # ✅ 為分段時間欄位設置自訂 Delegate
+        self._sector_time_delegate = SectorTimeDelegate(table)
+        for col in (5, 6, 7):
+            table.setItemDelegateForColumn(col, self._sector_time_delegate)
+
+        # ✅ 為 Sectors 欄位（第 10 欄）設置自訂 Delegate
+        self._sector_marks_delegate = SectorMarksDelegate(table)
+        table.setItemDelegateForColumn(10, self._sector_marks_delegate)
         
         return table
     
@@ -346,25 +418,39 @@ class IdealLapRankingTableWidget(QWidget):
             driver_item.setToolTip(f"{driver_code} - {team}")
             self.table.setItem(row, 1, driver_item)
             
-            # 2. 車手最速圈
+            # 2. 車隊
+            team_item = QTableWidgetItem(team)
+            team_item.setTextAlignment(Qt.AlignCenter)
+            team_item.setBackground(self._get_team_color(team))
+            team_item.setForeground(QBrush(QColor(0, 0, 0)))
+            team_item.setToolTip(team)
+            self.table.setItem(row, 2, team_item)
+
+            # 3. 車手最速圈
             fastest_lap = driver.get("fastest_lap_time")
             fastest_lap_item = QTableWidgetItem(self._format_time(fastest_lap))
             fastest_lap_item.setTextAlignment(Qt.AlignCenter)
             # 設置 Tooltip
             if fastest_lap:
                 fastest_lap_item.setToolTip(self._create_fastest_lap_tooltip(driver))
-            self.table.setItem(row, 2, fastest_lap_item)
+            self.table.setItem(row, 3, fastest_lap_item)
             
-            # 3. 理想圈
+            # 4. 理想圈
             ideal_lap = driver.get("ideal_lap_time")
             ideal_lap_item = QTableWidgetItem(self._format_time(ideal_lap))
             ideal_lap_item.setTextAlignment(Qt.AlignCenter)
             # 設置 Tooltip
             if ideal_lap:
                 ideal_lap_item.setToolTip(self._create_ideal_lap_tooltip(driver))
-            self.table.setItem(row, 3, ideal_lap_item)
+            self.table.setItem(row, 4, ideal_lap_item)
+
+            # 5-7. 分段最佳 vs 理想
+            sector_breakdown = driver.get("sector_breakdown", {})
+            for col_index, sector_num in enumerate([1, 2, 3], start=5):
+                sector_item = self._create_sector_item(sector_breakdown, sector_num)
+                self.table.setItem(row, col_index, sector_item)
             
-            # 4. 差異（套用梯度顏色）
+            # 8. 差異（套用梯度顏色）
             gap = driver.get("time_gap", 0)
             gap_item = QTableWidgetItem()
             gap_item.setData(Qt.DisplayRole, gap)  # 用於排序
@@ -373,9 +459,9 @@ class IdealLapRankingTableWidget(QWidget):
             gap_item.setBackground(self._get_gap_color(gap))
             # 設置 Tooltip
             gap_item.setToolTip(self._create_gap_tooltip(gap, ideal_lap, fastest_lap))
-            self.table.setItem(row, 4, gap_item)
+            self.table.setItem(row, 8, gap_item)
             
-            # 5. 與全場最速差距（套用統一顏色標準）
+            # 9. 與全場最速差距（套用統一顏色標準）
             gap_to_fastest = driver.get("gap_to_session_fastest")
             if gap_to_fastest is not None:
                 gap_fastest_item = QTableWidgetItem()
@@ -384,18 +470,18 @@ class IdealLapRankingTableWidget(QWidget):
                 gap_fastest_item.setTextAlignment(Qt.AlignCenter)
                 # ✅ 修正：使用統一的 gap_color 標準，而非 competitiveness_color
                 gap_fastest_item.setBackground(self._get_gap_color(gap_to_fastest))
-                self.table.setItem(row, 5, gap_fastest_item)
+                self.table.setItem(row, 9, gap_fastest_item)
             else:
-                gap_fastest_item = QTableWidgetItem("N/A")
+                gap_fastest_item = QTableWidgetItem(tr('na', 'N/A'))
                 gap_fastest_item.setTextAlignment(Qt.AlignCenter)
-                self.table.setItem(row, 5, gap_fastest_item)
+                self.table.setItem(row, 9, gap_fastest_item)
             
-            # 6. 分段標記（打勾綠色，XX 黑色）
-            sector_marks = self._get_sector_marks(driver.get("sector_breakdown", {}))
+            # 10. 分段標記（打勾綠色，XX 黑色）
+            sector_marks = self._get_sector_marks(sector_breakdown)
             sector_item = QTableWidgetItem(sector_marks)
             sector_item.setTextAlignment(Qt.AlignCenter)
             # ✅ Delegate 會自動處理顏色繪製，不需要 setForeground
-            self.table.setItem(row, 6, sector_item)
+            self.table.setItem(row, 10, sector_item)
             
             # 已移除操作按鈕（Action 欄）
             
@@ -462,6 +548,51 @@ class IdealLapRankingTableWidget(QWidget):
         
         return "".join(marks)
     
+    def _create_sector_item(self, sector_breakdown: Dict[str, Any], sector_num: int) -> QTableWidgetItem:
+        """建立單一分段的表格項目"""
+        sector_key = f"sector_{sector_num}"
+        sector_info = sector_breakdown.get(sector_key, {})
+        fastest_time = None
+        ideal_time = None
+        if isinstance(sector_info, dict):
+            fastest_time = sector_info.get("fastest_time")
+            ideal_time = sector_info.get("ideal_time", sector_info.get("time"))
+
+        fastest_text = self._format_sector_time(fastest_time) if fastest_time is not None else None
+        ideal_text = self._format_sector_time(ideal_time) if ideal_time is not None else None
+
+        item = QTableWidgetItem()
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setText("")
+        # 依據最速圈排序，若不存在則置於末端
+        sort_value = fastest_time if fastest_time is not None else float('inf')
+        item.setData(Qt.DisplayRole, sort_value)
+        item.setData(Qt.UserRole, {
+            'fastest_text': fastest_text,
+            'ideal_text': ideal_text
+        })
+        item.setTextAlignment(Qt.AlignCenter)
+
+        tooltip_lines = []
+        if fastest_text is not None:
+            tooltip_lines.append(
+                f"{tr('sector_label_best', '最佳')}: {fastest_text}"
+            )
+        if ideal_text is not None:
+            tooltip_lines.append(
+                f"{tr('sector_label_ideal', '理想')}: {ideal_text}"
+            )
+        if not tooltip_lines:
+            tooltip_lines.append(tr('na', 'N/A'))
+        item.setToolTip("\n".join(tooltip_lines))
+        return item
+
+    def _format_sector_time(self, seconds: Optional[float]) -> str:
+        """格式化分段時間（固定顯示秒數）"""
+        if seconds is None:
+            return tr('na', 'N/A')
+        return f"{seconds:.3f}"
+    
     def _create_fastest_lap_tooltip(self, driver: Dict[str, Any]) -> str:
         """創建車手最速圈的 Tooltip"""
         fastest_lap = driver.get("fastest_lap_time")
@@ -486,6 +617,53 @@ class IdealLapRankingTableWidget(QWidget):
                 time=self._format_time(fastest_lap)
             )
     
+    def _create_gap_tooltip(self, gap: Optional[float], ideal_lap: Optional[float], fastest_lap: Optional[float]) -> str:
+        """創建差異欄位的 Tooltip"""
+        if gap is None:
+            return tr('tooltip_gap_cannot_calculate', '無法計算差異')
+
+        tooltip_lines = []
+
+        percentage = 0.0
+        if fastest_lap:
+            percentage = (gap / fastest_lap) * 100 if fastest_lap else 0
+            tooltip_lines.append(
+                tr('tooltip_gap_value', '差異: +{gap}s (+{percentage}%)').format(
+                    gap=f"{gap:.3f}",
+                    percentage=f"{percentage:.2f}"
+                )
+            )
+        else:
+            tooltip_lines.append(
+                tr('tooltip_gap_value', '差異: +{gap}s (+{percentage}%)').format(
+                    gap=f"{gap:.3f}",
+                    percentage="N/A"
+                )
+            )
+
+        if fastest_lap:
+            tooltip_lines.append(
+                tr('tooltip_fastest_lap', '最速圈: {time}').format(
+                    time=self._format_time(fastest_lap)
+                )
+            )
+
+        if ideal_lap:
+            tooltip_lines.append(
+                tr('tooltip_ideal_lap', '理想圈: {time}').format(
+                    time=self._format_time(ideal_lap)
+                )
+            )
+
+        if gap < 0.2:
+            tooltip_lines.append(tr('tooltip_gap_near_perfect', '評估: 接近完美單圈'))
+        elif gap < 0.5:
+            tooltip_lines.append(tr('tooltip_gap_moderate', '評估: 有中等提升空間'))
+        else:
+            tooltip_lines.append(tr('tooltip_gap_significant', '評估: 有明顯改善空間'))
+
+        return "\n".join(tooltip_lines)
+
     def _create_ideal_lap_tooltip(self, driver: Dict[str, Any]) -> str:
         """創建理想圈的 Tooltip"""
         ideal_lap = driver.get("ideal_lap_time")
@@ -497,46 +675,55 @@ class IdealLapRankingTableWidget(QWidget):
         # 顯示分段來源
         ideal_detail = driver.get("ideal_lap_detail", {})
         if isinstance(ideal_detail, dict):
+            sector_sources = ideal_detail.get("sector_sources", {})
             for sector_num in [1, 2, 3]:
-                sector_key = f"sector_{sector_num}"
-                if sector_key in ideal_detail:
-                    sector_info = ideal_detail[sector_key]
-                    if isinstance(sector_info, dict):
-                        sector_time = sector_info.get("time", 0)
-                        sector_lap = sector_info.get("lap_number", tr('na', 'N/A'))
-                        tooltip_lines.append(
-                            tr('tooltip_sector_detail', 'S{sector_num}: {time}s (Lap {lap_num})').format(
-                                sector_num=sector_num,
-                                time=f"{sector_time:.3f}",
-                                lap_num=sector_lap
-                            )
-                        )
-        
-        return "\n".join(tooltip_lines)
-    
-    def _create_gap_tooltip(self, gap: float, ideal_lap: float, fastest_lap: float) -> str:
-        """創建差異的 Tooltip"""
-        if ideal_lap is None or fastest_lap is None:
-            return tr('tooltip_gap_cannot_calculate', '無法計算差異')
-        
-        percentage = (gap / ideal_lap) * 100 if ideal_lap > 0 else 0
-        
-        tooltip_lines = [
-            tr('tooltip_gap_value', '差異: +{gap}s (+{percentage}%)').format(
-                gap=f"{gap:.3f}",
-                percentage=f"{percentage:.2f}"
-            )
-        ]
-        
-        # 評估
-        if gap < 0.2:
-            assessment = tr('tooltip_gap_near_perfect', '評估: 接近完美單圈')
-        elif gap < 0.5:
-            assessment = tr('tooltip_gap_moderate', '評估: 有中等提升空間')
+                sector_info = None
+                if isinstance(sector_sources, dict):
+                    sector_info = sector_sources.get(f"s{sector_num}")
+                if sector_info is None:
+                    sector_info = ideal_detail.get(f"sector_{sector_num}")
+                if not isinstance(sector_info, dict):
+                    continue
+                sector_time = sector_info.get("time")
+                lap_number = sector_info.get("lap")
+                if sector_time is None:
+                    continue
+                tooltip_lines.append(
+                    tr('tooltip_sector_detail', 'S{sector_num}: {time}s (Lap {lap_num})').format(
+                        sector_num=sector_num,
+                        time=self._format_sector_time(sector_time),
+                        lap_num=lap_number if lap_number is not None else tr('na', 'N/A')
+                    )
+                )
+
+        gap = driver.get("time_gap")
+        fastest_lap = driver.get("fastest_lap_time")
+        if gap is not None:
+            if fastest_lap:
+                percentage = (gap / fastest_lap) * 100 if fastest_lap else 0
+                tooltip_lines.append(
+                    tr('tooltip_gap_value', '差異: +{gap}s (+{percentage}%)').format(
+                        gap=f"{gap:.3f}",
+                        percentage=f"{percentage:.2f}"
+                    )
+                )
+            else:
+                tooltip_lines.append(
+                    tr('tooltip_gap_value', '差異: +{gap}s (+{percentage}%)').format(
+                        gap=f"{gap:.3f}",
+                        percentage="N/A"
+                    )
+                )
+
+            if gap < 0.2:
+                assessment = tr('tooltip_gap_near_perfect', '評估: 接近完美單圈')
+            elif gap < 0.5:
+                assessment = tr('tooltip_gap_moderate', '評估: 有中等提升空間')
+            else:
+                assessment = tr('tooltip_gap_significant', '評估: 有明顯改善空間')
+            tooltip_lines.append(assessment)
         else:
-            assessment = tr('tooltip_gap_significant', '評估: 有明顯改善空間')
-        
-        tooltip_lines.append(assessment)
+            tooltip_lines.append(tr('tooltip_gap_cannot_calculate', '無法計算差異'))
         
         return "\n".join(tooltip_lines)
     
