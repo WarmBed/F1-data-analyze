@@ -162,19 +162,20 @@ class F1AnalysisCacheService:
             return None
 
         year = params.get("year", "*")
-        race = self._normalize_race_name(params.get("race", "*"))
-        session = params.get("session")
-        driver1 = params.get("driver1")
-        driver2 = params.get("driver2")
-        lap = params.get("lap")
-        lap1 = params.get("lap1")
-        lap2 = params.get("lap2")
+        race_param = params.get("race", "*")
         session = params.get("session", "*")
         driver1 = params.get("driver1", "*")
         driver2 = params.get("driver2", "*")
         lap = params.get("lap")
         lap1 = params.get("lap1")
         lap2 = params.get("lap2")
+
+        normalized_race = self._normalize_race_name(race_param)
+        race_tokens = self._build_race_search_tokens(race_param)
+
+        year_token = "*" if year in (None, "", "*") else str(year)
+        session_token = "*" if session in (None, "", "*") else str(session)
+        race = normalized_race
         
         for pattern_base in patterns:
             # 不同功能有不同的檔案命名模式
@@ -223,10 +224,14 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}team_colors_{year}_*.json",              # 任何 colormap
                 ]
             else:  # 一般分析
-                search_patterns = [
-                    f"{self.json_dir}{pattern_base}*{year}*{race}*{session}*.json",
-                    f"{self.json_dir}*{pattern_base}*{year}*{race}*{session}*.json"
-                ]
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    search_patterns.extend({
+                        f"{self.json_dir}{pattern_base}*{year_token}*{race_str}*{session_token}*.json",
+                        f"{self.json_dir}*{pattern_base}*{year_token}*{race_str}*{session_token}*.json"
+                    })
             
             for pattern in search_patterns:
                 print(f"[CACHE] 🔍 搜尋模式: {os.path.basename(pattern)}")
@@ -351,6 +356,42 @@ class F1AnalysisCacheService:
         
         race_lower = race_name.lower().replace(" ", "_").replace("-", "_")
         return self.race_name_lookup.get(race_lower, race_lower)
+
+    def _build_race_search_tokens(self, race_value: Any) -> List[str]:
+        """建立賽事名稱搜尋關鍵字，支援空白與底線格式"""
+        if race_value in (None, "", "*"):
+            return ["*"]
+
+        raw_text = str(race_value).strip()
+        if not raw_text:
+            return ["*"]
+
+        tokens: List[str] = []
+        candidates = {
+            raw_text,
+            raw_text.replace(" ", "_"),
+            raw_text.replace(" ", "_").lower(),
+            raw_text.lower(),
+        }
+
+        normalized = self._normalize_race_name(raw_text)
+        if normalized and normalized != "*":
+            candidates.add(normalized)
+            candidates.add(normalized.replace("_", " "))
+            variants = self.race_name_variants.get(normalized, [])
+            for variant in variants:
+                variant_text = str(variant)
+                candidates.add(variant_text)
+                candidates.add(variant_text.replace(" ", "_"))
+
+        for candidate in candidates:
+            cleaned = str(candidate).strip()
+            if not cleaned:
+                continue
+            tokens.append(cleaned)
+
+        # 保持順序並去除重複
+        return list(dict.fromkeys(tokens))
     
     def _get_race_full_name(self, race: str, year: int) -> str:
         """獲取賽事完整名稱"""
@@ -382,8 +423,7 @@ class F1AnalysisCacheService:
         normalized_target = self._normalize_race_name(race)
         variants = set(self.race_name_variants.get(normalized_target, []))
         variants.add(normalized_target)
-
-        file_name = os.path.basename(file_path).lower().replace("-", "_")
+        file_name = os.path.basename(file_path).lower().replace("-", "_").replace(" ", "_")
 
         for variant in variants:
             token = variant.lower().replace(" ", "_")
@@ -638,7 +678,7 @@ class F1AnalysisCacheService:
     def _file_info_matches_race(self, file_info: Optional[Dict[str, Any]], race: Any) -> bool:
         if not file_info or not isinstance(file_info, dict):
             return True
-        file_name = str(file_info.get("file_name", "")).lower().replace("-", "_")
+        file_name = str(file_info.get("file_name", "")).lower().replace("-", "_").replace(" ", "_")
         if not file_name:
             return False
 
