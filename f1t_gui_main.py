@@ -34,12 +34,18 @@ import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
 from core.logger import setup_logging, get_logger
 
 # 🔧 日誌系統配置：
-# - level="INFO" : 降低日誌等級（不再顯示 DEBUG 訊息）
+# - 開發模式 (Python): level="INFO" (詳細日誌)
+# - EXE 模式 (PyInstaller): level="CRITICAL" (極度靜默，僅記錄嚴重錯誤)
 # - console_level=None : 已停用終端機輸出（在 logger.py 中移除 console handler）
 # - 日誌檔案：logs/f1_gui_2025-10-06.log（依日期自動切換）
-setup_logging(component="gui", level="INFO", console_level=None)
+
+# 檢測是否為 PyInstaller 打包的 EXE
+IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+LOG_LEVEL = "CRITICAL" if IS_EXE_MODE else "INFO"
+
+setup_logging(component="gui", level=LOG_LEVEL, console_level=None)
 logger = get_logger("main", component="gui")
-logger.info("F1T GUI 控制台初始化完成 - 日誌系統已啟用 (INFO level, 僅檔案輸出)")
+logger.info(f"F1T GUI 控制台初始化完成 - 日誌系統已啟用 ({LOG_LEVEL} level, {'EXE 極度靜默模式' if IS_EXE_MODE else '開發模式'})")
 
 # 導入連動管理器
 from modules.gui.lap_analysis.linkage import linkage_manager
@@ -2140,6 +2146,9 @@ class PopoutSubWindow(QMdiSubWindow):
         # [TOOL] 新增：模組支援
         self.analysis_module = analysis_module
         self._parameter_provider = parameter_provider
+
+        # 確保關閉後釋放資源並從父層列表移除
+        self.setAttribute(Qt.WA_DeleteOnClose, True)
         
         # [TOOL] 新增：本地參數存儲 (用於非同步狀態)
         self.local_year = "2025"
@@ -4296,6 +4305,13 @@ class PopoutSubWindow(QMdiSubWindow):
             # 如果內容widget有 CLI 分析功能，也要停止
             if self.content_widget and hasattr(self.content_widget, 'stop_cli_analysis'):
                 self.content_widget.stop_cli_analysis()
+
+            # 從父層 MDI 區域移除子視窗，避免殘留在 subWindowList()
+            if self.parent_mdi and hasattr(self.parent_mdi, 'removeSubWindow'):
+                try:
+                    self.parent_mdi.removeSubWindow(self)
+                except Exception:
+                    pass
             
             # 接受關閉事件，讓 PyQt 自動處理移除
             event.accept()
@@ -7285,6 +7301,10 @@ class StyleHMainWindow(QMainWindow):
                         logger.info(f"     子視窗數量: {len(sub_windows)}")
                         
                         for sub_win in sub_windows:
+                            if hasattr(sub_win, 'isVisible') and not sub_win.isVisible():
+                                logger.info("       ⏭️  跳過已關閉/隱藏的子視窗")
+                                continue
+
                             # 優先使用 PopoutSubWindow 上綁定的 analysis_module
                             candidate_modules = []
 

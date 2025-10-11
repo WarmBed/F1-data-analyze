@@ -221,24 +221,61 @@ class TireAnalysisChartWidget(QWidget):
                 selected_driver = "VER"
                 self.chart_data['current_driver'] = selected_driver
             
-            # 更新範圍 - 基於所有車手的數據，過濾無效的 end_lap 值
+            # 更新範圍 - 基於所有車手的數據
             if hasattr(self, 'all_drivers_stint_data') and self.all_drivers_stint_data:
                 all_stints = []
                 for driver_stints in self.all_drivers_stint_data.values():
                     all_stints.extend(driver_stints)
-                
+
                 if all_stints:
-                    self.min_lap = min(stint['start_lap'] for stint in all_stints)
-                    # 過濾掉明顯錯誤的 end_lap 值（end_lap <= start_lap）
-                    valid_end_laps = [stint['end_lap'] for stint in all_stints 
-                                    if stint['end_lap'] > stint['start_lap']]
-                    if valid_end_laps:
-                        self.max_lap = max(valid_end_laps)
+                    start_candidates = []
+                    end_candidates = []
+                    for stint in all_stints:
+                        start_val = self._safe_lap_value(stint.get('start_lap'))
+                        end_val = self._safe_lap_value(stint.get('end_lap'))
+                        if start_val is not None:
+                            start_candidates.append(start_val)
+                        if start_val is not None and end_val is not None and end_val >= start_val:
+                            end_candidates.append(end_val)
+
+                    total_lap_candidates = self._collect_total_laps()
+
+                    if start_candidates:
+                        self.min_lap = min(start_candidates)
                     else:
-                        self.max_lap = 60  # 默認值
+                        self.min_lap = 1
+
+                    lap_candidates = list(end_candidates)
+                    lap_candidates.extend(total_lap_candidates)
+
+                    if lap_candidates:
+                        self.max_lap = max(lap_candidates)
+                    else:
+                        self.max_lap = max(self.min_lap, 60)
             elif self.stint_data:
-                self.min_lap = min(stint['start_lap'] for stint in self.stint_data)
-                self.max_lap = max(stint['end_lap'] for stint in self.stint_data)
+                start_candidates = [
+                    self._safe_lap_value(stint.get('start_lap'))
+                    for stint in self.stint_data
+                ]
+                start_candidates = [lap for lap in start_candidates if lap is not None]
+
+                end_candidates = [
+                    self._safe_lap_value(stint.get('end_lap'))
+                    for stint in self.stint_data
+                ]
+                end_candidates = [lap for lap in end_candidates if lap is not None]
+
+                if start_candidates:
+                    self.min_lap = min(start_candidates)
+                else:
+                    self.min_lap = 1
+
+                if end_candidates:
+                    self.max_lap = max(end_candidates)
+                else:
+                    self.max_lap = max(self.min_lap, 60)
+
+            self.max_lap = max(self.min_lap, self.max_lap)
             
             self._logger.debug("[TIRE_CHART] 圈數範圍: %s-%s", self.min_lap, self.max_lap)
             self._logger.debug(
@@ -251,6 +288,49 @@ class TireAnalysisChartWidget(QWidget):
         except Exception:  # noqa: BLE001
             self._logger.exception("[TIRE_CHART] 數據更新錯誤")
     
+    def _safe_lap_value(self, value: Any) -> Optional[int]:
+        """將圈數值轉換為整數，忽略無效資料。"""
+        try:
+            if value is None or isinstance(value, bool):
+                return None
+            if isinstance(value, (int, float)):
+                return int(value)
+            if isinstance(value, str):
+                cleaned = value.strip()
+                if cleaned.isdigit():
+                    return int(cleaned)
+            return None
+        except Exception:  # noqa: BLE001 - 防禦性處理
+            return None
+
+    def _collect_total_laps(self) -> List[int]:
+        """收集各資料來源的總圈數作為 X 軸範圍候選。"""
+        totals: List[int] = []
+
+        driver_source = getattr(self, 'all_drivers_data', None)
+        if isinstance(driver_source, dict):
+            for driver_data in driver_source.values():
+                if not isinstance(driver_data, dict):
+                    continue
+                summary = driver_data.get('driver_summary') or {}
+                candidate = self._safe_lap_value(summary.get('total_laps'))
+                if candidate is not None:
+                    totals.append(candidate)
+
+        if isinstance(self.chart_data, dict):
+            metadata = self.chart_data.get('metadata', {}) or {}
+            analysis_info = self.chart_data.get('analysis_info', {}) or {}
+            for value in (
+                analysis_info.get('total_laps'),
+                metadata.get('total_laps'),
+                metadata.get('race_total_laps'),
+            ):
+                candidate = self._safe_lap_value(value)
+                if candidate is not None:
+                    totals.append(candidate)
+
+        return totals
+
     def paintEvent(self, event):
         """繪製圖表"""
         painter = QPainter(self)
@@ -306,11 +386,12 @@ class TireAnalysisChartWidget(QWidget):
         painter.setFont(font)
         
         # X軸標籤
-        lap_range = self.max_lap - self.min_lap
+        lap_range = max(1, self.max_lap - self.min_lap)
         step = max(1, lap_range // 10)  # 大約10個刻度
-        
+
         for lap in range(self.min_lap, self.max_lap + 1, step):
-            x = chart_rect.left() + (lap - self.min_lap) * chart_rect.width() / lap_range
+            lap_position = (lap - self.min_lap) / lap_range
+            x = chart_rect.left() + lap_position * chart_rect.width()
             painter.drawLine(int(x), chart_rect.bottom(), int(x), chart_rect.bottom() + 5)
             painter.drawText(int(x - 10), chart_rect.bottom() + 20, str(lap))
         

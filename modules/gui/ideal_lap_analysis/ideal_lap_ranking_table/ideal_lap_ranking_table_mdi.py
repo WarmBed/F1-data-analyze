@@ -22,11 +22,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
+from core.gui_i18n import tr
+
 # 導入基類
-try:
-    from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
-except ImportError:
-    from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
+from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
 
 
 class IdealLapRankingApiWorker(QThread):
@@ -520,38 +519,17 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         """API 請求失敗 - 嘗試備援方案"""
         print(f"❌ [IDEAL_LAP_MDI] API 調用失敗: {error_msg}")
         
-        # 嘗試本地 JSON 作為備援
-        print("[IDEAL_LAP_MDI] 🔄 嘗試從本地 JSON 載入...")
-        
         if hasattr(self, 'lbl_control_status'):
-            self.lbl_control_status.setText("API 失敗，嘗試本地檔案...")
-        
-        if not hasattr(self, 'data_loader'):
-            print("❌ [IDEAL_LAP_MDI] 資料載入器未初始化")
-            if hasattr(self, 'lbl_control_status'):
-                self.lbl_control_status.setText("❌ 載入失敗")
-            self._show_error("載入失敗", f"API 失敗且無法使用備援方案:\n{error_msg}")
-            return
-        
-        # 使用資料載入器嘗試讀取本地 JSON
-        success = self.data_loader.load_data(
-            year=self.year,
-            race=self.race,
-            session=self.session
+            self.lbl_control_status.setText(tr("ideal_lap_api_failure", "API 請求失敗，請稍後再試"))
+
+        self._show_error(
+            tr("ideal_lap_api_failure_title", "載入失敗"),
+            tr(
+                "ideal_lap_api_failure_message",
+                "理想圈排名資料僅支援透過 API 載入。請確認 API 服務可用或稍後再試。\n\n詳細錯誤:\n{error}",
+            ).format(error=error_msg)
         )
-        
-        if not success:
-            print("❌ [IDEAL_LAP_MDI] 本地 JSON 載入也失敗")
-            if hasattr(self, 'lbl_control_status'):
-                self.lbl_control_status.setText("❌ API 和本地檔案都載入失敗")
-            self._show_error(
-                "載入失敗",
-                f"API 調用失敗:\n{error_msg}\n\n本地檔案也找不到。\n\n請檢查網路連接或手動執行 CLI 生成資料。"
-            )
-        else:
-            print("[IDEAL_LAP_MDI] ✅ 成功從本地 JSON 載入")
-            if hasattr(self, 'lbl_control_status'):
-                self.lbl_control_status.setText("⚠️ 從本地檔案載入（API 失敗）")
+        print("❌ [IDEAL_LAP_MDI] 已封鎖本地 JSON 後備 (API-ONLY)")
     
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
         """
@@ -569,12 +547,20 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             print(f"[IDEAL_LAP_MDI] 🔄 更新參數: {year} {race} {session}")
             
             # 更新內部參數
+            self.current_year = str(year)
+            self.current_race = race
+            self.current_session = session
             self.year = str(year)
             self.race = race
             self.session = session
             
             # 同時更新 DataLoader 的參數
-            if hasattr(self, 'data_loader') and self.data_loader:
+            if hasattr(self, 'data_manager') and self.data_manager:
+                self.data_manager.year = str(year)
+                self.data_manager.race = race
+                self.data_manager.session = session
+                print(f"[IDEAL_LAP_MDI] ✅ DataManager 參數已同步")
+            elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
                 self.data_loader.session = session
@@ -590,6 +576,45 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             
         except Exception as e:
             print(f"❌ [IDEAL_LAP_MDI] 參數更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    def update_parameters(self, year: int = None, race: str = None, session: str = None, **kwargs) -> bool:
+        """覆寫通用參數更新邏輯，確保觸發 API 載入"""
+        try:
+            target_year = year if year is not None else (self.year or getattr(self, 'current_year', None))
+            target_race = race if race is not None else (self.race or getattr(self, 'current_race', None))
+            target_session = session if session is not None else (self.session or getattr(self, 'current_session', None))
+
+            if not all([target_year, target_race, target_session]):
+                print("❌ [IDEAL_LAP_MDI] 參數更新失敗：缺少必要參數")
+                return False
+
+            normalized_year = str(target_year)
+            normalized_race = target_race
+            normalized_session = target_session
+
+            self.current_year = normalized_year
+            self.current_race = normalized_race
+            self.current_session = normalized_session
+
+            params_payload = {
+                'year': self.current_year,
+                'race': self.current_race,
+                'session': self.current_session
+            }
+            self.parameters_updated.emit(params_payload)
+            self.update_window_title()
+
+            return self.update_analysis_parameters(
+                self.current_year,
+                self.current_race,
+                self.current_session
+            )
+
+        except Exception as exc:
+            print(f"❌ [IDEAL_LAP_MDI] update_parameters 失敗: {exc}")
             import traceback
             traceback.print_exc()
             return False

@@ -72,6 +72,10 @@ class IdealLapRankingTableDataLoader(UniversalDataLoader):
         self.year = str(year)
         self.race = race
         self.session = session
+
+        # API-ONLY 模式：停用本地 JSON 後備
+        self._allow_local_fallback = False
+        self._debug("[IDEAL_LAP_LOADER] 已停用本地 JSON 後備 (API-ONLY)")
         
         self._debug(f"[IDEAL_LAP_LOADER] 初始化完成: {year} {race} {session}")
     
