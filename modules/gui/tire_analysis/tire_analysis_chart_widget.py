@@ -363,8 +363,9 @@ class TireAnalysisChartWidget(QWidget):
                 
                 # 數據驗證：修正明顯錯誤的 end_lap
                 if end_lap <= start_lap:
-                    self._logger.warning(
-                        "[TIRE_CHART] 檢測到錯誤 end_lap: driver=%s, start=%s, end=%s",
+                    # 改為 DEBUG 級別，避免在正常修正流程中產生警告噪音
+                    self._logger.debug(
+                        "[TIRE_CHART] 檢測到需要修正的 end_lap: driver=%s, start=%s, end=%s",
                         driver,
                         start_lap,
                         stint['end_lap'],

@@ -462,13 +462,16 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             timeout=60.0
         )
         
-        # 連接信號
+        # 🔧 關鍵修復: 使用 Qt.QueuedConnection 確保槽函數在 UI 線程執行
+        # 原因: API Worker 在 QThread.run() 中發射信號（非 UI 線程）
+        #       如果使用默認的 AutoConnection，槽函數可能在 Worker 線程執行
+        #       導致在非 UI 線程更新 Qt Widget → 程式崩潰
         self.api_worker.progress.connect(self._on_api_progress)
         self.api_worker.success.connect(self._on_api_success)
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[IDEAL_LAP_MDI] ▶️  啟動 API 請求...")
+        print("[IDEAL_LAP_MDI] ▶️  啟動 API 請求（使用 Qt.QueuedConnection）...")
         self.api_worker.start()
     
     @pyqtSlot(int)

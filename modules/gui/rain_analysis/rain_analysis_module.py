@@ -47,6 +47,9 @@ class RainAnalysisModule(IAnalysisModule):
         """Initialize rain analysis module"""
         super().__init__(parent)
         
+        # ✅ 添加 analysis_type 屬性以支援批次更新
+        self.analysis_type = 'rain_weather'
+        
         # Module basic information
         self._module_name = "RainAnalysis"
         self._display_name = "🌧️ Rain Analysis"

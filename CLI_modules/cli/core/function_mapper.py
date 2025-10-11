@@ -2924,14 +2924,18 @@ class F1AnalysisFunctionMapper:
             }
 
     def _execute_team_color_analysis(self, **kwargs):
-        """Function 98: 顏色配置輸出 (FastF1 團隊/車手色票)"""
+        """Function 98: 顏色配置輸出 (FastF1 團隊/車手色票 + 12小時智能刷新)"""
 
         try:
-            from CLI_modules.cli.analyzer.team_color_analysis import generate_team_color_report
+            from CLI_modules.cli.analyzer.team_color_analysis import (
+                generate_team_color_report,
+                check_color_freshness
+            )
 
             colormap = kwargs.get("colormap") or kwargs.get("palette") or "fastf1"
             include_drivers = kwargs.get("include_drivers", True)
             save_json = kwargs.get("save_json", True)
+            force = kwargs.get("force", False)  # 是否強制重新生成
 
             year = kwargs.get("year")
             if year is None and self.data_loader and getattr(self.data_loader, "year", None):
@@ -2944,6 +2948,7 @@ class F1AnalysisFunctionMapper:
                 colormap=str(colormap),
                 save_json=bool(save_json),
                 include_drivers=bool(include_drivers),
+                force=bool(force),
             )
 
             return self._standardize_result(result, 98, "顏色配置輸出")

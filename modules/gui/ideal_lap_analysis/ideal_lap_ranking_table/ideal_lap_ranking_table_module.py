@@ -46,6 +46,9 @@ class IdealLapRankingTableModule(IAnalysisModule):
         """
         super().__init__(parent)
         
+        # ✅ 添加 analysis_type 屬性以支援批次更新
+        self.analysis_type = 'ideal_lap'
+        
         # 模組基本資訊
         self._module_name = "IdealLapRankingTable"
         self._display_name = "Ideal Lap Ranking Table"

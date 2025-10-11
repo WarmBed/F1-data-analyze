@@ -34,6 +34,7 @@ from PyQt5.QtGui import QFont
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.api_runtime_state import is_api_available
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -185,36 +186,10 @@ class TireAnalysisDataManager(UniversalDataLoader):
         return False, "預設策略 (API 優先，不允許本地回退)"
 
     def _is_api_available(self) -> bool:
-        """Check REST API availability before spawning background threads."""
-        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
-        health_url = f"{base_url}/api/v2/system/health"
-        try:
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code != 200:
-                legacy_url = f"{base_url}/api/v2/health"
-                legacy_response = requests.get(legacy_url, timeout=2.0)
-                if legacy_response.status_code != 200:
-                    return False
-                payload = legacy_response.json()
-                if isinstance(payload, dict):
-                    status = str(payload.get("status") or payload.get("state") or "").lower()
-                    if status in {"ok", "healthy", "ready", "pass"}:
-                        return True
-                    if payload.get("success") is True:
-                        return True
-                return True
-            payload = response.json()
-            if isinstance(payload, dict):
-                status = str(payload.get("status") or payload.get("state") or "").lower()
-                if status in {"ok", "healthy", "ready", "pass"}:
-                    return True
-                if payload.get("success") is True:
-                    return True
-            return True
-        except Exception as exc:
-            self._debug(f"API 健康檢查失敗: {exc}")
-            return False
-
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle whether local JSON fallback is allowed."""
         self._allow_local_fallback = bool(allowed)
@@ -624,18 +599,30 @@ class TireAnalysisDataManager(UniversalDataLoader):
                     or stint.get("tyre_compound")
                     or "UNKNOWN"
                 )
-                start_lap = (
-                    stint.get("start_lap")
-                    or stint.get("lap_start")
-                    or stint.get("startLap")
-                    or 1
-                )
-                end_lap = (
-                    stint.get("end_lap")
-                    or stint.get("lap_end")
-                    or stint.get("endLap")
-                    or start_lap
-                )
+                
+                # 修復：使用明確的 None 檢查，避免 0 被視為假值
+                start_lap = stint.get("start_lap")
+                if start_lap is None:
+                    start_lap = stint.get("lap_start")
+                    if start_lap is None:
+                        start_lap = stint.get("startLap")
+                        if start_lap is None:
+                            start_lap = 1
+                
+                # 修復：優先使用 end_lap，但要檢查其是否有效（> 0）
+                end_lap = stint.get("end_lap")
+                if end_lap is None or end_lap <= 0:
+                    end_lap = stint.get("lap_end")
+                    if end_lap is None or end_lap <= 0:
+                        end_lap = stint.get("endLap")
+                        if end_lap is None or end_lap <= 0:
+                            # 嘗試使用 length 欄位計算 end_lap
+                            length = stint.get("length")
+                            if length is not None and length > 0:
+                                end_lap = start_lap + length - 1
+                            else:
+                                # 最後的回退：使用 start_lap（單圈 stint）
+                                end_lap = start_lap
 
                 laps = stint.get("laps")
                 if laps is None:

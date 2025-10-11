@@ -31,6 +31,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.api_runtime_state import is_api_available
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -178,35 +179,10 @@ class PitstopDataManager(QObject):
         return False, "預設策略 (API 優先，不允許本地回退)"
 
     def _is_api_available(self) -> bool:
-        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
-        health_url = f"{base_url}/api/v2/system/health"
-        try:
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code != 200:
-                legacy_url = f"{base_url}/api/v2/health"
-                legacy_response = requests.get(legacy_url, timeout=2.0)
-                if legacy_response.status_code != 200:
-                    return False
-                payload = legacy_response.json()
-                if isinstance(payload, dict):
-                    status = str(payload.get("status") or payload.get("state") or "").lower()
-                    if status in {"ok", "healthy", "ready", "pass"}:
-                        return True
-                    if payload.get("success") is True:
-                        return True
-                return True
-            payload = response.json()
-            if isinstance(payload, dict):
-                status = str(payload.get("status") or payload.get("state") or "").lower()
-                if status in {"ok", "healthy", "ready", "pass"}:
-                    return True
-                if payload.get("success") is True:
-                    return True
-            return True
-        except Exception as exc:
-            print(f"[PITSTOP_MANAGER] API 健康檢查失敗: {exc}")
-            return False
-
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         self._allow_local_fallback = bool(allowed)
         self._fallback_policy_reason = reason or "手動覆寫"
@@ -1530,6 +1506,9 @@ class PitstopAnalysisModule(IAnalysisModule):
         self._display_name = "進站分析"
         self._version = "1.0.0"
         self._description = "F1 車手最快進站時間排行榜"
+        
+        # ✅ 添加 analysis_type 屬性，用於進度條系統識別
+        self.analysis_type = "pitstop"
         
         # 參數
         self.current_year = None  # 修正：初始化為 None，等待同步

@@ -579,6 +579,7 @@ class F1AnalysisModularCLI:
             colormap = getattr(self.args, 'colormap', None)
             save_json_flag = not getattr(self.args, 'no_save_json', False)
             include_driver_colors = not getattr(self.args, 'no_driver_colors', False)
+            force = getattr(self.args, 'force', False)
 
             result = mapper.execute_function_by_number(
                 function_id,
@@ -594,7 +595,8 @@ class F1AnalysisModularCLI:
                 show_detailed_output=show_detailed_output,
                 colormap=colormap,
                 save_json=save_json_flag,
-                include_drivers=include_driver_colors
+                include_drivers=include_driver_colors,
+                force=force
             )
             
             if result.get("success", False):
@@ -1735,6 +1737,8 @@ def create_argument_parser():
                        help='工具模式僅顯示結果，不輸出 JSON 檔案')
     parser.add_argument('--no-driver-colors', action='store_true',
                        help='顏色配置輸出時僅生成車隊色票，不包含車手')
+    parser.add_argument('--force', action='store_true',
+                       help='強制重新生成，忽略智能刷新檢查 (適用於 -f98, -f99 等有緩存的功能)')
 
     return parser
 

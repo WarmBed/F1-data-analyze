@@ -50,6 +50,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
             "F1 All-Drivers full-throttle duration box plot analysis module"
         )
 
+        self.analysis_type = "throttle_boxplot"
         self._is_initialized = False
         self._parameter_provider = None
         self.current_year = str(year) if year else "2025"

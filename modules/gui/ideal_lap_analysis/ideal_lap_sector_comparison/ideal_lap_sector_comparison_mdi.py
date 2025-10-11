@@ -437,13 +437,17 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         )
         
         # 連接信號
+        # 🔧 關鍵修復: 使用 Qt.QueuedConnection 確保槽函數在 UI 線程執行
+        # 原因: API Worker 在 QThread.run() 中發射信號（非 UI 線程）
+        #       如果使用默認的 AutoConnection，槽函數可能在 Worker 線程執行
+        #       導致在非 UI 線程更新 Qt Widget → 程式崩潰
         self.api_worker.progress.connect(self._on_api_progress)
         self.api_worker.success.connect(self._on_api_success)
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動異步請求
         self.api_worker.start()
-        print("✅ [SECTOR_COMPARISON_MDI] API Worker 已啟動")
+        print("✅ [SECTOR_COMPARISON_MDI] API Worker 已啟動（使用 Qt.QueuedConnection）")
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
@@ -463,13 +467,15 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         """
         API 請求成功回調
         
+        ⚠️ 關鍵修復: 使用 @pyqtSlot 確保在 UI 線程執行
+        
         Args:
             result: API 返回的數據
         """
-        print("✅ [SECTOR_COMPARISON_API] API 請求成功")
-        print(f"[DEBUG] API 返回數據鍵: {list(result.keys())}")
-        
         try:
+            print("✅ [SECTOR_COMPARISON_API] API 請求成功")
+            print(f"[DEBUG] API 返回數據鍵: {list(result.keys())}")
+            
             # 提取實際數據（處理 API Worker 的包裝格式）
             api_data = result.get('data', result)
             meta = result.get('meta', {})
@@ -482,6 +488,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             
             # ✅ 修正: 調用 _on_data_loaded() 處理數據（複製 ranking_table 模式）
             # 而非調用不存在的 update_chart()
+            print("[SECTOR_COMPARISON_API] 🔄 在 UI 線程更新數據...")
             self._on_data_loaded(api_data)
             
             # 更新狀態
@@ -491,6 +498,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             
             # 保存當前數據
             self._current_data = api_data
+            print("✅ [SECTOR_COMPARISON_API] UI 更新完成")
             
         except Exception as e:
             print(f"❌ [SECTOR_COMPARISON_API] 數據處理失敗: {e}")

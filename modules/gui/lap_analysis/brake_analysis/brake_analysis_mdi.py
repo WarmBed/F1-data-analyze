@@ -286,6 +286,9 @@ class BrakeAnalysisModule(IAnalysisModule):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # ✅ 設置分析類型（用於批次更新識別）
+        self.analysis_type = 'brake'
+        
         # 參數狀態
         self.current_year = "2025"
         self.current_race = "Japan"

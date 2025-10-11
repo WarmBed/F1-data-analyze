@@ -308,4 +308,5 @@ class ModuleTypes:
     ACCIDENT_ANALYSIS = "accident_analysis"            # 事故分析
     TRACK_ANALYSIS = "track_analysis"                  # 賽道分析
     IDEAL_LAP_RANKING = "ideal_lap_ranking"            # 理想圈排名表
+    IDEAL_LAP_SECTOR_HEATMAP = "ideal_lap_sector_heatmap"  # 理想圈分段熱圖
     IDEAL_LAP_SECTOR_COMPARISON = "ideal_lap_sector_comparison"  # 理想圈分段對比

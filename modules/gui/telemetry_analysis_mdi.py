@@ -18,6 +18,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.api_runtime_state import is_api_available
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -250,17 +251,10 @@ class TelemetryDataManager(QObject):
         )
 
     def _is_api_available(self) -> bool:
-        """快速檢查 API 是否可連線 (避免在測試環境中長時間等待)。"""
-        try:
-            health_url = f"{self._api_base_url}/health"
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code == 200:
-                return True
-            # 任何非 5xx 回應都視為服務可達（表示伺服器存在但端點不同）
-            return response.status_code < 500
-        except Exception:
-            return False
-
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")
         if env_value is not None:
@@ -1439,6 +1433,9 @@ class TelemetryAnalysisModule(IAnalysisModule):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        
+        # 設置分析類型（用於批次更新識別）
+        self.analysis_type = 'telemetry'
         
         # 模組基本資訊
         self._module_name = "DriverAnalysis"

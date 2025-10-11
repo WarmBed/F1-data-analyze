@@ -352,22 +352,69 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             self._debug("✅ 父類 load_data() 返回 True")
         self._debug("========== 本地 JSON 回退流程結束 ==========")
 
-    def _cleanup_api_worker(self) -> None:
-        if self._api_worker:
-            if self._api_worker.isRunning():
-                self._api_worker.requestInterruption()
-                self._api_worker.wait(200)
-            for signal in [self._api_worker.progress, self._api_worker.success, self._api_worker.failure]:
-                try:
-                    signal.disconnect()
-                except Exception:
-                    pass
+    def _stop_api_worker(self, wait_timeout_ms: int = 2000) -> None:
+        worker = self._api_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._debug("_stop_api_worker: requesting interruption")
             try:
-                self._api_worker.finished.disconnect()
+                worker.requestInterruption()
+                worker.quit()
             except Exception:
                 pass
-            self._api_worker.deleteLater()
+
+            if not worker.wait(wait_timeout_ms):
+                self._debug("_stop_api_worker: worker timeout, forcing terminate()")
+                try:
+                    worker.terminate()
+                except Exception as exc:
+                    self._debug(f"_stop_api_worker: terminate() raised {exc}")
+                worker.wait(200)
+
+    def _cleanup_api_worker(self) -> None:
+        worker = self._api_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._stop_api_worker()
+
+        for signal, slot in (
+            (worker.progress, self._on_api_progress),
+            (worker.success, self._on_api_success),
+            (worker.failure, self._on_api_error),
+        ):
+            try:
+                signal.disconnect(slot)
+            except Exception:
+                pass
+
+        try:
+            worker.finished.disconnect(self._cleanup_api_worker)
+        except Exception:
+            pass
+
+        worker.deleteLater()
+        if worker is self._api_worker:
             self._api_worker = None
+
+    def stop_loading(self) -> None:
+        """停止任何進行中的 API 載入流程。"""
+        self._stop_api_worker()
+        self._cleanup_api_worker()
+        self._is_loading = False
+        try:
+            self.status_changed.emit(tr("throttle_box_plot.loading_cancelled", "已取消載入請求"))
+        except Exception:
+            pass
+
+    def cleanup(self) -> None:
+        self._debug("cleanup: releasing throttle API worker")
+        self.stop_loading()
+        self._raw_data_cache = None
+        self._current_data = None
 
     def get_last_data_source(self) -> str:
         return getattr(self, "_last_data_source", "unknown")
@@ -824,9 +871,9 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         try:
             print("[THROTTLE_MDI] ========== 油門箱型圖參數更新 ==========")
             print(f"[THROTTLE_MDI] 收到參數: {year} {race} {session}")
-            self.current_year = int(year) if isinstance(year, str) and year.isdigit() else year
-            self.current_race = race
-            self.current_session = session
+            self.current_year = str(year)
+            self.current_race = str(race)
+            self.current_session = str(session)
 
             if not hasattr(self, "_error_handler_connected"):
                 if hasattr(self, "data_manager") and self.data_manager:
@@ -834,6 +881,15 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
                     self._error_handler_connected = True
 
             if hasattr(self, "data_manager") and self.data_manager:
+                if hasattr(self.data_manager, "is_loading") and self.data_manager.is_loading():
+                    if hasattr(self.data_manager, "stop_loading"):
+                        self.data_manager.stop_loading()
+                    else:
+                        try:
+                            self.data_manager._cleanup_api_worker()  # noqa: SLF001 - fallback for舊版
+                            self.data_manager._is_loading = False
+                        except Exception:
+                            pass
                 self.data_manager.year = self.current_year
                 self.data_manager.race = self.current_race
                 self.data_manager.session = self.current_session
@@ -856,18 +912,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             return False
 
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
-        try:
-            self.update_lap_parameters(year=year, race=race, session=session)
-            if hasattr(self, "data_manager") and self.data_manager:
-                return self.data_manager.load_data(
-                    year=self.current_year,
-                    race=self.current_race,
-                    session=self.current_session,
-                )
-            return True
-        except Exception as exc:
-            self._debug(f"更新分析參數失敗: {exc}")
-            return False
+        return self.update_lap_parameters(year=year, race=race, session=session)
 
     def _on_filter_settings_changed(self, settings: Dict[str, Any]):
         print(f"[THROTTLE_MDI] 過濾設定變更: {settings}")

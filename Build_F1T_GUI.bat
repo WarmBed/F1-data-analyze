@@ -59,6 +59,7 @@ REM 4. 執行打包
 echo [4/5] 開始打包 EXE（這可能需要幾分鐘）...
 echo       使用設定檔: F1T_GUI.spec
 echo       包含 48 個 hiddenimports 模組
+echo       內建 Runtime Hook: 自動設置 F1_LOG_LEVEL=DEBUG
 echo.
 pyinstaller F1T_GUI.spec
 
@@ -90,6 +91,12 @@ if exist "dist\F1T_GUI.exe" (
     echo ======================================================================
     echo.
     echo    EXE 檔案位置: dist\F1T_GUI.exe
+    echo.
+    echo    ⚠️  日誌級別設定:
+    echo    - 已內建 Runtime Hook 自動設置 F1_LOG_LEVEL=DEBUG
+    echo    - 所有 DEBUG 級別或以上的訊息都會寫入日誌檔案
+    echo    - 日誌檔案位置: logs\f1_gui_YYYY-MM-DD.log
+    echo    - 如需更改級別，請修改 pyinstaller_runtime_hook.py
     echo.
     echo    測試步驟:
     echo    1. 執行 dist\F1T_GUI.exe

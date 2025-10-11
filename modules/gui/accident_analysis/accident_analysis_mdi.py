@@ -784,6 +784,9 @@ class AccidentAnalysisModule(IAnalysisModule):
         self._version = "1.0.0"
         self._description = tr('accident_module_description', 'F1 Accident Statistics Analysis and Visualization')
         
+        # ✅ 添加 analysis_type 屬性，用於進度條系統識別
+        self.analysis_type = "accident"
+        
         # 參數
         self.current_year = None
         self.current_race = None 

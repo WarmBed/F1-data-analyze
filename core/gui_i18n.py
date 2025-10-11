@@ -53,6 +53,8 @@ class GuiTranslator:
         return {
             # 主視窗元素
             'main_window': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
+            'home_page': {'zh': '主頁', 'en': 'Home', 'ja': 'ホーム'},
+            'tab_page': {'zh': '分頁{number}', 'en': 'Tab {number}', 'ja': 'タブ {number}'},
             'help_menu': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
             'open_help_center': {'zh': '使用說明...', 'en': 'User Guide...', 'ja': '使用ガイド...'},
             'about_action': {'zh': '關於 F1T', 'en': 'About F1T', 'ja': 'F1T について'},
@@ -238,6 +240,11 @@ class GuiTranslator:
                 'ja': '更新するテレメトリー分析ウィンドウがありません\n（{0}個の非テレメトリーモジュールをスキップ）'
             },
             'update': {'zh': '更新', 'en': 'Update', 'ja': '更新'},
+            'update_race_params_confirm': {
+                'zh': '檢測到賽事參數變更：\n年份: {year}\n賽事: {race}\n賽段: {session}\n\n共有 {count} 個遙測分析視窗需要更新。\n是否立即更新所有視窗？',
+                'en': 'Race parameters changed:\nYear: {year}\nRace: {race}\nSession: {session}\n\n{count} telemetry analysis windows need update.\nUpdate all windows now?',
+                'ja': 'レースパラメータが変更されました：\n年: {year}\nレース: {race}\nセッション: {session}\n\n{count} 個のテレメトリー分析ウィンドウを更新する必要があります。\nすべてのウィンドウを今すぐ更新しますか？'
+            },
 
             # 系統設定
             'system_settings_title': {'zh': '系統設定', 'en': 'System Settings', 'ja': 'システム設定'},
@@ -699,7 +706,8 @@ class GuiTranslator:
             'throttle_box_plot': {'zh': '油門箱線圖', 'en': 'Throttle Box Plot', 'ja': 'スロットル箱ひげ図'},
             'throttle_line_chart': {'zh': '油門折線圖', 'en': 'Throttle Line Chart', 'ja': 'スロットルライン'},
             
-            # Ideal Lap Analysis 子模組
+            # Ideal Lap Analysis 主項目與子模組
+            'ideal_lap_analysis': {'zh': '理想圈分析', 'en': 'Ideal Lap Analysis', 'ja': '理想ラップ分析'},
             'ideal_lap_ranking_table': {'zh': '排名表格', 'en': 'Ranking Table', 'ja': 'ランキングテーブル'},
             'ideal_lap_sector_heatmap': {'zh': '分段熱力圖', 'en': 'Sector Heat Map', 'ja': 'セクターヒートマップ'},
             'ideal_lap_sector_comparison': {'zh': '分段比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
@@ -1024,7 +1032,7 @@ class GuiTranslator:
             
             # Options Dialog - 描述
             'ranking_table_desc': {'zh': '排名表格：顯示所有車手的理想圈排名', 'en': 'Ranking Table: Shows ideal lap ranking for all drivers', 'ja': 'ランキングテーブル: 全ドライバーの理想ラップランキングを表示'},
-            'sector_heatmap_desc': {'zh': '分段熱力圖：視覺化分段表現（開發中）', 'en': 'Sector Heatmap: Visualizes sector performance (under development)', 'ja': 'セクターヒートマップ: セクター性能を可視化（開発中）'},
+            'sector_heatmap_desc': {'zh': '分段熱力圖：視覺化各車手 S1/S2/S3 表現', 'en': 'Sector Heatmap: Visualizes S1/S2/S3 performance for all drivers', 'ja': 'セクターヒートマップ: 各ドライバーのS1/S2/S3パフォーマンスを可視化'},
             'sector_comparison_desc': {'zh': '分段比較：比較車手間的分段差異（開發中）', 'en': 'Sector Comparison: Compares sector differences between drivers (under development)', 'ja': 'セクター比較: ドライバー間のセクター差異を比較（開発中）'},
             
             # Ranking Table Widget - 統計摘要面板

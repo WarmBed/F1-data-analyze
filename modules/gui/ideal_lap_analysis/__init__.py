@@ -15,6 +15,9 @@ __author__ = "F1T Development Team"
 
 # 導出對話框（已完成）
 from .ideal_lap_options_dialog import IdealLapAnalysisOptionsDialog
+from .ideal_lap_sector_heatmap.ideal_lap_sector_heatmap_module import (
+    IdealLapSectorHeatmapModule,
+)
 
 # 導出主要類別（待實作後啟用）
 # from .ideal_lap_ranking_table.ideal_lap_ranking_table_module import (
@@ -23,5 +26,6 @@ from .ideal_lap_options_dialog import IdealLapAnalysisOptionsDialog
 
 __all__ = [
     "IdealLapAnalysisOptionsDialog",
+    "IdealLapSectorHeatmapModule",
     # "IdealLapRankingTableModule",
 ]

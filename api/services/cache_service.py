@@ -77,6 +77,7 @@ class F1AnalysisCacheService:
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
+            "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
             "99": ["season_calendar"],
         }
         
@@ -213,6 +214,14 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}season_calendar_{year}_*.json",      # 單年格式
                     f"{self.json_dir}season_calendar_*.json"              # 任何賽季日曆
                 ]
+            elif function_id == "98":  # ✅ 團隊顏色配置 - 特殊處理
+                # 檔案格式: team_colors_{year}_{colormap}_{timestamp}.json
+                # 預設 colormap = "fastf1"
+                colormap = params.get("colormap", "fastf1")
+                search_patterns = [
+                    f"{self.json_dir}team_colors_{year}_{colormap}_*.json",  # 指定 colormap
+                    f"{self.json_dir}team_colors_{year}_*.json",              # 任何 colormap
+                ]
             else:  # 一般分析
                 search_patterns = [
                     f"{self.json_dir}{pattern_base}*{year}*{race}*{session}*.json",
@@ -229,15 +238,21 @@ class F1AnalysisCacheService:
                 print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
-                    if not self._file_matches_race(file_path, race):
-                        continue
-                    if not self._file_matches_session(file_path, session):
-                        continue
+                    # ✅ Function 98 (Team Colors) 不檢查 race/session
+                    if function_id not in {"98", "99"}:
+                        if not self._file_matches_race(file_path, race):
+                            continue
+                        if not self._file_matches_session(file_path, session):
+                            continue
 
                     result = self._load_json_safely(file_path)
-                    if result and self._result_matches_params(result, year, race, session, driver1, driver2, lap, lap1, lap2):
+                    # ✅ Function 98/99 使用特殊驗證邏輯
+                    if function_id in {"98", "99"}:
+                        if result and self._season_level_result_matches(result, year, function_id, params):
+                            return result
+                    elif result and self._result_matches_params(result, year, race, session, driver1, driver2, lap, lap1, lap2):
                         return result
-                    if result and function_id == "2" and self._track_result_matches(file_path, result, year, race, session):
+                    elif result and function_id == "2" and self._track_result_matches(file_path, result, year, race, session):
                         return result
         
         return None
@@ -440,6 +455,67 @@ class F1AnalysisCacheService:
         session_token = str(session).lower()
         file_name = os.path.basename(file_path).lower()
         return f"_{session_token}" in file_name or file_name.endswith(f"_{session_token}.json")
+
+    def _season_level_result_matches(
+        self,
+        result: Dict[str, Any],
+        year: Any,
+        function_id: str,
+        params: Dict[str, Any]
+    ) -> bool:
+        """
+        驗證賽季級別分析結果 (Function 98, 99)
+        
+        這些功能不需要 race/session 參數，只驗證 year 和特定參數
+        """
+        if not isinstance(result, dict):
+            return False
+        
+        # Function 98: Team Colors - 驗證 year 和 colormap
+        if function_id == "98":
+            # 檢查 metadata 中的 year
+            metadata = result.get("metadata", {})
+            if isinstance(metadata, dict):
+                result_year = metadata.get("year") or metadata.get("season")
+                if result_year and str(result_year) != str(year):
+                    return False
+            
+            # 檢查 colormap (如果有指定)
+            colormap = params.get("colormap")
+            if colormap:
+                result_colormap = metadata.get("colormap")
+                if result_colormap and result_colormap != colormap:
+                    return False
+            
+            # 驗證基本數據結構
+            data = result.get("data", {})
+            if not isinstance(data, dict):
+                return False
+            
+            # 應該包含 teams 或 drivers
+            if not data.get("teams") and not data.get("drivers"):
+                return False
+            
+            return True
+        
+        # Function 99: Season Calendar - 驗證 year
+        elif function_id == "99":
+            data = result.get("data", {})
+            
+            # 多年格式: {"data": {"2024": [...], "2025": [...]}}
+            if isinstance(data, dict) and str(year) in data:
+                return True
+            
+            # 單年格式: 檢查 metadata
+            metadata = result.get("metadata", {})
+            if isinstance(metadata, dict):
+                result_year = metadata.get("year") or metadata.get("season")
+                if result_year and str(result_year) == str(year):
+                    return True
+            
+            return False
+        
+        return False
 
     def _file_info_contains_lap(self, file_info: Optional[Dict[str, Any]], lap_value: Any, alias: Optional[str] = None) -> bool:
         if not file_info or not isinstance(file_info, dict):

@@ -36,6 +36,7 @@ from PyQt5.QtGui import QFont
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.api_runtime_state import is_api_available
 
 # 導入翻譯函數與全域設定
 from core.gui_i18n import tr
@@ -215,15 +216,10 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         return True, "預設策略 (允許本地 JSON 後備)"
 
     def _is_api_available(self) -> bool:
-        try:
-            health_url = f"{self._api_base_url}/health"
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code == 200:
-                return True
-            return response.status_code < 500
-        except Exception:
-            return False
-
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle whether local JSON fallback is allowed."""
         self._allow_local_fallback = bool(allowed)

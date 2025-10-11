@@ -47,6 +47,9 @@ class TireAnalysisModule(IAnalysisModule):
         """Initialize tire strategy analysis module"""
         super().__init__(parent)
         
+        # ✅ 添加 analysis_type 屬性以支援批次更新
+        self.analysis_type = 'tire'
+        
         # Module basic information
         self._module_name = "TireAnalysis"
         self._display_name = "🛞 Tire Strategy Analysis"

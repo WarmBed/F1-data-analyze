@@ -34,6 +34,7 @@ from PyQt5.QtGui import QFont
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.api_runtime_state import is_api_available
 
 # 導入翻譯函數
 try:
@@ -277,15 +278,10 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         return True, "預設策略 (允許本地 JSON 後備)"
 
     def _is_api_available(self) -> bool:
-        """快速檢查 API 是否可用，以避免測試時殘留背景執行緒。"""
-        try:
-            health_url = f"{self._api_base_url}/health"
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code == 200:
-                return True
-            return response.status_code < 500
-        except Exception:
-            return False
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle local JSON fallback policy."""
@@ -314,8 +310,8 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             return super().load_data(**kwargs)
 
         if self._is_loading:
-            self._debug("已有載入請求執行中，忽略新的請求")
-            return False
+            self._debug("已有載入請求執行中，取消舊請求並使用最新參數")
+            self.stop_loading()
 
         if not self._validate_load_parameters(kwargs):
             self._error("API 載入參數驗證失敗")
@@ -372,6 +368,27 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         self._api_worker.failure.connect(self._on_api_error)
         self._api_worker.finished.connect(self._cleanup_api_worker)
         self._api_worker.start()
+
+    def _stop_api_worker(self, wait_timeout_ms: int = 2000) -> None:
+        worker = self._api_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._debug("_stop_api_worker: requesting interruption")
+            try:
+                worker.requestInterruption()
+                worker.quit()
+            except Exception:
+                pass
+
+            if not worker.wait(wait_timeout_ms):
+                self._debug("_stop_api_worker: worker timeout, forcing terminate()")
+                try:
+                    worker.terminate()
+                except Exception as exc:
+                    self._debug(f"_stop_api_worker: terminate() raised {exc}")
+                worker.wait(200)
 
     def _on_api_progress(self, value: int) -> None:
         try:
@@ -442,27 +459,30 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         super().load_data(**params)
 
     def _cleanup_api_worker(self) -> None:
-        if self._api_worker:
-            if self._api_worker.isRunning():
-                self._api_worker.requestInterruption()
-                self._api_worker.wait(200)
+        worker = self._api_worker
+        if not worker:
+            return
+
+        if worker.isRunning():
+            self._stop_api_worker()
+
+        for signal, slot in (
+            (worker.progress, self._on_api_progress),
+            (worker.success, self._on_api_success),
+            (worker.failure, self._on_api_error),
+        ):
             try:
-                self._api_worker.progress.disconnect()
+                signal.disconnect(slot)
             except Exception:
                 pass
-            try:
-                self._api_worker.success.disconnect()
-            except Exception:
-                pass
-            try:
-                self._api_worker.failure.disconnect()
-            except Exception:
-                pass
-            try:
-                self._api_worker.finished.disconnect()
-            except Exception:
-                pass
-            self._api_worker.deleteLater()
+
+        try:
+            worker.finished.disconnect(self._cleanup_api_worker)
+        except Exception:
+            pass
+
+        worker.deleteLater()
+        if worker is self._api_worker:
             self._api_worker = None
 
     def get_last_data_source(self) -> str:
@@ -470,6 +490,20 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def get_last_api_metadata(self) -> Dict[str, Any]:
         return getattr(self, "_last_api_meta", {})
+
+    def stop_loading(self) -> None:
+        self._debug("stop_loading: cancel current track analysis load")
+        self._stop_api_worker()
+        self._cleanup_api_worker()
+        self._is_loading = False
+
+    def cleanup(self) -> None:
+        self._debug("cleanup: releasing track analysis resources")
+        self.stop_loading()
+        self.track_data = {}
+        self.position_records = []
+        self.track_bounds = {}
+        self.session_info = {}
     
     def _generate_data_via_cli(self, **kwargs) -> bool:
         """

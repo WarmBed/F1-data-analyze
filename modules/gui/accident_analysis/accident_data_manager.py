@@ -11,7 +11,8 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 
 import requests
 from core.api_base_url import resolve_api_base_url
-from PyQt5.QtCore import QObject, QThread, pyqtSignal
+from core.api_runtime_state import is_api_available
+from PyQt5.QtCore import QObject, QThread, Qt, pyqtSignal
 
 try:
     from ..base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
@@ -278,9 +279,14 @@ class AccidentDataManager(UniversalDataLoader):
         except Exception as exc:  # pragma: no cover - reported to GUI
             self._is_loading = False
             self._error(f"啟動 API 請求失敗: {exc}")
-            self.status_changed.emit("API 載入啟動失敗，嘗試使用本地資料")
-            self._fallback_to_local(str(exc))
-            return False
+            if self._allow_local_fallback:
+                self.status_changed.emit("API 載入啟動失敗，嘗試使用本地資料")
+                self._fallback_to_local(str(exc))
+                return True
+            else:
+                self.status_changed.emit("API 載入啟動失敗且未啟用本地 JSON 後備")
+                self.error_occurred.emit(f"API 請求失敗: {exc}")
+                return False
 
     def _start_api_request(self) -> None:
         self._cleanup_api_worker()
@@ -296,7 +302,7 @@ class AccidentDataManager(UniversalDataLoader):
         self._api_worker.progress.connect(self._on_api_progress)
         self._api_worker.success.connect(self._on_api_success)
         self._api_worker.failure.connect(self._on_api_error)
-        self._api_worker.finished.connect(self._cleanup_api_worker)
+        self._api_worker.finished.connect(self._cleanup_api_worker, Qt.QueuedConnection)
         self._api_worker.start()
 
     # ------------------------------------------------------------------
@@ -327,14 +333,22 @@ class AccidentDataManager(UniversalDataLoader):
         except Exception as exc:
             self._error(f"處理 API 數據失敗: {exc}")
             self._is_loading = False
-            self.status_changed.emit("API 資料錯誤，改用本地資料")
-            self._fallback_to_local(str(exc))
+            if self._allow_local_fallback:
+                self.status_changed.emit("API 資料錯誤，改用本地資料")
+                self._fallback_to_local(str(exc))
+            else:
+                self.status_changed.emit("API 資料錯誤且未啟用本地 JSON 後備")
+                self.error_occurred.emit(f"API 數據處理失敗: {exc}")
 
     def _on_api_error(self, message: str) -> None:  # pragma: no cover - GUI path
         self._error(f"API 請求失敗: {message}")
         self._is_loading = False
-        self.status_changed.emit("API 請求失敗，改用本地資料")
-        self._fallback_to_local(message)
+        if self._allow_local_fallback:
+            self.status_changed.emit("API 請求失敗，改用本地資料")
+            self._fallback_to_local(message)
+        else:
+            self.status_changed.emit("API 請求失敗且未啟用本地 JSON 後備")
+            self.error_occurred.emit(f"API 請求失敗: {message}")
 
     def _cleanup_api_worker(self) -> None:
         if not self._api_worker:
@@ -540,44 +554,26 @@ class AccidentDataManager(UniversalDataLoader):
         return resolve_api_base_url(event_logger=self._debug)
 
     def _is_api_available(self) -> bool:
-        base_url = (self._api_base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
-        health_url = f"{base_url}/api/v2/system/health"
-        try:
-            response = requests.get(health_url, timeout=2.0)
-            if response.status_code != 200:
-                legacy_url = f"{base_url}/api/v2/health"
-                legacy_response = requests.get(legacy_url, timeout=2.0)
-                if legacy_response.status_code != 200:
-                    return False
-                payload = legacy_response.json()
-                if isinstance(payload, dict):
-                    status = str(payload.get("status") or payload.get("state") or "").lower()
-                    if status in {"ok", "healthy", "ready", "pass"}:
-                        return True
-                    if payload.get("success") is True:
-                        return True
-                return True
-            payload = response.json()
-            if isinstance(payload, dict):
-                status = str(payload.get("status") or payload.get("state") or "").lower()
-                if status in {"ok", "healthy", "ready", "pass"}:
-                    return True
-                if payload.get("success") is True:
-                    return True
-            return True
-        except Exception as exc:
-            self._debug(f"API 健康檢查失敗: {exc}")
-            return False
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        """
+        ⚠️ API-ONLY 模式: 預設禁用本地 JSON 後備
+        
+        根據 API-ONLY 政策，GUI 模組必須強制使用 API 獲取數據。
+        只有明確設置環境變數才允許本地 JSON 後備（僅用於開發/調試）。
+        """
         env_value = os.getenv("F1T_ALLOW_ACCIDENT_JSON_FALLBACK")
         if env_value is not None:
             normalized = str(env_value).strip().lower()
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_ACCIDENT_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_ACCIDENT_JSON_FALLBACK={env_value}"
-        # 預設允許事故模組使用本地 JSON 後備，以維持舊資料可用性
-        return True, "預設允許本地 JSON 後備"
+        # ⚠️ API-ONLY 模式: 預設禁用本地 JSON 後備
+        return False, "API-ONLY 模式（預設政策）"
 
     def _resolve_race_variants(self, race: str) -> List[str]:
         if not race:

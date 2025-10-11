@@ -210,6 +210,7 @@ class ColorPaletteProvider:
                     event_logger=lambda message: print(f"[COLOR] {message}")
                 )
 
+            # ✅ 修復: 使用 URL 參數（與其他模組一致）
             response = requests.post(
                 f"{self._base_url}{API_ENDPOINT}",
                 params={"function_id": 98, "year": int(year)},
@@ -228,9 +229,18 @@ class ColorPaletteProvider:
             return None
 
     def _apply_payload(self, payload: Dict[str, Any], *, season_year: int, colormap: str) -> None:
-        data = payload.get("data") or {}
-        teams = data.get("teams") or {}
-        drivers = data.get("drivers") or {}
+        # ✅ 修復: API 返回嵌套結構 data.data.teams（而非 data.teams）
+        outer_data = payload.get("data") or {}
+        inner_data = outer_data.get("data") or outer_data  # 兼容舊格式
+        teams = inner_data.get("teams") or {}
+        drivers = inner_data.get("drivers") or {}
+
+        # ✅ 調試日誌：顯示 API 回應摘要
+        print(f"[COLOR] 📋 API 回應摘要: teams={len(teams)}, drivers={len(drivers)}")
+        if teams:
+            print(f"[COLOR] 📋 車隊列表: {list(teams.keys())[:5]}{'...' if len(teams) > 5 else ''}")
+        if drivers:
+            print(f"[COLOR] 📋 車手列表: {list(drivers.keys())[:10]}{'...' if len(drivers) > 10 else ''}")
 
         team_palette: Dict[str, Dict[str, Any]] = {}
         for slug, info in teams.items():
@@ -248,7 +258,12 @@ class ColorPaletteProvider:
                 "team_name": info.get("team_name") or info.get("team_title") or slug.title(),
             }
 
+        print(f"[COLOR] 📋 車隊處理完成: team_palette={len(team_palette)} 個車隊")
+
         driver_palette: Dict[str, Dict[str, Any]] = {}
+        processed_count = 0
+        skipped_count = 0
+        
         for code, info in drivers.items():
             code_norm = self._normalize_driver_code(code)
             hex_value = str(info.get("hex") or "").strip()
@@ -258,7 +273,11 @@ class ColorPaletteProvider:
                 team_entry = team_palette.get(team_slug)
                 if team_entry:
                     hex_value = team_entry["hex"]
+                    print(f"[COLOR] 💡 車手 {code} 使用車隊顏色: team_slug='{team_slug}' → {hex_value}")
                 else:
+                    print(f"[COLOR] ⚠️  車手 {code} 跳過: team_slug='{team_slug}' 在 team_palette 中找不到")
+                    print(f"[COLOR] 📋 可用車隊: {list(team_palette.keys())[:5]}")
+                    skipped_count += 1
                     continue
             rgb = self._ensure_rgb(info.get("rgb"), hex_value)
             qcolor = self._make_qcolor(hex_value)
@@ -276,8 +295,17 @@ class ColorPaletteProvider:
                 "driver_id": info.get("driver_id"),
                 "full_name": info.get("full_name") or code_norm,
             }
+            processed_count += 1
+
+        # ✅ 調試日誌：顯示處理結果
+        print(f"[COLOR] 📊 車手處理完成: 成功={processed_count}, 跳過={skipped_count}, driver_palette={len(driver_palette)}")
 
         if not driver_palette:
+            # ✅ 提供詳細的錯誤診斷資訊
+            print(f"[COLOR] ❌ driver_palette 為空！")
+            print(f"[COLOR] 📋 原始 teams 鍵: {list(teams.keys())}")
+            print(f"[COLOR] 📋 原始 drivers 鍵: {list(drivers.keys())}")
+            print(f"[COLOR] 📋 team_palette 鍵: {list(team_palette.keys())}")
             raise ColorPaletteError("API payload did not contain driver colour information")
 
         self._team_palette = team_palette

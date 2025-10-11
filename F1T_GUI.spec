@@ -86,7 +86,7 @@ a = Analysis(
     ],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['pyinstaller_runtime_hook.py'],  # 啟動時自動設置 F1_LOG_LEVEL=DEBUG
     excludes=[],
     noarchive=False,
     optimize=0,
@@ -112,4 +112,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon='image\\logo.ico',
 )
