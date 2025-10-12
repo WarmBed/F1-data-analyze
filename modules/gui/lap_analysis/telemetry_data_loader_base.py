@@ -181,6 +181,12 @@ class TelemetryDataLoader(QObject):
             'unit': 'm',
             'debug_prefix': 'DISTDIFF'
         },
+        'timediff': {
+            'display_name': tr('timediff_analysis', 'Time Diff Analysis'),
+            'data_field': 'time_difference',
+            'unit': 's',
+            'debug_prefix': 'TIMEDIFF'
+        },
         'speeddiff': {
             'display_name': tr('speeddiff_analysis', '速度差異分析'), 
             'data_field': 'speed_difference',
@@ -1195,8 +1201,8 @@ class TelemetryDataLoader(QObject):
             data_field = self.config['data_field']
             
             # 根據遙測類型選擇不同的數據路徑
-            if self.telemetry_type in ['speeddiff', 'distancediff']:
-                # 速度差和距離差數據直接在 results 下
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # 速度差、距離差和時間差數據直接在 results 下
                 if data_field not in results:
                     self._debug(f"❌ 缺少 {data_field} 字段")
                     return False
@@ -1210,6 +1216,9 @@ class TelemetryDataLoader(QObject):
                 elif self.telemetry_type == 'distancediff':
                     # 距離差：期望 'reference_distance' 和 'cumulative_distance_difference'
                     required_fields = ['reference_distance', 'cumulative_distance_difference']
+                elif self.telemetry_type == 'timediff':
+                    # 時間差：期望 'reference_time' 和 'cumulative_time_difference'
+                    required_fields = ['reference_time', 'cumulative_time_difference']
                 else:
                     # 其他差異分析：使用默認邏輯
                     required_fields = ['distance', data_field]
@@ -1275,6 +1284,23 @@ class TelemetryDataLoader(QObject):
                     self._debug(f"❌ 數據長度不一致: reference_distance={len(distance_data)}, cumulative_distance_difference={len(diff_data)}")
                     return False
                     
+            elif self.telemetry_type == 'timediff':
+                # 時間差：檢查 reference_time 和 cumulative_time_difference
+                time_data = telemetry_data.get('reference_time', [])
+                diff_data = telemetry_data.get('cumulative_time_difference', [])
+                
+                if len(time_data) == 0:
+                    self._debug("❌ 參考時間數據為空")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("❌ 累積時間差數據為空")
+                    return False
+                    
+                if len(time_data) != len(diff_data):
+                    self._debug(f"❌ 數據長度不一致: reference_time={len(time_data)}, cumulative_time_difference={len(diff_data)}")
+                    return False
+                    
             elif self.telemetry_type in ['speeddiff', 'distancediff']:
                 # 其他差異分析：使用默認邏輯  
                 distance_data = telemetry_data.get('distance', [])
@@ -1329,12 +1355,21 @@ class TelemetryDataLoader(QObject):
             data_field = self.config['data_field']
             
             # 根據遙測類型選擇不同的數據路徑
-            if self.telemetry_type in ['speeddiff', 'distancediff']:
-                # 速度差和距離差數據直接在 results 下
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # 速度差、距離差和時間差數據直接在 results 下
                 telemetry_raw = results[data_field]
                 self._debug(f"差異分析原始數據鍵值: {list(telemetry_raw.keys())}")
-                self._debug(f"距離數據點數: {len(telemetry_raw.get('distance', []))}")
-                self._debug(f"{data_field}數據點數: {len(telemetry_raw.get(data_field, []))}")
+                
+                # 根據類型輸出正確的字段名（原則1：基於JSON結構）
+                if self.telemetry_type == 'speeddiff':
+                    self._debug(f"距離數據點數: {len(telemetry_raw.get('distance', []))}")
+                    self._debug(f"speed_difference數據點數: {len(telemetry_raw.get('speed_difference', []))}")
+                elif self.telemetry_type == 'distancediff':
+                    self._debug(f"reference_distance數據點數: {len(telemetry_raw.get('reference_distance', []))}")
+                    self._debug(f"cumulative_distance_difference數據點數: {len(telemetry_raw.get('cumulative_distance_difference', []))}")
+                elif self.telemetry_type == 'timediff':
+                    self._debug(f"reference_time數據點數: {len(telemetry_raw.get('reference_time', []))}")
+                    self._debug(f"cumulative_time_difference數據點數: {len(telemetry_raw.get('cumulative_time_difference', []))}")
             else:
                 # 常規遙測數據在 telemetry_comparison 下
                 telemetry_comp = results['telemetry_comparison']
@@ -1383,7 +1418,7 @@ class TelemetryDataLoader(QObject):
             # 構建遙測數據結構 - 根據類型處理
             data_key = f"{self.telemetry_type}_data"
             
-            if self.telemetry_type in ['speeddiff', 'distancediff']:
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
                 # 差異分析數據結構 - 需要匹配前端期望的鍵名
                 if self.telemetry_type == 'speeddiff':
                     # 速度差分析：前端期望 'speed' 和 'cumulative_speed_difference'
@@ -1394,8 +1429,12 @@ class TelemetryDataLoader(QObject):
                         "speeddiff": telemetry_raw.get(data_field, []),  # 保留原始鍵名以備用
                         "driver1_name": comparison_info.get('driver1', 'UNK'),
                         "driver2_name": comparison_info.get('driver2', 'UNK'),
-                        "reference": telemetry_raw.get('reference', '')  # 添加參考信息
+                        "reference": telemetry_raw.get('reference', ''),  # 添加參考信息
+                        # 🆕 時間軸數據（用於時間模式）
+                        "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),
+                        "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', [])
                     }
+                    self._debug(f"🕒 [SPEEDDIFF] 時間數據: driver1={len(telemetry_raw.get('driver1_time_seconds', []))} 點, driver2={len(telemetry_raw.get('driver2_time_seconds', []))} 點")
                 elif self.telemetry_type == 'distancediff':
                     # 距離差分析：JSON結構與速度差不同，需要特殊處理
                     processed_data[data_key] = {
@@ -1405,8 +1444,26 @@ class TelemetryDataLoader(QObject):
                         "position_difference": telemetry_raw.get('position_difference', []),  # 保留原始數據
                         "driver1_name": comparison_info.get('driver1', 'UNK'),
                         "driver2_name": comparison_info.get('driver2', 'UNK'),
-                        "reference": telemetry_raw.get('reference', '')  # 添加參考信息
+                        "reference": telemetry_raw.get('reference', ''),  # 添加參考信息
+                        # 🆕 時間軸數據（用於時間模式）
+                        "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),
+                        "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', [])
                     }
+                    self._debug(f"🕒 [DISTANCEDIFF] 時間數據: driver1={len(telemetry_raw.get('driver1_time_seconds', []))} 點, driver2={len(telemetry_raw.get('driver2_time_seconds', []))} 點")
+                elif self.telemetry_type == 'timediff':
+                    # 時間差分析：使用 reference_time 作為時間軸
+                    processed_data[data_key] = {
+                        "time": telemetry_raw.get('reference_time', []),  # 使用 reference_time 作為時間軸數據
+                        "cumulative_time_difference": telemetry_raw.get('cumulative_time_difference', []),  # 累積時間差
+                        "reference_time": telemetry_raw.get('reference_time', []),  # 保留原始鍵名
+                        "distance_gap": telemetry_raw.get('distance_gap', []),  # 距離差
+                        "driver1_distance_at_time": telemetry_raw.get('driver1_distance_at_time', []),  # 車手1在各時間點的距離
+                        "driver2_distance_at_time": telemetry_raw.get('driver2_distance_at_time', []),  # 車手2在各時間點的距離
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', '時間為自變數'),  # 添加參考信息
+                    }
+                    self._debug(f"🕒 [TIMEDIFF] 時間差數據: time={len(telemetry_raw.get('reference_time', []))} 點, cumulative_diff={len(telemetry_raw.get('cumulative_time_difference', []))} 點")
                 else:
                     # 其他差異分析：保持原有結構
                     processed_data[data_key] = {
@@ -1416,42 +1473,74 @@ class TelemetryDataLoader(QObject):
                         "driver2_name": comparison_info.get('driver2', 'UNK')
                     }
                 
+                # 調試輸出 - 根據類型使用不同的鍵名（原則1：先驗證再編寫）
                 self._debug(f"構建差異分析數據結構:")
-                self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 點")
                 if self.telemetry_type == 'speeddiff':
+                    self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 點")
                     self._debug(f"  speed: {len(processed_data[data_key]['speed'])} 點")
                     self._debug(f"  cumulative_speed_difference: {len(processed_data[data_key]['cumulative_speed_difference'])} 點")
                 elif self.telemetry_type == 'distancediff':
+                    self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 點")
                     self._debug(f"  cumulative_distance_difference: {len(processed_data[data_key]['cumulative_distance_difference'])} 點")
+                elif self.telemetry_type == 'timediff':
+                    # timediff 使用 'time' 作為 X 軸，不是 'distance'（原則1：基於實際數據結構）
+                    self._debug(f"  time: {len(processed_data[data_key]['time'])} 點")
+                    self._debug(f"  cumulative_time_difference: {len(processed_data[data_key]['cumulative_time_difference'])} 點")
+                    self._debug(f"  distance_gap: {len(processed_data[data_key].get('distance_gap', []))} 點")
                 else:
-                    self._debug(f"  {self.telemetry_type}: {len(processed_data[data_key][self.telemetry_type])} 點")
+                    # 其他未知類型的備用邏輯
+                    self._debug(f"  {self.telemetry_type}: {len(processed_data[data_key].get(self.telemetry_type, []))} 點")
             else:
                 # 常規遙測數據結構
                 processed_data[data_key] = {
                     "distance": telemetry_raw.get('distance', []),
                     f"driver1_{self.telemetry_type}": telemetry_raw.get('driver1_data', []),
                     f"driver2_{self.telemetry_type}": telemetry_raw.get('driver2_data', []),
+                    "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),  # 🆕 時間數據
+                    "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', []),  # 🆕 時間數據
                     "driver1_name": metadata.get('driver1', comparison_info.get('driver1', 'UNK')),
                     "driver2_name": metadata.get('driver2', comparison_info.get('driver2', 'UNK'))
                 }
+                
+                # 🆕 Debug: 顯示時間數據提取結果
+                self._debug(f"🕒 [TIME_AXIS_DEBUG] 提取時間數據:")
+                self._debug(f"🕒 [TIME_AXIS_DEBUG]   driver1_time_seconds 點數: {len(telemetry_raw.get('driver1_time_seconds', []))}")
+                self._debug(f"🕒 [TIME_AXIS_DEBUG]   driver2_time_seconds 點數: {len(telemetry_raw.get('driver2_time_seconds', []))}")
             
-            # 計算統計數據 - 根據類型選擇不同的數據源
-            distance_data = telemetry_raw.get('distance', [])
+            # 計算統計數據 - 根據類型選擇不同的數據源（原則1：驗證後編寫）
+            if self.telemetry_type == 'timediff':
+                # timediff 使用 reference_time 作為 X 軸，不是 distance
+                x_axis_data = telemetry_raw.get('reference_time', [])
+                x_axis_label = 'time'
+            else:
+                # 其他類型使用 distance
+                x_axis_data = telemetry_raw.get('distance', [])
+                x_axis_label = 'distance'
             
-            if self.telemetry_type in ['speeddiff', 'distancediff']:
-                # 差異分析統計
-                diff_data = telemetry_raw.get(data_field, [])
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # 差異分析統計 - 根據類型使用不同的差異字段名（原則1：驗證JSON結構）
+                if self.telemetry_type == 'speeddiff':
+                    diff_field_name = 'speed_difference'
+                elif self.telemetry_type == 'distancediff':
+                    diff_field_name = 'cumulative_distance_difference'
+                elif self.telemetry_type == 'timediff':
+                    diff_field_name = 'cumulative_time_difference'  # ✅ JSON 中的實際字段名
+                else:
+                    diff_field_name = data_field  # 備用
+                
+                diff_data = telemetry_raw.get(diff_field_name, [])
                 processed_data["statistics"] = {
                     "difference": self._calculate_statistics(diff_data),
-                    "distance": {
-                        "min": min(distance_data) if distance_data else 0,
-                        "max": max(distance_data) if distance_data else 0,
-                        "total_points": len(distance_data)
+                    x_axis_label: {  # 使用動態鍵名
+                        "min": min(x_axis_data) if x_axis_data else 0,
+                        "max": max(x_axis_data) if x_axis_data else 0,
+                        "total_points": len(x_axis_data)
                     }
                 }
                 
+                # 調試輸出 - 使用動態標籤（原則1：基於實際數據）
                 self._debug(f"✅ {self.config['display_name']}數據處理完成")
-                self._debug(f"   距離點數: {len(distance_data)}")
+                self._debug(f"   X軸({x_axis_label})點數: {len(x_axis_data)}")
                 self._debug(f"   差異數據點數: {len(diff_data)}")
                 
             else:
@@ -1462,15 +1551,15 @@ class TelemetryDataLoader(QObject):
                 processed_data["statistics"] = {
                     "driver1": self._calculate_statistics(driver1_data),
                     "driver2": self._calculate_statistics(driver2_data),
-                    "distance": {
-                        "min": min(distance_data) if distance_data else 0,
-                        "max": max(distance_data) if distance_data else 0,
-                        "total_points": len(distance_data)
+                    x_axis_label: {  # 使用動態鍵名 (distance 或 time)
+                        "min": min(x_axis_data) if x_axis_data else 0,
+                        "max": max(x_axis_data) if x_axis_data else 0,
+                        "total_points": len(x_axis_data)
                     }
                 }
                 
                 self._debug(f"✅ {self.config['display_name']}數據處理完成")
-                self._debug(f"   距離點數: {len(distance_data)}")
+                self._debug(f"   {x_axis_label.capitalize()}點數: {len(x_axis_data)}")
                 self._debug(f"   車手1數據點數: {len(driver1_data)}")
                 self._debug(f"   車手2數據點數: {len(driver2_data)}")
             

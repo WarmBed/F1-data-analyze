@@ -21,9 +21,10 @@ class LinkageManager(QObject):
     
     # 信號定義
     master_linkage_changed = pyqtSignal(bool)  # 主開關狀態變更
-    x_linkage_signal = pyqtSignal(float, float)  # X軸連動信號 (distance, y_relative)
+    time_axis_mode_changed = pyqtSignal(bool)  # 時間軸模式變更 (True=時間軸, False=距離軸)
+    x_linkage_signal = pyqtSignal(float, float)  # X軸連動信號 (distance/time, y_relative)
     x_linkage_clear = pyqtSignal()  # X軸連動清除
-    click_linkage_signal = pyqtSignal(float)  # 點擊連動信號 (distance)
+    click_linkage_signal = pyqtSignal(float)  # 點擊連動信號 (distance/time)
     click_linkage_clear = pyqtSignal()  # 點擊連動清除
     
     def __init__(self, parent=None):
@@ -31,6 +32,7 @@ class LinkageManager(QObject):
         
         # 連動狀態
         self.master_linkage_enabled = True
+        self.time_axis_mode = False  # 時間軸模式（False=距離軸, True=時間軸）
         
         # 註冊的連動模組
         self.registered_modules: List[Any] = []
@@ -91,6 +93,33 @@ class LinkageManager(QObject):
     def is_master_linkage_enabled(self) -> bool:
         """獲取主連動開關狀態"""
         return self.master_linkage_enabled
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式並廣播給所有模組
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        if self.time_axis_mode != use_time_axis:
+            self.time_axis_mode = use_time_axis
+            
+            # 通知所有註冊的模組
+            for module in self.registered_modules:
+                try:
+                    if hasattr(module, 'set_time_axis_mode'):
+                        module.set_time_axis_mode(use_time_axis)
+                except Exception as e:
+                    print(f"[ERROR] [LINKAGE_MANAGER] 通知模組時間軸模式變更失敗: {e}")
+            
+            # 發送信號
+            self.time_axis_mode_changed.emit(use_time_axis)
+            
+            print(f"[LINKAGE_MANAGER] 時間軸模式: {'啟用（時間軸）' if use_time_axis else '停用（距離軸）'}，已通知 {len(self.registered_modules)} 個模組")
+    
+    def is_time_axis_mode(self) -> bool:
+        """獲取當前時間軸模式狀態"""
+        return self.time_axis_mode
     
     def send_x_linkage(self, distance_value: float, y_relative: float, sender=None):
         """發送X軸連動信號"""

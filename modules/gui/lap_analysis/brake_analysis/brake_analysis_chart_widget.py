@@ -62,6 +62,11 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.driver2_name = "Driver 2"
         self.sectors = []
         
+        # 時間軸模式支援（參考 Speed Analysis）
+        self.use_time_axis = False
+        self.driver1_time = []
+        self.driver2_time = []
+        
         # 數據範圍 - 剎車專用設置（百分比 0-100%）
         self.min_distance = 0
         self.max_distance = 5807
@@ -103,7 +108,8 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
     def set_brake_data(self, distance: List[float], driver1_brake: List[float], 
                      driver2_brake: List[float], driver1_name: str = "Driver 1", 
                      driver2_name: str = "Driver 2", sectors: List[Dict] = None,
-                     lap1: int = None, lap2: int = None):
+                     lap1: int = None, lap2: int = None,
+                     driver1_time: List[float] = None, driver2_time: List[float] = None):
         """設置brake數據
         
         Args:
@@ -115,6 +121,8 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             sectors: 賽道區段信息
             lap1: 車手1的圈數（用於雙圈比較模式）
             lap2: 車手2的圈數（用於雙圈比較模式）
+            driver1_time: 車手1時間數據（秒）
+            driver2_time: 車手2時間數據（秒）
         """
         # 🆕 雙圈比較模式判斷
         is_single_driver_dual_lap = False
@@ -135,10 +143,31 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.driver2_name = driver2_name
         self.sectors = sectors or []
         
-        # 計算數據範圍
-        if distance:
+        # 儲存時間數據（時間軸模式支援）
+        self.driver1_time = driver1_time or []
+        self.driver2_time = driver2_time or []
+        
+        # 計算 X 軸數據範圍（根據時間軸模式選擇）
+        print(f"🕒 [TIME_AXIS] set_brake_data 計算 X 軸範圍")
+        print(f"🕒 [TIME_AXIS]   當前 use_time_axis: {self.use_time_axis}")
+        
+        if self.use_time_axis and (driver1_time or driver2_time):
+            # 時間軸模式：使用時間數據計算範圍
+            all_time_values = []
+            if driver1_time:
+                all_time_values.extend(driver1_time)
+            if driver2_time:
+                all_time_values.extend(driver2_time)
+            
+            if all_time_values:
+                self.min_distance = min(all_time_values)
+                self.max_distance = max(all_time_values)
+                print(f"🕒 [TIME_AXIS]   使用時間數據計算範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif distance:
+            # 距離軸模式：使用距離數據計算範圍
             self.min_distance = min(distance)
             self.max_distance = max(distance)
+            print(f"[BRAKE_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
         
         all_brakes = []
         if driver1_brake:
@@ -175,6 +204,50 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.sectors = []
         self.reset_view()
         self.repaint()
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式
+        
+        Parameters:
+            use_time_axis: True = 使用時間軸, False = 使用距離軸
+        """
+        print(f"🕒 [TIME_AXIS] BrakeChartWidget.set_time_axis_mode 被調用")
+        print(f"🕒 [TIME_AXIS]   接收參數 use_time_axis: {use_time_axis}")
+        print(f"🕒 [TIME_AXIS]   當前 self.use_time_axis: {self.use_time_axis}")
+        
+        self.use_time_axis = use_time_axis
+        print(f"🕒 [TIME_AXIS]   更新後 self.use_time_axis: {self.use_time_axis}")
+        
+        # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
+        if use_time_axis and self.driver1_time:
+            # 使用時間數據計算範圍
+            all_time_values = list(self.driver1_time)
+            if self.driver2_time:
+                all_time_values.extend(self.driver2_time)
+            
+            self.min_distance = min(all_time_values)
+            self.max_distance = max(all_time_values)
+            print(f"🕒 [TIME_AXIS]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif self.distance_data:
+            # 使用距離數據計算範圍
+            self.min_distance = min(self.distance_data)
+            self.max_distance = max(self.distance_data)
+            print(f"🕒 [TIME_AXIS]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+        
+        # 重置視圖狀態
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_brake = None
+        self.view_max_brake = None
+        self.show_fixed_line = False
+        self.fixed_line_x = -1
+        self.fixed_distance_value = None
+        
+        # 強制重繪
+        print(f"[BRAKE_CHART] 🖌️ 時間軸模式切換，調用 repaint()...")
+        self.repaint()
+        print(f"🕒 [TIME_AXIS]   ✅ set_time_axis_mode 完成")
     
     def paintEvent(self, event):
         """繪製圖表"""
@@ -293,7 +366,7 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         current_min_brake = self.view_min_brake if self.view_min_brake is not None else self.min_brake
         current_max_brake = self.view_max_brake if self.view_max_brake is not None else self.max_brake
         
-        # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
+        # X軸標籤 (距離或時間) - 修正：與速度分析一致，只顯示偶數刻度
         distance_range = current_max_distance - current_min_distance
         if distance_range > 0:
             num_labels = 10  # 使用10個間隔
@@ -304,8 +377,12 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                 # 繪製刻度線
                 painter.drawLine(int(x), chart_rect.bottom(), int(x), chart_rect.bottom() + 5)
                 
-                # 繪製標籤
-                label = f"{distance:.0f}"
+                # 根據時間軸模式選擇格式
+                if self.use_time_axis:
+                    label = f"{distance:.1f}"  # 時間：顯示浮點數
+                else:
+                    label = f"{distance:.0f}"  # 距離：顯示整數
+                
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
                                Qt.AlignCenter, label)
         
@@ -329,11 +406,17 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 置中顯示在圖表下方
+        # X軸標題 - 置中顯示在圖表下方，根據時間軸模式切換
         x_title_width = 100
         x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
         x_title_y = chart_rect.bottom() + 5
-        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
+        
+        if self.use_time_axis:
+            x_axis_title = tr('time_s', '時間 (s)')
+        else:
+            x_axis_title = tr('distance_m', '距離 (m)')
+        
+        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_axis_title)
         
         # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
         painter.save()
@@ -379,7 +462,13 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
     
     def _draw_brake_curves(self, painter: QPainter, chart_rect: QRect):
         """繪製brake曲線"""
-        if not self.distance_data:
+        # 根據時間軸模式選擇X軸數據源
+        if self.use_time_axis and self.driver1_time and self.driver2_time:
+            x_data_source = self.driver1_time
+        else:
+            x_data_source = self.distance_data
+            
+        if not x_data_source:
             return
         
         # 設置裁剪區域，確保曲線不會繪製到圖表區域外
@@ -398,13 +487,13 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             return
         
         # 繪製車手1brake曲線
-        if self.driver1_brake and len(self.driver1_brake) == len(self.distance_data):
+        if self.driver1_brake and len(self.driver1_brake) == len(x_data_source):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
             
-            for i, (distance, brake) in enumerate(zip(self.distance_data, self.driver1_brake)):
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+            for i, (x_value, brake) in enumerate(zip(x_data_source, self.driver1_brake)):
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (brake - current_min_brake) / brake_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -412,14 +501,19 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
         
-        # 繪製車手2brake曲線
-        if self.driver2_brake and len(self.driver2_brake) == len(self.distance_data):
+        # 繪製車手2brake曲線（使用對應的時間數據）
+        if self.use_time_axis and self.driver2_time:
+            x_data_source_2 = self.driver2_time
+        else:
+            x_data_source_2 = x_data_source
+            
+        if self.driver2_brake and len(self.driver2_brake) == len(x_data_source_2):
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
             
-            for i, (distance, brake) in enumerate(zip(self.distance_data, self.driver2_brake)):
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+            for i, (x_value, brake) in enumerate(zip(x_data_source_2, self.driver2_brake)):
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (brake - current_min_brake) / brake_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -450,21 +544,27 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         if distance_range > 0 and self.distance_data:
             # 計算距離值
             relative_x = x_pos - chart_rect.left()
-            distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+            x_axis_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
             
             # 找到最接近的數據點來獲取真實的brake值
             driver1_brake_at_position = None
             driver2_brake_at_position = None
             
-            # 在距離數據中找到最接近的點
-            if self.distance_data and len(self.distance_data) > 0:
+            # 根據時間軸模式選擇搜索數據源
+            if self.use_time_axis and self.driver1_time and len(self.driver1_time) > 0:
+                search_data = self.driver1_time
+            else:
+                search_data = self.distance_data
+            
+            # 在數據中找到最接近的點
+            if search_data and len(search_data) > 0:
                 closest_index = 0
-                min_distance_diff = abs(self.distance_data[0] - distance_value)
+                min_diff = abs(search_data[0] - x_axis_value)
                 
-                for i, dist in enumerate(self.distance_data):
-                    distance_diff = abs(dist - distance_value)
-                    if distance_diff < min_distance_diff:
-                        min_distance_diff = distance_diff
+                for i, data_point in enumerate(search_data):
+                    diff = abs(data_point - x_axis_value)
+                    if diff < min_diff:
+                        min_diff = diff
                         closest_index = i
                 
                 # 獲取對應的brake值
@@ -512,7 +612,11 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
+            # 根據時間軸模式顯示不同的標籤
+            if self.use_time_axis:
+                painter.drawText(label_x + 5, text_y, f"{tr('time_label', '時間')}: {x_axis_value:.2f} s")
+            else:
+                painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {x_axis_value:.0f} m")
             
             # 顯示車手brake資訊
             for i, (driver_name, brake, color) in enumerate(drivers_to_show):
@@ -807,12 +911,13 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         chart_container = self._create_chart_area()
         self.main_splitter.addWidget(chart_container)
         
-        # 統計信息容器（採用可摺疊設計）
+        # 統計信息容器（已隱藏）
         self.stats_container = self._create_stats_container()
+        self.stats_container.setVisible(False)  # 🔒 永久隱藏統計面板
         self.main_splitter.addWidget(self.stats_container)
         
-        # 設置分割器比例 (與速度分析保持一致：圖表:統計 = 800:50)
-        self.main_splitter.setSizes([800, 50])
+        # 設置分割器比例，讓圖表佔據全部空間（統計面板已隱藏）
+        self.main_splitter.setSizes([1000, 0])  # 圖表:統計 = 1000:0（統計面板隱藏）
         
         # 設置分割器比例因子 (移除灰色樣式以使用系統默認)
         self.main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
@@ -1198,9 +1303,15 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             driver1_name = brake_data.get('driver1_name', 'Driver 1')
             driver2_name = brake_data.get('driver2_name', 'Driver 2')
             
+            # 🆕 提取時間軸數據（用於時間模式）
+            driver1_time = brake_data.get('driver1_time_seconds', [])
+            driver2_time = brake_data.get('driver2_time_seconds', [])
+            
             print(f"[brake_CHART] 距離數據點: {len(distance)}")
             print(f"[brake_CHART] 車手1 brake數據點: {len(driver1_brake)}")
             print(f"[brake_CHART] 車手2 brake數據點: {len(driver2_brake)}")
+            print(f"[brake_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
+            print(f"[brake_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             lap1 = None
@@ -1272,7 +1383,9 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_name=driver2_name,
                 sectors=sectors,
                 lap1=lap1,  # 🆕 傳遞圈數信息
-                lap2=lap2   # 🆕 傳遞圈數信息
+                lap2=lap2,  # 🆕 傳遞圈數信息
+                driver1_time=driver1_time,  # 🆕 傳遞時間數據
+                driver2_time=driver2_time   # 🆕 傳遞時間數據
             )
             print(f"[brake_CHART] ✅ 圖表更新完成")
             
@@ -1411,6 +1524,19 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         if self.current_data:
             self.update_brake_data(self.current_data)
     
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式（代理方法）
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_time_axis_mode(use_time_axis)
+            print(f"[BRAKE_WRAPPER] ✅ 時間軸模式已設置: {use_time_axis}")
+        else:
+            print(f"[ERROR] [BRAKE_WRAPPER] chart_widget 不存在，無法設置時間軸模式")
+    
     def update_lap_parameters(self, year: str, race: str, session: str, 
                              driver1: str = None, driver2: str = None,
                              lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
@@ -1470,8 +1596,12 @@ class BrakeAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
+        print(f"[BRAKE_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
+            print(f"[BRAKE_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
+        else:
+            print(f"[BRAKE_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""

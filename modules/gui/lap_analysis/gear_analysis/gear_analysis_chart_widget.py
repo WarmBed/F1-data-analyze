@@ -60,6 +60,11 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         self.driver2_name = "Driver 2"
         self.sectors = []
         
+        # 🆕 時間軸數據（用於 Use Time Axis 模式）
+        self.use_time_axis = False
+        self.driver1_time = []
+        self.driver2_time = []
+        
         # 數據範圍 - 檔位專用設置
         self.min_distance = 0
         self.max_distance = 5807
@@ -101,7 +106,8 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
     def set_gear_data(self, distance: List[float], driver1_gear: List[float], 
                      driver2_gear: List[float], driver1_name: str = "Driver 1", 
                      driver2_name: str = "Driver 2", sectors: List[Dict] = None,
-                     lap1: int = None, lap2: int = None):
+                     lap1: int = None, lap2: int = None,
+                     driver1_time: List[float] = None, driver2_time: List[float] = None):
         """設置gear數據
         
         Args:
@@ -113,6 +119,8 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
             sectors: 賽道區段信息
             lap1: 車手1的圈數（用於雙圈比較模式）
             lap2: 車手2的圈數（用於雙圈比較模式）
+            driver1_time: 車手1的時間數據（秒）
+            driver2_time: 車手2的時間數據（秒）
         """
         # 🆕 雙圈比較模式判斷
         is_single_driver_dual_lap = False
@@ -133,10 +141,21 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         self.driver2_name = driver2_name
         self.sectors = sectors or []
         
-        # 計算數據範圍
-        if distance:
+        # 🆕 存儲時間數據
+        self.driver1_time = driver1_time if driver1_time is not None else []
+        self.driver2_time = driver2_time if driver2_time is not None else []
+        
+        # 🆕 計算數據範圍（根據時間軸模式選擇）
+        if self.use_time_axis and self.driver1_time:
+            # 時間軸模式：使用時間數據計算 X 軸範圍
+            self.min_distance = min(self.driver1_time)
+            self.max_distance = max(self.driver1_time)
+            print(f"[GEAR_CHART] 🕒 時間軸範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif distance:
+            # 距離軸模式：使用距離數據計算 X 軸範圍
             self.min_distance = min(distance)
             self.max_distance = max(distance)
+            print(f"[GEAR_CHART] 📏 距離軸範圍: {self.min_distance:.0f}m - {self.max_distance:.0f}m")
         
         all_gears = []
         if driver1_gear:
@@ -163,6 +182,35 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
+        self.repaint()
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        print(f"[GEAR_CHART] 🕒 設置時間軸模式: {use_time_axis}")
+        
+        self.use_time_axis = use_time_axis
+        
+        # 重新計算 X 軸範圍
+        if use_time_axis and self.driver1_time:
+            # 切換到時間軸：使用時間數據
+            self.min_distance = min(self.driver1_time)
+            self.max_distance = max(self.driver1_time)
+            print(f"[GEAR_CHART] 🕒 時間軸範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif self.distance_data:
+            # 切換到距離軸：使用距離數據
+            self.min_distance = min(self.distance_data)
+            self.max_distance = max(self.distance_data)
+            print(f"[GEAR_CHART] 📏 距離軸範圍: {self.min_distance:.0f}m - {self.max_distance:.0f}m")
+        
+        # 重置視圖狀態
+        self.reset_view()
+        
+        # 觸發重繪
         self.repaint()
     
     def reset_data(self):
@@ -291,19 +339,23 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         current_min_gear = self.view_min_gear if self.view_min_gear is not None else self.min_gear
         current_max_gear = self.view_max_gear if self.view_max_gear is not None else self.max_gear
         
-        # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
+        # X軸標籤 (距離或時間) - 修正：與速度分析一致，只顯示偶數刻度
         distance_range = current_max_distance - current_min_distance
         if distance_range > 0:
             num_labels = 10  # 使用10個間隔
             for i in range(0, num_labels + 1, 2):  # 只顯示偶數刻度
-                distance = current_min_distance + (distance_range * i / num_labels)
-                x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+                value = current_min_distance + (distance_range * i / num_labels)
+                x = chart_rect.left() + (value - current_min_distance) / distance_range * chart_rect.width()
                 
                 # 繪製刻度線
                 painter.drawLine(int(x), chart_rect.bottom(), int(x), chart_rect.bottom() + 5)
                 
-                # 繪製標籤
-                label = f"{distance:.0f}"
+                # 🆕 根據時間軸模式選擇標籤格式
+                if self.use_time_axis:
+                    label = f"{value:.1f}"  # 時間: 一位小數
+                else:
+                    label = f"{value:.0f}"  # 距離: 整數
+                
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
                                Qt.AlignCenter, label)
         
@@ -327,11 +379,18 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 置中顯示在圖表下方
+        # X軸標題 - 置中顯示在圖表下方（根據時間軸模式）
         x_title_width = 100
         x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
         x_title_y = chart_rect.bottom() + 5
-        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
+        
+        # 🆕 根據時間軸模式選擇標題
+        if self.use_time_axis:
+            x_label = tr('time_axis_title', 'Time') + " (s)"
+        else:
+            x_label = tr('distance_axis_title', 'Distance') + " (m)"
+        
+        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_label)
         
         # Y軸標題 (旋轉文字) - 修正：與速度分析一致的位置
         painter.save()
@@ -380,6 +439,14 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         if not self.distance_data:
             return
         
+        # 🆕 根據時間軸模式選擇 X 軸數據源
+        if self.use_time_axis and self.driver1_time and self.driver2_time:
+            x_data_source = self.driver1_time
+            print(f"[GEAR_CHART] 🕒 使用時間數據繪製曲線 ({len(x_data_source)} 點)")
+        else:
+            x_data_source = self.distance_data
+            print(f"[GEAR_CHART] 📏 使用距離數據繪製曲線 ({len(x_data_source)} 點)")
+        
         # 設置裁剪區域，防止曲線繪製到圖表邊界之外
         painter.setClipRect(chart_rect)
         
@@ -396,13 +463,13 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
             return
         
         # 繪製車手1gear曲線
-        if self.driver1_gear and len(self.driver1_gear) == len(self.distance_data):
+        if self.driver1_gear and len(self.driver1_gear) == len(x_data_source):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
             
-            for i, (distance, gear) in enumerate(zip(self.distance_data, self.driver1_gear)):
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+            for i, (x_value, gear) in enumerate(zip(x_data_source, self.driver1_gear)):
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (gear - current_min_gear) / gear_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -411,13 +478,13 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
                 painter.drawLine(points[i], points[i + 1])
         
         # 繪製車手2gear曲線
-        if self.driver2_gear and len(self.driver2_gear) == len(self.distance_data):
+        if self.driver2_gear and len(self.driver2_gear) == len(x_data_source):
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
             
-            for i, (distance, gear) in enumerate(zip(self.distance_data, self.driver2_gear)):
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+            for i, (x_value, gear) in enumerate(zip(x_data_source, self.driver2_gear)):
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (gear - current_min_gear) / gear_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -446,23 +513,29 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
         distance_range = current_max_distance - current_min_distance
         
         if distance_range > 0 and self.distance_data:
-            # 計算距離值
+            # 計算 X 軸值（距離或時間）
             relative_x = x_pos - chart_rect.left()
-            distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+            x_axis_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
             
             # 找到最接近的數據點來獲取真實的gear值
             driver1_gear_at_position = None
             driver2_gear_at_position = None
             
-            # 在距離數據中找到最接近的點
-            if self.distance_data and len(self.distance_data) > 0:
+            # 🆕 根據時間軸模式選擇搜索數據源
+            if self.use_time_axis and self.driver1_time and len(self.driver1_time) > 0:
+                search_data = self.driver1_time
+            else:
+                search_data = self.distance_data
+            
+            # 在數據中找到最接近的點
+            if search_data and len(search_data) > 0:
                 closest_index = 0
-                min_distance_diff = abs(self.distance_data[0] - distance_value)
+                min_diff = abs(search_data[0] - x_axis_value)
                 
-                for i, dist in enumerate(self.distance_data):
-                    distance_diff = abs(dist - distance_value)
-                    if distance_diff < min_distance_diff:
-                        min_distance_diff = distance_diff
+                for i, data_point in enumerate(search_data):
+                    diff = abs(data_point - x_axis_value)
+                    if diff < min_diff:
+                        min_diff = diff
                         closest_index = i
                 
                 # 獲取對應的gear值
@@ -510,7 +583,11 @@ class GearChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawin
             painter.setFont(QFont("Arial", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
+            # 🆕 根據時間軸模式顯示不同的標籤
+            if self.use_time_axis:
+                painter.drawText(label_x + 5, text_y, f"{tr('time_label', 'Time')}: {x_axis_value:.2f} s")
+            else:
+                painter.drawText(label_x + 5, text_y, f"{tr('distance_label', 'Distance')}: {x_axis_value:.0f} m")
             
             # 顯示車手gear資訊
             for i, (driver_name, gear, color) in enumerate(drivers_to_show):
@@ -789,12 +866,13 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         chart_container = self._create_chart_area()
         self.main_splitter.addWidget(chart_container)
         
-        # 統計信息容器（採用可摺疊設計）
+        # 統計信息容器（已隱藏）
         self.stats_container = self._create_stats_container()
+        self.stats_container.setVisible(False)  # 🔒 永久隱藏統計面板
         self.main_splitter.addWidget(self.stats_container)
         
-        # 設置分割器比例 (與速度分析保持一致：圖表:統計 = 800:50)
-        self.main_splitter.setSizes([800, 50])
+        # 設置分割器比例，讓圖表佔據全部空間（統計面板已隱藏）
+        self.main_splitter.setSizes([1000, 0])  # 圖表:統計 = 1000:0（統計面板隱藏）
         
         # 設置分割器比例因子 (移除灰色樣式以使用系統默認)
         self.main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
@@ -1087,6 +1165,19 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         """設置圈數顯示"""
         self.lap1_display.setText(str(lap1))
         self.lap2_display.setText(str(lap2))
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式（代理方法）
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_time_axis_mode(use_time_axis)
+            print(f"[GEAR_WRAPPER] ✅ 時間軸模式已設置: {use_time_axis}")
+        else:
+            print(f"[ERROR] [GEAR_WRAPPER] chart_widget 不存在，無法設置時間軸模式")
         
     def _update_status_info(self, data: Dict[str, Any]):
         """更新狀態資訊顯示"""
@@ -1175,9 +1266,15 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             driver1_name = gear_data.get('driver1_name', 'Driver 1')
             driver2_name = gear_data.get('driver2_name', 'Driver 2')
             
+            # 🆕 提取時間軸數據（用於時間模式）
+            driver1_time = gear_data.get('driver1_time_seconds', [])
+            driver2_time = gear_data.get('driver2_time_seconds', [])
+            
             print(f"[gear_CHART] 距離數據點: {len(distance)}")
             print(f"[gear_CHART] 車手1 gear數據點: {len(driver1_gear)}")
             print(f"[gear_CHART] 車手2 gear數據點: {len(driver2_gear)}")
+            print(f"[gear_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
+            print(f"[gear_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             lap1 = None
@@ -1249,7 +1346,9 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 driver2_name=driver2_name,
                 sectors=sectors,
                 lap1=lap1,  # 🆕 傳遞圈數信息
-                lap2=lap2   # 🆕 傳遞圈數信息
+                lap2=lap2,   # 🆕 傳遞圈數信息
+                driver1_time=driver1_time,  # 🆕 時間軸數據
+                driver2_time=driver2_time   # 🆕 時間軸數據
             )
             print(f"[gear_CHART] ✅ 圖表更新完成")
             
@@ -1447,8 +1546,12 @@ class GearAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
+        print(f"[GEAR_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
+            print(f"[GEAR_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
+        else:
+            print(f"[GEAR_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""

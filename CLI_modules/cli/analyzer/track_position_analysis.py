@@ -354,16 +354,39 @@ def analyze_track_position_data(data_loader):
                             
                             print(f"   [INFO] 處理 {total_points} 個賽道位置點，取樣 {sample_size} 個")
                             
+                            # 檢查是否有時間數據
+                            has_time = 'Time' in pos_data.columns or 'SessionTime' in pos_data.columns
+                            time_column = 'Time' if 'Time' in pos_data.columns else 'SessionTime' if 'SessionTime' in pos_data.columns else None
+                            
+                            if has_time and time_column:
+                                print(f"   [SUCCESS] 時間數據: 可用 (使用 {time_column} 欄位)")
+                            else:
+                                print(f"   [WARNING] 時間數據: 不可用，將使用點索引")
+                            
                             for i, idx in enumerate(sample_indices):
                                 row = pos_data.iloc[idx]
                                 distance = distances[idx] if idx < len(distances) else 0
                                 
-                                # 僅包含距離、位置X、位置Y
+                                # 提取時間數據（秒為單位）
+                                time_seconds = 0.0
+                                if has_time and time_column:
+                                    try:
+                                        time_val = getattr(row, time_column, 0)
+                                        # 處理 pandas Timedelta
+                                        if hasattr(time_val, 'total_seconds'):
+                                            time_seconds = float(time_val.total_seconds())
+                                        else:
+                                            time_seconds = float(time_val)
+                                    except:
+                                        time_seconds = 0.0
+                                
+                                # 包含距離、位置X、位置Y、時間戳
                                 record = {
                                     "point_index": i + 1,
                                     "distance_m": float(distance),
                                     "position_x": float(getattr(row, 'X', 0)),
-                                    "position_y": float(getattr(row, 'Y', 0))
+                                    "position_y": float(getattr(row, 'Y', 0)),
+                                    "time_seconds": time_seconds
                                 }
                                 position_data["position_records"].append(record)
                             
@@ -453,6 +476,15 @@ def extract_position_from_car_data(car_data, position_data):
             )
             print(f"   [WARNING] 基於位置計算距離")
         
+        # 檢查是否有時間數據
+        has_time = 'Time' in car_data.columns or 'SessionTime' in car_data.columns
+        time_column = 'Time' if 'Time' in car_data.columns else 'SessionTime' if 'SessionTime' in car_data.columns else None
+        
+        if has_time and time_column:
+            print(f"   [SUCCESS] 時間數據: 可用 (使用 {time_column} 欄位)")
+        else:
+            print(f"   [WARNING] 時間數據: 不可用，將使用點索引")
+        
         # 處理位置記錄 - 取樣以避免過多數據
         total_points = len(car_data)
         sample_size = min(50, total_points)  # 最多取50個點
@@ -464,12 +496,26 @@ def extract_position_from_car_data(car_data, position_data):
             row = car_data.iloc[idx]
             distance = distances[idx] if idx < len(distances) else 0
             
-            # 僅包含距離、位置X、位置Y
+            # 提取時間數據（秒為單位）
+            time_seconds = 0.0
+            if has_time and time_column:
+                try:
+                    time_val = getattr(row, time_column, 0)
+                    # 處理 pandas Timedelta
+                    if hasattr(time_val, 'total_seconds'):
+                        time_seconds = float(time_val.total_seconds())
+                    else:
+                        time_seconds = float(time_val)
+                except:
+                    time_seconds = 0.0
+            
+            # 包含距離、位置X、位置Y、時間戳
             record = {
                 "point_index": i + 1,
                 "distance_m": float(distance),
                 "position_x": float(getattr(row, 'X', 0)),
-                "position_y": float(getattr(row, 'Y', 0))
+                "position_y": float(getattr(row, 'Y', 0)),
+                "time_seconds": time_seconds
             }
             position_data["position_records"].append(record)
         
@@ -496,25 +542,40 @@ def extract_position_from_car_data(car_data, position_data):
 
 
 def display_position_table(position_data):
-    """顯示位置數據表格 - 僅顯示距離、位置X、位置Y"""
+    """顯示位置數據表格 - 包含距離、位置X、位置Y、時間戳"""
     if not position_data["has_position_data"] or not position_data["position_records"]:
         print("\n[ERROR] 沒有FastF1位置數據可顯示")
         return
     
-    print(f"\n[INFO] FastF1賽道位置數據表格 (僅距離、X、Y座標):")
+    # 檢查是否有時間數據
+    has_time = any(record.get('time_seconds', 0) > 0 for record in position_data["position_records"])
+    
+    print(f"\n[INFO] FastF1賽道位置數據表格 ({'包含時間戳' if has_time else '僅座標資料'}):")
     
     table = PrettyTable()
-    table.field_names = ["點", "距離(m)", "位置X", "位置Y"]
+    if has_time:
+        table.field_names = ["點", "距離(m)", "位置X", "位置Y", "時間(s)"]
+    else:
+        table.field_names = ["點", "距離(m)", "位置X", "位置Y"]
     table.align = "c"
     table.float_format = ".1"
     
     for record in position_data["position_records"]:
-        table.add_row([
-            record["point_index"],
-            f"{record['distance_m']:.0f}",
-            f"{record['position_x']:.1f}",
-            f"{record['position_y']:.1f}"
-        ])
+        if has_time:
+            table.add_row([
+                record["point_index"],
+                f"{record['distance_m']:.0f}",
+                f"{record['position_x']:.1f}",
+                f"{record['position_y']:.1f}",
+                f"{record.get('time_seconds', 0.0):.3f}"
+            ])
+        else:
+            table.add_row([
+                record["point_index"],
+                f"{record['distance_m']:.0f}",
+                f"{record['position_x']:.1f}",
+                f"{record['position_y']:.1f}"
+            ])
     
     print(table)
 
@@ -546,7 +607,7 @@ def display_position_statistics(position_data):
 
 
 def save_position_raw_data(session_info, position_data):
-    """保存位置分析Raw Data"""
+    """保存位置分析Raw Data - 包含時間戳資訊"""
     
     # 清理不能序列化的數據類型
     def clean_for_json(obj):
@@ -565,6 +626,9 @@ def save_position_raw_data(session_info, position_data):
         else:
             return str(obj)
     
+    # 檢查是否有時間數據
+    has_time_data = any(record.get('time_seconds', 0) > 0 for record in position_data["position_records"])
+    
     raw_data = {
         "analysis_type": "track_position_analysis",
         "function": "2",
@@ -572,6 +636,8 @@ def save_position_raw_data(session_info, position_data):
         "session_info": clean_for_json(session_info),
         "position_analysis": {
             "has_position_data": bool(position_data["has_position_data"]),
+            "has_time_data": has_time_data,
+            "time_reference": "seconds_from_lap_start" if has_time_data else "none",
             "fastest_lap_info": clean_for_json(position_data["fastest_lap_info"]),
             "track_bounds": clean_for_json(position_data["track_bounds"]),
             "distance_covered_m": float(position_data["distance_covered"]),
@@ -596,6 +662,8 @@ def save_position_raw_data(session_info, position_data):
         with open(raw_data_file, "w", encoding="utf-8") as f:
             json.dump(raw_data, f, ensure_ascii=False, indent=2)
         print(f"\n[SAVE] Raw Data 已保存: {raw_data_file}")
+        if has_time_data:
+            print(f"[INFO] 時間戳資訊已包含於 JSON 檔案中")
     except Exception as e:
         print(f"\n[ERROR] Raw Data 保存失敗: {e}")
 

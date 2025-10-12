@@ -82,18 +82,21 @@ class TwoDriverTelemetryComparison:
         if self.cache_enabled:
             cached_result = self._check_cache(cache_key)
             if cached_result:
-                if show_detailed_output:
-                    print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
-                    self._display_detailed_telemetry_tables(cached_result)
+                if not self._cache_has_time_series(cached_result):
+                    print("📦 緩存缺少時間序列資料，將重新計算...")
                 else:
-                    print("📦 使用緩存數據")
-                
-                # 保存JSON結果（即使是緩存數據也要保存）
-                self._save_json_result(cached_result, driver1, driver2, display_lap1, display_lap2)
-                
-                # 結果驗證和反饋
-                self._report_analysis_results(cached_result, "雙車手遙測比較分析")
-                return cached_result
+                    if show_detailed_output:
+                        print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
+                        self._display_detailed_telemetry_tables(cached_result)
+                    else:
+                        print("📦 使用緩存數據")
+
+                    # 保存JSON結果（即使是緩存數據也要保存）
+                    self._save_json_result(cached_result, driver1, driver2, display_lap1, display_lap2)
+
+                    # 結果驗證和反饋
+                    self._report_analysis_results(cached_result, "雙車手遙測比較分析")
+                    return cached_result
         
         print("🔄 重新計算 - 開始遙測數據分析...")
         
@@ -255,7 +258,8 @@ class TwoDriverTelemetryComparison:
             'speed_difference': {},
             'distance_difference': {},
             'statistics': {},
-            'charts_generated': []
+            'charts_generated': [],
+            'disable_charts': True  # ✅ 禁用 PNG 圖表生成
         }
         
         # 分析各種遙測參數比較
@@ -275,17 +279,24 @@ class TwoDriverTelemetryComparison:
                 
                 if not param_data1.empty and not param_data2.empty:
                     # 插值到共同的距離基準
-                    common_distance, interp_data1, interp_data2 = self._interpolate_to_common_distance(
+                    common_distance, interp_data1, interp_data2, interp_time1, interp_time2 = self._interpolate_to_common_distance(
                         telemetry1, telemetry2, param
                     )
                     
                     if common_distance is not None:
-                        analysis_result['telemetry_comparison'][param] = {
+                        telemetry_entry = {
                             'name': param_name,
                             'driver1_data': interp_data1.tolist(),
                             'driver2_data': interp_data2.tolist(),
                             'distance': common_distance.tolist()
                         }
+
+                        if interp_time1 is not None and interp_time2 is not None:
+                            telemetry_entry['driver1_time_seconds'] = interp_time1.tolist()
+                            telemetry_entry['driver2_time_seconds'] = interp_time2.tolist()
+                            telemetry_entry['time_reference'] = 'seconds_from_lap_start'
+
+                        analysis_result['telemetry_comparison'][param] = telemetry_entry
                         
                         # 統計資訊
                         analysis_result['statistics'][param] = {
@@ -318,6 +329,16 @@ class TwoDriverTelemetryComparison:
             print("❌ 距離差分析返回 None 或空字典")
             analysis_result['distance_difference'] = {}
         
+        # 🆕 計算時間差分析
+        time_diff_analysis = self._calculate_time_difference(telemetry1, telemetry2, driver1, driver2)
+        print(f"🔍 時間差分析結果: {type(time_diff_analysis)}")
+        if time_diff_analysis:
+            print(f"🔍 時間差分析內容鍵: {list(time_diff_analysis.keys())}")
+            analysis_result['time_difference'] = time_diff_analysis
+        else:
+            print("❌ 時間差分析返回 None 或空字典")
+            analysis_result['time_difference'] = {}
+        
         # 生成比較圖表
         self._generate_comparison_charts(analysis_result, driver1, driver2, lap_number)
         
@@ -327,7 +348,7 @@ class TwoDriverTelemetryComparison:
         return analysis_result
     
     def _interpolate_to_common_distance(self, telemetry1, telemetry2, param):
-        """插值到共同的距離基準"""
+        """插值到共同的距離基準，回傳對齊的資料與時間"""
         try:
             # 檢查原始數據
             print(f"🔍 插值參數: {param}")
@@ -384,6 +405,31 @@ class TwoDriverTelemetryComparison:
             
             interp_data1 = np.interp(common_distance, telemetry1_sorted['Distance'], telemetry1_sorted[param])
             interp_data2 = np.interp(common_distance, telemetry2_sorted['Distance'], telemetry2_sorted[param])
+
+            # 追加時間插值 (相對圈起點的秒數)
+            interp_time1 = None
+            interp_time2 = None
+
+            if 'Time' in telemetry1_sorted.columns and 'Time' in telemetry2_sorted.columns:
+                time_series1 = telemetry1_sorted['Time']
+                time_series2 = telemetry2_sorted['Time']
+
+                if time_series1.notna().any() and time_series2.notna().any():
+                    time_series1_filled = time_series1.ffill().bfill()
+                    time_series2_filled = time_series2.ffill().bfill()
+
+                    if time_series1_filled.notna().all() and time_series2_filled.notna().all():
+                        time_seconds1 = (time_series1_filled - time_series1_filled.iloc[0]).dt.total_seconds()
+                        time_seconds2 = (time_series2_filled - time_series2_filled.iloc[0]).dt.total_seconds()
+
+                        interp_time1 = np.interp(common_distance, telemetry1_sorted['Distance'], time_seconds1)
+                        interp_time2 = np.interp(common_distance, telemetry2_sorted['Distance'], time_seconds2)
+                    else:
+                        print("   ⚠️ 時間資料仍包含缺失值，跳過時間插值")
+                else:
+                    print("   ⚠️ 時間資料全部為缺失值，跳過時間插值")
+            else:
+                print("   ⚠️ 遙測資料缺少 Time 欄位，跳過時間插值")
             
             print(f"   ✅ 插值完成，輸出範圍:")
             print(f"      車手1: {interp_data1.min():.2f} - {interp_data1.max():.2f}")
@@ -391,11 +437,11 @@ class TwoDriverTelemetryComparison:
             print(f"      車手1前5個值: {interp_data1[:5]}")
             print(f"      車手2前5個值: {interp_data2[:5]}")
             
-            return common_distance, interp_data1, interp_data2
+            return common_distance, interp_data1, interp_data2, interp_time1, interp_time2
             
         except Exception as e:
             print(f"⚠️ 插值計算失敗 ({param}): {e}")
-            return None, None, None
+            return None, None, None, None, None
     
     def _calculate_speed_difference(self, telemetry1, telemetry2, driver1, driver2):
         """計算速度差 vs 距離"""
@@ -428,7 +474,23 @@ class TwoDriverTelemetryComparison:
             # 計算速度差
             speed_diff = speed1_interp - speed2_interp  # driver1 - driver2
             
-            return {
+            # 🆕 插值時間數據（用於時間軸模式）
+            if 'Time' in telemetry1.columns and 'Time' in telemetry2.columns:
+                # 轉換時間為秒數（從圈開始計算）
+                time_seconds1 = (telemetry1['Time'] - telemetry1['Time'].iloc[0]).dt.total_seconds()
+                time_seconds2 = (telemetry2['Time'] - telemetry2['Time'].iloc[0]).dt.total_seconds()
+                
+                # 插值時間到共同距離
+                time1_interp = np.interp(common_distance, telemetry1['Distance'], time_seconds1)
+                time2_interp = np.interp(common_distance, telemetry2['Distance'], time_seconds2)
+                
+                print(f"✅ 速度差分析：已添加時間數據（{len(time1_interp)} 點）")
+            else:
+                time1_interp = None
+                time2_interp = None
+                print(f"⚠️ 速度差分析：時間數據不可用")
+            
+            result = {
                 'distance': common_distance.tolist(),
                 'speed_difference': speed_diff.tolist(),
                 'max_diff': float(np.max(speed_diff)),
@@ -436,31 +498,19 @@ class TwoDriverTelemetryComparison:
                 'mean_diff': float(np.mean(speed_diff)),
                 'reference': f"{driver1} - {driver2}"
             }
+            
+            # 添加時間數據（如果可用）
+            if time1_interp is not None and time2_interp is not None:
+                result['driver1_time_seconds'] = time1_interp.tolist()
+                result['driver2_time_seconds'] = time2_interp.tolist()
+                result['time_reference'] = 'seconds_from_lap_start'
+            
+            return result
             
         except Exception as e:
             print(f"⚠️ 速度差分析失敗: {e}")
-            return None
-            
-            common_distance, speed1, speed2 = self._interpolate_to_common_distance(
-                telemetry1, telemetry2, 'Speed'
-            )
-            
-            if common_distance is None:
-                return None
-            
-            speed_diff = speed1 - speed2  # driver1 - driver2
-            
-            return {
-                'distance': common_distance.tolist(),
-                'speed_difference': speed_diff.tolist(),
-                'max_diff': float(np.max(speed_diff)),
-                'min_diff': float(np.min(speed_diff)),
-                'mean_diff': float(np.mean(speed_diff)),
-                'reference': f"{driver1} - {driver2}"
-            }
-            
-        except Exception as e:
-            print(f"⚠️ 速度差計算失敗: {e}")
+            import traceback
+            traceback.print_exc()
             return None
     
     def _interpolate_position_to_common_distance(self, telemetry1, telemetry2, distance_column='Distance'):
@@ -536,11 +586,27 @@ class TwoDriverTelemetryComparison:
                 print("❌ 距離插值失敗")
                 return None
             
+            # 🆕 插值時間數據（用於時間軸模式）
+            try:
+                # 轉換時間為秒數（從圈開始計算）
+                time_seconds1 = (telemetry1['Time'] - telemetry1['Time'].iloc[0]).dt.total_seconds()
+                time_seconds2 = (telemetry2['Time'] - telemetry2['Time'].iloc[0]).dt.total_seconds()
+                
+                # 插值時間到共同距離
+                time1_interp = np.interp(common_distance, telemetry1['Distance'], time_seconds1)
+                time2_interp = np.interp(common_distance, telemetry2['Distance'], time_seconds2)
+                
+                print(f"✅ 距離差分析：已添加時間數據（{len(time1_interp)} 點）")
+            except Exception as time_error:
+                time1_interp = None
+                time2_interp = None
+                print(f"⚠️ 距離差分析：時間數據處理失敗 - {time_error}")
+            
             print(f"✅ 距離差計算完成，數據點數: {len(cumulative_distance_diff)}")
             print(f"📊 位置距離差統計: 最大={np.max(position_diff):.2f}m, 最小={np.min(position_diff):.2f}m, 平均={np.mean(position_diff):.2f}m")
             print(f"📊 累積距離差統計: 最大={np.max(cumulative_distance_diff):.2f}m, 最小={np.min(cumulative_distance_diff):.2f}m, 平均={np.mean(cumulative_distance_diff):.2f}m")
             
-            return {
+            result = {
                 'reference_distance': common_distance.tolist(),
                 'position_difference': position_diff.tolist(),
                 'cumulative_distance_difference': cumulative_distance_diff.tolist(),
@@ -557,8 +623,113 @@ class TwoDriverTelemetryComparison:
                 'reference': f"{driver1} - {driver2}"
             }
             
+            # 🆕 添加時間數據（如果可用）
+            if time1_interp is not None and time2_interp is not None:
+                result['driver1_time_seconds'] = time1_interp.tolist()
+                result['driver2_time_seconds'] = time2_interp.tolist()
+                result['time_reference'] = 'seconds_from_lap_start'
+                print(f"✅ 距離差分析：時間數據已添加到輸出")
+            
+            return result
+            
         except Exception as e:
             print(f"⚠️ 賽道距離差計算失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _calculate_time_difference(self, telemetry1, telemetry2, driver1, driver2):
+        """計算時間差 vs 時間"""
+        try:
+            print("🔍 開始計算時間差分析...")
+            
+            # 檢查必要的數據欄位
+            required_cols = ['Time', 'Distance']
+            for col in required_cols:
+                if col not in telemetry1.columns or col not in telemetry2.columns:
+                    print(f"❌ 遙測數據中缺少必要欄位: {col}")
+                    return None
+            
+            # 轉換時間為秒數（從圈開始計算）
+            time_seconds1 = (telemetry1['Time'] - telemetry1['Time'].iloc[0]).dt.total_seconds()
+            time_seconds2 = (telemetry2['Time'] - telemetry2['Time'].iloc[0]).dt.total_seconds()
+            
+            print(f"📊 {driver1} 時間範圍: {time_seconds1.min():.2f}s 到 {time_seconds1.max():.2f}s")
+            print(f"📊 {driver2} 時間範圍: {time_seconds2.min():.2f}s 到 {time_seconds2.max():.2f}s")
+            
+            # 找出共同的時間範圍
+            time1_min, time1_max = time_seconds1.min(), time_seconds1.max()
+            time2_min, time2_max = time_seconds2.min(), time_seconds2.max()
+            
+            common_time_min = max(time1_min, time2_min)
+            common_time_max = min(time1_max, time2_max)
+            
+            if common_time_min >= common_time_max:
+                print(f"❌ 沒有共同的時間範圍: [{common_time_min:.2f}s, {common_time_max:.2f}s]")
+                return None
+            
+            # 創建共同的時間數組（500個採樣點）
+            common_time = np.linspace(common_time_min, common_time_max, 500)
+            
+            # 插值距離數據到共同時間
+            distance1_interp = np.interp(common_time, time_seconds1, telemetry1['Distance'])
+            distance2_interp = np.interp(common_time, time_seconds2, telemetry2['Distance'])
+            
+            # 計算時間差（driver1 - driver2）
+            # 在相同的時間點，計算兩車手的距離差
+            # 正值表示 driver1 領先，負值表示 driver2 領先
+            distance_gap = distance1_interp - distance2_interp
+            
+            # 計算累積時間差（基於距離和速度）
+            # 使用距離差和平均速度估算時間差
+            if 'Speed' in telemetry1.columns and 'Speed' in telemetry2.columns:
+                # 插值速度到共同時間
+                speed1_interp = np.interp(common_time, time_seconds1, telemetry1['Speed'])
+                speed2_interp = np.interp(common_time, time_seconds2, telemetry2['Speed'])
+                
+                # 將速度從 km/h 轉換為 m/s
+                speed1_ms = speed1_interp / 3.6
+                speed2_ms = speed2_interp / 3.6
+                
+                # 計算時間差（秒）：距離差 / 平均速度
+                # 使用 driver1 的速度來估算如果 driver2 要追上/保持距離差需要多少時間
+                avg_speed_ms = (speed1_ms + speed2_ms) / 2
+                avg_speed_ms = np.where(avg_speed_ms > 0.1, avg_speed_ms, 0.1)  # 避免除以零
+                
+                cumulative_time_diff = distance_gap / avg_speed_ms
+            else:
+                # 如果沒有速度數據，時間差設為距離差（作為後備）
+                cumulative_time_diff = distance_gap
+                print("⚠️ 速度數據不可用，使用距離差作為時間差估算")
+            
+            print(f"✅ 時間差計算完成，數據點數: {len(common_time)}")
+            print(f"📊 距離差統計: 最大={np.max(distance_gap):.2f}m, 最小={np.min(distance_gap):.2f}m, 平均={np.mean(distance_gap):.2f}m")
+            print(f"📊 時間差統計: 最大={np.max(cumulative_time_diff):.2f}s, 最小={np.min(cumulative_time_diff):.2f}s, 平均={np.mean(cumulative_time_diff):.2f}s")
+            
+            result = {
+                'reference_time': common_time.tolist(),
+                'distance_gap': distance_gap.tolist(),
+                'cumulative_time_difference': cumulative_time_diff.tolist(),
+                'driver1_distance_at_time': distance1_interp.tolist(),
+                'driver2_distance_at_time': distance2_interp.tolist(),
+                'distance_gap_stats': {
+                    'max_gap': float(np.max(distance_gap)),
+                    'min_gap': float(np.min(distance_gap)),
+                    'mean_gap': float(np.mean(distance_gap))
+                },
+                'time_diff_stats': {
+                    'max_diff': float(np.max(cumulative_time_diff)),
+                    'min_diff': float(np.min(cumulative_time_diff)),
+                    'mean_diff': float(np.mean(cumulative_time_diff))
+                },
+                'reference': f"{driver1} - {driver2}",
+                'time_reference': 'seconds_from_lap_start'
+            }
+            
+            return result
+            
+        except Exception as e:
+            print(f"⚠️ 時間差計算失敗: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -844,6 +1015,20 @@ class TwoDriverTelemetryComparison:
                 print(f"⚠️ 緩存讀取失敗: {e}")
         return None
     
+    def _cache_has_time_series(self, cached_result):
+        """檢查緩存資料是否包含時間序列 (確保支援 speed vs time)"""
+        try:
+            telemetry_section = cached_result.get('telemetry_comparison', {})
+            speed_entry = telemetry_section.get('Speed', {})
+            return (
+                isinstance(speed_entry, dict)
+                and 'driver1_time_seconds' in speed_entry
+                and 'driver2_time_seconds' in speed_entry
+            )
+        except Exception as exc:
+            print(f"⚠️ 緩存結構檢查失敗: {exc}")
+            return False
+
     def _save_cache(self, data, cache_key):
         """保存緩存"""
         try:

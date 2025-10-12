@@ -200,16 +200,30 @@ class LapAnalysisLinkageDrawingMixin:
         if not hasattr(self, 'linkage_distance_value') or not self.linkage_distance_value:
             return
             
-        # 獲取視圖範圍
-        current_min_distance = getattr(self, 'view_min_distance', None) or getattr(self, 'min_distance', 0)
-        current_max_distance = getattr(self, 'view_max_distance', None) or getattr(self, 'max_distance', 6000)
-        distance_range = current_max_distance - current_min_distance
+        # 獲取當前的視圖範圍
+        # 注意：在時間軸模式下，這些"distance"屬性實際存儲的是時間範圍
+        # Speed/Distance Diff 使用 min_speed/max_speed
+        # 其他模組使用 min_distance/max_distance
+        current_min = (
+            getattr(self, 'view_min_distance', None) or 
+            getattr(self, 'view_min_speed', None) or 
+            getattr(self, 'min_distance', None) or 
+            getattr(self, 'min_speed', 0)
+        )
+        current_max = (
+            getattr(self, 'view_max_distance', None) or 
+            getattr(self, 'view_max_speed', None) or 
+            getattr(self, 'max_distance', None) or 
+            getattr(self, 'max_speed', 6000)
+        )
+        value_range = current_max - current_min
         
-        if distance_range <= 0:
+        if value_range <= 0:
             return
             
-        # 計算X座標
-        relative_pos = (self.linkage_distance_value - current_min_distance) / distance_range
+        # 計算 X 座標
+        # linkage_distance_value 在時間軸模式下實際上是時間值，在距離模式下是距離值
+        relative_pos = (self.linkage_distance_value - current_min) / value_range
         x_pos = chart_rect.left() + int(relative_pos * chart_rect.width())
         
         # 檢查是否在圖表範圍內
@@ -250,15 +264,36 @@ class LapAnalysisLinkageDrawingMixin:
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawRect(label_x, label_y, label_width, label_height)
         
-        # 繪製距離資訊
+        # 繪製距離或時間資訊（根據時間軸模式）
         painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Arial", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
+        
+        # 檢查是否使用時間軸模式
+        use_time_axis = getattr(self, 'use_time_axis', False)
+        
+        if use_time_axis:
+            # 在時間軸模式下，linkage_distance_value 實際上已經是時間值（秒）
+            painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_time', '連動時間')}: {self.linkage_distance_value:.2f} s")
+        else:
+            # 在距離模式下，linkage_distance_value 是距離值（米）
+            painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的數據資訊
-        if distance_data and driver1_data:
+        # 在時間軸模式下，使用 linkage_distance_value（時間值）在 driver1_time 中搜索
+        # 在距離模式下，使用 linkage_distance_value（距離值）在 distance_data 中搜索
+        use_time_axis = getattr(self, 'use_time_axis', False)
+        driver1_time = getattr(self, 'driver1_time', None)
+        
+        if use_time_axis and driver1_time:
+            # 時間軸模式：在時間數組中搜索
+            search_data = driver1_time
+        else:
+            # 距離模式：在距離數組中搜索
+            search_data = distance_data
+            
+        if search_data and driver1_data:
             # 找到最接近的數據點
-            closest_idx = self._find_closest_data_index(distance_data, self.linkage_distance_value)
+            closest_idx = self._find_closest_data_index(search_data, self.linkage_distance_value)
             
             if closest_idx is not None:
                 text_y = label_y + 30

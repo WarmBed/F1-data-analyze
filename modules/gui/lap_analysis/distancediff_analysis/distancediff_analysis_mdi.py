@@ -544,7 +544,8 @@ class distancediffAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str,
                               driver1: str, driver2: Optional[str] = None,
                               lap1: int = 1, lap2: Optional[int] = None,
-                              is_fastest: bool = False) -> bool:
+                              is_fastest: bool = False,
+                              use_time_axis: bool = False) -> bool:
         """更新圈速參數並刷新距離差資料"""
         try:
             print("[distancediff_MDI] ========== 圈速參數更新 ==========")
@@ -552,6 +553,7 @@ class distancediffAnalysisModule(IAnalysisModule):
             print(f"[distancediff_MDI] 車手: {driver1} vs {driver2}")
             print(f"[distancediff_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[distancediff_MDI] 最速圈: {is_fastest}")
+            print(f"[distancediff_MDI] 🕒 時間軸模式: {use_time_axis}")
 
             if is_fastest and hasattr(self, '_ensure_telemetry_data_for_fastest_laps'):
                 fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
@@ -589,6 +591,11 @@ class distancediffAnalysisModule(IAnalysisModule):
 
             if hasattr(self.distancediff_chart_widget, 'set_lap_numbers'):
                 self.distancediff_chart_widget.set_lap_numbers(self.lap1, self.lap2)
+                
+                # 🆕 設置時間軸模式
+                if hasattr(self.distancediff_chart_widget, 'set_time_axis_mode'):
+                    self.distancediff_chart_widget.set_time_axis_mode(use_time_axis)
+                    print(f"[distancediff_MDI] ✅ 已設置時間軸模式: {use_time_axis}")
 
             self.update_window_title()
 
@@ -645,7 +652,8 @@ class distancediffAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str, 
                             driver1: str, driver2: str = None, 
                             lap1: int = 1, lap2: int = 1, 
-                            is_fastest: bool = False) -> bool:
+                            is_fastest: bool = False,
+                            use_time_axis: bool = False) -> bool:
         """更新圈速分析參數（包含車手和圈數）- 與速度模組一致的接口"""
         try:
             print(f"[distancediff_MDI] ========== 圈速參數更新 ==========")
@@ -653,6 +661,7 @@ class distancediffAnalysisModule(IAnalysisModule):
             print(f"[distancediff_MDI] 車手: {driver1} vs {driver2}")
             print(f"[distancediff_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[distancediff_MDI] 最速圈: {is_fastest}")
+            print(f"[distancediff_MDI] 🕒 時間軸模式: {use_time_axis}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
@@ -669,7 +678,7 @@ class distancediffAnalysisModule(IAnalysisModule):
                 else:
                     print(f"[distancediff_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
             
-            # 檢查參數是否有變化
+            # 檢查參數是否有變化（包含時間軸模式）
             params_changed = (
                 self.current_year != str(year) or 
                 self.current_race != race or 
@@ -677,10 +686,13 @@ class distancediffAnalysisModule(IAnalysisModule):
                 self.driver1 != driver1 or
                 self.driver2 != driver2 or  # 正確處理 None 值比較
                 self.lap1 != lap1 or
-                self.lap2 != lap2
+                self.lap2 != lap2 or
+                getattr(self, 'use_time_axis', False) != use_time_axis  # 🆕 檢測時間軸模式變化
             )
             
             print(f"[distancediff_MDI] 參數是否變化: {params_changed}")
+            if getattr(self, 'use_time_axis', False) != use_time_axis:
+                print(f"[distancediff_MDI] 🕒 時間軸模式變化: {getattr(self, 'use_time_axis', False)} → {use_time_axis}")
             
             # 更新所有參數 - 保持 driver2 的原始值（包括 None）
             self.current_year = str(year)
@@ -690,11 +702,17 @@ class distancediffAnalysisModule(IAnalysisModule):
             self.driver2 = driver2  # 保持原始值，支援單場賽事車手分析
             self.lap1 = lap1
             self.lap2 = lap2
+            self.use_time_axis = use_time_axis  # 🆕 保存時間軸模式狀態
             
             # 更新圖表組件的圈數顯示
             if self.distancediff_chart_widget:
                 self.distancediff_chart_widget.set_lap_numbers(lap1, lap2)
                 print(f"[distancediff_MDI] ✅ 已更新圖表組件的圈數顯示")
+                
+                # 🆕 設置時間軸模式
+                if hasattr(self.distancediff_chart_widget, 'set_time_axis_mode'):
+                    self.distancediff_chart_widget.set_time_axis_mode(use_time_axis)
+                    print(f"[distancediff_MDI] ✅ 已設置時間軸模式: {use_time_axis}")
             
             if params_changed:
                 print(f"[distancediff_MDI] 🔄 參數已變化，開始重載數據...")
@@ -899,6 +917,15 @@ class distancediffAnalysisModule(IAnalysisModule):
                 
         except Exception as e:
             print(f"[WARNING] [distancediff_MDI] 清理模組時發生警告: {e}")
+    
+    def reset_chart_view(self):
+        """重置圖表視圖 - 與 Show All Data 按鈕整合"""
+        print(f"[DISTANCEDIFF_MDI] 🔄 reset_chart_view() 被調用")
+        if hasattr(self, 'distancediff_chart_widget') and self.distancediff_chart_widget:
+            print(f"[DISTANCEDIFF_MDI] ✅ 找到 distancediff_chart_widget，調用 reset_chart_view()")
+            self.distancediff_chart_widget.reset_chart_view()
+        else:
+            print(f"[DISTANCEDIFF_MDI] ❌ 未找到 distancediff_chart_widget 屬性")
     
     def cleanup(self):
         """清理資源 - 實現抽象方法"""

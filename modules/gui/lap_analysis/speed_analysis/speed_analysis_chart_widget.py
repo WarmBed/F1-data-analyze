@@ -46,6 +46,14 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         # 初始化連動混入類
         self.__init_linkage__()
         
+        # 設置更新回調（讓 Mixin 的連動方法能觸發 UI 更新）
+        self.update_callback = self.update
+        
+        # 時間軸模式
+        self.use_time_axis = False  # 預設使用距離軸
+        self.driver1_time = []  # 車手1時間數據
+        self.driver2_time = []  # 車手2時間數據
+        
         # 數據
         self.distance_data = []
         self.driver1_speed = []
@@ -81,17 +89,16 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         
         # 固定線條和數值顯示
         self.fixed_line_x = -1  # 固定垂直線的X位置（螢幕像素）
-        self.fixed_distance_value = None  # 固定線對應的實際距離值
-        self.show_fixed_line = False  # 是否顯示固定線
+        # fixed_distance_value 和 show_fixed_line 已由 __init_linkage__() 初始化
         
-        # 初始化連動混入類屬性
-        self.linkage_enabled = True  # 模組本地連動開關
-        self.master_linkage_enabled = True  # 主視窗總開關狀態
-        self.is_sending_linkage = False  # 避免循環信號發送
-        self.linkage_distance_value = None  # 連動接收的距離值
-        self.linkage_y_relative = 0.5  # 連動接收的Y軸相對位置 (0.0-1.0)
-        self.show_linkage_line = False  # 是否顯示連動線
-        self.update_callback = None  # 連動回調函數
+        # ❌ 移除重複屬性定義（已由 __init_linkage__() 設置）
+        # self.linkage_enabled = True
+        # self.master_linkage_enabled = True
+        # self.is_sending_linkage = False
+        # self.linkage_distance_value = None
+        # self.linkage_y_relative = 0.5
+        # self.show_linkage_line = False
+        # self.update_callback = None
         
         # 註冊到連動管理器
         if linkage_manager:
@@ -122,7 +129,8 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
     def set_speed_data(self, distance: List[float], driver1_speed: List[float], 
                       driver2_speed: List[float], driver1_name: str = "Driver 1", 
                       driver2_name: str = "Driver 2", sectors: List[Dict] = None,
-                      lap1: int = None, lap2: int = None):
+                      lap1: int = None, lap2: int = None,
+                      driver1_time: List[float] = None, driver2_time: List[float] = None):
         """
         設置速度數據
         
@@ -135,6 +143,8 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             sectors: 賽道分段信息
             lap1: 車手1圈數（用於雙圈比較模式）
             lap2: 車手2圈數（用於雙圈比較模式）
+            driver1_time: 車手1時間數據（秒）
+            driver2_time: 車手2時間數據（秒）
         """
         print(f"[SPEED_CHART] ========== set_speed_data 被調用 ==========")
         print(f"[SPEED_CHART] 📏 distance 點數: {len(distance) if distance else 0}")
@@ -157,6 +167,8 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.distance_data = distance
         self.driver1_speed = driver1_speed
         self.driver2_speed = driver2_speed
+        self.driver1_time = driver1_time or []  # 時間數據
+        self.driver2_time = driver2_time or []  # 時間數據
         self.sectors = sectors or []
         
         # 🆕 雙圈比較模式：判斷是否為同車手不同圈數比較
@@ -197,8 +209,24 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             
         print(f"[SPEED_CHART] 🔍 單車手模式: {self.is_single_driver}")
         
-        # 計算數據範圍
-        if distance:
+        # 計算 X 軸數據範圍（根據時間軸模式選擇）
+        print(f"🕒 [TIME_AXIS_DEBUG] set_speed_data 計算 X 軸範圍")
+        print(f"🕒 [TIME_AXIS_DEBUG]   當前 use_time_axis: {self.use_time_axis}")
+        
+        if self.use_time_axis and (driver1_time or driver2_time):
+            # 時間軸模式：使用時間數據計算範圍
+            all_time_values = []
+            if driver1_time:
+                all_time_values.extend(driver1_time)
+            if driver2_time:
+                all_time_values.extend(driver2_time)
+            
+            if all_time_values:
+                self.min_distance = min(all_time_values)
+                self.max_distance = max(all_time_values)
+                print(f"🕒 [TIME_AXIS_DEBUG]   使用時間數據計算範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif distance:
+            # 距離軸模式：使用距離數據計算範圍
             self.min_distance = min(distance)
             self.max_distance = max(distance)
             print(f"[SPEED_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
@@ -218,6 +246,51 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         print(f"[SPEED_CHART] 🖌️ 調用 repaint()...")
         self.repaint()
         print(f"[SPEED_CHART] ✅ set_speed_data 完成")
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式
+        
+        Parameters:
+            use_time_axis: True = 使用時間軸, False = 使用距離軸
+        """
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 6: SpeedChartWidget.set_time_axis_mode 被調用")
+        print(f"🕒 [TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
+        print(f"[SPEED_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
+        self.use_time_axis = use_time_axis
+        print(f"🕒 [TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
+        
+        # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
+        if use_time_axis and self.driver1_time:
+            # 使用時間數據計算範圍
+            all_time_values = list(self.driver1_time)
+            if self.driver2_time:
+                all_time_values.extend(self.driver2_time)
+            
+            self.min_distance = min(all_time_values)
+            self.max_distance = max(all_time_values)
+            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif self.distance_data:
+            # 使用距離數據計算範圍
+            self.min_distance = min(self.distance_data)
+            self.max_distance = max(self.distance_data)
+            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+        
+        # 重置視圖狀態
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_speed = None
+        self.view_max_speed = None
+        self.show_fixed_line = False
+        self.fixed_line_x = -1
+        self.fixed_distance_value = None
+        
+        # 強制重繪
+        print(f"[SPEED_CHART] 🖌️ 時間軸模式切換，調用 repaint()...")
+        print(f"🕒 [TIME_AXIS_DEBUG]   調用 self.repaint() 強制重繪")
+        self.repaint()
+        print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 完成")
         
     def reset_view(self):
         """重置視圖到原始範圍"""
@@ -326,14 +399,23 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         painter.setFont(font)
         painter.setPen(QPen(self.axis_color, 1))
         
-        # X軸標籤 (距離)
+        # X軸標籤 (距離或時間)
         distance_range = self.max_distance - self.min_distance
         if distance_range > 0:
             for i in range(0, 11, 2):  # 只顯示偶數刻度
                 distance_value = self.min_distance + i * distance_range / 10
                 x = chart_rect.left() + i * chart_rect.width() / 10
+                
+                # 根據時間軸模式選擇格式
+                if self.use_time_axis:
+                    # 時間軸：顯示浮點數（例如 85.4）
+                    label_text = f"{distance_value:.1f}"
+                else:
+                    # 距離軸：顯示整數（例如 4500）
+                    label_text = f"{int(distance_value)}"
+                
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
-                               Qt.AlignCenter, f"{int(distance_value)}")
+                               Qt.AlignCenter, label_text)
         
         # Y軸標籤 (速度)
         speed_range = self.max_speed - self.min_speed
@@ -348,11 +430,22 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         title_font = QFont("Microsoft YaHei", 7)
         painter.setFont(title_font)
         
-        # X軸標題 - 置中顯示在圖表下方
+        # X軸標題 - 根據時間軸模式顯示不同標題
         x_title_width = 100
         x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
         x_title_y = chart_rect.bottom() + 5
-        painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
+        
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題")
+        print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
+        
+        if self.use_time_axis:
+            x_axis_title = tr('time_s', '時間 (s)')
+            print(f"🕒 [TIME_AXIS_DEBUG]   繪製時間軸標題: {x_axis_title}")
+            painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_axis_title)
+        else:
+            x_axis_title = tr('distance_m', '距離 (m)')
+            print(f"🕒 [TIME_AXIS_DEBUG]   繪製距離軸標題: {x_axis_title}")
+            painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_axis_title)
         
         # Y軸標題
         painter.save()
@@ -395,7 +488,21 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                     painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
     def _draw_speed_curves(self, painter: QPainter, chart_rect: QRect):
         """繪製速度曲線"""
-        if not self.distance_data:
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源")
+        print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   driver1_time 長度: {len(self.driver1_time) if self.driver1_time else 0}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   driver2_time 長度: {len(self.driver2_time) if self.driver2_time else 0}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   distance_data 長度: {len(self.distance_data) if self.distance_data else 0}")
+        
+        # 根據時間軸模式選擇X軸數據源
+        if self.use_time_axis and self.driver1_time and self.driver2_time:
+            x_data_source = self.driver1_time  # 使用時間數據
+            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ 使用時間數據作為 X 軸 (driver1_time)")
+        else:
+            x_data_source = self.distance_data  # 使用距離數據
+            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)")
+            
+        if not x_data_source:
             return
         
         # 設置裁剪區域，防止曲線繪製到圖表邊界之外
@@ -414,13 +521,13 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             return
         
         # 繪製車手1速度曲線
-        if self.driver1_speed and len(self.driver1_speed) == len(self.distance_data):
+        if self.driver1_speed and len(self.driver1_speed) == len(x_data_source):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
-            for i, (distance, speed) in enumerate(zip(self.distance_data, self.driver1_speed)):
+            for i, (x_value, speed) in enumerate(zip(x_data_source, self.driver1_speed)):
                 # 只繪製在當前視圖範圍內的點
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (speed - current_min_speed) / speed_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -429,13 +536,20 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                 painter.drawLine(points[i], points[i + 1])
         
         # 繪製車手2速度曲線
-        if self.driver2_speed and len(self.driver2_speed) == len(self.distance_data):
+        if self.use_time_axis and self.driver2_time:
+            # 時間軸模式：使用 driver2_time
+            x_data_source_2 = self.driver2_time
+        else:
+            # 距離軸模式：使用 distance_data
+            x_data_source_2 = x_data_source
+            
+        if self.driver2_speed and len(self.driver2_speed) == len(x_data_source_2):
             painter.setPen(QPen(self.driver2_color, 2))
             points = []
-            for i, (distance, speed) in enumerate(zip(self.distance_data, self.driver2_speed)):
+            for i, (x_value, speed) in enumerate(zip(x_data_source_2, self.driver2_speed)):
                 # 只繪製在當前視圖範圍內的點
-                if current_min_distance <= distance <= current_max_distance:
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+                if current_min_distance <= x_value <= current_max_distance:
+                    x = chart_rect.left() + (x_value - current_min_distance) / distance_range * chart_rect.width()
                     y = chart_rect.bottom() - (speed - current_min_speed) / speed_range * chart_rect.height()
                     points.append(QPoint(int(x), int(y)))
             
@@ -483,23 +597,29 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         distance_range = current_max_distance - current_min_distance
         
         if distance_range > 0 and self.distance_data:
-            # 計算距離值
+            # 計算 X 軸值（距離或時間）
             relative_x = x_pos - chart_rect.left()
-            distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
+            x_axis_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
             
             # 找到最接近的數據點來獲取真實的曲線速度值
             driver1_speed_at_position = None
             driver2_speed_at_position = None
             
-            # 在距離數據中找到最接近的點
-            if self.distance_data and len(self.distance_data) > 0:
+            # 根據時間軸模式選擇搜索數據源
+            if self.use_time_axis and self.driver1_time:
+                search_data = self.driver1_time
+            else:
+                search_data = self.distance_data
+            
+            # 在數據中找到最接近的點
+            if search_data and len(search_data) > 0:
                 closest_index = 0
-                min_distance_diff = abs(self.distance_data[0] - distance_value)
+                min_distance_diff = abs(search_data[0] - x_axis_value)
                 
-                for i, dist in enumerate(self.distance_data):
-                    distance_diff = abs(dist - distance_value)
-                    if distance_diff < min_distance_diff:
-                        min_distance_diff = distance_diff
+                for i, value in enumerate(search_data):
+                    value_diff = abs(value - x_axis_value)
+                    if value_diff < min_distance_diff:
+                        min_distance_diff = value_diff
                         closest_index = i
                 
                 # 獲取對應的速度值
@@ -550,7 +670,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
+            
+            # 根據時間軸模式顯示不同的標籤
+            if self.use_time_axis:
+                painter.drawText(label_x + 5, text_y, f"{tr('time_label', '時間')}: {x_axis_value:.2f} s")
+            else:
+                painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {x_axis_value:.0f} m")
             
             # 顯示車手速度資訊
             for i, (driver_name, speed, color) in enumerate(drivers_to_show):
@@ -603,18 +728,28 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawRect(label_x, label_y, label_width, label_height)
         
-        # 繪製距離資訊
+        # 繪製距離或時間資訊（根據時間軸模式）
         painter.setPen(QPen(QColor(50, 50, 50), 1))
         painter.setFont(QFont("Microsoft YaHei", 9))
-        painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
+        
+        if self.use_time_axis:
+            painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_time', '連動時間')}: {self.linkage_distance_value:.2f} s")
+        else:
+            painter.drawText(label_x + 5, label_y + 15, f"{tr('linkage_distance', '連動距離')}: {self.linkage_distance_value:.0f} m")
         
         # 顯示當前位置的速度資訊
-        if self.distance_data and self.driver1_speed:
+        # 根據時間軸模式選擇搜索數據源
+        if self.use_time_axis and self.driver1_time:
+            search_data = self.driver1_time
+        else:
+            search_data = self.distance_data
+            
+        if search_data and self.driver1_speed:
             # 找到最接近的數據點
             closest_idx = None
             min_diff = float('inf')
-            for i, dist in enumerate(self.distance_data):
-                diff = abs(dist - self.linkage_distance_value)
+            for i, value in enumerate(search_data):
+                diff = abs(value - self.linkage_distance_value)
                 if diff < min_diff:
                     min_diff = diff
                     closest_idx = i
@@ -845,65 +980,16 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             linkage_manager.send_x_linkage_clear(self)
         self.update()
     
-    def on_x_linkage_received(self, distance_value: float, y_relative: float):
-        """接收來自其他圖表的X軸連動信號"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 根據距離值設置連動線 (使用滑鼠追蹤樣式)
-        self.linkage_distance_value = distance_value
-        self.linkage_y_relative = y_relative
-        self.show_linkage_line = True
-        self.update()
-    
-    def on_x_linkage_clear(self):
-        """接收X軸連動清除信號"""
-        if not self.linkage_enabled or not self.master_linkage_enabled or self.is_sending_linkage:
-            return
-        
-        # 清除連動線
-        self.show_linkage_line = False
-        self.linkage_distance_value = None
-        self.linkage_y_relative = 0.5
-        self.update()
-    
-    def set_linkage_enabled(self, enabled: bool):
-        """設置是否啟用X軸連動功能 (模組本地開關)"""
-        self.linkage_enabled = enabled
-        
-    def set_master_linkage_enabled(self, enabled: bool):
-        """設置主視窗連動總開關狀態"""
-        self.master_linkage_enabled = enabled
-        
-    def on_master_linkage_changed(self, enabled: bool):
-        """響應主視窗連動總開關變更"""
-        self.set_master_linkage_enabled(enabled)
-        if not enabled:
-            # 當總開關關閉時，清除所有連動線
-            self.show_linkage_line = False
-            self.linkage_distance_value = None
-            self.linkage_y_relative = 0.5
-            self.update()
-    
-    def on_click_linkage_received(self, distance_value: float):
-        """接收來自其他圖表的點擊連動信號 (設置固定線)"""
-        if not self.linkage_enabled:
-            return
-        
-        # 設置固定線 (紅色背景樣式)
-        self.fixed_distance_value = distance_value
-        self.show_fixed_line = True
-        self.update()
-    
-    def on_click_linkage_clear(self):
-        """接收點擊連動清除信號"""
-        if not self.linkage_enabled:
-            return
-        
-        # 清除固定線
-        self.show_fixed_line = False
-        self.fixed_distance_value = None
-        self.update()
+    # ✅ 移除覆蓋的連動方法，改用 Mixin 的標準實現
+    # 以下方法已由 LapAnalysisLinkageMixin 提供：
+    # - on_x_linkage_received(distance_value, y_relative)
+    # - on_x_linkage_clear()
+    # - set_linkage_enabled(enabled)
+    # - set_master_linkage_enabled(enabled)
+    # - on_master_linkage_changed(enabled)
+    # - on_click_linkage_received(distance_value)
+    # - on_click_linkage_clear()
+    # 這些方法使用 update_callback 機制，確保連動信號正確觸發 UI 更新
 
 
 class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
@@ -943,16 +1029,17 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.chart_container = self._create_chart_container()
         main_splitter.addWidget(self.chart_container)
         
-        # 統計信息區域
+        # 統計信息區域（已隱藏）
         self.stats_container = self._create_stats_container()
+        self.stats_container.setVisible(False)  # 🔒 永久隱藏統計面板
         main_splitter.addWidget(self.stats_container)
         
         # 設置分割器比例
         main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
         main_splitter.setStretchFactor(1, 0)  # 統計區域固定大小
         
-        # 設置初始分割比例，讓圖表佔據大部分空間
-        main_splitter.setSizes([800, 50])  # 圖表:統計 = 800:50
+        # 設置初始分割比例，讓圖表佔據全部空間（統計面板已隱藏）
+        main_splitter.setSizes([1000, 0])  # 圖表:統計 = 1000:0（統計面板隱藏）
         
     def _create_chart_container(self) -> QWidget:
         """創建圖表容器"""
@@ -1329,9 +1416,21 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             driver1_name = speed_data.get('driver1_name', 'Driver 1')
             driver2_name = speed_data.get('driver2_name', 'Driver 2')
             
+            # 提取時間數據（用於時間軸模式）
+            driver1_time = speed_data.get('driver1_time_seconds', [])
+            driver2_time = speed_data.get('driver2_time_seconds', [])
+            
+            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 9: update_speed_data 提取時間數據")
+            print(f"🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver1_time_seconds: {'driver1_time_seconds' in speed_data}")
+            print(f"🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver2_time_seconds: {'driver2_time_seconds' in speed_data}")
+            
             print(f"[SPEED_CHART_WIDGET] 📏 distance 點數: {len(distance)}")
             print(f"[SPEED_CHART_WIDGET] 🏎️ driver1_speed 點數: {len(driver1_speed)}")
             print(f"[SPEED_CHART_WIDGET] 🏎️ driver2_speed 點數: {len(driver2_speed)}")
+            print(f"[SPEED_CHART_WIDGET] 🕒 driver1_time 點數: {len(driver1_time)}")
+            print(f"[SPEED_CHART_WIDGET] 🕒 driver2_time 點數: {len(driver2_time)}")
+            print(f"🕒 [TIME_AXIS_DEBUG]   driver1_time 點數: {len(driver1_time)}")
+            print(f"🕒 [TIME_AXIS_DEBUG]   driver2_time 點數: {len(driver2_time)}")
             print(f"[SPEED_CHART_WIDGET] 👤 driver1_name: {driver1_name}")
             print(f"[SPEED_CHART_WIDGET] 👤 driver2_name: {driver2_name}")
             
@@ -1400,7 +1499,9 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_name=driver2_name,
                 sectors=sectors,
                 lap1=lap1,  # 🆕 傳遞圈數信息
-                lap2=lap2   # 🆕 傳遞圈數信息
+                lap2=lap2,  # 🆕 傳遞圈數信息
+                driver1_time=driver1_time,  # 🆕 傳遞時間數據
+                driver2_time=driver2_time   # 🆕 傳遞時間數據
             )
             print(f"[SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成")
             
@@ -1486,6 +1587,24 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             
         except Exception as e:
             print(f"[ERROR] 更新統計表格失敗: {e}")
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """
+        設置時間軸模式（代理方法）
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 10: SpeedAnalysisChartWidget.set_time_axis_mode 被調用")
+        print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis: {use_time_axis}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(self, 'chart_widget'): {hasattr(self, 'chart_widget')}")
+        
+        if hasattr(self, 'chart_widget') and self.chart_widget is not None:
+            print(f"🕒 [TIME_AXIS_DEBUG]   準備調用 chart_widget.set_time_axis_mode({use_time_axis})")
+            self.chart_widget.set_time_axis_mode(use_time_axis)
+            print(f"🕒 [TIME_AXIS_DEBUG] ✅ 步驟 11: 已成功轉發到 SpeedChartWidget")
+        else:
+            print(f"🕒 [TIME_AXIS_DEBUG] ❌ chart_widget 不存在或為 None")
             
     def reset_chart_view(self):
         """重置圖表視圖"""

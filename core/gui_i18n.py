@@ -564,6 +564,11 @@ class GuiTranslator:
             'distance_label': {'zh': '距離', 'en': 'Distance', 'ja': '距離'},
             'linkage_distance': {'zh': '連動距離', 'en': 'Linkage Distance', 'ja': '連動距離'},
             
+            # 時間軸相關翻譯
+            'time_s': {'zh': '時間 (s)', 'en': 'Time (s)', 'ja': '時間 (s)'},
+            'time_label': {'zh': '時間', 'en': 'Time', 'ja': '時間'},
+            'linkage_time': {'zh': '連動時間', 'en': 'Linkage Time', 'ja': '連動時間'},
+            
             # 連動系統專用翻譯
             'linkage_button': {'zh': '🔗 連動', 'en': '🔗 Link', 'ja': '🔗 連動'},
             'master_linkage_button': {'zh': '🔗 主連動', 'en': '🔗 Master Link', 'ja': '🔗 マスター連動'},

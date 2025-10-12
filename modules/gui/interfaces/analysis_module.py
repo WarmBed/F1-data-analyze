@@ -297,6 +297,7 @@ class ModuleTypes:
     TELEMETRY_GEAR = "telemetry_gear"                  # 遙測分析 - 檔位分析
     TELEMETRY_ACCELERATION = "telemetry_acceleration"  # 遙測分析 - 加速度分析
     TELEMETRY_DISTANCEDIFF = "telemetry_distancediff"  # 遙測分析 - 距離差異分析
+    TELEMETRY_TIMEDIFF = "telemetry_timediff"          # 遙測分析 - 時間差異分析
     TELEMETRY_SPEEDDIFF = "telemetry_speeddiff"        # 遙測分析 - 速度差異分析
     TELEMETRY_ANALYSIS = "telemetry_analysis"          # 遙測分析 - 綜合分析
     THROTTLE_BOX_PLOT = "throttle_box_plot"            # 油門箱型圖分析

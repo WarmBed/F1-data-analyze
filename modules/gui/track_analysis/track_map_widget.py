@@ -75,6 +75,12 @@ class TrackMapWidget(QWidget):
         # 個別連動開關狀態
         self._linkage_enabled: bool = True
 
+        # 時間軸支援
+        self._use_time_axis: bool = False
+        self._time_lookup: List[Tuple[float, float, float]] = []  # (time_seconds, x, y)
+        self._time_values: List[float] = []
+        self._time_available: bool = False
+
         # 連動標記資料
         self._distance_lookup: List[Tuple[float, float, float]] = []
         self._distance_values: List[float] = []
@@ -427,6 +433,42 @@ class TrackMapWidget(QWidget):
         self.fit_to_view()
 
     # ------------------------------------------------------------------
+    # 時間軸支援
+    # ------------------------------------------------------------------
+    def set_time_axis_mode(self, use_time_axis: bool) -> bool:
+        """
+        設置是否使用時間軸模式
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+            
+        Returns:
+            bool: 是否成功設置（如果沒有時間數據則失敗）
+        """
+        if use_time_axis and not self._time_available:
+            print("[TRACK_MAP] ⚠️ 無法切換至時間軸：缺少時間數據")
+            return False
+        
+        if self._use_time_axis != use_time_axis:
+            self._use_time_axis = use_time_axis
+            print(f"[TRACK_MAP] 🕒 時間軸模式: {'啟用' if use_time_axis else '停用（使用距離軸）'}")
+            
+            # 清除現有標記（避免錯誤的單位混淆）
+            self._clear_dynamic_marker(update_view=False)
+            self._clear_fixed_marker(update_view=False)
+            self.update()
+        
+        return True
+    
+    def is_time_axis_mode(self) -> bool:
+        """返回當前是否使用時間軸模式"""
+        return self._use_time_axis
+    
+    def is_time_axis_available(self) -> bool:
+        """返回是否有時間數據可用"""
+        return self._time_available
+
+    # ------------------------------------------------------------------
     # 連動整合
     # ------------------------------------------------------------------
     def _register_linkage(self) -> None:
@@ -434,6 +476,15 @@ class TrackMapWidget(QWidget):
             try:
                 linkage_manager.register_module(self, "track_map")
                 self._master_linkage_enabled = linkage_manager.is_master_linkage_enabled()
+                
+                # ✅ 同步時間軸模式狀態
+                current_time_axis_mode = linkage_manager.is_time_axis_mode()
+                if current_time_axis_mode and self._time_available:
+                    self._use_time_axis = True
+                    print(f"[TRACK_MAP] 🕒 已同步時間軸模式: 啟用")
+                elif current_time_axis_mode and not self._time_available:
+                    print(f"[TRACK_MAP] ⚠️ LinkageManager 啟用時間軸，但本模組缺少時間數據")
+                
                 self._linkage_registered = True
                 print("[TRACK_MAP] 已註冊至 linkage_manager，主連動狀態:", self._master_linkage_enabled)
             except Exception as exc:
@@ -463,21 +514,47 @@ class TrackMapWidget(QWidget):
         self.set_master_linkage_enabled(enabled)
 
     # linkage signals -------------------------------------------------
-    def on_x_linkage_received(self, distance_value: float, y_relative: float) -> None:
+    def on_x_linkage_received(self, distance_or_time_value: float, y_relative: float) -> None:
+        """
+        接收連動信號（支援距離或時間值）
+        
+        Args:
+            distance_or_time_value: 距離值（公尺）或時間值（秒），根據當前模式自動判斷
+            y_relative: Y軸相對位置（0.0 ~ 1.0）
+        """
         if not self._master_linkage_enabled or not self._linkage_enabled:
             return
+        
         self._last_linkage_relative_y = y_relative
-        self._update_dynamic_marker(distance_value)
+        
+        # 根據當前模式選擇使用距離或時間查找
+        if self._use_time_axis and self._time_available:
+            # 時間軸模式：將時間值轉換為位置
+            self._update_dynamic_marker_by_time(distance_or_time_value)
+        else:
+            # 距離軸模式：直接使用距離值
+            self._update_dynamic_marker(distance_or_time_value)
 
     def on_x_linkage_clear(self) -> None:
         if not self._linkage_enabled:
             return
         self._clear_dynamic_marker()
 
-    def on_click_linkage_received(self, distance_value: float) -> None:
+    def on_click_linkage_received(self, distance_or_time_value: float) -> None:
+        """
+        接收點擊連動信號（支援距離或時間值）
+        
+        Args:
+            distance_or_time_value: 距離值（公尺）或時間值（秒），根據當前模式自動判斷
+        """
         if not self._master_linkage_enabled or not self._linkage_enabled:
             return
-        self._update_fixed_marker(distance_value)
+        
+        # 根據當前模式選擇使用距離或時間查找
+        if self._use_time_axis and self._time_available:
+            self._update_fixed_marker_by_time(distance_or_time_value)
+        else:
+            self._update_fixed_marker(distance_or_time_value)
 
     def on_click_linkage_clear(self) -> None:
         if not self._linkage_enabled:
@@ -579,16 +656,44 @@ class TrackMapWidget(QWidget):
         if update_view:
             self.update()
 
+    def _update_dynamic_marker_by_time(self, time_value: float) -> None:
+        """基於時間值更新動態標記"""
+        world_pos = self._find_world_coordinate_by_time(time_value)
+        if world_pos:
+            self._dynamic_marker_distance = float(time_value)  # 在時間模式下存儲時間值
+            self._dynamic_marker_world = world_pos
+        else:
+            self._dynamic_marker_distance = None
+            self._dynamic_marker_world = None
+        self.update()
+
+    def _update_fixed_marker_by_time(self, time_value: float) -> None:
+        """基於時間值更新固定標記"""
+        world_pos = self._find_world_coordinate_by_time(time_value)
+        if world_pos:
+            self._fixed_marker_distance = float(time_value)  # 在時間模式下存儲時間值
+            self._fixed_marker_world = world_pos
+        else:
+            self._fixed_marker_distance = None
+            self._fixed_marker_world = None
+        self.update()
+
     # ------------------------------------------------------------------
     # 距離索引與座標計算
     # ------------------------------------------------------------------
     def _build_distance_lookup(self) -> None:
-        entries: List[Tuple[float, float, float]] = []
+        """建立距離和時間的位置查找表"""
+        distance_entries: List[Tuple[float, float, float]] = []
+        time_entries: List[Tuple[float, float, float]] = []
         last_distance: Optional[float] = None
+        last_time: Optional[float] = None
         skipped = 0
+        has_time_data = False
 
         for record in self.position_data:
             distance = self._extract_distance(record)
+            time_seconds = record.get("time_seconds")
+            
             if distance is None:
                 skipped += 1
                 continue
@@ -599,33 +704,56 @@ class TrackMapWidget(QWidget):
                 skipped += 1
                 continue
 
-            # 強制確保距離遞增，若資料逆序則略做調整
+            # 距離查找表
             if last_distance is not None and distance < last_distance:
                 distance = last_distance
-
-            entries.append((float(distance), float(x), float(y)))
+            distance_entries.append((float(distance), float(x), float(y)))
             last_distance = distance
+            
+            # 時間查找表（如果有時間數據）
+            if isinstance(time_seconds, (int, float)):
+                time = float(time_seconds)
+                if last_time is not None and time < last_time:
+                    time = last_time
+                time_entries.append((time, float(x), float(y)))
+                last_time = time
+                has_time_data = True
 
-        entries.sort(key=lambda item: item[0])
-        if entries:
-            self._raw_distance_range = (entries[0][0], entries[-1][0])
+        # 處理距離查找表
+        distance_entries.sort(key=lambda item: item[0])
+        if distance_entries:
+            self._raw_distance_range = (distance_entries[0][0], distance_entries[-1][0])
         else:
             self._raw_distance_range = (0.0, 0.0)
 
-        self._distance_scale = self._determine_distance_scale(entries)
+        self._distance_scale = self._determine_distance_scale(distance_entries)
         if self._distance_scale != 1.0:
-            entries = [(item[0] * self._distance_scale, item[1], item[2]) for item in entries]
+            distance_entries = [(item[0] * self._distance_scale, item[1], item[2]) for item in distance_entries]
 
-        self._distance_lookup = entries
-        self._distance_values = [item[0] for item in entries]
+        self._distance_lookup = distance_entries
+        self._distance_values = [item[0] for item in distance_entries]
+        
+        # 處理時間查找表
+        time_entries.sort(key=lambda item: item[0])
+        self._time_lookup = time_entries
+        self._time_values = [item[0] for item in time_entries]
+        self._time_available = has_time_data and len(time_entries) > 0
 
-        if skipped and entries:
-            print(f"[TRACK_MAP] 距離索引建立完成: {len(entries)} 筆有效資料，忽略 {skipped} 筆缺失或不合法資料")
-        elif not entries:
+        # 日誌輸出
+        if skipped and distance_entries:
+            print(f"[TRACK_MAP] 索引建立完成: {len(distance_entries)} 筆距離資料，忽略 {skipped} 筆缺失或不合法資料")
+        elif not distance_entries:
             print("[TRACK_MAP] ⚠️ 無法建立距離索引：缺少 distance 資料")
         else:
-            print(f"[TRACK_MAP] 建立距離索引: {len(entries)} 筆有效資料")
-        if entries and self._distance_scale != 1.0:
+            print(f"[TRACK_MAP] 建立距離索引: {len(distance_entries)} 筆有效資料")
+            
+        if self._time_available:
+            print(f"[TRACK_MAP] ✅ 時間軸支援: 建立 {len(time_entries)} 筆時間索引")
+            print(f"[TRACK_MAP]    時間範圍: {self._time_values[0]:.2f}s ~ {self._time_values[-1]:.2f}s")
+        else:
+            print("[TRACK_MAP] ⚠️ 時間軸不可用：缺少 time_seconds 資料")
+            
+        if distance_entries and self._distance_scale != 1.0:
             print(
                 "[TRACK_MAP] ⚙️ 自動距離縮放：原始最大距離 "
                 f"{self._raw_distance_range[1]:.2f} → 正規化 {self._distance_values[-1]:.2f} 公尺"
@@ -691,6 +819,35 @@ class TrackMapWidget(QWidget):
             return prev_x, prev_y
 
         ratio = (distance - prev_dist) / (next_dist - prev_dist)
+        ratio = max(0.0, min(1.0, ratio))
+        interp_x = prev_x + (next_x - prev_x) * ratio
+        interp_y = prev_y + (next_y - prev_y) * ratio
+        return interp_x, interp_y
+
+    def _find_world_coordinate_by_time(self, time_value: float) -> Optional[Tuple[float, float]]:
+        """基於時間值查找世界座標（線性插值）"""
+        if not self._time_lookup or not self._time_available:
+            return None
+
+        time = float(time_value)
+        idx = bisect_left(self._time_values, time)
+
+        if idx <= 0:
+            base = self._time_lookup[0]
+            return base[1], base[2]
+        if idx >= len(self._time_lookup):
+            base = self._time_lookup[-1]
+            return base[1], base[2]
+
+        prev_entry = self._time_lookup[idx - 1]
+        next_entry = self._time_lookup[idx]
+        prev_time, prev_x, prev_y = prev_entry
+        next_time, next_x, next_y = next_entry
+
+        if next_time == prev_time:
+            return prev_x, prev_y
+
+        ratio = (time - prev_time) / (next_time - prev_time)
         ratio = max(0.0, min(1.0, ratio))
         interp_x = prev_x + (next_x - prev_x) * ratio
         interp_y = prev_y + (next_y - prev_y) * ratio

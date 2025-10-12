@@ -498,7 +498,8 @@ class BrakeAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str, 
                             driver1: str, driver2: str = None, 
                             lap1: int = 1, lap2: int = 1, 
-                            is_fastest: bool = False) -> bool:
+                            is_fastest: bool = False,
+                            use_time_axis: bool = False) -> bool:
         """更新圈速分析參數（包含車手和圈數）- 與速度模組一致的接口"""
         try:
             print(f"[brake_MDI] ========== 圈速參數更新 ==========")
@@ -506,6 +507,7 @@ class BrakeAnalysisModule(IAnalysisModule):
             print(f"[brake_MDI] 車手: {driver1} vs {driver2}")
             print(f"[brake_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[brake_MDI] 最速圈: {is_fastest}")
+            print(f"[brake_MDI] 🕒 時間軸模式: {use_time_axis}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
@@ -548,6 +550,10 @@ class BrakeAnalysisModule(IAnalysisModule):
             if self.brake_chart_widget:
                 self.brake_chart_widget.set_lap_numbers(lap1, lap2)
                 print(f"[brake_MDI] ✅ 已更新圖表組件的圈數顯示")
+                
+                # 🆕 設置時間軸模式
+                self.brake_chart_widget.set_time_axis_mode(use_time_axis)
+                print(f"[brake_MDI] ✅ 已設置時間軸模式: {use_time_axis}")
             
             if params_changed:
                 print(f"[brake_MDI] 🔄 參數已變化，開始重載數據...")
@@ -752,6 +758,15 @@ class BrakeAnalysisModule(IAnalysisModule):
                 
         except Exception as e:
             print(f"[WARNING] [brake_MDI] 清理模組時發生警告: {e}")
+    
+    def reset_chart_view(self):
+        """重置圖表視圖 - 與 Show All Data 按鈕整合"""
+        print(f"[BRAKE_MDI] 🔄 reset_chart_view() 被調用")
+        if hasattr(self, 'brake_chart_widget') and self.brake_chart_widget:
+            print(f"[BRAKE_MDI] ✅ 找到 brake_chart_widget，調用 reset_chart_view()")
+            self.brake_chart_widget.reset_chart_view()
+        else:
+            print(f"[BRAKE_MDI] ❌ 未找到 brake_chart_widget 屬性")
     
     def cleanup(self):
         """清理資源 - 實現抽象方法"""
@@ -1117,7 +1132,8 @@ class BrakeAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str,
                               driver1: str, driver2: Optional[str] = None,
                               lap1: int = 1, lap2: Optional[int] = None,
-                              is_fastest: bool = False) -> bool:
+                              is_fastest: bool = False,
+                              use_time_axis: bool = False) -> bool:
         """更新圈速分析參數並觸發資料重載"""
         try:
             print("[brake_MDI] ========== 圈速參數更新 ==========")
@@ -1125,6 +1141,7 @@ class BrakeAnalysisModule(IAnalysisModule):
             print(f"[brake_MDI] 車手: {driver1} vs {driver2}")
             print(f"[brake_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[brake_MDI] 最速圈: {is_fastest}")
+            print(f"[brake_MDI] 🕒 時間軸模式: {use_time_axis}")
 
             # 處理最速圈選項
             if is_fastest and hasattr(self, '_ensure_telemetry_data_for_fastest_laps'):
@@ -1164,6 +1181,11 @@ class BrakeAnalysisModule(IAnalysisModule):
 
             if hasattr(self.brake_chart_widget, 'set_lap_numbers'):
                 self.brake_chart_widget.set_lap_numbers(self.lap1, self.lap2)
+            
+            # 🆕 設置時間軸模式
+            if hasattr(self.brake_chart_widget, 'set_time_axis_mode'):
+                self.brake_chart_widget.set_time_axis_mode(use_time_axis)
+                print(f"[brake_MDI] ✅ 已設置時間軸模式: {use_time_axis}")
 
             # 更新標題
             self.update_window_title()

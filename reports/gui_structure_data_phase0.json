@@ -1,0 +1,163 @@
+{
+  "total_modules": 21,
+  "universal_loader": [
+    "track_analysis",
+    "Throttle_analysis/throttle_line_chart_analysis",
+    "ideal_lap_analysis/ideal_lap_ranking_table",
+    "ideal_lap_analysis/ideal_lap_sector_comparison",
+    "ideal_lap_analysis/ideal_lap_sector_heatmap"
+  ],
+  "universal_mdi": [
+    "rain_analysis",
+    "tire_analysis",
+    "track_analysis",
+    "lap_box_plot_analysis",
+    "Throttle_analysis/throttle_box_plot_analysis",
+    "Throttle_analysis/throttle_line_chart_analysis",
+    "ideal_lap_analysis/ideal_lap_ranking_table",
+    "ideal_lap_analysis/ideal_lap_sector_comparison",
+    "ideal_lap_analysis/ideal_lap_sector_heatmap",
+    "driver_race/detailed_lap_analysis",
+    "driver_race/lap_box_plot_analysis"
+  ],
+  "custom_api_worker": [
+    {
+      "module": "accident_analysis",
+      "worker": "AccidentAnalysisApiWorker",
+      "file": "accident_data_manager.py"
+    },
+    {
+      "module": "rain_analysis",
+      "worker": "RainAnalysisApiWorker",
+      "file": "rain_analysis_mdi.py"
+    },
+    {
+      "module": "tire_analysis",
+      "worker": "TireAnalysisApiWorker",
+      "file": "tire_analysis_mdi.py"
+    },
+    {
+      "module": "track_analysis",
+      "worker": "TrackAnalysisApiWorker",
+      "file": "track_analysis_mdi.py"
+    },
+    {
+      "module": "pitstop_analysis",
+      "worker": "PitstopAnalysisApiWorker",
+      "file": "pitstop_analysis_mdi.py"
+    },
+    {
+      "module": "lap_box_plot_analysis",
+      "worker": "LapTimeBoxPlotApiWorker",
+      "file": "lap_box_plot_analysis_mdi.py"
+    },
+    {
+      "module": "Throttle_analysis/throttle_box_plot_analysis",
+      "worker": "ThrottleBoxPlotApiWorker",
+      "file": "throttle_box_plot_analysis_mdi.py"
+    },
+    {
+      "module": "Throttle_analysis/throttle_line_chart_analysis",
+      "worker": "ThrottleLineChartApiWorker",
+      "file": "throttle_line_chart_data_loader.py"
+    },
+    {
+      "module": "ideal_lap_analysis/ideal_lap_ranking_table",
+      "worker": "IdealLapRankingApiWorker",
+      "file": "ideal_lap_ranking_table_mdi.py"
+    },
+    {
+      "module": "ideal_lap_analysis/ideal_lap_sector_comparison",
+      "worker": "IdealLapSectorComparisonApiWorker",
+      "file": "ideal_lap_sector_comparison_mdi.py"
+    },
+    {
+      "module": "ideal_lap_analysis/ideal_lap_sector_heatmap",
+      "worker": "IdealLapSectorHeatmapApiWorker",
+      "file": "ideal_lap_sector_heatmap_mdi.py"
+    },
+    {
+      "module": "driver_race/detailed_lap_analysis",
+      "worker": "DetailedLapAnalysisApiWorker",
+      "file": "driverlap_analysis_mdi.py"
+    },
+    {
+      "module": "driver_race/lap_box_plot_analysis",
+      "worker": "LapTimeBoxPlotApiWorker",
+      "file": "lap_box_plot_analysis_mdi.py"
+    }
+  ],
+  "telemetry_loader": [
+    "lap_analysis/speed_analysis",
+    "lap_analysis/brake_analysis",
+    "lap_analysis/Throttle_analysis",
+    "lap_analysis/gear_analysis",
+    "lap_analysis/rpm_analysis",
+    "lap_analysis/acceleration_analysis",
+    "lap_analysis/speeddiff_analysis",
+    "lap_analysis/distancediff_analysis"
+  ],
+  "i18n_coverage": {
+    "accident_analysis": 58.964646464646464,
+    "rain_analysis": 37.634408602150536,
+    "tire_analysis": 38.35616438356164,
+    "track_analysis": 31.330472103004293,
+    "pitstop_analysis": 33.33333333333333,
+    "lap_box_plot_analysis": 42.857142857142854,
+    "Throttle_analysis/throttle_box_plot_analysis": 92.20779220779221,
+    "Throttle_analysis/throttle_line_chart_analysis": 167.21311475409837,
+    "ideal_lap_analysis/ideal_lap_ranking_table": 115.78947368421053,
+    "ideal_lap_analysis/ideal_lap_sector_comparison": 44.24778761061947,
+    "ideal_lap_analysis/ideal_lap_sector_heatmap": 218.18181818181816,
+    "driver_race/detailed_lap_analysis": 32.98969072164948,
+    "driver_race/lap_box_plot_analysis": 43.169398907103826,
+    "lap_analysis/speed_analysis": 59.60264900662252,
+    "lap_analysis/brake_analysis": 90.0,
+    "lap_analysis/Throttle_analysis": 67.35751295336787,
+    "lap_analysis/gear_analysis": 84.61538461538461,
+    "lap_analysis/rpm_analysis": 87.2,
+    "lap_analysis/acceleration_analysis": 104.58015267175573,
+    "lap_analysis/speeddiff_analysis": 91.36690647482014,
+    "lap_analysis/distancediff_analysis": 89.78102189781022
+  },
+  "emoji_found": {
+    "accident_analysis": 202,
+    "rain_analysis": 17,
+    "tire_analysis": 5,
+    "track_analysis": 6,
+    "pitstop_analysis": 57,
+    "lap_box_plot_analysis": 12,
+    "Throttle_analysis/throttle_box_plot_analysis": 11,
+    "Throttle_analysis/throttle_line_chart_analysis": 19,
+    "ideal_lap_analysis/ideal_lap_ranking_table": 27,
+    "ideal_lap_analysis/ideal_lap_sector_comparison": 22,
+    "ideal_lap_analysis/ideal_lap_sector_heatmap": 12,
+    "driver_race/detailed_lap_analysis": 24,
+    "driver_race/lap_box_plot_analysis": 12,
+    "lap_analysis/speed_analysis": 109,
+    "lap_analysis/brake_analysis": 71,
+    "lap_analysis/Throttle_analysis": 101,
+    "lap_analysis/gear_analysis": 68,
+    "lap_analysis/rpm_analysis": 69,
+    "lap_analysis/acceleration_analysis": 72,
+    "lap_analysis/speeddiff_analysis": 73,
+    "lap_analysis/distancediff_analysis": 75
+  },
+  "chart_widget_lines": {
+    "rain_analysis": 1210,
+    "tire_analysis": 759,
+    "lap_box_plot_analysis": 694,
+    "Throttle_analysis/throttle_box_plot_analysis": 476,
+    "Throttle_analysis/throttle_line_chart_analysis": 337,
+    "driver_race/detailed_lap_analysis": 1361,
+    "driver_race/lap_box_plot_analysis": 693,
+    "lap_analysis/speed_analysis": 1591,
+    "lap_analysis/brake_analysis": 1498,
+    "lap_analysis/Throttle_analysis": 1518,
+    "lap_analysis/gear_analysis": 1475,
+    "lap_analysis/rpm_analysis": 1481,
+    "lap_analysis/acceleration_analysis": 1545,
+    "lap_analysis/speeddiff_analysis": 1610,
+    "lap_analysis/distancediff_analysis": 1569
+  }
+}

@@ -61,6 +61,11 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.driver2_name = "Driver 2"
         self.sectors = []
         
+        # 🆕 時間軸數據（用於時間模式）
+        self.use_time_axis = False
+        self.driver1_time = []
+        self.driver2_time = []
+        
         # 數據範圍
         self.min_distance = 0
         self.max_distance = 5807
@@ -102,7 +107,8 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
     def set_acceleration_data(self, distance: List[float], driver1_acceleration: List[float], 
                      driver2_acceleration: List[float], driver1_name: str = "Driver 1", 
                      driver2_name: str = "Driver 2", sectors: List[Dict] = None,
-                     lap1: int = None, lap2: int = None):
+                     lap1: int = None, lap2: int = None,
+                     driver1_time: List[float] = None, driver2_time: List[float] = None):
         """設置acceleration數據
         
         Args:
@@ -114,6 +120,8 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             sectors: 賽道區段信息
             lap1: 車手1的圈數（用於雙圈比較模式）
             lap2: 車手2的圈數（用於雙圈比較模式）
+            driver1_time: 🆕 車手1時間軸數據（秒）
+            driver2_time: 🆕 車手2時間軸數據（秒）
         """
         # 🆕 雙圈比較模式判斷
         is_single_driver_dual_lap = False
@@ -136,8 +144,15 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         self.driver2_name = driver2_name
         self.sectors = sectors or []
         
-        # 計算數據範圍
-        if distance:
+        # 🆕 存儲時間軸數據
+        self.driver1_time = driver1_time or []
+        self.driver2_time = driver2_time or []
+        
+        # 計算數據範圍（🆕 支持時間軸模式）
+        if self.use_time_axis and self.driver1_time:
+            self.min_distance = min(self.driver1_time)
+            self.max_distance = max(self.driver1_time)
+        elif distance:
             self.min_distance = min(distance)
             self.max_distance = max(distance)
         
@@ -172,6 +187,33 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 強制重繪和更新
         self.update()
         self.repaint()
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """🆕 設置時間軸模式
+        
+        Args:
+            use_time_axis: True=使用時間軸, False=使用距離軸
+        """
+        if self.use_time_axis != use_time_axis:
+            self.use_time_axis = use_time_axis
+            print(f"[ACC_CHART] 🕒 時間軸模式切換: {use_time_axis}")
+            
+            # 重新計算 X 軸範圍
+            if self.use_time_axis and self.driver1_time:
+                self.min_distance = min(self.driver1_time)
+                self.max_distance = max(self.driver1_time)
+                print(f"[ACC_CHART]    時間範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+            elif self.distance_data:
+                self.min_distance = min(self.distance_data)
+                self.max_distance = max(self.distance_data)
+                print(f"[ACC_CHART]    距離範圍: {self.min_distance:.0f}m - {self.max_distance:.0f}m")
+            
+            # 重置視圖範圍
+            self.view_min_distance = None
+            self.view_max_distance = None
+            
+            # 重繪圖表
+            self.repaint()
     
     def reset_view(self):
         """重置視圖到原始範圍"""
@@ -314,7 +356,7 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         current_min_acceleration = self.view_min_acceleration if self.view_min_acceleration is not None else self.min_acceleration
         current_max_acceleration = self.view_max_acceleration if self.view_max_acceleration is not None else self.max_acceleration
         
-        # X軸標籤 (距離) - 修正：與速度分析一致，只顯示偶數刻度
+        # X軸標籤 (距離/時間) - 修正：與速度分析一致，只顯示偶數刻度
         distance_range = current_max_distance - current_min_distance
         if distance_range > 0:
             num_labels = 10  # 使用10個間隔
@@ -325,8 +367,11 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
                 # 繪製刻度線
                 painter.drawLine(int(x), chart_rect.bottom(), int(x), chart_rect.bottom() + 5)
                 
-                # 繪製標籤
-                label = f"{distance:.0f}"
+                # 🆕 繪製標籤（根據時間軸模式選擇格式）
+                if self.use_time_axis:
+                    label = f"{distance:.1f}"  # 時間格式：一位小數
+                else:
+                    label = f"{distance:.0f}"  # 距離格式：整數
                 painter.drawText(int(x - 20), chart_rect.bottom() + 20, 40, 20, 
                                Qt.AlignCenter, label)
         
@@ -363,11 +408,14 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         painter.setFont(axis_font)
         painter.setPen(text_color)
         
-        # X軸標題 - 置中顯示在圖表下方
+        # 🆕 X軸標題 - 根據時間軸模式選擇文字
         x_title_width = 100
         x_title_x = rect.left() + (rect.width() - x_title_width) // 2
         x_title_y = rect.bottom() + 5
-        painter.drawText(x_title_x, x_title_y, x_title_width, 15, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
+        if self.use_time_axis:
+            painter.drawText(x_title_x, x_title_y, x_title_width, 15, Qt.AlignCenter, tr('time_s', '時間 (s)'))
+        else:
+            painter.drawText(x_title_x, x_title_y, x_title_width, 15, Qt.AlignCenter, tr('distance_m', '距離 (m)'))
         
         # Y軸標題 - 垂直文字 (左側中央)  
         painter.save()
@@ -416,6 +464,12 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         if not self.distance_data:
             return
         
+        # 🆕 根據時間軸模式選擇 X 軸數據源
+        if self.use_time_axis and self.driver1_time and self.driver2_time:
+            x_data_source = self.driver1_time  # 時間模式：使用時間數據
+        else:
+            x_data_source = self.distance_data  # 距離模式：使用距離數據
+        
         # 設置裁剪區域，防止曲線繪製到圖表邊界之外
         painter.setClipRect(chart_rect)
         
@@ -440,11 +494,11 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             return
         
         # 繪製車手1acceleration曲線
-        if self.driver1_acceleration and len(self.driver1_acceleration) == len(self.distance_data):
+        if self.driver1_acceleration and len(self.driver1_acceleration) == len(x_data_source):
             painter.setPen(QPen(self.driver1_color, 2))
             points = []
             
-            for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver1_acceleration)):
+            for i, (distance, acceleration) in enumerate(zip(x_data_source, self.driver1_acceleration)):
                 # 檢查是否有有效的數值 (先檢查 None,再檢查 NaN/Inf)
                 if (distance is not None and acceleration is not None and
                     current_min_distance <= distance <= current_max_distance and 
@@ -459,25 +513,32 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             for i in range(len(points) - 1):
                 painter.drawLine(points[i], points[i + 1])
         
-        # 繪製車手2acceleration曲線
-        if self.driver2_acceleration and len(self.driver2_acceleration) == len(self.distance_data):
-            painter.setPen(QPen(self.driver2_color, 2))
-            points = []
+        # 繪製車手2acceleration曲線（🆕 使用 driver2_time）
+        if self.driver2_acceleration:
+            # 🆕 車手2可能使用不同的時間數據（雙圈比較模式）
+            if self.use_time_axis and self.driver2_time:
+                x_data_source_driver2 = self.driver2_time
+            else:
+                x_data_source_driver2 = self.distance_data
             
-            for i, (distance, acceleration) in enumerate(zip(self.distance_data, self.driver2_acceleration)):
-                # 檢查是否有有效的數值 (先檢查 None,再檢查 NaN/Inf)
-                if (distance is not None and acceleration is not None and
-                    current_min_distance <= distance <= current_max_distance and 
-                    not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
-                    x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
-                    y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
-                    # 再次檢查計算結果是否有效
-                    if not (math.isnan(x) or math.isnan(y) or math.isinf(x) or math.isinf(y)):
-                        points.append(QPoint(int(x), int(y)))
-            
-            # 繪製連線
-            for i in range(len(points) - 1):
-                painter.drawLine(points[i], points[i + 1])
+            if len(self.driver2_acceleration) == len(x_data_source_driver2):
+                painter.setPen(QPen(self.driver2_color, 2))
+                points = []
+                
+                for i, (distance, acceleration) in enumerate(zip(x_data_source_driver2, self.driver2_acceleration)):
+                    # 檢查是否有有效的數值 (先檢查 None,再檢查 NaN/Inf)
+                    if (distance is not None and acceleration is not None and
+                        current_min_distance <= distance <= current_max_distance and 
+                        not (math.isnan(distance) or math.isnan(acceleration) or math.isinf(distance) or math.isinf(acceleration))):
+                        x = chart_rect.left() + (distance - current_min_distance) / distance_range * chart_rect.width()
+                        y = chart_rect.bottom() - (acceleration - current_min_acceleration) / acceleration_range * chart_rect.height()
+                        # 再次檢查計算結果是否有效
+                        if not (math.isnan(x) or math.isnan(y) or math.isinf(x) or math.isinf(y)):
+                            points.append(QPoint(int(x), int(y)))
+                
+                # 繪製連線
+                for i in range(len(points) - 1):
+                    painter.drawLine(points[i], points[i + 1])
     
     def _draw_tracking_line(self, painter: QPainter, chart_rect: QRect, x_pos: int, is_fixed: bool):
         """繪製追蹤線和數值顯示"""
@@ -499,8 +560,14 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         current_max_distance = self.view_max_distance if self.view_max_distance is not None else self.max_distance
         distance_range = current_max_distance - current_min_distance
         
-        if distance_range > 0 and self.distance_data:
-            # 計算距離值
+        # 🆕 根據時間軸模式選擇搜索數據源
+        if self.use_time_axis and self.driver1_time:
+            search_data = self.driver1_time
+        else:
+            search_data = self.distance_data
+        
+        if distance_range > 0 and search_data:
+            # 計算距離/時間值
             relative_x = x_pos - chart_rect.left()
             distance_value = current_min_distance + (relative_x / chart_rect.width()) * distance_range
             
@@ -508,12 +575,12 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             driver1_acceleration_at_position = None
             driver2_acceleration_at_position = None
             
-            # 在距離數據中找到最接近的點
-            if self.distance_data and len(self.distance_data) > 0:
+            # 在距離/時間數據中找到最接近的點
+            if search_data and len(search_data) > 0:
                 closest_index = 0
-                min_distance_diff = abs(self.distance_data[0] - distance_value)
+                min_distance_diff = abs(search_data[0] - distance_value)
                 
-                for i, dist in enumerate(self.distance_data):
+                for i, dist in enumerate(search_data):
                     distance_diff = abs(dist - distance_value)
                     if distance_diff < min_distance_diff:
                         min_distance_diff = distance_diff
@@ -564,7 +631,11 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
             painter.setFont(QFont("Microsoft YaHei", 9))
             
             text_y = label_y + 15
-            painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
+            # 🆕 根據時間軸模式選擇顯示格式
+            if self.use_time_axis:
+                painter.drawText(label_x + 5, text_y, f"{tr('time_label', '時間')}: {distance_value:.2f} s")
+            else:
+                painter.drawText(label_x + 5, text_y, f"{tr('distance_label', '距離')}: {distance_value:.0f} m")
             
             # 顯示車手acceleration資訊
             for i, (driver_name, acceleration, color) in enumerate(drivers_to_show):
@@ -843,12 +914,13 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         chart_container = self._create_chart_area()
         self.main_splitter.addWidget(chart_container)
         
-        # 統計信息容器（採用可摺疊設計）
+        # 統計信息容器（已隱藏）
         self.stats_container = self._create_stats_container()
+        self.stats_container.setVisible(False)  # 🔒 永久隱藏統計面板
         self.main_splitter.addWidget(self.stats_container)
         
-        # 設置分割器比例 (與速度分析保持一致：圖表:統計 = 800:50)
-        self.main_splitter.setSizes([800, 50])
+        # 設置分割器比例，讓圖表佔據全部空間（統計面板已隱藏）
+        self.main_splitter.setSizes([1000, 0])  # 圖表:統計 = 1000:0（統計面板隱藏）
         
         # 設置分割器比例因子 (移除灰色樣式以使用系統默認)
         self.main_splitter.setStretchFactor(0, 1)  # 圖表區域可伸縮
@@ -1141,6 +1213,12 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         """設置圈數顯示"""
         self.lap1_display.setText(str(lap1))
         self.lap2_display.setText(str(lap2))
+    
+    def set_time_axis_mode(self, use_time_axis: bool):
+        """🆕 設置時間軸模式（代理方法）"""
+        if hasattr(self, 'chart_widget') and self.chart_widget:
+            self.chart_widget.set_time_axis_mode(use_time_axis)
+            print(f"[ACC_WRAPPER] ✅ 時間軸模式已設置: {use_time_axis}")
         
     def _update_status_info(self, data: Dict[str, Any]):
         """更新狀態資訊顯示"""
@@ -1229,9 +1307,15 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
             driver1_name = acceleration_data.get('driver1_name', 'Driver 1')
             driver2_name = acceleration_data.get('driver2_name', 'Driver 2')
             
+            # 🆕 提取時間軸數據（用於時間模式）
+            driver1_time = acceleration_data.get('driver1_time_seconds', [])
+            driver2_time = acceleration_data.get('driver2_time_seconds', [])
+            
             print(f"[acceleration_CHART] 距離數據點: {len(distance)}")
             print(f"[acceleration_CHART] 車手1 acceleration數據點: {len(driver1_acceleration)}")
             print(f"[acceleration_CHART] 車手2 acceleration數據點: {len(driver2_acceleration)}")
+            print(f"[acceleration_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
+            print(f"[acceleration_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             lap1 = None
@@ -1303,7 +1387,9 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
                 driver2_name=driver2_name,
                 sectors=sectors,
                 lap1=lap1,  # 🆕 傳遞圈數信息
-                lap2=lap2   # 🆕 傳遞圈數信息
+                lap2=lap2,   # 🆕 傳遞圈數信息
+                driver1_time=driver1_time,  # 🆕 時間軸數據
+                driver2_time=driver2_time   # 🆕 時間軸數據
             )
             print(f"[acceleration_CHART] ✅ 圖表更新完成")
             

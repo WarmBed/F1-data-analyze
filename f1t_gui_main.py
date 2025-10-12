@@ -73,9 +73,26 @@ from modules.gui.shared.season_calendar_provider import (
 )
 from modules.gui.themes import ColorPaletteError, color_palette_provider
 
+
+def select_preferred_event(
+    completed_events: List[SeasonEvent],
+    upcoming_events: List[SeasonEvent],
+) -> Optional[SeasonEvent]:
+    """Return the preferred event for default selection.
+
+    Prioritise the most recent completed race and fall back to the next
+    upcoming race when no completed race is available.
+    """
+
+    if completed_events:
+        return completed_events[-1]
+    if upcoming_events:
+        return upcoming_events[0]
+    return None
+
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
-    """自定義MDI區域，強制執行子視窗最小尺寸限制並啟用內建功能"""
+    """自定義MDI區域，強制執行子視窗最小尺寸限制"""
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -84,84 +101,11 @@ class CustomMdiArea(QMdiArea):
         self.setActivationOrder(QMdiArea.CreationOrder)  # 設置視窗激活順序
         self.setViewMode(QMdiArea.SubWindowView)  # 確保使用子視窗模式
         
-        # 啟用右鍵選單和視窗管理功能
-        self.setContextMenuPolicy(Qt.DefaultContextMenu)  # 啟用預設右鍵選單
+        # 禁用右鍵選單
+        self.setContextMenuPolicy(Qt.NoContextMenu)  # 完全禁用右鍵選單
         
         # 允許拖拉視窗
         self.setOption(QMdiArea.DontMaximizeSubWindowOnActivation, True)  # 不自動最大化
-        
-        #print(f"[LOCK] CustomMdiArea: 初始化完成，已啟用內建右鍵選單和視窗管理功能")
-        
-    def contextMenuEvent(self, event):
-        """處理右鍵選單事件"""
-        # 獲取滑鼠位置下的子視窗
-        widget_at_pos = self.childAt(event.pos())
-        subwindow = None
-        
-        # 向上查找，尋找 QMdiSubWindow
-        current_widget = widget_at_pos
-        while current_widget and subwindow is None:
-            if isinstance(current_widget, QMdiSubWindow):
-                subwindow = current_widget
-                break
-            # 檢查父元件是否為 QMdiSubWindow
-            parent = current_widget.parent()
-            if isinstance(parent, QMdiSubWindow):
-                subwindow = parent
-                break
-            current_widget = parent
-        
-        if subwindow:
-            # 如果在子視窗上右鍵，顯示視窗管理選單
-            menu = QMenu(self)
-            
-            # 添加視窗管理選項
-            cascade_action = menu.addAction("層疊視窗 (&C)")
-            cascade_action.triggered.connect(self.cascadeSubWindows)
-            
-            tile_action = menu.addAction("平舖視窗 (&T)")
-            tile_action.triggered.connect(self.tileSubWindows)
-            
-            menu.addSeparator()
-            
-            close_action = menu.addAction("關閉視窗 (&X)")
-            close_action.triggered.connect(subwindow.close)
-            
-            close_all_action = menu.addAction(tr("close_all_windows", "Close All Windows (&A)"))
-            close_all_action.triggered.connect(self.closeAllSubWindows)
-            
-            menu.addSeparator()
-            
-            # 視窗狀態選項
-            if subwindow.isMaximized():
-                restore_action = menu.addAction("還原視窗 (&R)")
-                restore_action.triggered.connect(subwindow.showNormal)
-            else:
-                maximize_action = menu.addAction("最大化視窗 (&M)")
-                maximize_action.triggered.connect(subwindow.showMaximized)
-            
-            minimize_action = menu.addAction("最小化視窗 (&N)")
-            minimize_action.triggered.connect(subwindow.showMinimized)
-            
-            # 顯示選單
-            menu.exec_(event.globalPos())
-        else:
-            # 如果在空白區域右鍵，顯示區域管理選單
-            menu = QMenu(self)
-            
-            cascade_action = menu.addAction("層疊所有視窗 (&C)")
-            cascade_action.triggered.connect(self.cascadeSubWindows)
-            
-            tile_action = menu.addAction("平舖所有視窗 (&T)")
-            tile_action.triggered.connect(self.tileSubWindows)
-            
-            menu.addSeparator()
-            
-            close_all_action = menu.addAction(tr("close_all_windows", "Close All Windows (&A)"))
-            close_all_action.triggered.connect(self.closeAllSubWindows)
-            
-            # 顯示選單
-            menu.exec_(event.globalPos())
         
     def addSubWindow(self, widget, flags=None):
         """添加子視窗並強制執行最小尺寸 - 簡化版本"""
@@ -2126,6 +2070,57 @@ class DraggableTitleBar(QWidget):
     def get_sync_status(self):
         """取得當前X軸連動狀態"""
         return self.sync_btn.isChecked()
+    
+    def cleanup(self):
+        """
+        清理資源和信號連接
+        
+        ⚠️  資源洩漏修復: 在視窗關閉時斷開所有信號，防止循環引用導致內存洩漏
+        
+        清理項目:
+        - 所有按鈕信號連接（包括實例屬性和局部變數）
+        - parent_window 循環引用
+        - 所有 Qt 對象引用
+        
+        技術細節:
+        - DraggableTitleBar 有3個實例屬性按鈕 + 5個局部變數按鈕
+        - 遍歷所有子 QPushButton 以斷開所有 clicked 信號
+        """
+        try:
+            print(f"[CLEANUP] 開始清理 DraggableTitleBar 資源...")
+            
+            # 🔧 步驟1: 遍歷所有子 QPushButton 並斷開 clicked 信號
+            # 這樣可以處理實例屬性按鈕和局部變數按鈕
+            from PyQt5.QtWidgets import QPushButton
+            button_count = 0
+            for child in self.findChildren(QPushButton):
+                try:
+                    child.clicked.disconnect()
+                    button_count += 1
+                    print(f"[CLEANUP]   ✅ 斷開按鈕信號: {child.objectName() or '未命名按鈕'}")
+                except TypeError:
+                    # 信號已經斷開或無連接
+                    pass
+            
+            print(f"[CLEANUP]   📊 共斷開 {button_count} 個按鈕信號")
+            
+            # 🔧 步驟2: 清除 parent_window 循環引用
+            if hasattr(self, 'parent_window'):
+                print(f"[CLEANUP]   ✅ 清除 parent_window 引用")
+                self.parent_window = None
+            
+            # 🔧 步驟3: 清除其他對象引用
+            self.title_label = None
+            self.sync_btn = None
+            self.linkage_btn = None
+            self.popout_btn = None
+            
+            print(f"[CLEANUP] ✅ DraggableTitleBar 資源清理完成")
+            
+        except Exception as e:
+            print(f"[WARNING] DraggableTitleBar cleanup 失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
 class PopoutSubWindow(QMdiSubWindow):
     """支援彈出功能和調整大小的MDI子視窗 - 升級為通用模組容器"""
@@ -2673,6 +2668,14 @@ class PopoutSubWindow(QMdiSubWindow):
         self.resizing = False
         self.resize_direction = None
         
+        # 🔧 修復洩漏: 預創建靜態游標對象，避免重複創建
+        self._cursor_arrow = Qt.ArrowCursor
+        self._cursor_size_ver = Qt.SizeVerCursor
+        self._cursor_size_hor = Qt.SizeHorCursor
+        self._cursor_size_fdiag = Qt.SizeFDiagCursor
+        self._cursor_size_bdiag = Qt.SizeBDiagCursor
+        self._current_cursor = None  # 追蹤當前游標，避免重複設置
+        
         #print(f"📏 Resize margins - Visual: {self.resize_margin}px, Detection: {self.resize_detection_margin}px")
         
         # 強制啟用滑鼠追蹤
@@ -2698,23 +2701,35 @@ class PopoutSubWindow(QMdiSubWindow):
             self.perform_resize(event.globalPos())
             event.accept()
             return
+        
+        # 🔧 防禦性檢查: 確保游標屬性已初始化
+        if not hasattr(self, '_current_cursor'):
+            super().mouseMoveEvent(event)
+            return
             
         # 更新游標 - 即使沒有在調整也要檢查
         direction = self.get_resize_direction(event.pos())
         
+        # 🔧 修復洩漏: 只在游標真正改變時才設置，避免重複創建游標對象
+        new_cursor = None
         if direction:
             # 取消上方調整大小功能，移除 'top' 相關游標
             if direction in ['bottom']:  # 只保留 bottom，移除 top
-                self.setCursor(Qt.SizeVerCursor)
+                new_cursor = self._cursor_size_ver
             elif direction in ['left', 'right']:
-                self.setCursor(Qt.SizeHorCursor)
+                new_cursor = self._cursor_size_hor
             elif direction in ['bottom-right']:  # 移除 top-left
-                self.setCursor(Qt.SizeFDiagCursor)
+                new_cursor = self._cursor_size_fdiag
             elif direction in ['bottom-left']:  # 移除 top-right
-                self.setCursor(Qt.SizeBDiagCursor)
+                new_cursor = self._cursor_size_bdiag
             event.accept()  # 接受事件，防止被覆蓋
         else:
-            self.setCursor(Qt.ArrowCursor)
+            new_cursor = self._cursor_arrow
+        
+        # 🔧 只在游標改變時才設置，減少 setCursor 調用次數
+        if new_cursor != self._current_cursor:
+            self.setCursor(new_cursor)
+            self._current_cursor = new_cursor
             
         # [HOT] 重要：讓事件傳遞給父類以保持拖動功能
         super().mouseMoveEvent(event)
@@ -2725,7 +2740,14 @@ class PopoutSubWindow(QMdiSubWindow):
         
     def leaveEvent(self, event):
         """滑鼠離開事件 - 恢復箭頭游標"""
-        self.setCursor(Qt.ArrowCursor)
+        # 🔧 修復洩漏: 只在需要時設置游標（防禦性檢查）
+        if hasattr(self, '_current_cursor') and hasattr(self, '_cursor_arrow'):
+            if self._current_cursor != self._cursor_arrow:
+                self.setCursor(self._cursor_arrow)
+                self._current_cursor = self._cursor_arrow
+        else:
+            # 如果屬性未初始化（極少數情況），使用標準游標
+            self.setCursor(Qt.ArrowCursor)
         super().leaveEvent(event)
         
     def mouseReleaseEvent(self, event):
@@ -2733,7 +2755,14 @@ class PopoutSubWindow(QMdiSubWindow):
         if event.button() == Qt.LeftButton:
             self.resizing = False
             self.resize_direction = None
-            self.setCursor(Qt.ArrowCursor)
+            # 🔧 修復洩漏: 只在需要時設置游標（防禦性檢查）
+            if hasattr(self, '_current_cursor') and hasattr(self, '_cursor_arrow'):
+                if self._current_cursor != self._cursor_arrow:
+                    self.setCursor(self._cursor_arrow)
+                    self._current_cursor = self._cursor_arrow
+            else:
+                # 如果屬性未初始化（極少數情況），使用標準游標
+                self.setCursor(Qt.ArrowCursor)
             event.accept()
             return
         super().mouseReleaseEvent(event)
@@ -3353,11 +3382,9 @@ class PopoutSubWindow(QMdiSubWindow):
             self._select_race_by_key(previous_race_key)
 
         if self.race_combo.currentIndex() < 0:
-            preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+            preferred_event = select_preferred_event(completed_events, upcoming_events)
             if preferred_event is not None:
-                index = self.race_combo.findData(preferred_event)
-                if index >= 0:
-                    self.race_combo.setCurrentIndex(index)
+                self._select_race_by_key(preferred_event.race_key)
         if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
             self.race_combo.setCurrentIndex(0)
 
@@ -4295,6 +4322,27 @@ class PopoutSubWindow(QMdiSubWindow):
         try:
             window_title = self.windowTitle()
             
+            # 🔧 修復洩漏1: 斷開所有模組信號連接
+            if hasattr(self, 'analysis_module') and self.analysis_module:
+                try:
+                    # 斷開模組信號
+                    if hasattr(self.analysis_module, 'module_error'):
+                        self.analysis_module.module_error.disconnect()
+                    if hasattr(self.analysis_module, 'parameters_updated'):
+                        self.analysis_module.parameters_updated.disconnect()
+                    print(f"[CLEANUP] {window_title} 已斷開模組信號連接")
+                except Exception as e:
+                    print(f"[WARNING] {window_title} 斷開信號時出錯: {e}")
+            
+            # 🔧 修復洩漏2: 清理 DraggableTitleBar 資源（7個按鈕信號）
+            if hasattr(self, 'title_bar') and self.title_bar:
+                try:
+                    self.title_bar.cleanup()
+                    self.title_bar = None
+                    print(f"[CLEANUP] {window_title} 已清理 TitleBar 資源")
+                except Exception as e:
+                    print(f"[WARNING] {window_title} TitleBar 清理失敗: {e}")
+            
             # 發出關閉信號
             self.window_closed.emit()
             
@@ -4305,6 +4353,19 @@ class PopoutSubWindow(QMdiSubWindow):
             # 如果內容widget有 CLI 分析功能，也要停止
             if self.content_widget and hasattr(self.content_widget, 'stop_cli_analysis'):
                 self.content_widget.stop_cli_analysis()
+            
+            # 🔧 修復洩漏3: 清理所有對象引用
+            self.analysis_module = None
+            self._parameter_provider = None
+            self.content_widget = None
+            self.main_window = None
+            
+            # 🔧 修復洩漏4: 清理事件處理狀態
+            self.resizing = False
+            self.resize_direction = None
+            self.resize_start_pos = None
+            self.resize_start_geometry = None
+            self._current_cursor = None
 
             # 從父層 MDI 區域移除子視窗，避免殘留在 subWindowList()
             if self.parent_mdi and hasattr(self.parent_mdi, 'removeSubWindow'):
@@ -4313,10 +4374,13 @@ class PopoutSubWindow(QMdiSubWindow):
                 except Exception:
                     pass
             
+            print(f"[CLEANUP] {window_title} 資源已清理完成")
+            
             # 接受關閉事件，讓 PyQt 自動處理移除
             event.accept()
             
         except Exception as e:
+            print(f"[ERROR] closeEvent 異常: {e}")
             event.accept()  # 即使出錯也要關閉
 
 class ContextMenuTreeWidget(QTreeWidget):
@@ -4331,24 +4395,45 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         # 設置右鍵選單
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.show_context_menu)
+        # ✅ 修復洩漏：使用 Qt.UniqueConnection 防止信號重複連接
+        self.customContextMenuRequested.connect(self.show_context_menu, Qt.UniqueConnection)
         
-        # 連接項目點擊事件
-        self.itemClicked.connect(self.on_item_clicked)
+        # ✅ 修復洩漏：使用 Qt.UniqueConnection 防止信號風暴
+        # ⚠️ 性能優化：添加防抖機制
+        self._last_click_time = 0
+        self._click_debounce_ms = 100  # 100ms 防抖
+        self.itemClicked.connect(self.on_item_clicked, Qt.UniqueConnection)
         
     def on_item_clicked(self, item, column):
-        """處理項目點擊事件 - 僅用於選擇，不觸發分析"""
+        """處理項目點擊事件 - 僅用於選擇，不觸發分析
+        
+        ⚠️ 性能優化 (2025-10-12):
+        - 添加防抖機制，避免信號風暴
+        - 減少 selectedItems() 調用次數
+        """
+        # ✅ 防抖機制：避免頻繁觸發（100ms 內只處理一次）
+        import time
+        current_time = time.time() * 1000  # 轉換為毫秒
+        if current_time - self._last_click_time < self._click_debounce_ms:
+            return  # 忽略過於頻繁的點擊
+        self._last_click_time = current_time
+        
         # 檢查是否為葉節點（可分析的項目）
         if item.childCount() == 0:
-            # 檢查是否為多選狀態
+            # ✅ 優化：只調用一次 selectedItems()
             selected_items = self.selectedItems()
+            selected_count = len(selected_items)
             
-            if len(selected_items) > 1:
+            if selected_count > 1:
                 # 多選模式：顯示選中的項目數量
-                print(f"[MULTI_SELECT] 已選擇 {len(selected_items)} 個分析模組")
-                for selected_item in selected_items:
-                    if selected_item.childCount() == 0:  # 確保是葉節點
-                        print(f"  - {selected_item.text(0)}")
+                print(f"[MULTI_SELECT] 已選擇 {selected_count} 個分析模組")
+                # ✅ 優化：只在少於 10 個時詳細列出
+                if selected_count <= 10:
+                    for selected_item in selected_items:
+                        if selected_item.childCount() == 0:  # 確保是葉節點
+                            print(f"  - {selected_item.text(0)}")
+                else:
+                    print(f"  (項目過多，不詳細列出)")
                 print(f"[MULTI_SELECT] 💡 提示：右鍵點擊可執行批量分析")
             else:
                 # 單選模式：僅顯示選中項目，不直接執行分析
@@ -4487,6 +4572,36 @@ class ContextMenuTreeWidget(QTreeWidget):
             
         print(f"[BATCH_EXPORT] 批量匯出完成")
     
+    def cleanup(self):
+        """
+        清理資源和信號連接
+        
+        ⚠️ 資源洩漏修復: 斷開所有信號，防止循環引用
+        """
+        try:
+            print("[CLEANUP] 開始清理 ContextMenuTreeWidget 資源...")
+            
+            # 🔧 斷開所有信號連接
+            try:
+                self.customContextMenuRequested.disconnect()
+                print("[CLEANUP]   ✅ 斷開 customContextMenuRequested")
+            except TypeError:
+                pass  # 信號已經斷開
+            
+            try:
+                self.itemClicked.disconnect()
+                print("[CLEANUP]   ✅ 斷開 itemClicked")
+            except TypeError:
+                pass  # 信號已經斷開
+            
+            # 🔧 清除 main_window 引用
+            self.main_window = None
+            
+            print("[CLEANUP] ✅ ContextMenuTreeWidget 資源清理完成")
+            
+        except Exception as e:
+            print(f"[WARNING] ContextMenuTreeWidget cleanup 失敗: {e}")
+    
     def analyze_function(self, function_name, batch_mode=False):
         """分析單個功能（支援批量模式）
         
@@ -4524,48 +4639,97 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         # ========== 子項目處理（直接開啟對應模組）==========
         params = self.main_window.get_current_parameters()
+        lap_params: Dict[str, Any] = {}
+
+        if hasattr(self.main_window, 'get_current_lap_toolbar_parameters'):
+            try:
+                lap_params = self.main_window.get_current_lap_toolbar_parameters() or {}
+            except Exception as exc:
+                print(f"[TREE_CLICK] ⚠️ 讀取圈速工具欄參數失敗: {exc}")
+
+        if not isinstance(lap_params, dict):
+            lap_params = {}
+
+        driver1 = lap_params.get('driver1') or "VER"
+        driver2 = lap_params.get('driver2')
+        if isinstance(driver2, str) and not driver2.strip():
+            driver2 = None
+
+        lap1_number = lap_params.get('lap1_number')
+        lap1_number = lap1_number if isinstance(lap1_number, int) and lap1_number > 0 else 1
+
+        lap2_number = lap_params.get('lap2_number')
+        if driver2 is None:
+            lap2_number = None
+        elif not isinstance(lap2_number, int) or lap2_number <= 0:
+            lap2_number = 1
+
+        lap_type = lap_params.get('lap_type') or tr('specific_lap', 'Specific Lap')
+        is_fastest_lap = bool(lap_params.get('is_fastest_lap'))
         
         # Lap Analysis 子模組 - 使用預設車手
         if clean_name in ["Speed Analysis", "速度分析"]:
             self.main_window.create_telemetry_window(
-                "speed_analysis", params, 
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                "speed_analysis", params,
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Brake Analysis", "煞車分析"]:
             self.main_window.create_telemetry_window(
                 "brake", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Gear Analysis", "檔位分析"]:
             self.main_window.create_telemetry_window(
                 "gear", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["RPM Analysis", "轉速分析"]:
             self.main_window.create_telemetry_window(
                 "rpm", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Acceleration Analysis", "加速度分析"]:
             self.main_window.create_telemetry_window(
                 "acceleration", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Speed Diff Analysis", "速度差分析"]:
             self.main_window.create_telemetry_window(
                 "speed_diff", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Distance Diff Analysis", "距離差分析"]:
             self.main_window.create_telemetry_window(
                 "distancediff", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
+            )
+        
+        elif clean_name in ["Time Diff Analysis", "時間差分析"]:
+            self.main_window.create_telemetry_window(
+                "timediff", params,
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         elif clean_name in ["Throttle Analysis", "油門分析"]:
@@ -4573,7 +4737,9 @@ class ContextMenuTreeWidget(QTreeWidget):
             print(f"[TREE_CLICK] 開啟油門遙測分析（Lap Analysis 子模組）")
             self.main_window.create_telemetry_window(
                 "throttle", params,
-                driver1="VER", driver2="LEC", lap1_number=1, lap2_number=1
+                driver1=driver1, driver2=driver2,
+                lap1_number=lap1_number, lap2_number=lap2_number,
+                lap_type=lap_type, is_fastest_lap=is_fastest_lap
             )
         
         # Detailed Lap Analysis 子模組
@@ -5150,13 +5316,31 @@ class WindowSettingsDialog(QDialog):
                 add_event(event)
 
             if self.race_combo.currentIndex() < 0:
-                preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+                preferred_event = select_preferred_event(completed_events, upcoming_events)
                 if preferred_event is not None:
-                    index = self.race_combo.findData(preferred_event)
-                    if index >= 0:
-                        self.race_combo.setCurrentIndex(index)
+                    print(
+                        "[RACE_DEFAULT][MAIN] preferred=",
+                        preferred_event.race_key,
+                        preferred_event.round,
+                        preferred_event.is_completed,
+                    )
+                    before_index = self.race_combo.currentIndex()
+                    self._select_race_by_key(preferred_event.race_key)
+                    after_index = self.race_combo.currentIndex()
+                    print(
+                        "[RACE_DEFAULT][MAIN] index from",
+                        before_index,
+                        "to",
+                        after_index,
+                        "text=",
+                        self.race_combo.currentText(),
+                    )
             if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
                 self.race_combo.setCurrentIndex(0)
+                print(
+                    "[RACE_DEFAULT][MAIN] fallback index=0 text=",
+                    self.race_combo.currentText(),
+                )
         else:
             placeholder = tr("season_calendar_placeholder", "[無已完成賽事]")
             self.race_combo.addItem(placeholder, None)
@@ -5814,19 +5998,21 @@ class StyleHMainWindow(QMainWindow):
             for event in upcoming_events:
                 add_event_to_combo(event)
 
+            selection_applied = False
             if preserve_race_key and preserve_race_key in self._race_event_lookup:
                 target_event = self._race_event_lookup[preserve_race_key]
                 index = self.race_combo.findData(target_event)
                 if index >= 0:
                     self.race_combo.setCurrentIndex(index)
+                    selection_applied = True
 
-            if self.race_combo.currentIndex() < 0:
-                preferred_event = completed_events[0] if completed_events else (upcoming_events[0] if upcoming_events else None)
+            if not selection_applied:
+                preferred_event = select_preferred_event(completed_events, upcoming_events)
                 if preferred_event is not None:
-                    index = self.race_combo.findData(preferred_event)
-                    if index >= 0:
-                        self.race_combo.setCurrentIndex(index)
-            if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
+                    self._select_race_by_key(preferred_event.race_key)
+                    selection_applied = self.race_combo.currentIndex() >= 0
+
+            if not selection_applied and self.race_combo.count() > 0:
                 self.race_combo.setCurrentIndex(0)
         else:
             placeholder = tr("season_calendar_placeholder", "[無已完成賽事]")
@@ -5835,6 +6021,21 @@ class StyleHMainWindow(QMainWindow):
         self.race_combo.blockSignals(False)
 
         self._update_session_combo(preserve_session_code=preserve_session_code)
+
+        # 同步本地參數以便其他模組獲取正確預設值
+        self.local_year = str(year)
+        selected_event = self.get_selected_event()
+        if selected_event:
+            self.local_race = selected_event.race_key
+        print(
+            "[RACE_DEFAULT][MAIN] final selection:",
+            {
+                "index": self.race_combo.currentIndex(),
+                "text": self.race_combo.currentText(),
+                "race_key": getattr(selected_event, "race_key", None),
+            },
+        )
+        self.local_session = self.get_selected_session_code()
 
         if self._season_error_message and self.statusBar():
             self.statusBar().showMessage(self._season_error_message, 10000)
@@ -6002,6 +6203,10 @@ class StyleHMainWindow(QMainWindow):
         
         # 🏁 連接最速圈checkbox的變更事件，自動設置圈數為99
         self.fastest_lap_checkbox.toggled.connect(self._on_main_fastest_lap_changed)
+
+        # 使用時間軸選項
+        self.use_time_axis_checkbox = QCheckBox(tr("use_time_axis_option", "Use Time Axis"))
+        self.use_time_axis_checkbox.setVisible(False)
         
         # 更新按鈕動作（稍後動態添加）
         self.update_all_action = None
@@ -6385,7 +6590,7 @@ class StyleHMainWindow(QMainWindow):
                     self.lap1_label, self.lap1_spinbox,
                     self.driver2_label, self.driver2_combo,
                     self.lap2_label, self.lap2_spinbox,
-                    self.fastest_lap_checkbox
+                    self.fastest_lap_checkbox, self.use_time_axis_checkbox
                 ]
                 
                 print(f"[LAP_CONTROL] 🔧 準備添加 {len(controls_to_add)} 個控件到工具欄")
@@ -6478,7 +6683,7 @@ class StyleHMainWindow(QMainWindow):
                 self.lap1_label, self.lap1_spinbox,
                 self.driver2_label, self.driver2_combo,
                 self.lap2_label, self.lap2_spinbox,
-                self.fastest_lap_checkbox
+                self.fastest_lap_checkbox, self.use_time_axis_checkbox
             ]
             
             for control in controls_to_remove:
@@ -6751,6 +6956,9 @@ class StyleHMainWindow(QMainWindow):
             'speed_diff',     # 速度差分析
             'Speeddiff',      # 速度差分析（大寫變體）
             'distancediff',   # 累積距離差分析
+            'Distancediff',   # 累積距離差分析（大寫變體）
+            'timediff',       # 累積時間差分析
+            'Timediff',       # 累積時間差分析（大寫變體）
             'laptime',        # 詳細圈速分析
             'laptime_boxplot',  # 圈速箱型圖
             'throttle_boxplot',  # 油門箱型圖
@@ -6769,6 +6977,16 @@ class StyleHMainWindow(QMainWindow):
         
         # 獲取當前設置
         driver1 = self.driver1_combo.currentText()
+        
+        # 獲取時間軸設定
+        use_time_axis = self.use_time_axis_checkbox.isChecked() if hasattr(self, 'use_time_axis_checkbox') else False
+        print(f"🕒 [TIME_AXIS_DEBUG] ========== 時間軸追蹤開始 ==========")
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 1: 讀取復選框狀態")
+        print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(self, 'use_time_axis_checkbox'): {hasattr(self, 'use_time_axis_checkbox')}")
+        if hasattr(self, 'use_time_axis_checkbox'):
+            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis_checkbox.isChecked(): {self.use_time_axis_checkbox.isChecked()}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   最終 use_time_axis 值: {use_time_axis}")
+        logger.info(f"圈速控制 - 時間軸設定: use_time_axis={use_time_axis}")
         
         # 🔍 詳細診斷：driver2_combo 狀態
         logger.info(f"[DEBUG] 🔍 driver2_combo 詳細狀態檢查:")
@@ -6827,10 +7045,25 @@ class StyleHMainWindow(QMainWindow):
             logger.info("[LAP_CONTROL] 備註: lap_analysis_windows 為空，但偵測到其他分析模組")
             print("[LAP_CONTROL] ℹ️ lap_analysis_windows 為空，但偵測到其他分析模組")
 
+        # 🔥 [關鍵修復] 通知 LinkageManager 時間軸模式變更
+        # 必須在更新各個模組之前調用，確保所有已註冊的模組接收到時間軸模式通知
+        try:
+            from modules.gui.lap_analysis.linkage import linkage_manager
+            logger.info(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 通知 LinkageManager 時間軸模式")
+            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 通知 LinkageManager 時間軸模式")
+            logger.info(f"🕒 [TIME_AXIS_DEBUG]   呼叫 linkage_manager.set_time_axis_mode({use_time_axis})")
+            print(f"🕒 [TIME_AXIS_DEBUG]   呼叫 linkage_manager.set_time_axis_mode({use_time_axis})")
+            linkage_manager.set_time_axis_mode(use_time_axis)
+            logger.info(f"🕒 [TIME_AXIS_DEBUG]   ✅ LinkageManager 通知完成")
+            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ LinkageManager 通知完成")
+        except Exception as e:
+            logger.error(f"🕒 [TIME_AXIS_DEBUG]   ❌ LinkageManager 通知失敗: {e}", exc_info=True)
+            print(f"🕒 [TIME_AXIS_DEBUG]   ❌ LinkageManager 通知失敗: {e}")
+
         telemetry_types = {
             'speed_analysis', 'speed', 'brake', 'throttle', 'steering',
             'gear', 'rpm', 'acceleration', 'speed_diff', 'Speeddiff',
-            'distancediff', 'laptime'
+            'distancediff', 'Distancediff', 'timediff', 'Timediff', 'laptime'
         }
         driver_only_types = {
             'throttle_line_chart_single_driver'
@@ -6849,6 +7082,11 @@ class StyleHMainWindow(QMainWindow):
 
                 logger.info("🔍 [BATCH_DEBUG] 嘗試調用 %s，kwargs=%s", method_name, kwargs)
                 print(f"🔍 [BATCH_DEBUG] 嘗試調用 {method_name}, kwargs={kwargs}")
+                
+                # 🕒 時間軸追蹤
+                if 'use_time_axis' in kwargs:
+                    print(f"🕒 [TIME_AXIS_DEBUG] 步驟 3: 調用 {method_name}")
+                    print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {kwargs['use_time_axis']}")
 
                 try:
                     result = method(**kwargs)
@@ -6974,7 +7212,11 @@ class StyleHMainWindow(QMainWindow):
                     'lap1': lap1,
                     'lap2': lap2,
                     'is_fastest': is_fastest,
+                    'use_time_axis': use_time_axis,  # 新增時間軸參數
                 }
+                
+                print(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 準備 telemetry_kwargs")
+                print(f"🕒 [TIME_AXIS_DEBUG]   telemetry_kwargs['use_time_axis'] = {telemetry_kwargs.get('use_time_axis')}")
                 driver_primary = driver1 or driver2 or base_kwargs.get('driver')
                 driver_kwargs = {
                     **base_kwargs,
@@ -7231,6 +7473,9 @@ class StyleHMainWindow(QMainWindow):
             'speed_diff',     # 速度差分析
             'Speeddiff',      # 速度差分析（大寫變體）
             'distancediff',   # 累積距離差分析
+            'Distancediff',   # 累積距離差分析（大寫變體）
+            'timediff',       # 累積時間差分析
+            'Timediff',       # 累積時間差分析（大寫變體）
             'laptime',        # 詳細圈速分析
             'laptime_boxplot',  # 圈速箱型圖
             'throttle_boxplot',  # 油門箱型圖
@@ -7255,9 +7500,16 @@ class StyleHMainWindow(QMainWindow):
         
         for window in self.lap_analysis_windows:
             if hasattr(window, 'analysis_type') and window.analysis_type in all_analysis_types:
-                analysis_windows.append(window)
-                logger.info(f"  ✅ 找到 MDI 視窗: {window.analysis_type}")
-                print(f"  ✅ 找到 MDI 視窗: {window.analysis_type}")
+                # 🔧 修復洩漏: 使用 seen_ids 防止重複添加
+                window_id = id(window)
+                if window_id not in seen_ids:
+                    analysis_windows.append(window)
+                    seen_ids.add(window_id)
+                    logger.info(f"  ✅ 找到 MDI 視窗: {window.analysis_type} (id={window_id})")
+                    print(f"  ✅ 找到 MDI 視窗: {window.analysis_type} (id={window_id})")
+                else:
+                    logger.info(f"  ⏭️  跳過重複 MDI 視窗: {window.analysis_type} (id={window_id})")
+                    print(f"  ⏭️  跳過重複 MDI 視窗: {window.analysis_type} (id={window_id})")
         
         # ✅ 2. 檢查 Tab 視窗（賽事級分析）
         logger.info(f"🔵 [DEBUG] 檢查 tab_widget: {self.tab_widget.count()} 個標籤")
@@ -7488,6 +7740,9 @@ class StyleHMainWindow(QMainWindow):
         tree.setIndentation(12)  # 增加縮排以容納三層結構
         tree.setRootIsDecorated(True)
         
+        # 🔧 修復洩漏: 存儲為實例屬性以便清理
+        self.function_tree = tree
+        
         # ========== Race Overview Analysis ==========
         race_overview_group = QTreeWidgetItem(tree, [tr("race_overview_analysis", "Race Overview Analysis")])
         race_overview_group.setExpanded(True)
@@ -7512,6 +7767,7 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(lap_analysis, ["    (L) " + tr("acceleration_analysis", "Acceleration Analysis")])
         QTreeWidgetItem(lap_analysis, ["    (L) " + tr("speed_diff_analysis", "Speed Diff Analysis")])
         QTreeWidgetItem(lap_analysis, ["    (L) " + tr("distance_diff_analysis", "Distance Diff Analysis")])
+        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("time_diff_analysis", "Time Diff Analysis")])
         
         # Detailed Lap Analysis - 2 個視圖
         detailed_lap = QTreeWidgetItem(driver_performance_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
@@ -7795,19 +8051,77 @@ class StyleHMainWindow(QMainWindow):
             print(f"[GLOBAL_TOOLBAR] ❌ 關閉 MDI 視窗失敗: {e}")
     
     def show_all_data_in_current_tab(self):
-        """顯示當前分頁的所有數據（全局工具列按鈕）"""
+        """顯示當前分頁的所有數據（全局工具列按鈕）- 重置所有已開啟視窗的 XY 軸視圖"""
         try:
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
                 print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
                 return
             
-            # TODO: 實現數據總覽功能
-            print("[GLOBAL_TOOLBAR] ℹ️  顯示所有數據功能待實現")
-            # 未來可以在這裡添加數據總覽視窗
+            # 🔧 獲取所有 MDI 子窗口（不只是 active 的）
+            all_sub_windows = current_mdi_area.subWindowList()
+            if not all_sub_windows:
+                print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有任何分析窗口")
+                return
+            
+            print(f"[GLOBAL_TOOLBAR] 🔄 準備重置 {len(all_sub_windows)} 個視窗的 XY 軸...")
+            
+            # 遍歷所有子窗口
+            reset_count = 0
+            for sub_window in all_sub_windows:
+                try:
+                    # 嘗試從子窗口獲取模組實例
+                    analysis_module = None
+                    if hasattr(sub_window, 'analysis_module'):
+                        analysis_module = sub_window.analysis_module
+                        print(f"[GLOBAL_TOOLBAR]   ✅ 找到模組: {analysis_module.__class__.__name__}")
+                    
+                    # 如果沒有模組實例，嘗試獲取 widget
+                    if not analysis_module:
+                        analysis_widget = sub_window.widget()
+                        if not analysis_widget:
+                            print(f"[GLOBAL_TOOLBAR]   ⚠️  無法獲取 widget，跳過此視窗")
+                            continue
+                        
+                        # 檢查 widget 本身是否有 reset_chart_view()
+                        if hasattr(analysis_widget, 'reset_chart_view'):
+                            print(f"[GLOBAL_TOOLBAR]   ✅ Widget 有 reset_chart_view(): {analysis_widget.__class__.__name__}")
+                            analysis_widget.reset_chart_view()
+                            reset_count += 1
+                            continue
+                        
+                        # 檢查 widget 是否有 analysis_module 屬性
+                        if hasattr(analysis_widget, 'analysis_module'):
+                            analysis_module = analysis_widget.analysis_module
+                            print(f"[GLOBAL_TOOLBAR]   ✅ 從 widget 找到模組: {analysis_module.__class__.__name__}")
+                        else:
+                            # 最後嘗試直接調用 chart_widget.reset_view()
+                            if hasattr(analysis_widget, 'chart_widget') and hasattr(analysis_widget.chart_widget, 'reset_view'):
+                                print(f"[GLOBAL_TOOLBAR]   ✅ 直接調用 chart_widget.reset_view()")
+                                analysis_widget.chart_widget.reset_view()
+                                reset_count += 1
+                            else:
+                                print(f"[GLOBAL_TOOLBAR]   ⚠️  {analysis_widget.__class__.__name__} 無重置方法，跳過")
+                            continue
+                    
+                    # 調用模組的 reset_chart_view() 方法
+                    if analysis_module and hasattr(analysis_module, 'reset_chart_view'):
+                        print(f"[GLOBAL_TOOLBAR]   ✅ 調用 {analysis_module.__class__.__name__}.reset_chart_view()")
+                        analysis_module.reset_chart_view()
+                        reset_count += 1
+                    else:
+                        print(f"[GLOBAL_TOOLBAR]   ⚠️  模組沒有 reset_chart_view()，跳過")
+                
+                except Exception as e:
+                    print(f"[GLOBAL_TOOLBAR]   ❌ 處理視窗時發生錯誤: {e}")
+                    continue
+            
+            print(f"[GLOBAL_TOOLBAR] ✅ 完成！成功重置 {reset_count}/{len(all_sub_windows)} 個視窗")
             
         except Exception as e:
-            print(f"[GLOBAL_TOOLBAR] ❌ 顯示數據失敗: {e}")
+            print(f"[GLOBAL_TOOLBAR] ❌ 重置視圖失敗: {e}")
+            import traceback
+            traceback.print_exc()
     
     def _on_tab_changed(self, index):
         """分頁切換事件處理"""
@@ -8763,6 +9077,9 @@ class StyleHMainWindow(QMainWindow):
                 'degraded': 'API Degraded',
                 'offline': 'API Offline',
             }.get(state, 'API Status')
+            
+            # ✅ 修復洩漏：只在手動觸發時顯示 QMessageBox
+            # 自動輪詢（每 10 秒）只更新狀態欄，不彈窗
             if manual:
                 if state == 'online':
                     QMessageBox.information(self, message_title, tooltip_text)
@@ -8770,13 +9087,16 @@ class StyleHMainWindow(QMainWindow):
                     QMessageBox.warning(self, message_title, tooltip_text)
                 else:
                     QMessageBox.warning(self, message_title, tooltip_text)
-            else:
-                if state == 'offline' and previous_state != 'offline':
-                    QMessageBox.warning(self, message_title, tooltip_text)
-                elif state == 'online' and previous_state in ('offline', 'degraded'):
-                    QMessageBox.information(self, 'API Restored', tooltip_text)
-                elif state == 'degraded' and previous_state == 'online':
-                    QMessageBox.warning(self, message_title, tooltip_text)
+            # ❌ 已移除：自動輪詢時的彈窗邏輯（避免每 10 秒創建 QMessageBox 導致洩漏）
+            # else:
+            #     if state == 'offline' and previous_state != 'offline':
+            #         QMessageBox.warning(self, message_title, tooltip_text)
+            #     elif state == 'online' and previous_state in ('offline', 'degraded'):
+            #         QMessageBox.information(self, 'API Restored', tooltip_text)
+            #     elif state == 'degraded' and previous_state == 'online':
+            #         QMessageBox.warning(self, message_title, tooltip_text)
+            
+            # 📊 日誌記錄（保留，用於調試和監控）
             if state == 'offline':
                 logger.warning('API health check failed: %s', errors or details)
             elif state == 'degraded':
@@ -8992,6 +9312,70 @@ class StyleHMainWindow(QMainWindow):
             'year': self.year_combo.currentText() if hasattr(self, 'year_combo') else '2025',
             'race': fastf1_race,  # 使用轉換後的名稱
             'session': self.session_combo.currentText() if hasattr(self, 'session_combo') else 'R'
+        }
+
+    def get_current_lap_toolbar_parameters(self) -> Dict[str, Any]:
+        """回傳工具欄上的圈速分析參數設定"""
+        driver1: str = "VER"
+        driver2: Optional[str] = "LEC"
+        lap1_number: int = 1
+        lap2_number: Optional[int] = 1
+        lap_type: str = tr("specific_lap", "Specific Lap")
+        is_fastest_lap: bool = False
+        use_time_axis: bool = False
+
+        try:
+            if hasattr(self, 'driver1_combo') and self.driver1_combo.count() > 0:
+                data = self.driver1_combo.currentData()
+                text = self.driver1_combo.currentText()
+                candidate = data if data else text
+                if isinstance(candidate, str) and candidate.strip():
+                    driver1 = candidate.strip()
+
+            if hasattr(self, 'driver2_combo') and self.driver2_combo.count() > 0:
+                data2 = self.driver2_combo.currentData()
+                if data2 is None:
+                    driver2 = None
+                else:
+                    text2 = self.driver2_combo.currentText()
+                    candidate2 = data2 if data2 else text2
+                    if isinstance(candidate2, str) and candidate2.strip():
+                        driver2 = candidate2.strip()
+            else:
+                driver2 = None
+
+            if hasattr(self, 'lap1_spinbox'):
+                lap1_number = int(self.lap1_spinbox.value())
+
+            if hasattr(self, 'lap2_spinbox'):
+                lap2_number = int(self.lap2_spinbox.value())
+
+            if hasattr(self, 'fastest_lap_checkbox'):
+                is_fastest_lap = bool(self.fastest_lap_checkbox.isChecked())
+
+            if hasattr(self, 'use_time_axis_checkbox'):
+                use_time_axis = bool(self.use_time_axis_checkbox.isChecked())
+
+            if is_fastest_lap:
+                lap1_number = 99
+                lap2_number = 99 if driver2 else None
+                lap_type = tr("fastest_lap_type", "Fastest Lap")
+            else:
+                lap_type = tr("specific_lap", "Specific Lap")
+                if driver2 is None:
+                    lap2_number = None
+
+        except Exception as exc:
+            print(f"[LAP_CONTROL] ⚠️ 無法讀取圈速工具欄參數: {exc}")
+
+        return {
+            "driver1": driver1,
+            "driver2": driver2,
+            "lap1_number": lap1_number,
+            "lap2_number": lap2_number,
+            "lap_type": lap_type,
+            "is_fastest_lap": is_fastest_lap,
+            "use_time_axis": use_time_axis,
         }
     
     def format_window_title(self, module_name):
@@ -13336,6 +13720,118 @@ class StyleHMainWindow(QMainWindow):
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('distancediff')
                 
+            elif chart_type == 'timediff':
+                # 時間差分析 - 使用新版模組架構
+                print(f"[CREATE_DEBUG] ⏱️ 檢測到時間差分析請求，嘗試新版模組架構")
+
+                # 使用新版模組化架構創建時間差分析
+                try:
+                    print(f"[CREATE_DEBUG] 📦 正在導入時間差分析模組...")
+                    from modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi import timediffAnalysisModule
+                    print(f"[CREATE_DEBUG] ✅ 時間差分析模組導入成功")
+                    
+                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    # 創建模組實例
+                    analysis_module = timediffAnalysisModule()
+                    print(f"[CREATE_DEBUG] ✅ 時間差模組實例創建成功")
+                    
+                    # 創建正確的參數提供者
+                    parameter_provider = MainWindowParameterProvider(self)
+                    analysis_module.parameter_provider = parameter_provider
+                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    
+                    # 設置當前參數
+                    analysis_module.current_year = str(params['year'])
+                    analysis_module.current_race = params['race']
+                    analysis_module.current_session = params['session']
+                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    
+                    # 設置車手和圈數參數
+                    analysis_module.driver1 = driver1 if driver1 else "VER"
+                    analysis_module.driver2 = driver2  # 允許為 None
+                    analysis_module.lap1 = lap1_number if lap1_number else 1
+                    analysis_module.lap2 = lap2_number  # 允許為 None
+                    
+                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    
+                    # 初始化模組
+                    print(f"[CREATE_DEBUG] 🚀 初始化時間差分析模組...")
+                    if analysis_module.initialize_module():
+                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        
+                        # 獲取模組標題，傳遞當前參數
+                        window_title = analysis_module.get_window_title(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=analysis_module.driver1,
+                            driver2=analysis_module.driver2,
+                            lap1=analysis_module.lap1,
+                            lap2=analysis_module.lap2
+                        )
+                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        
+                        # 創建子視窗並設置標題
+                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
+                        sub_window.setWidget(analysis_module.get_widget())
+                        
+                        # 設置模組的父視窗引用
+                        analysis_module.set_parent_window(sub_window)
+                        
+                        # 設置視窗大小
+                        sub_window.resize(1200, 800)
+                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        
+                        # 添加到MDI區域
+                        current_mdi_area.addSubWindow(sub_window)
+                        sub_window.show()
+                        
+                        print(f"[OK] [NEW_MODULE] 時間差分析模組視窗已創建: {window_title}")
+                        
+                        # 建立分析模組和子視窗的對應關係
+                        analysis_module._sub_window = sub_window  # 存儲子視窗引用
+                        
+                        # 通知主視窗圈速分析視窗已開啟
+                        self.on_lap_analysis_window_opened(analysis_module, "timediff")
+                        
+                        # 自動載入數據
+                        print(f"[CREATE_DEBUG] 🚀 自動載入時間差分析數據...")
+                        success = analysis_module.load_data(
+                            year=params['year'],
+                            race=params['race'],
+                            session=params['session'],
+                            driver1=driver1,
+                            driver2=driver2,
+                            lap1=lap1_number,
+                            lap2=lap2_number,
+                            is_fastest=is_fastest_lap
+                        )
+                        
+                        if success:
+                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                        else:
+                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                        
+                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        return
+                    else:
+                        print(f"[ERROR] 時間差分析模組初始化失敗，回退到舊版模式")
+                        
+                except Exception as e:
+                    print(f"[ERROR] ❌ 時間差分析模組創建失敗: {e}")
+                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    print(f"[ERROR] 回退到舊版模式")
+                    import traceback
+                    print(f"[ERROR] 詳細錯誤追踪:")
+                    traceback.print_exc()
+                
+                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版時間差分析模式")
+                
+                # 回退：創建佔位組件
+                chart_widget = self.create_placeholder_telemetry_widget('timediff')
+                
             elif chart_type == 'brake':
                 # 使用新的煞車分析模組
                 print(f"[CREATE_DEBUG] 🎯 檢測到煞車分析請求，嘗試新版模組架構")
@@ -15753,6 +16249,133 @@ class StyleHMainWindow(QMainWindow):
         except Exception as e:
             #print(f"[WARNING] 移除歡迎頁面時發生錯誤: {e}")
             pass
+    
+    def closeEvent(self, event):
+        """
+        主視窗關閉事件處理
+        
+        ⚠️ 資源洩漏修復: 清理所有執行緒、信號和資源，防止 Dummy 執行緒洩漏
+        
+        清理項目:
+        1. 停止 API 健康檢查執行緒 (ApiHealthWorker)
+        2. 停止 API 運行時監控執行緒 (ApiRuntimeWorker)
+        3. 停止所有定時器 (QTimer)
+        4. 關閉所有 MDI 子視窗和分析模組
+        5. 斷開所有信號連接
+        6. 清理全局管理器
+        """
+        print("[CLEANUP] 🛑 主視窗正在關閉，開始清理資源...")
+        
+        try:
+            # ========== 步驟 1: 停止 API 監控執行緒 ==========
+            print("[CLEANUP] 📡 停止 API 監控執行緒...")
+            
+            # 停止 API 健康檢查執行緒
+            if hasattr(self, '_api_health_worker') and self._api_health_worker:
+                try:
+                    print("[CLEANUP]   🔴 停止 ApiHealthWorker...")
+                    self._api_health_worker_active = False
+                    self._api_health_worker.quit()
+                    if not self._api_health_worker.wait(2000):  # 等待 2 秒
+                        print("[CLEANUP]   ⚠️ ApiHealthWorker 未正常退出，強制終止")
+                        self._api_health_worker.terminate()
+                        self._api_health_worker.wait()
+                    print("[CLEANUP]   ✅ ApiHealthWorker 已停止")
+                except Exception as e:
+                    print(f"[CLEANUP]   ⚠️ 停止 ApiHealthWorker 時出錯: {e}")
+                finally:
+                    self._api_health_worker = None
+            
+            # 停止 API 運行時監控執行緒
+            if hasattr(self, '_api_runtime_worker') and self._api_runtime_worker:
+                try:
+                    print("[CLEANUP]   🔴 停止 ApiRuntimeWorker...")
+                    self._api_runtime_worker_active = False
+                    self._api_runtime_worker.quit()
+                    if not self._api_runtime_worker.wait(2000):  # 等待 2 秒
+                        print("[CLEANUP]   ⚠️ ApiRuntimeWorker 未正常退出，強制終止")
+                        self._api_runtime_worker.terminate()
+                        self._api_runtime_worker.wait()
+                    print("[CLEANUP]   ✅ ApiRuntimeWorker 已停止")
+                except Exception as e:
+                    print(f"[CLEANUP]   ⚠️ 停止 ApiRuntimeWorker 時出錯: {e}")
+                finally:
+                    self._api_runtime_worker = None
+            
+            # ========== 步驟 2: 停止所有定時器 ==========
+            print("[CLEANUP] ⏰ 停止所有定時器...")
+            
+            if hasattr(self, 'api_health_timer') and self.api_health_timer:
+                self.api_health_timer.stop()
+                print("[CLEANUP]   ✅ api_health_timer 已停止")
+            
+            if hasattr(self, 'api_runtime_timer') and self.api_runtime_timer:
+                self.api_runtime_timer.stop()
+                print("[CLEANUP]   ✅ api_runtime_timer 已停止")
+            
+            if hasattr(self, '_parameter_broadcast_timer') and self._parameter_broadcast_timer:
+                self._parameter_broadcast_timer.stop()
+                print("[CLEANUP]   ✅ _parameter_broadcast_timer 已停止")
+            
+            # ========== 步驟 3: 關閉所有 MDI 子視窗 ==========
+            print("[CLEANUP] 🪟 關閉所有 MDI 子視窗...")
+            
+            if hasattr(self, 'mdi_areas') and self.mdi_areas:
+                for mdi_area in self.mdi_areas:
+                    if mdi_area:
+                        try:
+                            mdi_area.closeAllSubWindows()
+                            print(f"[CLEANUP]   ✅ 已關閉 MDI 區域的所有子視窗")
+                        except Exception as e:
+                            print(f"[CLEANUP]   ⚠️ 關閉 MDI 子視窗時出錯: {e}")
+            
+            # ========== 步驟 4: 清理追蹤列表 ==========
+            print("[CLEANUP] 📋 清理追蹤列表...")
+            
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.clear()
+                print("[CLEANUP]   ✅ active_subwindows 已清空")
+            
+            if hasattr(self, 'lap_analysis_windows'):
+                self.lap_analysis_windows.clear()
+                print("[CLEANUP]   ✅ lap_analysis_windows 已清空")
+            
+            if hasattr(self, 'active_analysis_tabs'):
+                self.active_analysis_tabs.clear()
+                print("[CLEANUP]   ✅ active_analysis_tabs 已清空")
+            
+            # ========== 步驟 5: 清理全局管理器 ==========
+            print("[CLEANUP] 🌐 清理全局管理器...")
+            
+            try:
+                from modules.gui.lap_analysis.linkage_manager import linkage_manager
+                if linkage_manager:
+                    linkage_manager.clear_all_linkages()
+                    print("[CLEANUP]   ✅ linkage_manager 已清理")
+            except Exception as e:
+                print(f"[CLEANUP]   ⚠️ 清理 linkage_manager 時出錯: {e}")
+            
+            # ========== 步驟 6: 清理功能樹 Widget ==========
+            print("[CLEANUP] 🌳 清理功能樹...")
+            
+            if hasattr(self, 'function_tree') and self.function_tree:
+                try:
+                    self.function_tree.cleanup()
+                    self.function_tree = None
+                    print("[CLEANUP]   ✅ function_tree 已清理")
+                except Exception as e:
+                    print(f"[CLEANUP]   ⚠️ 清理 function_tree 時出錯: {e}")
+            
+            print("[CLEANUP] ✅ 主視窗資源清理完成")
+            
+        except Exception as e:
+            print(f"[CLEANUP] ❌ 清理過程中發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        # 接受關閉事件
+        event.accept()
+        print("[CLEANUP] 🏁 主視窗關閉事件處理完成")
 
 
 def main():

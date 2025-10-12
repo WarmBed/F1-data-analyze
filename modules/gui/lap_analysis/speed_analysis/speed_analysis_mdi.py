@@ -603,7 +603,7 @@ class SpeedAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str, 
                             driver1: str, driver2: str = None, 
                             lap1: int = 1, lap2: int = 1, 
-                            is_fastest: bool = False) -> bool:
+                            is_fastest: bool = False, use_time_axis: bool = False) -> bool:
         """更新圈速分析參數（包含車手和圈數）"""
         try:
             print(f"[SPEED_MDI] ========== 圈速參數更新 ==========")
@@ -611,6 +611,13 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[SPEED_MDI] 車手: {driver1} vs {driver2}")
             print(f"[SPEED_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[SPEED_MDI] 最速圈: {is_fastest}")
+            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 4: MDI 收到 use_time_axis 參數")
+            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
+            print(f"[SPEED_MDI] ⏱️  使用時間軸: {use_time_axis}")
+            
+            # 儲存時間軸設定
+            self.use_time_axis = use_time_axis
+            print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
@@ -674,6 +681,21 @@ class SpeedAnalysisModule(IAnalysisModule):
                     
                     if success:
                         print(f"[SPEED_MDI] ✅ 圈速參數更新後數據重載成功")
+                        
+                        # 應用時間軸設定到圖表
+                        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: 準備設置圖表時間軸模式")
+                        print(f"🕒 [TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
+                        if self.speed_chart_widget:
+                            print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
+                        
+                        if self.speed_chart_widget and hasattr(self.speed_chart_widget, 'set_time_axis_mode'):
+                            print(f"🕒 [TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
+                            self.speed_chart_widget.set_time_axis_mode(use_time_axis)
+                            print(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
+                            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                        else:
+                            print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
+                        
                         # 發送參數更新信號
                         self.parameters_updated.emit({
                             'year': self.current_year,
@@ -822,6 +844,15 @@ class SpeedAnalysisModule(IAnalysisModule):
         # 速度分析模組暫時不提供參數設定介面
         return None
     
+    def reset_chart_view(self):
+        """重置圖表視圖 - 與 Show All Data 按鈕整合"""
+        print(f"[SPEED_MDI] 🔄 reset_chart_view() 被調用")
+        if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
+            print(f"[SPEED_MDI] ✅ 找到 speed_chart_widget，調用 reset_chart_view()")
+            self.speed_chart_widget.reset_chart_view()
+        else:
+            print(f"[SPEED_MDI] ❌ 未找到 speed_chart_widget 屬性")
+    
     def cleanup(self):
         """清理資源 - 實現抽象方法"""
         try:
@@ -890,7 +921,7 @@ class SpeedAnalysisModule(IAnalysisModule):
     def update_lap_parameters(self, year: str, race: str, session: str,
                             driver1: str, driver2: str = None,
                             lap1: int = 1, lap2: int = None,
-                            is_fastest: bool = False) -> bool:
+                            is_fastest: bool = False, use_time_axis: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 供統一更新介面使用"""
         try:
             print(f"[SPEED_MDI] 🔄 更新圈速參數...")
@@ -898,6 +929,12 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[SPEED_MDI]   🏎️ 車手參數: {driver1} vs {driver2}")
             print(f"[SPEED_MDI]   🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[SPEED_MDI]   ⚡ 最速圈: {is_fastest}")
+            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 4: SpeedAnalysisModule.update_lap_parameters 接收參數")
+            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
+            
+            # 儲存時間軸設定
+            self.use_time_axis = use_time_axis
+            print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -926,6 +963,20 @@ class SpeedAnalysisModule(IAnalysisModule):
             
             if success:
                 print(f"[SPEED_MDI] ✅ 圈速參數更新成功")
+                
+                # 應用時間軸設定到圖表
+                print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: SpeedAnalysisModule 準備設置圖表時間軸模式")
+                print(f"🕒 [TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
+                if self.speed_chart_widget:
+                    print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
+                
+                if self.speed_chart_widget and hasattr(self.speed_chart_widget, 'set_time_axis_mode'):
+                    print(f"🕒 [TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
+                    self.speed_chart_widget.set_time_axis_mode(use_time_axis)
+                    print(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
+                    print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                else:
+                    print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
             else:
                 print(f"[SPEED_MDI] ❌ 數據載入失敗")
                 
