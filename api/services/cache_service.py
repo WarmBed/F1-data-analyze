@@ -77,6 +77,8 @@ class F1AnalysisCacheService:
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
+            "96": ["race_weather_forecast"],  # ✅ 添加 Function 96 - 賽事天氣預報
+            "97": ["championship_standings"],  # ✅ 添加 Function 97 - 賽季積分榜 (車手/車隊)
             "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
             "99": ["season_calendar"],
         }
@@ -223,6 +225,18 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}team_colors_{year}_{colormap}_*.json",  # 指定 colormap
                     f"{self.json_dir}team_colors_{year}_*.json",              # 任何 colormap
                 ]
+            elif function_id == "96":  # ✅ 天氣預報 - 在 weather/ 子目錄
+                # 檔案格式: weather/race_weather_forecast_{year}_{race}_R.json
+                # ⚠️ 注意：天氣預報固定使用 session='R'，忽略傳入的 session 參數
+                # 使用遞迴搜尋找到子目錄中的檔案
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    # 使用 ** 遞迴搜尋 weather/ 子目錄，固定匹配 _R.json
+                    search_patterns.extend([
+                        f"{self.json_dir}**/race_weather_forecast*{year_token}*{race_str}*R*.json",
+                    ])
             else:  # 一般分析
                 effective_tokens = race_tokens or ["*"]
                 search_patterns = []
@@ -235,7 +249,9 @@ class F1AnalysisCacheService:
             
             for pattern in search_patterns:
                 print(f"[CACHE] 🔍 搜尋模式: {os.path.basename(pattern)}")
-                files = glob.glob(pattern)
+                # 🔧 FIX: Function 96 使用遞迴搜尋（檔案在 weather/ 子目錄）
+                use_recursive = function_id == "96" and "**" in pattern
+                files = glob.glob(pattern, recursive=use_recursive)
                 if not files:
                     print(f"[CACHE] ❌ 無匹配檔案")
                     continue
@@ -243,16 +259,22 @@ class F1AnalysisCacheService:
                 print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
-                    # ✅ Function 98 (Team Colors) 不檢查 race/session
-                    if function_id not in {"98", "99"}:
+                    # ✅ Function 96/97/98/99 跳過額外驗證（glob pattern 已足夠精確）
+                    # Function 96: 天氣預報 - 已通過 glob pattern 精確匹配
+                    # Function 97/98/99: 賽季級別分析 - 不需要 race/session
+                    if function_id not in {"96", "97", "98", "99"}:
                         if not self._file_matches_race(file_path, race):
                             continue
                         if not self._file_matches_session(file_path, session):
                             continue
 
                     result = self._load_json_safely(file_path)
-                    # ✅ Function 98/99 使用特殊驗證邏輯
-                    if function_id in {"98", "99"}:
+                    # ✅ Function 96: 天氣預報 - 直接返回（glob pattern 已精確匹配）
+                    if function_id == "96":
+                        if result:
+                            return result
+                    # ✅ Function 97/98/99 使用特殊驗證邏輯
+                    elif function_id in {"97", "98", "99"}:
                         if result and self._season_level_result_matches(result, year, function_id, params):
                             return result
                     elif result and self._result_matches_params(result, year, race, session, driver1, driver2, lap, lap1, lap2):
@@ -368,10 +390,11 @@ class F1AnalysisCacheService:
 
         tokens: List[str] = []
         candidates = {
-            raw_text,
-            raw_text.replace(" ", "_"),
-            raw_text.replace(" ", "_").lower(),
-            raw_text.lower(),
+            raw_text,                                    # ✅ 原始格式 "Singapore Grand Prix"
+            raw_text.replace(" ", "_"),                  # ✅ 底線格式 "Singapore_Grand_Prix"
+            raw_text.replace(" ", "_").lower(),          # ✅ 小寫底線 "singapore_grand_prix"
+            raw_text.lower(),                            # ✅ 小寫空白 "singapore grand prix"
+            raw_text.replace(" Grand Prix", "").strip(), # ✅ 新增：僅國家名 "Singapore"
         }
 
         normalized = self._normalize_race_name(raw_text)
@@ -504,15 +527,35 @@ class F1AnalysisCacheService:
         params: Dict[str, Any]
     ) -> bool:
         """
-        驗證賽季級別分析結果 (Function 98, 99)
+        驗證賽季級別分析結果 (Function 97, 98, 99)
         
         這些功能不需要 race/session 參數，只驗證 year 和特定參數
         """
         if not isinstance(result, dict):
             return False
         
+        # Function 97: Championship Standings - 驗證 year
+        if function_id == "97":
+            # 檢查 metadata 中的 year
+            metadata = result.get("metadata", {})
+            if isinstance(metadata, dict):
+                result_year = metadata.get("season_year") or metadata.get("year") or metadata.get("season")
+                if result_year and str(result_year) != str(year):
+                    return False
+            
+            # 驗證基本數據結構
+            data = result.get("data", {})
+            if not isinstance(data, dict):
+                return False
+            
+            # 應該包含 drivers 或 constructors
+            if not data.get("drivers") and not data.get("constructors"):
+                return False
+            
+            return True
+        
         # Function 98: Team Colors - 驗證 year 和 colormap
-        if function_id == "98":
+        elif function_id == "98":
             # 檢查 metadata 中的 year
             metadata = result.get("metadata", {})
             if isinstance(metadata, dict):

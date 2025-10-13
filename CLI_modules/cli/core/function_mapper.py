@@ -92,6 +92,8 @@ class F1AnalysisFunctionMapper:
             52: self._execute_performance_benchmarking,
             53: self._execute_ideal_lap_analysis,
             54: self._execute_driver_throttle_ratio,
+            96: self._execute_race_weather_forecast,  # 賽事天氣預報
+            97: self._execute_championship_standings_analysis,
             98: self._execute_team_color_analysis,
             99: self._execute_season_calendar_analysis,
         }
@@ -259,7 +261,9 @@ class F1AnalysisFunctionMapper:
     def _check_data_loaded(self, function_id: Union[str, int]) -> bool:
         """檢查是否需要載入數據"""
         # 系統功能不需要檢查數據載入
-        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "98", "99"}
+        # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
+        # 98: 車隊顏色分析, 99: 賽季賽程查詢
+        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "96", "98", "99"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -2923,6 +2927,39 @@ class F1AnalysisFunctionMapper:
                 "data": None,
             }
 
+    def _execute_championship_standings_analysis(self, **kwargs):
+        """Function 97: 賽季積分查詢 (車手/車隊)"""
+
+        try:
+            from CLI_modules.cli.analyzer.championship_standings_analysis import (
+                generate_championship_standings,
+            )
+
+            year = kwargs.get("year")
+            if year is None and self.data_loader and getattr(self.data_loader, "year", None):
+                year = self.data_loader.year
+            if year is None:
+                year = datetime.now().year
+
+            result = generate_championship_standings(
+                year=int(year),
+                round_hint=kwargs.get("round") or kwargs.get("round_hint") or "last",
+                save_json=kwargs.get("save_json", True),
+                include_drivers=kwargs.get("include_drivers", True),
+                include_constructors=kwargs.get("include_constructors", True),
+                force=kwargs.get("force", False),
+            )
+
+            return self._standardize_result(result, 97, "賽季積分查詢")
+
+        except Exception as exc:  # pragma: no cover - runtime safeguard
+            return {
+                "success": False,
+                "message": f"賽季積分查詢失敗: {exc}",
+                "function_id": "97",
+                "data": None,
+            }
+
     def _execute_team_color_analysis(self, **kwargs):
         """Function 98: 顏色配置輸出 (FastF1 團隊/車手色票 + 12小時智能刷新)"""
 
@@ -2999,6 +3036,111 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": f"賽季賽程查詢失敗: {exc}",
                 "function_id": "99",
+                "data": None,
+            }
+
+    def _execute_race_weather_forecast(self, **kwargs):
+        """Function 96: 賽事天氣預報 (支援 Open-Meteo API + 12小時智能刷新)"""
+
+        try:
+            from CLI_modules.cli.analyzer.race_weather_forecast import (
+                generate_race_weather_forecast,
+                check_weather_forecast_freshness
+            )
+
+            # 參數處理
+            year = kwargs.get("year")
+            event_name = kwargs.get("race")  # 從 race 參數映射到 event_name
+            force = kwargs.get("force", False)
+            
+            # 自動選擇年份
+            if not year:
+                if self.data_loader and getattr(self.data_loader, "year", None):
+                    year = self.data_loader.year
+                else:
+                    year = datetime.now().year
+            
+            # 顯示功能資訊
+            print(f"\n🌤️  賽事天氣預報: {year} {event_name or '(自動選擇下一場比賽)'}")
+            print("🔍 數據來源: Open-Meteo API (免費)")
+            print("📅 包含: 比賽日前2天預報 + 前2年歷史數據")
+            
+            # 檢查現有檔案新鮮度
+            if not force:
+                freshness = check_weather_forecast_freshness(year, event_name)
+                if freshness.get("is_fresh"):
+                    age_formatted = freshness.get("age_formatted", "未知")
+                    print(f"✅ 發現新鮮快取檔案 (更新於 {age_formatted} 前)")
+                    print(f"📁 檔案: {freshness.get('path')}")
+            
+            # 生成天氣預報
+            result = generate_race_weather_forecast(
+                year=int(year),
+                event_name=event_name,
+                save_json=True,
+                force=force
+            )
+            
+            # 顯示結果摘要
+            if result.get("success"):
+                metadata = result.get("metadata", {})
+                data = result.get("data", {})
+                
+                print(f"\n✅ {result.get('message')}")
+                print(f"📍 賽事: {metadata.get('event_name')}")
+                print(f"📅 比賽日期: {metadata.get('race_date_local')}")
+                print(f"🏁 第 {metadata.get('round')} 站")
+                
+                coordinates = data.get("coordinates", {})
+                print(f"🌍 賽道: {coordinates.get('circuit')}")
+                print(f"🗺️  座標: {coordinates.get('latitude')}, {coordinates.get('longitude')}")
+                
+                if metadata.get("output_file"):
+                    print(f"💾 輸出: {metadata.get('output_file')}")
+                
+                # 顯示天氣預報摘要
+                forecast = data.get("forecast", {})
+                forecast_days = forecast.get("days", [])
+                
+                print("\n📊 天氣預報摘要:")
+                for day_data in forecast_days:
+                    label = day_data.get("label", "")
+                    date = day_data.get("date", "")
+                    summary = day_data.get("summary", {})
+                    
+                    label_text = {
+                        "race_minus_2": "比賽日前2天",
+                        "race_minus_1": "比賽日前1天",
+                        "race_day": "比賽當天"
+                    }.get(label, label)
+                    
+                    temp_max = summary.get("temperature_max")
+                    temp_min = summary.get("temperature_min")
+                    precip = summary.get("precipitation_sum")
+                    wind = summary.get("windspeed_max")
+                    wind_dir = summary.get("winddirection_cardinal")
+                    
+                    print(f"\n  {label_text} ({date}):")
+                    if temp_max is not None and temp_min is not None:
+                        print(f"    🌡️  溫度: {temp_min:.1f}°C ~ {temp_max:.1f}°C")
+                    if precip is not None:
+                        print(f"    🌧️  降雨量: {precip:.1f} mm")
+                    if wind is not None:
+                        wind_text = f"{wind:.1f} km/h"
+                        if wind_dir:
+                            wind_text += f" ({wind_dir})"
+                        print(f"    💨 風速: {wind_text}")
+            
+            return self._standardize_result(result, 96, "賽事天氣預報")
+
+        except Exception as exc:
+            import traceback
+            print(f"\n❌ 賽事天氣預報失敗: {exc}")
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"賽事天氣預報失敗: {exc}",
+                "function_id": "96",
                 "data": None,
             }
 

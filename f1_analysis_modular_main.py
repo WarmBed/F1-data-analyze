@@ -1453,6 +1453,26 @@ class F1AnalysisModularCLI:
         print("    輸入參數：檢查參數")
         print("    主要輸出：完整性報告")
 
+        print("\n96. 🌤️  賽事天氣預報 (Race Weather Forecast)")
+        print("    ⭐ 狀態：新增功能 (NEW)")
+        print("    功能描述：獲取比賽週末的天氣預報和歷史天氣數據")
+        print("    輸入參數：年份 (-y)、賽事名稱 (-r，可選）")
+        print("    數據來源：Open-Meteo API（免費，無需 API Key）")
+        print("    主要輸出：")
+        print("      [STATS] JSON格式：")
+        print("        • forecast.days: 比賽日前2天、前1天、當天的預報")
+        print("          - 逐小時數據: 溫度、降雨、雲量、風速、風向")
+        print("          - 每日摘要: 最高/最低溫、降雨總量、平均雲量")
+        print("        • historical.entries: 前2年同日期的歷史天氣")
+        print("        • coordinates: 賽道座標、時區、賽道名稱、國家")
+        print("        • calendar_event: 賽事資訊（賽事名稱、輪次、日期）")
+        print("      輸出目錄：json/weather/")
+        print("      智能刷新：12小時自動更新")
+        print("      支援賽道：33個F1賽道（含座標和時區）")
+        print("    使用範例：")
+        print("      python f1_analysis_modular_main.py -f 96 -y 2025 -r Japan")
+        print("      python f1_analysis_modular_main.py -f 96 -y 2025  # 自動選擇下一場比賽")
+
         print("\n99. [CALENDAR] 賽季賽程查詢 (Season Calendar Overview)")
         print("    功能描述：列出指定年份已完成與即將進行的賽事")
         print("    輸入參數：年份 (-y)")
@@ -1555,9 +1575,10 @@ class F1AnalysisModularCLI:
 
         function_id = str(self.args.function) if self.args.function else None
         # 系統功能和工具功能不需要載入賽事數據
-        # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 98: API 健康檢查, 99: 賽季賽程查詢
+        # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 
+        # 96: 賽事天氣預報, 98: API 健康檢查, 99: 賽季賽程查詢
         # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
-        data_optional_functions = {"49", "50", "51", "52", "98", "99"}
+        data_optional_functions = {"49", "50", "51", "52", "96", "98", "99"}
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 

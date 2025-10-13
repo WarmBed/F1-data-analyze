@@ -14,18 +14,19 @@ from PyQt5.QtGui import QColor
 from typing import Dict
 
 
-# ========== 車隊顏色 (2025 賽季) ==========
+# ========== 車隊顏色 (2025 賽季 - 柔和版本) ==========
+# 參考速度模組的柔和配色風格 (降低飽和度與亮度)
 TEAM_COLORS: Dict[str, QColor] = {
-    "Red Bull Racing": QColor("#3671C6"),
-    "Ferrari": QColor("#E8002D"),
-    "Mercedes": QColor("#27F4D2"),
-    "McLaren": QColor("#FF8000"),
-    "Aston Martin": QColor("#229971"),
-    "Alpine": QColor("#FF87BC"),
-    "Williams": QColor("#64C4FF"),
-    "RB": QColor("#6692FF"),
-    "Kick Sauber": QColor("#52E252"),
-    "Haas F1 Team": QColor("#B6BABD"),
+    "Red Bull Racing": QColor(0, 80, 180),      # 柔和藍色 (原 #3671C6)
+    "Ferrari": QColor(200, 50, 60),             # 柔和紅色 (原 #E8002D)
+    "Mercedes": QColor(39, 180, 160),           # 柔和青色 (原 #27F4D2)
+    "McLaren": QColor(200, 120, 0),             # 柔和橙色 (原 #FF8000)
+    "Aston Martin": QColor(34, 130, 100),       # 柔和綠色 (原 #229971)
+    "Alpine": QColor(200, 100, 160),            # 柔和粉色 (原 #FF87BC)
+    "Williams": QColor(80, 160, 220),           # 柔和淺藍 (原 #64C4FF)
+    "RB": QColor(80, 120, 200),                 # 柔和靛藍 (原 #6692FF)
+    "Kick Sauber": QColor(60, 180, 60),         # 柔和螢光綠 (原 #52E252)
+    "Haas F1 Team": QColor(140, 145, 150),      # 柔和灰色 (原 #B6BABD)
 }
 
 

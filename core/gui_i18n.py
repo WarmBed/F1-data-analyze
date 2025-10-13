@@ -727,6 +727,42 @@ class GuiTranslator:
             'tire_strategy_analysis': {'zh': '輪胎策略分析', 'en': 'Tire Strategy Analysis', 'ja': 'タイヤ戦略分析'},
             'detailed_lap_analysis': {'zh': '詳細圈速分析', 'en': 'Detailed Lap Analysis', 'ja': '詳細ラップ分析'},
             
+            # Championship Standings (錦標賽積分榜)
+            'driver_standings_title_with_round': {'zh': '車手積分榜 - {year} 第 {round} 站', 'en': 'Driver Standings - {year} Round {round}', 'ja': 'ドライバーランキング - {year} 第{round}戦'},
+            'constructor_standings_title_with_round': {'zh': '車隊積分榜 - {year} 第 {round} 站', 'en': 'Constructor Standings - {year} Round {round}', 'ja': 'コンストラクターランキング - {year} 第{round}戦'},
+            'season_progress_title': {'zh': '賽季進度 - {year}', 'en': 'Season Progress - {year}', 'ja': 'シーズン進行状況 - {year}'},
+            
+            # Season Progress Widget - Group Titles
+            'season_summary_group': {'zh': '賽季總結', 'en': 'Season Summary', 'ja': 'シーズンサマリー'},
+            'current_leaders_group': {'zh': '目前領先者', 'en': 'Current Leaders', 'ja': '現在のリーダー'},
+            
+            # Season Progress Widget - Race Statistics
+            'completed_races': {'zh': '已完成賽事：{count} / {total}', 'en': 'Completed Races: {count} / {total}', 'ja': '完了レース：{count} / {total}'},
+            'remaining_races': {'zh': '剩餘賽事：{count}', 'en': 'Remaining Races: {count}', 'ja': '残りレース：{count}'},
+            'next_race': {'zh': '下一場賽事：{name}', 'en': 'Next Race: {name}', 'ja': '次のレース：{name}'},
+            'race_date': {'zh': '日期：{date}', 'en': 'Date: {date}', 'ja': '日付：{date}'},
+            'no_upcoming_races': {'zh': '賽季已完成', 'en': 'Season Completed', 'ja': 'シーズン終了'},
+            
+            # Season Progress Widget - Championship Leaders
+            'driver_leader': {'zh': '車手領先者：{name} ({team}) - {points} 分', 'en': 'Driver Leader: {name} ({team}) - {points} pts', 'ja': 'ドライバーリーダー：{name} ({team}) - {points} pts'},
+            'constructor_leader': {'zh': '車隊領先者：{name} - {points} 分', 'en': 'Constructor Leader: {name} - {points} pts', 'ja': 'コンストラクターリーダー：{name} - {points} pts'},
+            
+            # Standings Table Columns (積分榜表格欄位)
+            'standings_col_position': {'zh': '名次', 'en': 'Pos', 'ja': '順位'},
+            'standings_col_driver_code': {'zh': '代碼', 'en': 'Code', 'ja': 'コード'},
+            'standings_col_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'standings_col_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'standings_col_constructor': {'zh': '車隊', 'en': 'Constructor', 'ja': 'コンストラクター'},
+            'standings_col_points': {'zh': '積分', 'en': 'Points', 'ja': 'ポイント'},
+            'standings_col_wins': {'zh': '勝場', 'en': 'Wins', 'ja': '勝利数'},
+            'standings_col_delta': {'zh': '落後差', 'en': 'Gap', 'ja': '差分'},
+            
+            # Season Progress Module (賽季進度模組)
+            'menu_analysis': {'zh': '分析', 'en': 'Analysis', 'ja': '分析'},
+            'menu_driver_standings': {'zh': '車手積分榜', 'en': 'Driver Standings', 'ja': 'ドライバーランキング'},
+            'menu_constructor_standings': {'zh': '車隊積分榜', 'en': 'Constructor Standings', 'ja': 'コンストラクターランキング'},
+            'menu_season_progress': {'zh': '賽季進度總覽', 'en': 'Season Progress', 'ja': 'シーズン進行状況'},
+            
             # 歡迎頁面
             'main_title': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
             'subtitle': {'zh': '專業級 F1 數據分析平台', 'en': 'Professional F1 Data Analysis Platform', 'ja': 'Professional F1 Data Analysis Platform'},
@@ -1100,6 +1136,41 @@ class GuiTranslator:
             # 通用字串
             'na': {'zh': 'N/A', 'en': 'N/A', 'ja': 'N/A'},
             'unknown': {'zh': '未知', 'en': 'Unknown', 'ja': '不明'},
+            
+            # Weather Timeline Widget - 標題與區塊
+            'weather_timeline_title': {'zh': '比賽週末天氣時間軸', 'en': 'Race Weekend Weather Timeline', 'ja': 'レースウィークエンド天気タイムライン'},
+            'weather_history_title': {'zh': '歷史天氣對比', 'en': 'Historical Weather Comparison', 'ja': '過去の天気比較'},
+            'weather_test_window': {'zh': '天氣時間軸測試視窗', 'en': 'Weather Timeline Widget Test', 'ja': 'ウェザータイムラインテストウィンドウ'},
+            'weather_loading_status': {'zh': '正在從 API 載入天氣數據...', 'en': 'Loading weather data from API...', 'ja': 'APIから天気データを読み込んでいます...'},
+            
+            # Weather Timeline Widget - 日期標籤
+            'weather_day_minus_2': {'zh': '前2天\n{date}', 'en': '2 Days Before\n{date}', 'ja': '2日前\n{date}'},
+            'weather_day_minus_1': {'zh': '前1天\n{date}', 'en': '1 Day Before\n{date}', 'ja': '1日前\n{date}'},
+            'weather_race_day': {'zh': '比賽日\n{date}', 'en': 'Race Day\n{date}', 'ja': 'レース当日\n{date}'},
+            
+            # Weather Timeline Widget - 時間軸節點預設值
+            'weather_temp_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            'weather_icon_loading': {'zh': '...', 'en': '...', 'ja': '...'},
+            'weather_rain_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            'weather_wind_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            
+            # Weather Timeline Widget - 數據顯示格式
+            'weather_temp_celsius': {'zh': '{temp:.1f}°C', 'en': '{temp:.1f}°C', 'ja': '{temp:.1f}°C'},
+            'weather_rain_mm': {'zh': '{precip:.1f}mm', 'en': '{precip:.1f}mm', 'ja': '{precip:.1f}mm'},
+            'weather_wind_kmh': {'zh': '{arrow} {speed:.0f}km/h', 'en': '{arrow} {speed:.0f}km/h', 'ja': '{arrow} {speed:.0f}km/h'},
+            'weather_wind_speed': {'zh': ', 風速 {speed:.0f}km/h', 'en': ', Wind Speed {speed:.0f}km/h', 'ja': ', 風速 {speed:.0f}km/h'},
+            
+            # Weather Timeline Widget - 歷史數據格式
+            'weather_history_2024': {
+                'zh': '2024 年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm',
+                'en': '2024 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, Precipitation {precip:.1f}mm',
+                'ja': '2024年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降水量 {precip:.1f}mm'
+            },
+            'weather_history_2023': {
+                'zh': '2023 年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm',
+                'en': '2023 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, Precipitation {precip:.1f}mm',
+                'ja': '2023年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降水量 {precip:.1f}mm'
+            },
         }
     
     def t(self, key, default=None):

@@ -106,6 +106,84 @@ class CustomMdiArea(QMdiArea):
         
         # 允許拖拉視窗
         self.setOption(QMdiArea.DontMaximizeSubWindowOnActivation, True)  # 不自動最大化
+    
+    def resizeEvent(self, event):
+        """MDI 區域調整大小時，重新排列固定視窗"""
+        super().resizeEvent(event)
+        
+        # 重新排列固定視窗（保持水平並列）
+        self._rearrange_fixed_windows()
+    
+    def _rearrange_fixed_windows(self):
+        """重新排列固定的歡迎頁面視窗（三欄排列：左欄上下分割）"""
+        # 獲取所有固定視窗
+        fixed_windows = [
+            sw for sw in self.subWindowList() 
+            if sw.property("is_welcome_fixed")
+        ]
+        
+        if not fixed_windows:
+            print(f"[MDI_RESIZE] ⚠️  沒有找到固定視窗")
+            return
+        
+        # 按位置分類視窗
+        left_top_window = None
+        left_bottom_window = None
+        middle_window = None
+        right_window = None
+        
+        for sw in fixed_windows:
+            position = sw.property("welcome_position")
+            if position == "left_top":
+                left_top_window = sw
+            elif position == "left_bottom":
+                left_bottom_window = sw
+            elif position == "middle":
+                middle_window = sw
+            elif position == "right":
+                right_window = sw
+        
+        # 計算視窗尺寸
+        mdi_width = self.width()
+        mdi_height = self.height()
+        
+        print(f"[MDI_RESIZE] 重新排列 {len(fixed_windows)} 個固定視窗（三欄排列）")
+        print(f"[MDI_RESIZE] MDI 尺寸: {mdi_width}x{mdi_height}")
+        
+        # 三欄寬度: 左 33%, 中 33%, 右 34%
+        left_width = mdi_width // 3
+        middle_width = mdi_width // 3
+        right_width = mdi_width - left_width - middle_width
+        
+        # 左欄高度: 上 45%, 下 55%
+        left_top_height = int(mdi_height * 0.45)
+        left_bottom_height = mdi_height - left_top_height
+        
+        # 重新設定每個視窗的位置和大小
+        if left_top_window:
+            old_geom = left_top_window.geometry()
+            left_top_window.setGeometry(0, 0, left_width, left_top_height)
+            new_geom = left_top_window.geometry()
+            print(f"[MDI_RESIZE] 左上視窗 ({left_top_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+        
+        if left_bottom_window:
+            old_geom = left_bottom_window.geometry()
+            left_bottom_window.setGeometry(0, left_top_height, left_width, left_bottom_height)
+            new_geom = left_bottom_window.geometry()
+            print(f"[MDI_RESIZE] 左下視窗 ({left_bottom_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+        
+        if middle_window:
+            old_geom = middle_window.geometry()
+            middle_window.setGeometry(left_width, 0, middle_width, mdi_height)
+            new_geom = middle_window.geometry()
+            print(f"[MDI_RESIZE] 中欄視窗 ({middle_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+        
+        if right_window:
+            old_geom = right_window.geometry()
+            right_window.setGeometry(left_width + middle_width, 0, right_width, mdi_height)
+            new_geom = right_window.geometry()
+            print(f"[MDI_RESIZE] 右欄視窗 ({right_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+
         
     def addSubWindow(self, widget, flags=None):
         """添加子視窗並強制執行最小尺寸 - 簡化版本"""
@@ -5816,6 +5894,13 @@ class StyleHMainWindow(QMainWindow):
         view_menu.addSeparator()
         view_menu.addAction('Full Screen', self.toggle_fullscreen)
         
+        # 分析菜單
+        analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
+        analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
+        analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
+        analysis_menu.addSeparator()
+        analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
+        
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
         tools_menu.addAction('System Settings', self.system_settings)
@@ -8350,7 +8435,7 @@ class StyleHMainWindow(QMainWindow):
         
         # 歡迎內容區域
         welcome_widget = QWidget()
-        welcome_widget.setFixedHeight(300)  # 固定高度
+        welcome_widget.setFixedHeight(150)  # 縮小高度（移除副標題後）
         welcome_widget.setStyleSheet("""
             QWidget {
                 background-color: #FFFFFF;
@@ -8375,33 +8460,6 @@ class StyleHMainWindow(QMainWindow):
         """)
         welcome_layout.addWidget(title_label)
         
-        # 副標題
-        subtitle_label = QLabel(tr("subtitle", "Professional F1 Data Analysis Platform"))
-        subtitle_label.setAlignment(Qt.AlignCenter)
-        subtitle_label.setStyleSheet("""
-            QLabel {
-                color: #666666;
-                font-size: 14px;
-                background: transparent;
-            }
-        """)
-        welcome_layout.addWidget(subtitle_label)
-        
-        # 歡迎信息
-        info_label = QLabel(tr("welcome_info", "💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0"))
-        info_label.setAlignment(Qt.AlignCenter)
-        info_label.setStyleSheet("""
-            QLabel {
-                color: #666666;
-                font-size: 12px;
-                background: transparent;
-                padding: 15px;
-                border: 1px solid #CCCCCC;
-                border-radius: 6px;
-            }
-        """)
-        welcome_layout.addWidget(info_label)
-        
         # 創建MDI工作區域
         mdi_area = CustomMdiArea()
         mdi_area.setObjectName("WelcomeMDIArea")
@@ -8410,12 +8468,155 @@ class StyleHMainWindow(QMainWindow):
         # 強制設置白色背景
         self.force_white_background(mdi_area)
         
-        # ===== 按鈕已移到全局工具列，此處不再需要 =====
+        # ===== 自動載入積分榜到 MDI 區域 =====
+        # 使用新的 UniversalDataLoader 架構
+        try:
+            # 導入新模組
+            from modules.gui.constructor_standings import ConstructorStandingsMDI
+            from modules.gui.driver_standings import DriverStandingsMDI
+            from modules.gui.season_progress import SeasonProgressMDI
+            from modules.gui.weather_timeline import WeatherTimelineMDI
+            
+            # 獲取當前選擇的年份（動態參數）
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2024"
+            
+            # 🌦️ Weather Timeline: 優先選擇下一場未開賽的賽事
+            # 使用 SeasonCalendarProvider 獲取賽季日曆
+            weather_race = "Japan Grand Prix"  # 預設值
+            try:
+                year_int = int(current_year)
+                events = self._season_provider.get_completed_events(year_int)
+                
+                # 分離已完賽和未開賽的賽事
+                completed_events = [event for event in events if event.is_completed]
+                upcoming_events = [event for event in events if not event.is_completed]
+                
+                # ✅ 優先選擇下一場未開賽（天氣預報對未來賽事更有意義）
+                if upcoming_events:
+                    next_event = upcoming_events[0]
+                    race_base = next_event.race_key
+                    print(f"[WELCOME] Weather Timeline: 選擇下一場未開賽 → {race_base}")
+                elif completed_events:
+                    # 回退：如果沒有未開賽的賽事，使用最新已完賽
+                    next_event = completed_events[-1]
+                    race_base = next_event.race_key
+                    print(f"[WELCOME] Weather Timeline: 無未開賽賽事，使用最新已完賽 → {race_base}")
+                else:
+                    race_base = "Japan"
+                    print(f"[WELCOME] Weather Timeline: 無賽事數據，使用預設值 → {race_base}")
+                
+                # Function 96 期望完整的賽事名稱，例如 "Singapore Grand Prix"
+                if "Grand Prix" not in race_base:
+                    weather_race = f"{race_base} Grand Prix"
+                else:
+                    weather_race = race_base
+                    
+            except Exception as e:
+                print(f"[WELCOME] ⚠️ Weather Timeline 賽事選擇失敗: {e}")
+                weather_race = "Japan Grand Prix"
+            
+            # 📊 積分榜/進度: 使用當前 race_combo 選擇的賽事
+            current_race = "Japan"  # 預設值
+            if hasattr(self, 'race_combo') and self.race_combo.currentIndex() >= 0:
+                display_text = self.race_combo.currentText()
+                if '(' in display_text:
+                    current_race = display_text.split('(')[0].strip()
+                else:
+                    current_race = display_text
+            
+            print(f"[WELCOME] 使用年份: {current_year}")
+            print(f"[WELCOME] 積分榜/進度賽事: {current_race}")
+            print(f"[WELCOME] 天氣預報賽事: {weather_race}")
+            
+            # 創建四個 MDI 子視窗 - 三欄排列 (左欄上下分割)
+            # 這四個視窗是固定的歡迎頁面內容，不受 Tile/Cascade 影響
+            
+            # 1. 賽季進度總覽 (左上)
+            season_progress_mdi = SeasonProgressMDI(year=current_year)
+            season_progress_sub = QMdiSubWindow()
+            season_progress_sub.setWidget(season_progress_mdi)
+            season_progress_sub.setWindowTitle(tr("season_progress_title", "Season Progress - {year}").format(year=current_year))
+            season_progress_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
+            season_progress_sub.setProperty("welcome_position", "left_top")  # 標記位置
+            mdi_area.addSubWindow(season_progress_sub)
+            
+            # 2. 天氣時間軸 (左下) - 使用下一場未開賽的賽事
+            weather_timeline_mdi = WeatherTimelineMDI(year=current_year, event=weather_race)
+            weather_timeline_sub = QMdiSubWindow()
+            weather_timeline_sub.setWidget(weather_timeline_mdi)
+            weather_timeline_sub.setWindowTitle(tr("weather_timeline_title", "Race Weather Forecast"))
+            weather_timeline_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
+            weather_timeline_sub.setProperty("welcome_position", "left_bottom")  # 標記位置
+            mdi_area.addSubWindow(weather_timeline_sub)
+            
+            # 3. 車隊積分榜 (中欄)
+            constructor_mdi = ConstructorStandingsMDI(year=current_year)
+            constructor_sub = QMdiSubWindow()
+            constructor_sub.setWidget(constructor_mdi)
+            constructor_sub.setWindowTitle(tr("constructor_standings_window_title", "車隊積分榜"))
+            constructor_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
+            constructor_sub.setProperty("welcome_position", "middle")  # 標記位置
+            mdi_area.addSubWindow(constructor_sub)
+            
+            # 4. 車手積分榜 (右欄)
+            driver_mdi = DriverStandingsMDI(year=current_year)
+            driver_sub = QMdiSubWindow()
+            driver_sub.setWidget(driver_mdi)
+            driver_sub.setWindowTitle(tr("driver_standings_window_title", "車手積分榜"))
+            driver_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
+            driver_sub.setProperty("welcome_position", "right")  # 標記位置
+            mdi_area.addSubWindow(driver_sub)
+            
+            # 使用 QTimer 延遲設定視窗位置（等待 MDI 區域完成佈局）
+            from PyQt5.QtCore import QTimer
+            def arrange_windows():
+                # 計算視窗尺寸 (三欄排列: 左欄上下分割, 中欄, 右欄)
+                mdi_width = mdi_area.width()
+                mdi_height = mdi_area.height()
+                
+                # 三欄寬度: 左 33%, 中 33%, 右 34%
+                left_width = mdi_width // 3
+                middle_width = mdi_width // 3
+                right_width = mdi_width - left_width - middle_width
+                
+                # 左欄高度: 上 45%, 下 55%
+                left_top_height = int(mdi_height * 0.45)
+                left_bottom_height = mdi_height - left_top_height
+                
+                # 設定位置和大小
+                # 左上: Season Progress
+                season_progress_sub.setGeometry(0, 0, left_width, left_top_height)
+                
+                # 左下: Weather Timeline
+                weather_timeline_sub.setGeometry(0, left_top_height, left_width, left_bottom_height)
+                
+                # 中欄: Constructor Standings
+                constructor_sub.setGeometry(left_width, 0, middle_width, mdi_height)
+                
+                # 右欄: Driver Standings
+                driver_sub.setGeometry(left_width + middle_width, 0, right_width, mdi_height)
+                
+                # 顯示視窗
+                season_progress_sub.show()
+                weather_timeline_sub.show()
+                constructor_sub.show()
+                driver_sub.show()
+                
+                print(f"[WELCOME] 視窗排列完成 (三欄): 左上{left_width}x{left_top_height} + 左下{left_width}x{left_bottom_height} + 中{middle_width}x{mdi_height} + 右{right_width}x{mdi_height}")
+            
+            # 延遲 100ms 執行排列
+            QTimer.singleShot(100, arrange_windows)
+            
+            print(f"[WELCOME] ✅ 賽季進度 + 天氣時間軸 + 積分榜模組已載入 (year={current_year}, race={current_race})")
+        except Exception as e:
+            print(f"[WELCOME] ❌ 模組載入失敗: {e}")
+            import traceback
+            traceback.print_exc()
         
         # 將歡迎區域和MDI區域添加到分割器
         splitter.addWidget(welcome_widget)
         splitter.addWidget(mdi_area)
-        splitter.setSizes([300, 600])  # 歡迎區域300px，MDI區域600px
+        splitter.setSizes([150, 750])  # 歡迎區域150px（縮小），MDI區域750px（增大）
         
         tab_layout.addWidget(splitter)
         return tab_container
@@ -11551,15 +11752,16 @@ class StyleHMainWindow(QMainWindow):
             return TelemetryChartWidget("speed")
     
     def close_all_mdi_windows(self, mdi_area):
-        """關閉指定MDI區域中的所有子視窗並徹底清理所有相關註冊"""
+        """關閉指定MDI區域中的所有子視窗並徹底清理所有相關註冊（排除固定視窗）"""
         try:
-            print(f"[CLOSE] 開始關閉 MDI 區域中的所有視窗...")
+            print(f"[CLOSE] 開始關閉 MDI 區域中的非固定視窗...")
             
-            # 獲取所有子視窗
-            subwindows = mdi_area.subWindowList()
+            # 獲取所有子視窗（排除固定視窗）
+            all_subwindows = mdi_area.subWindowList()
+            subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
             window_count = len(subwindows)
             
-            print(f"[STATS] MDI區域中共有 {window_count} 個子視窗")
+            print(f"[STATS] MDI區域中共有 {len(all_subwindows)} 個子視窗，其中 {window_count} 個非固定視窗")
             
             if window_count > 0:
                 # 1. 在關閉視窗前，先從連動管理器中取消註冊所有相關模組
@@ -14370,12 +14572,17 @@ class StyleHMainWindow(QMainWindow):
             
         # 獲取所有子視窗並過濾出可見的視窗
         all_subwindows = mdi_area.subWindowList()
-        # 只包含可見且未關閉的視窗
-        subwindows = [sw for sw in all_subwindows if sw.isVisible() and not sw.isWindowModified()]
-        print(f"[TILE DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見")
+        # 只包含可見且未關閉的視窗，並排除固定的歡迎頁面視窗
+        subwindows = [
+            sw for sw in all_subwindows 
+            if sw.isVisible() 
+            and not sw.isWindowModified() 
+            and not sw.property("is_welcome_fixed")  # 排除固定視窗
+        ]
+        print(f"[TILE DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
         
         if not subwindows:
-            print(f"[TILE DEBUG] 沒有可見的子視窗需要排列")
+            print(f"[TILE DEBUG] 沒有可見的非固定子視窗需要排列")
             return
         
         # 移除有問題的清理邏輯 - 直接使用現有的子視窗列表
@@ -14557,13 +14764,15 @@ class StyleHMainWindow(QMainWindow):
             #print("[ERROR] 當前分頁中沒有找到MDI區域")
             return
             
-        # 獲取所有子視窗
-        subwindows = mdi_area.subWindowList()
+        # 獲取所有子視窗，排除固定的歡迎頁面視窗
+        all_subwindows = mdi_area.subWindowList()
+        subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
+        
         if not subwindows:
-            #print("[ERROR] MDI區域中沒有子視窗需要層疊")
+            #print("[ERROR] MDI區域中沒有非固定子視窗需要層疊")
             return
             
-        #print(f"[STATS] 開始層疊排列 {len(subwindows)} 個子視窗")
+        #print(f"[STATS] 開始層疊排列 {len(subwindows)} 個非固定子視窗")
         
         # 計算層疊參數
         cascade_offset = 30  # 每個視窗的偏移量
@@ -14627,10 +14836,12 @@ class StyleHMainWindow(QMainWindow):
             #print("[ERROR] 當前分頁中沒有找到MDI區域")
             return
             
-        # 獲取所有子視窗並最小化
-        subwindows = mdi_area.subWindowList()
+        # 獲取所有子視窗並最小化（排除固定視窗）
+        all_subwindows = mdi_area.subWindowList()
+        subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
+        
         if not subwindows:
-            #print("[ERROR] MDI區域中沒有子視窗")
+            #print("[ERROR] MDI區域中沒有非固定子視窗")
             return
             
         count = 0
@@ -14664,10 +14875,12 @@ class StyleHMainWindow(QMainWindow):
             #print("[ERROR] 當前分頁中沒有找到MDI區域")
             return
             
-        # 獲取所有子視窗並最大化
-        subwindows = mdi_area.subWindowList()
+        # 獲取所有子視窗並最大化（排除固定視窗）
+        all_subwindows = mdi_area.subWindowList()
+        subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
+        
         if not subwindows:
-            #print("[ERROR] MDI區域中沒有子視窗")
+            #print("[ERROR] MDI區域中沒有非固定子視窗")
             return
             
         count = 0
@@ -14701,10 +14914,12 @@ class StyleHMainWindow(QMainWindow):
             #print("[ERROR] 當前分頁中沒有找到MDI區域")
             return
             
-        # 獲取所有子視窗並還原
-        subwindows = mdi_area.subWindowList()
+        # 獲取所有子視窗並還原（排除固定視窗）
+        all_subwindows = mdi_area.subWindowList()
+        subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
+        
         if not subwindows:
-            #print("[ERROR] MDI區域中沒有子視窗")
+            #print("[ERROR] MDI區域中沒有非固定子視窗")
             return
             
         count = 0
@@ -14755,6 +14970,81 @@ class StyleHMainWindow(QMainWindow):
             
         # 強制刷新界面
         self.update()
+    
+    def open_driver_standings(self):
+        """Open Driver Standings MDI window"""
+        try:
+            from modules.gui.driver_standings import DriverStandingsMDI
+            
+            # Get current year from year combo
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2024"
+            
+            # Create MDI window
+            driver_mdi = DriverStandingsMDI(year=current_year)
+            driver_sub = QMdiSubWindow()
+            driver_sub.setWidget(driver_mdi)
+            driver_sub.setWindowTitle(tr('menu_driver_standings', 'Driver Standings'))
+            driver_sub.resize(900, 600)
+            
+            # Add to MDI area
+            if hasattr(self, 'mdi_area'):
+                self.mdi_area.addSubWindow(driver_sub)
+                driver_sub.show()
+                print(f"[MENU] Opened Driver Standings (year={current_year})")
+        except Exception as e:
+            print(f"[MENU] Failed to open Driver Standings: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def open_constructor_standings(self):
+        """Open Constructor Standings MDI window"""
+        try:
+            from modules.gui.constructor_standings import ConstructorStandingsMDI
+            
+            # Get current year from year combo
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2024"
+            
+            # Create MDI window
+            constructor_mdi = ConstructorStandingsMDI(year=current_year)
+            constructor_sub = QMdiSubWindow()
+            constructor_sub.setWidget(constructor_mdi)
+            constructor_sub.setWindowTitle(tr('menu_constructor_standings', 'Constructor Standings'))
+            constructor_sub.resize(700, 400)
+            
+            # Add to MDI area
+            if hasattr(self, 'mdi_area'):
+                self.mdi_area.addSubWindow(constructor_sub)
+                constructor_sub.show()
+                print(f"[MENU] Opened Constructor Standings (year={current_year})")
+        except Exception as e:
+            print(f"[MENU] Failed to open Constructor Standings: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def open_season_progress(self):
+        """Open Season Progress MDI window"""
+        try:
+            from modules.gui.season_progress import SeasonProgressMDI
+            
+            # Get current year from year combo
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2024"
+            
+            # Create MDI window
+            progress_mdi = SeasonProgressMDI(year=current_year)
+            progress_sub = QMdiSubWindow()
+            progress_sub.setWidget(progress_mdi)
+            progress_sub.setWindowTitle(tr('season_progress_title', 'Season Progress - {year}').format(year=current_year))
+            progress_sub.resize(800, 500)
+            
+            # Add to MDI area
+            if hasattr(self, 'mdi_area'):
+                self.mdi_area.addSubWindow(progress_sub)
+                progress_sub.show()
+                print(f"[MENU] Opened Season Progress (year={current_year})")
+        except Exception as e:
+            print(f"[MENU] Failed to open Season Progress: {e}")
+            import traceback
+            traceback.print_exc()
         
     def data_validation(self): 
         #print("[工具] 數據驗證")
@@ -16019,6 +16309,37 @@ class StyleHMainWindow(QMainWindow):
         msg.setText(message)
         msg.setStandardButtons(QMessageBox.Ok)
         msg.exec_()
+    
+    def resizeEvent(self, event):
+        """主視窗調整大小時，同步調整固定視窗"""
+        super().resizeEvent(event)
+        
+        # 尋找 Welcome Tab 中的 MDI 區域
+        if hasattr(self, 'tab_widget'):
+            for i in range(self.tab_widget.count()):
+                tab_widget = self.tab_widget.widget(i)
+                if tab_widget:
+                    # 遞迴搜尋 CustomMdiArea
+                    mdi_area = self._find_mdi_area(tab_widget)
+                    if mdi_area and hasattr(mdi_area, '_rearrange_fixed_windows'):
+                        print(f"[MAIN_RESIZE] 主視窗調整大小，觸發 MDI 重新排列")
+                        mdi_area._rearrange_fixed_windows()
+    
+    def _find_mdi_area(self, widget):
+        """遞迴尋找 CustomMdiArea"""
+        if isinstance(widget, CustomMdiArea):
+            return widget
+        
+        # 檢查子組件
+        if hasattr(widget, 'children'):
+            for child in widget.children():
+                if isinstance(child, CustomMdiArea):
+                    return child
+                # 遞迴搜尋
+                result = self._find_mdi_area(child)
+                if result:
+                    return result
+        return None
     
     def closeEvent(self, event):
         """視窗關閉事件處理"""

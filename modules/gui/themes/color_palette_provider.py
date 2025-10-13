@@ -30,7 +30,7 @@ DEFAULT_TEAM_HEX: Dict[str, Tuple[str, str]] = {
     "aston martin": ("Aston Martin", "#00665F"),
     "alpine": ("Alpine", "#FF87BC"),
     "haas": ("Haas", "#B6BABD"),
-    "racing bulls": ("Racing Bulls", "#FCD700"),
+    "rb": ("RB", "#364AA9"),
     "kick sauber": ("Kick Sauber", "#00E700"),
     "williams": ("Williams", "#00A0DD"),
 }
@@ -60,10 +60,10 @@ DEFAULT_DRIVER_MAP: Dict[str, Tuple[str, str]] = {
     "OCO": ("haas", "Esteban Ocon"),
     "BEA": ("haas", "Oliver Bearman"),
     "MAG": ("haas", "Kevin Magnussen"),
-    # Racing Bulls
-    "TSU": ("racing bulls", "Yuki Tsunoda"),
-    "HAD": ("racing bulls", "Isack Hadjar"),
-    "RIC": ("racing bulls", "Daniel Ricciardo"),
+    # Racing Bulls (RB)
+    "TSU": ("rb", "Yuki Tsunoda"),
+    "HAD": ("rb", "Isack Hadjar"),
+    "RIC": ("rb", "Daniel Ricciardo"),
     # Kick Sauber / Audi
     "BOR": ("kick sauber", "Gabriel Bortoleto"),
     "HUL": ("kick sauber", "Nico Hülkenberg"),
@@ -152,11 +152,23 @@ class ColorPaletteProvider:
         code = self._normalize_driver_code(driver_code)
         entry = self._driver_palette.get(code)
 
-        if entry is None:
+        if entry is None and fallback:
+            # 嘗試從 DEFAULT_DRIVER_MAP 獲取車隊顏色
+            if code in DEFAULT_DRIVER_MAP:
+                team_slug, _ = DEFAULT_DRIVER_MAP[code]
+                team_entry = self._team_palette.get(team_slug)
+                if team_entry:
+                    return self._format_entry(team_entry, format)
+            
+            # 最後嘗試用 driver_code 作為車隊名稱
             team_entry = self._team_palette.get(self._normalize_team_slug(driver_code))
             if team_entry:
                 return self._format_entry(team_entry, format)
-            return self._default_color(format) if fallback else None
+            
+            return self._default_color(format)
+        
+        if entry is None:
+            return None
 
         return self._format_entry(entry, format)
 
@@ -401,7 +413,21 @@ class ColorPaletteProvider:
 
     @staticmethod
     def _normalize_team_slug(identifier: str) -> str:
-        return str(identifier or "").strip().lower()
+        """正規化車隊名稱為小寫 slug，移除常見後綴"""
+        normalized = str(identifier or "").strip().lower()
+        
+        # 移除常見後綴
+        suffixes_to_remove = [
+            " f1 team",
+            " racing",
+            " f1",
+        ]
+        
+        for suffix in suffixes_to_remove:
+            if normalized.endswith(suffix):
+                normalized = normalized[:-len(suffix)].strip()
+        
+        return normalized
 
     def _format_entry(self, entry: Dict[str, Any], format: str) -> Any:
         fmt = (format or "qcolor").lower()

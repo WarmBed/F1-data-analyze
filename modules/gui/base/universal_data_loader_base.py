@@ -729,6 +729,30 @@ UniversalDataLoader.register_analysis_type(
     )
 )
 
+# 註冊車手積分榜類型
+UniversalDataLoader.register_analysis_type(
+    'driver_standings',
+    AnalysisConfig(
+        display_name='車手積分榜',
+        debug_prefix='DRIVER_STANDINGS',
+        data_source='json',
+        cli_function='97',  # 功能97: 賽季積分查詢
+        file_patterns=['championship_standings_*.json']
+    )
+)
+
+# 註冊車隊積分榜類型
+UniversalDataLoader.register_analysis_type(
+    'constructor_standings',
+    AnalysisConfig(
+        display_name='車隊積分榜',
+        debug_prefix='CONSTRUCTOR_STANDINGS',
+        data_source='json',
+        cli_function='97',  # 功能97: 賽季積分查詢
+        file_patterns=['championship_standings_*.json']
+    )
+)
+
 
 # ========== 工廠函數 ==========
 
