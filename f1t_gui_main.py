@@ -5735,7 +5735,7 @@ class StyleHMainWindow(QMainWindow):
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
         
-        self.setWindowTitle("F1 TelemetryStation Pro V0.3.0")
+        self.setWindowTitle("F1 TelemetryStation Pro V0.4.0")
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         

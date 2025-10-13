@@ -1,0 +1,92 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+
+# ⭐ 個人語言配置檔案（會自動生成，不應上傳）
+core/gui_language_config.json
+
+# Cache and temporary files
+cache/
+tmp/
+logs/
+*.log
+
+# FastF1 cache
+f1_analysis_cache/
+
+# JSON outputs (分析結果，太大且會頻繁變動)
+json/*.json
+json_backup/*.json
+json_exports/*.json
+test_json_output/
+
+# Investigation outputs
+investigation_output/
+
+# Build outputs
+build/
+dist/
+
+# Cloudflared
+cloudflared/*.log
+cloudflared/.token
+
+# Local configuration
+config/local_*.json
+*.local.json
+
+# 測試資料
+tests/__pycache__/
+tests/*.pyc

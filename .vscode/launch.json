@@ -40,39 +40,7 @@
       "justMyCode": false,
       "stopOnEntry": false
     },
-    {
-      "name": "Python: CLI entry (interactive)",
-      "type": "debugpy",
-      "request": "launch",
-      "program": "${workspaceFolder}/f1_analysis_modular_main.py",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "PYTHONIOENCODING": "utf-8"
-      },
-      "justMyCode": false,
-      "stopOnEntry": false
-    },
-    {
-      "name": "Python: Pytest",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "pytest",
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "env": {
-        "PYTHONPATH": "${workspaceFolder}",
-        "PYTHONIOENCODING": "utf-8"
-      },
-      "args": [
-        "tests/",
-        "-v",
-        "--tb=short"
-      ],
-      "justMyCode": false,
-      "stopOnEntry": false
-    },
+   
     {
       "name": "🌐 Cloudflare Tunnel",
       "type": "node-terminal",
@@ -81,82 +49,34 @@
       "cwd": "${workspaceFolder}\\cloudflared"
     },
     {
-      "name": "📦 打包 EXE (PyInstaller)",
+      "name": "🚀 啟動所有 F1T 服務",
       "type": "node-terminal",
       "request": "launch",
-      "command": "python -m PyInstaller F1T_GUI.spec",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 建置",
-        "order": 1
-      }
+      "command": "${workspaceFolder}\\nssm\\Start_All_Services.bat",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "📦 清理並重新打包 EXE",
+      "name": "🛑 關閉所有 F1T 服務",
       "type": "node-terminal",
       "request": "launch",
-      "command": "powershell -NoProfile -Command \"Remove-Item dist -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue; python -m PyInstaller F1T_GUI.spec\"",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 建置",
-        "order": 2
-      }
-    }
-  ],
-  "compounds": [
-    {
-      "name": "🎯 只啟動 GUI",
-      "configurations": [
-        "Python: GUI"
-      ],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 開發模式",
-        "order": 1
-      }
+      "command": "${workspaceFolder}\\nssm\\Stop_All_Services.bat",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🚀 GUI + API (本地開發)",
-      "configurations": [
-        "Python: API server",
-        "Python: GUI"
-      ],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 開發模式",
-        "order": 2
-      }
+      "name": "🔄 重啟所有 F1T 服務",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Restart_All_Services.bat",
+      "cwd": "${workspaceFolder}"
     },
     {
-      "name": "🌐 API + Cloudflare Tunnel (對外開放)",
-      "configurations": [
-        "Python: API server",
-        "🌐 Cloudflare Tunnel"
-      ],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 生產模式",
-        "order": 1
-      }
-    },
-    {
-      "name": "🌍 完整系統 (API + Tunnel + GUI)",
-      "configurations": [
-        "Python: API server",
-        "🌐 Cloudflare Tunnel",
-        "Python: GUI"
-      ],
-      "stopAll": true,
-      "presentation": {
-        "hidden": false,
-        "group": "F1T - 生產模式",
-        "order": 2
-      }
+      "name": "📊 查看 F1T 服務狀態",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Check_Service_Status.bat",
+      "cwd": "${workspaceFolder}"
     }
   ]
-}
+  }
+
+

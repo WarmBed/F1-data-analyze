@@ -7,6 +7,22 @@ Dedicated to GUI interface language switching, does not affect CLI print output
 
 import os
 import json
+import sys
+
+def get_config_path():
+    """
+    獲取配置檔案路徑（支援 EXE 模式）
+    Returns the configuration file path (supports EXE mode)
+    """
+    # 檢測是否為 PyInstaller 打包的 EXE
+    if getattr(sys, 'frozen', False):
+        # EXE 模式：使用用戶目錄下的配置檔案
+        app_data_dir = os.path.join(os.path.expanduser('~'), '.f1telemetrystation')
+        os.makedirs(app_data_dir, exist_ok=True)
+        return os.path.join(app_data_dir, 'gui_language_config.json')
+    else:
+        # 開發模式：使用專案目錄
+        return os.path.join(os.path.dirname(__file__), 'gui_language_config.json')
 
 class GuiTranslator:
     """GUI 專用翻譯器 - 僅處理介面元素"""
@@ -21,16 +37,18 @@ class GuiTranslator:
         saved_language = self._load_saved_language()
         self.language = saved_language if saved_language else language
         self._translations = self._load_translations()
-        self._config_file = os.path.join(os.path.dirname(__file__), 'gui_language_config.json')
+        self._config_file = get_config_path()
     
     def _load_saved_language(self):
         """從設定檔載入保存的語言設定"""
         try:
-            config_file = os.path.join(os.path.dirname(__file__), 'gui_language_config.json')
+            config_file = get_config_path()
             if os.path.exists(config_file):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
-                    return config.get('language', 'en')
+                    loaded_lang = config.get('language', 'en')
+                    print(f"[GUI_I18N] 已載入語言設定: {loaded_lang} (檔案: {config_file})")
+                    return loaded_lang
         except Exception as e:
             print(f"[GUI_I18N] 載入語言設定失敗: {e}")
         return None
@@ -39,10 +57,10 @@ class GuiTranslator:
         """保存語言設定到檔案"""
         try:
             config = {'language': language}
-            config_file = os.path.join(os.path.dirname(__file__), 'gui_language_config.json')
+            config_file = get_config_path()
             with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-            print(f"[GUI_I18N] 語言設定已保存: {language}")
+            print(f"[GUI_I18N] 語言設定已保存: {language} (檔案: {config_file})")
             return True
         except Exception as e:
             print(f"[GUI_I18N] 保存語言設定失敗: {e}")

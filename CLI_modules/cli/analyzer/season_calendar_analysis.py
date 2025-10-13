@@ -17,7 +17,7 @@ __all__ = ["generate_season_calendar", "SeasonCalendarResult", "check_calendar_f
 
 FASTF1_CACHE_DIR = os.getenv("F1_ANALYSIS_FASTF1_CACHE", "f1_analysis_cache")
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
-CALENDAR_REFRESH_HOURS = 12  # 賽季日曆刷新間隔（小時）
+CALENDAR_REFRESH_HOURS = 168  # 7 天 (平時維護模式) - 賽程固定除非有改期
 
 SeasonCalendarResult = Dict[str, Any]
 
