@@ -1011,9 +1011,10 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.current_data = None
         self.setup_ui()
         
-        # 註冊到連動管理器
-        if linkage_manager:
-            linkage_manager.register_module(self, "speed_analysis")
+        # 🔴 移除容器類的重複註冊（內部的 SpeedChartWidget 已經在其 __init__ 中註冊）
+        # ❌ 不應該註冊容器類，只註冊內部的 chart_widget
+        # if linkage_manager:
+        #     linkage_manager.register_module(self, "speed_analysis")
         
     def setup_ui(self):
         """設置UI界面"""
@@ -1521,9 +1522,11 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             print(f"[SPEED_CHART_WIDGET] ✅ update_speed_data 全部完成")
             
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedChartWidget 實例）
             print(f"[ERROR] [SPEED CHART WIDGET] 更新數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
         """更新統計表格"""
@@ -1681,9 +1684,11 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 return False
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisChartWidget 實例）
             print(f"[ERROR] [SPEED_CHART] update_lap_parameters 失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             return False
     
     def set_master_linkage_enabled(self, enabled: bool):
@@ -1695,6 +1700,121 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         """設置個別連動狀態 - 轉發給圖表組件"""
         if hasattr(self, 'chart_widget') and self.chart_widget:
             self.chart_widget.set_linkage_enabled(enabled)
+    
+    def cleanup(self):
+        """清理 Chart Widget 資源 - 防止記憶體洩漏"""
+        try:
+            print(f"[SPEED_CHART] 🧹 開始清理資源...")
+            
+            # 0. 從連動管理器解除註冊（新增 v3.4）
+            try:
+                from modules.gui.lap_analysis.linkage.linkage_manager import linkage_manager
+                if linkage_manager:
+                    linkage_manager.unregister_module(self)
+                    print(f"[SPEED_CHART]   ✅ 已從連動管理器解除註冊")
+            except Exception as e:
+                print(f"[SPEED_CHART]   ⚠️ 解除註冊警告: {e}")
+            
+            # 1. 清理 Matplotlib 圖表
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                if hasattr(self.chart_widget, 'figure') and self.chart_widget.figure:
+                    try:
+                        self.chart_widget.figure.clear()
+                        import matplotlib.pyplot as plt
+                        plt.close(self.chart_widget.figure)
+                        self.chart_widget.figure = None
+                        print(f"[SPEED_CHART]   ✅ Matplotlib 圖表已清理")
+                    except Exception as e:
+                        print(f"[SPEED_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                
+                if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
+                    try:
+                        self.chart_widget.canvas.deleteLater()
+                        self.chart_widget.canvas = None
+                        print(f"[SPEED_CHART]   ✅ Canvas 已清理")
+                    except Exception as e:
+                        print(f"[SPEED_CHART]   ⚠️ Canvas 清理警告: {e}")
+            
+            # 2. 清理 QTableWidget 中的所有 Item（關鍵！）
+            if hasattr(self, 'stats_table') and self.stats_table:
+                try:
+                    # 明確刪除每個 Item 以釋放記憶體
+                    for row in range(self.stats_table.rowCount()):
+                        for col in range(self.stats_table.columnCount()):
+                            item = self.stats_table.item(row, col)
+                            if item:
+                                self.stats_table.takeItem(row, col)
+                                del item
+                    self.stats_table.clear()
+                    self.stats_table.deleteLater()
+                    self.stats_table = None
+                    print(f"[SPEED_CHART]   ✅ QTableWidget 已完全清理（包含所有 Items）")
+                except Exception as e:
+                    print(f"[SPEED_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+            
+            # 3. 斷開 Signal 連接
+            if hasattr(self, 'receiver') and self.receiver:
+                try:
+                    self.receiver.deleteLater()
+                    self.receiver = None
+                    print(f"[SPEED_CHART]   ✅ Signal Receiver 已清理")
+                except Exception as e:
+                    print(f"[SPEED_CHART]   ⚠️ Receiver 清理警告: {e}")
+            
+            # 4. 清理數據引用
+            data_attrs = ['telemetry_data', 'lap_data', 'speed_data', 
+                         'driver1_data', 'driver2_data', 'cached_data']
+            for attr in data_attrs:
+                if hasattr(self, attr):
+                    setattr(self, attr, None)
+            print(f"[SPEED_CHART]   ✅ 數據引用已清空")
+            
+            # 5. 清理 SpeedChartWidget
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                try:
+                    self.chart_widget.deleteLater()
+                    self.chart_widget = None
+                    print(f"[SPEED_CHART]   ✅ SpeedChartWidget 已清理")
+                except Exception as e:
+                    print(f"[SPEED_CHART]   ⚠️ SpeedChartWidget 清理警告: {e}")
+            
+            # 6. 清理資料載入器引用
+            if hasattr(self, 'speed_loader'):
+                self.speed_loader = None
+                print(f"[SPEED_CHART]   ✅ 資料載入器引用已清空")
+            
+            # 7. 徹底斷開所有 Qt 連接（新增 v3.4）
+            try:
+                self.disconnect()
+                print(f"[SPEED_CHART]   ✅ Qt 連接已斷開")
+            except Exception as e:
+                print(f"[SPEED_CHART]   ⚠️ 斷開連接警告: {e}")
+            
+            # 8. 徹底清理 __dict__（新增 v3.4）
+            try:
+                all_attrs = list(self.__dict__.keys())
+                cleaned_count = 0
+                
+                for attr in all_attrs:
+                    if not attr.startswith('__'):
+                        try:
+                            delattr(self, attr)
+                            cleaned_count += 1
+                        except Exception:
+                            pass
+                
+                print(f"[SPEED_CHART]   ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
+            except Exception as e:
+                print(f"[SPEED_CHART]   ⚠️ __dict__ 清理警告: {e}")
+            
+            print(f"[SPEED_CHART] ✅ 資源清理完成")
+            
+        except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisChartWidget 實例）
+            print(f"[ERROR] [SPEED_CHART] cleanup 失敗: {e}")
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
 
 # 主程式測試
 if __name__ == "__main__":

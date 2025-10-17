@@ -42,6 +42,7 @@ class ThrottleDataManager(QObject):
         self.current_session = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None  # 🔴 防止循環引用：data_manager ← module_ref → module
         
     def load_throttle_data(self, year: str, race: str, session: str, 
                        driver1: str = "VER", driver2: str = "VER",
@@ -242,6 +243,71 @@ class ThrottleDataManager(QObject):
         print(f"[ERROR] [THROTTLE_MDI] 載入錯誤: {error_message}")
         self._is_loading = False
         self.error_occurred.emit(error_message)
+
+    def cleanup(self):
+        """
+        清理 ThrottleDataManager 資源
+        
+        修復記憶體洩漏：清理 TelemetryDataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[THROTTLEDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 🔴 關鍵修復1：強制重置 _is_loading 標誌，防止卡住
+            self._is_loading = False
+            print(f"[THROTTLEDATAMANAGER] ✅ 已重置 _is_loading 標誌")
+            
+            # 1. 清理 TelemetryDataLoader 及其 QThread
+            if hasattr(self, '_speed_loader') and self._speed_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self._speed_loader, 'cleanup'):
+                        self._speed_loader.cleanup()
+                        print(f"[THROTTLEDATAMANAGER] ✅ 已清理 loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self._speed_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self._speed_loader.deleteLater()
+                    self._speed_loader = None
+                    
+                except Exception as e:
+                    print(f"[ERROR] [THROTTLEDATAMANAGER] 清理 loader 失敗: {e}")
+            
+            # 🔴 關鍵修復：斷開循環引用（data_manager ← module_ref → module）
+            if hasattr(self, 'module_ref') and self.module_ref:
+                print(f"[THROTTLEDATAMANAGER] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                self.module_ref = None
+            
+            # 2. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[THROTTLEDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [THROTTLEDATAMANAGER] cleanup() 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
 
 class ThrottleAnalysisModule(IAnalysisModule):
     """油門分析主模組"""
@@ -589,8 +655,10 @@ class ThrottleAnalysisModule(IAnalysisModule):
             
             # 檢查是否需要最速圈數據
             if is_fastest:
-                print(f"[THROTTLE_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
-                fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
+                print(f"[THROTTLE_MDI] 🏁 用戶選擇了最速圈選項，嘗試從本地獲取遙測數據...")
+                # ✅ 修復：不再調用阻塞性的 _ensure_telemetry_data_for_fastest_laps()
+                # 改為直接嘗試從本地 JSON 讀取最速圈數據
+                fastest_laps = self._get_fastest_laps_from_local_json()
                 if fastest_laps:
                     # 使用最速圈數據更新圈數
                     if driver1 in fastest_laps:
@@ -600,7 +668,8 @@ class ThrottleAnalysisModule(IAnalysisModule):
                         lap2 = fastest_laps[driver2]
                         print(f"[THROTTLE_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
                 else:
-                    print(f"[THROTTLE_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
+                    print(f"[THROTTLE_MDI] ⚠️ 本地無最速圈數據，使用預設圈數")
+                    print(f"[THROTTLE_MDI] 💡 提示：請先通過「遙測分析」模組或 API 獲取數據")
             
             # 檢查參數是否有變化
             params_changed = (
@@ -828,17 +897,26 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     print(f"[ERROR] [THROTTLE_MDI] 從分析模組管理器解除註冊失敗: {e}")
             
             if hasattr(self, 'data_manager') and self.data_manager:
+                # 🔧 關鍵修復：清理執行緒資源
+                if hasattr(self.data_manager, '_throttle_loader') and self.data_manager._throttle_loader:
+                    print(f"[THROTTLE_MDI] 🧹 清理 DataLoader 執行緒...")
+                    # ✅ 修復：使用正確的方法名 cleanup() 而非 cleanup_threads()
+                    if hasattr(self.data_manager._throttle_loader, 'cleanup'):
+                        self.data_manager._throttle_loader.cleanup()
+                
                 # 清理數據管理器
                 if hasattr(self.data_manager, 'cleanup'):
                     self.data_manager.cleanup()
                     
             if hasattr(self, 'throttle_chart_widget') and self.throttle_chart_widget:
-                # 🔧 修復：從連動管理器中取消註冊圖表組件
+                # 🔧 修復：從連動管理器中取消註冊圖表組件（內部 chart_widget）
                 try:
                     from modules.gui.lap_analysis.linkage import linkage_manager
                     if linkage_manager:
-                        linkage_manager.unregister_module(self.throttle_chart_widget)
-                        print(f"[THROTTLE_MDI] ✅ 已從連動管理器解除註冊圖表組件")
+                        # ✅ 正確：取消註冊內部 chart_widget（而不是容器）
+                        if hasattr(self.throttle_chart_widget, 'chart_widget') and self.throttle_chart_widget.chart_widget:
+                            linkage_manager.unregister_module(self.throttle_chart_widget.chart_widget)
+                            print(f"[THROTTLE_MDI] ✅ 已從連動管理器解除註冊內部圖表組件 (chart_widget)")
                 except Exception as e:
                     print(f"[ERROR] [THROTTLE_MDI] 從連動管理器解除註冊失敗: {e}")
                 
@@ -1010,27 +1088,26 @@ class ThrottleAnalysisModule(IAnalysisModule):
             print(f"[ERROR] [throttle_MDI] _check_and_load_telemetry_if_needed 失敗: {{e}}")
             return False
 
-    def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
-        """確保遙測分析數據存在，並獲取最速圈數據
+    def _get_fastest_laps_from_local_json(self) -> Optional[Dict[str, int]]:
+        """
+        從本地 JSON 獲取最速圈數據（非阻塞）
+        
+        ✅ API-ONLY 模式：只讀取已存在的本地 JSON，不自動生成
         
         Returns:
             Dict[str, int]: 車手代碼到最速圈數的映射，例如 {'VER': 15, 'LEC': 23}
         """
         try:
-            print(f"[THROTTLE_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
+            print(f"[THROTTLE_MDI] 🔍 從本地讀取遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
             
             # 檢查遙測分析JSON檔案是否存在
             telemetry_file = self._find_telemetry_analysis_file()
             
             if not telemetry_file:
-                print(f"[THROTTLE_MDI] 📡 遙測分析數據不存在，開始自動載入...")
-                success = self._trigger_telemetry_analysis()
-                if success:
-                    # 重新檢查檔案
-                    telemetry_file = self._find_telemetry_analysis_file()
-                else:
-                    print(f"[THROTTLE_MDI] ❌ 遙測分析載入失敗")
-                    return None
+                print(f"[THROTTLE_MDI] ⚠️ 本地無遙測分析數據")
+                print(f"[THROTTLE_MDI] 💡 建議：請先通過「遙測分析」模組或 API 獲取數據")
+                print(f"[THROTTLE_MDI] 💡 或手動執行：python f1_analysis_modular_main.py -f 12 -y {self.current_year} -r {self.current_race} -s {self.current_session}")
+                return None
             
             if telemetry_file:
                 print(f"[THROTTLE_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
@@ -1077,87 +1154,34 @@ class ThrottleAnalysisModule(IAnalysisModule):
             return None
 
     def _trigger_telemetry_analysis(self) -> bool:
-        """觸發遙測分析載入/生成"""
-        try:
-            print(f"[THROTTLE_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
-            
-            # 方法1: 嘗試通過主視窗找到遙測分析模組
-            if hasattr(self, 'parent_window') and self.parent_window:
-                main_window = self.parent_window
-                # 尋找主視窗的父級(可能是F1T主視窗)
-                while main_window.parent():
-                    main_window = main_window.parent()
-                
-                # 檢查是否有MDI區域
-                if hasattr(main_window, 'mdi_area'):
-                    # 檢查是否已有遙測分析視窗
-                    for sub_window in main_window.mdi_area.subWindowList():
-                        window_title = sub_window.windowTitle()
-                        if "遙測分析" in window_title:
-                            print(f"[THROTTLE_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
-                            # 激活並刷新遙測分析視窗
-                            main_window.mdi_area.setActiveSubWindow(sub_window)
-                            return True
-                    
-                    # API-ONLY 模式：不自動創建視窗
-                    print(f"[THROTTLE_MDI] � [API-ONLY] 未找到現有遙測分析視窗")
-                    print(f"[THROTTLE_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
-                    return False
-            
-            # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            print(f"[THROTTLE_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
-            return self._generate_telemetry_via_cli()
-            
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _trigger_telemetry_analysis 失敗: {e}")
-            return False
+        """
+        [已廢棄] 觸發遙測分析載入/生成
+        
+        ⚠️ API-ONLY 模式：此方法已不再自動啟動 CLI 或創建視窗
+        """
+        print(f"[THROTTLE_MDI] ℹ️ _trigger_telemetry_analysis() 已廢棄")
+        print(f"[THROTTLE_MDI] 💡 [API-ONLY] 提示：請手動開啟「遙測分析」模組或通過 API 獲取數據")
+        print(f"[THROTTLE_MDI] � 或執行：python f1_analysis_modular_main.py -f 12 -y {self.current_year} -r {self.current_race} -s {self.current_session}")
+        return False
 
     def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據（Function 12）"""
-        try:
-            import subprocess
-            import threading
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析（正確的遙測數據來源）
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            print(f"[THROTTLE_MDI] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為油門分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
-            )
-            
-            stdout, stderr = process.communicate(timeout=120)  # 2分鐘超時
-            
-            if process.returncode == 0:
-                print(f"[THROTTLE_MDI] ✅ 遙測分析CLI執行成功")
-                # 等待檔案寫入完成
-                time.sleep(2)
-                return True
-            else:
-                print(f"[THROTTLE_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[THROTTLE_MDI] ⏰ 遙測分析CLI執行超時")
-            process.kill()
-            return False
-        except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _generate_telemetry_via_cli 失敗: {e}")
-            return False
+        """
+        [已禁用] 通過CLI生成遙測分析數據（Function 12）
+        
+        ⚠️ API-ONLY 模式：此方法已完全禁用以避免主線程阻塞
+        系統只允許：
+        1. 通過 REST API 獲取數據
+        2. 讀取已存在的本地 JSON 檔案
+        3. 手動在終端執行 CLI 命令
+        
+        Returns:
+            bool: 始終返回 False（已禁用）
+        """
+        print(f"[THROTTLE_MDI] ⚠️  [API-ONLY] _generate_telemetry_via_cli() 已禁用")
+        print(f"[THROTTLE_MDI] 💡 提示：請手動執行以下命令生成遙測數據：")
+        print(f"[THROTTLE_MDI] 💡 命令：python f1_analysis_modular_main.py -f 12 -y {self.current_year} -r {self.current_race} -s {self.current_session}")
+        print(f"[THROTTLE_MDI] 💡 或者通過 API 獲取數據")
+        return False
 
     def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:
         """從遙測分析JSON檔案中提取最速圈數據"""
@@ -1276,6 +1300,40 @@ class ThrottleAnalysisModule(IAnalysisModule):
         except Exception as e:
             print(f"[ERROR] [THROTTLE_MDI] export_data 失敗: {e}")
             return False
+    def closeEvent(self, event):
+        """
+        ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
+        
+        修復執行緒洩漏問題 - 確保 TelemetryApiWorker 執行緒正確終止
+        問題：用戶關閉 MDI 視窗時，背景執行緒繼續運行導致 Dummy-11 到 Dummy-47+ 洩漏
+        """
+        print(f"[THROTTLE_MDI] 🧹 視窗關閉事件觸發，開始清理資源...")
+        
+        try:
+            # 清理數據載入器的執行緒
+            if hasattr(self, 'data_manager') and self.data_manager:
+                if hasattr(self.data_manager, '_throttle_loader') and self.data_manager._throttle_loader:
+                    print(f"[THROTTLE_MDI] 清理 DataLoader 執行緒...")
+                    # ✅ 修復：使用正確的方法名 cleanup() 而非 cleanup_threads()
+                    if hasattr(self.data_manager._throttle_loader, 'cleanup'):
+                        self.data_manager._throttle_loader.cleanup()
+            
+            # 斷開所有信號連接
+            if hasattr(self, 'data_manager') and self.data_manager:
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                    self.data_manager.error_occurred.disconnect()
+                except Exception:
+                    pass
+            
+            print(f"[THROTTLE_MDI] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[THROTTLE_MDI] ⚠️ 清理過程發生錯誤: {e}")
+        
+        # 調用父類的 closeEvent
+        super().closeEvent(event)
+
 
 # 註冊油門分析模組到工廠
 try:

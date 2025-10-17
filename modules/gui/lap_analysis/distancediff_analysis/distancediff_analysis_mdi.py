@@ -40,6 +40,7 @@ class distancediffDataManager(QObject):
         self.current_session = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None  # 🔴 防止循環引用：data_manager ← module_ref → module
         
     def load_distancediff_data(self, year: str, race: str, session: str, 
                       driver1: str = "VER", driver2: str = "VER",
@@ -67,9 +68,8 @@ class distancediffDataManager(QObject):
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":
                 print(f"🔄 [distancediff_MDI_DATA] 檢測到最速圈選項，檢查遙測分析數據...")
-                self._check_and_load_telemetry_if_needed()
-                
-                # 解析最速圈參數為實際圈數
+                # ✅ 修復：使用非阻塞方式檢查遙測數據
+                # 直接解析最速圈，如果數據不存在會在載入器中提示用戶
                 lap1, lap2 = self._resolve_lap_numbers(lap1, lap2, driver1, driver2, is_fastest)
                 print(f"🔢 [distancediff_MDI_DATA] 最速圈解析完成: {driver1}=第{lap1}圈, {driver2}=第{lap2}圈")
             
@@ -141,80 +141,38 @@ class distancediffDataManager(QObject):
         self.error_occurred.emit(error_msg)
     
     def _check_and_load_telemetry_if_needed(self):
-        """檢查並載入遙測分析數據（最速圈用）"""
-        try:
-            print(f"[distancediff_MDI_DATA] 🔍 檢查遙測分析數據可用性...")
-            
-            # 檢查是否已有遙測分析檔案
-            telemetry_patterns = [
-                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
-                f"telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
-                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}.json"
-            ]
-            
-            search_dirs = ["json", "json_exports", "cache"]
-            telemetry_file = None
-            
-            for directory in search_dirs:
-                if os.path.exists(directory):
-                    for pattern in telemetry_patterns:
-                        file_path = os.path.join(directory, pattern)
-                        if os.path.exists(file_path):
-                            telemetry_file = file_path
-                            print(f"📁 [distancediff_MDI_DATA] 找到現有遙測檔案: {telemetry_file}")
-                            return True
-            
-            # 如果沒有找到，通過CLI生成Function 12數據
-            print(f"[distancediff_MDI_DATA] � 未找到遙測數據，通過CLI生成...")
-            return self._generate_telemetry_via_cli()
-            
-        except Exception as e:
-            print(f"❌ [distancediff_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
-            return False
+        """
+        [已廢棄] 檢查並載入遙測分析數據（最速圈用）
+        
+        ⚠️ API-ONLY 模式: 此方法已不再自動調用 CLI
+        最速圈數據現在依賴於：
+        1. 預先存在的遙測分析 JSON 檔案
+        2. 通過 API 獲取的數據
+        3. 手動執行 CLI: python f1_analysis_modular_main.py -f 12 -y {year} -r {race} -s {session}
+        """
+        print(f"[distancediff_MDI_DATA] ℹ️ _check_and_load_telemetry_if_needed() 已廢棄")
+        print(f"[distancediff_MDI_DATA] 💡 [API-ONLY] 提示：請先通過主視窗遙測模組或 REST API 獲取遙測數據")
+        print(f"[distancediff_MDI_DATA] 💡 [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 12 -y {self.current_year} -r {self.current_race} -s {self.current_session}")
+        return False
     
     def _generate_telemetry_via_cli(self) -> bool:
-        """通過CLI生成遙測分析數據（Function 12）"""
-        try:
-            import subprocess
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            print(f"[distancediff_MDI_DATA] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為distancediff分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
-            )
-            
-            stdout, stderr = process.communicate(timeout=300)  # 5分鐘超時
-            
-            if process.returncode == 0:
-                print(f"[distancediff_MDI_DATA] ✅ 遙測分析CLI執行成功")
-                time.sleep(2)  # 等待檔案寫入完成
-                return True
-            else:
-                print(f"[distancediff_MDI_DATA] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print(f"[distancediff_MDI_DATA] ⏰ 遙測分析CLI執行超時")
-            return False
-        except Exception as e:
-            print(f"[ERROR] [distancediff_MDI_DATA] _generate_telemetry_via_cli 失敗: {e}")
-            return False
+        """
+        [已禁用] 通過CLI生成遙測分析數據（Function 12）
+        
+        ⚠️ API-ONLY 模式: 此方法已完全禁用以避免主線程阻塞
+        系統只允許：
+        1. 通過 REST API 獲取數據
+        2. 讀取已存在的本地 JSON 檔案
+        3. 手動在終端執行 CLI 命令
+        
+        Returns:
+            bool: 始終返回 False（已禁用）
+        """
+        print(f"[distancediff_MDI_DATA] ⚠️  [API-ONLY] _generate_telemetry_via_cli() 已禁用")
+        print(f"[distancediff_MDI_DATA] 💡 提示：請手動執行以下命令生成遙測數據：")
+        print(f"[distancediff_MDI_DATA] 💡 命令：python f1_analysis_modular_main.py -f 12 -y {self.current_year} -r {self.current_race} -s {self.current_session}")
+        print(f"[distancediff_MDI_DATA] 💡 或者通過 API 獲取數據")
+        return False
     
     def _get_fastest_lap_number(self, driver: str) -> int:
         """從遙測分析數據獲取指定車手的最速圈數"""
@@ -311,6 +269,67 @@ class distancediffDataManager(QObject):
         except Exception as e:
             print(f"❌ [distancediff_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
+
+    def cleanup(self):
+        """
+        清理 distancediffDataManager 資源
+        
+        修復記憶體洩漏：清理 TelemetryDataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[DISTANCEDIFFDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 🔴 關鍵修復：清理 distancediff_loader（不是 _speed_loader！）
+            if hasattr(self, 'distancediff_loader') and self.distancediff_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self.distancediff_loader, 'cleanup'):
+                        self.distancediff_loader.cleanup()
+                        print(f"[DISTANCEDIFFDATAMANAGER] ✅ 已清理 distancediff_loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self.distancediff_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.distancediff_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.distancediff_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.distancediff_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self._speed_loader.deleteLater()
+                    self._speed_loader = None
+                    
+                except Exception as e:
+                    print(f"[ERROR] [DISTANCEDIFFDATAMANAGER] 清理 loader 失敗: {e}")
+            
+            # 🔴 關鍵修復：斷開循環引用（data_manager ← module_ref → module）
+            if hasattr(self, 'module_ref') and self.module_ref:
+                print(f"[DISTANCEDIFFDATAMANAGER] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                self.module_ref = None
+            
+            # 2. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[DISTANCEDIFFDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [DISTANCEDIFFDATAMANAGER] cleanup() 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
 
 class distancediffAnalysisModule(IAnalysisModule):
     """distancediff分析主模組"""
@@ -896,6 +915,11 @@ class distancediffAnalysisModule(IAnalysisModule):
         """清理模組資源和信號連接"""
         try:
             print(f"[distancediff_MDI] 🧹 清理distancediff分析模組...")
+
+            # 🔧 關鍵修復：清理執行緒資源
+            if self.data_manager and hasattr(self.data_manager, 'distancediff_loader'):
+                print(f"[DISTDIFF_MDI] 🧹 清理 DistanceDiffAnalysisDataLoader 執行緒...")
+                self.data_manager.distancediff_loader.cleanup_threads()
             
             if self.data_manager:
                 # 斷開所有信號連接
@@ -943,13 +967,20 @@ class distancediffAnalysisModule(IAnalysisModule):
                     
                 except Exception as e:
                     print(f"[ERROR] [distancediff_MDI] 從分析模組管理器解除註冊失敗: {e}")
+
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
             
-            # 🔗 從連動管理器取消註冊
+            # 🔗 從連動管理器取消註冊（內部 chart_widget）
             try:
                 from ..linkage import linkage_manager
                 if linkage_manager and hasattr(self, 'distancediff_chart_widget') and self.distancediff_chart_widget:
-                    linkage_manager.unregister_module(self.distancediff_chart_widget)
-                    print(f"[distancediff_MDI] ✅ 已從連動管理器取消註冊")
+                    # ✅ 正確：取消註冊內部 chart_widget（而不是容器）
+                    if hasattr(self.distancediff_chart_widget, 'chart_widget') and self.distancediff_chart_widget.chart_widget:
+                        linkage_manager.unregister_module(self.distancediff_chart_widget.chart_widget)
+                        print(f"[distancediff_MDI] ✅ 已從連動管理器取消註冊內部圖表組件 (chart_widget)")
             except ImportError as e:
                 print(f"[WARNING] [distancediff_MDI] 無法導入連動管理器: {e}")
             except Exception as e:
@@ -1209,6 +1240,38 @@ class distancediffAnalysisModule(IAnalysisModule):
         # ========== 實現抽象方法 ==========
 
     @property
+    def closeEvent(self, event):
+        """
+        ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
+        
+        修復執行緒洩漏問題 - 確保 TelemetryApiWorker 執行緒正確終止
+        問題：用戶關閉 MDI 視窗時，背景執行緒繼續運行導致 Dummy-11 到 Dummy-47+ 洩漏
+        """
+        print(f"[DISTDIFF_MDI] 🧹 視窗關閉事件觸發，開始清理資源...")
+        
+        try:
+            # 清理數據載入器的執行緒
+            if hasattr(self, 'data_manager') and self.data_manager:
+                if hasattr(self.data_manager, 'distancediff_loader'):
+                    print(f"[DISTDIFF_MDI] 清理 DataLoader 執行緒...")
+                    self.data_manager.distancediff_loader.cleanup_threads()
+            
+            # 斷開所有信號連接
+            if hasattr(self, 'data_manager') and self.data_manager:
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                    self.data_manager.error_occurred.disconnect()
+                except Exception:
+                    pass
+            
+            print(f"[DISTDIFF_MDI] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[DISTDIFF_MDI] ⚠️ 清理過程發生錯誤: {e}")
+        
+        # 調用父類的 closeEvent
+        super().closeEvent(event)
+
     def module_name(self) -> str:
         """模組名稱"""
         return "distancediff_analysis"

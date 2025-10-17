@@ -25,6 +25,7 @@ TEAM_COLORS: Dict[str, QColor] = {
     "Alpine": QColor(200, 100, 160),            # 柔和粉色 (原 #FF87BC)
     "Williams": QColor(80, 160, 220),           # 柔和淺藍 (原 #64C4FF)
     "RB": QColor(80, 120, 200),                 # 柔和靛藍 (原 #6692FF)
+    "Racing Bulls": QColor(80, 120, 200),       # ✅ 別名支援（與 RB 相同）
     "Kick Sauber": QColor(60, 180, 60),         # 柔和螢光綠 (原 #52E252)
     "Haas F1 Team": QColor(140, 145, 150),      # 柔和灰色 (原 #B6BABD)
 }

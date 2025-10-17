@@ -665,6 +665,30 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
     
     # ========== 工具方法 ==========
     
+    # ========== 清理 ==========
+    def cleanup(self) -> None:
+        """停止計時器並斷開訊號，避免物件被計時器/連線保活。"""
+        try:
+            try:
+                if hasattr(self, '_generation_timer') and self._generation_timer:
+                    self._generation_timer.stop()
+            except Exception:
+                pass
+            try:
+                if hasattr(self, '_generation_timeout_timer') and self._generation_timeout_timer:
+                    self._generation_timeout_timer.stop()
+            except Exception:
+                pass
+            for sig in (self.data_loaded, self.load_error, self.status_changed, self.load_progress):
+                try:
+                    sig.disconnect()
+                except Exception:
+                    pass
+            self._is_loading = False
+            self.current_session = None
+        except Exception:
+            pass
+
     def calculate_statistics(self, data: List[float]) -> Dict[str, float]:
         """計算統計數據"""
         if not data:
@@ -780,7 +804,8 @@ def create_data_loader(analysis_type: str, parent=None) -> UniversalDataLoader:
     class ConcreteDataLoader(UniversalDataLoader):
         def _validate_load_parameters(self, params): return True
         def _build_filename_patterns(self, **kwargs): return ["*.json"]
-        def _generate_data_via_cli(self, **kwargs): return True
+        # 明確禁止 CLI 路徑
+        def _generate_data_via_cli(self, **kwargs): return False
         def _validate_data_format(self, raw_data): return True
         def _process_data(self, raw_data): return raw_data
     

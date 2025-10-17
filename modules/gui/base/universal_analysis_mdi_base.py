@@ -924,11 +924,40 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 self.main_widget = None
 
             self.parent_window = None
+            
+            self._debug("✅ 基礎資源清理完成")
+            
+            # 🔴 新增步驟 7: 徹底斷開所有 Qt 連接（修復洩漏）
+            try:
+                self.disconnect()
+                print(f"[{self.config.display_name}] ✅ Qt 連接已斷開")
+            except Exception as e:
+                print(f"[{self.config.display_name}] ⚠️ 斷開 Qt 連接警告: {e}")
+            
+            # 🔴 新增步驟 8: 徹底清理 __dict__（修復洩漏）
+            try:
+                module_name = self.config.display_name if hasattr(self, 'config') else "UniversalMDI"
+                all_attrs = list(self.__dict__.keys())
+                cleaned_count = 0
                 
-            self._debug("✅ 資源清理完成")
+                for attr in all_attrs:
+                    if not attr.startswith('__'):
+                        try:
+                            delattr(self, attr)
+                            cleaned_count += 1
+                        except Exception:
+                            pass
+                
+                print(f"[{module_name}] ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
+                print(f"[{module_name}] ✅ 完整資源清理完成")
+            except Exception as e:
+                print(f"[UniversalMDI] ⚠️ __dict__ 清理警告: {e}")
             
         except Exception as e:
-            self._error(f"資源清理失敗: {e}")
+            if hasattr(self, '_error'):
+                self._error(f"資源清理失敗: {e}")
+            else:
+                print(f"[UniversalMDI] ❌ 資源清理失敗: {e}")
     
     # ========== IAnalysisModule 額外方法實現 ==========
     

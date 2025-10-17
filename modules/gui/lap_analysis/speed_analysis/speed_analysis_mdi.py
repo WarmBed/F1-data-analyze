@@ -20,11 +20,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
-# 導入國際化模組
-from core.gui_i18n import tr
-
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
+from core.gui_i18n import tr
 
 class SpeedDataManager(QObject):
     """速度數據管理器 - 負責JSON緩存和CLI備援"""
@@ -42,6 +40,7 @@ class SpeedDataManager(QObject):
         self.current_session = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None
         
     def load_speed_data(self, year: str, race: str, session: str, 
                        driver1: str = "VER", driver2: str = "VER",
@@ -82,15 +81,15 @@ class SpeedDataManager(QObject):
             
             print(f"[SPEED_MDI_DATA] 🚀 調用 load_speed_data...")
             
-            # 創建數據載入器
-            speed_loader = SpeedAnalysisDataLoader()
-            speed_loader.data_loaded.connect(self._on_data_loaded)
-            speed_loader.load_error.connect(self._on_load_error)
-            speed_loader.status_changed.connect(self.status_changed.emit)
-            speed_loader.load_progress.connect(self.loading_progress.emit)
+            # ✅ 修復：創建數據載入器並保存為實例變數（防止垃圾回收）
+            self._speed_loader = SpeedAnalysisDataLoader()
+            self._speed_loader.data_loaded.connect(self._on_data_loaded)
+            self._speed_loader.load_error.connect(self._on_load_error)
+            self._speed_loader.status_changed.connect(self.status_changed.emit)
+            self._speed_loader.load_progress.connect(self.loading_progress.emit)
             
             # 開始載入數據
-            success = speed_loader.load_speed_data(
+            success = self._speed_loader.load_speed_data(
                 year=int(year),
                 race=race,
                 session=session,
@@ -101,34 +100,57 @@ class SpeedDataManager(QObject):
                 is_fastest_lap=is_fastest  # 修正：使用傳入的is_fastest參數
             )
             
-            # 保存載入器引用避免被回收
-            self._speed_loader = speed_loader
-            
             # 將loader設置給chart widget以供直接更新
             if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
-                self.speed_chart_widget.speed_loader = speed_loader
+                self.speed_chart_widget.speed_loader = self._speed_loader
                 print(f"[SPEED_MDI] ✅ 已將loader設置給chart widget")
             
-            return success
+            if success:
+                print(f"[SPEED_MDI_DATA] ✅ 速度數據載入請求提交成功")
+                self.loading_progress.emit(50)
+                return True
+            else:
+                print(f"[SPEED_MDI_DATA] ❌ 速度數據載入請求失敗")
+                self._is_loading = False
+                self.error_occurred.emit("速度數據載入請求失敗")
+                return False
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 速度數據載入失敗: {e}")
-            self.error_occurred.emit(f"載入失敗: {str(e)}")
+            print(f"[ERROR] [SPEED_MDI_DATA] 載入速度數據時發生錯誤: {e}")
             self._is_loading = False
+            self.error_occurred.emit(f"載入速度數據失敗: {str(e)}")
             return False
 
     def _check_and_load_telemetry_if_needed(self):
-        """檢查本地遙測分析數據（API-ONLY 模式：不自動創建視窗）"""
+        """檢查遙測分析數據（最速圈用）"""
         try:
-            print(f"� [SPEED_MDI] [API-ONLY] 檢查本地遙測分析數據...")
-            
-            # API-ONLY 模式：僅檢查本地數據，不自動創建視窗
-            print(f"💡 [SPEED_MDI] 提示：如需遙測分析，請手動開啟遙測分析模組")
-            print(f"💡 [SPEED_MDI] 或使用 API 獲取遙測數據")
+            print(f"[SPEED_MDI_DATA] 檢查遙測分析數據可用性...")
+
+            module_ref = getattr(self, "module_ref", None)
+            if module_ref:
+                print(f"[SPEED_MDI_DATA] 委派給module_ref檢查遙測數據")
+                return module_ref._check_and_load_telemetry_if_needed()
+
+            telemetry_patterns = [
+                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"telemetry_analysis_{self.current_year}_{self.current_race}_{self.current_session}.json",
+                f"all_drivers_telemetry_analysis_{self.current_year}_{self.current_race}.json"
+            ]
+
+            search_dirs = ["json", "json_exports", "cache"]
+            for directory in search_dirs:
+                if os.path.exists(directory):
+                    for pattern in telemetry_patterns:
+                        file_path = os.path.join(directory, pattern)
+                        if os.path.exists(file_path):
+                            print(f"[SPEED_MDI_DATA] 找到現有遙測檔案: {file_path}")
+                            return True
+
+            print("[SPEED_MDI_DATA] API-ONLY 模式下未找到遙測檔案，請透過主視窗遙測模組或 REST API 取得資料")
             return False
-                
+
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 檢查遙測數據時發生錯誤: {e}")
+            print(f"[SPEED_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
             return False
 
     def _get_fastest_lap_number(self, driver: str) -> int:
@@ -227,34 +249,88 @@ class SpeedDataManager(QObject):
             print(f"❌ [SPEED_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
     
-    def _on_data_loaded(self, data: dict):
-        """處理數據載入完成"""
+    def _on_data_loaded(self, data):
+        """數據載入完成回調"""
         try:
-            print(f"[SPEED_MDI_DATA] ========== 數據載入完成回調 ==========")
-            print(f"[SPEED_MDI_DATA] 📦 接收到數據類型: {type(data)}")
-            print(f"[SPEED_MDI_DATA] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-            if isinstance(data, dict) and 'speed_data' in data:
-                speed_data = data['speed_data']
-                print(f"[SPEED_MDI_DATA] 📊 speed_data 鍵值: {list(speed_data.keys())}")
-                print(f"[SPEED_MDI_DATA] 📊 distance 點數: {len(speed_data.get('distance', []))}")
-                print(f"[SPEED_MDI_DATA] 📊 driver1_speed 點數: {len(speed_data.get('driver1_speed', []))}")
-                print(f"[SPEED_MDI_DATA] 📊 driver2_speed 點數: {len(speed_data.get('driver2_speed', []))}")
+            print(f"[SPEED_MDI_DATA] 速度數據載入完成")
             self._is_loading = False
-            print(f"[SPEED_MDI_DATA] 🚀 即將發送 data_loaded 信號...")
-            print(f"[SPEED_MDI_DATA] 📡 信號接收者數量: {self.receivers(self.data_loaded)}")
+            self.loading_progress.emit(100)
+            self.status_changed.emit("速度數據載入完成")
             self.data_loaded.emit(data)
-            print(f"[SPEED_MDI_DATA] ✅ data_loaded 信號已發送")
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI_DATA] 數據處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            self.error_occurred.emit(f"數據處理失敗: {str(e)}")
+            print(f"[ERROR] [SPEED_MDI_DATA] 處理載入完成回調時發生錯誤: {e}")
+            self._on_load_error(f"數據處理失敗: {str(e)}")
     
-    def _on_load_error(self, error_message: str):
-        """處理載入錯誤"""
-        print(f"[ERROR] [SPEED_MDI] 載入錯誤: {error_message}")
+    def _on_load_error(self, error_msg):
+        """數據載入錯誤回調"""
+        print(f"[SPEED_MDI_DATA] 速度數據載入錯誤: {error_msg}")
         self._is_loading = False
-        self.error_occurred.emit(error_message)
+        self.loading_progress.emit(0)
+        self.status_changed.emit(f"載入失敗: {error_msg}")
+        self.error_occurred.emit(error_msg)
+
+    def cleanup(self):
+        """
+        清理 SpeedDataManager 資源
+        
+        修復記憶體洩漏：清理 DataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[SPEEDDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 1. 清理 DataLoader 及其 QThread
+            if hasattr(self, '_speed_loader') and self._speed_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self._speed_loader, 'cleanup'):
+                        self._speed_loader.cleanup()
+                        print(f"[SPEEDDATAMANAGER] ✅ 已清理 loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self._speed_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self._speed_loader.deleteLater()
+                    self._speed_loader = None
+                    
+                except Exception as e:
+                    print(f"[ERROR] [SPEEDDATAMANAGER] 清理 loader 失敗: {e}")
+            
+            # 2. 🔴 斷開循環引用：清理 module_ref
+            if hasattr(self, 'module_ref'):
+                print(f"[SPEEDDATAMANAGER] 🔴 斷開循環引用：清理 module_ref")
+                self.module_ref = None
+            
+            # 3. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[SPEEDDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedDataManager 實例）
+            print(f"[ERROR] [SPEEDDATAMANAGER] cleanup() 失敗: {e}")
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
+
 
 class SpeedAnalysisModule(IAnalysisModule):
     """速度分析主模組"""
@@ -266,8 +342,8 @@ class SpeedAnalysisModule(IAnalysisModule):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # ✅ 設置分析類型（用於批次更新識別）
-        self.analysis_type = 'speed_analysis'
+        # ✅ 設置分析類型（用於批次更新識別）- 統一命名與其他模組一致
+        self.analysis_type = 'speed'
         
         # 參數狀態
         self.current_year = "2025"
@@ -297,6 +373,7 @@ class SpeedAnalysisModule(IAnalysisModule):
             
             # 創建數據管理器
             self.data_manager = SpeedDataManager()
+            self.data_manager.module_ref = self
             self.data_manager.data_loaded.connect(self._update_chart)
             self.data_manager.error_occurred.connect(self._handle_error)
             
@@ -346,9 +423,11 @@ class SpeedAnalysisModule(IAnalysisModule):
             return True
             
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [SPEED_MDI] 模組初始化失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             return False
     
     def set_parent_window(self, parent_window):
@@ -395,9 +474,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                 print(f"[SPEED_MDI] ❌ speed_chart_widget 未初始化")
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [SPEED_MDI] 圖表更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             self.module_error.emit(f"圖表更新失敗: {str(e)}")
     
     def _update_toolbar_status(self, data: dict):
@@ -516,9 +597,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                 print(f"[SPEED_MDI] ❌ 數據管理器未初始化，無法重載數據")
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [SPEED_MDI] 處理圈數變更失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             self.module_error.emit(f"處理圈數變更失敗: {str(e)}")
     
     def update_parameters(self, year: int = None, race: str = None, session: str = None, **kwargs) -> bool:
@@ -591,12 +674,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                     return True
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [SPEED_PARAMS_DEBUG] 參數更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            self.module_error.emit(f"參數更新失敗: {str(e)}")
-            return False
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             self.module_error.emit(f"參數更新失敗: {str(e)}")
             return False
     
@@ -740,9 +822,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                 return True
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 bound method 和 self）
             print(f"[SPEED_MDI] ❌ 圈速參數更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             self.module_error.emit(f"圈速參數更新失敗: {str(e)}")
             return False
     
@@ -771,9 +855,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                 parent.update()
                 parent.repaint()
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [SPEED_TITLE_DEBUG] 更新視窗標題失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
     
     def _delayed_title_update(self, title: str) -> None:
         """延遲標題更新 - 採用進站分析模式"""
@@ -854,8 +940,14 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[SPEED_MDI] ❌ 未找到 speed_chart_widget 屬性")
     
     def cleanup(self):
-        """清理資源 - 實現抽象方法"""
+        """清理資源 - 實現抽象方法
+        
+        📌 回歸 RPM 模組的簡單清理架構
+        清理順序：analysis_manager → data_manager → linkage_manager → chart_widget → main_widget
+        """
         try:
+            print(f"[SPEED_MDI] 🧹 開始清理資源...")
+            
             # 從分析模組管理器解除註冊
             if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
                 try:
@@ -869,21 +961,42 @@ class SpeedAnalysisModule(IAnalysisModule):
                     
                 except Exception as e:
                     print(f"[ERROR] [SPEED_MDI] 從分析模組管理器解除註冊失敗: {e}")
-            
+
             if hasattr(self, 'data_manager') and self.data_manager:
-                # 清理數據管理器
+                # 🔴 斷開循環引用：先清空 module_ref
+                print(f"[SPEED_MDI] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                if hasattr(self.data_manager, 'module_ref'):
+                    self.data_manager.module_ref = None
+                
+                # 🔴 修復：直接調用 cleanup() 即可（內部已包含執行緒清理）
+                # cleanup() 會調用 _cleanup_api_worker() 處理 QThread
                 if hasattr(self.data_manager, 'cleanup'):
                     self.data_manager.cleanup()
-                    
+            
+            # 🔴 移除不存在的 cleanup_module() 調用（已在上方清理 data_manager）
+            # self.cleanup_module()  ← 此方法不存在，導致異常提前退出
+            
             if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
-                # 🔧 修復：從連動管理器中取消註冊圖表組件
+                # 從連動管理器中取消註冊圖表組件（必須是內部的 chart_widget，不是容器）
                 try:
+                    print(f"[SPEED_MDI] [DEBUG] 嘗試導入 linkage_manager...")
                     from modules.gui.lap_analysis.linkage import linkage_manager
+                    print(f"[SPEED_MDI] [DEBUG] linkage_manager 導入成功: {linkage_manager}")
+                    
                     if linkage_manager:
-                        linkage_manager.unregister_module(self.speed_chart_widget)
-                        print(f"[SPEED_MDI] ✅ 已從連動管理器解除註冊圖表組件")
+                        # ✅ 關鍵修復：必須 unregister 內部的 SpeedChartWidget，不是外層的 SpeedAnalysisChartWidget
+                        if hasattr(self.speed_chart_widget, 'chart_widget') and self.speed_chart_widget.chart_widget:
+                            print(f"[SPEED_MDI] [DEBUG] 調用 unregister_module({self.speed_chart_widget.chart_widget})")
+                            linkage_manager.unregister_module(self.speed_chart_widget.chart_widget)
+                            print(f"[SPEED_MDI] ✅ 已從連動管理器解除註冊圖表組件（內部 chart_widget）")
+                        else:
+                            print(f"[SPEED_MDI] [DEBUG] ⚠️ chart_widget 不存在，跳過 unregister")
+                    else:
+                        print(f"[SPEED_MDI] [DEBUG] ⚠️ linkage_manager 為 False/None，跳過 unregister")
                 except Exception as e:
                     print(f"[ERROR] [SPEED_MDI] 從連動管理器解除註冊失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
                 
                 # 清理圖表組件
                 if hasattr(self.speed_chart_widget, 'cleanup'):
@@ -893,6 +1006,13 @@ class SpeedAnalysisModule(IAnalysisModule):
             if hasattr(self, 'main_widget') and self.main_widget:
                 # 清理主要組件
                 self.main_widget.deleteLater()
+                self.main_widget = None
+            
+            # 🔴 最後清理：斷開所有組件引用
+            if hasattr(self, 'data_manager'):
+                self.data_manager = None
+            if hasattr(self, 'speed_chart_widget'):
+                self.speed_chart_widget = None
                 
             print(f"[CLEANUP] 速度分析模組資源清理完成")
         except Exception as e:
@@ -983,9 +1103,11 @@ class SpeedAnalysisModule(IAnalysisModule):
             return success
             
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 bound method 和 self）
             print(f"[ERROR] [SPEED_MDI] update_lap_parameters 失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             return False
     
     def refresh_analysis(self) -> None:
@@ -1309,9 +1431,11 @@ class SpeedAnalysisModule(IAnalysisModule):
             print(f"[OK] [NOTIFICATION] ⚡ 速度分析模組內容更新成功")
                 
         except Exception as e:
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
             print(f"[ERROR] [NOTIFICATION] ⚡ 速度分析模組內容更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據 - 實現抽象方法"""

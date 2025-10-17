@@ -200,21 +200,18 @@ class LapAnalysisLinkageDrawingMixin:
         if not hasattr(self, 'linkage_distance_value') or not self.linkage_distance_value:
             return
             
-        # 獲取當前的視圖範圍
-        # 注意：在時間軸模式下，這些"distance"屬性實際存儲的是時間範圍
-        # Speed/Distance Diff 使用 min_speed/max_speed
-        # 其他模組使用 min_distance/max_distance
+        # 🔧 修復：正確獲取 X 軸範圍（distance/time 軸）
+        # X 軸範圍應該從 min_distance/max_distance 獲取
+        # 在時間軸模式下，min_distance 實際存儲的是 min_time
         current_min = (
             getattr(self, 'view_min_distance', None) or 
-            getattr(self, 'view_min_speed', None) or 
             getattr(self, 'min_distance', None) or 
-            getattr(self, 'min_speed', 0)
+            0
         )
         current_max = (
             getattr(self, 'view_max_distance', None) or 
-            getattr(self, 'view_max_speed', None) or 
             getattr(self, 'max_distance', None) or 
-            getattr(self, 'max_speed', 6000)
+            6000
         )
         value_range = current_max - current_min
         

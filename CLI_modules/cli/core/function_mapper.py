@@ -2678,8 +2678,49 @@ class F1AnalysisFunctionMapper:
         return {"success": True, "message": "空氣動力學效率分析功能開發中", "function_id": "27"}
     
     def _execute_brake_performance_analysis(self, **kwargs):
-        """煞車性能分析"""
-        return {"success": True, "message": "煞車性能分析功能開發中", "function_id": "28"}
+        """Function 34: 全部車手煞車性能分析"""
+        try:
+            from CLI_modules.cli.analyzer.brake_performance_analyzer import (
+                BrakePerformanceAnalyzer,
+            )
+
+            print("[START] 全部車手煞車性能分析 (Function 34)")
+
+            if not self._check_data_loaded(34):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料，無法執行煞車性能分析",
+                    "function_id": "34",
+                }
+
+            year = kwargs.get("year", getattr(self.data_loader, "year", None))
+            race = kwargs.get("race", getattr(self.data_loader, "race_name", None))
+            session = kwargs.get("session", getattr(self.data_loader, "session_type", None))
+            top_n = kwargs.get("top_n")
+            include_chart = kwargs.get("include_chart", True)
+
+            analyzer = BrakePerformanceAnalyzer(
+                self.data_loader,
+                year=year,
+                race=race,
+                session=session,
+            )
+            result = analyzer.run(top_n=top_n, include_chart=include_chart)
+
+            if result.get("success"):
+                self._export_to_json(result, 34, "brake_performance")
+
+            return result
+
+        except Exception as exc:
+            print(f"[ERROR] 全部車手煞車性能分析失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"全部車手煞車性能分析失敗: {exc}",
+                "function_id": "34",
+            }
     
     def _execute_engine_performance_analysis(self, **kwargs):
         """引擎性能分析"""

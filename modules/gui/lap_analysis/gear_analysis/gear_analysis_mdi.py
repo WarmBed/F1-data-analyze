@@ -42,6 +42,7 @@ class GearDataManager(QObject):
         self.current_driver2 = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None  # 🔴 防止循環引用：data_manager ← module_ref → module
         
     def load_gear_data(self, year: str, race: str, session: str, 
                       driver1: str = "VER", driver2: str = "VER",
@@ -300,6 +301,67 @@ class GearDataManager(QObject):
         except Exception as e:
             print(f"❌ [gear_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
+
+    def cleanup(self):
+        """
+        清理 GearDataManager 資源
+        
+        修復記憶體洩漏：清理 TelemetryDataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[GEARDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 1. 清理 TelemetryDataLoader 及其 QThread
+            if hasattr(self, '_speed_loader') and self._speed_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self._speed_loader, 'cleanup'):
+                        self._speed_loader.cleanup()
+                        print(f"[GEARDATAMANAGER] ✅ 已清理 loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self._speed_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self._speed_loader.deleteLater()
+                    self._speed_loader = None
+                    
+                except Exception as e:
+                    print(f"[ERROR] [GEARDATAMANAGER] 清理 loader 失敗: {e}")
+            
+            # 🔴 關鍵修復：斷開循環引用（data_manager ← module_ref → module）
+            if hasattr(self, 'module_ref') and self.module_ref:
+                print(f"[GEARDATAMANAGER] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                self.module_ref = None
+            
+            # 2. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[GEARDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [GEARDATAMANAGER] cleanup() 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
 
 class GearAnalysisModule(IAnalysisModule):
     """檔位分析主模組"""
@@ -761,6 +823,11 @@ class GearAnalysisModule(IAnalysisModule):
         """清理模組資源和信號連接"""
         try:
             print(f"[gear_MDI] 🧹 清理gear分析模組...")
+
+            # 🔧 關鍵修復：清理執行緒資源
+            if self.data_manager and hasattr(self.data_manager, 'gear_loader'):
+                print(f"[GEAR_MDI] 🧹 清理 GearAnalysisDataLoader 執行緒...")
+                self.data_manager.gear_loader.cleanup_threads()
             
             if self.data_manager:
                 # 斷開所有信號連接
@@ -808,11 +875,27 @@ class GearAnalysisModule(IAnalysisModule):
                     
                 except Exception as e:
                     print(f"[ERROR] [gear_MDI] 從分析模組管理器解除註冊失敗: {e}")
+
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
             
             # 調用模組清理
             self.cleanup_module()
             
             if hasattr(self, 'gear_chart_widget') and self.gear_chart_widget:
+                # 🔧 修復：從連動管理器中取消註冊圖表組件（內部 chart_widget）
+                try:
+                    from modules.gui.lap_analysis.linkage import linkage_manager
+                    if linkage_manager:
+                        # ✅ 正確：取消註冊內部 chart_widget（而不是容器）
+                        if hasattr(self.gear_chart_widget, 'chart_widget') and self.gear_chart_widget.chart_widget:
+                            linkage_manager.unregister_module(self.gear_chart_widget.chart_widget)
+                            print(f"[GEAR_MDI] ✅ 已從連動管理器解除註冊內部圖表組件 (chart_widget)")
+                except Exception as e:
+                    print(f"[ERROR] [GEAR_MDI] 從連動管理器解除註冊失敗: {e}")
+                
                 # 清理圖表組件
                 if hasattr(self.gear_chart_widget, 'cleanup'):
                     self.gear_chart_widget.cleanup()
@@ -1072,6 +1155,38 @@ class GearAnalysisModule(IAnalysisModule):
         # ========== 實現抽象方法 ==========
 
     @property
+    def closeEvent(self, event):
+        """
+        ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
+        
+        修復執行緒洩漏問題 - 確保 TelemetryApiWorker 執行緒正確終止
+        問題：用戶關閉 MDI 視窗時，背景執行緒繼續運行導致 Dummy-11 到 Dummy-47+ 洩漏
+        """
+        print(f"[GEAR_MDI] 🧹 視窗關閉事件觸發，開始清理資源...")
+        
+        try:
+            # 清理數據載入器的執行緒
+            if hasattr(self, 'data_manager') and self.data_manager:
+                if hasattr(self.data_manager, 'gear_loader'):
+                    print(f"[GEAR_MDI] 清理 DataLoader 執行緒...")
+                    self.data_manager.gear_loader.cleanup_threads()
+            
+            # 斷開所有信號連接
+            if hasattr(self, 'data_manager') and self.data_manager:
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                    self.data_manager.error_occurred.disconnect()
+                except Exception:
+                    pass
+            
+            print(f"[GEAR_MDI] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[GEAR_MDI] ⚠️ 清理過程發生錯誤: {e}")
+        
+        # 調用父類的 closeEvent
+        super().closeEvent(event)
+
     def module_name(self) -> str:
         """模組名稱"""
         return "gear_analysis"

@@ -58,11 +58,18 @@ class TelemetryApiWorker(QThread):
         super().__init__(parent)
         self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
-        self.timeout = timeout
+        # 🔴 修復：大幅減少超時時間，避免長時間阻塞
+        # 從 75 秒改為 10 秒，配合 _cleanup_api_worker 的 5 秒 wait
+        self.timeout = min(timeout, 10.0)  # 最多 10 秒
         self.request_token = request_token
 
     def run(self) -> None:
         try:
+            # 🔴 添加中斷檢查點 1: 開始前檢查
+            if self.isInterruptionRequested():
+                print(f"[API_WORKER] ⚠️ 執行緒在開始前被中斷")
+                return
+            
             self.progress.emit(15)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -79,13 +86,25 @@ class TelemetryApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 🔴 添加中斷檢查點 2: HTTP 請求前檢查
+            if self.isInterruptionRequested():
+                print(f"[API_WORKER] ⚠️ 執行緒在 HTTP 請求前被中斷")
+                return
+            
             start_ts = time.perf_counter()
+            # 🔴 修復：使用更短的超時時間（已在 __init__ 中限制為 10 秒）
             response = requests.post(
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 🔴 添加中斷檢查點 3: HTTP 請求後檢查
+            if self.isInterruptionRequested():
+                print(f"[API_WORKER] ⚠️ 執行緒在 HTTP 響應後被中斷")
+                return
+            
             self.progress.emit(70)
             response.raise_for_status()
 
@@ -227,6 +246,8 @@ class TelemetryDataLoader(QObject):
         self._active_request_token = 0
         self._pending_params: Dict[str, Any] = {}
         self._api_worker: Optional[TelemetryApiWorker] = None
+        # 🔴 新增：執行緒運行標誌，防止並發創建
+        self._api_worker_running = False
         self._last_data_source: str = "unknown"
         self._last_api_meta: Dict[str, Any] = {}
         
@@ -647,9 +668,24 @@ class TelemetryDataLoader(QObject):
             self._fallback_to_local("API 服務未啟動", request_token)
             return
 
+        # 🔴 關鍵修復：檢查是否有執行緒正在運行
+        if self._api_worker_running:
+            print(f"[{self.config['debug_prefix']}_LOADER] ⚠️ API Worker 仍在運行，取消新請求")
+            self._debug("⚠️ 前一個 API 請求仍在處理中，跳過新請求")
+            # 可選：發送錯誤信號或排隊
+            self.load_error.emit("前一個請求仍在處理中，請稍後再試")
+            return
+        
+        # 清理舊的執行緒（如果有）
         self._cleanup_api_worker()
 
         timeout = getattr(self, "_api_timeout", 75.0)
+        # 🔴 修復：限制最大超時為 10 秒
+        timeout = min(timeout, 10.0)
+        
+        # 🔴 設置運行標誌
+        self._api_worker_running = True
+        
         self._api_worker = TelemetryApiWorker(
             self._api_base_url,
             worker_params,
@@ -660,8 +696,10 @@ class TelemetryDataLoader(QObject):
         self._api_worker.progress.connect(self._on_api_progress)
         self._api_worker.success.connect(self._on_api_success)
         self._api_worker.failure.connect(self._on_api_error)
-        self._api_worker.finished.connect(self._cleanup_api_worker)
+        # 🔴 修復：finished 信號中清除運行標誌
+        self._api_worker.finished.connect(self._on_api_worker_finished)
         self._api_worker.start()
+        print(f"[{self.config['debug_prefix']}_LOADER] ✅ API Worker 已啟動（超時: {timeout}s）")
 
     def _on_api_progress(self, value: int) -> None:
         try:
@@ -678,6 +716,23 @@ class TelemetryDataLoader(QObject):
         data = payload.get("data")
         raw_payload = payload.get("payload", {})
         meta = payload.get("meta", {})
+        
+        # 修復 1: 添加數據有效性前置驗證（複用 driverlap_analysis 模式）
+        # 參考: modules/gui/driver_race/detailed_lap_analysis/driverlap_analysis_mdi.py:389
+        if data is None:
+            error_msg = raw_payload.get("message", "API 返回空數據")
+            self._error(f"數據驗證失敗: data is None - {error_msg}")
+            self._on_api_error(f"數據驗證失敗: {error_msg}", request_token)
+            return
+        
+        # 修復 1.5: 檢查 API success 狀態（複用 accident_data_manager 模式）
+        # 參考: modules/gui/accident_analysis/accident_data_manager.py:80
+        if isinstance(raw_payload, dict) and not raw_payload.get("success", True):
+            error_msg = raw_payload.get("message", "API 執行失敗")
+            self._error(f"API 返回失敗狀態: {error_msg}")
+            self._on_api_error(error_msg, request_token)
+            return
+        
         self._handle_api_success(data, raw_payload, meta, request_token)
 
     def _on_api_error(self, message: str, request_token: Optional[int] = None) -> None:
@@ -690,12 +745,51 @@ class TelemetryDataLoader(QObject):
         if not self._fallback_to_local(message, request_token):
             self.load_error.emit(f"API 載入失敗: {message}")
 
+    def _on_api_worker_finished(self) -> None:
+        """
+        API Worker 執行緒完成回調
+        
+        🔴 關鍵修復 (DummyThread 洩漏)：
+        - 清除運行標誌，允許新請求
+        - 即使出錯也確保標誌被清除
+        """
+        try:
+            print(f"[{self.config['debug_prefix']}_LOADER] 🏁 API Worker 執行緒已完成")
+            self._api_worker_running = False  # 清除運行標誌
+            
+            # 注意：不在這裡調用 _cleanup_api_worker()
+            # 因為 cleanup 會在成功/失敗的回調中已經執行
+            
+        except Exception as e:
+            print(f"[{self.config['debug_prefix']}_LOADER] ⚠️ _on_api_worker_finished 異常: {e}")
+            # 即使出錯也要清除標誌（防禦性）
+            self._api_worker_running = False
+
     def _cleanup_api_worker(self) -> None:
+        """
+        清理 API Worker 執行緒 - 修復 QThread 崩潰問題
+        
+        🔴 關鍵修復：正確停止 QThread 避免 "Destroyed while thread is still running"
+        """
         if self._api_worker:
             try:
+                # 🔴 步驟 1：請求中斷
                 if self._api_worker.isRunning():
+                    print(f"[TELEMETRY_LOADER] ⚠️ API Worker 仍在運行，請求中斷...")
                     self._api_worker.requestInterruption()
-                    self._api_worker.wait(200)
+                    
+                    # 🔴 步驟 2：調用 quit() 停止事件循環
+                    self._api_worker.quit()
+                    
+                    # 🔴 步驟 3：等待最多 5 秒讓執行緒結束
+                    if not self._api_worker.wait(5000):  # 5 秒超時
+                        print(f"[ERROR] [TELEMETRY_LOADER] API Worker 5秒後仍未停止，強制終止")
+                        self._api_worker.terminate()  # 強制終止
+                        self._api_worker.wait(1000)  # 再等 1 秒
+                    else:
+                        print(f"[TELEMETRY_LOADER] ✅ API Worker 已正常停止")
+                
+                # 🔴 步驟 4：斷開所有信號連接
                 self._api_worker.progress.disconnect()
             except Exception:
                 pass
@@ -711,8 +805,55 @@ class TelemetryDataLoader(QObject):
                 self._api_worker.finished.disconnect()
             except Exception:
                 pass
-            self._api_worker.deleteLater()
-            self._api_worker = None
+            
+            # 🔴 步驟 5：確認執行緒已停止才刪除
+            if not self._api_worker.isRunning():
+                self._api_worker.deleteLater()
+                self._api_worker = None
+                print(f"[TELEMETRY_LOADER] ✅ API Worker 已安全刪除")
+            else:
+                print(f"[ERROR] [TELEMETRY_LOADER] API Worker 仍在運行，無法安全刪除！")
+                # 保留引用，避免崩潰
+                # 但設置為 None 以避免重複清理
+                old_worker = self._api_worker
+                self._api_worker = None
+                # 讓舊 worker 自然結束
+                old_worker.finished.connect(old_worker.deleteLater)
+        
+        # 🔴 防禦性清除運行標誌（即使沒有 worker 也清除）
+        self._api_worker_running = False
+    
+    def cleanup(self) -> None:
+        """
+        公開的清理方法 - 清理所有資源
+        
+        用於模組關閉時清理：
+        1. API Worker 執行緒
+        2. 信號連接
+        3. 內部數據
+        """
+        try:
+            print(f"[TELEMETRY_LOADER] 🧹 開始清理 {self.telemetry_type} 載入器...")
+            
+            # 1. 清理 API Worker 執行緒
+            self._cleanup_api_worker()
+            
+            # 🔴 防禦性清除運行標誌（確保模組關閉時重置）
+            self._api_worker_running = False
+            
+            # 2. 清理內部數據
+            self._data_cache = None
+            self._last_api_meta = None
+            self._last_data_source = None
+            
+            # 3. 重置狀態
+            self._active_request_token = None
+            self._is_loading = False
+            
+            print(f"[TELEMETRY_LOADER] ✅ {self.telemetry_type} 載入器清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [TELEMETRY_LOADER] 清理 {self.telemetry_type} 載入器失敗: {e}")
 
     def _handle_api_success(self, data: Any, payload: Dict[str, Any], meta: Dict[str, Any],
                             request_token: Optional[int] = None) -> None:
@@ -774,6 +915,12 @@ class TelemetryDataLoader(QObject):
             import traceback
             self._error("完整錯誤追蹤:")
             self._error(traceback.format_exc())
+            
+            # 修復 2: 確保進度條完成和載入標誌清除（防止 GUI 假死）
+            self._is_loading = False
+            self.load_progress.emit(100)
+            self.status_changed.emit("API 數據處理失敗")
+            
             self._on_api_error(str(exc), request_token)
 
     def _fallback_to_local(self, reason: str, request_token: Optional[int] = None) -> bool:
@@ -929,16 +1076,40 @@ class TelemetryDataLoader(QObject):
                                         driver1: str, driver2: str = None,
                                         lap1: int = 1, lap2: int = 1,
                                         request_token: Optional[int] = None) -> bool:
-        """透過 CLI 工具生成遙測數據"""
+        """
+        [已禁用] 透過 CLI 工具生成遙測數據
+        
+        ⚠️ API-ONLY 模式: 此方法已改為提示訊息，不再執行 CLI
+        系統只允許：
+        1. 通過 REST API 獲取數據
+        2. 讀取已存在的本地 JSON 檔案
+        3. 手動在終端執行 CLI 命令
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽段
+            driver1: 車手1代碼
+            driver2: 車手2代碼（可選）
+            lap1: 圈數1
+            lap2: 圈數2
+            request_token: 請求標記
+            
+        Returns:
+            bool: 始終返回 False（已禁用）
+        """
         try:
             if request_token is not None and request_token != self._active_request_token:
-                self._debug(f"忽略過時的 CLI 生成請求 (token {request_token} != {self._active_request_token})")
+                self._debug(f"忽略過時的生成請求 (token {request_token} != {self._active_request_token})")
                 return False
-            self._debug("========== CLI 命令生成 ==========")
-            self._debug(f"生成{self.config['display_name']}數據: {year} {race} {session}")
+                
+            self._debug("========== [API-ONLY] 數據生成請求 ==========")
+            self._debug(f"⚠️  [API-ONLY] CLI 調用已禁用")
+            self._debug(f"請求: {self.config['display_name']} | {year} {race} {session}")
+            self._debug(f"車手: {driver1} vs {driver2} | 圈數: L{lap1} vs L{lap2}")
             
-            # 構建命令 - 使用Function 13: 車手比較分析
-            command = [
+            # 生成建議的 CLI 命令（供用戶手動執行）
+            command_parts = [
                 "python", "f1_analysis_modular_main.py",
                 "-f", "13",  # 功能13: 車手比較分析
                 "-y", str(year),
@@ -947,58 +1118,26 @@ class TelemetryDataLoader(QObject):
                 "-d", driver1
             ]
             
-            # 添加第二位車手參數
             if driver2:
-                command.extend(["-d2", driver2])
-                self._debug(f"雙車手模式: {driver1} vs {driver2}")
+                command_parts.extend(["-d2", driver2])
             else:
-                # 單車手模式：設置 driver2 與 driver1 相同
-                command.extend(["-d2", driver1])
-                self._debug(f"單車手模式: {driver1} vs {driver1}")
+                command_parts.extend(["-d2", driver1])
+                
+            command_parts.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
             
-            # 添加圈數參數 - 始終使用雙參數模式
-            command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
+            manual_command = ' '.join(command_parts)
             
-            if driver2:
-                self._debug(f"雙車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver2} 第{lap2}圈")
-            else:
-                self._debug(f"單車手模式圈數設定: {driver1} 第{lap1}圈 vs {driver1} 第{lap2}圈")
+            self._debug("💡 提示：請使用以下方式獲取數據：")
+            self._debug(f"💡 方案1 [推薦]: 通過 REST API 調用 Function 13")
+            self._debug(f"� 方案2: 手動執行 CLI 命令：")
+            self._debug(f"💡   {manual_command}")
             
-            self._debug(f"完整 CLI 命令: {' '.join(command)}")
-            self.status_changed.emit(f"正在生成{self.config['display_name']}數據...")
+            self.status_changed.emit(f"[API-ONLY] 數據生成已禁用，請使用 API 或手動執行 CLI")
             
-            # 非阻塞執行
-            def run_cli():
-                try:
-                    self._debug("🚀 開始執行 CLI 命令...")
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        errors='replace',  # 遇到無法解碼的字符時用替代字符
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        self._debug("CLI 執行成功")
-                    else:
-                        self._error(f"CLI 執行失敗: {stderr}")
-                        
-                except Exception as e:
-                    self._error(f"CLI 執行異常: {e}")
-            
-            # 在背景執行緒中執行CLI
-            thread = threading.Thread(target=run_cli, daemon=True)
-            thread.start()
-            
-            return True
+            return False
             
         except Exception as e:
-            self._error(f"啟動 CLI 失敗: {e}")
+            self._error(f"處理生成請求時發生錯誤: {e}")
             return False
     
     # ========== 監控系統 ==========

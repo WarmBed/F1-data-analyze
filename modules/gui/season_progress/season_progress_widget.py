@@ -42,13 +42,15 @@ class SeasonProgressWidget(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(16)
         
-        # Title
+        # Title - 響應式字體
         self.title_label = QLabel(tr("season_progress_title", "Season Progress"), self)
+        self.title_label.setObjectName("season_progress_title")  # 用於響應式選擇器
         self.title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(self.title_label)
         
-        # Season Summary Group
+        # Season Summary Group - 響應式標題
         self.summary_box = QGroupBox(tr("season_summary_group", "Season Summary"), self)
+        self.summary_box.setObjectName("season_summary_groupbox")  # 用於響應式選擇器
         summary_layout = QVBoxLayout(self.summary_box)
         summary_layout.setSpacing(8)
         
@@ -70,8 +72,9 @@ class SeasonProgressWidget(QWidget):
         
         layout.addWidget(self.summary_box)
         
-        # Leaders Group
+        # Leaders Group - 響應式標題
         self.leader_box = QGroupBox(tr("current_leaders_group", "Current Leaders"), self)
+        self.leader_box.setObjectName("current_leaders_groupbox")  # 用於響應式選擇器
         leader_layout = QVBoxLayout(self.leader_box)
         leader_layout.setSpacing(8)
         
@@ -168,6 +171,54 @@ class SeasonProgressWidget(QWidget):
             self.constructor_leader_label.setText(tr("na", "N/A"))
         
         print(f"[SEASON_PROGRESS_WIDGET] Data populated successfully")
+    
+    def resizeEvent(self, event):
+        """響應視窗大小變化，自動調整字體大小"""
+        super().resizeEvent(event)
+        self._adjust_responsive_font()
+    
+    def _adjust_responsive_font(self):
+        """根據視窗寬度調整字體大小"""
+        width = self.width()
+        
+        # 定義響應式字體大小
+        if width < 250:
+            # 極小視窗: 標題 12px, GroupBox 9px, 內容 10px
+            title_size = 12
+            groupbox_size = 9
+            content_size = 10
+        elif width < 350:
+            # 小視窗: 標題 14px, GroupBox 10px, 內容 11px
+            title_size = 14
+            groupbox_size = 10
+            content_size = 11
+        elif width < 450:
+            # 中等視窗: 標題 16px, GroupBox 11px, 內容 12px
+            title_size = 16
+            groupbox_size = 11
+            content_size = 12
+        else:
+            # 大視窗: 標題 18px, GroupBox 12px, 內容 14px (預設)
+            title_size = 18
+            groupbox_size = 12
+            content_size = 14
+        
+        # 應用響應式樣式
+        self.title_label.setStyleSheet(f"font-size: {title_size}px; font-weight: bold;")
+        
+        # GroupBox 標題樣式
+        groupbox_style = f"QGroupBox {{ font-size: {groupbox_size}px; font-weight: bold; }}"
+        self.summary_box.setStyleSheet(groupbox_style)
+        self.leader_box.setStyleSheet(groupbox_style)
+        
+        # 內容標籤樣式
+        content_style = f"font-size: {content_size}px;"
+        self.completed_label.setStyleSheet(content_style)
+        self.remaining_label.setStyleSheet(content_style)
+        self.next_race_label.setStyleSheet(f"{content_style} font-weight: bold; color: #0066cc;")
+        self.next_race_date_label.setStyleSheet(content_style)
+        self.driver_leader_label.setStyleSheet(content_style)
+        self.constructor_leader_label.setStyleSheet(content_style)
 
 
 # Test code

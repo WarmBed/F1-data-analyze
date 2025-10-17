@@ -128,12 +128,24 @@ class AnalysisModuleManager(QObject):
     def unregister_chart_widget(self, chart_widget: object):
         """解除註冊圖表組件"""
         try:
+            print(f"[ANALYSIS_MANAGER] 🔍 unregister 前: list 長度 = {len(self._registered_chart_widgets)}")
+            print(f"[ANALYSIS_MANAGER] 🔍 widget 在 list 中: {chart_widget in self._registered_chart_widgets}")
+            print(f"[ANALYSIS_MANAGER] 🔍 widget ID: {id(chart_widget)}")
+            print(f"[ANALYSIS_MANAGER] 🔍 list 中的 ID: {[id(w) for w in self._registered_chart_widgets]}")
+            
             if chart_widget in self._registered_chart_widgets:
                 self._registered_chart_widgets.remove(chart_widget)
+                print(f"[ANALYSIS_MANAGER] ✅ 已從 list 移除")
+                print(f"[ANALYSIS_MANAGER] 🔍 unregister 後: list 長度 = {len(self._registered_chart_widgets)}")
                 print(f"[ANALYSIS_MANAGER] Unregistered chart widget: {type(chart_widget).__name__}")
                 return True
+            else:
+                print(f"[ANALYSIS_MANAGER] ⚠️ widget 不在 list 中，無法移除")
+                return False
         except Exception as e:
             print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget unregistration failed: {e}")
+            import traceback
+            traceback.print_exc()
             return False
     
     def _is_lap_analysis_module(self, module_instance: object, module_type: str = None) -> bool:

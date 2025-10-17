@@ -10,8 +10,8 @@ import os
 import json
 import datetime
 import traceback
-import threading
-import subprocess
+# import threading  # ⚠️ [API-ONLY] 已移除：GUI 不再使用 threading 執行 CLI
+# import subprocess  # ⚠️ [API-ONLY] 已移除：GUI 不再調用 subprocess 執行 CLI
 import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
@@ -668,51 +668,49 @@ class TelemetryDataManager(QObject):
         return False
     
     def _start_cli_generation(self, year: str, race: str, session: str) -> bool:
-        """啟動 CLI 生成流程 - 非阻塞方式"""
-        try:
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(year), "-r", race, "-s", session
-            ]
-            
-            print(f"[CLI] 執行遙測分析: {' '.join(command)}")
-            self.status_changed.emit("正在生成遙測數據...")
-            self.loading_progress.emit(30)
-            
-            def run_telemetry_cli():
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        print(f"[CLI_SUCCESS] 遙測分析CLI執行成功")
-                    else:
-                        error_msg = f"CLI執行失敗: {stderr}"
-                        print(f"[CLI_ERROR] {error_msg}")
-                        self.error_occurred.emit(error_msg)
-                        
-                except Exception as e:
-                    error_msg = f"CLI執行異常: {str(e)}"
-                    print(f"[CLI_EXCEPTION] {error_msg}")
-                    self.error_occurred.emit(error_msg)
-            
-            # 在後台執行遙測CLI
-            thread = threading.Thread(target=run_telemetry_cli, daemon=True)
-            thread.start()
-            return True
-            
-        except Exception as e:
-            print(f"[ERROR] 啟動遙測CLI失敗: {e}")
-            return False
+        """
+        [已禁用] 啟動 CLI 生成流程
+        
+        ⚠️ API-ONLY 模式: 此方法已改為提示訊息，不再執行 CLI
+        
+        GUI 模組不應自動調用 CLI 進程。請使用以下替代方案：
+        
+        方案 1 [推薦]: 通過 REST API 調用
+            - 確保 API 服務器正在運行 (refactored_api.py)
+            - 使用 POST /api/v2/analysis/execute
+            - 參數: {"function_id": "12", "year": "{year}", "race": "{race}", "session": "{session}"}
+        
+        方案 2: 使用已存在的本地 JSON 檔案
+            - 檢查 json/ 目錄是否有對應的遙測分析結果
+        
+        方案 3: 手動執行 CLI 命令生成數據
+            - PowerShell 執行: python f1_analysis_modular_main.py -f 12 -y {year} -r {race} -s {session}
+            - 等待完成後，GUI 會自動檢測並載入生成的 JSON
+        
+        Args:
+            year: 賽季年份
+            race: 賽事名稱
+            session: 賽事階段 (R/Q/FP1/FP2/FP3)
+        
+        Returns:
+            False (固定返回 False，表示不執行)
+        """
+        command = f"python f1_analysis_modular_main.py -f 12 -y {year} -r {race} -s {session}"
+        
+        print("\n" + "="*80)
+        print("⚠️  [API-ONLY 模式] GUI 不再自動執行 CLI 命令")
+        print("="*80)
+        print("\n💡 方案 1 [推薦]: 通過 REST API 調用")
+        print(f"   - 確保 API 服務器正在運行: python refactored_api.py")
+        print(f"   - POST /api/v2/analysis/execute")
+        print(f'   - Payload: {{"function_id": "12", "year": "{year}", "race": "{race}", "session": "{session}"}}')
+        print("\n💡 方案 2: 使用已存在的本地 JSON 檔案")
+        print("   - 檢查 json/ 目錄")
+        print("\n💡 方案 3: 手動執行 CLI 命令")
+        print(f"   - PowerShell: {command}")
+        print("="*80 + "\n")
+        
+        return False
     
     def _start_generation_monitoring(self, year: str, race: str, session: str):
         """啟動檔案生成監控"""

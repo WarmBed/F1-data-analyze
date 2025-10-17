@@ -142,8 +142,9 @@ class WeatherTimelineWidget(QWidget):
         layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(16)
         
-        # 標題
+        # 標題 - 響應式字體
         self.title_label = QLabel(tr("weather_timeline_title", "比賽週末天氣時間軸"), self)
+        self.title_label.setObjectName("weather_timeline_title")  # 用於響應式選擇器
         self.title_label.setStyleSheet("font-size: 18px; font-weight: bold;")
         layout.addWidget(self.title_label)
         
@@ -176,10 +177,11 @@ class WeatherTimelineWidget(QWidget):
         history_layout.setContentsMargins(8, 8, 8, 8)
         history_layout.setSpacing(4)
         
-        # 歷史數據標題
-        history_title = QLabel(tr("weather_history_title", "歷史天氣對比"), self)
-        history_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #6c757d;")
-        history_layout.addWidget(history_title)
+        # 歷史數據標題 - 響應式字體
+        self.history_title = QLabel(tr("weather_history_title", "歷史天氣對比"), self)
+        self.history_title.setObjectName("weather_history_title")  # 用於響應式選擇器
+        self.history_title.setStyleSheet("font-size: 12px; font-weight: bold; color: #6c757d;")
+        history_layout.addWidget(self.history_title)
         
         # 2024 和 2023 數據
         self.history_2024_label = QLabel("", self)
@@ -339,6 +341,71 @@ class WeatherTimelineWidget(QWidget):
         line.setStyleSheet("background-color: #dee2e6; margin: 60px 0px;")
         line.setFixedWidth(40)
         return line
+    
+    def resizeEvent(self, event):
+        """響應視窗大小變化，自動調整字體大小"""
+        super().resizeEvent(event)
+        self._adjust_responsive_font()
+    
+    def _adjust_responsive_font(self):
+        """根據視窗寬度調整字體大小"""
+        width = self.width()
+        
+        # 定義響應式字體大小
+        if width < 250:
+            # 極小視窗: 主標題 12px, 次標題 9px, 內容 8px, 節點 7px
+            title_size = 12
+            subtitle_size = 9
+            content_size = 8
+            node_size = 7
+            icon_size = 12
+        elif width < 350:
+            # 小視窗: 主標題 14px, 次標題 10px, 內容 9px, 節點 7px
+            title_size = 14
+            subtitle_size = 10
+            content_size = 9
+            node_size = 7
+            icon_size = 14
+        elif width < 450:
+            # 中等視窗: 主標題 16px, 次標題 11px, 內容 10px, 節點 8px
+            title_size = 16
+            subtitle_size = 11
+            content_size = 10
+            node_size = 8
+            icon_size = 15
+        else:
+            # 大視窗: 主標題 18px, 次標題 12px, 內容 11px, 節點 8px (預設)
+            title_size = 18
+            subtitle_size = 12
+            content_size = 11
+            node_size = 8
+            icon_size = 16
+        
+        # 應用響應式樣式 - 主標題
+        self.title_label.setStyleSheet(f"font-size: {title_size}px; font-weight: bold;")
+        
+        # 歷史標題
+        self.history_title.setStyleSheet(f"font-size: {subtitle_size}px; font-weight: bold; color: #6c757d;")
+        
+        # 歷史內容
+        self.history_2024_label.setStyleSheet(f"font-size: {content_size}px; color: #6c757d;")
+        self.history_2023_label.setStyleSheet(f"font-size: {content_size}px; color: #6c757d;")
+        
+        # 更新時間軸節點字體
+        for i in range(self.timeline_layout.count()):
+            item = self.timeline_layout.itemAt(i)
+            widget = item.widget()
+            if isinstance(widget, TimelineNode):
+                # 更新節點內的標籤字體
+                widget.date_label.setStyleSheet(f"font-size: {node_size}px; color: #495057;")
+                widget.temp_label.setStyleSheet(f"font-size: {node_size}px; font-weight: bold; color: #000000;")
+                widget.rain_label.setStyleSheet(f"font-size: {node_size}px; color: #6c757d;")
+                widget.wind_label.setStyleSheet(f"font-size: {node_size}px; color: #6c757d;")
+                
+                # 調整天氣圖示大小
+                icon_font = QFont()
+                icon_font.setPointSize(icon_size)
+                widget.weather_label.setFont(icon_font)
 
 
 # Demo 測試

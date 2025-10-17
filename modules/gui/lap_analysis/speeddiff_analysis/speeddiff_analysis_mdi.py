@@ -42,6 +42,7 @@ class speeddiffDataManager(QObject):
         self.current_driver2 = None
         self.loading = False
         self._is_loading = False
+        self.module_ref = None  # 🔴 防止循環引用：data_manager ← module_ref → module
         
     def load_speeddiff_data(self, year: str, race: str, session: str, 
                       driver1: str = "VER", driver2: str = "VER",
@@ -300,6 +301,68 @@ class speeddiffDataManager(QObject):
         except Exception as e:
             print(f"❌ [speeddiff_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
+
+    def cleanup(self):
+        """
+        清理 speeddiffDataManager 資源
+        
+        修復記憶體洩漏：清理 TelemetryDataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[SPEEDDIFFDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 🔴 關鍵修復：清理 speeddiff_loader（不是 _speed_loader！）
+            if hasattr(self, 'speeddiff_loader') and self.speeddiff_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self.speeddiff_loader, 'cleanup'):
+                        self.speeddiff_loader.cleanup()
+                        print(f"[SPEEDDIFFDATAMANAGER] ✅ 已清理 speeddiff_loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self.speeddiff_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.speeddiff_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.speeddiff_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self.speeddiff_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self.speeddiff_loader.deleteLater()
+                    self.speeddiff_loader = None
+                    print(f"[SPEEDDIFFDATAMANAGER] ✅ speeddiff_loader 已釋放")
+                    
+                except Exception as e:
+                    print(f"[ERROR] [SPEEDDIFFDATAMANAGER] 清理 speeddiff_loader 失敗: {e}")
+            
+            # 🔴 關鍵修復：斷開循環引用（data_manager ← module_ref → module）
+            if hasattr(self, 'module_ref') and self.module_ref:
+                print(f"[SPEEDDIFFDATAMANAGER] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                self.module_ref = None
+            
+            # 2. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[SPEEDDIFFDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [SPEEDDIFFDATAMANAGER] cleanup() 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
 
 class SpeeddiffAnalysisModule(IAnalysisModule):
     """speeddiff分析主模組"""
@@ -885,6 +948,11 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
         """清理模組資源和信號連接"""
         try:
             print(f"[speeddiff_MDI] 🧹 清理speeddiff分析模組...")
+
+            # 🔧 關鍵修復：清理執行緒資源
+            if self.data_manager and hasattr(self.data_manager, 'speeddiff_loader'):
+                print(f"[SPEEDDIFF_MDI] 🧹 清理 SpeedDiffAnalysisDataLoader 執行緒...")
+                self.data_manager.speeddiff_loader.cleanup_threads()
             
             if self.data_manager:
                 # 斷開所有信號連接
@@ -932,13 +1000,20 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
                     
                 except Exception as e:
                     print(f"[ERROR] [speeddiff_MDI] 從分析模組管理器解除註冊失敗: {e}")
+
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
             
-            # 🔗 從連動管理器取消註冊
+            # 🔗 從連動管理器取消註冊（內部 chart_widget）
             try:
                 from ..linkage import linkage_manager
                 if linkage_manager and hasattr(self, 'speeddiff_chart_widget') and self.speeddiff_chart_widget:
-                    linkage_manager.unregister_module(self.speeddiff_chart_widget)
-                    print(f"[speeddiff_MDI] ✅ 已從連動管理器取消註冊")
+                    # ✅ 正確：取消註冊內部 chart_widget（而不是容器）
+                    if hasattr(self.speeddiff_chart_widget, 'chart_widget') and self.speeddiff_chart_widget.chart_widget:
+                        linkage_manager.unregister_module(self.speeddiff_chart_widget.chart_widget)
+                        print(f"[speeddiff_MDI] ✅ 已從連動管理器取消註冊內部圖表組件 (chart_widget)")
             except ImportError as e:
                 print(f"[WARNING] [speeddiff_MDI] 無法導入連動管理器: {e}")
             except Exception as e:
@@ -1207,6 +1282,38 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
         # ========== 實現抽象方法 ==========
 
     @property
+    def closeEvent(self, event):
+        """
+        ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
+        
+        修復執行緒洩漏問題 - 確保 TelemetryApiWorker 執行緒正確終止
+        問題：用戶關閉 MDI 視窗時，背景執行緒繼續運行導致 Dummy-11 到 Dummy-47+ 洩漏
+        """
+        print(f"[SPEEDDIFF_MDI] 🧹 視窗關閉事件觸發，開始清理資源...")
+        
+        try:
+            # 清理數據載入器的執行緒
+            if hasattr(self, 'data_manager') and self.data_manager:
+                if hasattr(self.data_manager, 'speeddiff_loader'):
+                    print(f"[SPEEDDIFF_MDI] 清理 DataLoader 執行緒...")
+                    self.data_manager.speeddiff_loader.cleanup_threads()
+            
+            # 斷開所有信號連接
+            if hasattr(self, 'data_manager') and self.data_manager:
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                    self.data_manager.error_occurred.disconnect()
+                except Exception:
+                    pass
+            
+            print(f"[SPEEDDIFF_MDI] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[SPEEDDIFF_MDI] ⚠️ 清理過程發生錯誤: {e}")
+        
+        # 調用父類的 closeEvent
+        super().closeEvent(event)
+
     def module_name(self) -> str:
         """模組名稱"""
         return "speeddiff_analysis"

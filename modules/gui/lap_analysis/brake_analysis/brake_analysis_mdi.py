@@ -276,6 +276,71 @@ class BrakeDataManager(QObject):
             print(f"❌ [brake_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
 
+    def cleanup(self):
+        """
+        清理 BrakeDataManager 資源
+        
+        修復記憶體洩漏：清理 TelemetryDataLoader 的 API Worker 執行緒
+        """
+        try:
+            print(f"[BRAKEDATAMANAGER] 🧹 開始清理資源...")
+            
+            # 🔴 關鍵修復1：強制重置 _is_loading 標誌，防止卡住
+            self._is_loading = False
+            print(f"[BRAKEDATAMANAGER] ✅ 已重置 _is_loading 標誌")
+            
+            # 1. 清理 TelemetryDataLoader 及其 QThread
+            if hasattr(self, '_speed_loader') and self._speed_loader:
+                try:
+                    # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
+                    if hasattr(self._speed_loader, 'cleanup'):
+                        self._speed_loader.cleanup()
+                        print(f"[BRAKEDATAMANAGER] ✅ 已清理 loader 執行緒")
+                    
+                    # 斷開信號連接
+                    try:
+                        self._speed_loader.data_loaded.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_error.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.status_changed.disconnect()
+                    except Exception:
+                        pass
+                    try:
+                        self._speed_loader.load_progress.disconnect()
+                    except Exception:
+                        pass
+                    
+                    # 標記為待刪除
+                    self._speed_loader.deleteLater()
+                    self._speed_loader = None
+                    
+                except Exception as e:
+                    print(f"[ERROR] [BRAKEDATAMANAGER] 清理 loader 失敗: {e}")
+            
+            # 🔴 關鍵修復：斷開循環引用（data_manager ← module_ref → module）
+            if hasattr(self, 'module_ref') and self.module_ref:
+                print(f"[ERROR] [BRAKEDATAMANAGER] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                self.module_ref = None
+            
+            # 2. 清理內部狀態
+            self.current_year = None
+            self.current_race = None
+            self.current_session = None
+            self._is_loading = False
+            
+            print(f"[BRAKEDATAMANAGER] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [BRAKEDATAMANAGER] cleanup() 失敗: {e}")
+            import traceback
+            traceback.print_exc()
+
+
 class BrakeAnalysisModule(IAnalysisModule):
     """brake分析主模組"""
     
@@ -737,6 +802,13 @@ class BrakeAnalysisModule(IAnalysisModule):
         """清理模組資源和信號連接"""
         try:
             print(f"[brake_MDI] 🧹 清理brake分析模組...")
+
+            # 🔧 關鍵修復：清理執行緒資源
+            if self.data_manager and hasattr(self.data_manager, 'brake_loader') and self.data_manager.brake_loader:
+                print(f"[BRAKE_MDI] 🧹 清理 BrakeAnalysisDataLoader 執行緒...")
+                # ✅ 修復：使用正確的方法名 cleanup() 而非 cleanup_threads()
+                if hasattr(self.data_manager.brake_loader, 'cleanup'):
+                    self.data_manager.brake_loader.cleanup()
             
             if self.data_manager:
                 # 斷開所有信號連接
@@ -784,11 +856,37 @@ class BrakeAnalysisModule(IAnalysisModule):
                     
                 except Exception as e:
                     print(f"[ERROR] [brake_MDI] 從分析模組管理器解除註冊失敗: {e}")
+
+            if hasattr(self, 'data_manager') and self.data_manager:
+                # 清理數據管理器
+                if hasattr(self.data_manager, 'cleanup'):
+                    self.data_manager.cleanup()
             
             # 調用模組清理
             self.cleanup_module()
             
             if hasattr(self, 'brake_chart_widget') and self.brake_chart_widget:
+                # 從連動管理器中取消註冊圖表組件（必須是內部的 chart_widget，不是容器）
+                try:
+                    print(f"[BRAKE_MDI] [DEBUG] 嘗試導入 linkage_manager...")
+                    from modules.gui.lap_analysis.linkage import linkage_manager
+                    print(f"[BRAKE_MDI] [DEBUG] linkage_manager 導入成功: {linkage_manager}")
+                    
+                    if linkage_manager:
+                        # ✅ 關鍵修復：必須 unregister 內部的 BrakeChartWidget，不是外層的 BrakeAnalysisChartWidget
+                        if hasattr(self.brake_chart_widget, 'chart_widget') and self.brake_chart_widget.chart_widget:
+                            print(f"[BRAKE_MDI] [DEBUG] 調用 unregister_module({self.brake_chart_widget.chart_widget})")
+                            linkage_manager.unregister_module(self.brake_chart_widget.chart_widget)
+                            print(f"[BRAKE_MDI] ✅ 已從連動管理器解除註冊圖表組件（內部 chart_widget）")
+                        else:
+                            print(f"[BRAKE_MDI] [DEBUG] ⚠️ chart_widget 不存在，跳過 unregister")
+                    else:
+                        print(f"[BRAKE_MDI] [DEBUG] ⚠️ linkage_manager 為 False/None，跳過 unregister")
+                except Exception as e:
+                    print(f"[ERROR] [BRAKE_MDI] 從連動管理器解除註冊失敗: {e}")
+                    import traceback
+                    traceback.print_exc()
+                
                 # 清理圖表組件
                 if hasattr(self.brake_chart_widget, 'cleanup'):
                     self.brake_chart_widget.cleanup()
@@ -1054,6 +1152,40 @@ class BrakeAnalysisModule(IAnalysisModule):
         # ========== 實現抽象方法 ==========
 
     @property
+    def closeEvent(self, event):
+        """
+        ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
+        
+        修復執行緒洩漏問題 - 確保 TelemetryApiWorker 執行緒正確終止
+        問題：用戶關閉 MDI 視窗時，背景執行緒繼續運行導致 Dummy-11 到 Dummy-47+ 洩漏
+        """
+        print(f"[BRAKE_MDI] 🧹 視窗關閉事件觸發，開始清理資源...")
+        
+        try:
+            # 清理數據載入器的執行緒
+            if hasattr(self, 'data_manager') and self.data_manager:
+                if hasattr(self.data_manager, 'brake_loader') and self.data_manager.brake_loader:
+                    print(f"[BRAKE_MDI] 清理 DataLoader 執行緒...")
+                    # ✅ 修復：使用正確的方法名 cleanup() 而非 cleanup_threads()
+                    if hasattr(self.data_manager.brake_loader, 'cleanup'):
+                        self.data_manager.brake_loader.cleanup()
+            
+            # 斷開所有信號連接
+            if hasattr(self, 'data_manager') and self.data_manager:
+                try:
+                    self.data_manager.data_loaded.disconnect()
+                    self.data_manager.error_occurred.disconnect()
+                except Exception:
+                    pass
+            
+            print(f"[BRAKE_MDI] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[BRAKE_MDI] ⚠️ 清理過程發生錯誤: {e}")
+        
+        # 調用父類的 closeEvent
+        super().closeEvent(event)
+
     def module_name(self) -> str:
         """模組名稱"""
         return "brake_analysis"

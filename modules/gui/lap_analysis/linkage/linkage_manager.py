@@ -65,10 +65,19 @@ class LinkageManager(QObject):
     
     def unregister_module(self, module):
         """取消註冊連動模組"""
+        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 前: list 長度 = {len(self.registered_modules)}")
+        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 在 list 中: {module in self.registered_modules}")
+        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module ID: {id(module)}")
+        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] list 中的 ID: {[id(m) for m in self.registered_modules]}")
+        
         if module in self.registered_modules:
             self.registered_modules.remove(module)
             self._disconnect_module_signals(module)
+            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] 已從 list 移除")
+            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 後: list 長度 = {len(self.registered_modules)}")
             print(f"[LINKAGE_MANAGER] 已取消註冊連動模組，目前共 {len(self.registered_modules)} 個模組")
+        else:
+            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 不在 list 中，無法移除")
     
     def set_master_linkage_enabled(self, enabled: bool):
         """設置主連動開關狀態"""

@@ -896,9 +896,10 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         # 初始化UI
         self._setup_ui()
         
-        # 註冊到連動管理器
-        if linkage_manager:
-            linkage_manager.register_module(self, "acceleration_analysis")
+        # 🔴 移除容器類的重複註冊（內部的 accelerationChartWidget 將在 _create_chart_area() 中註冊）
+        # 避免雙重註冊導致的記憶體洩漏問題
+        # if linkage_manager:
+        #     linkage_manager.register_module(self, "acceleration_analysis")
         
     def _setup_ui(self):
         """設置使用者介面 - 採用速度分析的垂直單欄布局"""
@@ -1610,6 +1611,85 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         """清除固定線條 - 與速度分析保持一致"""
         if hasattr(self, 'chart_widget') and self.chart_widget:
             self.chart_widget.clear_fixed_line()
+    
+    def cleanup(self):
+        """清理 Chart Widget 資源 - 防止記憶體洩漏"""
+        try:
+            print(f"[ACCELERATION_CHART] 🧹 開始清理資源...")
+            
+            # 1. 清理 Matplotlib 圖表
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                if hasattr(self.chart_widget, 'figure') and self.chart_widget.figure:
+                    try:
+                        self.chart_widget.figure.clear()
+                        import matplotlib.pyplot as plt
+                        plt.close(self.chart_widget.figure)
+                        self.chart_widget.figure = None
+                        print(f"[ACCELERATION_CHART]   ✅ Matplotlib 圖表已清理")
+                    except Exception as e:
+                        print(f"[ACCELERATION_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                
+                if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
+                    try:
+                        self.chart_widget.canvas.deleteLater()
+                        self.chart_widget.canvas = None
+                        print(f"[ACCELERATION_CHART]   ✅ Canvas 已清理")
+                    except Exception as e:
+                        print(f"[ACCELERATION_CHART]   ⚠️ Canvas 清理警告: {e}")
+            
+            # 2. 清理 QTableWidget 中的所有 Item
+            if hasattr(self, 'stats_table') and self.stats_table:
+                try:
+                    for row in range(self.stats_table.rowCount()):
+                        for col in range(self.stats_table.columnCount()):
+                            item = self.stats_table.item(row, col)
+                            if item:
+                                self.stats_table.takeItem(row, col)
+                                del item
+                    self.stats_table.clear()
+                    self.stats_table.deleteLater()
+                    self.stats_table = None
+                    print(f"[ACCELERATION_CHART]   ✅ QTableWidget 已完全清理")
+                except Exception as e:
+                    print(f"[ACCELERATION_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+            
+            # 3. 斷開 Signal 連接
+            if hasattr(self, 'receiver') and self.receiver:
+                try:
+                    self.receiver.deleteLater()
+                    self.receiver = None
+                    print(f"[ACCELERATION_CHART]   ✅ Signal Receiver 已清理")
+                except Exception as e:
+                    print(f"[ACCELERATION_CHART]   ⚠️ Receiver 清理警告: {e}")
+            
+            # 4. 清理數據引用
+            data_attrs = ['telemetry_data', 'lap_data', 'acceleration_data', 
+                         'driver1_data', 'driver2_data', 'cached_data']
+            for attr in data_attrs:
+                if hasattr(self, attr):
+                    setattr(self, attr, None)
+            print(f"[ACCELERATION_CHART]   ✅ 數據引用已清空")
+            
+            # 5. 清理 AccelerationChartWidget
+            if hasattr(self, 'chart_widget') and self.chart_widget:
+                try:
+                    self.chart_widget.deleteLater()
+                    self.chart_widget = None
+                    print(f"[ACCELERATION_CHART]   ✅ AccelerationChartWidget 已清理")
+                except Exception as e:
+                    print(f"[ACCELERATION_CHART]   ⚠️ AccelerationChartWidget 清理警告: {e}")
+            
+            # 6. 清理資料載入器引用
+            if hasattr(self, 'acceleration_loader'):
+                self.acceleration_loader = None
+                print(f"[ACCELERATION_CHART]   ✅ 資料載入器引用已清空")
+            
+            print(f"[ACCELERATION_CHART] ✅ 資源清理完成")
+            
+        except Exception as e:
+            print(f"[ERROR] [ACCELERATION_CHART] cleanup 失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
 # 主程式測試
 if __name__ == "__main__":

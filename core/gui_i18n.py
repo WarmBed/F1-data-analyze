@@ -663,6 +663,83 @@ class GuiTranslator:
             'system_settings': {'zh': '系統設定', 'en': 'System Settings', 'ja': 'システム設定'},
             'check_api_status': {'zh': '檢查 API 狀態', 'en': 'Check API Status', 'ja': 'APIステータスを確認'},
             'run_api_health_check': {'zh': '立即執行 API 健康檢查', 'en': 'Run an API health check immediately', 'ja': 'APIヘルスチェックを即座に実行'},
+            'objgraph_diagnostic': {'zh': '記憶體診斷', 'en': 'Memory Diagnostics', 'ja': 'メモリ診断'},
+            'objgraph_diagnostic_tip': {'zh': '開啟記憶體和物件診斷工具', 'en': 'Open memory and object diagnostic tool', 'ja': 'メモリとオブジェクト診断ツールを開く'},
+            
+            # Objgraph Diagnostic Window
+            'objgraph_diagnostic_title': {'zh': '物件記憶體診斷工具', 'en': 'Memory Diagnostics', 'ja': 'メモリ診断ツール'},
+            'objgraph_control_panel': {'zh': '控制面板', 'en': 'Control Panel', 'ja': 'コントロールパネル'},
+            'objgraph_scan_objects': {'zh': '掃描物件', 'en': 'Scan Objects', 'ja': 'オブジェクトスキャン'},
+            'objgraph_track_growth': {'zh': '追蹤成長', 'en': 'Track Growth', 'ja': '成長追跡'},
+            'objgraph_force_gc': {'zh': '強制垃圾回收', 'en': 'Force GC', 'ja': '強制ガベージコレクション'},
+            'objgraph_display_limit': {'zh': '顯示數量', 'en': 'Display Limit', 'ja': '表示数'},
+            'objgraph_auto_refresh': {'zh': '自動刷新', 'en': 'Auto Refresh', 'ja': '自動更新'},
+            'objgraph_interval': {'zh': '間隔(秒)', 'en': 'Interval(s)', 'ja': '間隔(秒)'},
+            'objgraph_export': {'zh': '導出報告', 'en': 'Export Report', 'ja': 'レポートエクスポート'},
+            'objgraph_tab_stats': {'zh': '物件統計', 'en': 'Object Stats', 'ja': 'オブジェクト統計'},
+            'objgraph_tab_growth': {'zh': '成長追蹤', 'en': 'Growth Track', 'ja': '成長追跡'},
+            'objgraph_tab_graph': {'zh': '引用圖', 'en': 'Reference Graph', 'ja': '参照グラフ'},
+            'objgraph_tab_action': {'zh': '操作記錄', 'en': 'Action Log', 'ja': '操作記録'},
+            'objgraph_tab_log': {'zh': '診斷日誌', 'en': 'Diagnostic Log', 'ja': '診断ログ'},
+            'objgraph_ready': {'zh': '就緒', 'en': 'Ready', 'ja': '準備完了'},
+            'objgraph_action_note': {'zh': '操作記錄', 'en': 'Action Notes', 'ja': '操作メモ'},
+            'objgraph_action_placeholder': {'zh': '輸入操作描述...', 'en': 'Enter action description...', 'ja': '操作説明を入力...'},
+            'objgraph_add_action': {'zh': '新增記錄', 'en': 'Add Note', 'ja': '記録追加'},
+            'objgraph_quick_actions': {'zh': '快速操作', 'en': 'Quick Actions', 'ja': 'クイックアクション'},
+            'objgraph_quick_open': {'zh': '開啟模組', 'en': 'Open Module', 'ja': 'モジュールを開く'},
+            'objgraph_quick_close': {'zh': '關閉模組', 'en': 'Close Module', 'ja': 'モジュールを閉じる'},
+            'objgraph_quick_analyze': {'zh': '執行分析', 'en': 'Run Analysis', 'ja': '分析実行'},
+            'objgraph_quick_export': {'zh': '導出資料', 'en': 'Export Data', 'ja': 'データエクスポート'},
+            'objgraph_quick_clear': {'zh': '清理緩存', 'en': 'Clear Cache', 'ja': 'キャッシュクリア'},
+            'objgraph_action_time': {'zh': '時間', 'en': 'Time', 'ja': '時刻'},
+            'objgraph_action_description': {'zh': '操作描述', 'en': 'Description', 'ja': '説明'},
+            'objgraph_action_objects': {'zh': '物件總數', 'en': 'Total Objects', 'ja': 'オブジェクト総数'},
+            'objgraph_action_change': {'zh': '變化', 'en': 'Change', 'ja': '変化'},
+            'objgraph_snapshot': {'zh': '快照當前狀態', 'en': 'Snapshot State', 'ja': '状態スナップショット'},
+            'objgraph_snapshot_in_progress': {'zh': '正在拍攝快照並追蹤成長...', 'en': 'Taking snapshot and tracking growth...', 'ja': 'スナップショット作成と成長追跡中...'},
+            'objgraph_clear_actions': {'zh': '清空記錄', 'en': 'Clear Records', 'ja': '記録クリア'},
+            'objgraph_empty_action': {'zh': '請輸入操作描述', 'en': 'Please enter action description', 'ja': '操作説明を入力してください'},
+            'objgraph_confirm_clear': {'zh': '確認清空', 'en': 'Confirm Clear', 'ja': 'クリア確認'},
+            'objgraph_confirm_clear_actions': {'zh': '確定要清空所有操作記錄嗎？', 'en': 'Clear all action records?', 'ja': 'すべての操作記録をクリアしますか？'},
+            'objgraph_type': {'zh': '類型', 'en': 'Type', 'ja': 'タイプ'},
+            'objgraph_count': {'zh': '數量', 'en': 'Count', 'ja': '数量'},
+            'objgraph_percentage': {'zh': '百分比', 'en': 'Percentage', 'ja': 'パーセンテージ'},
+            'objgraph_previous': {'zh': '之前', 'en': 'Previous', 'ja': '以前'},
+            'objgraph_current': {'zh': '目前', 'en': 'Current', 'ja': '現在'},
+            'objgraph_growth': {'zh': '成長', 'en': 'Growth', 'ja': '成長'},
+            'objgraph_growth_info': {'zh': '此功能追蹤兩次掃描之間的物件數量變化。點擊「追蹤成長」開始追蹤。', 'en': 'This feature tracks object count changes between scans. Click "Track Growth" to start.', 'ja': 'この機能は、スキャン間のオブジェクト数の変化を追跡します。「成長追跡」をクリックして開始します。'},
+            'objgraph_select_type': {'zh': '選擇類型', 'en': 'Select Type', 'ja': 'タイプを選択'},
+            'objgraph_max_depth': {'zh': '最大深度', 'en': 'Max Depth', 'ja': '最大深度'},
+            'objgraph_generate_graph': {'zh': '生成引用圖', 'en': 'Generate Graph', 'ja': 'グラフ生成'},
+            'objgraph_no_graph': {'zh': '尚未生成引用圖', 'en': 'No graph generated yet', 'ja': 'まだグラフが生成されていません'},
+            'objgraph_clear_log': {'zh': '清除日誌', 'en': 'Clear Log', 'ja': 'ログクリア'},
+            'objgraph_scanning': {'zh': '正在掃描物件...', 'en': 'Scanning objects...', 'ja': 'オブジェクトをスキャン中...'},
+            'objgraph_start_scan': {'zh': '開始掃描物件', 'en': 'Start scanning objects', 'ja': 'オブジェクトスキャン開始'},
+            'objgraph_scan_complete': {'zh': '掃描完成', 'en': 'Scan complete', 'ja': 'スキャン完了'},
+            'objgraph_scan_success': {'zh': '掃描成功，找到 {0} 種類型', 'en': 'Scan successful, found {0} types', 'ja': 'スキャン成功、{0}種類見つかりました'},
+            'objgraph_scan_error': {'zh': '掃描失敗', 'en': 'Scan failed', 'ja': 'スキャン失敗'},
+            'objgraph_tracking_growth': {'zh': '正在追蹤成長...', 'en': 'Tracking growth...', 'ja': '成長追跡中...'},
+            'objgraph_start_growth_track': {'zh': '開始追蹤物件成長', 'en': 'Start tracking object growth', 'ja': 'オブジェクト成長追跡開始'},
+            'objgraph_growth_complete': {'zh': '成長追蹤完成', 'en': 'Growth tracking complete', 'ja': '成長追跡完了'},
+            'objgraph_growth_success': {'zh': '追蹤完成，發現 {0} 種類型有變化', 'en': 'Tracking complete, {0} types changed', 'ja': '追跡完了、{0}種類が変化'},
+            'objgraph_growth_error': {'zh': '成長追蹤失敗', 'en': 'Growth tracking failed', 'ja': '成長追跡失敗'},
+            'objgraph_force_gc_start': {'zh': '執行強制垃圾回收...', 'en': 'Forcing garbage collection...', 'ja': '強制ガベージコレクション実行中...'},
+            'objgraph_gc_complete': {'zh': '垃圾回收完成，總共回收 {0} 個物件', 'en': 'GC complete, collected {0} objects', 'ja': 'GC完了、{0}個のオブジェクトを回収'},
+            'objgraph_gc_done': {'zh': '垃圾回收完成 ({0} 個物件)', 'en': 'GC complete ({0} objects)', 'ja': 'GC完了({0}個)'},
+            'objgraph_gc_title': {'zh': '垃圾回收', 'en': 'Garbage Collection', 'ja': 'ガベージコレクション'},
+            'objgraph_gc_message': {'zh': '已回收 {0} 個物件', 'en': 'Collected {0} objects', 'ja': '{0}個のオブジェクトを回収しました'},
+            'objgraph_select_type_warning': {'zh': '請選擇或輸入物件類型', 'en': 'Please select or enter object type', 'ja': 'オブジェクトタイプを選択または入力してください'},
+            'objgraph_generating_graph': {'zh': '正在生成 {0} 的引用圖...', 'en': 'Generating reference graph for {0}...', 'ja': '{0}の参照グラフを生成中...'},
+            'objgraph_generate_graph_start': {'zh': '開始生成 {0} 的引用圖', 'en': 'Start generating reference graph for {0}', 'ja': '{0}の参照グラフ生成開始'},
+            'objgraph_graph_complete': {'zh': '引用圖已生成: {0}', 'en': 'Reference graph generated: {0}', 'ja': '参照グラフ生成完了: {0}'},
+            'objgraph_graph_success': {'zh': '引用圖已保存至: {0}', 'en': 'Reference graph saved to: {0}', 'ja': '参照グラフ保存先: {0}'},
+            'objgraph_graph_saved': {'zh': '引用圖已保存至:\n{0}', 'en': 'Reference graph saved to:\n{0}', 'ja': '参照グラフ保存先:\n{0}'},
+            'objgraph_graph_load_error': {'zh': '無法載入圖片', 'en': 'Failed to load image', 'ja': '画像の読み込みに失敗'},
+            'objgraph_graph_error': {'zh': '引用圖生成失敗', 'en': 'Reference graph generation failed', 'ja': '参照グラフ生成失敗'},
+            'objgraph_export_report': {'zh': '導出診斷報告', 'en': 'Export Diagnostic Report', 'ja': '診断レポートエクスポート'},
+            'objgraph_export_success': {'zh': '報告已導出至:\n{0}', 'en': 'Report exported to:\n{0}', 'ja': 'レポートエクスポート先:\n{0}'},
+            'objgraph_export_error': {'zh': '導出失敗:\n{0}', 'en': 'Export failed:\n{0}', 'ja': 'エクスポート失敗:\n{0}'},
+            'objgraph_open_error': {'zh': '無法開啟記憶體診斷工具:\n{0}', 'en': 'Failed to open Memory Diagnostic tool:\n{0}', 'ja': 'メモリ診断ツールを開けません:\n{0}'},
             
             # DraggableTitleBar 工具提示和按鈕
             'sync_main_window_tooltip_enabled': {'zh': '接收主程式同步：啟用 (綠色)', 'en': 'Receive Main Window Sync: Enabled (Green)', 'ja': 'メインウィンドウと同期：有効（緑）'},
@@ -1150,6 +1227,72 @@ class GuiTranslator:
             'sector_comparison_header_s2_delta': {'zh': 'S2 差異', 'en': 'S2 Delta', 'ja': 'S2 差分'},
             'sector_comparison_header_s3_delta': {'zh': 'S3 差異', 'en': 'S3 Delta', 'ja': 'S3 差分'},
             'sector_comparison_header_cumulative': {'zh': '累積總差異', 'en': 'Cumulative Delta', 'ja': '累積差分'},
+            
+            # All Drivers Straight Line Speed Analysis - 表格欄位標題
+            'speed_analysis_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'speed_analysis_header_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'speed_analysis_header_max_speed': {'zh': '最高速度', 'en': 'Max Speed', 'ja': '最高速度'},
+            'speed_analysis_header_segment_accel_time': {'zh': '加速時間', 'en': 'Accel Time', 'ja': '加速時間'},
+            'speed_analysis_header_segment_avg_accel': {'zh': '平均加速度', 'en': 'Avg Accel', 'ja': '平均加速度'},
+            'speed_analysis_header_segment_start_speed': {'zh': '起始速度', 'en': 'Start Speed', 'ja': '開始速度'},
+            'speed_analysis_header_accel_bar': {'zh': '加速性能視覺化', 'en': 'Accel Performance', 'ja': '加速性能ビジュアル'},
+            
+            # All Drivers Straight Line Speed Analysis - 資訊標籤
+            'straight_speed_info_no_data': {'zh': '分析範圍: 未載入資料', 'en': 'Analysis Range: No Data Loaded', 'ja': '分析範囲: データ未読み込み'},
+            'straight_speed_info_range': {'zh': '分析範圍: {start}m → {end}m (長度: {length}m)', 'en': 'Analysis Range: {start}m → {end}m (Length: {length}m)', 'ja': '分析範囲: {start}m → {end}m (長さ: {length}m)'},
+            'straight_speed_info_reference': {'zh': ' | 參考車手: {driver}', 'en': ' | Reference Driver: {driver}', 'ja': ' | 基準ドライバー: {driver}'},
+            
+            # All Drivers Straight Line Speed Analysis - Tooltip
+            'straight_speed_driver_tooltip': {'zh': '{driver} - {team}', 'en': '{driver} - {team}', 'ja': '{driver} - {team}'},
+            'straight_speed_team_tooltip': {'zh': '{team}', 'en': '{team}', 'ja': '{team}'},
+            'straight_speed_start_speed_tooltip': {'zh': '起始→結束: {start} → {end} km/h', 'en': 'Start→End: {start} → {end} km/h', 'ja': '開始→終了: {start} → {end} km/h'},
+            
+            # All Drivers Straight Line Speed Analysis - 車手詳細資訊
+            'straight_speed_driver_details': {
+                'zh': '''車手詳細資訊 - {driver}
+
+車手: {driver}
+車隊: {team}
+
+最高速度: {max_speed} km/h
+
+加速性能 (100 → 300 km/h):
+  時間: {accel_100_300_time} s
+  距離: {accel_distance} m
+  平均加速度: {accel_avg} m/s²
+
+加速性能 (100 → {max_speed_full} km/h):
+  時間: {time_to_max} s''',
+                'en': '''Driver Details - {driver}
+
+Driver: {driver}
+Team: {team}
+
+Max Speed: {max_speed} km/h
+
+Acceleration (100 → 300 km/h):
+  Time: {accel_100_300_time} s
+  Distance: {accel_distance} m
+  Avg Acceleration: {accel_avg} m/s²
+
+Acceleration (100 → {max_speed_full} km/h):
+  Time: {time_to_max} s''',
+                'ja': '''ドライバー詳細 - {driver}
+
+ドライバー: {driver}
+チーム: {team}
+
+最高速度: {max_speed} km/h
+
+加速性能 (100 → 300 km/h):
+  時間: {accel_100_300_time} s
+  距離: {accel_distance} m
+  平均加速度: {accel_avg} m/s²
+
+加速性能 (100 → {max_speed_full} km/h):
+  時間: {time_to_max} s'''
+            },
+            'straight_speed_driver_info_title': {'zh': '車手資訊 - {driver}', 'en': 'Driver Info - {driver}', 'ja': 'ドライバー情報 - {driver}'},
             
             # 通用字串
             'na': {'zh': 'N/A', 'en': 'N/A', 'ja': 'N/A'},

@@ -735,11 +735,34 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
 
     def cleanup(self) -> None:  # type: ignore[override]
         try:
+            # 🔴 新增：斷開 control_panel 的所有信號連接（修復洩漏）
+            if hasattr(self, 'control_panel') and self.control_panel:
+                try:
+                    self.control_panel.settingsChanged.disconnect(self._on_control_settings_changed)
+                    self.control_panel.reloadRequested.disconnect(self._on_reload_requested)
+                    self.control_panel.resetRequested.disconnect(self._on_reset_requested)
+                    self.control_panel.exportRequested.disconnect(self._on_export_requested)
+                    self.control_panel.driverChanged.disconnect(self._on_driver_selection_changed)
+                    self.control_panel.driver2Changed.disconnect(self._on_driver2_selection_changed)
+                    print(f"[THROTTLE_LINE_CHART] ✅ control_panel 信號已斷開（6 個連接）")
+                except (TypeError, RuntimeError):
+                    pass
+                
+                # 清理 control_panel
+                try:
+                    self.control_panel.deleteLater()
+                    self.control_panel = None
+                    print(f"[THROTTLE_LINE_CHART] ✅ control_panel 已清理")
+                except Exception as e:
+                    print(f"[THROTTLE_LINE_CHART] ⚠️ control_panel 清理警告: {e}")
+            
+            # 斷開 settings_manager 信號連接
             if self.settings_manager:
                 self.settings_manager.boxplot_settings_changed.disconnect(self._on_global_filter_settings_changed)
                 self.settings_manager.throttle_line_chart_settings_changed.disconnect(
                     self._on_throttle_settings_changed
                 )
+                print(f"[THROTTLE_LINE_CHART] ✅ settings_manager 信號已斷開")
         except (TypeError, RuntimeError):  # pragma: no cover - already disconnected
             pass
         super().cleanup()

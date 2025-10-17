@@ -1102,7 +1102,13 @@ class AccidentAnalysisModule(IAnalysisModule):
 
     def _generate_accident_data_via_cli(self, year: str, race: str, session: str) -> bool:
         """
-        透過 CLI 工具生成事故數據 - 使用非阻塞方式（參照進站分析模組）
+        [已禁用] 透過 CLI 工具生成事故數據
+        
+        ⚠️ API-ONLY 模式: 此方法已改為提示訊息，不再執行 CLI
+        系統只允許：
+        1. 通過 REST API 獲取數據
+        2. 讀取已存在的本地 JSON 檔案
+        3. 手動在終端執行 CLI 命令
         
         Args:
             year: 年份
@@ -1110,16 +1116,14 @@ class AccidentAnalysisModule(IAnalysisModule):
             session: 賽段代碼
             
         Returns:
-            bool: 請求是否成功提交（注意：不是生成是否成功）
+            bool: 始終返回 False（已禁用）
         """
         try:
-            print(f"🔧 [ACCIDENT_MODULE] 開始生成事故分析數據: {year} {race} {session}")
+            print(f"[ACCIDENT_MODULE] ========== [API-ONLY] 數據生成請求 ==========")
+            print(f"[ACCIDENT_MODULE] ⚠️  [API-ONLY] CLI 調用已禁用")
+            print(f"[ACCIDENT_MODULE] 請求: 事故分析 | {year} {race} {session}")
             
-            # 直接調用 CLI 分析腳本
-            import subprocess
-            import threading
-            
-            # 構建命令 - 功能8是事故分析
+            # 生成建議的 CLI 命令（供用戶手動執行）
             command = [
                 "python", "f1_analysis_modular_main.py",
                 "-f", "8",  # 功能8: 事故分析
@@ -1128,39 +1132,18 @@ class AccidentAnalysisModule(IAnalysisModule):
                 "-s", session
             ]
             
-            print(f"🔧 [ACCIDENT_MODULE] 執行命令: {' '.join(command)}")
+            manual_command = ' '.join(command)
             
-            # 非阻塞執行
-            def run_cli():
-                try:
-                    process = subprocess.Popen(
-                        command,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        text=True,
-                        encoding='utf-8',
-                        cwd=os.getcwd()
-                    )
-                    
-                    stdout, stderr = process.communicate()
-                    
-                    if process.returncode == 0:
-                        print(f"✅ [ACCIDENT_MODULE] CLI執行成功")
-                        print(f"📊 [ACCIDENT_MODULE] CLI輸出: {stdout[:200]}...")  # 顯示前200字符
-                    else:
-                        print(f"❌ [ACCIDENT_MODULE] CLI執行失敗: {stderr}")
-                        
-                except Exception as e:
-                    print(f"❌ [ACCIDENT_MODULE] CLI執行時發生錯誤: {e}")
+            print(f"[ACCIDENT_MODULE] 💡 提示：請使用以下方式獲取數據：")
+            print(f"[ACCIDENT_MODULE] 💡 方案1 [推薦]: 通過 REST API 調用 Function 8")
+            print(f"[ACCIDENT_MODULE] 💡   API 端點: POST /api/v2/analysis/execute?function_id=8")
+            print(f"[ACCIDENT_MODULE] 💡 方案2: 手動執行 CLI 命令：")
+            print(f"[ACCIDENT_MODULE] 💡   {manual_command}")
             
-            # 在後台執行
-            cli_thread = threading.Thread(target=run_cli, daemon=True)
-            cli_thread.start()
-            
-            return True
+            return False
             
         except Exception as e:
-            print(f"❌ [ACCIDENT_MODULE] 生成數據時發生錯誤: {e}")
+            print(f"❌ [ACCIDENT_MODULE] 處理生成請求時發生錯誤: {e}")
             return False
 
     def _start_generation_monitoring(self, year: str, race: str, session: str):

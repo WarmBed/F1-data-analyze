@@ -21,11 +21,13 @@ from datetime import datetime
 class NSSMServiceMonitor:
     """NSSM 服務監控類別"""
     
-    def __init__(self):
+    def __init__(self, debug_enabled: bool = False):
         """初始化監控器"""
         self.script_dir = Path(__file__).parent
         self.project_root = self.script_dir.parent
-        self.logs_dir = self.script_dir / "logs"
+        # 修正：使用專案根目錄下的 logs，而非 nssm/logs
+        self.logs_dir = self.project_root / "logs"
+        self.debug_enabled = debug_enabled
         
         # F1T 服務列表
         self.services = {
@@ -46,6 +48,11 @@ class NSSMServiceMonitor:
             }
         }
     
+    def _debug(self, message: str):
+        """DEBUG 訊息輸出"""
+        if self.debug_enabled:
+            print(f"[DEBUG] {message}")
+    
     def get_service_status(self, service_name: str) -> Dict:
         """
         獲取服務狀態
@@ -59,16 +66,21 @@ class NSSMServiceMonitor:
                 "process_info": {...} or None
             }
         """
+        self._debug(f"獲取服務狀態: {service_name}")
         try:
-            # 使用 sc query 獲取服務狀態
+            # 使用 sc query 獲取服務狀態（使用 cp950 編碼）
             result = subprocess.run(
                 ["sc", "query", service_name],
                 capture_output=True,
                 text=True,
-                encoding='utf-8'
+                encoding='cp950',
+                errors='ignore'
             )
+            self._debug(f"命令返回碼: {result.returncode}")
             
             if result.returncode != 0:
+                self._debug(f"服務 {service_name} 不存在或查詢失敗")
+                self._debug(f"錯誤輸出: {result.stderr}")
                 return {
                     "exists": False,
                     "state": "NOT_INSTALLED",
@@ -79,37 +91,82 @@ class NSSMServiceMonitor:
             
             # 解析輸出
             output = result.stdout
+            self._debug(f"sc query 輸出 (部分):\n{output[:200]}...")
             
             # 提取狀態
             state_match = re.search(r'STATE\s+:\s+\d+\s+(\w+)', output)
             state = state_match.group(1) if state_match else "UNKNOWN"
+            self._debug(f"解析狀態: {state}")
             
-            # 提取 PID
-            pid_match = re.search(r'PID\s+:\s+(\d+)', output)
-            pid = int(pid_match.group(1)) if pid_match else None
+            # 提取 PID - sc query 不包含 PID，需要用其他方法獲取
+            pid = None
+            
+            # 方法 1: 使用 WMIC 獲取服務 PID
+            try:
+                wmic_result = subprocess.run(
+                    ["wmic", "service", "where", f"name='{service_name}'", "get", "processid", "/format:value"],
+                    capture_output=True,
+                    text=True,
+                    encoding='cp950',
+                    errors='ignore'
+                )
+                if wmic_result.returncode == 0:
+                    pid_match = re.search(r'ProcessId=(\d+)', wmic_result.stdout)
+                    if pid_match:
+                        pid = int(pid_match.group(1))
+                        self._debug(f"WMIC 獲取 PID: {pid}")
+            except Exception as e:
+                self._debug(f"WMIC 獲取 PID 失敗: {e}")
+            
+            # 方法 2: 如果 WMIC 失敗，嘗試用 PowerShell
+            if not pid:
+                try:
+                    ps_result = subprocess.run(
+                        ["powershell", "-Command", f"Get-WmiObject -Class Win32_Service -Filter \"Name='{service_name}'\" | Select-Object -Property ProcessId"],
+                        capture_output=True,
+                        text=True,
+                        encoding='cp950',
+                        errors='ignore'
+                    )
+                    if ps_result.returncode == 0:
+                        pid_match = re.search(r'(\d+)', ps_result.stdout)
+                        if pid_match:
+                            pid = int(pid_match.group(1))
+                            self._debug(f"PowerShell 獲取 PID: {pid}")
+                except Exception as e:
+                    self._debug(f"PowerShell 獲取 PID 失敗: {e}")
+            
+            self._debug(f"最終 PID: {pid}")
             
             # 獲取進程資訊
             process_info = None
             if pid and pid > 0:
                 try:
                     process = psutil.Process(pid)
+                    cpu_percent = process.cpu_percent(interval=0.1)
+                    memory_mb = process.memory_info().rss / (1024 * 1024)
+                    
                     process_info = {
                         "pid": pid,
                         "name": process.name(),
-                        "cpu_percent": process.cpu_percent(interval=0.1),
-                        "memory_mb": process.memory_info().rss / (1024 * 1024),
+                        "cpu_percent": cpu_percent,
+                        "memory_mb": memory_mb,
                         "create_time": process.create_time(),
                         "status": process.status()
                     }
-                except (psutil.NoSuchProcess, psutil.AccessDenied):
-                    pass
+                    self._debug(f"進程資訊獲取成功: CPU={cpu_percent:.1f}%, MEM={memory_mb:.1f}MB")
+                except (psutil.NoSuchProcess, psutil.AccessDenied) as e:
+                    self._debug(f"獲取進程資訊失敗: {e}")
+            else:
+                self._debug(f"PID 無效或為 0，跳過進程資訊獲取")
             
-            # 獲取啟動類型
+            # 獲取啟動類型（使用 cp950 編碼）
             startup_result = subprocess.run(
                 ["sc", "qc", service_name],
                 capture_output=True,
                 text=True,
-                encoding='utf-8'
+                encoding='cp950',
+                errors='ignore'
             )
             
             startup_type = "UNKNOWN"
@@ -117,17 +174,24 @@ class NSSMServiceMonitor:
                 startup_match = re.search(r'START_TYPE\s+:\s+\d+\s+(\w+)', startup_result.stdout)
                 if startup_match:
                     startup_type = startup_match.group(1)
+                self._debug(f"解析啟動類型: {startup_type}")
+            else:
+                self._debug(f"獲取啟動類型失敗，返回碼: {startup_result.returncode}")
             
-            return {
+            result_data = {
                 "exists": True,
                 "state": state,
                 "pid": pid,
                 "startup_type": startup_type,
                 "process_info": process_info
             }
+            self._debug(f"服務狀態結果: {result_data}")
+            return result_data
             
         except Exception as e:
             print(f"[ERROR] 獲取服務狀態失敗: {e}")
+            import traceback
+            print(f"[ERROR] 詳細錯誤: {traceback.format_exc()}")
             return {
                 "exists": False,
                 "state": "ERROR",
@@ -139,39 +203,85 @@ class NSSMServiceMonitor:
     
     def start_service(self, service_name: str) -> bool:
         """啟動服務"""
+        self._debug(f"嘗試啟動服務: {service_name}")
         try:
             result = subprocess.run(
                 ["net", "start", service_name],
                 capture_output=True,
                 text=True,
-                encoding='utf-8'
+                encoding='cp950',
+                errors='ignore'
             )
-            return result.returncode == 0
+            self._debug(f"net start 返回碼: {result.returncode}")
+            if result.stderr:
+                self._debug(f"net start 錯誤: {result.stderr}")
+            
+            success = result.returncode == 0
+            self._debug(f"啟動服務結果: {success}")
+            return success
         except Exception as e:
             print(f"[ERROR] 啟動服務失敗: {e}")
+            import traceback
+            print(f"[ERROR] 詳細錯誤: {traceback.format_exc()}")
             return False
     
     def stop_service(self, service_name: str) -> bool:
         """停止服務"""
+        self._debug(f"嘗試停止服務: {service_name}")
         try:
             result = subprocess.run(
                 ["net", "stop", service_name],
                 capture_output=True,
                 text=True,
-                encoding='utf-8'
+                encoding='cp950',
+                errors='ignore'
             )
-            return result.returncode == 0
+            self._debug(f"net stop 返回碼: {result.returncode}")
+            if result.stderr:
+                self._debug(f"net stop 錯誤: {result.stderr}")
+            
+            success = result.returncode == 0
+            self._debug(f"停止服務結果: {success}")
+            return success
         except Exception as e:
             print(f"[ERROR] 停止服務失敗: {e}")
+            import traceback
+            print(f"[ERROR] 詳細錯誤: {traceback.format_exc()}")
             return False
     
     def restart_service(self, service_name: str) -> bool:
-        """重啟服務"""
-        if self.stop_service(service_name):
+        """重啟服務 - 異步友好版本"""
+        self._debug(f"嘗試重啟服務: {service_name}")
+        try:
+            # 先停止服務
+            if not self.stop_service(service_name):
+                self._debug(f"停止服務 {service_name} 失敗")
+                return False
+            
+            # 非阻塞等待 - 使用輪詢方式確認服務已停止
             import time
-            time.sleep(2)  # 等待 2 秒
-            return self.start_service(service_name)
-        return False
+            max_wait = 10  # 最多等待 10 秒
+            wait_step = 0.5  # 每次等待 0.5 秒
+            waited = 0
+            
+            while waited < max_wait:
+                time.sleep(wait_step)
+                waited += wait_step
+                status = self.get_service_status(service_name)
+                if status["state"] == "STOPPED":
+                    break
+                self._debug(f"等待服務停止... ({waited:.1f}s)")
+            
+            # 啟動服務
+            success = self.start_service(service_name)
+            self._debug(f"重啟服務 {service_name} 結果: {success}")
+            return success
+            
+        except Exception as e:
+            print(f"[ERROR] 重啟服務 {service_name} 失敗: {e}")
+            import traceback
+            print(f"[ERROR] 詳細錯誤: {traceback.format_exc()}")
+            return False
     
     def get_service_logs(self, service_name: str, tail: int = 100, error_log: bool = False) -> List[str]:
         """

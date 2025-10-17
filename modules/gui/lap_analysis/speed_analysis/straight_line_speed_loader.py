@@ -45,13 +45,13 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         """Load straight-line speed data, fetching from API when needed."""
 
         if not self._validate_load_parameters(kwargs):
-            self._error("載入參數驗證失敗")
-            self.load_error.emit("載入參數不正確")
+            self._error(tr("straight_speed_load_param_validation_failed", "載入參數驗證失敗"))
+            self.load_error.emit(tr("straight_speed_load_param_invalid", "載入參數不正確"))
             return False
 
         existing = self._find_data_file(**kwargs)
         if not existing:
-            self._debug("找不到本地直線速度檔案，準備透過 API 取得最新資料")
+            self._debug(tr("straight_speed_no_local_file", "找不到本地直線速度檔案，準備透過 API 取得最新資料"))
             if not self._fetch_via_api_and_cache(**kwargs):
                 return False
 
@@ -107,7 +107,18 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         if not raw_data.get("success", False):
             return False
 
-        payload = raw_data.get("data")
+        first_layer = raw_data.get("data")
+        if not isinstance(first_layer, dict):
+            return False
+        
+        # ⚠️ API 返回的數據結構是嵌套的兩層 data
+        # 檢查是否有第二層 data
+        if "data" in first_layer:
+            payload = first_layer.get("data")
+        else:
+            # 兼容舊格式或本地 JSON (沒有第二層嵌套)
+            payload = first_layer
+        
         if not isinstance(payload, dict):
             return False
 
@@ -118,7 +129,17 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         return True
 
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
-        payload = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        # ⚠️ API 返回的數據結構是嵌套的兩層 data
+        # raw_data["data"]["data"]["driver_speeds"]
+        first_layer = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        
+        # 檢查是否有嵌套的第二層 data
+        if isinstance(first_layer, dict) and "data" in first_layer:
+            payload = first_layer.get("data", {})
+        else:
+            # 兼容舊格式或本地 JSON (沒有第二層嵌套)
+            payload = first_layer
+        
         metadata = dict(payload.get("metadata") or {})
         summary = payload.get("summary") or {}
         chart = payload.get("chart_data")
@@ -134,6 +155,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         processed = {
             "metadata": metadata,
             "driver_speeds": payload.get("driver_speeds") or [],
+            "reference_segment": payload.get("reference_segment") or {},  # ✅ 新增：傳遞距離範圍資訊
             "summary": summary,
             "chart_data": chart,
             "raw_payload": raw_data,
@@ -150,8 +172,8 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             race = str(kwargs["race"])
             session = str(kwargs["session"])
         except (KeyError, TypeError, ValueError) as exc:
-            self._error(f"缺少必要參數，無法呼叫 API: {exc}")
-            self.load_error.emit("缺少必要參數，無法載入直線速度分析")
+            self._error(tr("straight_speed_api_missing_params", "缺少必要參數，無法呼叫 API: {error}").format(error=str(exc)))
+            self.load_error.emit(tr("straight_speed_load_missing_params", "缺少必要參數，無法載入直線速度分析"))
             return None
 
         params = {
@@ -164,7 +186,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             params["force_refresh"] = True
 
         endpoint = f"{self._api_base_url}/api/v2/analysis/execute"
-        self.status_changed.emit("透過 API 載入全部車手直線速度資料...")
+        self.status_changed.emit(tr("straight_speed_loading_via_api", "透過 API 載入全部車手直線速度資料..."))
         self.load_progress.emit(25)
 
         try:
@@ -177,14 +199,14 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             response.raise_for_status()
             payload = response.json()
         except Exception as exc:  # broad catch to emit signal and log
-            self._error(f"API 載入失敗: {exc}")
-            self.load_error.emit(f"API 載入失敗: {exc}")
+            self._error(tr("straight_speed_api_load_failed", "API 載入失敗: {error}").format(error=str(exc)))
+            self.load_error.emit(tr("straight_speed_api_load_failed", "API 載入失敗: {error}").format(error=str(exc)))
             return None
 
         if not isinstance(payload, dict) or not payload.get("success", False):
-            message = payload.get("message") if isinstance(payload, dict) else "未知錯誤"
-            self._error(f"API 返回失敗: {message}")
-            self.load_error.emit(f"API 返回失敗: {message}")
+            message = payload.get("message") if isinstance(payload, dict) else tr("straight_speed_unknown_error", "未知錯誤")
+            self._error(tr("straight_speed_api_return_failed", "API 返回失敗: {message}").format(message=message))
+            self.load_error.emit(tr("straight_speed_api_return_failed", "API 返回失敗: {message}").format(message=message))
             return None
 
         self._last_api_payload = payload
@@ -194,7 +216,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             self.load_progress.emit(60)
             return output_path
 
-        self.load_error.emit("儲存 API 結果時發生錯誤")
+        self.load_error.emit(tr("straight_speed_save_error", "儲存 API 結果時發生錯誤"))
         return None
 
     def _write_payload_to_cache(self, payload: Dict[str, Any], year: int, race: str, session: str) -> Optional[str]:
@@ -204,10 +226,10 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             path = os.path.join("json", filename)
             with open(path, "w", encoding="utf-8") as handle:
                 json.dump(payload, handle, ensure_ascii=False, indent=2, default=str)
-            self._debug(f"API 結果已寫入 {path}")
+            self._debug(tr("straight_speed_api_result_saved", "API 結果已寫入 {path}").format(path=path))
             return path
         except Exception as exc:
-            self._error(f"寫入 JSON 檔案失敗: {exc}")
+            self._error(tr("straight_speed_write_json_failed", "寫入 JSON 檔案失敗: {error}").format(error=str(exc)))
             return None
 
     def _make_filename(self, year: int, race: str, session: str) -> str:

@@ -255,6 +255,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             self._fallback_policy_reason = previous_reason
 
     def _start_api_request(self, params: Dict[str, Any]) -> None:
+        """啟動 API 請求背景執行緒（完全複製 throttle_line_chart 的成功模式）"""
         self._cleanup_api_worker()
 
         worker_params = {
@@ -352,58 +353,35 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             self._debug("✅ 父類 load_data() 返回 True")
         self._debug("========== 本地 JSON 回退流程結束 ==========")
 
-    def _stop_api_worker(self, wait_timeout_ms: int = 2000) -> None:
-        worker = self._api_worker
-        if not worker:
-            return
-
-        if worker.isRunning():
-            self._debug("_stop_api_worker: requesting interruption")
-            try:
-                worker.requestInterruption()
-                worker.quit()
-            except Exception:
-                pass
-
-            if not worker.wait(wait_timeout_ms):
-                self._debug("_stop_api_worker: worker timeout, forcing terminate()")
-                try:
-                    worker.terminate()
-                except Exception as exc:
-                    self._debug(f"_stop_api_worker: terminate() raised {exc}")
-                worker.wait(200)
-
     def _cleanup_api_worker(self) -> None:
-        worker = self._api_worker
-        if not worker:
-            return
-
-        if worker.isRunning():
-            self._stop_api_worker()
-
-        for signal, slot in (
-            (worker.progress, self._on_api_progress),
-            (worker.success, self._on_api_success),
-            (worker.failure, self._on_api_error),
-        ):
+        """
+        清理 API Worker 執行緒
+        
+        ✅ 完全複製 throttle_line_chart 和 accident 的成功模式
+        """
+        if self._api_worker:
             try:
-                signal.disconnect(slot)
+                self._api_worker.progress.disconnect()
             except Exception:
                 pass
-
-        try:
-            worker.finished.disconnect(self._cleanup_api_worker)
-        except Exception:
-            pass
-
-        worker.deleteLater()
-        if worker is self._api_worker:
+            try:
+                self._api_worker.success.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.failure.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.finished.disconnect()
+            except Exception:
+                pass
+            self._api_worker.deleteLater()
             self._api_worker = None
 
     def stop_loading(self) -> None:
         """停止任何進行中的 API 載入流程。"""
-        self._stop_api_worker()
-        self._cleanup_api_worker()
+        self._cleanup_api_worker()  # ✅ 直接調用 cleanup，移除多餘的 _stop_api_worker
         self._is_loading = False
         try:
             self.status_changed.emit(tr("throttle_box_plot.loading_cancelled", "已取消載入請求"))
@@ -881,15 +859,6 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
                     self._error_handler_connected = True
 
             if hasattr(self, "data_manager") and self.data_manager:
-                if hasattr(self.data_manager, "is_loading") and self.data_manager.is_loading():
-                    if hasattr(self.data_manager, "stop_loading"):
-                        self.data_manager.stop_loading()
-                    else:
-                        try:
-                            self.data_manager._cleanup_api_worker()  # noqa: SLF001 - fallback for舊版
-                            self.data_manager._is_loading = False
-                        except Exception:
-                            pass
                 self.data_manager.year = self.current_year
                 self.data_manager.race = self.current_race
                 self.data_manager.session = self.current_session
@@ -1127,3 +1096,5 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
 
         except Exception as exc:
             print(f"[ERROR] [THROTTLE_MDI] 設置響應式佈局失敗: {exc}")
+
+

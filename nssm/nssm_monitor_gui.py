@@ -30,13 +30,103 @@ from PyQt5.QtChart import QChart, QChartView, QLineSeries, QValueAxis, QDateTime
 from service_monitor import NSSMServiceMonitor
 
 
+class ServiceMonitorSingleton:
+    """單例模式的服務監控器，避免重複創建實例"""
+    _instance = None
+    _monitor = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._monitor = NSSMServiceMonitor(debug_enabled=False)
+        return cls._instance
+    
+    def get_monitor(self):
+        return self._monitor
+
+
+class BatchServiceWorker(QThread):
+    """批量服務操作背景執行緒"""
+    
+    # 信號定義
+    progress_updated = pyqtSignal(str, str)  # (operation, service_name)
+    operation_completed = pyqtSignal(str, int, int)  # (operation, success_count, total_count)
+    error_occurred = pyqtSignal(str, str)  # (operation, error_message)
+    
+    def __init__(self, operation: str, service_names: list, parent=None):
+        super().__init__(parent)
+        self.operation = operation  # "start_all", "stop_all", "restart_all"
+        self.service_names = service_names
+        self.monitor = ServiceMonitorSingleton().get_monitor()
+        self.should_stop = False
+    
+    def stop_operation(self):
+        """請求停止操作"""
+        self.should_stop = True
+    
+    def run(self):
+        """背景執行緒主函數 - 增強異常處理版本"""
+        success_count = 0
+        total_count = len(self.service_names)
+        
+        try:
+            if self.operation == "start_all":
+                for service_name in self.service_names:
+                    if self.should_stop:
+                        break
+                    
+                    try:
+                        self.progress_updated.emit("啟動", service_name)
+                        if self.monitor.start_service(service_name):
+                            success_count += 1
+                    except Exception as e:
+                        print(f"[ERROR] 啟動服務 {service_name} 時發生異常: {e}")
+                        self.error_occurred.emit("start", f"啟動 {service_name} 失敗: {str(e)}")
+                    
+            elif self.operation == "stop_all":
+                for service_name in self.service_names:
+                    if self.should_stop:
+                        break
+                    
+                    try:
+                        self.progress_updated.emit("停止", service_name)
+                        if self.monitor.stop_service(service_name):
+                            success_count += 1
+                    except Exception as e:
+                        print(f"[ERROR] 停止服務 {service_name} 時發生異常: {e}")
+                        self.error_occurred.emit("stop", f"停止 {service_name} 失敗: {str(e)}")
+                        
+            elif self.operation == "restart_all":
+                for service_name in self.service_names:
+                    if self.should_stop:
+                        break
+                    
+                    try:
+                        self.progress_updated.emit("重啟", service_name)
+                        # 重啟操作可能需要更長時間，增加超時保護
+                        if self.monitor.restart_service(service_name):
+                            success_count += 1
+                        # 重啟後稍微等待一下讓服務穩定
+                        self.msleep(500)  # 等待 0.5 秒
+                    except Exception as e:
+                        print(f"[ERROR] 重啟服務 {service_name} 時發生異常: {e}")
+                        self.error_occurred.emit("restart", f"重啟 {service_name} 失敗: {str(e)}")
+            
+            # 操作完成
+            self.operation_completed.emit(self.operation, success_count, total_count)
+            
+        except Exception as e:
+            print(f"[ERROR] 批量操作執行緒發生嚴重異常: {e}")
+            self.error_occurred.emit(self.operation, f"批量操作失敗: {str(e)}")
+
+
 class ServiceStatusWidget(QGroupBox):
     """單一服務狀態顯示 Widget"""
     
     def __init__(self, service_name: str, parent=None):
         super().__init__(service_name, parent)
         self.service_name = service_name
-        self.monitor = NSSMServiceMonitor()
+        self.monitor = ServiceMonitorSingleton().get_monitor()  # 使用單例
         self.init_ui()
     
     def init_ui(self):
@@ -97,56 +187,88 @@ class ServiceStatusWidget(QGroupBox):
         self.setLayout(layout)
     
     def update_status(self):
-        """更新服務狀態"""
-        status = self.monitor.get_service_status(self.service_name)
-        
-        if status["exists"]:
-            # 更新狀態顯示
-            if status["state"] == "RUNNING":
-                self.status_label.setStyleSheet("color: #00FF00;")
-                self.status_text.setText("運行中")
+        """更新服務狀態 - 使用緩存優化性能"""
+        try:
+            # 檢查主視窗的緩存
+            main_window = self._get_main_window()
+            cached_status = None
+            
+            if main_window:
+                cached_status = main_window._get_cached_status(self.service_name)
+            
+            # 如果沒有緩存或緩存過期，則獲取新狀態
+            if cached_status is None:
+                status = self.monitor.get_service_status(self.service_name)
+                if main_window:
+                    main_window._cache_status(self.service_name, status)
+            else:
+                status = cached_status
+            
+            if status["exists"]:
+                # 更新狀態顯示
+                if status["state"] == "RUNNING":
+                    self.status_label.setStyleSheet("color: #00FF00;")
+                    self.status_text.setText("運行中")
+                    self.start_btn.setEnabled(False)
+                    self.stop_btn.setEnabled(True)
+                    self.restart_btn.setEnabled(True)
+                elif status["state"] == "STOPPED":
+                    self.status_label.setStyleSheet("color: #FF0000;")
+                    self.status_text.setText("已停止")
+                    self.start_btn.setEnabled(True)
+                    self.stop_btn.setEnabled(False)
+                    self.restart_btn.setEnabled(False)
+                else:
+                    self.status_label.setStyleSheet("color: #FFA500;")
+                    self.status_text.setText(status["state"])
+                
+                # 更新進程資訊
+                if status["process_info"]:
+                    info = status["process_info"]
+                    
+                    self.pid_label.setText(f"PID: {info['pid']}")
+                    self.cpu_label.setText(f"CPU: {info['cpu_percent']:.1f}%")
+                    self.mem_label.setText(f"記憶體: {info['memory_mb']:.1f} MB")
+                    
+                    # 更新進度條
+                    self.cpu_progress.setValue(int(info['cpu_percent']))
+                    self.mem_progress.setValue(int(info['memory_mb']))
+                    
+                    # 計算運行時間
+                    uptime = datetime.now().timestamp() - info['create_time']
+                    hours = int(uptime // 3600)
+                    minutes = int((uptime % 3600) // 60)
+                    self.uptime_label.setText(f"運行時間: {hours}h {minutes}m")
+                else:
+                    self.pid_label.setText("PID: --")
+                    self.cpu_label.setText("CPU: --%")
+                    self.mem_label.setText("記憶體: -- MB")
+                    self.uptime_label.setText("運行時間: --")
+                    self.cpu_progress.setValue(0)
+                    self.mem_progress.setValue(0)
+            else:
+                self.status_label.setStyleSheet("color: #808080;")
+                self.status_text.setText("未安裝")
                 self.start_btn.setEnabled(False)
-                self.stop_btn.setEnabled(True)
-                self.restart_btn.setEnabled(True)
-            elif status["state"] == "STOPPED":
-                self.status_label.setStyleSheet("color: #FF0000;")
-                self.status_text.setText("已停止")
-                self.start_btn.setEnabled(True)
                 self.stop_btn.setEnabled(False)
                 self.restart_btn.setEnabled(False)
-            else:
-                self.status_label.setStyleSheet("color: #FFA500;")
-                self.status_text.setText(status["state"])
-            
-            # 更新進程資訊
-            if status["process_info"]:
-                info = status["process_info"]
-                self.pid_label.setText(f"PID: {info['pid']}")
-                self.cpu_label.setText(f"CPU: {info['cpu_percent']:.1f}%")
-                self.mem_label.setText(f"記憶體: {info['memory_mb']:.1f} MB")
                 
-                # 更新進度條
-                self.cpu_progress.setValue(int(info['cpu_percent']))
-                self.mem_progress.setValue(int(info['memory_mb']))
-                
-                # 計算運行時間
-                uptime = datetime.now().timestamp() - info['create_time']
-                hours = int(uptime // 3600)
-                minutes = int((uptime % 3600) // 60)
-                self.uptime_label.setText(f"運行時間: {hours}h {minutes}m")
-            else:
-                self.pid_label.setText("PID: --")
-                self.cpu_label.setText("CPU: --%")
-                self.mem_label.setText("記憶體: -- MB")
-                self.uptime_label.setText("運行時間: --")
-                self.cpu_progress.setValue(0)
-                self.mem_progress.setValue(0)
-        else:
-            self.status_label.setStyleSheet("color: #808080;")
-            self.status_text.setText("未安裝")
-            self.start_btn.setEnabled(False)
-            self.stop_btn.setEnabled(False)
-            self.restart_btn.setEnabled(False)
+        except Exception as e:
+            print(f"[ERROR] 更新 {self.service_name} 狀態時發生異常: {e}")
+            # 設置錯誤狀態
+            self.status_label.setStyleSheet("color: #FF0000;")
+            self.status_text.setText("錯誤")
+            self.pid_label.setText(f"錯誤: {str(e)[:20]}...")
+            self.cpu_label.setText("CPU: 錯誤")
+            self.mem_label.setText("記憶體: 錯誤")
+            self.uptime_label.setText("運行時間: 錯誤")
+    
+    def _get_main_window(self):
+        """獲取主視窗實例"""
+        widget = self
+        while widget and not isinstance(widget, NSSMMonitorGUI):
+            widget = widget.parent()
+        return widget
     
     def start_service(self):
         """啟動服務"""
@@ -159,31 +281,65 @@ class ServiceStatusWidget(QGroupBox):
     
     def stop_service(self):
         """停止服務"""
-        reply = QMessageBox.question(
-            self, "確認", 
-            f"確定要停止服務 {self.service_name} 嗎？",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if reply == QMessageBox.Yes:
-            success = self.monitor.stop_service(self.service_name)
-            if success:
-                QMessageBox.information(self, "成功", f"服務 {self.service_name} 已停止")
-            else:
-                QMessageBox.critical(self, "錯誤", f"無法停止服務 {self.service_name}")
-            self.update_status()
+        try:
+            reply = QMessageBox.question(
+                self, "確認", 
+                f"確定要停止服務 {self.service_name} 嗎？",
+                QMessageBox.Yes | QMessageBox.No
+            )
+            
+            if reply == QMessageBox.Yes:
+                success = self.monitor.stop_service(self.service_name)
+                
+                if success:
+                    QMessageBox.information(self, "成功", f"服務 {self.service_name} 已停止")
+                else:
+                    QMessageBox.critical(self, "錯誤", f"無法停止服務 {self.service_name}")
+                
+                self.update_status()
+        except Exception as e:
+            print(f"[ERROR] 停止 {self.service_name} 時發生異常: {e}")
+            QMessageBox.critical(self, "錯誤", f"停止服務時發生異常: {e}")
     
     def restart_service(self):
-        """重啟服務"""
-        success = self.monitor.restart_service(self.service_name)
-        if success:
-            QMessageBox.information(self, "成功", f"服務 {self.service_name} 已重啟")
-        else:
-            QMessageBox.critical(self, "錯誤", f"無法重啟服務 {self.service_name}")
-        self.update_status()
+        """重啟服務 - 非阻塞版本"""
+        try:
+            # 顯示重啟中狀態
+            self.status_label.setStyleSheet("color: #FFA500;")
+            self.status_text.setText("重啟中...")
+            self.start_btn.setEnabled(False)
+            self.stop_btn.setEnabled(False)
+            self.restart_btn.setEnabled(False)
+            
+            # 強制刷新 GUI
+            QApplication.processEvents()
+            
+            success = self.monitor.restart_service(self.service_name)
+            
+            if success:
+                QMessageBox.information(self, "成功", f"服務 {self.service_name} 已重啟")
+            else:
+                QMessageBox.critical(self, "錯誤", f"無法重啟服務 {self.service_name}")
+        
+        except Exception as e:
+            print(f"[ERROR] 重啟服務 {self.service_name} 時 GUI 發生異常: {e}")
+            QMessageBox.critical(self, "錯誤", f"重啟服務時發生異常: {e}")
+        
+        finally:
+            # 恢復狀態並刷新
+            self.update_status()
     
     def view_logs(self):
         """查看日誌（發送信號給主視窗）"""
-        self.parent().parent().parent().show_service_logs(self.service_name)
+        # 向上找到 NSSMMonitorGUI 主視窗
+        widget = self
+        while widget and not isinstance(widget, NSSMMonitorGUI):
+            widget = widget.parent()
+        
+        if widget:
+            widget.show_service_logs(self.service_name)
+        else:
+            print(f"[ERROR] 無法找到主視窗來顯示 {self.service_name} 的日誌")
 
 
 class LogViewerWidget(QWidget):
@@ -191,7 +347,7 @@ class LogViewerWidget(QWidget):
     
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.monitor = NSSMServiceMonitor()
+        self.monitor = ServiceMonitorSingleton().get_monitor()  # 使用單例
         self.current_service = None
         self.init_ui()
     
@@ -328,14 +484,24 @@ class NSSMMonitorGUI(QMainWindow):
     
     def __init__(self):
         super().__init__()
-        self.monitor = NSSMServiceMonitor()
+        self.monitor = ServiceMonitorSingleton().get_monitor()  # 使用單例
         self.service_widgets = {}
+        self.last_refresh_time = 0
+        self.refresh_in_progress = False
+        self.batch_worker = None  # 批量操作工作執行緒
+        self.status_cache = {}  # 狀態緩存
+        self.cache_expiry = 5  # 緩存 5 秒
         self.init_ui()
         
-        # 設定自動刷新計時器
+        # 設定自動刷新計時器 - 進一步減少頻率以提升性能
         self.refresh_timer = QTimer(self)
-        self.refresh_timer.timeout.connect(self.refresh_all_status)
-        self.refresh_timer.start(3000)  # 每 3 秒刷新
+        self.refresh_timer.timeout.connect(self.smart_refresh)
+        self.refresh_timer.start(15000)  # 每 15 秒刷新（優化性能）
+        
+        # 設定手動刷新按鈕刷新計時器
+        self.manual_refresh_timer = QTimer(self)
+        self.manual_refresh_timer.setSingleShot(True)
+        self.manual_refresh_timer.timeout.connect(self.refresh_all_status)
         
         # 初始刷新
         self.refresh_all_status()
@@ -405,75 +571,227 @@ class NSSMMonitorGUI(QMainWindow):
         self.setStatusBar(self.statusBar)
         self.statusBar.showMessage("準備就緒")
     
-    def refresh_all_status(self):
-        """刷新所有服務狀態"""
-        for widget in self.service_widgets.values():
-            widget.update_status()
+    def smart_refresh(self):
+        """智能刷新 - 避免重複調用"""
+        current_time = datetime.now().timestamp()
+        if self.refresh_in_progress:
+            return
         
-        # 更新狀態列
-        running_count = sum(
-            1 for name in self.service_widgets.keys()
-            if self.monitor.get_service_status(name)["state"] == "RUNNING"
-        )
-        self.statusBar.showMessage(
-            f"最後更新: {datetime.now().strftime('%H:%M:%S')} | "
-            f"運行中: {running_count}/3"
-        )
-    
-    def start_all_services(self):
-        """啟動所有服務"""
-        success_count = 0
-        for service_name in self.service_widgets.keys():
-            if self.monitor.start_service(service_name):
-                success_count += 1
+        if current_time - self.last_refresh_time < 12:  # 至少間隔 12 秒
+            return
         
-        QMessageBox.information(
-            self, "完成", 
-            f"已啟動 {success_count}/3 個服務"
-        )
         self.refresh_all_status()
     
+    def refresh_all_status(self):
+        """刷新所有服務狀態 - 優化性能版本"""
+        if self.refresh_in_progress:
+            return
+        
+        self.refresh_in_progress = True
+        self.last_refresh_time = datetime.now().timestamp()
+        
+        try:
+            # 清理過期緩存
+            self._cleanup_expired_cache()
+            
+            # 批量獲取所有服務狀態（一次性獲取，減少系統調用）
+            all_status = {}
+            for service_name in self.service_widgets.keys():
+                if self._get_cached_status(service_name) is None:
+                    status = self.monitor.get_service_status(service_name)
+                    self._cache_status(service_name, status)
+                    all_status[service_name] = status
+            
+            # 刷新各個服務 Widget
+            for service_name, widget in self.service_widgets.items():
+                widget.update_status()
+            
+            # 更新狀態列 - 使用快取的狀態
+            running_count = sum(
+                1 for service_name in self.service_widgets.keys()
+                if self._get_cached_service_state(service_name) == "RUNNING"
+            )
+            self.statusBar.showMessage(
+                f"最後更新: {datetime.now().strftime('%H:%M:%S')} | "
+                f"運行中: {running_count}/3"
+            )
+            
+        except Exception as e:
+            print(f"[ERROR] 刷新狀態時發生異常: {e}")
+        finally:
+            self.refresh_in_progress = False
+    
+    def _cleanup_expired_cache(self):
+        """清理過期的緩存條目"""
+        current_time = datetime.now().timestamp()
+        expired_keys = [
+            key for key, value in self.status_cache.items()
+            if current_time - value['timestamp'] > self.cache_expiry
+        ]
+        for key in expired_keys:
+            del self.status_cache[key]
+    
+    def _get_cached_service_state(self, service_name: str) -> str:
+        """獲取快取的服務狀態，避免重複調用"""
+        try:
+            widget = self.service_widgets.get(service_name)
+            if widget and hasattr(widget, 'status_text'):
+                status_text = widget.status_text.text()
+                if status_text == "運行中":
+                    return "RUNNING"
+                elif status_text == "已停止":
+                    return "STOPPED"
+            return "UNKNOWN"
+        except Exception:
+            return "UNKNOWN"
+    
+    def _get_cached_status(self, service_name: str):
+        """獲取緩存的服務狀態"""
+        current_time = datetime.now().timestamp()
+        if service_name in self.status_cache:
+            cache_entry = self.status_cache[service_name]
+            if current_time - cache_entry['timestamp'] < self.cache_expiry:
+                return cache_entry['status']
+        return None
+    
+    def _cache_status(self, service_name: str, status: dict):
+        """緩存服務狀態"""
+        self.status_cache[service_name] = {
+            'status': status,
+            'timestamp': datetime.now().timestamp()
+        }
+    
+    def start_all_services(self):
+        """啟動所有服務 - 背景執行"""
+        if self.batch_worker and self.batch_worker.isRunning():
+            QMessageBox.warning(self, "警告", "批量操作正在進行中，請稍候...")
+            return
+        
+        self._start_batch_operation("start_all", "啟動所有服務")
+    
     def stop_all_services(self):
-        """停止所有服務"""
+        """停止所有服務 - 背景執行"""
+        if self.batch_worker and self.batch_worker.isRunning():
+            QMessageBox.warning(self, "警告", "批量操作正在進行中，請稍候...")
+            return
+        
         reply = QMessageBox.question(
             self, "確認", 
             "確定要停止所有服務嗎？",
             QMessageBox.Yes | QMessageBox.No
         )
         if reply == QMessageBox.Yes:
-            success_count = 0
-            for service_name in self.service_widgets.keys():
-                if self.monitor.stop_service(service_name):
-                    success_count += 1
-            
-            QMessageBox.information(
-                self, "完成", 
-                f"已停止 {success_count}/3 個服務"
-            )
-            self.refresh_all_status()
+            self._start_batch_operation("stop_all", "停止所有服務")
     
     def restart_all_services(self):
-        """重啟所有服務"""
-        success_count = 0
-        for service_name in self.service_widgets.keys():
-            if self.monitor.restart_service(service_name):
-                success_count += 1
+        """重啟所有服務 - 背景執行"""
+        if self.batch_worker and self.batch_worker.isRunning():
+            QMessageBox.warning(self, "警告", "批量操作正在進行中，請稍候...")
+            return
+        
+        reply = QMessageBox.question(
+            self, "確認", 
+            "確定要重啟所有服務嗎？此操作可能需要一些時間...",
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self._start_batch_operation("restart_all", "重啟所有服務")
+    
+    def _start_batch_operation(self, operation: str, operation_name: str):
+        """開始批量操作"""
+        # 禁用相關按鈕
+        self.start_all_btn.setEnabled(False)
+        self.stop_all_btn.setEnabled(False)
+        self.restart_all_btn.setEnabled(False)
+        
+        # 更新狀態列
+        self.statusBar.showMessage(f"正在執行: {operation_name}...")
+        
+        # 創建並啟動背景工作執行緒
+        service_names = list(self.service_widgets.keys())
+        self.batch_worker = BatchServiceWorker(operation, service_names, self)
+        
+        # 連接信號
+        self.batch_worker.progress_updated.connect(self._on_batch_progress)
+        self.batch_worker.operation_completed.connect(self._on_batch_completed)
+        self.batch_worker.error_occurred.connect(self._on_batch_error)
+        self.batch_worker.finished.connect(self._on_batch_finished)
+        
+        # 啟動執行緒
+        self.batch_worker.start()
+    
+    def _on_batch_progress(self, operation: str, service_name: str):
+        """批量操作進度更新"""
+        self.statusBar.showMessage(f"正在{operation}服務: {service_name}...")
+    
+    def _on_batch_completed(self, operation: str, success_count: int, total_count: int):
+        """批量操作完成"""
+        operation_names = {
+            "start_all": "啟動",
+            "stop_all": "停止", 
+            "restart_all": "重啟"
+        }
+        op_name = operation_names.get(operation, operation)
         
         QMessageBox.information(
             self, "完成", 
-            f"已重啟 {success_count}/3 個服務"
+            f"已{op_name} {success_count}/{total_count} 個服務"
         )
+        
+        # 刷新狀態顯示
         self.refresh_all_status()
+    
+    def _on_batch_error(self, operation: str, error_message: str):
+        """批量操作發生錯誤"""
+        QMessageBox.critical(
+            self, "錯誤", 
+            f"批量操作失敗: {error_message}"
+        )
+    
+    def _on_batch_finished(self):
+        """批量操作執行緒結束 - 重新啟用按鈕"""
+        self.start_all_btn.setEnabled(True)
+        self.stop_all_btn.setEnabled(True)
+        self.restart_all_btn.setEnabled(True)
+        
+        self.statusBar.showMessage("準備就緒")
+        
+        # 清理執行緒引用
+        if self.batch_worker:
+            self.batch_worker.deleteLater()
+            self.batch_worker = None
     
     def show_service_logs(self, service_name: str):
         """切換到日誌頁面並顯示指定服務的日誌"""
         self.tabs.setCurrentIndex(1)  # 切換到日誌頁面
         self.log_viewer.show_service_logs(service_name)
+    
+    def closeEvent(self, event):
+        """視窗關閉事件 - 清理背景執行緒"""
+        if self.batch_worker and self.batch_worker.isRunning():
+            # 請求停止操作
+            self.batch_worker.stop_operation()
+            
+            # 等待執行緒結束（最多等待3秒）
+            if not self.batch_worker.wait(3000):
+                # 強制終止
+                self.batch_worker.terminate()
+                self.batch_worker.wait(1000)
+        
+        # 停止自動刷新計時器
+        if hasattr(self, 'refresh_timer'):
+            self.refresh_timer.stop()
+        
+        event.accept()
 
 
 def main():
-    """主程式入口"""
+    """主程式入口 - 性能優化版本"""
     app = QApplication(sys.argv)
+    
+    # 性能優化設定
+    app.setAttribute(Qt.AA_DontCreateNativeWidgetSiblings, True)
+    app.setAttribute(Qt.AA_DisableWindowContextHelpButton, True)
     
     # 設定應用程式樣式
     app.setStyle("Fusion")
