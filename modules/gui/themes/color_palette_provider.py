@@ -10,14 +10,19 @@ render charts with sensible defaults.
 
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import requests
 from PyQt5.QtGui import QColor
 
 from core.api_base_url import resolve_api_base_url
+
+# ✅ 手動覆寫配置檔路徑（與 CLI 模組共用）
+DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")
 
 API_ENDPOINT = "/api/v2/analysis/execute"
 DEFAULT_TIMEOUT = 20.0
@@ -329,7 +334,89 @@ class ColorPaletteProvider:
         self._loaded_year = season_year
         self._loaded_colormap = colormap
         self._defaults_applied = False
+        
+        # ✅ 套用手動覆寫（最高優先級）
+        self._apply_driver_overrides(season_year)
 
+    def _apply_driver_overrides(self, season_year: int) -> None:
+        """
+        套用車手-車隊手動覆寫（GUI 版本）
+        
+        Args:
+            season_year: 賽季年份
+        """
+        if not DRIVER_OVERRIDES_PATH.exists():
+            return
+        
+        try:
+            with open(DRIVER_OVERRIDES_PATH, "r", encoding="utf-8") as f:
+                config = json.load(f)
+            
+            year_str = str(season_year)
+            year_overrides = config.get("overrides", {}).get(year_str, {})
+            
+            override_count = 0
+            for code, data in year_overrides.items():
+                if code.startswith("_"):  # 跳過註解欄位
+                    continue
+                
+                if not isinstance(data, dict):
+                    continue
+                    
+                if not data.get("enabled", False):
+                    continue
+                
+                code_upper = self._normalize_driver_code(code)
+                
+                # ✅ 檢查車手是否存在於調色盤
+                if code_upper not in self._driver_palette:
+                    # 新增車手（季中替補）
+                    team_slug = self._normalize_team_slug(data.get("team_slug", ""))
+                    team_entry = self._team_palette.get(team_slug)
+                    
+                    if not team_entry:
+                        print(f"[GUI_OVERRIDE] ⚠️  跳過 {code_upper}: 車隊 '{team_slug}' 不存在")
+                        continue
+                    
+                    self._driver_palette[code_upper] = {
+                        "hex": team_entry["hex"],
+                        "rgb": team_entry["rgb"],
+                        "qcolor": team_entry["qcolor"],
+                        "team_slug": team_slug,
+                        "team_name": data.get("team_name", team_entry["team_name"]),
+                        "driver_id": data.get("driver_id", code_upper.lower()),
+                        "full_name": data.get("full_name", code_upper),
+                    }
+                    print(f"[GUI_OVERRIDE] ➕ 新增車手: {code_upper} → {data.get('team_name')} ({data.get('reason', 'N/A')})")
+                    override_count += 1
+                else:
+                    # 更新現有車手的車隊資訊
+                    original_team = self._driver_palette[code_upper].get("team_name", "Unknown")
+                    new_team_slug = self._normalize_team_slug(data.get("team_slug", ""))
+                    new_team_entry = self._team_palette.get(new_team_slug)
+                    
+                    if not new_team_entry:
+                        print(f"[GUI_OVERRIDE] ⚠️  跳過 {code_upper}: 車隊 '{new_team_slug}' 不存在")
+                        continue
+                    
+                    self._driver_palette[code_upper].update({
+                        "hex": new_team_entry["hex"],
+                        "rgb": new_team_entry["rgb"],
+                        "qcolor": new_team_entry["qcolor"],
+                        "team_slug": new_team_slug,
+                        "team_name": data.get("team_name", new_team_entry["team_name"]),
+                    })
+                    print(f"[GUI_OVERRIDE] 🔄 更新車手: {code_upper}: {original_team} → {data.get('team_name')} ({data.get('reason', 'N/A')})")
+                    override_count += 1
+            
+            if override_count > 0:
+                print(f"[GUI_OVERRIDE] ✅ 共套用 {override_count} 個車手覆寫（{season_year} 賽季）")
+                self._metadata["overrides_applied"] = override_count
+                self._metadata["overrides_source"] = str(DRIVER_OVERRIDES_PATH)
+            
+        except Exception as e:
+            print(f"[GUI_OVERRIDE] ⚠️  載入覆寫配置失敗: {e}")
+    
     def _apply_defaults(self, *, season_year: int, colormap: str) -> None:
         if not self._allow_defaults:
             raise ColorPaletteError("預設色票已被禁用，無法套用")

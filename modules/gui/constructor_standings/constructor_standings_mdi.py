@@ -271,22 +271,16 @@ class ConstructorStandingsMDI(QWidget):
             print(f"[CONSTRUCTOR_MDI] 📋 載入 {len(constructors)} 支車隊")
             print(f"[CONSTRUCTOR_MDI] 📋 Metadata: season_year={metadata.get('season_year')}, round={metadata.get('resolved_round')}")
             
-            # 轉換為顯示格式 (Widget 期望的格式)
-            display_data = {
-                "standings": [],
-                "season_year": metadata.get("season_year"),
-                "round": metadata.get("resolved_round"),
-                "metadata": metadata
+            # ✅ 正確：調用 DataLoader 的轉換方法（包含 team_slug 映射）
+            raw_data = {
+                "success": True,
+                "data": {
+                    "constructors": constructors,
+                    "metadata": metadata
+                }
             }
             
-            for entry in constructors:
-                display_data["standings"].append({
-                    "position": entry.get("position"),
-                    "constructor_name": entry.get("constructor", {}).get("name"),  # ✅ 修正欄位名稱
-                    "points": entry.get("points"),
-                    "wins": entry.get("wins"),
-                    "points_delta": entry.get("points_delta")
-                })
+            display_data = self.data_loader._transform_data_for_display(raw_data)
             
             print(f"[CONSTRUCTOR_MDI] 📊 轉換後數據: {len(display_data['standings'])} 支車隊, 年份={display_data.get('season_year')}, 輪次={display_data.get('round')}")
             

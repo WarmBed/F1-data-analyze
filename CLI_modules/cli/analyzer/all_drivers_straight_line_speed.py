@@ -71,12 +71,19 @@ class DriverSpeedRecord:
         
         # ✅ 新增：基於 reference_segment 的加速數據
         if self.segment_acceleration is not None:
+            # 統一終點速度的加速數據
             result["segment_accel_time_seconds"] = self.segment_acceleration.get("time_seconds")
             result["segment_accel_distance_meters"] = self.segment_acceleration.get("distance_meters")
             result["segment_avg_acceleration_ms2"] = self.segment_acceleration.get("avg_acceleration_ms2")
             result["segment_start_speed_kmh"] = self.segment_acceleration.get("start_speed_kmh")
             result["segment_end_speed_kmh"] = self.segment_acceleration.get("end_speed_kmh")
             result["segment_speed_gain_kmh"] = self.segment_acceleration.get("speed_gain_kmh")
+            
+            # ⭐ v3.3 新增：個人最高速度數據
+            result["max_speed_time_seconds"] = self.segment_acceleration.get("max_speed_time_seconds")
+            result["max_speed_distance_meters"] = self.segment_acceleration.get("max_speed_distance_meters")
+            result["segment_unified_end_speed_kmh"] = self.segment_acceleration.get("unified_end_speed_kmh")
+            result["segment_personal_max_speed_kmh"] = self.segment_acceleration.get("personal_max_speed_kmh")
         else:
             result["segment_accel_time_seconds"] = None
             result["segment_accel_distance_meters"] = None
@@ -84,6 +91,12 @@ class DriverSpeedRecord:
             result["segment_start_speed_kmh"] = None
             result["segment_end_speed_kmh"] = None
             result["segment_speed_gain_kmh"] = None
+            
+            # ⭐ v3.3 新增欄位
+            result["max_speed_time_seconds"] = None
+            result["max_speed_distance_meters"] = None
+            result["segment_unified_end_speed_kmh"] = None
+            result["segment_personal_max_speed_kmh"] = None
             
         return result
 
@@ -235,61 +248,100 @@ class AllDriversStraightLineSpeedAnalysis:
         print(f"  直線長度: {reference_segment['segment_length']:.1f}m")
         print(f"  速度範圍: {reference_segment['segment_start_speed']:.1f} - {reference_segment['segment_max_speed']:.1f} km/h")
         
-        # ✅ 新增步驟 4A：預掃描確定統一速度範圍
-        print("\n[步驟 4A/5] 預掃描所有車手，確定統一速度範圍...")
-        unified_speed_range = self._determine_unified_speed_range(reference_segment)
-        
-        if unified_speed_range is None:
-            print("[WARNING] 無法確定統一速度範圍，使用預設值")
-            unified_speed_range = {
-                "start_speed": 100.0,
-                "end_speed": 250.0,
-                "adjustment_reason": "使用預設範圍"
-            }
-        else:
-            print(f"  統一起始速度: {unified_speed_range['start_speed']:.0f} km/h")
-            print(f"  統一終點速度: {unified_speed_range['end_speed']:.0f} km/h")
-            print(f"  調整原因: {unified_speed_range.get('adjustment_reason', 'N/A')}")
-        
-        # 將統一速度範圍添加到 reference_segment
-        reference_segment['unified_start_speed'] = unified_speed_range['start_speed']
-        reference_segment['unified_end_speed'] = unified_speed_range['end_speed']
-        
-        # 使用位置標準化方法收集所有車手數據
-        print(f"\n[步驟 4B/5] 收集所有車手在統一位置和速度範圍的數據...")
+        # ✅ v3.3 步驟 1: 預掃描所有車手，獲取個人最高速度數據
+        print(f"\n[步驟 4A/5] 預掃描所有車手，獲取個人最高速度數據...")
         print(f"  核心測量範圍: {reference_segment['segment_distance_start']:.1f}m - {reference_segment['segment_distance_end']:.1f}m")
-        print(f"  擴展測量範圍: ±200m (允許更寬的搜尋區域)")
-        print(f"  統一速度範圍: {unified_speed_range['start_speed']:.0f} → {unified_speed_range['end_speed']:.0f} km/h\n")
+        print(f"  加速測量邏輯: 從硬編碼起點到油門降低前最高速度點\n")
         
-        records: List[DriverSpeedRecord] = []
+        temp_records: List[DriverSpeedRecord] = []
         driver_count = 0
         success_count = 0
-        extended_range_count = 0
         
         for driver_code in self._iter_drivers():
             driver_count += 1
             record = self._compute_driver_record_with_position(driver_code, reference_segment)
             if record:
-                records.append(record)
+                temp_records.append(record)
                 success_count += 1
                 
-                # ✅ 標註擴展範圍測量
-                range_marker = ""
-                if not record.in_core_range:
-                    range_marker = " [擴展範圍]"
-                    extended_range_count += 1
-                
-                print(f"  {driver_code}: 最高速度 {record.max_speed_kmh:.1f} km/h @ {record.distance_m:.0f}m{range_marker}", end="")
-                if record.acceleration_100_300:
-                    accel_start = record.acceleration_100_300.get('speed_start_kmh', unified_speed_range['start_speed'])
-                    accel_end = record.acceleration_100_300.get('speed_end_kmh', unified_speed_range['end_speed'])
-                    print(f", 加速 {record.acceleration_100_300['time_seconds']:.3f}s ({accel_start:.0f}→{accel_end:.0f} km/h)")
+                # 顯示個人最高速度數據
+                range_marker = "" if record.in_core_range else " [擴展範圍]"
+                segment_end_speed = record.segment_acceleration.get('end_speed_kmh') if record.segment_acceleration else None
+                if segment_end_speed:
+                    print(f"  {driver_code}: 最高速度 {record.max_speed_kmh:.1f} km/h, 範圍內最高 {segment_end_speed:.1f} km/h{range_marker}")
                 else:
-                    print(" (無加速數據)")
+                    print(f"  {driver_code}: 最高速度 {record.max_speed_kmh:.1f} km/h (無加速數據){range_marker}")
         
-        print(f"\n分析完成: {success_count}/{driver_count} 車手")
-        if extended_range_count > 0:
-            print(f"  ⚠️  {extended_range_count} 個車手在擴展範圍內達到最高速 (核心範圍外 ±200m)")
+        print(f"\n預掃描完成: {success_count}/{driver_count} 車手")
+        
+        if not temp_records:
+            return {
+                "success": False,
+                "function_id": "48",
+                "message": "無法計算任何車手的直線最高速度 (缺少遙測資料)",
+                "data": {
+                    "metadata": self._build_metadata(),
+                    "driver_speeds": [],
+                    "reference_segment": reference_segment,
+                },
+            }
+        
+        # ✅ v3.3 步驟 2: 從核心範圍車手中找出最低的終點速度
+        print(f"\n[步驟 4B/5] 確定統一終點速度...")
+        core_range_records = [r for r in temp_records if r.in_core_range and r.segment_acceleration]
+        
+        if core_range_records:
+            # 從核心範圍車手的終點速度中選最低值
+            end_speeds = [r.segment_acceleration['end_speed_kmh'] for r in core_range_records]
+            unified_end_speed = min(end_speeds)
+            print(f"  ✅ 使用核心範圍車手的最低終點速度: {unified_end_speed:.1f} km/h")
+            print(f"  核心範圍車手數: {len(core_range_records)}")
+        else:
+            # 如果沒有核心範圍車手，使用所有車手
+            records_with_accel = [r for r in temp_records if r.segment_acceleration]
+            if records_with_accel:
+                end_speeds = [r.segment_acceleration['end_speed_kmh'] for r in records_with_accel]
+                unified_end_speed = min(end_speeds)
+                print(f"  ⚠️  無核心範圍車手，使用所有車手的最低終點速度: {unified_end_speed:.1f} km/h")
+            else:
+                print(f"  ❌ 無任何車手有加速數據，無法確定統一終點速度")
+                unified_end_speed = None
+        
+        # ✅ v3.3 步驟 3: 使用統一終點速度重新計算所有車手的加速時間
+        if unified_end_speed is not None:
+            print(f"\n[步驟 4C/5] 使用統一終點速度 ({unified_end_speed:.1f} km/h) 重新計算加速時間...\n")
+        else:
+            print(f"\n[步驟 4C/5] ⚠️  無法確定統一終點速度，使用原始數據...\n")
+        
+        records: List[DriverSpeedRecord] = []
+        for temp_record in temp_records:
+            # 重新計算到統一速度的加速時間
+            updated_record = self._recompute_driver_record_with_unified_endpoint(
+                temp_record, 
+                reference_segment, 
+                unified_end_speed
+            )
+            if updated_record:
+                records.append(updated_record)
+                
+                # 顯示更新後的數據
+                range_marker = "" if updated_record.in_core_range else " [擴展範圍]"
+                seg = updated_record.segment_acceleration
+                if seg:
+                    # ✅ 修正: 處理 None 值
+                    max_speed_time = seg.get('max_speed_time_seconds')
+                    if max_speed_time is not None:
+                        max_speed_time_str = f"{max_speed_time:.2f}s"
+                    else:
+                        max_speed_time_str = "N/A"
+                    
+                    print(f"  {updated_record.driver}: 加速 {seg['time_seconds']:.2f}s " +
+                          f"({seg['start_speed_kmh']:.0f}→{seg['end_speed_kmh']:.0f} km/h), " +
+                          f"最高速度時間 {max_speed_time_str}{range_marker}")
+                else:
+                    print(f"  {updated_record.driver}: 無加速數據{range_marker}")
+        
+        print(f"\n重新計算完成: {len(records)} 車手")
         
         if not records:
             return {
@@ -309,29 +361,50 @@ class AllDriversStraightLineSpeedAnalysis:
         else:
             sliced_records = records
 
-        # 添加統一速度範圍到 metadata
+        # ✅ 更新 reference_segment 為實際加速測量範圍
+        # 使用所有車手的最大加速終點距離作為 segment_distance_end
+        if temp_records:
+            actual_end_distances = []
+            for r in temp_records:
+                if r.segment_acceleration and "actual_distance_end" in r.segment_acceleration:
+                    actual_end_distances.append(r.segment_acceleration["actual_distance_end"])
+            
+            if actual_end_distances:
+                # 使用最大加速終點距離（涵蓋所有車手的測量範圍）
+                max_end_distance = max(actual_end_distances)
+                reference_segment["segment_distance_end"] = max_end_distance
+                reference_segment["segment_length"] = max_end_distance - reference_segment["segment_distance_start"]
+                print(f"\n✅ 更新分析範圍為實際加速測量範圍:")
+                print(f"   起點: {reference_segment['segment_distance_start']:.1f}m")
+                print(f"   終點: {max_end_distance:.1f}m (最遠車手的加速終點)")
+                print(f"   長度: {reference_segment['segment_length']:.1f}m")
+        
+        # ❌ [已移除] 添加統一速度範圍到 metadata
+        # 原因：不再使用統一速度範圍，完全依賴硬編碼距離
         metadata = self._build_metadata(total_drivers=len(records))
-        metadata["unified_speed_range"] = {
-            "start_speed_kmh": unified_speed_range['start_speed'],
-            "end_speed_kmh": unified_speed_range['end_speed'],
-            "adjustment_reason": unified_speed_range.get('adjustment_reason', '')
-        }
         
         data_payload = {
             "metadata": metadata,
             "driver_speeds": [record.as_dict() for record in sliced_records],
             "summary": self._build_summary(records),
-            "reference_segment": reference_segment,  # 添加參考直線段信息
-            "algorithm_version": "2.1_unified_speed_range"
+            "reference_segment": reference_segment,  # 添加參考直線段信息（已更新為實際測量範圍）
+            "algorithm_version": "3.3_unified_endpoint_with_max_speed",  # ✅ 更新版本號（2025-10-18）
+            "unified_end_speed_kmh": unified_end_speed  # ⭐ 添加統一終點速度
         }
 
         if include_chart:
             data_payload["chart_data"] = self._build_chart_data(records)
 
+        # ✅ 修正: 處理 unified_end_speed 為 None 的情況
+        if unified_end_speed is not None:
+            success_message = f"全部車手直線速度與加速性能分析完成 (統一終點速度: {unified_end_speed:.1f} km/h)"
+        else:
+            success_message = "全部車手直線速度與加速性能分析完成 (部分車手無加速數據)"
+
         return {
             "success": True,
             "function_id": "48",
-            "message": "全部車手直線速度與加速性能分析完成 (位置標準化)",
+            "message": success_message,
             "data": data_payload,
         }
 
@@ -341,6 +414,15 @@ class AllDriversStraightLineSpeedAnalysis:
 
     def _determine_unified_speed_range(self, reference_segment: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
+        ❌ DEPRECATED - 此函數已廢棄 (2025-10-18)
+        
+        原因：系統已改為完全依賴硬編碼距離範圍 (TRACK_ACCELERATION_START_DISTANCE)
+        不再使用統一速度範圍限制
+        
+        保留此函數僅供參考，請勿調用！
+        
+        ---
+        
         預掃描所有車手，確定統一的加速測量速度範圍
         
         ✅ 新邏輯（2025-10-15）：
@@ -355,6 +437,11 @@ class AllDriversStraightLineSpeedAnalysis:
                 "scanned_drivers": int  # 掃描的車手數量
             }
         """
+        raise DeprecationWarning(
+            "❌ _determine_unified_speed_range() 已廢棄！"
+            "系統已改為完全依賴硬編碼距離範圍，不再使用統一速度限制。"
+            "請檢查調用此函數的代碼並移除！"
+        )
         print("  預掃描所有車手的速度範圍（基於錨點搜索範圍）...")
         
         distance_start = reference_segment["segment_distance_start"]
@@ -599,7 +686,7 @@ class AllDriversStraightLineSpeedAnalysis:
             # ✅ 硬編碼起點字典
             TRACK_ACCELERATION_START_DISTANCE = {
                 "China": 3544,
-                "Japan": 5650,
+                "Japan": 0,
                 "Monaco": 200,
                 "Singapore": 3550,
                 "Hungary": 0,
@@ -616,7 +703,7 @@ class AllDriversStraightLineSpeedAnalysis:
                 "Abu Dhabi": 1452,
                 "Bahrain": 4850,
                 "Australia": 4807,
-                "United States": 4872,
+                "United States": 3625,
                 "Mexico": 0,
                 "Brazil": 823,
                 "Spain": 4333,
@@ -624,6 +711,12 @@ class AllDriversStraightLineSpeedAnalysis:
             }
             
             race_name = self.race
+            
+            # ✅ 標準化賽道名稱（支援不區分大小寫）
+            if race_name:
+                # 將賽道名稱標準化為首字母大寫（Japan, China, Saudi Arabia 等）
+                race_name = race_name.title()
+                print(f"[INFO] 標準化賽道名稱: '{self.race}' → '{race_name}'")
             
             # ✅ 步驟 1: 使用硬編碼起點
             if race_name and race_name in TRACK_ACCELERATION_START_DISTANCE:
@@ -827,6 +920,488 @@ class AllDriversStraightLineSpeedAnalysis:
             
         except Exception as e:
             print(f"[WARNING] 計算 segment 加速度失敗: {e}")
+            return None
+    
+    def _calculate_segment_acceleration_improved(
+        self,
+        car_data: pd.DataFrame,
+        hardcoded_start_distance: float,
+        track_name: Optional[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        計算從硬編碼起點到油門降低前最高速度點的加速性能（改進版 v3.2）
+        
+        ✅ 核心邏輯（2025-10-18 更新）：
+        1. 起點：硬編碼的固定距離（例如 3544m），往後看找最接近的點
+        2. 計算範圍：從起點到油門從 >= 95% 降到 < 95% 之前的所有點
+        3. 終點選擇：在計算範圍內找到速度最高的點作為最終點
+        4. 原因：
+           - 油門降低代表車手開始鬆油門準備剎車
+           - 使用最高速度點確保捕捉到最佳加速性能
+           - 避免因短暫的油門降低（換檔、打滑）而提前終止測量
+        5. 最高速度：全圈最高速度（不限於加速區間）
+        
+        Args:
+            car_data: 車手遙測數據（必須包含 Speed, Distance, Time, Throttle 欄位）
+            hardcoded_start_distance: 硬編碼起點距離（米）
+            track_name: 賽道名稱（用於日誌，可選）
+            
+        Returns:
+            包含加速時間、平均加速度、起始/終點速度的字典，失敗時返回 None
+        """
+        try:
+            debug = True  # ✅ 啟用調試模式
+            
+            if debug:
+                print(f"\n[DEBUG] === 開始計算 Segment 加速 ===")
+                print(f"[DEBUG] 硬編碼起點: {hardcoded_start_distance}m")
+                print(f"[DEBUG] 賽道: {track_name}")
+            
+            if car_data is None or car_data.empty:
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 0: car_data 為空")
+                return None
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 0: car_data 有 {len(car_data)} 個數據點")
+                print(f"[DEBUG]    欄位: {list(car_data.columns)}")
+            
+            # ✅ 確保必要欄位存在
+            required_columns = ["Speed", "Distance", "Time"]
+            for col in required_columns:
+                if col not in car_data.columns:
+                    if debug:
+                        print(f"[DEBUG] ❌ 缺少必要欄位: {col}")
+                    print(f"[WARNING] 缺少必要欄位: {col}")
+                    return None
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 1: 所有必要欄位存在")
+            
+            # 提取數據
+            speeds = pd.to_numeric(car_data["Speed"], errors="coerce")
+            distances = pd.to_numeric(car_data["Distance"], errors="coerce")
+            times = car_data["Time"]
+            
+            # ✅ 步驟 2: 檢查並提取油門數據（Throttle）
+            if "Throttle" not in car_data.columns:
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 2: 缺少 Throttle 欄位")
+                print(f"[WARNING] 缺少 Throttle 欄位，無法使用油門作為終點判斷")
+                return None
+            
+            throttles = pd.to_numeric(car_data["Throttle"], errors="coerce")
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 2: 成功提取 Throttle 數據")
+                print(f"[DEBUG]    油門範圍: {throttles.min():.1f}% - {throttles.max():.1f}%")
+            
+            # 移除 NaN 值
+            valid_mask = ~(speeds.isna() | distances.isna() | throttles.isna())
+            if not valid_mask.any():
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 3: 所有數據都是 NaN")
+                return None
+            
+            speeds = speeds[valid_mask]
+            distances = distances[valid_mask]
+            times = times[valid_mask]
+            throttles = throttles[valid_mask]
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 3: 移除 NaN 後剩餘 {len(speeds)} 個有效點")
+                print(f"[DEBUG]    距離範圍: {distances.min():.1f}m - {distances.max():.1f}m")
+                print(f"[DEBUG]    速度範圍: {speeds.min():.1f} - {speeds.max():.1f} km/h")
+                print(f"[DEBUG]    油門範圍: {throttles.min():.1f}% - {throttles.max():.1f}%")
+            
+            # ✅ 步驟 4: 找到硬編碼起點（往後看，最接近且 >= hardcoded_start_distance）
+            valid_start_indices = distances >= hardcoded_start_distance
+            if not valid_start_indices.any():
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 4: 沒有數據在硬編碼起點 {hardcoded_start_distance}m 之後")
+                return None  # 沒有數據在硬編碼起點之後
+            
+            # 找最接近的點（往後看）
+            start_candidates = distances[valid_start_indices]
+            distance_diffs = (start_candidates - hardcoded_start_distance).abs()
+            start_idx = distance_diffs.idxmin()
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 4: 找到起點候選")
+                print(f"[DEBUG]    起點索引: {start_idx}")
+                print(f"[DEBUG]    起點距離: {distances[start_idx]:.1f}m")
+                print(f"[DEBUG]    起點速度: {speeds[start_idx]:.1f} km/h")
+                print(f"[DEBUG]    起點油門: {throttles[start_idx]:.1f}%")
+            
+            # ✅ 步驟 5: 檢查起點油門，如果 <= 50% 則往前找第一個 > 50% 的點
+            # 理由：油門小於 50% 表示車手尚未全力加速
+            THROTTLE_START_MIN = 50  # 百分比
+            if throttles[start_idx] <= THROTTLE_START_MIN:
+                if debug:
+                    print(f"[DEBUG] 步驟 5: 起點油門 <= {THROTTLE_START_MIN}%，往前搜尋高油門點...")
+                future_high_throttle = throttles.loc[start_idx:] > THROTTLE_START_MIN
+                if not future_high_throttle.any():
+                    if debug:
+                        print(f"[DEBUG] ❌ 步驟 5: 沒有找到高油門區間 (> {THROTTLE_START_MIN}%)")
+                    return None  # 沒有高油門區間
+                start_idx = future_high_throttle[future_high_throttle].index[0]
+                if debug:
+                    print(f"[DEBUG] ✅ 步驟 5: 調整起點")
+                    print(f"[DEBUG]    新起點距離: {distances[start_idx]:.1f}m")
+                    print(f"[DEBUG]    新起點油門: {throttles[start_idx]:.1f}%")
+            else:
+                if debug:
+                    print(f"[DEBUG] ✅ 步驟 5: 起點油門 > {THROTTLE_START_MIN}%，無需調整")
+            
+            # ✅ 步驟 6: 找到油門降低的點，並在降低之前的範圍內找最高速度點作為終點
+            # 新邏輯（2025-10-18 v3.3.1）：
+            # 1. 如果起點油門 < 95%，往後搜索第一個油門 ≥ 95% 的點作為真正的起點
+            # 2. 從該高油門起點開始，找油門降低（< 95%）的點
+            # 3. 在高油門範圍內找速度最高的點作為終點
+            
+            THROTTLE_HIGH_THRESHOLD = 95  # 百分比
+            actual_start_idx = start_idx  # 實際起點
+            
+            # 如果當前起點油門 < 95%，往後找第一個 ≥ 95% 的點
+            if throttles[start_idx] < THROTTLE_HIGH_THRESHOLD:
+                if debug:
+                    print(f"[DEBUG] 步驟 6: 起點油門 {throttles[start_idx]:.1f}% < {THROTTLE_HIGH_THRESHOLD}%")
+                    print(f"[DEBUG]    往後搜索第一個 ≥ {THROTTLE_HIGH_THRESHOLD}% 的點...")
+                
+                future_throttles = throttles.loc[start_idx:]
+                high_throttle_mask = future_throttles >= THROTTLE_HIGH_THRESHOLD
+                
+                if high_throttle_mask.any():
+                    # 找到第一個高油門點，作為實際起點
+                    actual_start_idx = high_throttle_mask[high_throttle_mask].index[0]
+                    if debug:
+                        print(f"[DEBUG] ✅ 找到高油門起點")
+                        print(f"[DEBUG]    距離: {distances[actual_start_idx]:.1f}m")
+                        print(f"[DEBUG]    油門: {throttles[actual_start_idx]:.1f}%")
+                        print(f"[DEBUG]    速度: {speeds[actual_start_idx]:.1f} km/h")
+                else:
+                    if debug:
+                        print(f"[DEBUG] ❌ 沒有找到 ≥ {THROTTLE_HIGH_THRESHOLD}% 的油門點")
+                    return None  # 沒有高油門區間，無法計算
+            
+            # 從實際起點開始，找油門降低的點
+            future_throttles = throttles.loc[actual_start_idx:]
+            low_throttle_mask = future_throttles < THROTTLE_HIGH_THRESHOLD
+            
+            if debug:
+                print(f"[DEBUG] 步驟 6: 從實際起點搜索油門 < {THROTTLE_HIGH_THRESHOLD}% 的點...")
+            
+            end_idx = None
+            if low_throttle_mask.any():
+                # 找到第一個低於閾值的點
+                first_low_throttle_idx = low_throttle_mask[low_throttle_mask].index[0]
+                
+                # 計算範圍：從實際起點到油門降低之前
+                loc_in_future = future_throttles.index.get_loc(first_low_throttle_idx)
+                if loc_in_future > 0:
+                    # 油門降低前的最後一個高油門點
+                    last_high_throttle_idx = future_throttles.index[loc_in_future - 1]
+                    
+                    # 在實際起點到最後高油門點的範圍內，找速度最高的點
+                    speed_range = speeds.loc[actual_start_idx:last_high_throttle_idx]
+                    if len(speed_range) > 0:
+                        end_idx = speed_range.idxmax()
+                        
+                        if debug:
+                            print(f"[DEBUG] ✅ 步驟 6: 找到油門降低點並確定終點")
+                            print(f"[DEBUG]    終點距離: {distances[end_idx]:.1f}m")
+                            print(f"[DEBUG]    終點速度: {speeds[end_idx]:.1f} km/h")
+                            print(f"[DEBUG]    終點油門: {throttles[end_idx]:.1f}%")
+            
+            # 如果沒有找到，使用全範圍最高速度點
+            if end_idx is None:
+                speed_range = speeds.loc[actual_start_idx:]
+                if len(speed_range) > 0:
+                    end_idx = speed_range.idxmax()
+                    if debug:
+                        print(f"[DEBUG] ⚠️  步驟 6: 沒有找到油門降低點，使用全範圍最高速度")
+                        print(f"[DEBUG]    終點距離: {distances[end_idx]:.1f}m")
+                        print(f"[DEBUG]    終點速度: {speeds[end_idx]:.1f} km/h")
+                else:
+                    if debug:
+                        print(f"[DEBUG] ❌ 步驟 6: 無有效數據")
+                    return None
+            
+            # 使用實際起點替換原始起點
+            start_idx = actual_start_idx
+            
+            # ✅ 步驟 7: 確保終點在起點之後
+            if start_idx >= end_idx:
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 7: 終點不在起點之後（start_idx={start_idx}, end_idx={end_idx}）")
+                return None
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 7: 終點在起點之後")
+            
+            # ✅ 步驟 8: 提取起點和終點的數據
+            start_speed = float(speeds[start_idx])
+            end_speed = float(speeds[end_idx])
+            start_distance = float(distances[start_idx])
+            end_distance = float(distances[end_idx])
+            start_time = times[start_idx]
+            end_time = times[end_idx]
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 8: 提取數據完成")
+                print(f"[DEBUG]    加速區間: {start_distance:.1f}m - {end_distance:.1f}m ({end_distance - start_distance:.1f}m)")
+                print(f"[DEBUG]    速度變化: {start_speed:.1f} - {end_speed:.1f} km/h ({end_speed - start_speed:.1f} km/h)")
+            
+            # 先計算距離差（用於時間估算）
+            distance_diff = end_distance - start_distance
+            
+            # ✅ 步驟 9: 計算時間差（處理跨越終點線的情況）
+            if hasattr(start_time, "total_seconds"):
+                time_start_sec = start_time.total_seconds()
+            else:
+                time_start_sec = float(start_time)
+            
+            if hasattr(end_time, "total_seconds"):
+                time_end_sec = end_time.total_seconds()
+            else:
+                time_end_sec = float(end_time)
+            
+            time_diff = time_end_sec - time_start_sec
+            
+            # ⚠️ 處理跨越終點線的情況（時間反轉）
+            if time_diff < 0:
+                if debug:
+                    print(f"[DEBUG] ⚠️  檢測到時間反轉（跨越終點線）")
+                    print(f"[DEBUG]    原始時間差: {time_diff:.3f}秒")
+                    print(f"[DEBUG]    起點時間: {time_start_sec:.3f}秒")
+                    print(f"[DEBUG]    終點時間: {time_end_sec:.3f}秒")
+                
+                # 使用距離和平均速度估算時間
+                avg_speed_ms = ((start_speed + end_speed) / 2) / 3.6  # 平均速度 (m/s)
+                if avg_speed_ms > 0:
+                    time_diff = distance_diff / avg_speed_ms
+                    if debug:
+                        print(f"[DEBUG]    使用距離估算時間: {time_diff:.3f}秒")
+                else:
+                    if debug:
+                        print(f"[DEBUG] ❌ 無法估算時間（平均速度 = 0）")
+                    return None
+            
+            if time_diff <= 0:
+                if debug:
+                    print(f"[DEBUG] ❌ 步驟 9: 時間差仍然 <= 0 ({time_diff})")
+                return None
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 9: 時間差計算完成: {time_diff:.3f}秒")
+            
+            # ✅ 步驟 10: 計算性能指標
+            speed_gain_kmh = end_speed - start_speed
+            speed_gain_ms = speed_gain_kmh / 3.6  # 轉為 m/s
+            avg_acceleration = speed_gain_ms / time_diff
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 10: 性能指標計算完成")
+                print(f"[DEBUG]    加速時間: {time_diff:.3f}秒")
+                print(f"[DEBUG]    加速距離: {distance_diff:.2f}m")
+                print(f"[DEBUG]    速度增益: {speed_gain_kmh:.1f} km/h")
+                print(f"[DEBUG]    平均加速度: {avg_acceleration:.2f} m/s²")
+            
+            # ✅ 步驟 11: 返回完整的加速性能數據
+            result = {
+                "time_seconds": round(time_diff, 3),
+                "distance_meters": round(distance_diff, 2),
+                "avg_acceleration_ms2": round(avg_acceleration, 2),
+                "start_speed_kmh": round(start_speed, 1),
+                "end_speed_kmh": round(end_speed, 1),
+                "speed_gain_kmh": round(speed_gain_kmh, 1),
+                "actual_distance_start": round(start_distance, 1),
+                "actual_distance_end": round(end_distance, 1)
+            }
+            
+            if debug:
+                print(f"[DEBUG] ✅ 步驟 11: 返回結果")
+                print(f"[DEBUG] === Segment 加速計算完成 ===\n")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[WARNING] 計算改進版 segment 加速度失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return None
+    
+    def _calculate_segment_acceleration_to_target_speed(
+        self,
+        car_data: pd.DataFrame,
+        hardcoded_start_distance: float,
+        target_end_speed_kmh: float,
+        track_name: Optional[str] = None,
+        debug: bool = False
+    ) -> Optional[Dict[str, Any]]:
+        """
+        計算從硬編碼起點到達指定目標速度的加速性能（v3.3 新增）
+        
+        ✅ 核心邏輯（2025-10-18）：
+        1. 起點：硬編碼的固定距離（例如 3544m）
+        2. 終點：找到速度達到或最接近目標速度（例如 310 km/h）的點
+        3. 用途：統一所有車手的加速測量終點，使數據具有可比性
+        
+        Args:
+            car_data: 車手遙測數據（必須包含 Speed, Distance, Time 欄位）
+            hardcoded_start_distance: 硬編碼起點距離（米）
+            target_end_speed_kmh: 目標終點速度（km/h）
+            track_name: 賽道名稱（用於日誌，可選）
+            debug: 是否啟用調試輸出
+            
+        Returns:
+            包含加速時間、平均加速度、起始/終點速度的字典，失敗時返回 None
+        """
+        try:
+            if debug:
+                print(f"\n[DEBUG] === 計算到目標速度的加速 ===")
+                print(f"[DEBUG] 目標速度: {target_end_speed_kmh} km/h")
+            
+            if car_data is None or car_data.empty:
+                return None
+            
+            # 提取數據
+            speeds = pd.to_numeric(car_data["Speed"], errors="coerce")
+            distances = pd.to_numeric(car_data["Distance"], errors="coerce")
+            times = car_data["Time"]
+            
+            # 移除 NaN
+            valid_mask = ~(speeds.isna() | distances.isna())
+            if not valid_mask.any():
+                return None
+            
+            speeds = speeds[valid_mask]
+            distances = distances[valid_mask]
+            times = times[valid_mask]
+            
+            # 找到起點
+            valid_start_indices = distances[distances >= hardcoded_start_distance].index
+            if len(valid_start_indices) == 0:
+                return None
+            
+            start_candidates = distances[valid_start_indices]
+            distance_diffs = (start_candidates - hardcoded_start_distance).abs()
+            start_idx = distance_diffs.idxmin()
+            
+            start_speed = float(speeds[start_idx])
+            start_distance = float(distances[start_idx])
+            start_time = times[start_idx]
+            
+            if debug:
+                print(f"[DEBUG] 起點: {start_distance:.1f}m, 速度 {start_speed:.1f} km/h")
+            
+            # 找到目標速度點（從起點開始搜尋）
+            future_speeds = speeds.loc[start_idx:]
+            
+            # 找到第一個 >= 目標速度的點
+            target_mask = future_speeds >= target_end_speed_kmh
+            
+            if target_mask.any():
+                end_idx = target_mask[target_mask].index[0]
+            else:
+                # 如果無法達到目標速度，使用最高速度點
+                end_idx = future_speeds.idxmax()
+                if debug:
+                    print(f"[DEBUG] ⚠️  無法達到目標速度 {target_end_speed_kmh} km/h，使用最高速度點")
+            
+            end_speed = float(speeds[end_idx])
+            end_distance = float(distances[end_idx])
+            end_time = times[end_idx]
+            
+            if debug:
+                print(f"[DEBUG] 終點: {end_distance:.1f}m, 速度 {end_speed:.1f} km/h")
+            
+            # 確保終點在起點之後
+            if start_idx >= end_idx:
+                return None
+            
+            # 計算時間差
+            if hasattr(start_time, "total_seconds"):
+                time_start_sec = start_time.total_seconds()
+            else:
+                time_start_sec = float(start_time)
+            
+            if hasattr(end_time, "total_seconds"):
+                time_end_sec = end_time.total_seconds()
+            else:
+                time_end_sec = float(end_time)
+            
+            time_diff = time_end_sec - time_start_sec
+            
+            # 處理跨越終點線的情況
+            if time_diff < 0:
+                avg_speed_ms = ((start_speed + end_speed) / 2) / 3.6
+                if avg_speed_ms > 0:
+                    time_diff = (end_distance - start_distance) / avg_speed_ms
+                else:
+                    return None
+            
+            if time_diff <= 0:
+                return None
+            
+            # 計算距離差
+            distance_diff = end_distance - start_distance
+            
+            # 計算性能指標
+            speed_gain_kmh = end_speed - start_speed
+            speed_gain_ms = speed_gain_kmh / 3.6
+            avg_acceleration = speed_gain_ms / time_diff
+            
+            if debug:
+                print(f"[DEBUG] 加速時間: {time_diff:.3f}秒")
+                print(f"[DEBUG] 加速距離: {distance_diff:.2f}m")
+                print(f"[DEBUG] 速度增益: {speed_gain_kmh:.1f} km/h")
+                print(f"[DEBUG] === 完成 ===\n")
+            
+            return {
+                "time_seconds": round(time_diff, 3),
+                "distance_meters": round(distance_diff, 2),
+                "avg_acceleration_ms2": round(avg_acceleration, 2),
+                "start_speed_kmh": round(start_speed, 1),
+                "end_speed_kmh": round(end_speed, 1),
+                "speed_gain_kmh": round(speed_gain_kmh, 1),
+                "actual_distance_start": round(start_distance, 1),
+                "actual_distance_end": round(end_distance, 1)
+            }
+            
+        except Exception as e:
+            if debug:
+                print(f"[WARNING] 計算到目標速度的加速失敗: {e}")
+                import traceback
+                traceback.print_exc()
+            return None
+    
+    def _find_closest_distance_index(
+        self,
+        distances: pd.Series,
+        target_distance: float
+    ) -> Optional[int]:
+        """
+        輔助方法：找到最接近目標距離的索引
+        
+        Args:
+            distances: 距離數據序列
+            target_distance: 目標距離（米）
+            
+        Returns:
+            最接近目標距離的索引，失敗時返回 None
+        """
+        try:
+            if distances is None or distances.empty:
+                return None
+            
+            distance_diff = (distances - target_distance).abs()
+            closest_idx = distance_diff.idxmin()
+            
+            return closest_idx
+            
+        except Exception as e:
+            print(f"[WARNING] 找尋最接近距離的索引失敗: {e}")
             return None
     
     def _find_speed_in_position_range(
@@ -1225,11 +1800,24 @@ class AllDriversStraightLineSpeedAnalysis:
         range_indices: Any,
         start_speed_threshold: Optional[float] = None,
         start_speed_idx: Optional[int] = None,
-        unified_start_speed: Optional[float] = None,
-        unified_end_speed: Optional[float] = None,
+        unified_start_speed: Optional[float] = None,  # ⚠️ DEPRECATED 參數
+        unified_end_speed: Optional[float] = None,    # ⚠️ DEPRECATED 參數
         race_name: Optional[str] = None
     ) -> Optional[Dict[str, float]]:
-        """計算加速性能
+        """
+        ⚠️ DEPRECATED - 此函數使用舊邏輯（統一速度範圍）
+        
+        建議使用：_calculate_segment_acceleration_improved()
+        
+        原因：此函數基於統一速度範圍（unified_start_speed, unified_end_speed），
+        新邏輯已改為完全依賴硬編碼距離範圍。
+        
+        保留此函數僅用於計算 100-300 km/h 固定速度範圍的加速性能。
+        若需要賽道段加速性能，請使用 _calculate_segment_acceleration_improved()。
+        
+        ---
+        
+        計算加速性能（基於統一速度範圍）
         
         ✅ 關鍵修正：
         - 最高速度點：在擴展範圍（range_indices）內找
@@ -1305,8 +1893,8 @@ class AllDriversStraightLineSpeedAnalysis:
                 
                 # 已測試賽道（填入實際值）：
                 "China": 3544,           #260km/h算起
-                # "Azerbaijan": None,      # 待填入
-                 "Japan": 5650,          #由 5650m->529m #230km/h算起
+                "Azerbaijan": 683,      # 待填入
+                 "Japan": 5432,          #由 5650m->529m #230km/h算起
                 
                 # 未測試賽道（暫時空白）：
                  "Monaco": 200, #110km/h算起
@@ -1325,7 +1913,7 @@ class AllDriversStraightLineSpeedAnalysis:
                  "Abu Dhabi": 1452,
                  "Bahrain": 4850, #由 5650m->510m #115km/h算起 
                  "Australia": 4807,
-                 "United States": 4872,
+                 "United States": 3589,
                  "Mexico": 0,
                  "Brazil": 823,
                  "Spain": 4333, #由4333m到589m
@@ -1613,7 +2201,8 @@ class AllDriversStraightLineSpeedAnalysis:
         # 計算加速性能（在同一位置範圍內，使用統一速度範圍）
         acceleration_data = None
         if speed_result["can_calculate_acceleration"]:
-            # ✅ 傳入統一速度範圍和賽道名稱
+            # ⚠️ DEPRECATED 調用：此函數使用舊邏輯（統一速度範圍）
+            # 保留僅用於計算 100-300 km/h 固定速度範圍的加速性能
             acceleration_data = self._calculate_acceleration_in_position_range(
                 car_data,
                 max_speed_idx,
@@ -1622,20 +2211,28 @@ class AllDriversStraightLineSpeedAnalysis:
                 speed_result["range_indices"],
                 start_speed_threshold=speed_result.get("start_speed_threshold"),
                 start_speed_idx=speed_result.get("start_speed_idx"),
-                unified_start_speed=reference_segment.get("unified_start_speed"),
-                unified_end_speed=reference_segment.get("unified_end_speed"),
+                unified_start_speed=None,  # ❌ 已移除統一速度範圍
+                unified_end_speed=None,    # ❌ 已移除統一速度範圍
                 race_name=reference_segment.get("race_name")
             )
         
-        # ⭐ 計算基於距離範圍的賽道段加速性能
-        segment_acceleration_data = self._calculate_segment_acceleration(
+        # ⭐ 計算基於硬編碼起點的賽道段加速性能（改進版 v3）
+        # 核心邏輯：從硬編碼起點開始，直到油門 <= 5% 之前的所有點
+        segment_acceleration_data = self._calculate_segment_acceleration_improved(
             car_data=car_data,
-            segment_distance_start=distance_start,
-            segment_distance_end=distance_end
+            hardcoded_start_distance=distance_start,  # 使用參考起點作為硬編碼起點
+            track_name=reference_segment.get("race_name")  # 賽道名稱（用於日誌）
         )
         
+        # ✅ 使用加速終點距離作為顯示距離（專注於直線段分析）
+        # 優先使用 segment_acceleration_data 的終點距離，回退到最高速度點距離
+        if segment_acceleration_data and "actual_distance_end" in segment_acceleration_data:
+            distance_m = segment_acceleration_data["actual_distance_end"]
+        else:
+            # 回退方案：使用全圈最高速度點的距離
+            distance_m = self._safe_float(car_data, max_speed_idx, "Distance")
+        
         # 獲取其他數據
-        distance_m = self._safe_float(car_data, max_speed_idx, "Distance")
         throttle = self._safe_float(car_data, max_speed_idx, "Throttle")
         drs = self._safe_int(car_data, max_speed_idx, "DRS")
         session_time = self._format_time(car_data, max_speed_idx, "Time")
@@ -1670,6 +2267,118 @@ class AllDriversStraightLineSpeedAnalysis:
         )
 
         return record
+
+    def _recompute_driver_record_with_unified_endpoint(
+        self,
+        temp_record: DriverSpeedRecord,
+        reference_segment: Dict[str, Any],
+        unified_end_speed_kmh: float
+    ) -> Optional[DriverSpeedRecord]:
+        """
+        使用統一終點速度重新計算車手的加速數據（v3.3）
+        
+        保留原始的個人最高速度數據，同時添加到統一速度的加速時間
+        
+        Args:
+            temp_record: 預掃描階段獲取的車手記錄（包含個人最高速度數據）
+            reference_segment: 參考直線段信息
+            unified_end_speed_kmh: 統一的終點速度（km/h）
+            
+        Returns:
+            更新後的車手記錄，失敗時返回 None
+        """
+        try:
+            # 獲取車手的最快單圈遙測數據
+            driver_laps = self._pick_driver_laps(temp_record.driver)
+            if driver_laps is None or getattr(driver_laps, "empty", False):
+                return temp_record  # 無法重新計算，返回原記錄
+            
+            fastest_lap = self._find_fastest_lap(driver_laps)
+            if fastest_lap is None:
+                return temp_record
+            
+            car_data = self._extract_car_data(fastest_lap)
+            if car_data is None or "Speed" not in car_data.columns:
+                return temp_record
+            
+            # 保存個人最高速度數據
+            personal_max_speed_data = temp_record.segment_acceleration.copy() if temp_record.segment_acceleration else {}
+            
+            # 計算到統一速度的加速時間
+            distance_start = reference_segment.get("segment_distance_start")
+            unified_accel_data = self._calculate_segment_acceleration_to_target_speed(
+                car_data=car_data,
+                hardcoded_start_distance=distance_start,
+                target_end_speed_kmh=unified_end_speed_kmh,
+                track_name=reference_segment.get("race_name"),
+                debug=False
+            )
+            
+            if unified_accel_data is None:
+                # 無法計算到統一速度，保留原數據
+                return temp_record
+            
+            # ⭐ v3.3 修正：處理個人最高速度數據
+            # 如果預掃描階段有個人數據，使用之；否則使用統一速度數據作為個人極限
+            personal_time = personal_max_speed_data.get("time_seconds")
+            personal_distance = personal_max_speed_data.get("distance_meters")
+            personal_max_speed = personal_max_speed_data.get("end_speed_kmh")
+            
+            if personal_time is None:
+                # 預掃描時找不到個人最高速度（油門一直很低），使用統一速度作為極限
+                personal_time = unified_accel_data["time_seconds"]
+                personal_distance = unified_accel_data["distance_meters"]
+                personal_max_speed = unified_accel_data["end_speed_kmh"]
+            
+            # ✅ v3.4 修正賦值邏輯（2025-10-19）
+            # 問題：之前 time_seconds 和 max_speed_time_seconds 的賦值反轉了
+            # 正確邏輯：
+            #   - time_seconds（導出為 segment_accel_time_seconds）= 到個人最高速度的時間（較長）
+            #   - max_speed_time_seconds = 到統一終點速度的時間（較短）
+            # 原因：
+            #   - personal_max_speed_data 來自預掃描的 segment_acceleration，使用 _calculate_segment_acceleration_improved
+            #   - _calculate_segment_acceleration_improved 計算到油門降低前的最高速度點（個人最高速度）
+            #   - unified_accel_data 使用 _calculate_segment_acceleration_to_target_speed 計算到統一速度
+            #   - 所以 personal_time > unified_time
+            merged_segment_data = {
+                # ✅ 修正：個人最高速度的加速數據（時間較長，用於主要排序）
+                "time_seconds": personal_time,  # ← 到個人最高速度（較長）
+                "distance_meters": personal_distance,
+                "avg_acceleration_ms2": unified_accel_data["avg_acceleration_ms2"],  # 使用統一數據的加速度
+                "start_speed_kmh": unified_accel_data["start_speed_kmh"],
+                "end_speed_kmh": personal_max_speed,  # ← 個人最高速度
+                "speed_gain_kmh": personal_max_speed - unified_accel_data["start_speed_kmh"],
+                
+                # ✅ 修正：統一終點速度數據（時間較短，用於公平比較）
+                "max_speed_time_seconds": unified_accel_data["time_seconds"],  # ← 到統一速度（較短）
+                "max_speed_distance_meters": unified_accel_data["distance_meters"],
+                "unified_end_speed_kmh": unified_end_speed_kmh,  # 統一終點速度
+                "personal_max_speed_kmh": personal_max_speed,  # 個人最高速度
+            }
+            
+            # 創建新的記錄
+            updated_record = DriverSpeedRecord(
+                driver=temp_record.driver,
+                driver_number=temp_record.driver_number,
+                team=temp_record.team,
+                full_name=temp_record.full_name,
+                max_speed_kmh=temp_record.max_speed_kmh,
+                lap_number=temp_record.lap_number,
+                distance_m=temp_record.distance_m,
+                session_time=temp_record.session_time,
+                throttle=temp_record.throttle,
+                drs=temp_record.drs,
+                acceleration_100_300=temp_record.acceleration_100_300,
+                segment_acceleration=merged_segment_data,  # ⭐ 合併後的數據
+                in_core_range=temp_record.in_core_range,
+                measurement_notes=temp_record.measurement_notes,
+            )
+            
+            return updated_record
+            
+        except Exception as e:
+            print(f"[WARNING] 重新計算 {temp_record.driver} 的加速數據失敗: {e}")
+            return temp_record  # 失敗時返回原記錄
 
     def _pick_driver_laps(self, driver_code: str) -> Any:
         laps = getattr(self.data_loader, "laps", None)

@@ -1,0 +1,289 @@
+{
+  "success": false,
+  "message": "分析執行失敗",
+  "error": "CLI 執行成功但未找到輸出文件",
+  "source": "cli_no_output",
+  "execution_time": "1.149s",
+  "request_id": "req_f630f84df7",
+  "timestamp": "2025-10-19T23:29:26.785519",
+  "cli_info": {
+    "command": "python f1_analysis_modular_main.py -f 34 -y 2025 -r china -s R",
+    "duration_seconds": 1.1483147144317627,
+    "returncode": 0,
+    "stdout_preview": "",
+    "stderr_preview": "C:\\Users\\mike2\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\fastf1\\api.py:32: UserWarning: `fastf1.api` will be considered private in future releases and potentially be removed or changed!\n  warnings.warn(\"`fastf1.api` will be considered private in future releases and \"",
+    "pid": 45132
+  },
+  "runtime": {
+    "busy": false,
+    "active_task_count": 0,
+    "queue_length": 0,
+    "estimated_completion_seconds": null,
+    "max_concurrency": 1,
+    "active_tasks": [],
+    "metrics": {
+      "total_requests": 51,
+      "cache_hits": 0,
+      "cache_hit_rate": 0.0,
+      "cli_runs": 51,
+      "failures": 51,
+      "avg_execution_seconds": 1.11,
+      "last_execution_seconds": 1.149,
+      "last_request_id": "req_f630f84df7",
+      "last_completed_request": "req_f630f84df7",
+      "last_completed_source": "cli"
+    },
+    "recent_history": [
+      {
+        "request_id": "req_2998c50f0c",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:12:58.557610",
+        "duration_seconds": 1.054,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_8a99e61263",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:13:01.327348",
+        "duration_seconds": 1.117,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_2ceba9146b",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:13:14.299588",
+        "duration_seconds": 1.067,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_8f635413ca",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:13:16.633685",
+        "duration_seconds": 1.033,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_a4602ee32a",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:14:04.718279",
+        "duration_seconds": 1.054,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_85bb89951c",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:14:06.986635",
+        "duration_seconds": 0.98,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_d36bd19769",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:16:40.864513",
+        "duration_seconds": 1.042,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_c43d3c5fab",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:16:43.557298",
+        "duration_seconds": 1.084,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_9780421501",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:18:00.417657",
+        "duration_seconds": 1.049,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_a5e201b11f",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:18:03.158857",
+        "duration_seconds": 1.094,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_1bf2ef181d",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:18:14.962690",
+        "duration_seconds": 1.055,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_4da94344f9",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:18:17.572696",
+        "duration_seconds": 1.031,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_1db30a83cc",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:04.766596",
+        "duration_seconds": 1.064,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_3cf538d9d1",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:07.481718",
+        "duration_seconds": 1.093,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_f18bf38b35",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:18.903309",
+        "duration_seconds": 1.062,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_11289998ff",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:21.295287",
+        "duration_seconds": 1.131,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_aab09653aa",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:33.241205",
+        "duration_seconds": 1.055,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_4e3037e7ab",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:22:36.032666",
+        "duration_seconds": 1.091,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_af17b2f75e",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:23:56.776524",
+        "duration_seconds": 1.063,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_3f01a8a207",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:23:59.063076",
+        "duration_seconds": 1.021,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_ec45d3405a",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:24:43.053539",
+        "duration_seconds": 1.016,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_f1949bc514",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:24:45.412675",
+        "duration_seconds": 1.042,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_15de49f696",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:28:45.053733",
+        "duration_seconds": 1.147,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_14cb0fddf2",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:28:47.837097",
+        "duration_seconds": 1.135,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      },
+      {
+        "request_id": "req_f630f84df7",
+        "function_id": "34",
+        "completed_at": "2025-10-19T23:29:26.785495",
+        "duration_seconds": 1.149,
+        "success": false,
+        "status": "error",
+        "message": "CLI 執行成功但未找到輸出文件",
+        "source": "cli"
+      }
+    ]
+  }
+}

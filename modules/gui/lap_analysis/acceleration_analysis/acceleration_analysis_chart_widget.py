@@ -47,6 +47,9 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         # 初始化連動混入類
         self.__init_linkage__()
         
+        # 設置更新回調（讓 Mixin 的連動方法能觸發 UI 更新）
+        self.update_callback = self.update
+        
         # 圖表設置 - 與速度分析保持完全一致
         self.margin_left = 80
         self.margin_right = 20
@@ -100,6 +103,28 @@ class accelerationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinka
         
         # 啟用鼠標追蹤，讓鼠標移動時即時觸發事件
         self.setMouseTracking(True)
+        
+        # ✅ 註冊到連動管理器（與 Speed Analysis 完全一致）
+        if linkage_manager:
+            linkage_manager.register_module(self, "acceleration_analysis")
+            # 🔧 同步當前的主連動開關狀態
+            try:
+                current_master_state = linkage_manager.is_master_linkage_enabled()
+                self.set_master_linkage_enabled(current_master_state)
+                print(f"[ACCELERATION_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+            except Exception as e:
+                print(f"[ERROR] [ACCELERATION_CHART] 同步連動狀態失敗: {e}")
+        else:
+            print(f"[WARNING] [ACCELERATION_CHART] 連動管理器不可用，連動功能將無法使用")
+        
+        # 拖拉狀態
+        self.last_drag_pos = QPoint()
+        
+        # 視圖範圍（用於縮放和拖拉）
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_acceleration = None
+        self.view_max_acceleration = None
         
         self.setMinimumSize(200, 100)  # 極小最小尺寸，提供更高的佈局靈活性
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # 設置擴展策略
@@ -1616,6 +1641,15 @@ class accelerationAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnaly
         """清理 Chart Widget 資源 - 防止記憶體洩漏"""
         try:
             print(f"[ACCELERATION_CHART] 🧹 開始清理資源...")
+            
+            # 0. 從連動管理器解除註冊（與 Speed Analysis 一致）
+            try:
+                from modules.gui.lap_analysis.linkage.linkage_manager import linkage_manager
+                if linkage_manager:
+                    linkage_manager.unregister_module(self)
+                    print(f"[ACCELERATION_CHART]   ✅ 已從連動管理器解除註冊")
+            except Exception as e:
+                print(f"[ACCELERATION_CHART]   ⚠️ 解除註冊警告: {e}")
             
             # 1. 清理 Matplotlib 圖表
             if hasattr(self, 'chart_widget') and self.chart_widget:

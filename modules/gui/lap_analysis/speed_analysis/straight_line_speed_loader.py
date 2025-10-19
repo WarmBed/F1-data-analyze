@@ -200,13 +200,16 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             payload = response.json()
         except Exception as exc:  # broad catch to emit signal and log
             self._error(tr("straight_speed_api_load_failed", "API 載入失敗: {error}").format(error=str(exc)))
-            self.load_error.emit(tr("straight_speed_api_load_failed", "API 載入失敗: {error}").format(error=str(exc)))
+            # ⚠️ [API-ONLY 模式修正] 不發送 load_error 信號，避免彈窗
+            # API 失敗是正常情況，讓用戶通過其他方式獲取數據
+            self._debug("💡 提示: API 暫時不可用，請稍後重試或檢查網絡連接")
             return None
 
         if not isinstance(payload, dict) or not payload.get("success", False):
             message = payload.get("message") if isinstance(payload, dict) else tr("straight_speed_unknown_error", "未知錯誤")
             self._error(tr("straight_speed_api_return_failed", "API 返回失敗: {message}").format(message=message))
-            self.load_error.emit(tr("straight_speed_api_return_failed", "API 返回失敗: {message}").format(message=message))
+            # ⚠️ [API-ONLY 模式修正] 不發送 load_error 信號，避免彈窗
+            self._debug("💡 提示: API 響應異常，請檢查後端服務狀態")
             return None
 
         self._last_api_payload = payload
@@ -216,7 +219,9 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
             self.load_progress.emit(60)
             return output_path
 
-        self.load_error.emit(tr("straight_speed_save_error", "儲存 API 結果時發生錯誤"))
+        # ⚠️ [API-ONLY 模式修正] 儲存失敗不影響數據使用，不發送 load_error
+        self._error(tr("straight_speed_save_error", "儲存 API 結果時發生錯誤"))
+        self._debug("💡 數據已成功獲取但未能寫入本地緩存，不影響使用")
         return None
 
     def _write_payload_to_cache(self, payload: Dict[str, Any], year: int, race: str, session: str) -> Optional[str]:

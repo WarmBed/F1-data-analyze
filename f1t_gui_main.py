@@ -2482,17 +2482,25 @@ class PopoutSubWindow(QMdiSubWindow):
             return self._legacy_update_current_window()
     
     def update_window_title(self):
-        """更新視窗標題"""
+        """更新視窗標題 - 確保使用模組的當前參數"""
         try:
             # 如果有 analysis_module，使用模組的 get_window_title 方法
             if self.analysis_module and hasattr(self.analysis_module, 'get_window_title'):
+                # ✅ [FIX] 優先從模組獲取當前參數（確保同步）
+                if hasattr(self.analysis_module, 'current_year'):
+                    year = self.analysis_module.current_year
+                    race = self.analysis_module.current_race
+                    session = self.analysis_module.current_session
+                else:
+                    # 備選：使用本地參數
+                    year = str(self.local_year)
+                    race = self.local_race
+                    session = self.local_session
+                
                 # 傳遞當前參數給模組的 get_window_title 方法
-                new_title = self.analysis_module.get_window_title(
-                    year=str(self.local_year), 
-                    race=self.local_race, 
-                    session=self.local_session
-                )
+                new_title = self.analysis_module.get_window_title(year, race, session)
                 print(f"[TITLE] [MODULE] 使用模組標題: {new_title}")
+                print(f"[TITLE] [MODULE] 參數: {year} {race} {session}")
             else:
                 # 舊版邏輯：保持原始格式，只更新參數部分
                 if hasattr(self, 'original_title') and self.original_title:
@@ -4963,7 +4971,7 @@ class ContextMenuTreeWidget(QTreeWidget):
             self.main_window.create_analysis_window(clean_name)
         
         # Ideal Lap Analysis 子模組
-        elif clean_name in ["Ranking Table", "排名表格", "理想圈排名"]:
+        elif clean_name in ["Ideal Lap Ranking Table", "Ranking Table", "排名表格", "理想圈排名"]:  # ✅ 添加新名稱
             print(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
@@ -4978,6 +4986,10 @@ class ContextMenuTreeWidget(QTreeWidget):
         # Straight Speed Analysis 子模組 ⭐ 新增
         elif clean_name in ["All Drivers Speed & Acceleration", "全車手速度與加速", "全車手直線速度"]:
             print(f"[TREE_CLICK] 開啟全車手直線速度與加速性能分析（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        elif clean_name in ["All Drivers Brake Performance", "全車手煞車性能", "全車手煞車分析"]:
+            print(f"[TREE_CLICK] 開啟全車手煞車性能分析（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         # Track Analysis 特殊處理
@@ -7338,6 +7350,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
         }
         
         # 獲取當前設置
@@ -7890,6 +7903,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
         }
         
         analysis_windows = []
@@ -8192,14 +8206,15 @@ class StyleHMainWindow(QMainWindow):
         # Ideal Lap Analysis - 3 個子模組
         ideal_lap = QTreeWidgetItem(driver_performance_group, [tr("ideal_lap_analysis", "Ideal Lap Analysis")])
         ideal_lap.setExpanded(False)
-        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_ranking_table", "Ranking Table")])
+        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_ranking_table", "Ideal Lap Ranking Table")])  # ✅ 更明確的名稱
         QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison")])  # ✅ 已啟用
         QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_heatmap", "Sector Heat Map")])
         
         # Straight Speed Analysis - 全車手直線速度與加速性能分析 ⭐ 新增
-        straight_speed = QTreeWidgetItem(driver_performance_group, [tr("straight_speed_analysis", "Straight Speed Analysis")])
+        straight_speed = QTreeWidgetItem(driver_performance_group, [tr("straight_speed_analysis", "Straight Speed Analysis (Experimental)")])
         straight_speed.setExpanded(False)
         QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_straight_speed", "All Drivers Speed & Acceleration")])  # ✅ 已啟用
+        QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_brake_performance", "All Drivers Brake Performance")])  # ✅ F34 煞車性能分析
         
         # ========== Multi-Season Analysis ==========
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
@@ -11251,6 +11266,7 @@ class StyleHMainWindow(QMainWindow):
                 ],
                 "ideal_lap_ranking": [
                     ("ideal_lap_ranking", "Ideal Lap Ranking"),
+                    ("ideal_lap_ranking_table", "Ideal Lap Ranking Table"),  # ✅ 添加新名稱
                     ("ranking_table", "Ranking Table"),
                     "排名表格",  # 樹節點別名
                     "理想圈排名",
@@ -11270,10 +11286,18 @@ class StyleHMainWindow(QMainWindow):
                 ],
                 "all_drivers_straight_line_speed": [  # ⭐ 新增
                     ("all_drivers_straight_speed", "All Drivers Speed & Acceleration"),
-                    ("straight_speed_analysis", "Straight Speed Analysis"),
+                    ("straight_speed_analysis", "Straight Speed Analysis (Experimental)"),
                     "全車手速度與加速",
                     "全車手直線速度",
+                    "直線速度分析(實驗)",
                     "All Drivers Speed & Acceleration",
+                ],
+                "all_drivers_brake_performance": [  # ⭐ F34 煞車性能分析
+                    ("all_drivers_brake_perf", "All Drivers Brake Performance"),
+                    ("brake_performance_analysis", "Brake Performance Analysis"),
+                    "全車手煞車性能",
+                    "全車手煞車分析",
+                    "All Drivers Brake Performance",
                 ],
             }
 
@@ -11968,6 +11992,47 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 全車手直線速度模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理全車手煞車性能分析模組 ⭐ F34 新增
+                elif module_type == "all_drivers_brake_performance":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手煞車性能分析模組...")
+                        from modules.gui.all_drivers_brake_performance_analysis.all_drivers_brake_performance_mdi import (
+                            AllDriversBrakePerformanceMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 全車手煞車性能 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = AllDriversBrakePerformanceMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 全車手煞車性能 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 全車手煞車性能模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 全車手煞車性能模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

@@ -100,7 +100,8 @@ class ConstructorStandingsWidget(QWidget):
             
             # 1. Constructor name (with color background)
             team_name = entry.get("constructor_name", "Unknown")
-            team_color = color_palette_provider.get_team_color(team_name)
+            team_slug = entry.get("team_slug", team_name.lower())  # ✅ 獲取 team_slug
+            team_color = color_palette_provider.get_team_color(team_slug)  # ✅ 使用 team_slug 查詢
             team_item = self._create_colored_item(team_name, team_color)
             self.table.setItem(row_idx, 1, team_item)
             

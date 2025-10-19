@@ -848,20 +848,28 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.update_window_title()
     
     def update_window_title(self) -> None:
-        """更新視窗標題 - 參照速度分析模組增強版"""
+        """更新視窗標題 - 確保完全替換，不累積舊標題"""
         try:
             # 檢查 parent_window 屬性（MDI 子視窗引用）
             parent = getattr(self, 'parent_window', None)
             
             if parent and hasattr(parent, 'setWindowTitle'):
+                # 生成新標題（確保使用當前參數）
                 new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                
+                # ✅ [FIX] 獲取舊標題以便調試
+                old_title = parent.windowTitle() if hasattr(parent, 'windowTitle') else "N/A"
+                
+                # ✅ [FIX] 直接設置新標題（完全替換，不追加）
                 parent.setWindowTitle(new_title)
                 
                 # 強制刷新視窗顯示
                 parent.update()
                 parent.repaint()
                 
-                self._debug(f"🏷️ 視窗標題已更新為: {new_title}")
+                self._debug(f"🏷️ 視窗標題已更新")
+                self._debug(f"   舊標題: {old_title}")
+                self._debug(f"   新標題: {new_title}")
         except Exception as e:
             self._error(f"更新視窗標題失敗: {e}")
             import traceback

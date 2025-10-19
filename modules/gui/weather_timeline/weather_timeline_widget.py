@@ -348,37 +348,38 @@ class WeatherTimelineWidget(QWidget):
         self._adjust_responsive_font()
     
     def _adjust_responsive_font(self):
-        """根據視窗寬度調整字體大小"""
+        """根據視窗寬度調整字體大小（參照 Season Progress 字體標準）"""
         width = self.width()
         
-        # 定義響應式字體大小
+        # 定義響應式字體大小（與 Season Progress 一致）
         if width < 250:
-            # 極小視窗: 主標題 12px, 次標題 9px, 內容 8px, 節點 7px
+            # 極小視窗: 主標題 12px, 次標題 9px, 內容 10px, 節點 9px
             title_size = 12
             subtitle_size = 9
-            content_size = 8
-            node_size = 7
+            content_size = 10
+            node_size = 9
             icon_size = 12
         elif width < 350:
-            # 小視窗: 主標題 14px, 次標題 10px, 內容 9px, 節點 7px
+            # 小視窗: 主標題 14px, 次標題 10px, 內容 11px, 節點 10px
             title_size = 14
             subtitle_size = 10
-            content_size = 9
-            node_size = 7
+            content_size = 11
+            node_size = 10
             icon_size = 14
         elif width < 450:
-            # 中等視窗: 主標題 16px, 次標題 11px, 內容 10px, 節點 8px
+            # 中等視窗: 主標題 16px, 次標題 11px, 內容 12px, 節點 11px
             title_size = 16
             subtitle_size = 11
-            content_size = 10
-            node_size = 8
+            content_size = 12
+            node_size = 11
             icon_size = 15
         else:
-            # 大視窗: 主標題 18px, 次標題 12px, 內容 11px, 節點 8px (預設)
+            # 大視窗 (≥450px): 主標題 18px, 次標題 12px, 內容 14px, 節點 12px
+            # 參照 Season Progress 標準: 標題 18px, GroupBox 12px, 內容 14px
             title_size = 18
             subtitle_size = 12
-            content_size = 11
-            node_size = 8
+            content_size = 14
+            node_size = 12
             icon_size = 16
         
         # 應用響應式樣式 - 主標題

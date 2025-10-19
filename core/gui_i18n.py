@@ -808,9 +808,14 @@ class GuiTranslator:
             
             # Ideal Lap Analysis 主項目與子模組
             'ideal_lap_analysis': {'zh': '理想圈分析', 'en': 'Ideal Lap Analysis', 'ja': '理想ラップ分析'},
-            'ideal_lap_ranking_table': {'zh': '排名表格', 'en': 'Ranking Table', 'ja': 'ランキングテーブル'},
+            'ideal_lap_ranking_table': {'zh': '理想圈排名表格', 'en': 'Ideal Lap Ranking Table', 'ja': '理想ラップランキングテーブル'},
             'ideal_lap_sector_heatmap': {'zh': '分段熱力圖', 'en': 'Sector Heat Map', 'ja': 'セクターヒートマップ'},
             'ideal_lap_sector_comparison': {'zh': '分段比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
+            
+            # Straight Speed Analysis 主項目與子模組
+            'straight_speed_analysis': {'zh': '直線速度分析(實驗)', 'en': 'Straight Speed Analysis (Experimental)', 'ja': '直線速度分析(実験)'},
+            'all_drivers_straight_speed': {'zh': '全車手速度與加速', 'en': 'All Drivers Speed & Acceleration', 'ja': '全ドライバー速度と加速'},
+            'all_drivers_brake_performance': {'zh': '全車手煞車性能', 'en': 'All Drivers Brake Performance', 'ja': '全ドライバーブレーキ性能'},
             
             # 通用項目
             'coming_soon': {'zh': '即將推出...', 'en': 'Coming Soon...', 'ja': '近日公開...'},
@@ -1228,13 +1233,34 @@ class GuiTranslator:
             'sector_comparison_header_s3_delta': {'zh': 'S3 差異', 'en': 'S3 Delta', 'ja': 'S3 差分'},
             'sector_comparison_header_cumulative': {'zh': '累積總差異', 'en': 'Cumulative Delta', 'ja': '累積差分'},
             
+            # All Drivers Brake Performance Analysis - 表格欄位標題
+            'brake_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'brake_header_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'brake_header_max_deceleration_g': {'zh': '最大減速度 (G)', 'en': 'Max Decel (G)', 'ja': '最大減速度 (G)'},
+            'brake_header_brake_time': {'zh': '煞車時間 (s)', 'en': 'Brake Time (s)', 'ja': 'ブレーキ時間 (s)'},
+            'brake_header_avg_deceleration': {'zh': '平均減速度 (m/s²)', 'en': 'Avg Decel (m/s²)', 'ja': '平均減速度 (m/s²)'},
+            'brake_header_brake_start_speed': {'zh': '起始速度 (km/h)', 'en': 'Start Speed (km/h)', 'ja': '開始速度 (km/h)'},
+            'brake_header_brake_bar': {'zh': '煞車性能視覺化', 'en': 'Brake Performance', 'ja': 'ブレーキ性能ビジュアル'},
+            
+            # All Drivers Brake Performance Analysis - 資訊標籤
+            'brake_performance_info_no_data': {'zh': '煞車範圍: 未載入資料', 'en': 'Brake Range: No Data Loaded', 'ja': 'ブレーキ範囲: データ未読み込み'},
+            'brake_performance_info_range': {'zh': '煞車範圍: {start}m → {end}m (長度: {length}m)', 'en': 'Brake Range: {start}m → {end}m (Length: {length}m)', 'ja': 'ブレーキ範囲: {start}m → {end}m (長さ: {length}m)'},
+            'brake_performance_info_reference': {'zh': ' | 參考車手: {driver}', 'en': ' | Reference Driver: {driver}', 'ja': ' | 基準ドライバー: {driver}'},
+            
+            # All Drivers Brake Performance Analysis - Tooltip
+            'brake_performance_driver_tooltip': {'zh': '{driver} - {team}', 'en': '{driver} - {team}', 'ja': '{driver} - {team}'},
+            'brake_performance_team_tooltip': {'zh': '{team}', 'en': '{team}', 'ja': '{team}'},
+            'brake_deceleration_tooltip': {'zh': '{g:.2f} G ({ms2:.2f} m/s²)', 'en': '{g:.2f} G ({ms2:.2f} m/s²)', 'ja': '{g:.2f} G ({ms2:.2f} m/s²)'},
+            'brake_speed_range': {'zh': '煞車前→煞車後: {start} → {end} km/h (減速 {reduction} km/h)', 'en': 'Before→After: {start} → {end} km/h (Reduction: {reduction} km/h)', 'ja': 'ブレーキ前→後: {start} → {end} km/h (減速: {reduction} km/h)'},
+            
             # All Drivers Straight Line Speed Analysis - 表格欄位標題
             'speed_analysis_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
             'speed_analysis_header_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
-            'speed_analysis_header_max_speed': {'zh': '最高速度', 'en': 'Max Speed', 'ja': '最高速度'},
-            'speed_analysis_header_segment_accel_time': {'zh': '加速時間', 'en': 'Accel Time', 'ja': '加速時間'},
-            'speed_analysis_header_segment_avg_accel': {'zh': '平均加速度', 'en': 'Avg Accel', 'ja': '平均加速度'},
-            'speed_analysis_header_segment_start_speed': {'zh': '起始速度', 'en': 'Start Speed', 'ja': '開始速度'},
+            'speed_analysis_header_max_speed': {'zh': '最高速度 (km/h)', 'en': 'Max Speed (km/h)', 'ja': '最高速度 (km/h)'},
+            'speed_analysis_header_segment_accel_time': {'zh': '加速時間 (s)', 'en': 'Accel Time (s)', 'ja': '加速時間 (s)'},
+            'speed_analysis_header_segment_avg_accel': {'zh': '平均加速度 (m/s²)', 'en': 'Avg Accel (m/s²)', 'ja': '平均加速度 (m/s²)'},
+            'speed_analysis_header_segment_start_speed': {'zh': '起始速度 (km/h)', 'en': 'Start Speed (km/h)', 'ja': '開始速度 (km/h)'},
+            'speed_analysis_header_max_speed_time': {'zh': '最高速度時間 (s)', 'en': 'Max Speed Time (s)', 'ja': '最高速度時間 (s)'},
             'speed_analysis_header_accel_bar': {'zh': '加速性能視覺化', 'en': 'Accel Performance', 'ja': '加速性能ビジュアル'},
             
             # All Drivers Straight Line Speed Analysis - 資訊標籤

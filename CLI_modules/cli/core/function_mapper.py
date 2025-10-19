@@ -2678,7 +2678,7 @@ class F1AnalysisFunctionMapper:
         return {"success": True, "message": "空氣動力學效率分析功能開發中", "function_id": "27"}
     
     def _execute_brake_performance_analysis(self, **kwargs):
-        """Function 34: 全部車手煞車性能分析"""
+        """煞車性能分析 (Function 34)"""
         try:
             from CLI_modules.cli.analyzer.brake_performance_analyzer import (
                 BrakePerformanceAnalyzer,
@@ -2713,12 +2713,10 @@ class F1AnalysisFunctionMapper:
             return result
 
         except Exception as exc:
-            print(f"[ERROR] 全部車手煞車性能分析失敗: {exc}")
-            import traceback
-            traceback.print_exc()
+            print(f"[ERROR] 煞車性能分析失敗: {exc}")
             return {
                 "success": False,
-                "message": f"全部車手煞車性能分析失敗: {exc}",
+                "message": f"煞車性能分析失敗: {exc}",
                 "function_id": "34",
             }
     

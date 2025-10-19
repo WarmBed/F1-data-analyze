@@ -334,6 +334,15 @@ _FUNCTION_SPEC_LIST = [
         notes="GUI detailed lap view consumes the JSON; driver optional for single-driver runs.",
     ),
 _make_spec(
+        "34",
+        name="All Drivers Brake Performance",
+        description="Analyzes brake performance for all drivers including maximum deceleration, brake distance and brake time.",
+        required_params=["year", "race", "session"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
+        cache_patterns=["brake_performance", "all_drivers_brake_performance"],
+        notes="Provides brake zone analysis data for GUI brake performance widgets. Calculates deceleration from hardcoded brake endpoints to earliest Brake=1 point.",
+    ),
+    _make_spec(
         "48",
         name="All Drivers Straight-Line Speed",
         description="Calculates the maximum straight-line speed achieved by every driver in the session.",

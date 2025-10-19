@@ -20,7 +20,10 @@ from fastf1.ergast import Ergast
 from fastf1.plotting._constants import Constants as SEASON_CONSTANTS
 
 
-__all__ = ["generate_team_color_report", "check_color_freshness"]
+__all__ = ["generate_team_color_report", "check_color_freshness", "load_driver_overrides"]
+
+# ✅ 覆寫配置檔路徑
+DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")
 
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 SUPPORTED_SEASONS = sorted(int(year) for year in SEASON_CONSTANTS.keys())
@@ -233,6 +236,68 @@ def _fetch_driver_mapping(year: int, alias_map: Dict[str, str]) -> Tuple[Optiona
     return None, {}
 
 
+def load_driver_overrides(year: int) -> Dict[str, Dict[str, str]]:
+    """
+    載入指定賽季的車手-車隊手動覆寫配置
+    
+    Args:
+        year: 賽季年份
+        
+    Returns:
+        覆寫字典，鍵為車手代碼（大寫），值為覆寫資料
+        {
+            "TSU": {
+                "team_slug": "red bull",
+                "team_name": "Red Bull",
+                "full_name": "Yuki Tsunoda",
+                ...
+            }
+        }
+    """
+    if not DRIVER_OVERRIDES_PATH.exists():
+        return {}
+    
+    try:
+        with open(DRIVER_OVERRIDES_PATH, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        
+        year_str = str(year)
+        year_overrides = config.get("overrides", {}).get(year_str, {})
+        
+        # ✅ 過濾啟用的覆寫
+        enabled_overrides = {}
+        for code, data in year_overrides.items():
+            if code.startswith("_"):  # 跳過註解欄位
+                continue
+            
+            if not isinstance(data, dict):
+                continue
+                
+            if not data.get("enabled", False):
+                print(f"[OVERRIDE] ⏭️  跳過未啟用的覆寫: {code} (enabled=false)")
+                continue
+            
+            # ✅ 正規化車手代碼（大寫）
+            code_upper = code.upper()
+            enabled_overrides[code_upper] = {
+                "team_slug": data.get("team_slug", ""),
+                "team_name": data.get("team_name", ""),
+                "full_name": data.get("full_name", code_upper),
+                "driver_id": data.get("driver_id", code_upper.lower()),
+            }
+            
+            print(f"[OVERRIDE] ✅ 載入覆寫: {code_upper} → {data.get('team_name')} ({data.get('reason', 'N/A')})")
+        
+        if enabled_overrides:
+            print(f"[OVERRIDE] 📋 共載入 {len(enabled_overrides)} 個車手覆寫（{year} 賽季）")
+        
+        return enabled_overrides
+        
+    except Exception as e:
+        print(f"[OVERRIDE] ⚠️  載入覆寫配置失敗: {e}")
+        return {}
+
+
 def generate_team_color_report(
     year: Optional[int] = None,
     *,
@@ -335,6 +400,24 @@ def generate_team_color_report(
 
     if include_drivers:
         driver_source_year, mapping = _fetch_driver_mapping(season_year, alias_map)
+        
+        # ✅ 套用手動覆寫（優先於 Ergast API）
+        overrides = load_driver_overrides(season_year)
+        if overrides:
+            print(f"\n{'='*50}")
+            print(f"🔧 套用車手-車隊手動覆寫")
+            print(f"{'='*50}")
+            for code, override_data in overrides.items():
+                if code in mapping:
+                    original_team = mapping[code].get("team_slug", "Unknown")
+                    mapping[code].update(override_data)
+                    print(f"   {code}: {original_team} → {override_data['team_slug']} (覆寫)")
+                else:
+                    # ✅ 新增車手（例如季中替補）
+                    mapping[code] = override_data
+                    print(f"   {code}: (新增) → {override_data['team_slug']}")
+            print(f"{'='*50}\n")
+        
         for code, info in mapping.items():
             team_slug = info["team_slug"]
             team_info = team_payload.get(team_slug)

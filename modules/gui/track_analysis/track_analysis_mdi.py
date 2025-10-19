@@ -895,6 +895,32 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             return self.data_manager._current_data
         return None
     
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """
+        生成視窗標題（覆寫基類方法）
+        
+        Args:
+            year: 年份（可選，使用當前年份）
+            race: 賽事（可選，使用當前賽事）
+            session: 場次（可選，使用當前場次）
+            
+        Returns:
+            str: 格式化的視窗標題
+        """
+        # 使用提供的參數或當前參數
+        year = year or self.current_year or "2025"
+        race = race or self.current_race or "Unknown"
+        session = session or self.current_session or "R"
+        
+        # 使用國際化翻譯
+        from core.gui_i18n import tr, get_gui_language
+        language = get_gui_language()
+        
+        if language == 'zh':
+            return f"{tr('track_analysis', '賽道分析')}_{year}_{race}_{session}"
+        else:
+            return f"Track Analysis_{year}_{race}_{session}"
+    
     def update_window_title(self):
         """更新視窗標題 - UniversalAnalysisMDI 需要此方法"""
         # 視窗標題由 PopoutSubWindow 管理，這裡不需要實現

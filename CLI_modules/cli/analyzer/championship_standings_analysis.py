@@ -20,6 +20,7 @@ __all__ = [
 
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 STANDINGS_REFRESH_HOURS = 120  # 5 天 (平時維護模式)
+DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")  # ✅ 新增：覆寫配置路徑
 
 ChampionshipStandingsResult = Dict[str, Any]
 
@@ -119,22 +120,123 @@ def _isoformat(value: Any) -> Optional[str]:
     return str(value)
 
 
-def _serialize_driver_row(row: pd.Series) -> Dict[str, Any]:
-    constructors = []
-    ids = _normalise_list(row.get("constructorIds"))
-    names = _normalise_list(row.get("constructorNames"))
-    urls = _normalise_list(row.get("constructorUrls"))
-    nationalities = _normalise_list(row.get("constructorNationalities"))
-
-    for idx, constructor_id in enumerate(ids):
-        constructors.append(
-            {
-                "constructor_id": constructor_id or None,
-                "name": names[idx] if idx < len(names) else None,
-                "url": urls[idx] if idx < len(urls) else None,
-                "nationality": nationalities[idx] if idx < len(nationalities) else None,
+def load_driver_overrides(year: int) -> Dict[str, Dict[str, str]]:
+    """
+    載入車手-車隊手動覆寫配置
+    
+    Args:
+        year: 賽季年份
+        
+    Returns:
+        Dict[driver_code, {"team_slug": str, "team_name": str, "constructor_id": str}]
+        範例: {"TSU": {"team_slug": "red bull", "team_name": "Red Bull", "constructor_id": "red_bull"}}
+    """
+    overrides = {}
+    
+    if not DRIVER_OVERRIDES_PATH.exists():
+        return overrides
+    
+    try:
+        with open(DRIVER_OVERRIDES_PATH, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        
+        # ✅ 正確的路徑：overrides.{year}
+        overrides_data = config.get("overrides", {})
+        year_str = str(year)
+        
+        if year_str not in overrides_data:
+            return overrides
+        
+        year_config = overrides_data[year_str]
+        for driver_code, override_data in year_config.items():
+            # 跳過註解欄位
+            if driver_code.startswith("_"):
+                continue
+            
+            if not isinstance(override_data, dict):
+                continue
+            
+            # 只載入啟用的覆寫
+            if not override_data.get("enabled", False):
+                continue
+            
+            team_slug = override_data.get("team_slug")
+            team_name = override_data.get("team_name")
+            
+            if not team_slug or not team_name:
+                continue
+            
+            # 將 team_slug 轉換為 constructor_id 格式（空格轉底線）
+            constructor_id = team_slug.replace(" ", "_")
+            
+            overrides[driver_code.upper()] = {
+                "team_slug": team_slug,
+                "team_name": team_name,
+                "constructor_id": constructor_id,
             }
-        )
+            
+            print(f"[OVERRIDE] ✅ {driver_code} → {team_name} (constructor_id: {constructor_id})")
+        
+        if overrides:
+            print(f"[OVERRIDE] 載入 {len(overrides)} 個車手覆寫")
+        
+        return overrides
+        
+    except Exception as e:
+        print(f"[OVERRIDE] ⚠️  載入覆寫配置失敗: {e}")
+        return overrides
+
+
+
+def _serialize_driver_row(row: pd.Series, overrides: Dict[str, Dict[str, str]] = None) -> Dict[str, Any]:
+    """
+    序列化車手積分榜資料列
+    
+    Args:
+        row: DataFrame 資料列
+        overrides: 車手覆寫配置 {driver_code: {team_slug, team_name, constructor_id}}
+    """
+    if overrides is None:
+        overrides = {}
+    
+    # 獲取車手代碼
+    driver_code = str(row.get("driverCode") or "").upper()
+    
+    # 檢查是否有覆寫
+    if driver_code in overrides:
+        override = overrides[driver_code]
+        # ✅ 使用覆寫的車隊資料
+        constructors = [
+            {
+                "constructor_id": override["constructor_id"],
+                "name": override["team_name"],
+                "url": None,  # 覆寫時不提供 URL
+                "nationality": None,  # 覆寫時不提供國籍
+            }
+        ]
+        print(f"[OVERRIDE] ✅ {driver_code} 車隊已覆寫: {override['team_name']}")
+    else:
+        # ✅ 使用原始 Ergast 資料
+        constructors = []
+        ids = _normalise_list(row.get("constructorIds"))
+        names = _normalise_list(row.get("constructorNames"))
+        urls = _normalise_list(row.get("constructorUrls"))
+        nationalities = _normalise_list(row.get("constructorNationalities"))
+
+        for idx, constructor_id in enumerate(ids):
+            # ✅ 移除 " F1 Team" 後綴以簡化顯示
+            team_name = names[idx] if idx < len(names) else None
+            if team_name:
+                team_name = team_name.replace(" F1 Team", "").strip()
+            
+            constructors.append(
+                {
+                    "constructor_id": constructor_id or None,
+                    "name": team_name,  # ✅ 使用處理後的名稱
+                    "url": urls[idx] if idx < len(urls) else None,
+                    "nationality": nationalities[idx] if idx < len(nationalities) else None,
+                }
+            )
 
     given = str(row.get("givenName") or "").strip()
     family = str(row.get("familyName") or "").strip()
@@ -147,7 +249,7 @@ def _serialize_driver_row(row: pd.Series) -> Dict[str, Any]:
         "wins": int(row.get("wins") or 0),
         "driver": {
             "driver_id": str(row.get("driverId") or ""),
-            "code": str(row.get("driverCode") or "").upper(),
+            "code": driver_code,
             "number": int(row.get("driverNumber")) if pd.notna(row.get("driverNumber")) else None,
             "given_name": given,
             "family_name": family,
@@ -161,6 +263,10 @@ def _serialize_driver_row(row: pd.Series) -> Dict[str, Any]:
 
 
 def _serialize_constructor_row(row: pd.Series) -> Dict[str, Any]:
+    # ✅ 移除 " F1 Team" 後綴以簡化顯示
+    constructor_name = str(row.get("constructorName") or "")
+    constructor_name = constructor_name.replace(" F1 Team", "").strip()
+    
     return {
         "position": int(row.get("position") or 0),
         "position_text": str(row.get("positionText") or ""),
@@ -168,7 +274,7 @@ def _serialize_constructor_row(row: pd.Series) -> Dict[str, Any]:
         "wins": int(row.get("wins") or 0),
         "constructor": {
             "constructor_id": row.get("constructorId"),
-            "name": row.get("constructorName"),
+            "name": constructor_name,  # ✅ 使用處理後的名稱
             "nationality": row.get("constructorNationality"),
             "url": row.get("constructorUrl"),
         },
@@ -196,6 +302,11 @@ def generate_championship_standings(
 
     if not include_constructors and not include_drivers:
         raise ValueError("至少需要啟用車手或車隊其中一種積分")
+
+    # ✅ 載入車手覆寫配置
+    driver_overrides = load_driver_overrides(target_year)
+    if driver_overrides:
+        print(f"[STANDINGS] 已載入 {len(driver_overrides)} 個車手覆寫")
 
     if not force:
         freshness = check_standings_freshness(target_year)
@@ -230,7 +341,8 @@ def generate_championship_standings(
             driver_resp = client.get_driver_standings(season=target_year, round=round_hint)
             if driver_resp and driver_resp.content:
                 driver_df = driver_resp.content[0]
-                driver_entries = [_serialize_driver_row(row) for _, row in driver_df.iterrows()]
+                # ✅ 傳遞覆寫配置給序列化函數
+                driver_entries = [_serialize_driver_row(row, driver_overrides) for _, row in driver_df.iterrows()]
                 _append_deltas(driver_entries)
                 if not driver_resp.description.empty:
                     driver_round = int(driver_resp.description.iloc[0].get("round", 0) or 0)
@@ -311,6 +423,8 @@ def generate_championship_standings(
             "include_drivers": include_drivers,
             "include_constructors": include_constructors,
             "force_regenerated": force,
+            "overrides_applied": len(driver_overrides) > 0,  # ✅ 新增：標記是否套用覆寫
+            "overridden_drivers": list(driver_overrides.keys()) if driver_overrides else [],  # ✅ 新增：覆寫車手清單
         },
         "data": {
             "drivers": driver_entries,
