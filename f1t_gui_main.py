@@ -2433,6 +2433,8 @@ class PopoutSubWindow(QMdiSubWindow):
         print(f"[UPDATE_DEBUG] ========== 視窗更新請求 ==========")
         print(f"[UPDATE_DEBUG] 視窗標題: {self.windowTitle()}")
         print(f"[UPDATE_DEBUG] 是否有 analysis_module: {self.analysis_module is not None}")
+        print(f"🚨 [SYNC_DEBUG] sync_enabled 值: {getattr(self, 'sync_enabled', 'N/A')}")
+        print(f"🚨 [SYNC_DEBUG] _parameter_provider 存在: {hasattr(self, '_parameter_provider') and self._parameter_provider is not None}")
         
         if self.analysis_module:
             print(f"[UPDATE_DEBUG] 🎯 使用新版模組更新邏輯")
@@ -2441,17 +2443,21 @@ class PopoutSubWindow(QMdiSubWindow):
                 params = {}
                 if self.sync_enabled and self._parameter_provider:
                     # 同步模式：使用主視窗參數
+                    print(f"🟢 [SYNC_DEBUG] 同步模式啟用 - 使用主視窗參數")
                     params = {
                         'year': int(self._parameter_provider.get_current_year()),  # 轉換為int
                         'race': self._parameter_provider.get_current_race(),
                         'session': self._parameter_provider.get_current_session()
                     }
+                    print(f"🟢 [SYNC_DEBUG] 主視窗參數: {params}")
                     # 更新本地參數
                     self.local_year = str(params['year'])  # 本地參數保持字符串
                     self.local_race = params['race'] 
                     self.local_session = params['session']
                 else:
                     # 非同步模式：使用本地參數
+                    print(f"🔴 [SYNC_DEBUG] 同步模式停用 - 使用本地參數")
+                    print(f"🔴 [SYNC_DEBUG] 本地參數: year={self.local_year}, race={self.local_race}, session={self.local_session}")
                     params = {
                         'year': int(self.local_year),  # 轉換為int
                         'race': self.local_race,
@@ -5263,7 +5269,21 @@ class WindowSettingsDialog(QDialog):
             current_session = parent_window.local_session
         else:
             current_session = self.get_current_session_from_main_window()
-        self._update_session_combo(preserve_session_code=current_session)
+        
+        # [DEBUG] 調用前確認點
+        logger.info(f"🔍 [SESSION_CALL] 即將調用 _update_session_combo，current_session={current_session}")
+        print(f"🔍 [SESSION_CALL] 即將調用 _update_session_combo，current_session={current_session}")
+        
+        try:
+            self._update_session_combo(preserve_session_code=current_session)
+            logger.info(f"✅ [SESSION_CALL] _update_session_combo 調用完成")
+            print(f"✅ [SESSION_CALL] _update_session_combo 調用完成")
+        except Exception as e:
+            logger.error(f"❌ [SESSION_CALL] _update_session_combo 調用失敗: {e}")
+            print(f"❌ [SESSION_CALL] _update_session_combo 調用失敗: {e}")
+            import traceback
+            traceback.print_exc()
+        
         params_layout.addWidget(self.session_combo, 2, 1)
         
         layout.addWidget(params_group)
@@ -5462,11 +5482,40 @@ class WindowSettingsDialog(QDialog):
         return text or "R"
 
     def _update_session_combo(self, preserve_session_code: Optional[str] = None) -> None:
-        if not self.session_combo:
+        logger.info(f"🔍 [SESSION_DEBUG] _update_session_combo 入口，session_combo: {self.session_combo}")
+        print(f"🔍 [SESSION_DEBUG] _update_session_combo 入口，session_combo: {self.session_combo}")
+        
+        # ✅ 修復：不使用布爾檢查（PyQt5 已刪除的 widget 會返回 False）
+        # 改用 hasattr 和 None 檢查
+        if not hasattr(self, 'session_combo') or self.session_combo is None:
+            logger.warning(f"🔍 [SESSION_DEBUG] session_combo 不存在或為 None，提早返回！")
+            print(f"🔍 [SESSION_DEBUG] session_combo 不存在或為 None，提早返回！")
             return
 
         event = self.get_selected_event()
         current_code = preserve_session_code or self.get_selected_session_code()
+        
+        # 🔍 [SESSION_DEBUG] 調試輸出
+        logger.info(f"🔍 [SESSION_DEBUG] _update_session_combo 被調用")
+        logger.info(f"🔍 [SESSION_DEBUG] preserve_session_code: {preserve_session_code}")
+        logger.info(f"🔍 [SESSION_DEBUG] current_code: {current_code}")
+        logger.info(f"🔍 [SESSION_DEBUG] event: {event}")
+        print(f"🔍 [SESSION_DEBUG] _update_session_combo 被調用")
+        print(f"🔍 [SESSION_DEBUG] preserve_session_code: {preserve_session_code}")
+        print(f"🔍 [SESSION_DEBUG] current_code: {current_code}")
+        print(f"🔍 [SESSION_DEBUG] event: {event}")
+        if event:
+            logger.info(f"🔍 [SESSION_DEBUG] event.race_key: {event.race_key}")
+            logger.info(f"🔍 [SESSION_DEBUG] event.sessions: {event.sessions}")
+            print(f"🔍 [SESSION_DEBUG] event.race_key: {event.race_key}")
+            print(f"🔍 [SESSION_DEBUG] event.sessions: {event.sessions}")
+            if event.sessions:
+                logger.info(f"🔍 [SESSION_DEBUG] sessions 數量: {len(event.sessions)}")
+                print(f"🔍 [SESSION_DEBUG] sessions 數量: {len(event.sessions)}")
+                for session in event.sessions:
+                    logger.info(f"🔍 [SESSION_DEBUG]   - {session.code}")
+                    print(f"🔍 [SESSION_DEBUG]   - {session.code}")
+        
         self.session_combo.blockSignals(True)
         self.session_combo.clear()
 
@@ -7668,6 +7717,29 @@ class StyleHMainWindow(QMainWindow):
                         ('update_lap_parameters', base_kwargs, ('year', 'race', 'session')),
                         ('onParametersChanged', base_kwargs, ('year', 'race', 'session')),
                     ]
+
+                # 🔒 [SYNC_FIX] 檢查視窗的同步狀態（支援 PopoutSubWindow 的 sync_enabled）
+                # ⚠️ 關鍵修復：批次更新必須尊重視窗的獨立同步設定
+                # 如果視窗已停用同步，則跳過批次更新
+                skip_update = False
+                if hasattr(analysis_module, '_sub_window'):
+                    # 檢查子視窗（PopoutSubWindow）的 sync_enabled 屬性
+                    sub_window = analysis_module._sub_window
+                    if hasattr(sub_window, 'sync_enabled') and not sub_window.sync_enabled:
+                        logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                        print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                        skip_update = True
+                elif hasattr(analysis_module, 'sync_enabled') and not analysis_module.sync_enabled:
+                    # 直接檢查模組自己的 sync_enabled 屬性
+                    logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                    print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                    skip_update = True
+                
+                if skip_update:
+                    logger.info(f"🔒 [SYNC_FIX] ✅ 已跳過 {window_title}，保持獨立參數")
+                    print(f"🔒 [SYNC_FIX] ✅ 已跳過 {window_title}，保持獨立參數")
+                    updated_count += 1  # 視為成功（已跳過，不是失敗）
+                    continue
 
                 executed, result = _attempt_module_update(analysis_module, attempts)
 
@@ -10384,7 +10456,10 @@ class StyleHMainWindow(QMainWindow):
         current_race = self.race_combo.currentText()
         current_session = self.session_combo.currentText()
         
-        # 🔧 [FIX] 重複視窗檢查機制 - 防止創建多個相同視窗
+        # � [DISABLED] 重複視窗檢查機制已禁用 (2025-10-20)
+        # 原因：使用者希望能夠同時開啟多個相同模組的視窗來比較不同參數
+        # 例如：同時開啟多個 Rain Analysis、Ideal Lap Ranking 等視窗
+        """
         # 步驟1: 獲取預期的視窗標題模式
         expected_title_patterns = self._get_expected_window_title_pattern(
             function_name, 
@@ -10410,6 +10485,9 @@ class StyleHMainWindow(QMainWindow):
             return  # 🚫 不創建新視窗，直接返回
         
         logger.info(f"[DUPLICATE_CHECK] ✅ 未找到重複視窗，繼續創建: {function_name}")
+        """
+        
+        logger.info(f"[MULTI_WINDOW] ✅ 允許創建多個視窗: {function_name}")
 
         detailed_lap_selection = {"detail_table": True, "box_plot": False}
         if is_detailed_lap:
