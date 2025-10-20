@@ -63,7 +63,7 @@ except ImportError:
     I18N_AVAILABLE = False
 
 from core.gui_settings_manager import gui_settings_manager
-from .lap_filter_utils import extract_caution_laps, lap_is_under_caution
+from .lap_filter_utils import extract_caution_laps, extract_red_flag_laps, lap_is_under_caution, lap_is_under_red_flag
 
 
 class BoxPlotCanvas(QWidget):
@@ -485,6 +485,7 @@ class LapTimeBoxPlotWidget(QWidget):
         # 過濾設定
         self.filter_pit_laps = True
         self.filter_yellow_flags = True
+        self.filter_red_flags = True
         self.filter_outliers = True
         self.outlier_threshold = 1.5  # IQR 倍數
         
@@ -633,7 +634,9 @@ class LapTimeBoxPlotWidget(QWidget):
                 detailed_laps = driver_data.get('detailed_lap_data', [])
                 lap_times = []
                 caution_laps = extract_caution_laps(driver_data) if self.filter_yellow_flags else set()
+                red_flag_laps = extract_red_flag_laps(driver_data) if self.filter_red_flags else set()
                 filtered_caution = 0
+                filtered_red_flag = 0
                 filtered_pit = 0
                 
                 for lap in detailed_laps:
@@ -649,6 +652,14 @@ class LapTimeBoxPlotWidget(QWidget):
                         caution_laps,
                     ):
                         filtered_caution += 1
+                        continue
+
+                    if self.filter_red_flags and lap_is_under_red_flag(
+                        lap.get('lap_number'),
+                        lap,
+                        red_flag_laps,
+                    ):
+                        filtered_red_flag += 1
                         continue
                     
                     # 過濾進站圈
@@ -794,6 +805,7 @@ class LapTimeBoxPlotWidget(QWidget):
         """套用全域箱型圖設定"""
         self.filter_pit_laps = settings.get('filter_pit_laps', True)
         self.filter_yellow_flags = settings.get('filter_yellow_flags', True)
+        self.filter_red_flags = settings.get('filter_red_flags', True)
         self.filter_outliers = settings.get('filter_outliers', True)
         self.outlier_threshold = settings.get('outlier_threshold', 1.5)
         self._update_settings_summary()
@@ -803,6 +815,7 @@ class LapTimeBoxPlotWidget(QWidget):
         previous = (
             self.filter_pit_laps,
             self.filter_yellow_flags,
+            self.filter_red_flags,
             self.filter_outliers,
             self.outlier_threshold,
         )
@@ -811,6 +824,7 @@ class LapTimeBoxPlotWidget(QWidget):
         current = (
             self.filter_pit_laps,
             self.filter_yellow_flags,
+            self.filter_red_flags,
             self.filter_outliers,
             self.outlier_threshold,
         )
@@ -827,6 +841,7 @@ class LapTimeBoxPlotWidget(QWidget):
         summary_lines = [
             f"Filter pit laps: {'Enabled' if self.filter_pit_laps else 'Disabled'}",
             f"Filter yellow flag laps: {'Enabled' if self.filter_yellow_flags else 'Disabled'}",
+            f"Filter red flag laps: {'Enabled' if self.filter_red_flags else 'Disabled'}",
             f"Filter outliers (IQR): {'Enabled' if self.filter_outliers else 'Disabled'}",
             f"Outlier threshold: {self.outlier_threshold:.1f} × IQR",
         ]

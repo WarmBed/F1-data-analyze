@@ -195,15 +195,45 @@ class PitstopDataManager(QObject):
             print(f"[PITSTOP_MANAGER] API 基底網址更新為 {self._api_base_url}")
 
     def _cleanup_api_worker(self, kind: str) -> None:
+        """
+        異步清理 API Worker（方案 2: 信號驅動清理）
+        ✅ 不阻塞主線程
+        ✅ 使用信號自動清理
+        """
         worker = self._api_workers.pop(kind, None)
         if worker:
             try:
                 if worker.isRunning():
+                    # 1. 請求中斷（非阻塞）
                     worker.requestInterruption()
                     worker.quit()
-                    worker.wait(1000)
-            except Exception:
-                pass
+                    
+                    # 2. 使用信號自動清理（當 Worker 停止時）
+                    def on_worker_stopped():
+                        """Worker 停止後自動清理"""
+                        if worker:
+                            worker.deleteLater()
+                    
+                    worker.finished.connect(on_worker_stopped)
+                    
+                    # 3. 延遲強制終止（1 秒後，但不阻塞主線程）
+                    from PyQt5.QtCore import QTimer
+                    def force_terminate():
+                        # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
+                        try:
+                            if worker and worker.isRunning():
+                                print(f"[WARNING] pitstop_analysis API Worker ({kind}) 未在 1 秒內停止，強制終止")
+                                worker.terminate()
+                        except (RuntimeError, AttributeError):
+                            # Worker 已被刪除，無需處理
+                            pass
+                    
+                    QTimer.singleShot(1000, force_terminate)
+                else:
+                    # Worker 已停止，立即清理
+                    worker.deleteLater()
+            except Exception as e:
+                print(f"[ERROR] pitstop_analysis cleanup exception: {e}")
 
     def _start_api_request(
         self,

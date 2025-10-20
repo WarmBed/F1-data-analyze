@@ -49,6 +49,9 @@ import traceback
 import subprocess
 import importlib
 from pathlib import Path
+
+# ✅ 導入集中管理的版本號
+from config.version import APP_VERSION, APP_FULL_TITLE
 from typing import Any, Dict, List, Optional
 import requests
 
@@ -5892,8 +5895,22 @@ class ApiRuntimeWorker(QThread):
 class StyleHMainWindow(QMainWindow):
     """風格H: 專業賽車分析工作站主視窗"""
     
-    def __init__(self):
+    def __init__(self, progress_callback=None):
+        """
+        初始化主視窗
+        
+        Args:
+            progress_callback: 可選的進度回調函數
+                              簽名: callback(progress: int, message: str)
+                              - progress: 0-100 的整數
+                              - message: 當前階段描述
+        """
         super().__init__()
+        
+        # 0% - 開始初始化
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(0, tr('splash_initializing'))
         print("[INIT] 🚀 開始初始化 F1 TelemetryStation Pro 主視窗...")
         # API health monitor attributes
         self.ready_label = None
@@ -5924,7 +5941,12 @@ class StyleHMainWindow(QMainWindow):
         # GUI 語言會自動從設定檔載入，不需要強制設定
         # set_gui_language('en')  # 已移除強制設定
         
-        self.setWindowTitle("F1 TelemetryStation Pro V0.4.0")
+        self.setWindowTitle(APP_FULL_TITLE)  # ✅ 使用集中管理的版本號
+        
+        # 10% - 視窗標題設定完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(10, tr('splash_loading_window'))
         print("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
@@ -5949,6 +5971,11 @@ class StyleHMainWindow(QMainWindow):
         self.lap_analysis_windows = set()  # 活動的遙測分析視窗集合
         self.lap_controls_visible = False  # 遙測控件是否可見
         self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
+        
+        # 20% - 追蹤屬性初始化完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(20, tr('splash_loading_state'))
         print("[INIT] ✅ 遙測分析狀態追蹤已初始化")
 
         # 賽季日曆支援
@@ -5965,23 +5992,59 @@ class StyleHMainWindow(QMainWindow):
             "Las Vegas": "Las Vegas",
             "Abu Dhabi": "Abu Dhabi",
         }
+        
+        # 30% - 賽季日曆初始化完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(30, tr('splash_loading_calendar'))
+        
         self._color_palette_provider = color_palette_provider
         self._initialize_color_palette()
+        
+        # 40% - 顏色配置載入完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(40, tr('splash_loading_colors'))
 
         print("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
+        
+        # 55% - UI 初始化完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(55, tr('splash_loading_ui'))
+        
         print("[INIT] 🎨 開始應用樣式...")
         self.apply_style_h()
+        
+        # 70% - 樣式應用完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(70, tr('splash_applying_style'))
         
         # 整合連動管理器
         print("[INIT] 🔗 開始整合連動管理器...")
         self.integrate_linkage_manager()
+        
+        # 85% - 連動管理器整合完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(85, tr('splash_setup_linkage'))
+        print("[INIT] ✅ 連動管理器整合完成")
+        
         print("[INIT] [API] Initialising health monitor...")
         self.setup_api_health_monitor()
         print("[INIT] [API] Health monitor active")
 
-        print("[INIT] ✅ 連動管理器整合完成")
+        # 95% - API 監控設定完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(95, tr('splash_setup_api'))
         
+        # 100% - 初始化完成
+        if progress_callback:
+            from core.gui_i18n import tr
+            progress_callback(100, tr('splash_complete'))
         print("[INIT] ✅ 主視窗初始化完成！")
         
         # 延遲檢查標籤欄隱藏狀態和圈速控件狀態
@@ -8920,15 +8983,12 @@ class StyleHMainWindow(QMainWindow):
                     race_base = "Japan"
                     print(f"[WELCOME] Weather Timeline: 無賽事數據，使用預設值 → {race_base}")
                 
-                # Function 96 期望完整的賽事名稱，例如 "Singapore Grand Prix"
-                if "Grand Prix" not in race_base:
-                    weather_race = f"{race_base} Grand Prix"
-                else:
-                    weather_race = race_base
+                # ✅ Function 96 期望簡短的賽事名稱（如 "Mexico"），不需要 "Grand Prix" 後綴
+                weather_race = race_base
                     
             except Exception as e:
                 print(f"[WELCOME] ⚠️ Weather Timeline 賽事選擇失敗: {e}")
-                weather_race = "Japan Grand Prix"
+                weather_race = "Japan"  # 使用簡短格式
             
             # 📊 積分榜/進度: 使用當前 race_combo 選擇的賽事
             current_race = "Japan"  # 預設值
@@ -14927,9 +14987,19 @@ class StyleHMainWindow(QMainWindow):
         
     def open_track_analysis_window(self):
         """開啟賽道分析視窗"""
+        import time
+        start_time = time.perf_counter()
+        
+        def log_step(step_name):
+            elapsed = (time.perf_counter() - start_time) * 1000
+            print(f"[TRACK_DEBUG] {elapsed:7.2f}ms | {step_name}")
+        
         try:
+            log_step("🚀 開始 open_track_analysis_window()")
+            
             # 檢查是否為首次使用分析功能
             self.check_and_remove_welcome_page()
+            log_step("✅ 檢查歡迎頁面完成")
             
             # 檢查模組是否可用並決定使用的實作
             track_module = None
@@ -14937,55 +15007,76 @@ class StyleHMainWindow(QMainWindow):
             use_universal = False
 
             try:
+                log_step("📦 開始導入 TrackAnalysisUniversal...")
                 from modules.gui.track_analysis import TrackAnalysisUniversal
                 use_universal = True
-                print("[OK] TrackAnalysisUniversal 可用")
+                log_step("✅ TrackAnalysisUniversal 導入成功")
             except ImportError as universal_error:
-                print(f"[WARN] TrackAnalysisUniversal 導入失敗: {universal_error}")
+                log_step(f"⚠️  TrackAnalysisUniversal 導入失敗: {universal_error}")
                 try:
                     from modules.gui.track_analysis import TrackAnalysisModule
-                    print("[WARN] 回退至 legacy TrackAnalysisModule")
+                    log_step("⚠️  回退至 legacy TrackAnalysisModule")
                 except ImportError:
                     from core.gui_i18n import tr
                     QMessageBox.warning(self, tr('warning', 'Warning'), tr('track_module_unavailable', 'Track analysis module is not available'))
                     return
 
             # 創建參數提供者
+            log_step("🔧 創建參數提供者...")
             parameter_provider = MainWindowParameterProvider(self)
+            log_step("✅ 參數提供者創建完成")
             
             # 獲取當前參數
+            log_step("📝 獲取當前參數...")
             current_year = parameter_provider.get_current_year()
             current_race = parameter_provider.get_current_race()
             current_session = parameter_provider.get_current_session()
+            log_step(f"✅ 參數: {current_year}/{current_race}/{current_session}")
             default_size = None
 
             if use_universal:
                 try:
+                    log_step("🏗️  開始創建 TrackAnalysisUniversal 實例...")
                     module_instance = TrackAnalysisUniversal(main_window=self)
+                    log_step("✅ TrackAnalysisUniversal 實例創建完成")
+                    
                     module_instance.parameter_provider = parameter_provider
+                    log_step("✅ 參數提供者設置完成")
 
                     try:
                         year_value = int(current_year)
                     except (TypeError, ValueError):
                         year_value = current_year
 
+                    log_step(f"⚡ 開始調用 update_parameters({year_value}, {current_race}, {current_session})...")
+                    log_step("   ⚠️  【關鍵步驟】這裡會觸發 API 請求，可能導致卡死")
+                    
                     module_instance.update_parameters(
                         year=year_value,
                         race=current_race,
                         session=current_session
                     )
+                    
+                    log_step("✅ update_parameters() 返回")
+                    log_step("   💡 如果看到這行，說明 update_parameters 沒有阻塞")
 
                     track_module = module_instance
+                    log_step("🎨 獲取 Widget...")
                     track_widget = module_instance.get_widget()
+                    log_step("✅ Widget 獲取完成")
+                    
                     window_title = module_instance.get_window_title(current_year, current_race, current_session)
                     default_size = module_instance.get_default_size()
-                    print(f"[OK] 使用 TrackAnalysisUniversal 開啟視窗: {window_title}")
+                    log_step(f"✅ 視窗標題: {window_title}")
                 except Exception as exc:
-                    print(f"[ERROR] TrackAnalysisUniversal 初始化失敗，回退 Legacy: {exc}")
+                    log_step(f"❌ TrackAnalysisUniversal 初始化失敗: {exc}")
+                    import traceback
+                    traceback.print_exc()
                     use_universal = False
 
             if not use_universal:
                 # 確保 legacy 類別可用
+                log_step("⚠️  使用 Legacy 模式")
                 from modules.gui.track_analysis import TrackAnalysisModule
 
                 track_module = TrackAnalysisModule(
@@ -14996,16 +15087,20 @@ class StyleHMainWindow(QMainWindow):
                 track_widget = track_module
                 window_title = track_module.get_window_title(current_year, current_race, current_session)
                 default_size = None
-                print(f"[OK] 使用 legacy TrackAnalysisModule 開啟視窗: {window_title}")
+                log_step(f"✅ Legacy 視窗: {window_title}")
             
             # 獲取當前 MDI 區域
+            log_step("🔍 獲取當前 MDI 區域...")
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
+                log_step("❌ 找不到 MDI 區域")
                 from core.gui_i18n import tr
                 QMessageBox.warning(self, tr('warning', 'Warning'), tr('mdi_area_not_found', 'Cannot find current MDI area'))
                 return
+            log_step("✅ MDI 區域獲取完成")
             
             # 創建 PopoutSubWindow
+            log_step("🏗️  創建 PopoutSubWindow...")
             sub_window = PopoutSubWindow(
                 title=window_title,
                 parent_mdi=current_mdi_area,  # 使用當前 MDI 區域
@@ -15014,17 +15109,25 @@ class StyleHMainWindow(QMainWindow):
                 parameter_provider=parameter_provider,
                 global_signal_manager=getattr(self, 'global_signal_manager', None)
             )
+            log_step("✅ PopoutSubWindow 創建完成")
             
             # 設置賽道分析模組為視窗內容
+            log_step("🎨 設置 Widget...")
             sub_window.setWidget(track_widget)
+            log_step("✅ Widget 設置完成")
             
             # 添加到 MDI 區域
+            log_step("➕ 添加到 MDI 區域...")
             current_mdi_area.addSubWindow(sub_window)
+            log_step("✅ 添加到 MDI 完成")
+            
+            log_step("📺 顯示視窗...")
             sub_window.show()
+            log_step("✅ 視窗顯示完成")
             
             # 連接信號
             # 🔴 使用 partial 避免 lambda 閉包洩漏
-
+            log_step("🔗 連接信號...")
             sub_window.window_closed.connect(
 
                 partial(self.on_subwindow_closed, sub_window)
@@ -15032,18 +15135,27 @@ class StyleHMainWindow(QMainWindow):
             )
             if hasattr(track_module, 'module_error'):
                 track_module.module_error.connect(lambda msg: self.show_error_message("賽道分析錯誤", msg))
+            log_step("✅ 信號連接完成")
             
             # 記錄視窗
             self.active_subwindows.append(sub_window)
             
             # 更新狀態
-            print(f"[STATUS] 已開啟賽道分析視窗: {window_title}")
+            log_step(f"📊 視窗標題: {window_title}")
 
             # 依模組建議尺寸調整視窗大小
             if default_size and isinstance(default_size, (tuple, list)) and len(default_size) == 2:
+                log_step(f"📐 調整視窗大小: {default_size}")
                 sub_window.resize(default_size[0], default_size[1])
             
+            total_time = (time.perf_counter() - start_time) * 1000
+            log_step(f"🎉 完成！總耗時: {total_time:.2f}ms")
+            
         except Exception as e:
+            elapsed = (time.perf_counter() - start_time) * 1000
+            print(f"[TRACK_DEBUG] {elapsed:7.2f}ms | ❌ 異常: {e}")
+            import traceback
+            traceback.print_exc()
             from core.gui_i18n import tr
             QMessageBox.critical(self, tr('error', 'Error'), f"{tr('track_window_error', 'Cannot open track analysis window')}: {str(e)}")
             print(f"[STATUS] 賽道分析視窗開啟失敗: {str(e)}")
@@ -17377,9 +17489,67 @@ def main():
     # 設置應用程序在最後一個視窗關閉時退出
     app.setQuitOnLastWindowClosed(True)
     
-    # 創建主視窗
-    window = StyleHMainWindow()
-    window.show()
+    # ========== 整合啟動畫面 ==========
+    print("[MAIN] 🎨 創建啟動畫面...")
+    from modules.gui.splash_screen import create_splash_screen
+    from core.gui_i18n import tr
+    
+    splash = create_splash_screen(2)  # Version 2: 白底黑字極簡風格
+    splash.show()
+    app.processEvents()  # 立即顯示啟動畫面
+    
+    def update_progress(progress: int, message: str):
+        """進度更新回調函數"""
+        splash.set_progress(progress, message)
+        app.processEvents()  # 確保進度立即更新
+    
+    print("[MAIN] ✅ 啟動畫面已顯示")
+    
+    # ========== 創建主視窗（帶錯誤處理）==========
+    window = None
+    init_error = None
+    
+    try:
+        print("[MAIN] 🏗️ 創建主視窗...")
+        window = StyleHMainWindow(progress_callback=update_progress)
+        print("[MAIN] ✅ 主視窗創建成功")
+        
+        # 延遲 500ms 後關閉啟動畫面
+        QTimer.singleShot(500, splash.close)
+        
+    except Exception as e:
+        print(f"[MAIN] ❌ 主視窗初始化失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        init_error = e
+        
+        # 更新啟動畫面顯示錯誤
+        update_progress(100, tr('splash_error_opening'))
+        QTimer.singleShot(1000, splash.close)  # 1秒後關閉
+        
+        # 嘗試創建最小化的視窗（無進度回調）
+        try:
+            print("[MAIN] 🔄 嘗試創建簡化視窗...")
+            window = StyleHMainWindow()  # 無回調版本
+            print("[MAIN] ⚠️ 簡化視窗創建成功（功能可能不完整）")
+        except Exception as e2:
+            print(f"[MAIN] ❌ 簡化視窗創建也失敗: {e2}")
+            # 完全失敗，只關閉啟動畫面
+            splash.close()
+            raise
+    
+    # ========== 顯示主視窗 ==========
+    if window:
+        window.show()
+        
+        # 如果初始化有錯誤，顯示警告對話框
+        if init_error:
+            QTimer.singleShot(1500, lambda: QMessageBox.critical(
+                window,
+                tr('error_initialization_failed'),
+                f"{tr('error_init_message')}\n\n{str(init_error)}"
+            ))
     
     # 執行事件循環
     result = app.exec_()

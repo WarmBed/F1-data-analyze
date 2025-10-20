@@ -16,7 +16,7 @@ import json
 import os
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -35,6 +35,11 @@ API_ENDPOINT = "/api/v2/analysis/execute"
 DEFAULT_BASE_URL = "https://api.f1telemetrystationpro.org"
 CONFIG_PATH = Path("config/api_config.json")
 JSON_DIR = Path(os.getenv("F1_ANALYSIS_JSON_DIR", "json"))
+
+# 🔄 Calendar 刷新策略：智能加速機制
+CALENDAR_REFRESH_HOURS_NORMAL = 168  # 7 天 (正常模式：賽程固定時期)
+CALENDAR_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時 (臨近模式：賽前 2 天)
+RACE_APPROACHING_THRESHOLD_DAYS = 2  # 賽前 2 天啟動加速刷新
 
 SESSION_NAME_MAPPING = (
     ("practice 1", "FP1"),
@@ -145,14 +150,43 @@ class SeasonCalendarProvider:
         """Return season events for the given year.
 
         The result is cached for the lifetime of the provider instance.
+        
+        ✨ 智能加速刷新邏輯：
+        - 正常模式：7 天刷新一次（賽程固定時期）
+        - 臨近模式：賽前 2 天開始，每 12 小時刷新（捕捉賽事完成狀態）
+        - 優先檢查本地 JSON 的新鮮度
+        - 如果新鮮，直接使用本地 JSON
+        - 如果過期或不存在，嘗試通過 API 刷新
+        - API 失敗則降級使用舊的 JSON（總比沒有好）
         """
 
         if year in self._cache:
             return self._cache[year]
 
-        payload = self._fetch_from_api(year)
-        if payload is None:
+        # 🔍 Step 1: 檢查本地 JSON 的新鮮度
+        local_json_path, local_json_age_hours = self._get_latest_json_info(year)
+        
+        # 🏁 Step 2: 判斷是否有賽事臨近（決定刷新頻率）
+        refresh_interval_hours = self._determine_refresh_interval(local_json_path, year)
+        is_local_fresh = local_json_age_hours is not None and local_json_age_hours < refresh_interval_hours
+        
+        if is_local_fresh:
+            print(f"[SEASON] 本地 JSON 仍新鮮（{local_json_age_hours:.1f} 小時前，閾值: {refresh_interval_hours} 小時），直接使用")
             payload = self._load_latest_json(year)
+        else:
+            # 🌐 Step 3: 本地 JSON 過期或不存在，嘗試 API 刷新
+            if local_json_age_hours is None:
+                print(f"[SEASON] 未找到本地 JSON，嘗試通過 API 獲取")
+            else:
+                refresh_mode = "加速模式" if refresh_interval_hours == CALENDAR_REFRESH_HOURS_RACE_APPROACHING else "正常模式"
+                print(f"[SEASON] 本地 JSON 已過期（{local_json_age_hours:.1f} 小時前，{refresh_mode}），嘗試通過 API 刷新")
+            
+            payload = self._fetch_from_api(year)
+            
+            # 📁 Step 4: API 失敗，降級使用舊的 JSON
+            if payload is None:
+                print(f"[SEASON] API 不可用，降級使用本地 JSON（即使過期）")
+                payload = self._load_latest_json(year)
 
         if payload is None:
             raise SeasonCalendarError(f"無法取得 {year} 年的賽季日曆資料 (API 與本地 JSON 皆不可用)")
@@ -164,6 +198,93 @@ class SeasonCalendarProvider:
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
+    def _determine_refresh_interval(self, json_path: Optional[Path], year: int) -> float:
+        """
+        判斷刷新間隔：根據是否有賽事臨近決定刷新頻率
+        
+        策略：
+        - 正常模式：168 小時（7 天）- 賽程穩定時期
+        - 加速模式：12 小時 - 賽前 2 天內，頻繁檢查賽事完成狀態
+        
+        Returns:
+            刷新間隔（小時）
+        """
+        # 如果沒有本地 JSON，使用正常模式
+        if json_path is None:
+            return CALENDAR_REFRESH_HOURS_NORMAL
+        
+        try:
+            # 讀取 JSON 並找到即將到來的賽事
+            payload = json.loads(json_path.read_text(encoding="utf-8"))
+            events = self._transform_payload(payload, year=year)
+            
+            # 找到最近的未完賽事件
+            now = datetime.now(timezone.utc)
+            upcoming_events = [e for e in events if not e.is_completed]
+            
+            if not upcoming_events:
+                # 沒有未完賽事件，使用正常模式
+                return CALENDAR_REFRESH_HOURS_NORMAL
+            
+            # 檢查最近的賽事是否在臨近閾值內
+            for event in upcoming_events[:3]:  # 只檢查最近 3 場賽事
+                race_date_str = event.race_date
+                if race_date_str:
+                    try:
+                        # 解析賽事日期（格式: "2025-10-19"）
+                        race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        days_until_race = (race_date - now).days
+                        
+                        # 🚨 賽前 2 天內或賽後 1 天內，啟用加速模式
+                        if -1 <= days_until_race <= RACE_APPROACHING_THRESHOLD_DAYS:
+                            print(f"[SEASON] 🏁 賽事臨近！{event.race_key} 在 {days_until_race} 天{'後' if days_until_race >= 0 else '前'}，啟用加速刷新模式（12 小時）")
+                            return CALENDAR_REFRESH_HOURS_RACE_APPROACHING
+                    except ValueError:
+                        continue
+            
+            # 沒有臨近賽事，使用正常模式
+            return CALENDAR_REFRESH_HOURS_NORMAL
+            
+        except Exception as e:
+            print(f"[SEASON] 判斷刷新間隔時出錯: {e}，降級使用正常模式")
+            return CALENDAR_REFRESH_HOURS_NORMAL
+    
+    def _get_latest_json_info(self, year: int) -> tuple[Optional[Path], Optional[float]]:
+        """
+        獲取最新的 season calendar JSON 檔案資訊
+        
+        Returns:
+            (檔案路徑, 檔案年齡小時數) 如果找到
+            (None, None) 如果找不到
+        """
+        if not JSON_DIR.exists():
+            return (None, None)
+        
+        all_candidates = sorted(
+            JSON_DIR.glob("season_calendar_*.json"),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        
+        for candidate in all_candidates:
+            try:
+                payload = json.loads(candidate.read_text(encoding="utf-8"))
+                
+                # 檢查是否包含指定年份的數據
+                if self._payload_contains_year(payload, year):
+                    # 計算檔案年齡
+                    file_mtime = datetime.fromtimestamp(candidate.stat().st_mtime, tz=timezone.utc)
+                    now = datetime.now(timezone.utc)
+                    age_hours = (now - file_mtime).total_seconds() / 3600
+                    
+                    return (candidate, age_hours)
+                    
+            except Exception as e:
+                print(f"[SEASON] 讀取 {candidate.name} 失敗: {e}")
+                continue
+        
+        return (None, None)
+    
     def _determine_base_url(self) -> str:
         return resolve_api_base_url(
             config_path=CONFIG_PATH,

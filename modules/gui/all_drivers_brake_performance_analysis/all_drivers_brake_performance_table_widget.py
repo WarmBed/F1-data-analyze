@@ -22,9 +22,7 @@ from typing import Dict, List, Any, Optional
 
 # 導入翻譯和配色
 from core.gui_i18n import tr
-from modules.gui.ideal_lap_analysis.shared_colors import (
-    get_team_color,
-)
+from modules.gui.themes.color_palette_provider import color_palette_provider
 
 
 class DecelerationBarDelegate(QStyledItemDelegate):
@@ -188,6 +186,9 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
         self.segment_distance_end = None
         self.segment_length = None
         
+        # ✅ 初始化欄位可見性設定
+        self._column_visibility = self._get_column_visibility()
+        
         # 初始化 UI
         self._init_ui()
     
@@ -247,47 +248,84 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
         self.info_label.setText(info_text)
         print(f"[BRAKE_TABLE] 資訊標籤更新: {info_text}")
     
-    def _create_table(self) -> QTableWidget:
-        """創建表格"""
-        table = QTableWidget()
+    def _get_column_visibility(self) -> Dict[str, bool]:
+        """
+        獲取欄位可見性設定（從 gui_settings_manager 讀取）
         
-        # ⭐ 簡化欄位標題（只保留 segment brake 欄位）
-        # 
-        # 欄位說明：
-        # 1. ❌ 移除「排名」- Qt 動態排序會改變順序，固定排名會誤導
-        # 1. 車手 - 3字母代碼（車隊背景色）
-        # 2. 車隊 - 車隊名稱（車隊背景色）
-        # 3. 最大減速度 - 賽道段內最大減速度（G）
-        # 4. ⭐ 煞車時間 - 賽道段煞車時間（秒）
-        #    - 計算：brake_end_time - brake_start_time
-        #    - 邏輯：時間越短 = 性能越好 ✅
-        #    - 排序：升序（最短在前）
-        # 5. ⭐ 平均減速度 - 賽道段平均減速度（m/s²）
-        #    - 計算：(起始速度 - 結束速度) / 煞車時間 / 3.6
-        #    - 邏輯：減速度越大 = 性能越好 ✅
-        #    - 排序：降序（最大在前）
-        # 6. ⭐ 起始速度 - 賽道段開始時的速度（km/h）
-        #    - 來源：brake_start_speed_kmh
-        #    - 說明：車手進入煞車區時的速度
-        #    - 範例：HAM 310 km/h，LEC 305 km/h
-        #    - 意義：起始速度高 = 入彎速度快
-        #    - 排序：降序（最高在前）
-        #    - Tooltip：顯示「起始→結束速度」（例如：310→103 km/h）
-        # 7. ⭐ 煞車性能視覺化 - 棒狀圖顯示煞車時間
-        #    - 視覺：棒越短 = 時間越短 = 性能越好 ✅
-        #    - 數據來源：brake_time_seconds
-        columns = [
-            tr('brake_header_driver', '車手'),
-            tr('brake_header_team', '車隊'),
-            tr('brake_header_max_deceleration_g', '最大減速度 (G)'),
-            tr('brake_header_brake_time', '煞車時間 (s)'),
-            tr('brake_header_avg_deceleration', '平均減速度 (m/s²)'),
-            tr('brake_header_brake_start_speed', '起始速度 (km/h)'),
-            tr('brake_header_brake_bar', '煞車性能視覺化')
+        Returns:
+            Dict[str, bool]: 欄位可見性字典
+        """
+        from core.gui_settings_manager import gui_settings_manager
+        
+        settings = gui_settings_manager.get_straight_speed_analysis_settings()
+        
+        # Brake 模組欄位映射（使用 Brake 專用設定）
+        return {
+            'driver': True,  # 永遠可見
+            'team': True,    # 永遠可見
+            'max_deceleration': settings.get('brake_show_max_decel', False),  # 使用 brake_show_max_decel
+            'brake_time': True,  # 永遠可見（對應 Speed 的 accel_time）
+            'avg_deceleration': True,  # 永遠可見（對應 Speed 的 avg_accel）
+            'start_speed': settings.get('brake_show_start_speed', False),  # 使用 brake_show_start_speed
+            'performance_bar': settings.get('brake_show_performance_bar', True),  # 使用 brake_show_performance_bar
+        }
+    
+    def _get_visible_columns(self) -> List[tuple]:
+        """
+        獲取可見的欄位列表
+        
+        Returns:
+            List[tuple]: [(邏輯欄位名, 欄位標題), ...]
+        """
+        all_columns = [
+            ('driver', tr('brake_header_driver', '車手')),
+            ('team', tr('brake_header_team', '車隊')),
+            ('max_deceleration', tr('brake_header_max_deceleration_g', '最大減速度 (G)')),
+            ('brake_time', tr('brake_header_brake_time', '煞車時間 (s)')),
+            ('avg_deceleration', tr('brake_header_avg_deceleration', '平均減速度 (m/s²)')),
+            ('start_speed', tr('brake_header_brake_start_speed', '起始速度 (km/h)')),
+            ('performance_bar', tr('brake_header_brake_bar', '煞車性能視覺化')),
         ]
         
-        table.setColumnCount(len(columns))
-        table.setHorizontalHeaderLabels(columns)
+        # 只返回可見的欄位
+        visible_columns = [
+            (col_name, col_title)
+            for col_name, col_title in all_columns
+            if self._column_visibility.get(col_name, True)
+        ]
+        
+        return visible_columns
+    
+    def _get_column_index(self, logical_column: str) -> Optional[int]:
+        """
+        獲取邏輯欄位的實際欄位索引
+        
+        Args:
+            logical_column: 邏輯欄位名稱 (例如: 'max_deceleration')
+            
+        Returns:
+            int: 實際欄位索引，如果欄位不可見則返回 None
+        """
+        if not self._column_visibility.get(logical_column, False):
+            return None
+        
+        visible_columns = self._get_visible_columns()
+        for idx, (col_name, _) in enumerate(visible_columns):
+            if col_name == logical_column:
+                return idx
+        
+        return None
+    
+    def _create_table(self) -> QTableWidget:
+        """創建表格（根據設定動態顯示欄位）"""
+        table = QTableWidget()
+        
+        # ✅ 動態獲取可見欄位
+        visible_columns = self._get_visible_columns()
+        column_titles = [title for _, title in visible_columns]
+        
+        table.setColumnCount(len(column_titles))
+        table.setHorizontalHeaderLabels(column_titles)
         
         # 設置表格屬性
         table.setSortingEnabled(True)
@@ -296,14 +334,21 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
         table.setAlternatingRowColors(True)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
-        # ✅ 設置固定欄位寬度
-        table.setColumnWidth(0, 100)  # 車手（車隊背景色）
-        table.setColumnWidth(1, 130)  # 車隊（車隊背景色）
-        table.setColumnWidth(2, 110)  # 最高速度
-        table.setColumnWidth(3, 120)  # 加速時間
-        table.setColumnWidth(4, 140)  # 平均加速度
-        table.setColumnWidth(5, 120)  # 起始速度
-        # 欄位 6（視覺化）使用 stretch 填滿剩餘空間
+        # ✅ 動態設置欄位寬度（根據可見欄位）
+        column_widths = {
+            'driver': 100,
+            'team': 130,
+            'max_deceleration': 110,
+            'brake_time': 120,
+            'avg_deceleration': 140,
+            'start_speed': 120,
+            # 'performance_bar' 使用 stretch 填滿剩餘空間
+        }
+        
+        visible_columns = self._get_visible_columns()
+        for idx, (col_name, _) in enumerate(visible_columns):
+            if col_name in column_widths:
+                table.setColumnWidth(idx, column_widths[col_name])
         
         # 設置行高
         table.verticalHeader().setDefaultSectionSize(40)
@@ -438,12 +483,22 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
         for row, driver_data in enumerate(self.driver_brakes_data):
             self._populate_row(row, row + 1, driver_data)
         
-        # ✅ 設置減速棒狀圖欄位的委託（現在是欄位 6，傳遞時間範圍）
-        bar_delegate = DecelerationBarDelegate(self.min_time_to_max, self.max_time_to_max, self.table)
-        self.table.setItemDelegateForColumn(6, bar_delegate)
-        print(f"[BRAKE_TABLE] 委託已設置，欄位 6，時間範圍 {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
+        # ✅ 設置減速棒狀圖欄位的委託（動態獲取欄位索引）
+        bar_col_index = self._get_column_index('performance_bar')
+        if bar_col_index is not None:
+            bar_delegate = DecelerationBarDelegate(self.min_time_to_max, self.max_time_to_max, self.table)
+            self.table.setItemDelegateForColumn(bar_col_index, bar_delegate)
+            print(f"[BRAKE_TABLE] 委託已設置，欄位 {bar_col_index}（煞車性能視覺化），時間範圍 {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
+        else:
+            print("[WARNING] [BRAKE_TABLE] Performance Bar 欄位不可見，跳過委託設置")
         
         self.table.setSortingEnabled(True)
+    
+    def _set_item_at_column(self, row: int, column_name: str, item: QTableWidgetItem):
+        """設置指定邏輯欄位的項目（處理動態欄位索引）"""
+        col_index = self._get_column_index(column_name)
+        if col_index is not None:  # ✅ 檢查 None 而非 -1
+            self.table.setItem(row, col_index, item)
     
     def _populate_row(self, row: int, position: int, driver_data: Dict):
         """填充單行數據 - 煞車性能"""
@@ -483,27 +538,31 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
         # ✅ 0. 車手（車隊背景色）
         driver_item = QTableWidgetItem(driver)
         driver_item.setTextAlignment(Qt.AlignCenter)
-        driver_item.setFont(QFont("Arial", 10, QFont.Bold))
+        driver_item.setFont(QFont("Arial", 10))  # ✅ 移除粗體
         
-        # ✅ 設置車隊背景色（使用共用配色模組）
-        team_color = get_team_color(team)
-        driver_item.setBackground(team_color)  # ✅ 直接傳 QColor
-        driver_item.setForeground(QBrush(QColor(0, 0, 0)))  # 黑色文字
+        # ✅ 設置車隊背景色（與 driver_standings 一致使用 color_palette_provider）
+        driver_color = color_palette_provider.get_driver_color(driver, fallback=True)
+        driver_item.setBackground(driver_color)
+        
+        # 根據背景色亮度決定文字顏色
+        luminance = (0.299 * driver_color.red() + 0.587 * driver_color.green() + 0.114 * driver_color.blue())
+        text_color = QColor(255, 255, 255) if luminance < 128 else QColor(0, 0, 0)
+        driver_item.setForeground(QBrush(text_color))
         driver_item.setToolTip(tr("brake_performance_driver_tooltip", "{driver} - {team}").format(
             driver=driver, team=team
         ))
         
-        self.table.setItem(row, 0, driver_item)
+        self._set_item_at_column(row, 'driver', driver_item)
         
         # ✅ 1. 車隊（車隊背景色）
         team_item = QTableWidgetItem(team)
         team_item.setTextAlignment(Qt.AlignCenter)
         team_item.setFont(QFont("Arial", 9))
         # ✅ 設置車隊背景色（與車手欄位一致）
-        team_item.setBackground(team_color)
-        team_item.setForeground(QBrush(QColor(0, 0, 0)))  # 黑色文字
+        team_item.setBackground(driver_color)
+        team_item.setForeground(QBrush(text_color))
         team_item.setToolTip(tr("brake_performance_team_tooltip", "{team}").format(team=team))
-        self.table.setItem(row, 1, team_item)
+        self._set_item_at_column(row, 'team', team_item)
         
         # ✅ 2. 最大減速度（G 單位，顏色編碼）
         decel_item = QTableWidgetItem(f"{max_deceleration_g:.2f} G")
@@ -524,7 +583,7 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
             )
         )
         
-        self.table.setItem(row, 2, decel_item)
+        self._set_item_at_column(row, 'max_deceleration', decel_item)
         
         # ⭐ 3. 煞車時間（煞車區間時間）
         if has_brake_data:
@@ -539,7 +598,7 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
             brake_time_item.setData(Qt.UserRole, 9999)
             brake_time_item.setForeground(QBrush(QColor(150, 150, 150)))
         brake_time_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 3, brake_time_item)
+        self._set_item_at_column(row, 'brake_time', brake_time_item)
         
         # ⭐ 4. 平均減速度（煞車區間平均減速度 = 速度差 / 時間）
         if has_brake_data and brake_time_val > 0:
@@ -556,7 +615,7 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
             avg_decel_item.setData(Qt.UserRole, 0)
             avg_decel_item.setForeground(QBrush(QColor(150, 150, 150)))
         avg_decel_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 4, avg_decel_item)
+        self._set_item_at_column(row, 'avg_deceleration', avg_decel_item)
         
         # ⭐ 5. 煞車前速度（煞車區間起始速度）
         if has_brake_data and brake_start_speed_val > 0:
@@ -577,7 +636,7 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
             start_speed_item.setData(Qt.UserRole, 0)
             start_speed_item.setForeground(QBrush(QColor(150, 150, 150)))
         start_speed_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 5, start_speed_item)
+        self._set_item_at_column(row, 'start_speed', start_speed_item)
         
         # ✅ 6. 煞車性能視覺化（使用委託繪製減速度棒狀圖）
         bar_item = QTableWidgetItem()
@@ -592,7 +651,7 @@ class AllDriversBrakePerformanceTableWidget(QWidget):
             bar_item.setData(Qt.UserRole + 2, 0)
         bar_item.setData(Qt.UserRole + 1, max_deceleration_g)  # 最大減速度（繪圖用）
         bar_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.table.setItem(row, 6, bar_item)
+        self._set_item_at_column(row, 'performance_bar', bar_item)
         
         # ✅ 儲存額外數據（用於點擊詳情）- 使用 driver_item 而非已移除的 pos_item
         driver_item.setData(Qt.UserRole, {

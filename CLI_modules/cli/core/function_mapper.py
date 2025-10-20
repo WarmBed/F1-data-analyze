@@ -233,8 +233,8 @@ class F1AnalysisFunctionMapper:
                             self.function_mapping[function_id](year, race, session, driver, **clean_kwargs),
                             function_id, f"功能{function_id}"
                         )
-                    elif function_id in [27, 28]:  # 功能27,28需要driver參數但方法簽名不同
-                        driver = kwargs.get('driver1') or kwargs.get('driver', 'VER')  # 默認使用VER
+                    elif function_id == 27:  # 功能27需要driver參數（保留舊邏輯）
+                        driver = kwargs.get('driver1') or kwargs.get('driver', 'VER')
                         year = kwargs.get('year', 2025)
                         race = kwargs.get('race', 'Japan')
                         session = kwargs.get('session', 'R')
@@ -244,6 +244,17 @@ class F1AnalysisFunctionMapper:
                         
                         return self._standardize_result(
                             self.function_mapping[function_id](year, race, session, driver, **clean_kwargs),
+                            function_id, f"功能{function_id}"
+                        )
+                    elif function_id == 28:  # 功能28: 像 Function 13/54 一樣從 data_loader 讀取
+                        # 從 kwargs 提取 driver 參數（但不提取 year/race/session）
+                        driver = kwargs.get('driver1') or kwargs.get('driver')
+                        
+                        # 準備乾淨的kwargs，避免重複參數
+                        clean_kwargs = {k: v for k, v in kwargs.items() if k not in ['driver', 'driver1']}
+                        
+                        return self._standardize_result(
+                            self.function_mapping[function_id](driver=driver, **clean_kwargs),
                             function_id, f"功能{function_id}"
                         )
                     else:
@@ -3312,26 +3323,30 @@ class F1AnalysisFunctionMapper:
             print(f"[ERROR] 車手最速圈速分析執行失敗: {e}")
             return {"success": False, "error": str(e), "function_id": "26"}
 
-    def _execute_driver_lap_time_analysis(self, year, race, session, driver, silent_mode=False, **kwargs):
+    def _execute_driver_lap_time_analysis(self, driver=None, silent_mode=False, **kwargs):
         """Function 28: 車手每圈圈速分析
         
+        ⚠️ 重要變更 (2025-10-21): 
+        此函數現在像 Function 13/54 一樣，從 data_loader 讀取 year/race/session
+        不再接受這些參數，確保數據來源與 metadata 始終一致
+        
         Args:
+            driver: 車手代碼，如果為 None 則分析全部車手
             silent_mode: 是否啟用靜默模式，隱藏詳細表格輸出
         """
-        # if not silent_mode:
-        #     if driver:
-        #         print(f"⏱️ 開始執行車手 {driver} 的每圈圈速分析...")
-        #     else:
-        #         print("⏱️ 開始執行全部車手的每圈圈速分析...")
-        
         try:
             from CLI_modules.cli.analyzer.single_driver_detailed_laptime_analysis import SingleDriverDetailedLaptimeAnalysis
             
+            # ✅ 像 Function 13/54 一樣：從 data_loader 讀取 year/race/session
+            year = getattr(self.data_loader, 'year', 2025)
+            race = getattr(self.data_loader, 'race_name', 'Japan')
+            session = getattr(self.data_loader, 'session_type', 'R')
+            
             analyzer = SingleDriverDetailedLaptimeAnalysis(
                 data_loader=self.data_loader,
-                year=year,
-                race=race,
-                session=session
+                year=year,      # ✅ 從 data_loader 讀取
+                race=race,      # ✅ 從 data_loader 讀取
+                session=session # ✅ 從 data_loader 讀取
             )
             
             # 準備參數，支援靜默模式

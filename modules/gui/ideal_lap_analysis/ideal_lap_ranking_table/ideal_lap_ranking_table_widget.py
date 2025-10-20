@@ -276,6 +276,9 @@ class IdealLapRankingTableWidget(QWidget):
         self._sector_marks_delegate = SectorMarksDelegate(table)
         table.setItemDelegateForColumn(10, self._sector_marks_delegate)
         
+        # ✅ 隱藏排名欄位（第 0 欄）
+        table.setColumnHidden(0, True)
+        
         return table
     
     # ========== 公開方法 ==========

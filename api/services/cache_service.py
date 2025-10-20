@@ -439,7 +439,11 @@ class F1AnalysisCacheService:
         return race_full_names.get(normalized_race, f"{race}_Grand_Prix")
 
     def _file_matches_race(self, file_path: str, race: str) -> bool:
-        """檢查檔案名稱是否包含期望的賽事名稱"""
+        """
+        檢查檔案名稱是否包含期望的賽事名稱
+        
+        ⚠️ 使用單詞邊界匹配，避免 "us" 匹配到 "australia" 的問題
+        """
         if not race or race == "*":
             return True
 
@@ -450,7 +454,15 @@ class F1AnalysisCacheService:
 
         for variant in variants:
             token = variant.lower().replace(" ", "_")
-            if token and token in file_name:
+            if not token:
+                continue
+            
+            # 🔧 FIX: 使用單詞邊界匹配，避免 "us" 匹配到 "australia"
+            # 檢查 token 是否作為獨立單詞出現（前後有分隔符或檔案開始/結束）
+            import re
+            # 建立正則表達式：token 前後必須是分隔符 (_) 或檔案開始/結束
+            pattern = r'(?:^|_)' + re.escape(token) + r'(?:_|\.json$|$)'
+            if re.search(pattern, file_name):
                 return True
 
         return False

@@ -209,16 +209,9 @@ class WeatherTimelineMDI(QWidget):
         """Start loading data (API-ONLY mode)"""
         print(f"[WEATHER_MDI] Loading data for {self.year} {self.event}")
         
-        # Try local JSON first (API-ONLY: allow fallback)
-        params = {"year": self.year, "event": self.event}
-        json_files = self.data_loader._search_json_files(**params)
-        
-        if json_files:
-            print(f"[WEATHER_MDI] Found local JSON: {json_files[0]}")
-            self.data_loader.load_data(**params)
-        else:
-            print("[WEATHER_MDI] No local JSON found, calling API")
-            self._call_api()
+        # ✅ API-ONLY 模式：強制使用 API，不讀取本地 JSON
+        print("[WEATHER_MDI] API-ONLY mode: Calling API")
+        self._call_api()
     
     def _call_api(self):
         """Call API to fetch weather data"""

@@ -115,8 +115,10 @@ def standardize_race_name(event_name: str) -> str:
         "russia": "russia",
         "turkish grand prix": "turkey",
         "turkey": "turkey",
-        "united states grand prix": "usa",
-        "united states": "usa",
+        "united states grand prix": "austin",  # 🔧 修復: Austin COTA 使用 'austin'
+        "united states": "austin",             # 🔧 修復: United States → austin
+        "miami grand prix": "miami",           # 新增: 區分 Miami 大獎賽
+        "miami": "miami",                      # 新增: Miami 簡稱
         "mexican grand prix": "mexico",
         "mexico": "mexico",
         "brazilian grand prix": "brazil",

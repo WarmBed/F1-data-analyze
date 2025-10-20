@@ -19,7 +19,12 @@ __all__ = [
 ]
 
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
-STANDINGS_REFRESH_HOURS = 120  # 5 天 (平時維護模式)
+
+# 🔄 Standings 刷新策略：智能加速機制
+STANDINGS_REFRESH_HOURS_NORMAL = 120  # 5 天 (正常模式：賽程間期)
+STANDINGS_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時 (臨近模式：賽前 2 天)
+RACE_APPROACHING_THRESHOLD_DAYS = 2  # 賽前 2 天啟動加速刷新
+
 DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")  # ✅ 新增：覆寫配置路徑
 
 ChampionshipStandingsResult = Dict[str, Any]
@@ -45,6 +50,84 @@ def _format_timedelta(delta: timedelta) -> str:
     days = hours // 24
     remaining_hours = hours % 24
     return f"{days} 天 {remaining_hours} 小時前"
+
+
+def _determine_standings_refresh_interval(year: int) -> float:
+    """
+    判斷積分榜刷新間隔：根據是否有賽事臨近決定刷新頻率
+    
+    策略：
+    - 正常模式：120 小時（5 天）- 賽程間期穩定時段
+    - 加速模式：12 小時 - 賽前 2 天內，頻繁檢查積分更新
+    
+    Args:
+        year: 賽季年份
+        
+    Returns:
+        刷新間隔（小時）
+    """
+    try:
+        # 檢查是否有 season calendar JSON 可用
+        json_dir = Path(JSON_OUTPUT_DIR)
+        if not json_dir.exists():
+            return STANDINGS_REFRESH_HOURS_NORMAL
+        
+        # 尋找最新的 season_calendar JSON
+        calendar_files = sorted(
+            json_dir.glob("season_calendar_*.json"),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        
+        if not calendar_files:
+            return STANDINGS_REFRESH_HOURS_NORMAL
+        
+        # 讀取 calendar JSON 並檢查臨近賽事
+        calendar_path = calendar_files[0]
+        with open(calendar_path, "r", encoding="utf-8") as f:
+            calendar_data = json.load(f)
+        
+        # 提取賽事列表
+        events = calendar_data.get("data", {}).get("events", [])
+        if not events:
+            return STANDINGS_REFRESH_HOURS_NORMAL
+        
+        # 過濾指定年份的賽事
+        year_events = [e for e in events if e.get("season_year") == year]
+        if not year_events:
+            return STANDINGS_REFRESH_HOURS_NORMAL
+        
+        # 找到未完成的賽事
+        now = datetime.now(timezone.utc)
+        upcoming_events = [e for e in year_events if not e.get("is_completed", False)]
+        
+        if not upcoming_events:
+            # 賽季已結束，使用正常模式
+            return STANDINGS_REFRESH_HOURS_NORMAL
+        
+        # 檢查最近的賽事是否在臨近閾值內
+        for event in upcoming_events[:3]:  # 只檢查最近 3 場賽事
+            race_date_str = event.get("race_date")
+            if race_date_str:
+                try:
+                    # 解析賽事日期（格式: "2025-10-26"）
+                    race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    days_until_race = (race_date - now).days
+                    
+                    # 🚨 賽前 2 天內或賽後 1 天內，啟用加速模式
+                    if -1 <= days_until_race <= RACE_APPROACHING_THRESHOLD_DAYS:
+                        race_name = event.get("event_name", "Unknown")
+                        print(f"[STANDINGS] 🏁 賽事臨近！{race_name} 在 {days_until_race} 天{'後' if days_until_race >= 0 else '前'}，啟用加速刷新模式（12 小時）")
+                        return STANDINGS_REFRESH_HOURS_RACE_APPROACHING
+                except ValueError:
+                    continue
+        
+        # 沒有臨近賽事，使用正常模式
+        return STANDINGS_REFRESH_HOURS_NORMAL
+        
+    except Exception as e:
+        print(f"[STANDINGS] 判斷刷新間隔時出錯: {e}，降級使用正常模式")
+        return STANDINGS_REFRESH_HOURS_NORMAL
 
 
 def check_standings_freshness(year: int) -> Dict[str, Any]:
@@ -83,7 +166,10 @@ def check_standings_freshness(year: int) -> Dict[str, Any]:
     now = datetime.now(timezone.utc)
     age = now - file_mtime
     age_hours = age.total_seconds() / 3600
-    is_fresh = age_hours < STANDINGS_REFRESH_HOURS
+    
+    # 🔄 使用智能刷新間隔判斷
+    refresh_interval = _determine_standings_refresh_interval(year)
+    is_fresh = age_hours < refresh_interval
 
     return {
         "exists": True,
@@ -93,6 +179,7 @@ def check_standings_freshness(year: int) -> Dict[str, Any]:
         "is_fresh": is_fresh,
         "should_regenerate": not is_fresh,
         "reason": "檔案仍在有效期內" if is_fresh else "檔案已過期",
+        "refresh_interval_hours": refresh_interval,  # 🔄 動態刷新間隔
     }
 
 
@@ -419,7 +506,7 @@ def generate_championship_standings(
             "requested_round": round_hint,
             "resolved_round": resolved_round,
             "generated_at": now.isoformat(),
-            "refresh_interval_hours": STANDINGS_REFRESH_HOURS,
+            "refresh_interval_hours": _determine_standings_refresh_interval(target_year),  # 🔄 動態刷新間隔
             "include_drivers": include_drivers,
             "include_constructors": include_constructors,
             "force_regenerated": force,

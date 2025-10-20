@@ -22,11 +22,12 @@ from typing import Dict, List, Any, Optional
 
 # 導入翻譯和配色
 from core.gui_i18n import tr
-# ✅ 導入共用顏色配置
+# ✅ 導入共用顏色配置和通用顏色系統
+from modules.gui.themes.color_palette_provider import color_palette_provider
 try:
-    from ..shared_colors import get_gap_color, get_team_color, get_cumulative_bar_color
+    from ..shared_colors import get_gap_color, get_cumulative_bar_color
 except ImportError:
-    from modules.gui.ideal_lap_analysis.shared_colors import get_gap_color, get_team_color, get_cumulative_bar_color
+    from modules.gui.ideal_lap_analysis.shared_colors import get_gap_color, get_cumulative_bar_color
 
 
 class CumulativeBarDelegate(QStyledItemDelegate):
@@ -178,6 +179,9 @@ class IdealLapSectorComparisonTableWidget(QWidget):
         header = table.horizontalHeader()
         header.setStretchLastSection(True)
         
+        # ✅ 隱藏排名欄位（第 0 欄）
+        table.setColumnHidden(0, True)
+        
         return table
     
     def update_data(self, data: Dict[str, Any]):
@@ -250,14 +254,11 @@ class IdealLapSectorComparisonTableWidget(QWidget):
         pos_item.setFont(QFont("Arial", 8))
         self.table.setItem(row, 0, pos_item)
         
-        # 1. 車手（車隊背景色）
+        # 1. 車手（車手背景色，與 Ranking Table 保持一致）
         driver_code = driver_data.get("driver", "N/A")
         team = driver_data.get("team", "Unknown")
-        driver_item = QTableWidgetItem(driver_code)
-        driver_item.setTextAlignment(Qt.AlignCenter)
-        driver_item.setBackground(self._get_team_color(team))
-        driver_item.setForeground(QBrush(QColor(0, 0, 0)))
-        # ✅ 移除粗體，與 Ranking Table 一致（不設置字體即使用默認）
+        driver_color = self._get_driver_color(driver_code)
+        driver_item = self._create_colored_item(driver_code, driver_color)
         driver_item.setToolTip(f"{driver_code} - {team}")
         self.table.setItem(row, 1, driver_item)
         
@@ -321,9 +322,39 @@ class IdealLapSectorComparisonTableWidget(QWidget):
         
         return item
     
-    def _get_team_color(self, team: str) -> QColor:
-        """獲取車隊顏色（使用共用配置）"""
-        return get_team_color(team)
+    def _get_driver_color(self, driver_code: str) -> QColor:
+        """
+        獲取車手顏色（使用通用顏色系統，與 Ranking Table 保持一致）
+        
+        Args:
+            driver_code: 車手代碼（例如: "VER", "HAM"）
+            
+        Returns:
+            QColor: 車手顏色
+        """
+        return color_palette_provider.get_driver_color(driver_code, fallback=True)
+    
+    def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
+        """
+        創建帶背景色的表格項目，自動選擇文字顏色（與 Ranking Table 保持一致）
+        
+        Args:
+            text: 顯示文字
+            bg_color: 背景顏色
+            
+        Returns:
+            QTableWidgetItem: 帶顏色的表格項目
+        """
+        item = QTableWidgetItem(text)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setBackground(QBrush(bg_color))
+        
+        # 根據背景色亮度決定文字顏色
+        luminance = (0.299 * bg_color.red() + 0.587 * bg_color.green() + 0.114 * bg_color.blue())
+        text_color = QColor(255, 255, 255) if luminance < 128 else QColor(0, 0, 0)
+        item.setForeground(QBrush(text_color))
+        item.setTextAlignment(Qt.AlignCenter)
+        return item
     
     def _get_delta_color(self, delta: float) -> QColor:
         """分段差異顏色（使用共用配置）"""

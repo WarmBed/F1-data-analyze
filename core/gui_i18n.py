@@ -284,6 +284,11 @@ class GuiTranslator:
                 'en': 'Filter yellow flag laps',
                 'ja': 'イエローフラッグ周回を除外'
             },
+            'boxplot_filter_red_flags': {
+                'zh': '過濾紅旗圈',
+                'en': 'Filter red flag laps',
+                'ja': 'レッドフラッグ周回を除外'
+            },
             'boxplot_outlier_threshold': {'zh': '異常值閾值', 'en': 'Outlier threshold', 'ja': '外れ値の閾値'},
             'boxplot_outlier_threshold_hint': {
                 'zh': '設定用於異常值判定的 IQR 倍數',
@@ -1358,6 +1363,22 @@ Acceleration (100 → {max_speed_full} km/h):
                 'en': '2023 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, Precipitation {precip:.1f}mm',
                 'ja': '2023年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降水量 {precip:.1f}mm'
             },
+            
+            # Splash Screen - Startup Progress Messages
+            'splash_initializing': {'zh': '正在初始化系統', 'en': 'Initializing System', 'ja': 'システムを初期化中'},
+            'splash_loading_window': {'zh': '正在載入視窗', 'en': 'Loading Window', 'ja': 'ウィンドウを読み込み中'},
+            'splash_loading_state': {'zh': '正在載入狀態管理', 'en': 'Loading State Manager', 'ja': '状態管理を読み込み中'},
+            'splash_loading_calendar': {'zh': '正在載入賽季日曆', 'en': 'Loading Season Calendar', 'ja': 'シーズンカレンダーを読み込み中'},
+            'splash_loading_colors': {'zh': '正在載入顏色配置', 'en': 'Loading Color Palette', 'ja': 'カラーパレットを読み込み中'},
+            'splash_loading_ui': {'zh': '正在載入使用者介面', 'en': 'Loading User Interface', 'ja': 'ユーザーインターフェースを読み込み中'},
+            'splash_applying_style': {'zh': '正在套用視覺樣式', 'en': 'Applying Visual Style', 'ja': 'ビジュアルスタイルを適用中'},
+            'splash_setup_linkage': {'zh': '正在設定連動管理器', 'en': 'Setting up Linkage Manager', 'ja': 'リンク管理を設定中'},
+            'splash_setup_api': {'zh': '正在設定API監控', 'en': 'Setting up API Monitor', 'ja': 'APIモニターを設定中'},
+            'splash_complete': {'zh': '初始化完成', 'en': 'Initialization Complete', 'ja': '初期化完了'},
+            'splash_error_continue': {'zh': '發生錯誤，繼續初始化', 'en': 'Error occurred, continuing', 'ja': 'エラー発生、続行中'},
+            'splash_error_opening': {'zh': '初始化失敗，嘗試開啟', 'en': 'Init failed, attempting to open', 'ja': '初期化失敗、開こうとしています'},
+            'error_initialization_failed': {'zh': '初始化失敗', 'en': 'Initialization Failed', 'ja': '初期化失敗'},
+            'error_init_message': {'zh': 'GUI 初始化過程中發生錯誤，部分功能可能無法使用', 'en': 'An error occurred during GUI initialization. Some features may be unavailable.', 'ja': 'GUI初期化中にエラーが発生しました。一部の機能が利用できない可能性があります'},
         }
     
     def t(self, key, default=None):

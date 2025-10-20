@@ -23,10 +23,7 @@ from typing import Dict, List, Any, Optional
 
 # 導入國際化和車隊配色
 from core.gui_i18n import tr
-from modules.gui.ideal_lap_analysis.shared_colors import (
-    get_team_color,
-    TEAM_COLORS,
-)
+from modules.gui.themes.color_palette_provider import color_palette_provider
 
 
 class AllDriversBrakePerformanceWidget(QWidget):
@@ -321,16 +318,9 @@ class AllDriversBrakePerformanceWidget(QWidget):
             str: 顏色 Hex 代碼
         """
         try:
-            # 從 current_data 中查找車手的車隊
-            driver_brakes = self.current_data.get("driver_brakes", [])
-            for driver_data in driver_brakes:
-                if driver_data.get("driver") == driver_code:
-                    team = driver_data.get("team", "")
-                    qcolor = get_team_color(team)
-                    return qcolor.name()
-            
-            # 預設藍色
-            return '#1E90FF'
+            # ✅ 使用 color_palette_provider.get_driver_color() 與 driver_standings 一致
+            qcolor = color_palette_provider.get_driver_color(driver_code, fallback=True)
+            return qcolor.name()
             
         except Exception:
             return '#1E90FF'

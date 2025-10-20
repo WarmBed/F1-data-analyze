@@ -22,9 +22,8 @@ from typing import Dict, List, Any, Optional
 
 # 導入翻譯和配色
 from core.gui_i18n import tr
-from modules.gui.ideal_lap_analysis.shared_colors import (
-    get_team_color,
-)
+from modules.gui.themes.color_palette_provider import color_palette_provider
+from core.gui_settings_manager import gui_settings_manager
 
 
 class AccelerationBarDelegate(QStyledItemDelegate):
@@ -188,6 +187,10 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         self.segment_distance_end = None
         self.segment_length = None
         
+        # ✅ 動態欄位設定
+        self._settings_manager = gui_settings_manager
+        self._column_visibility = self._get_column_visibility()
+        
         # 初始化 UI
         self._init_ui()
     
@@ -247,55 +250,85 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         self.info_label.setText(info_text)
         print(f"[SPEED_TABLE] 資訊標籤更新: {info_text}")
     
-    def _create_table(self) -> QTableWidget:
-        """創建表格"""
-        table = QTableWidget()
+    def _get_column_visibility(self) -> Dict[str, bool]:
+        """
+        從 settings manager 獲取欄位顯示設定
         
-        # ⭐ 簡化欄位標題（只保留 segment acceleration 欄位）
-        # 
-        # 欄位說明：
-        # 1. ❌ 移除「排名」- Qt 動態排序會改變順序，固定排名會誤導
-        # 1. 車手 - 3字母代碼（車隊背景色）
-        # 2. 車隊 - 車隊名稱（車隊背景色）
-        # 3. 最高速度 - 賽道段內最高速度（km/h）
-        # 4. ⭐ 加速時間 - 賽道段加速時間（秒）
-        #    - 計算：segment_distance_end_time - segment_distance_start_time
-        #    - 邏輯：時間越短 = 性能越好 ✅
-        #    - 排序：升序（最短在前）
-        # 5. ⭐ 平均加速度 - 賽道段平均加速度（m/s²）
-        #    - 計算：(結束速度 - 起始速度) / 加速時間 / 3.6
-        #    - 邏輯：加速度越大 = 性能越好 ✅
-        #    - 排序：降序（最大在前）
-        # 6. ⭐ 起始速度 - 賽道段開始時的速度（km/h）
-        #    - 來源：segment_start_speed_kmh
-        #    - 說明：車手進入賽道段時的速度（通常是彎道出彎速度）
-        #    - 範例：HAM 103 km/h，LEC 108 km/h
-        #    - 意義：起始速度高 = 彎道出彎快，但不代表直線加速好
-        #    - 排序：降序（最高在前）
-        #    - Tooltip：顯示「起始→結束速度」（例如：103→287 km/h）
-        # 7. ⭐ 最終速度 - 賽道段結束時的速度（km/h）
-        #    - 來源：segment_end_speed_kmh
-        #    - 說明：車手完成加速後的速度（加速終點速度）
-        #    - 範例：HAM 287 km/h，LEC 290 km/h
-        #    - 意義：最終速度高 = 加速效果好
-        #    - 排序：降序（最高在前）
-        #    - Tooltip：顯示速度增益（例如：+184 km/h）
-        # 8. ⭐ 加速性能視覺化 - 棒狀圖顯示加速時間
-        #    - 視覺：棒越短 = 時間越短 = 性能越好 ✅
-        #    - 數據來源：segment_accel_time_seconds
-        columns = [
-            tr('speed_analysis_header_driver', '車手'),
-            tr('speed_analysis_header_team', '車隊'),
-            tr('speed_analysis_header_max_speed', '最高速度 (km/h)'),
-            tr('speed_analysis_header_segment_accel_time', '加速時間 (s)'),
-            tr('speed_analysis_header_segment_avg_accel', '平均加速度 (m/s²)'),
-            tr('speed_analysis_header_segment_start_speed', '起始速度 (km/h)'),
-            tr('speed_analysis_header_max_speed_time', '最高速度時間 (s)'),
-            tr('speed_analysis_header_accel_bar', '加速性能視覺化')
+        Returns:
+            Dict: 欄位顯示狀態 {欄位名稱: 是否顯示}
+        """
+        settings = self._settings_manager.get_straight_speed_analysis_settings()
+        
+        visibility = {
+            'driver': True,  # 永遠顯示
+            'team': True,    # 永遠顯示
+            'max_speed': settings.get('speed_show_max_speed', False),
+            'accel_time': True,  # 永遠顯示（必須）
+            'avg_accel': True,   # 永遠顯示（必須）
+            'start_speed': settings.get('speed_show_start_speed', False),
+            'max_speed_time': settings.get('speed_show_max_speed_time', False),
+            'performance_bar': settings.get('speed_show_performance_bar', True),
+        }
+        
+        return visibility
+    
+    def _get_visible_columns(self) -> List[tuple]:
+        """
+        根據設定返回可見欄位列表
+        
+        Returns:
+            List[tuple]: [(邏輯欄位名, 欄位標題), ...]
+        """
+        all_columns = [
+            ('driver', tr('speed_analysis_header_driver', '車手')),
+            ('team', tr('speed_analysis_header_team', '車隊')),
+            ('max_speed', tr('speed_analysis_header_max_speed', '最高速度 (km/h)')),
+            ('accel_time', tr('speed_analysis_header_segment_accel_time', '加速時間 (s)')),
+            ('avg_accel', tr('speed_analysis_header_segment_avg_accel', '平均加速度 (m/s²)')),
+            ('start_speed', tr('speed_analysis_header_segment_start_speed', '起始速度 (km/h)')),
+            ('max_speed_time', tr('speed_analysis_header_max_speed_time', '最高速度時間 (s)')),
+            ('performance_bar', tr('speed_analysis_header_accel_bar', '加速性能視覺化')),
         ]
         
-        table.setColumnCount(len(columns))
-        table.setHorizontalHeaderLabels(columns)
+        # 只返回可見的欄位
+        visible_columns = [
+            (col_name, col_title)
+            for col_name, col_title in all_columns
+            if self._column_visibility.get(col_name, True)
+        ]
+        
+        return visible_columns
+    
+    def _get_column_index(self, logical_column: str) -> Optional[int]:
+        """
+        獲取邏輯欄位的實際欄位索引
+        
+        Args:
+            logical_column: 邏輯欄位名稱 (例如: 'max_speed')
+            
+        Returns:
+            int: 實際欄位索引，如果欄位不可見則返回 None
+        """
+        if not self._column_visibility.get(logical_column, False):
+            return None
+        
+        visible_columns = self._get_visible_columns()
+        for idx, (col_name, _) in enumerate(visible_columns):
+            if col_name == logical_column:
+                return idx
+        
+        return None
+    
+    def _create_table(self) -> QTableWidget:
+        """創建表格（根據設定動態顯示欄位）"""
+        table = QTableWidget()
+        
+        # ✅ 動態獲取可見欄位
+        visible_columns = self._get_visible_columns()
+        column_titles = [title for _, title in visible_columns]
+        
+        table.setColumnCount(len(column_titles))
+        table.setHorizontalHeaderLabels(column_titles)
         
         # 設置表格屬性
         table.setSortingEnabled(True)
@@ -304,17 +337,23 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         table.setAlternatingRowColors(True)
         table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
-        # ✅ 設置固定欄位寬度
-        table.setColumnWidth(0, 100)  # 車手（車隊背景色）
-        table.setColumnWidth(1, 160)  # 車隊（車隊背景色）
-        table.setColumnWidth(2, 120)  # 最高速度
-        table.setColumnWidth(3, 120)  # 加速時間
-        table.setColumnWidth(4, 120)  # 平均加速度
-        table.setColumnWidth(5, 120)  # 起始速度
-        table.setColumnWidth(6, 120)  # 最終速度
-        table.setColumnWidth(7, 350)  # 加速性能視覺化（棒狀圖需要更寬）
+        # ✅ 動態設置欄位寬度（根據可見欄位）
+        column_widths = {
+            'driver': 100,
+            'team': 160,
+            'max_speed': 120,
+            'accel_time': 120,
+            'avg_accel': 120,
+            'start_speed': 120,
+            'max_speed_time': 120,
+            'performance_bar': 350,
+        }
         
-        # ✅ 欄位 7（加速性能視覺化）拉伸填充剩餘空間
+        for idx, (col_name, _) in enumerate(visible_columns):
+            width = column_widths.get(col_name, 100)
+            table.setColumnWidth(idx, width)
+        
+        # ✅ 最後一個欄位拉伸填充剩餘空間
         # 欄位 6（視覺化）使用 stretch 填滿剩餘空間
         
         # 設置行高
@@ -450,12 +489,22 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         for row, driver_data in enumerate(self.driver_speeds_data):
             self._populate_row(row, row + 1, driver_data)
         
-        # ✅ 設置加速棒狀圖欄位的委託（✅ 現在是欄位 7，傳遞時間範圍）
-        bar_delegate = AccelerationBarDelegate(self.min_time_to_max, self.max_time_to_max, self.table)
-        self.table.setItemDelegateForColumn(7, bar_delegate)  # ✅ 從欄位 6 更新到欄位 7
-        print(f"[SPEED_TABLE] 委託已設置，欄位 7（加速性能視覺化），時間範圍 {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
+        # ✅ 設置加速棒狀圖欄位的委託（動態獲取欄位索引）
+        bar_col_index = self._get_column_index('performance_bar')
+        if bar_col_index is not None:
+            bar_delegate = AccelerationBarDelegate(self.min_time_to_max, self.max_time_to_max, self.table)
+            self.table.setItemDelegateForColumn(bar_col_index, bar_delegate)
+            print(f"[SPEED_TABLE] 委託已設置，欄位 {bar_col_index}（加速性能視覺化），時間範圍 {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
+        else:
+            print("[WARNING] [SPEED_TABLE] Performance Bar 欄位不可見，跳過委託設置")
         
         self.table.setSortingEnabled(True)
+    
+    def _set_item_at_column(self, row: int, column_name: str, item: QTableWidgetItem):
+        """設置指定邏輯欄位的項目（處理動態欄位索引）"""
+        col_index = self._get_column_index(column_name)
+        if col_index is not None:  # ✅ 修正：檢查 None 而非 -1
+            self.table.setItem(row, col_index, item)
     
     def _populate_row(self, row: int, position: int, driver_data: Dict):
         """填充單行數據（✅ 移除排名欄位，所有欄位索引減 1）"""
@@ -505,27 +554,31 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         # ✅ 0. 車手（車隊背景色）
         driver_item = QTableWidgetItem(driver)
         driver_item.setTextAlignment(Qt.AlignCenter)
-        driver_item.setFont(QFont("Arial", 10, QFont.Bold))
+        driver_item.setFont(QFont("Arial", 10))  # ✅ 移除粗體
         
-        # ✅ 設置車隊背景色（使用共用配色模組）
-        team_color = get_team_color(team)
-        driver_item.setBackground(team_color)  # ✅ 直接傳 QColor
-        driver_item.setForeground(QBrush(QColor(0, 0, 0)))  # 黑色文字
+        # ✅ 設置車隊背景色（與 driver_standings 一致使用 color_palette_provider）
+        driver_color = color_palette_provider.get_driver_color(driver, fallback=True)
+        driver_item.setBackground(driver_color)
+        
+        # 根據背景色亮度決定文字顏色
+        luminance = (0.299 * driver_color.red() + 0.587 * driver_color.green() + 0.114 * driver_color.blue())
+        text_color = QColor(255, 255, 255) if luminance < 128 else QColor(0, 0, 0)
+        driver_item.setForeground(QBrush(text_color))
         driver_item.setToolTip(tr("straight_speed_driver_tooltip", "{driver} - {team}").format(
             driver=driver, team=team
         ))
         
-        self.table.setItem(row, 0, driver_item)
+        self._set_item_at_column(row, 'driver', driver_item)
         
         # ✅ 1. 車隊（車隊背景色）
         team_item = QTableWidgetItem(team)
         team_item.setTextAlignment(Qt.AlignCenter)
         team_item.setFont(QFont("Arial", 9))
         # ✅ 設置車隊背景色（與車手欄位一致）
-        team_item.setBackground(team_color)
-        team_item.setForeground(QBrush(QColor(0, 0, 0)))  # 黑色文字
+        team_item.setBackground(driver_color)
+        team_item.setForeground(QBrush(text_color))
         team_item.setToolTip(tr("straight_speed_team_tooltip", "{team}").format(team=team))
-        self.table.setItem(row, 1, team_item)
+        self._set_item_at_column(row, 'team', team_item)
         
         # ✅ 2. 最高速度（顏色編碼）
         speed_item = QTableWidgetItem(f"{max_speed:.1f} km/h")
@@ -539,7 +592,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         speed_color = self._get_speed_color(max_speed)
         speed_item.setForeground(QBrush(speed_color))
         
-        self.table.setItem(row, 2, speed_item)
+        self._set_item_at_column(row, 'max_speed', speed_item)
         
         # ⭐ 3. 加速時間（到達統一終點速度的時間，較短）
         # ✅ v3.4 修正: 使用 accel_time_display (來自 max_speed_time_seconds)
@@ -555,7 +608,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             seg_time_item.setData(Qt.UserRole, 9999)
             seg_time_item.setForeground(QBrush(QColor(150, 150, 150)))
         seg_time_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 3, seg_time_item)
+        self._set_item_at_column(row, 'accel_time', seg_time_item)
         
         # ⭐ 4. 平均加速度（賽道段平均加速度）
         if has_segment_data:
@@ -570,7 +623,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             seg_accel_item.setData(Qt.UserRole, 0)
             seg_accel_item.setForeground(QBrush(QColor(150, 150, 150)))
         seg_accel_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 4, seg_accel_item)
+        self._set_item_at_column(row, 'avg_accel', seg_accel_item)
         
         # ⭐ 5. 起始速度（賽道段起始速度）
         if has_segment_data and segment_start_speed is not None:
@@ -589,7 +642,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             start_speed_item.setData(Qt.UserRole, 0)
             start_speed_item.setForeground(QBrush(QColor(150, 150, 150)))
         start_speed_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 5, start_speed_item)
+        self._set_item_at_column(row, 'start_speed', start_speed_item)
         
         # ⭐ 6. 最高速度時間（到達個人最高速度所需時間，較長）
         # ✅ v3.4 修正: 使用 max_speed_time_display (來自 segment_accel_time_seconds)
@@ -613,7 +666,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             max_speed_time_item.setData(Qt.UserRole, 0)
             max_speed_time_item.setForeground(QBrush(QColor(150, 150, 150)))
         max_speed_time_item.setTextAlignment(Qt.AlignCenter)
-        self.table.setItem(row, 6, max_speed_time_item)
+        self._set_item_at_column(row, 'max_speed_time', max_speed_time_item)
         
         # ✅ 7. 加速性能視覺化（使用委託繪製）
         bar_item = QTableWidgetItem()
@@ -628,7 +681,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             bar_item.setData(Qt.UserRole + 2, 0)
         bar_item.setData(Qt.UserRole + 1, max_speed)  # 最高速度（繪圖用）
         bar_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        self.table.setItem(row, 7, bar_item)
+        self._set_item_at_column(row, 'performance_bar', bar_item)
         
         # ✅ 儲存額外數據（用於點擊詳情）- 使用 driver_item 而非已移除的 pos_item
         driver_item.setData(Qt.UserRole, {

@@ -510,7 +510,17 @@ def _select_target_event(
     if event_name:
         needle = _normalise_key(event_name)
         for item in events:
+            # Try exact match on event_name first
             if _normalise_key(item.get("event_name")) == needle:
+                return item
+            # Try partial match on event_name (e.g., "Mexico" matches "Mexico City Grand Prix")
+            if needle in _normalise_key(item.get("event_name")):
+                return item
+            # Try match on country
+            if _normalise_key(item.get("country")) == needle:
+                return item
+            # Try match on location
+            if _normalise_key(item.get("location")) == needle:
                 return item
         raise ValueError(f"Event {event_name!r} not found in calendar for year={year}")
 

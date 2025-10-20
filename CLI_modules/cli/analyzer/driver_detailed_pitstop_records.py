@@ -226,7 +226,8 @@ def analyze_driver_detailed_pitstops(data_loader, session_info):
             'Singapore Grand Prix': 'singapore',
             'Russian Grand Prix': 'russia',
             'Turkish Grand Prix': 'turkey',
-            'United States Grand Prix': 'usa',
+            'United States Grand Prix': 'austin',  # 🔧 修復: Austin COTA 使用 'austin'
+            'Miami Grand Prix': 'miami',           # 新增: 區分 Miami 大獎賽
             'Mexican Grand Prix': 'mexico',
             'Brazilian Grand Prix': 'brazil',
             'Abu Dhabi Grand Prix': 'abu dhabi',
@@ -437,9 +438,13 @@ def save_json_results(driver_records, session_info, analysis_type):
         "data": driver_records
     }
     
-    # 更新檔案命名格式：driver_detailed_pitstop_records_YYYY_賽事.json
-    event_name = session_info.get('event_name', 'Unknown').replace(' ', '_')
+    # 更新檔案命名格式：driver_detailed_pitstop_records_YYYY_賽事_Grand_Prix.json
+    event_name_raw = session_info.get('event_name', 'Unknown')
     year = session_info.get('year', 'Unknown')
+    
+    # 標準化命名：將空格替換為底線，確保 "Grand Prix" 也被替換為 "Grand_Prix"
+    event_name = event_name_raw.replace(' ', '_')
+    
     filename = f"driver_detailed_pitstop_records_{year}_{event_name}.json"
     filepath = os.path.join(json_dir, filename)
     

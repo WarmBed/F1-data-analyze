@@ -45,7 +45,9 @@ from core.gui_settings_manager import gui_settings_manager
 
 from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
     extract_caution_laps,
+    extract_red_flag_laps,
     lap_is_under_caution,
+    lap_is_under_red_flag,
     lap_is_pit_stop,
 )
 
@@ -157,6 +159,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             "filter_outliers": True,
             "outlier_threshold": 1.5,
             "filter_yellow_flags": True,
+            "filter_red_flags": True,
         }
         self.settings_manager = gui_settings_manager
         self._raw_data_cache: Optional[Dict[str, Any]] = None
@@ -498,6 +501,13 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
                 except Exception:
                     caution_laps = None
 
+            red_flag_laps: Optional[Set[int]] = None
+            if self.filter_settings.get("filter_red_flags", True):
+                try:
+                    red_flag_laps = extract_red_flag_laps(driver_data)
+                except Exception:
+                    red_flag_laps = None
+
             durations: List[float] = []
             for lap in laps:
                 if not isinstance(lap, dict):
@@ -526,6 +536,10 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
                     if track_status and any(ch not in {"1"} for ch in track_status if ch.isdigit()):
                         continue
                     if lap_is_under_caution(lap_number, lap, caution_laps):
+                        continue
+
+                if self.filter_settings.get("filter_red_flags", True):
+                    if lap_is_under_red_flag(lap_number, lap, red_flag_laps):
                         continue
 
                 if self.filter_settings.get("filter_pit_laps", True):
@@ -618,7 +632,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             return
 
         updates: Dict[str, Any] = {}
-        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags"):
+        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags"):
             if key in settings and self.filter_settings.get(key) != settings[key]:
                 updates[key] = settings[key]
 

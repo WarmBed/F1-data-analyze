@@ -44,7 +44,9 @@ from core.gui_settings_manager import gui_settings_manager
 # 共用圈速過濾工具
 from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
     extract_caution_laps,
+    extract_red_flag_laps,
     lap_is_under_caution,
+    lap_is_under_red_flag,
 )
 
 # 導入通用基礎類別
@@ -159,6 +161,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             'filter_outliers': True,
             'outlier_threshold': 1.5,
             'filter_yellow_flags': True,
+            'filter_red_flags': True,
         }
         self.settings_manager = gui_settings_manager
         self._raw_data_cache: Optional[Dict[str, Any]] = None
@@ -226,7 +229,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             return
 
         updates: Dict[str, Any] = {}
-        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags"):
+        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags"):
             if key in settings and self.filter_settings.get(key) != settings[key]:
                 updates[key] = settings[key]
 
@@ -427,10 +430,13 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         self._debug("========== 本地 JSON 回退流程結束 ===========")
 
     def _cleanup_api_worker(self) -> None:
+        """
+        異步清理 API Worker（方案 2: 信號驅動清理）
+        ✅ 不阻塞主線程
+        ✅ 使用信號自動清理
+        """
         if self._api_worker:
-            if self._api_worker.isRunning():
-                self._api_worker.requestInterruption()
-                self._api_worker.wait(200)
+            # 1. 斷開所有信號
             try:
                 self._api_worker.progress.disconnect()
             except Exception:
@@ -447,8 +453,37 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
                 self._api_worker.finished.disconnect()
             except Exception:
                 pass
-            self._api_worker.deleteLater()
-            self._api_worker = None
+            
+            if self._api_worker.isRunning():
+                # 2. 請求中斷（非阻塞）
+                self._api_worker.requestInterruption()
+                self._api_worker.quit()
+                
+                # 3. 使用信號自動清理（當 Worker 停止時）
+                def on_worker_stopped():
+                    """Worker 停止後自動清理"""
+                    if self._api_worker:
+                        self._api_worker.deleteLater()
+                    self._api_worker = None
+                
+                self._api_worker.finished.connect(on_worker_stopped)
+                
+                # 4. 延遲強制終止（200ms 後，但不阻塞主線程）
+                from PyQt5.QtCore import QTimer
+                def force_terminate():
+                    # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
+                    try:
+                        if self._api_worker and self._api_worker.isRunning():
+                            self._api_worker.terminate()
+                    except (RuntimeError, AttributeError):
+                        # Worker 已被刪除，無需處理
+                        pass
+                
+                QTimer.singleShot(200, force_terminate)
+            else:
+                # Worker 已停止，立即清理
+                self._api_worker.deleteLater()
+                self._api_worker = None
 
     def get_last_data_source(self) -> str:
         return getattr(self, "_last_data_source", "unknown")
@@ -563,6 +598,10 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             if self.filter_settings.get('filter_yellow_flags', True):
                 caution_laps = extract_caution_laps(driver_data)
 
+            red_flag_laps: Optional[Set[int]] = None
+            if self.filter_settings.get('filter_red_flags', True):
+                red_flag_laps = extract_red_flag_laps(driver_data)
+
             lap_times = []
             for lap in detailed_laps:
                 if not isinstance(lap, dict):
@@ -586,6 +625,11 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
                 # 過濾黃旗/安全車圈
                 if self.filter_settings.get('filter_yellow_flags', True):
                     if lap_is_under_caution(lap.get('lap_number'), lap, caution_laps):
+                        continue
+
+                # 過濾紅旗圈
+                if self.filter_settings.get('filter_red_flags', True):
+                    if lap_is_under_red_flag(lap.get('lap_number'), lap, red_flag_laps):
                         continue
 
                 # 過濾進站圈

@@ -197,7 +197,7 @@ class CompatibleF1DataLoader:
             # FastF1 比賽名稱映射 - 將我們的標準名稱轉換為 FastF1 期望的名稱
             fastf1_race_mapping = {
                 'Great Britain': 'British',  # 統一使用 'British' 保持與GUI一致
-                'United States': 'Miami',    # 根據具體場次調整
+                'United States': 'United States',  # 🔧 修復: Austin COTA 使用 'United States'
                 'Las Vegas': 'Las Vegas',
                 'Emilia Romagna': 'Imola',
                 'Saudi Arabia': 'Saudi Arabia',
@@ -209,7 +209,7 @@ class CompatibleF1DataLoader:
                 'Monaco': 'Monaco',
                 'Japan': 'Japan',
                 'China': 'China',
-                'Miami': 'Miami',
+                'Miami': 'Miami',  # Miami Grand Prix 保持原名
                 'Netherlands': 'Netherlands',
                 'Singapore': 'Singapore',
                 'Hungary': 'Hungary',

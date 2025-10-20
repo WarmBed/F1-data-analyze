@@ -80,6 +80,11 @@ class SystemSettingsDialog(QDialog):
         )
         group_layout.addRow(self.filter_yellow_flags_checkbox)
 
+        self.filter_red_flags_checkbox = QCheckBox(
+            tr("boxplot_filter_red_flags", "Filter red flag laps")
+        )
+        group_layout.addRow(self.filter_red_flags_checkbox)
+
         self.outlier_threshold_spinbox = QDoubleSpinBox()
         self.outlier_threshold_spinbox.setDecimals(1)
         self.outlier_threshold_spinbox.setRange(0.5, 3.0)
@@ -237,6 +242,92 @@ class SystemSettingsDialog(QDialog):
         self.tab_widget.addTab(throttle_tab, tr("throttle_settings_tab", "Throttle Line Chart"))
         # ========== Throttle Line Chart 分頁結束 ==========
 
+        # ========== 新增：Straight Speed Analysis 分頁 ==========
+        speed_analysis_tab = QWidget()
+        speed_analysis_layout = QVBoxLayout(speed_analysis_tab)
+        speed_analysis_layout.setContentsMargins(10, 10, 10, 10)
+        speed_analysis_layout.setSpacing(12)
+
+        # All Drivers Speed 群組
+        speed_group = QGroupBox(tr("speed_display_group", "All Drivers Speed"))
+        speed_layout = QFormLayout(speed_group)
+        speed_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        speed_layout.setHorizontalSpacing(18)
+        speed_layout.setVerticalSpacing(10)
+
+        self.speed_show_max_speed_checkbox = QCheckBox(
+            tr("speed_show_max_speed", "Show Max Speed (km/h)")
+        )
+        speed_layout.addRow(self.speed_show_max_speed_checkbox)
+
+        self.speed_show_start_speed_checkbox = QCheckBox(
+            tr("speed_show_start_speed", "Show Start Speed (km/h)")
+        )
+        speed_layout.addRow(self.speed_show_start_speed_checkbox)
+
+        self.speed_show_max_speed_time_checkbox = QCheckBox(
+            tr("speed_show_max_speed_time", "Show Max Speed Time (s)")
+        )
+        speed_layout.addRow(self.speed_show_max_speed_time_checkbox)
+
+        self.speed_show_performance_bar_checkbox = QCheckBox(
+            tr("speed_show_performance_bar", "Show Performance Bar")
+        )
+        speed_layout.addRow(self.speed_show_performance_bar_checkbox)
+
+        speed_analysis_layout.addWidget(speed_group)
+
+        # All Drivers Brake 群組
+        brake_group = QGroupBox(tr("brake_display_group", "All Drivers Brake"))
+        brake_layout = QFormLayout(brake_group)
+        brake_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        brake_layout.setHorizontalSpacing(18)
+        brake_layout.setVerticalSpacing(10)
+
+        self.brake_show_max_decel_checkbox = QCheckBox(
+            tr("brake_show_max_decel", "Show Max Decel (G)")
+        )
+        brake_layout.addRow(self.brake_show_max_decel_checkbox)
+
+        self.brake_show_start_speed_checkbox = QCheckBox(
+            tr("brake_show_start_speed", "Show Start Speed (km/h)")
+        )
+        brake_layout.addRow(self.brake_show_start_speed_checkbox)
+
+        self.brake_show_performance_bar_checkbox = QCheckBox(
+            tr("brake_show_performance_bar", "Show Performance Bar")
+        )
+        brake_layout.addRow(self.brake_show_performance_bar_checkbox)
+
+        speed_analysis_layout.addWidget(brake_group)
+
+        # 說明文字
+        speed_analysis_info_label = QLabel(
+            tr(
+                "speed_analysis_settings_info",
+                "Driver, Team, Accel Time, Avg Accel, Brake Time, and Avg Decel columns are always visible.",
+            )
+        )
+        speed_analysis_info_label.setWordWrap(True)
+        speed_analysis_info_label.setStyleSheet("color: #666666; font-size: 11px;")
+        speed_analysis_layout.addWidget(speed_analysis_info_label)
+        speed_analysis_layout.addStretch(1)
+
+        # 重置預設值按鈕
+        speed_analysis_helper_layout = QHBoxLayout()
+        speed_analysis_helper_layout.setContentsMargins(0, 0, 0, 0)
+        speed_analysis_helper_layout.setSpacing(8)
+
+        self.speed_analysis_reset_defaults_button = QPushButton(tr("reset_defaults", "Reset Defaults"))
+        self.speed_analysis_reset_defaults_button.clicked.connect(self._reset_speed_analysis_defaults)
+        speed_analysis_helper_layout.addWidget(self.speed_analysis_reset_defaults_button)
+        speed_analysis_helper_layout.addStretch(1)
+
+        speed_analysis_layout.addLayout(speed_analysis_helper_layout)
+
+        self.tab_widget.addTab(speed_analysis_tab, tr("speed_analysis_settings_tab", "Straight Speed Analysis"))
+        # ========== Straight Speed Analysis 分頁結束 ==========
+
         # Button box
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accept)
@@ -251,6 +342,7 @@ class SystemSettingsDialog(QDialog):
         self.filter_pit_checkbox.setChecked(settings.get("filter_pit_laps", True))
         self.filter_outliers_checkbox.setChecked(settings.get("filter_outliers", True))
         self.filter_yellow_flags_checkbox.setChecked(settings.get("filter_yellow_flags", True))
+        self.filter_red_flags_checkbox.setChecked(settings.get("filter_red_flags", True))
         self.outlier_threshold_spinbox.setValue(settings.get("outlier_threshold", 1.5))
 
         # 載入 Throttle Line Chart 設定
@@ -274,10 +366,35 @@ class SystemSettingsDialog(QDialog):
             int(throttle_settings.get("threshold_percent", 90))
         )
 
+        # 載入 Straight Speed Analysis 設定
+        speed_analysis_settings = self._settings_manager.get_straight_speed_analysis_settings()
+        self.speed_show_max_speed_checkbox.setChecked(
+            speed_analysis_settings.get("speed_show_max_speed", False)
+        )
+        self.speed_show_start_speed_checkbox.setChecked(
+            speed_analysis_settings.get("speed_show_start_speed", False)
+        )
+        self.speed_show_max_speed_time_checkbox.setChecked(
+            speed_analysis_settings.get("speed_show_max_speed_time", False)
+        )
+        self.speed_show_performance_bar_checkbox.setChecked(
+            speed_analysis_settings.get("speed_show_performance_bar", True)
+        )
+        self.brake_show_max_decel_checkbox.setChecked(
+            speed_analysis_settings.get("brake_show_max_decel", False)
+        )
+        self.brake_show_start_speed_checkbox.setChecked(
+            speed_analysis_settings.get("brake_show_start_speed", False)
+        )
+        self.brake_show_performance_bar_checkbox.setChecked(
+            speed_analysis_settings.get("brake_show_performance_bar", True)
+        )
+
     def _reset_defaults(self) -> None:
         self.filter_pit_checkbox.setChecked(True)
         self.filter_outliers_checkbox.setChecked(True)
         self.filter_yellow_flags_checkbox.setChecked(True)
+        self.filter_red_flags_checkbox.setChecked(True)
         self.outlier_threshold_spinbox.setValue(1.5)
 
     def _reset_throttle_defaults(self) -> None:
@@ -291,11 +408,22 @@ class SystemSettingsDialog(QDialog):
         self.throttle_highlight_threshold_checkbox.setChecked(True)
         self.throttle_threshold_percent_spinbox.setValue(90)
 
+    def _reset_speed_analysis_defaults(self) -> None:
+        """重置 Straight Speed Analysis 預設值"""
+        self.speed_show_max_speed_checkbox.setChecked(False)
+        self.speed_show_start_speed_checkbox.setChecked(False)
+        self.speed_show_max_speed_time_checkbox.setChecked(False)
+        self.speed_show_performance_bar_checkbox.setChecked(True)
+        self.brake_show_max_decel_checkbox.setChecked(False)
+        self.brake_show_start_speed_checkbox.setChecked(False)
+        self.brake_show_performance_bar_checkbox.setChecked(True)
+
     def _on_accept(self) -> None:
         self._settings_manager.update_boxplot_settings(
             filter_pit_laps=self.filter_pit_checkbox.isChecked(),
             filter_outliers=self.filter_outliers_checkbox.isChecked(),
             filter_yellow_flags=self.filter_yellow_flags_checkbox.isChecked(),
+            filter_red_flags=self.filter_red_flags_checkbox.isChecked(),
             outlier_threshold=float(self.outlier_threshold_spinbox.value()),
         )
         
@@ -309,6 +437,17 @@ class SystemSettingsDialog(QDialog):
             rolling_window=int(self.throttle_rolling_window_spinbox.value()),
             highlight_threshold=self.throttle_highlight_threshold_checkbox.isChecked(),
             threshold_percent=float(self.throttle_threshold_percent_spinbox.value()),
+        )
+        
+        # 儲存 Straight Speed Analysis 設定
+        self._settings_manager.update_straight_speed_analysis_settings(
+            speed_show_max_speed=self.speed_show_max_speed_checkbox.isChecked(),
+            speed_show_start_speed=self.speed_show_start_speed_checkbox.isChecked(),
+            speed_show_max_speed_time=self.speed_show_max_speed_time_checkbox.isChecked(),
+            speed_show_performance_bar=self.speed_show_performance_bar_checkbox.isChecked(),
+            brake_show_max_decel=self.brake_show_max_decel_checkbox.isChecked(),
+            brake_show_start_speed=self.brake_show_start_speed_checkbox.isChecked(),
+            brake_show_performance_bar=self.brake_show_performance_bar_checkbox.isChecked(),
         )
         
         self.accept()

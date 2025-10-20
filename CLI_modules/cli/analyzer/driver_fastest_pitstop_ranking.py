@@ -196,9 +196,16 @@ def get_session_info(data_loader):
             # 如果 data_loader 沒有年份屬性，嘗試從 session 獲取
             year = getattr(data_loader.session, 'event', {}).get('year', 2024)
         
+        event_name = getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown')
+        location = getattr(data_loader.session, 'event', {}).get('Location', 'Unknown')
+        
+        print(f"[DEBUG get_session_info] EventName from FastF1: '{event_name}'")
+        print(f"[DEBUG get_session_info] Location from FastF1: '{location}'")
+        print(f"[DEBUG get_session_info] Year: {year}")
+        
         session_info = {
-            "event_name": getattr(data_loader.session, 'event', {}).get('EventName', 'Unknown'),
-            "circuit_name": getattr(data_loader.session, 'event', {}).get('Location', 'Unknown'),
+            "event_name": event_name,
+            "circuit_name": location,
             "session_type": getattr(data_loader.session, 'session_info', {}).get('Type', 'Unknown'),
             "year": year
         }
@@ -233,7 +240,8 @@ def analyze_driver_fastest_pitstops(data_loader, session_info):
             'Singapore Grand Prix': 'singapore',
             'Russian Grand Prix': 'russia',
             'Turkish Grand Prix': 'turkey',
-            'United States Grand Prix': 'usa',
+            'United States Grand Prix': 'austin',  # 🔧 修復: 指定 Austin (COTA) 而非 'usa'
+            'Miami Grand Prix': 'miami',           # 新增: 明確區分 Miami 大獎賽
             'Mexican Grand Prix': 'mexico',
             'Brazilian Grand Prix': 'brazil',
             'Abu Dhabi Grand Prix': 'abu dhabi',
@@ -243,6 +251,10 @@ def analyze_driver_fastest_pitstops(data_loader, session_info):
         
         # 標準化賽事名稱
         search_name = race_name_mapping.get(event_name, event_name.lower())
+        print(f"[DEBUG] 原始事件名稱: '{event_name}'")
+        print(f"[DEBUG] 年份: {session_info.get('year')}")
+        print(f"[DEBUG] 映射結果: '{search_name}'")
+        print(f"[DEBUG] 是否在映射表中: {event_name in race_name_mapping}")
         print(f"🔍 搜尋賽事會話: '{event_name}' -> '{search_name}'")
         
         # 根據年份和比賽名稱找到對應的 session_key

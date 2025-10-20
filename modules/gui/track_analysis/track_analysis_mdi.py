@@ -75,6 +75,12 @@ class TrackAnalysisApiWorker(QThread):
         self.timeout = timeout
 
     def run(self):
+        """
+        執行 API 請求（背景線程）
+        
+        ⚠️  此方法在獨立線程中執行，不要使用 GUI 操作
+        ✅ 使用信號發送結果
+        """
         try:
             self.progress.emit(20)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
@@ -88,12 +94,16 @@ class TrackAnalysisApiWorker(QThread):
                 query_params["force_refresh"] = True
 
             start_ts = time.perf_counter()
+            
+            # 執行 HTTP 請求（會阻塞此背景線程，但不影響主 GUI 線程）
             response = requests.post(
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            elapsed = time.perf_counter() - start_ts
             self.progress.emit(70)
             response.raise_for_status()
 
@@ -107,7 +117,7 @@ class TrackAnalysisApiWorker(QThread):
             if not isinstance(data, dict):
                 raise ValueError("API response missing 'data' object")
 
-            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            latency_ms = elapsed * 1000.0
             meta = {
                 "source": payload.get("source", "api"),
                 "execution_time": payload.get("execution_time"),
@@ -121,6 +131,10 @@ class TrackAnalysisApiWorker(QThread):
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
+            # 在背景線程中打印異常，但不影響主線程
+            import traceback
+            print(f"[TRACK_API_WORKER] ❌ 錯誤: {exc}")
+            traceback.print_exc()
             self.failure.emit(str(exc))
         finally:
             self.progress.emit(100)
@@ -351,7 +365,13 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             self._debug(f"API base URL 更新為 {self._api_base_url}")
 
     def _start_api_request(self, params: Dict[str, Any]) -> None:
-        """Spawn background worker contacting REST API."""
+        """
+        啟動背景 API Worker（修復版 - 移除過多調試輸出）
+        
+        ✅ 清理舊 Worker 後再啟動新 Worker
+        ✅ 減少調試輸出，避免終端噪音
+        """
+        self._debug("啟動 API 請求")
         self._cleanup_api_worker()
 
         worker_params = {
@@ -362,33 +382,22 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         }
 
         timeout = getattr(self.config, "api_timeout", 45.0)
-        self._api_worker = TrackAnalysisApiWorker(self._api_base_url, worker_params, timeout=timeout, parent=self)
+        self._debug(f"創建 API Worker (timeout={timeout}秒)")
+        
+        self._api_worker = TrackAnalysisApiWorker(
+            self._api_base_url, 
+            worker_params, 
+            timeout=timeout, 
+            parent=self
+        )
         self._api_worker.progress.connect(self._on_api_progress)
         self._api_worker.success.connect(self._on_api_success)
         self._api_worker.failure.connect(self._on_api_error)
         self._api_worker.finished.connect(self._cleanup_api_worker)
+        
+        self._debug("啟動 API Worker...")
         self._api_worker.start()
-
-    def _stop_api_worker(self, wait_timeout_ms: int = 2000) -> None:
-        worker = self._api_worker
-        if not worker:
-            return
-
-        if worker.isRunning():
-            self._debug("_stop_api_worker: requesting interruption")
-            try:
-                worker.requestInterruption()
-                worker.quit()
-            except Exception:
-                pass
-
-            if not worker.wait(wait_timeout_ms):
-                self._debug("_stop_api_worker: worker timeout, forcing terminate()")
-                try:
-                    worker.terminate()
-                except Exception as exc:
-                    self._debug(f"_stop_api_worker: terminate() raised {exc}")
-                worker.wait(200)
+        self._debug("API Worker 已啟動")
 
     def _on_api_progress(self, value: int) -> None:
         try:
@@ -459,31 +468,90 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         super().load_data(**params)
 
     def _cleanup_api_worker(self) -> None:
-        worker = self._api_worker
-        if not worker:
+        """
+        清理 API Worker（修復版本 - 避免閉包洩漏和競爭條件）
+        
+        ✅ 不阻塞主線程
+        ✅ 避免閉包捕獲 self._api_worker
+        ✅ 正確處理信號斷開後的清理流程
+        """
+        if not self._api_worker:
             return
-
-        if worker.isRunning():
-            self._stop_api_worker()
-
-        for signal, slot in (
-            (worker.progress, self._on_api_progress),
-            (worker.success, self._on_api_success),
-            (worker.failure, self._on_api_error),
-        ):
-            try:
-                signal.disconnect(slot)
-            except Exception:
-                pass
-
+        
+        worker = self._api_worker
+        self._api_worker = None  # 立即清除引用，避免閉包洩漏
+        
+        # 1. 斷開所有信號
         try:
-            worker.finished.disconnect(self._cleanup_api_worker)
+            worker.progress.disconnect()
         except Exception:
             pass
-
-        worker.deleteLater()
-        if worker is self._api_worker:
-            self._api_worker = None
+        try:
+            worker.success.disconnect()
+        except Exception:
+            pass
+        try:
+            worker.failure.disconnect()
+        except Exception:
+            pass
+        try:
+            worker.finished.disconnect()
+        except Exception:
+            pass
+        
+        if worker.isRunning():
+            # 2. 請求中斷（非阻塞）
+            worker.requestInterruption()
+            worker.quit()
+            
+            # 3. 使用弱引用避免閉包洩漏
+            import weakref
+            worker_ref = weakref.ref(worker)
+            
+            def on_worker_stopped():
+                """Worker 停止後自動清理"""
+                w = worker_ref()
+                if w is not None:
+                    w.deleteLater()
+            
+            # 重新連接 finished 信號（此時 Worker 還未停止）
+            try:
+                worker.finished.connect(on_worker_stopped)
+            except Exception as exc:
+                print(f"[TRACK_API_WORKER] ⚠️  無法連接 finished 信號: {exc}")
+                # 如果無法連接，直接清理
+                worker.deleteLater()
+                return
+            
+            # 4. 延遲強制終止（使用弱引用，避免在 Worker 運行時刪除）
+            from PyQt5.QtCore import QTimer
+            
+            def force_terminate():
+                w = worker_ref()
+                if w is not None and w.isRunning():
+                    print(f"[TRACK_API_WORKER] ⚠️  Worker 未在 200ms 內停止，強制終止")
+                    # ✅ 先斷開 finished 信號，避免重複清理
+                    try:
+                        w.finished.disconnect()
+                    except:
+                        pass
+                    # ✅ 強制終止執行緒
+                    w.terminate()
+                    # ✅ 非阻塞等待：使用 QTimer 輪詢
+                    def check_stopped():
+                        if w is not None and not w.isRunning():
+                            # Worker 已停止，安全刪除
+                            w.deleteLater()
+                        elif w is not None:
+                            # 還在運行，繼續等待
+                            QTimer.singleShot(50, check_stopped)
+                    
+                    QTimer.singleShot(50, check_stopped)
+            
+            QTimer.singleShot(200, force_terminate)
+        else:
+            # Worker 已停止，立即清理
+            worker.deleteLater()
 
     def get_last_data_source(self) -> str:
         return getattr(self, "_last_data_source", "unknown")
@@ -492,8 +560,11 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         return getattr(self, "_last_api_meta", {})
 
     def stop_loading(self) -> None:
+        """
+        停止當前的數據載入（完全複製 Rain Analysis 的邏輯）
+        ✅ 直接調用 _cleanup_api_worker，讓它處理 Worker 的停止和清理
+        """
         self._debug("stop_loading: cancel current track analysis load")
-        self._stop_api_worker()
         self._cleanup_api_worker()
         self._is_loading = False
 

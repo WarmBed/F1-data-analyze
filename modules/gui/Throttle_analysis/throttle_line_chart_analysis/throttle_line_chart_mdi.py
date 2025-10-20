@@ -583,6 +583,7 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         loader.update_filter_settings(
             filter_pit_laps=self._global_filter_settings.get("filter_pit_laps", True),
             filter_yellow_flags=self._global_filter_settings.get("filter_yellow_flags", True),
+            filter_red_flags=self._global_filter_settings.get("filter_red_flags", True),
             reprocess=False,
         )
         return loader
@@ -820,9 +821,15 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
     
     def _on_driver2_selection_changed(self, driver_code: str) -> None:
         """處理第二位車手選擇變更（新增）"""
+        print(f"\n{'='*80}")
+        print(f"🔍🔍🔍 [_on_driver2_selection_changed] Called with driver_code: {driver_code}")
+        print(f"🔍🔍🔍 [MDI] Current _global_filter_settings: {self._global_filter_settings}")
+        print(f"{'='*80}\n")
+        
         code = str(driver_code or "").strip().upper()
         # 允許空值（取消第二位車手）
         if code == getattr(self, "driver2", ""):
+            print(f"ℹ️ [_on_driver2_selection_changed] Driver2 unchanged: {code}")
             return
         self.driver2 = code
         
@@ -834,21 +841,25 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
             if hasattr(self.chart_widget, "_prepared_cache_driver2"):
                 self.chart_widget._prepared_cache_driver2 = None
                 self.chart_widget._render_prepared()
+            print(f"✅ [_on_driver2_selection_changed] Driver2 cleared")
             return
         
         # 載入第二位車手資料
         if hasattr(self.data_manager, "load_data"):
             # 建立第二個資料載入器實例
             from .throttle_line_chart_data_loader import ThrottleLineChartDataLoader
+            
+            # ✅ 修復：temp_loader 在 __init__() 中會自動從 settings_manager 讀取最新設定
+            # 不需要再次調用 update_filter_settings()，避免重複設定和時序問題
+            print(f"🔍🔍🔍 [_on_driver2_selection_changed] Creating temp_loader for Driver2...")
             temp_loader = ThrottleLineChartDataLoader(self)
-            temp_loader.update_filter_settings(
-                filter_pit_laps=self._global_filter_settings.get("filter_pit_laps", True),
-                filter_yellow_flags=self._global_filter_settings.get("filter_yellow_flags", True),
-                reprocess=False,
-            )
+            
+            # 🔍 DEBUG: 顯示 temp_loader 實際使用的過濾設定（來自 __init__）
+            print(f"🔍🔍🔍 [Driver2 Loader Created] Filter settings: pit={temp_loader._filter_pit_laps}, yellow={temp_loader._filter_yellow_flags}, red={temp_loader._filter_red_flags}")
             
             # 載入第二位車手資料
             temp_loader.data_loaded.connect(self._on_driver2_data_loaded)
+            print(f"🔍🔍🔍 [_on_driver2_selection_changed] Calling temp_loader.load_data() for {self.driver2}...")
             temp_loader.load_data(
                 year=self.current_year,
                 race=self.current_race,
@@ -856,18 +867,33 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
                 driver=self.driver2,
                 force_refresh=False,
             )
+        else:
+            print(f"❌ [_on_driver2_selection_changed] data_manager has no load_data method")
     
     def _on_driver2_data_loaded(self, data: Dict[str, Any]) -> None:
         """處理第二位車手資料載入完成（新增）"""
+        print(f"\n{'='*80}")
+        print(f"🔍🔍🔍 [_on_driver2_data_loaded] Called")
+        print(f"🔍🔍🔍 [_on_driver2_data_loaded] Data received: {bool(data)}")
+        if data:
+            print(f"🔍🔍🔍 [_on_driver2_data_loaded] Data keys: {list(data.keys())}")
+            if 'lap_records' in data:
+                print(f"🔍🔍🔍 [_on_driver2_data_loaded] lap_records count: {len(data['lap_records'])}")
+            if 'filters_applied' in data:
+                print(f"🔍🔍🔍 [_on_driver2_data_loaded] filters_applied: {data['filters_applied']}")
+        print(f"{'='*80}\n")
+        
         if not data or not hasattr(self.chart_widget, "update_data"):
+            print(f"❌ [_on_driver2_data_loaded] No data or chart_widget has no update_data method")
             return
         
         # 獲取主車手資料
         payload_driver1 = self.data_manager.get_chart_payload() if hasattr(self.data_manager, "get_chart_payload") else {}
         
         # 更新圖表（傳入雙車手資料）
+        print(f"🔍🔍🔍 [_on_driver2_data_loaded] Calling chart_widget.update_data()...")
         self.chart_widget.update_data(payload_driver1, data)
-        print(f"✅ [Driver2 Data Loaded] Successfully loaded data for {self.driver2}")
+        print(f"✅✅✅ [Driver2 Data Loaded] Successfully loaded data for {self.driver2}")
 
     def _on_throttle_settings_changed(self, settings: Dict[str, Any]) -> None:
         """處理 Throttle Line Chart 系統設定變更（新增）"""
@@ -888,27 +914,44 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
             self.control_panel.apply_settings(settings)
 
     def _on_global_filter_settings_changed(self, settings: Dict[str, Any]) -> None:
+        print(f"\n{'='*80}")
+        print(f"🔍🔍🔍 [_on_global_filter_settings_changed] Called")
+        print(f"🔍🔍🔍 [MDI] Received settings: {settings}")
+        print(f"{'='*80}\n")
+        
         if not isinstance(settings, dict):
+            print(f"❌ [_on_global_filter_settings_changed] Settings is not a dict: {type(settings)}")
             return
         
         # 🔍 DEBUG: 追蹤全域設定變更
         print(f"🌐 [Global Settings Changed] Received: {settings}")
         
-        self._global_filter_settings.update(
-            {
-                "filter_pit_laps": settings.get("filter_pit_laps", self._global_filter_settings.get("filter_pit_laps", True)),
-                "filter_yellow_flags": settings.get("filter_yellow_flags", self._global_filter_settings.get("filter_yellow_flags", True)),
-            }
-        )
+        # ✅ 修復：直接使用 settings，不要用預設值覆蓋
+        self._global_filter_settings.update({
+            "filter_pit_laps": settings.get("filter_pit_laps", True),
+            "filter_yellow_flags": settings.get("filter_yellow_flags", True),
+            "filter_red_flags": settings.get("filter_red_flags", True),
+        })
         
-        print(f"🌐 [Global Settings Updated] New state: pit={self._global_filter_settings.get('filter_pit_laps')}, yellow={self._global_filter_settings.get('filter_yellow_flags')}")
+        print(f"🌐🌐🌐 [Global Settings Updated] New state: pit={self._global_filter_settings.get('filter_pit_laps')}, yellow={self._global_filter_settings.get('filter_yellow_flags')}, red={self._global_filter_settings.get('filter_red_flags')}")
         
+        # ✅ 修復：更新 Driver 1 的過濾設定
         if isinstance(self.data_manager, ThrottleLineChartDataLoader):
+            print(f"🔍🔍🔍 [_on_global_filter_settings_changed] Updating Driver 1 filter settings...")
             self.data_manager.update_filter_settings(
-                filter_pit_laps=self._global_filter_settings.get("filter_pit_laps", True),
-                filter_yellow_flags=self._global_filter_settings.get("filter_yellow_flags", True),
+                filter_pit_laps=self._global_filter_settings["filter_pit_laps"],
+                filter_yellow_flags=self._global_filter_settings["filter_yellow_flags"],
+                filter_red_flags=self._global_filter_settings["filter_red_flags"],
                 reprocess=True,
             )
+            print(f"✅✅✅ [_on_global_filter_settings_changed] Driver 1 updated")
+        
+        # ✅ 修復 V3: 如果 Driver 2 已載入，重新載入其數據
+        if self.driver2:
+            print(f"🔄🔄🔄 [Reload Driver2] Detected Driver2={self.driver2}, reloading with new filter settings...")
+            self._on_driver2_selection_changed(self.driver2)
+        else:
+            print(f"ℹ️ℹ️ℹ️ [Reload Driver2] No Driver2 loaded, skipping reload")
 
 
 __all__ = ["ThrottleLineChartMDI"]

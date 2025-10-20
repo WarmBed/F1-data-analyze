@@ -39,6 +39,19 @@ CAUTION_SUMMARY_KEYS: Iterable[str] = (
     "vsc_lap_numbers",
 )
 
+RED_FLAG_INCIDENT_TYPES = {
+    "red_flag",
+    "red-flag",
+    "session_suspension",
+    "session-suspension",
+}
+
+RED_FLAG_SUMMARY_KEYS: Iterable[str] = (
+    "red_flag_lap_numbers",
+    "red_flag_laps",
+    "suspension_lap_numbers",
+)
+
 
 def normalize_lap_number(value: Any) -> Optional[int]:
     """Convert a lap number to an int when possible."""
@@ -80,6 +93,25 @@ def extract_caution_laps(driver_data: Dict[str, Any]) -> Set[int]:
                 if lap_int is not None:
                     caution_laps.add(lap_int)
     return caution_laps
+
+
+def extract_red_flag_laps(driver_data: Dict[str, Any]) -> Set[int]:
+    """Gather lap numbers flagged as red flag from summary data."""
+    red_flag_laps: Set[int] = set()
+
+    summary = driver_data.get("smart_markers_summary", {})
+    safety_summary = summary.get("accident_safety_detection", {})
+    if not isinstance(safety_summary, dict):
+        return red_flag_laps
+
+    for key in RED_FLAG_SUMMARY_KEYS:
+        laps = safety_summary.get(key)
+        if isinstance(laps, (list, tuple, set)):
+            for lap in laps:
+                lap_int = normalize_lap_number(lap)
+                if lap_int is not None:
+                    red_flag_laps.add(lap_int)
+    return red_flag_laps
 
 
 def _extract_safety_marker(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -130,6 +162,39 @@ def is_caution_lap(lap_or_markers: Dict[str, Any]) -> bool:
         return True
 
     return False
+
+
+def is_red_flag_lap(lap_or_markers: Dict[str, Any]) -> bool:
+    """Determine whether a lap contains a red flag condition."""
+    safety_marker = _extract_safety_marker(lap_or_markers)
+    if not safety_marker:
+        return False
+
+    incident_type = str(safety_marker.get("incident_type", "")).strip().lower()
+    if incident_type in RED_FLAG_INCIDENT_TYPES:
+        return True
+
+    flag_value = str(safety_marker.get("flag", "") or safety_marker.get("flag_color", "")).strip().lower()
+    if flag_value in {"red", "red flag", "red_flag", "red-flag"}:
+        return True
+
+    description = str(safety_marker.get("description", "")).lower()
+    if any(keyword in description for keyword in ("red flag", "red-flag", "session suspend", "race suspend")):
+        return True
+
+    return False
+
+
+def lap_is_under_red_flag(
+    lap_number: Any,
+    lap_info: Dict[str, Any],
+    red_flag_laps: Optional[Set[int]] = None,
+) -> bool:
+    """Check if a lap should be treated as red flag using summary sets and detailed markers."""
+    lap_int = normalize_lap_number(lap_number)
+    if lap_int is not None and red_flag_laps and lap_int in red_flag_laps:
+        return True
+    return is_red_flag_lap(lap_info)
 
 
 def lap_is_under_caution(

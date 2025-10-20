@@ -469,10 +469,16 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
             self.data_manager.session = self.current_session
 
     def _stop_api_worker(self) -> None:
+        """
+        異步停止 API Worker（方案 2: 信號驅動清理）
+        ✅ 不阻塞主線程
+        ✅ 使用信號自動清理
+        """
         worker = getattr(self, "api_worker", None)
         if not worker:
             return
 
+        # 1. 斷開所有信號（防止意外觸發）
         try:
             worker.progress.disconnect(self._on_api_progress)
         except (TypeError, RuntimeError):
@@ -491,17 +497,41 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
             pass
 
         if worker.isRunning():
+            # 2. 請求中斷（非阻塞）
             worker.requestInterruption()
             worker.quit()
-            if not worker.wait(3000):
-                worker.terminate()
-                worker.wait(500)
-
-        worker.deleteLater()
-        self.api_worker = None
+            
+            # 3. 使用信號自動清理（當 Worker 停止時）
+            def on_worker_stopped():
+                """Worker 停止後自動清理"""
+                if worker:
+                    worker.deleteLater()
+                self.api_worker = None
+            
+            worker.finished.connect(on_worker_stopped)
+            
+            # 4. 延遲強制終止（3 秒後，但不阻塞主線程）
+            from PyQt5.QtCore import QTimer
+            def force_terminate():
+                # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
+                try:
+                    if worker and worker.isRunning():
+                        print("[WARNING] ideal_lap_heatmap API Worker 未在 3 秒內停止，強制終止")
+                        worker.terminate()
+                except (RuntimeError, AttributeError):
+                    # Worker 已被刪除，無需處理
+                    pass
+            
+            QTimer.singleShot(3000, force_terminate)
+        else:
+            # Worker 已停止，立即清理
+            worker.deleteLater()
+            self.api_worker = None
 
     def _on_api_finished(self) -> None:
-        self.api_worker = None
+        """API Worker 完成後的回調（保留用於其他用途）"""
+        # 注意：清理邏輯已移至 _stop_api_worker 的信號處理
+        pass
 
     def _setup_ui(self):
         """

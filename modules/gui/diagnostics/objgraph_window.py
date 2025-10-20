@@ -382,24 +382,30 @@ class ObjgraphDiagnosticWindow(QWidget):
         
         quick_main_layout.addLayout(quick_layout_1)
         
-        # 第二行：新增的自動化操作按鈕
+        # 第二行：新增的自動化操作按鈕（已禁用，避免一般使用者誤觸）
         quick_layout_2 = QHBoxLayout()
         
-        # Turn on GUI 按鈕
-        turn_on_gui_btn = QPushButton('Turn on GUI')
-        turn_on_gui_btn.setStyleSheet("background-color: #2e7d32; color: white; font-weight: bold;")
+        # Turn on GUI 按鈕 - 禁用
+        turn_on_gui_btn = QPushButton('Turn on GUI (開發者功能)')
+        turn_on_gui_btn.setStyleSheet("background-color: #555555; color: #888888; font-weight: bold;")
+        turn_on_gui_btn.setEnabled(False)
+        turn_on_gui_btn.setToolTip("此功能已禁用，避免一般使用者誤觸。開發者請在代碼中啟用。")
         turn_on_gui_btn.clicked.connect(self._on_turn_on_gui)
         quick_layout_2.addWidget(turn_on_gui_btn)
         
-        # Open Speed Analysis 按鈕
-        open_speed_btn = QPushButton('Open Speed Analysis')
-        open_speed_btn.setStyleSheet("background-color: #1976d2; color: white; font-weight: bold;")
+        # Open Speed Analysis 按鈕 - 禁用
+        open_speed_btn = QPushButton('Open Speed Analysis (開發者功能)')
+        open_speed_btn.setStyleSheet("background-color: #555555; color: #888888; font-weight: bold;")
+        open_speed_btn.setEnabled(False)
+        open_speed_btn.setToolTip("此功能已禁用，避免一般使用者誤觸。開發者請在代碼中啟用。")
         open_speed_btn.clicked.connect(self._on_open_speed_analysis)
         quick_layout_2.addWidget(open_speed_btn)
         
-        # Open 9 Lap Analysis 按鈕
-        open_9_lap_btn = QPushButton('Open 9 Lap Analysis')
-        open_9_lap_btn.setStyleSheet("background-color: #d32f2f; color: white; font-weight: bold;")
+        # Open 9 Lap Analysis 按鈕 - 禁用
+        open_9_lap_btn = QPushButton('Open 9 Lap Analysis (開發者功能)')
+        open_9_lap_btn.setStyleSheet("background-color: #555555; color: #888888; font-weight: bold;")
+        open_9_lap_btn.setEnabled(False)
+        open_9_lap_btn.setToolTip("此功能已禁用，避免一般使用者誤觸。開發者請在代碼中啟用。")
         open_9_lap_btn.clicked.connect(self._on_open_9_lap_analysis)
         quick_layout_2.addWidget(open_9_lap_btn)
         
