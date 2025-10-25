@@ -36,6 +36,92 @@ def _ensure_json_dir() -> Path:
     return path
 
 
+def _extract_calendar_summary(year: int) -> Dict[str, Any]:
+    """
+    從 season_calendar JSON 提取指定年份的賽程摘要
+    
+    Args:
+        year: 賽季年份
+        
+    Returns:
+        賽程摘要字典：
+        {
+            "completed": int,      # 已完成場次
+            "remaining": int,      # 剩餘場次
+            "total": int,          # 總場次
+            "next_race": {         # 下一場賽事
+                "name": str,
+                "date": str        # ISO 格式
+            } or None
+        }
+    """
+    default_summary = {
+        "completed": 0,
+        "remaining": 0,
+        "total": 0,
+        "next_race": None
+    }
+    
+    try:
+        json_dir = Path(JSON_OUTPUT_DIR)
+        if not json_dir.exists():
+            return default_summary
+        
+        # 尋找最新的 season_calendar JSON（支援批量和單年檔案）
+        calendar_files = sorted(
+            list(json_dir.glob("season_calendar_multi_year_*.json")) + 
+            list(json_dir.glob(f"season_calendar_{year}_*.json")),
+            key=lambda p: p.stat().st_mtime,
+            reverse=True,
+        )
+        
+        if not calendar_files:
+            return default_summary
+        
+        # 讀取 calendar JSON
+        with open(calendar_files[0], "r", encoding="utf-8") as f:
+            calendar_data = json.load(f)
+        
+        # 批量 calendar 格式 (data 為字典，鍵為年份字串)
+        if isinstance(calendar_data.get("data"), dict):
+            year_str = str(year)
+            year_events = calendar_data["data"].get(year_str, [])
+        # 單年 calendar 格式 (data.events 為列表)
+        elif isinstance(calendar_data.get("data"), dict) and "events" in calendar_data["data"]:
+            all_events = calendar_data["data"]["events"]
+            year_events = [e for e in all_events if e.get("season_year") == year]
+        else:
+            return default_summary
+        
+        if not year_events:
+            return default_summary
+        
+        # 計算完成/剩餘場次
+        completed_events = [e for e in year_events if e.get("is_completed", False)]
+        upcoming_events = [e for e in year_events if not e.get("is_completed", False)]
+        
+        summary = {
+            "completed": len(completed_events),
+            "remaining": len(upcoming_events),
+            "total": len(year_events),
+            "next_race": None
+        }
+        
+        # 找到下一場賽事
+        if upcoming_events:
+            next_event = upcoming_events[0]
+            summary["next_race"] = {
+                "name": next_event.get("event_name", "Unknown"),
+                "date": next_event.get("race_date_local") or next_event.get("race_date", "")
+            }
+        
+        return summary
+        
+    except Exception as e:
+        print(f"[STANDINGS] 提取 calendar 摘要失敗: {e}")
+        return default_summary
+
+
 def _format_timedelta(delta: timedelta) -> str:
     total_seconds = int(delta.total_seconds())
     if total_seconds < 60:
@@ -498,6 +584,9 @@ def generate_championship_standings(
         }
         summary["constructors_count"] = len(constructor_entries)
 
+    # ✅ 新增：提取 calendar 摘要資訊
+    calendar_summary = _extract_calendar_summary(target_year)
+
     payload: ChampionshipStandingsResult = {
         "success": True,
         "message": f"{target_year} 年積分查詢完成",
@@ -516,6 +605,7 @@ def generate_championship_standings(
         "data": {
             "drivers": driver_entries,
             "constructors": constructor_entries,
+            "calendar": calendar_summary,  # ✅ 新增：賽程摘要
         },
         "summary": summary,
     }

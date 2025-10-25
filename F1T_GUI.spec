@@ -93,7 +93,14 @@ a = Analysis(
         'modules.gui.tire_analysis.tire_analysis_mdi',
         'modules.gui.tire_analysis.tire_analysis_data_loader',
         'modules.gui.tire_analysis.tire_analysis_chart_widget',
+        
+        # ⭐ Track Analysis 模組（完整子模組）
         'modules.gui.track_analysis',
+        'modules.gui.track_analysis.track_analysis_mdi',
+        'modules.gui.track_analysis.track_analysis_module',
+        'modules.gui.track_analysis.track_data_loader',
+        'modules.gui.track_analysis.track_data_processor',
+        'modules.gui.track_analysis.track_map_widget',
         
         # ⭐ 缺失的 Lap Analysis 子模組（speeddiff, distancediff, timediff）
         'modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_mdi',
@@ -189,6 +196,20 @@ a = Analysis(
         'modules.gui.base.universal_chart_widget_base',
         'modules.gui.base.universal_analysis_mdi',
         'modules.gui.base.universal_analysis_mdi_base',
+        
+        # ⭐ Telemetry Base 模組
+        'modules.gui.lap_analysis.base.telemetry_data_loader',
+        'modules.gui.lap_analysis.base.telemetry_chart_widget_base',
+        
+        # ⭐ Lap Analysis Linkage 模組
+        'modules.gui.lap_analysis.linkage.lap_analysis_linkage_mixin',
+        'modules.gui.lap_analysis.linkage.lap_analysis_linkage_drawing_mixin',
+        
+        # ⭐ Workspace 序列化模組
+        'modules.gui.workspace',
+        'modules.gui.workspace.workspace_manager',
+        'modules.gui.workspace.workspace_serializer',
+        'modules.gui.workspace.analysis_module_adapters',
         
         # ⭐ Championship Demo（如果存在）
         'modules.gui.championship_standings_demo',

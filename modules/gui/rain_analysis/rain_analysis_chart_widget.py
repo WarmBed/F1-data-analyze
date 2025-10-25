@@ -239,12 +239,9 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
     def _calculate_data_ranges(self):
         """計算數據範圍"""
         if not self.chart_data or self.current_chart_type not in self.chart_data:
-            print(f"[RAIN_RANGE_DEBUG] ❌ 無圖表數據或類型不匹配")
             return
             
         chart_info = self.chart_data[self.current_chart_type]
-        print(f"[RAIN_RANGE_DEBUG] 計算範圍，圖表類型: {self.current_chart_type}")
-        print(f"[RAIN_RANGE_DEBUG] 可用數據鍵: {list(chart_info.keys())}")
         
         # X軸範圍（圈數）
         if "x_data" in chart_info:
@@ -253,7 +250,6 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
                 self.x_range = (min(x_data), max(x_data))
                 self.min_lap = min(x_data)
                 self.max_lap = max(x_data)
-                print(f"[RAIN_RANGE_DEBUG] X軸範圍(圈數): {self.x_range}")
                 
         # 左Y軸範圍（現在用於溫度顯示，使用y2_data）
         if "y2_data" in chart_info:
@@ -263,14 +259,6 @@ class RainAnalysisChartWidget(TelemetryChartWidgetBase):
                 max_val = max(temp_data)
                 margin = (max_val - min_val) * 0.15 if max_val > min_val else 1  # 增加邊距到15%
                 self.left_y_range = (min_val - margin, max_val + margin)
-                print(f"[RAIN_RANGE_DEBUG] 溫度數據: min={min_val:.3f}, max={max_val:.3f}")
-                print(f"[RAIN_RANGE_DEBUG] 左Y軸範圍(溫度): {self.left_y_range}")
-                print(f"[RAIN_RANGE_DEBUG] 邊距: {margin:.3f}")
-                
-                # 檢查是否有異常值
-                for i, temp in enumerate(temp_data):
-                    if temp < self.left_y_range[0] or temp > self.left_y_range[1]:
-                        print(f"[RAIN_RANGE_DEBUG] ⚠️ 異常溫度值在圈{x_data[i] if i < len(x_data) else i}: {temp:.3f}")
                         
                 
         # 取消右Y軸範圍計算

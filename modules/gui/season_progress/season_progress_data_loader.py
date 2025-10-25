@@ -3,11 +3,11 @@
 Season Progress Data Loader
 
 Loads championship standings and race calendar data
-Follows API-ONLY pattern - prioritizes API, falls back to local JSON
+⚠️ Strict API-ONLY mode - ONLY uses API, NO local JSON fallback
 
 Author: F1T Team
 Date: 2025-10-13
-Version: 1.0.0
+Version: 1.1.0 (API-ONLY enforced)
 """
 
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader
@@ -23,10 +23,10 @@ class SeasonProgressDataLoader(UniversalDataLoader):
     Inherits from UniversalDataLoader, implements loading, validation and transformation
     of championship standings and race calendar data
     
-    Data Sources:
-    - API: refactored_api.py (function_id=97 for standings)
-    - Local JSON: json/championship_standings_{year}_R{round}.json
-    - Local JSON: json/season_calendar_multi_year_*.json
+    ⚠️ API-ONLY Mode (2025-10-24):
+    - ✅ API: refactored_api.py (function_id=97 for standings)
+    - ❌ Local JSON: Disabled (no fallback to json/ directory)
+    - ❌ CLI Generation: Disabled (no automatic subprocess calls)
     
     Data Structure:
     {
@@ -69,9 +69,9 @@ class SeasonProgressDataLoader(UniversalDataLoader):
         self.year = str(year)
         self._calendar_data = None
 
-        # API-ONLY mode: Allow local JSON fallback (for existing files)
-        self._allow_local_fallback = True
-        self._debug(f"[SEASON_PROGRESS_LOADER] Initialized: year={year}")
+        # ⚠️ API-ONLY 模式：完全禁用本地 JSON 回退（僅使用 API）
+        self._allow_local_fallback = False
+        self._debug(f"[SEASON_PROGRESS_LOADER] Initialized: year={year}, API-ONLY mode enabled (no local JSON)")
     
     def _validate_data_format(self, raw_data: Dict[str, Any]) -> bool:
         """
@@ -132,9 +132,16 @@ class SeasonProgressDataLoader(UniversalDataLoader):
         """
         Load race calendar data from local JSON
         
+        ⚠️ API-ONLY 模式檢查：如果禁用本地回退，則跳過載入
+        
         Returns:
             Calendar data or None
         """
+        # 檢查是否允許本地 JSON 回退
+        if not self._allow_local_fallback:
+            self._debug("[CALENDAR] ⚠️ API-ONLY mode: Local JSON calendar loading disabled")
+            return None
+        
         try:
             json_dir = Path("json")
             if not json_dir.exists():
@@ -197,36 +204,45 @@ class SeasonProgressDataLoader(UniversalDataLoader):
                 "points": constructors[0].get("points", 0)
             }
         
-        # Load calendar data
-        if self._calendar_data is None:
-            self._calendar_data = self._load_calendar_data()
-        
-        # Process calendar data
-        calendar_summary = {
-            "completed": 0,
-            "remaining": 0,
-            "total": 0,
-            "next_race": None
-        }
-        
-        if self._calendar_data:
-            year_events = self._calendar_data.get(str(self.year), [])
-            if year_events:
-                completed = [e for e in year_events if e.get("is_completed")]
-                upcoming = [e for e in year_events if not e.get("is_completed")]
-                
-                calendar_summary["completed"] = len(completed)
-                calendar_summary["remaining"] = len(upcoming)
-                calendar_summary["total"] = len(year_events)
-                
-                if upcoming:
-                    next_race = upcoming[0]
-                    calendar_summary["next_race"] = {
-                        "name": next_race.get("event_name", "Unknown"),
-                        "date": next_race.get("race_date_local", "")
-                    }
+        # ✅ 優先使用 API 返回的 calendar 資訊
+        api_calendar = data.get("calendar")
+        if api_calendar and isinstance(api_calendar, dict):
+            # API 已提供 calendar，直接使用
+            calendar_summary = api_calendar
+            self._debug("[TRANSFORM] Using calendar data from API")
+        else:
+            # API 未提供 calendar，嘗試從本地 JSON 載入（僅在允許時）
+            self._debug("[TRANSFORM] API calendar not available, attempting local fallback")
+            if self._calendar_data is None:
+                self._calendar_data = self._load_calendar_data()
+            
+            # Process calendar data
+            calendar_summary = {
+                "completed": 0,
+                "remaining": 0,
+                "total": 0,
+                "next_race": None
+            }
+            
+            if self._calendar_data:
+                year_events = self._calendar_data.get(str(self.year), [])
+                if year_events:
+                    completed = [e for e in year_events if e.get("is_completed")]
+                    upcoming = [e for e in year_events if not e.get("is_completed")]
+                    
+                    calendar_summary["completed"] = len(completed)
+                    calendar_summary["remaining"] = len(upcoming)
+                    calendar_summary["total"] = len(year_events)
+                    
+                    if upcoming:
+                        next_race = upcoming[0]
+                        calendar_summary["next_race"] = {
+                            "name": next_race.get("event_name", "Unknown"),
+                            "date": next_race.get("race_date_local", "")
+                        }
         
         self._debug(f"[TRANSFORM] Transformed data: {len(drivers)} drivers, {len(constructors)} constructors")
+        self._debug(f"[TRANSFORM] Calendar: {calendar_summary.get('completed')}/{calendar_summary.get('total')} completed")
         
         return {
             "season_year": metadata.get("season_year", int(self.year)),

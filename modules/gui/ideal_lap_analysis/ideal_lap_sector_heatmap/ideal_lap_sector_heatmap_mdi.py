@@ -417,6 +417,27 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
             traceback.print_exc()
             return False
 
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """
+        生成視窗標題 - 只顯示模組名稱，不包含年份/賽事/賽段
+        
+        Args:
+            year: 年份（忽略）
+            race: 賽事（忽略）
+            session: 賽段（忽略）
+            
+        Returns:
+            str: 模組名稱標題
+        """
+        # 導入翻譯函數
+        from core.gui_i18n import tr
+        
+        # 使用 tr() 支持多國語言
+        translated_title = tr("ideal_lap_sector_heatmap", "Ideal Lap Sector Heatmap")
+        
+        # 返回純模組名稱
+        return translated_title
+
     def load_initial_data(self):
         """
         載入初始資料 - 強制使用 API (API-ONLY 模式)

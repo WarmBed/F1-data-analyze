@@ -310,6 +310,20 @@ _FUNCTION_SPEC_LIST = [
         notes="Feeds in-depth PDF/GUI reports for post-race debriefs.",
     ),
     _make_spec(
+        "25",
+        name="Driver Race Position Analysis",
+        description="Analyzes race position changes for a single driver or all drivers, including starting/finishing positions, lap-by-lap position tracking, and position statistics.",
+        required_params=["year", "race", "session"],
+        optional_params=["driver1"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s", "driver1": "-d"},
+        cache_patterns=[
+            "position_analysis_*_all_drivers",
+            "position_analysis_*",
+            "single_driver_position_analysis"
+        ],
+        notes="Driver parameter optional – when omitted analyzes all drivers. Provides starting position, finishing position, best/worst positions, lap-by-lap changes, and position statistics (average, median, time in top 5/10).",
+    ),
+    _make_spec(
         "26",
         name="Tire Strategy Analysis",
         description="Generates tire strategy timelines leveraging FastF1 cache data.",

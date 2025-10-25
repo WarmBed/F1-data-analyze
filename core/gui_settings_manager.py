@@ -34,7 +34,7 @@ class ThrottleLineChartSettings:
 class StraightSpeedAnalysisSettings:
     """Straight Speed Analysis 欄位顯示設定"""
     # All Drivers Speed 欄位 (車手、車隊、Accel Time、Avg Accel 永遠顯示)
-    speed_show_max_speed: bool = False
+    speed_show_max_speed: bool = True  # ✅ 預設顯示最高速度
     speed_show_start_speed: bool = False
     speed_show_max_speed_time: bool = False
     speed_show_performance_bar: bool = True

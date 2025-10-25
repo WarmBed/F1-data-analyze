@@ -274,6 +274,27 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             traceback.print_exc()
             return False
     
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """
+        生成視窗標題 - 只顯示模組名稱，不包含年份/賽事/賽段
+        
+        Args:
+            year: 年份（忽略）
+            race: 賽事（忽略）
+            session: 賽段（忽略）
+            
+        Returns:
+            str: 模組名稱標題
+        """
+        # 導入翻譯函數
+        from core.gui_i18n import tr
+        
+        # 使用 tr() 支持多國語言
+        translated_title = tr("ideal_lap_sector_comparison", "Ideal Lap Sector Comparison")
+        
+        # 返回純模組名稱
+        return translated_title
+    
     #  ========== 基類抽象方法實作 ==========
     
     def create_data_manager(self):

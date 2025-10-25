@@ -96,6 +96,9 @@ class SeasonProgressWidget(QWidget):
         Args:
             data: Transformed season progress data from DataLoader
         """
+        print(f"[SEASON_PROGRESS_WIDGET] populate_data called")
+        print(f"[SEASON_PROGRESS_WIDGET] Data keys: {list(data.keys())}")
+        
         self.progress_data = data
         self.season_year = data.get("season_year", 2024)
         
@@ -109,6 +112,10 @@ class SeasonProgressWidget(QWidget):
         remaining = calendar.get("remaining", 0)
         total = calendar.get("total", 0)
         
+        print(f"[SEASON_PROGRESS_WIDGET] Calendar data: completed={completed}, remaining={remaining}, total={total}")
+        
+        print(f"[SEASON_PROGRESS_WIDGET] Calendar data: completed={completed}, remaining={remaining}, total={total}")
+        
         self.completed_label.setText(
             tr("completed_races", "Completed Races: {count} / {total}").format(
                 count=completed, total=total
@@ -117,6 +124,8 @@ class SeasonProgressWidget(QWidget):
         self.remaining_label.setText(
             tr("remaining_races", "Remaining Races: {count}").format(count=remaining)
         )
+        
+        print(f"[SEASON_PROGRESS_WIDGET] Labels updated: completed='{self.completed_label.text()}', remaining='{self.remaining_label.text()}'")
         
         # Update next race
         next_race = calendar.get("next_race")

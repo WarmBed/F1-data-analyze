@@ -169,13 +169,13 @@ class RainAnalysisModule(IAnalysisModule):
         return f"降雨分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"🌧️ {tr('rain_analysis')}_{year}_{race}_{session}"
+            return f"🌧️ {tr('rain_analysis')}"
         else:
-            return f"🌧️ Rain Analysis_{year}_{race}_{session}"
+            return f"🌧️ Rain Analysis"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

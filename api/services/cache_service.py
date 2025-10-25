@@ -74,6 +74,7 @@ class F1AnalysisCacheService:
             "14.3": ["driver_overtaking_analysis", "overtaking_analysis"],
             "14.4": ["driver_fastest_lap_ranking", "fastest_lap_report"],
             "14.9": ["all_drivers_comprehensive", "driver_comprehensive_full"],
+            "34": ["brake_performance", "all_drivers_brake_performance"],  # ✅ Function 34 - 全部車手煞車性能
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
@@ -183,27 +184,41 @@ class F1AnalysisCacheService:
             # 不同功能有不同的檔案命名模式
             if function_id == "13":  # 🔧 車手比較分析 - 精確圈數匹配
                 # 🆕 根據 lap1/lap2 參數決定搜尋模式
+                # 🔧 FIX: 支援多種賽事名稱格式 (United States vs united_states)
+                race_variants = [
+                    race,                                    # 原始格式 (united_states)
+                    race.replace("_", " "),                  # 空格格式 (united states)  
+                    race.replace("_", " ").title(),          # 首字母大寫 (United States)
+                    race.title().replace("_", " "),          # 大寫空格 (United States)
+                ]
+                
                 if lap1 is not None and lap2 is not None:
                     # 精確雙圈匹配模式
-                    search_patterns = [
-                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json",
-                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}_Lap{lap2}_Lap{lap1}.json",  # 反向順序
-                    ]
+                    search_patterns = []
+                    for race_variant in race_variants:
+                        search_patterns.extend([
+                            f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race_variant}_{session}_Lap{lap1}_Lap{lap2}.json",
+                            f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race_variant}_{session}_Lap{lap2}_Lap{lap1}.json",  # 反向順序
+                        ])
                     print(f"[CACHE] 🎯 精確雙圈匹配模式: Lap{lap1}_Lap{lap2}")
                 elif lap1 is not None:
                     # 精確單圈匹配模式
-                    search_patterns = [
-                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}.json",
-                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}_Lap{lap1}.json",
-                    ]
+                    search_patterns = []
+                    for race_variant in race_variants:
+                        search_patterns.extend([
+                            f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race_variant}_{session}_Lap{lap1}.json",
+                            f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race_variant}_{session}_Lap{lap1}.json",
+                        ])
                     print(f"[CACHE] 🎯 精確單圈匹配模式: Lap{lap1}")
                 else:
                     # ❌ 移除萬用字元模式（改為精確匹配或無圈數）
-                    search_patterns = [
-                        # 只搜尋沒有圈數後綴的檔案
-                        f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}.json",
-                        f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race}_{session}.json",
-                    ]
+                    search_patterns = []
+                    for race_variant in race_variants:
+                        search_patterns.extend([
+                            # 只搜尋沒有圈數後綴的檔案
+                            f"{self.json_dir}comparison_telemetry_{driver1}_{driver2}_{year}_{race_variant}_{session}.json",
+                            f"{self.json_dir}comparison_telemetry_{driver2}_{driver1}_{year}_{race_variant}_{session}.json",
+                        ])
                     print(f"[CACHE] 🎯 無圈數模式")
             elif function_id in {"3", "4", "5"}:  # 進站相關分析
                 race_full = self._get_race_full_name(race, year)
@@ -246,12 +261,40 @@ class F1AnalysisCacheService:
                         f"{self.json_dir}{pattern_base}*{year_token}*{race_str}*{session_token}*.json",
                         f"{self.json_dir}*{pattern_base}*{year_token}*{race_str}*{session_token}*.json"
                     })
+                    
+                    # 🔧 FIX: Function 34/48 檔名不一致問題 - CLI 使用空格，API 預設底線
+                    # 為 all_drivers 相關功能生成空格版本的搜索模式
+                    if function_id in {"34", "48"} and "_" in race_str:
+                        race_str_with_spaces = race_str.replace("_", " ")
+                        search_patterns.extend({
+                            f"{self.json_dir}{pattern_base}*{year_token}*{race_str_with_spaces}*{session_token}*.json",
+                            f"{self.json_dir}*{pattern_base}*{year_token}*{race_str_with_spaces}*{session_token}*.json"
+                        })
             
             for pattern in search_patterns:
                 print(f"[CACHE] 🔍 搜尋模式: {os.path.basename(pattern)}")
                 # 🔧 FIX: Function 96 使用遞迴搜尋（檔案在 weather/ 子目錄）
                 use_recursive = function_id == "96" and "**" in pattern
-                files = glob.glob(pattern, recursive=use_recursive)
+                
+                # 🔧 FIX: glob 區分大小寫，需要手動搜尋所有可能的大小寫組合
+                files = []
+                try:
+                    files = glob.glob(pattern, recursive=use_recursive)
+                except Exception as e:
+                    print(f"[CACHE] ⚠️ glob 錯誤: {e}")
+                
+                # 🔧 FIX: 如果沒找到，嘗試不區分大小寫的搜尋
+                if not files:
+                    print(f"[CACHE] ⚠️ 精確匹配失敗，嘗試不區分大小寫搜尋...")
+                    json_dir_path = Path(self.json_dir)
+                    if json_dir_path.exists():
+                        all_json_files = list(json_dir_path.glob("*.json"))
+                        pattern_lower = os.path.basename(pattern).lower()
+                        
+                        for json_file in all_json_files:
+                            if self._pattern_matches_case_insensitive(json_file.name, pattern_lower):
+                                files.append(str(json_file))
+                
                 if not files:
                     print(f"[CACHE] ❌ 無匹配檔案")
                     continue
@@ -378,9 +421,35 @@ class F1AnalysisCacheService:
         
         race_lower = race_name.lower().replace(" ", "_").replace("-", "_")
         return self.race_name_lookup.get(race_lower, race_lower)
+    
+    def _pattern_matches_case_insensitive(self, filename: str, pattern_lower: str) -> bool:
+        """
+        不區分大小寫的模式匹配
+        
+        Args:
+            filename: 實際檔案名稱
+            pattern_lower: 小寫的搜尋模式（可能包含 * 萬用字元）
+        
+        Returns:
+            bool: 是否匹配
+        """
+        filename_lower = filename.lower()
+        
+        # 將 glob 模式轉換為正則表達式
+        import fnmatch
+        pattern_regex = fnmatch.translate(pattern_lower)
+        
+        try:
+            import re
+            return re.match(pattern_regex, filename_lower) is not None
+        except Exception as e:
+            # 降級為簡單的字串包含檢查
+            print(f"[CACHE] ⚠️ 正則表達式匹配失敗: {e}")
+            pattern_clean = pattern_lower.replace("*", "").replace(".json", "")
+            return pattern_clean in filename_lower
 
     def _build_race_search_tokens(self, race_value: Any) -> List[str]:
-        """建立賽事名稱搜尋關鍵字，支援空白與底線格式"""
+        """建立賽事名稱搜尋關鍵字，支援空白與底線格式，且不區分大小寫"""
         if race_value in (None, "", "*"):
             return ["*"]
 
@@ -390,22 +459,30 @@ class F1AnalysisCacheService:
 
         tokens: List[str] = []
         candidates = {
-            raw_text,                                    # ✅ 原始格式 "Singapore Grand Prix"
-            raw_text.replace(" ", "_"),                  # ✅ 底線格式 "Singapore_Grand_Prix"
-            raw_text.replace(" ", "_").lower(),          # ✅ 小寫底線 "singapore_grand_prix"
-            raw_text.lower(),                            # ✅ 小寫空白 "singapore grand prix"
-            raw_text.replace(" Grand Prix", "").strip(), # ✅ 新增：僅國家名 "Singapore"
+            raw_text,                                    # ✅ 原始格式 "United States"
+            raw_text.replace(" ", "_"),                  # ✅ 底線格式 "United_States"
+            raw_text.replace(" ", "_").lower(),          # ✅ 小寫底線 "united_states"
+            raw_text.lower(),                            # ✅ 小寫空白 "united states"
+            raw_text.replace(" Grand Prix", "").strip(), # ✅ 僅國家名 "United States"
+            # 🔧 FIX: 新增大小寫組合變體
+            raw_text.title(),                            # ✅ 首字母大寫 "United States"
+            raw_text.title().replace(" ", "_"),          # ✅ 首字母大寫 + 底線 "United_States"
         }
 
         normalized = self._normalize_race_name(raw_text)
         if normalized and normalized != "*":
             candidates.add(normalized)
             candidates.add(normalized.replace("_", " "))
+            candidates.add(normalized.title())  # 🔧 FIX: 新增首字母大寫版本
+            candidates.add(normalized.title().replace("_", " "))  # 🔧 FIX: 大寫 + 空格
+            
             variants = self.race_name_variants.get(normalized, [])
             for variant in variants:
                 variant_text = str(variant)
                 candidates.add(variant_text)
                 candidates.add(variant_text.replace(" ", "_"))
+                candidates.add(variant_text.title())  # 🔧 FIX: 變體首字母大寫
+                candidates.add(variant_text.title().replace("_", " "))
 
         for candidate in candidates:
             cleaned = str(candidate).strip()

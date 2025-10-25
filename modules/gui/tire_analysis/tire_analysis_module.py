@@ -173,13 +173,13 @@ class TireAnalysisModule(IAnalysisModule):
         return f"Tire Strategy Analysis_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"{tr('tire_strategy_analysis')}_{year}_{race}_{session}"
+            return f"{tr('tire_strategy_analysis')}"
         else:
-            return f"Tire Strategy Analysis_{year}_{race}_{session}"
+            return f"Tire Strategy Analysis"
     
     def get_default_size(self):
         """Get default window size"""

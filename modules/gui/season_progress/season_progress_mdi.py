@@ -264,10 +264,12 @@ class SeasonProgressMDI(QWidget):
                 "data": {
                     "drivers": drivers,
                     "constructors": constructors,
-                    "metadata": metadata
+                    "metadata": metadata,
+                    "calendar": data_payload.get("calendar")  # ✅ 傳遞 calendar 數據
                 }
             }
             
+            print(f"[SEASON_PROGRESS_MDI] Calendar in payload: {data_payload.get('calendar')}")
             display_data = loader._transform_data_for_display(raw_data_for_transform)
             
             print(f"[SEASON_PROGRESS_MDI] Transformed data: year={display_data.get('season_year')}, round={display_data.get('round')}")

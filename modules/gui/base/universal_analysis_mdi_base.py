@@ -178,6 +178,11 @@ class UniversalAnalysisMDI(IAnalysisModule):
         self._cleanup_performed = False
         self._destroyed = False
         
+        # ✅ Workspace 載入模式標誌（方案 A）
+        # 當此標誌為 True 時，禁止自動數據載入，避免在 Workspace 重建時啟動多個執行緒導致崩潰
+        # 詳見: .github/copilot-instructions.md - API-ONLY 模式政策
+        self._workspace_loading_mode = False
+        
         self._debug(f"初始化 {self.config.display_name} MDI 模組")
     
     def _debug(self, message: str):
@@ -212,6 +217,21 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """初始化模組 - 通用初始化邏輯"""
+        # ✅ 環境變量檢查 - Workspace 載入時跳過完整初始化
+        import os
+        if os.environ.get('F1T_WORKSPACE_LOADING') == '1':
+            print(f"✅ [WORKSPACE_MODE] {self.config.display_name} 跳過 initialize_module（環境變量保護）")
+            # 🔧 修復：在 workspace 模式下也需要創建 main_widget 以支援 get_widget()
+            try:
+                self._setup_ui()  # 創建最基本的 UI 結構
+                print(f"✅ [WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建完成")
+            except Exception as e:
+                print(f"❌ [WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建失敗: {e}")
+                return False
+            # 最小化初始化：不創建 data_manager，不連接信號
+            self._initialized = False  # 標記為未初始化
+            return True  # 返回 True 讓 __init__ 繼續
+        
         try:
             self._debug(f"初始化 {self.config.display_name} 模組")
             
@@ -353,26 +373,12 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.module_error.emit(f"參數同步失敗: {str(e)}")
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
-        """獲取視窗標題（支援多國語言）"""
-        year = year or self.current_year
-        race = race or self.current_race
-        session = session or self.current_session
-        
+        """獲取視窗標題（支援多國語言）- 只顯示模組名稱"""
         # 使用 tr() 翻譯 display_name（支援多國語言）
         # 從 config.analysis_type 取得翻譯鍵，從 config.display_name 取得預設值
+        from core.gui_i18n import tr
         translated_name = tr(self.config.analysis_type, self.config.display_name)
-        base_title = f"{translated_name} - {year} {race} {session}"
-        
-        if self.config.requires_driver_params:
-            driver1 = getattr(self, 'driver1', 'VER')
-            driver2 = getattr(self, 'driver2', 'VER')
-            
-            if driver1 == driver2:
-                base_title += f" - {driver1}"
-            else:
-                base_title += f" - {driver1} vs {driver2}"
-        
-        return base_title
+        return translated_name
     
     def get_default_size(self) -> Tuple[int, int]:
         """獲取預設視窗大小"""
@@ -686,6 +692,22 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def _load_data_with_current_parameters(self):
         """使用當前參數載入數據"""
+        # ✅ Workspace 載入模式檢查（環境變量方式 - 最可靠）
+        import os
+        workspace_env = os.environ.get('F1T_WORKSPACE_LOADING')
+        print(f"🔍 [BASE_DEBUG] _load_data_with_current_parameters 被調用")
+        print(f"🔍 [BASE_DEBUG] F1T_WORKSPACE_LOADING = {workspace_env}")
+        
+        if workspace_env == '1':
+            print(f"✅ [WORKSPACE_MODE] 環境變量保護生效！跳過數據載入")
+            return
+        
+        # ✅ Workspace 載入模式檢查（方案 A - 標誌方式）
+        # 在 Workspace 重建期間，跳過自動數據載入以避免執行緒競爭
+        if getattr(self, '_workspace_loading_mode', False):
+            print(f"✅ [WORKSPACE_MODE] 標誌保護生效！跳過數據載入")
+            return
+        
         if getattr(self, '_cleanup_performed', False):
             self._debug("🛑 模組已釋放，略過數據載入")
             return
@@ -850,8 +872,17 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def update_window_title(self) -> None:
         """更新視窗標題 - 確保完全替換，不累積舊標題"""
         try:
+            # 🔍 調試：檢查 parent_window 狀態
+            print(f"[UPDATE_TITLE_DEBUG] ========== 開始更新視窗標題 ==========")
+            print(f"[UPDATE_TITLE_DEBUG] hasattr(self, 'parent_window'): {hasattr(self, 'parent_window')}")
+            
             # 檢查 parent_window 屬性（MDI 子視窗引用）
             parent = getattr(self, 'parent_window', None)
+            print(f"[UPDATE_TITLE_DEBUG] parent_window 值: {parent}")
+            print(f"[UPDATE_TITLE_DEBUG] parent_window 類型: {type(parent).__name__ if parent else 'None'}")
+            
+            if parent:
+                print(f"[UPDATE_TITLE_DEBUG] hasattr(parent, 'setWindowTitle'): {hasattr(parent, 'setWindowTitle')}")
             
             if parent and hasattr(parent, 'setWindowTitle'):
                 # 生成新標題（確保使用當前參數）
@@ -860,17 +891,73 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 # ✅ [FIX] 獲取舊標題以便調試
                 old_title = parent.windowTitle() if hasattr(parent, 'windowTitle') else "N/A"
                 
+                print(f"[UPDATE_TITLE_DEBUG] 舊標題: {old_title}")
+                print(f"[UPDATE_TITLE_DEBUG] 新標題: {new_title}")
+                
                 # ✅ [FIX] 直接設置新標題（完全替換，不追加）
                 parent.setWindowTitle(new_title)
                 
-                # 強制刷新視窗顯示
+                # 🔥 **關鍵修正**: 同時更新自訂標題列（PopoutSubWindow 的 title_bar）
+                if hasattr(parent, 'title_bar') and parent.title_bar:
+                    print(f"[UPDATE_TITLE_DEBUG] 發現自訂標題列，更新標題...")
+                    if hasattr(parent.title_bar, 'update_title'):
+                        parent.title_bar.update_title(new_title)
+                        print(f"[UPDATE_TITLE_DEBUG] ✅ 自訂標題列已更新")
+                    else:
+                        print(f"[UPDATE_TITLE_DEBUG] ⚠️  title_bar 沒有 update_title 方法")
+                else:
+                    print(f"[UPDATE_TITLE_DEBUG] 沒有自訂標題列，跳過")
+                
+                # 🔥 強制刷新視窗標題顯示
+                print(f"[UPDATE_TITLE_DEBUG] 強制刷新視窗標題...")
+                
+                # 方法 1: 刷新子視窗
                 parent.update()
                 parent.repaint()
                 
+                # 方法 2: 刷新 MDI Area
+                from PyQt5.QtWidgets import QApplication
+                if parent.parent():
+                    parent.parent().update()
+                    parent.parent().repaint()
+                
+                # 方法 3: 強制處理事件
+                QApplication.processEvents()
+                
+                # 方法 4: 驗證標題確實已更改
+                current_title = parent.windowTitle()
+                print(f"[UPDATE_TITLE_DEBUG] 驗證當前標題: {current_title}")
+                if current_title != new_title:
+                    print(f"[UPDATE_TITLE_DEBUG] ⚠️  標題未更新，重試...")
+                    parent.setWindowTitle(new_title)
+                    QApplication.processEvents()
+                    # 再次驗證
+                    final_title = parent.windowTitle()
+                    print(f"[UPDATE_TITLE_DEBUG] 重試後的標題: {final_title}")
+                
+                # 🔥 強制觸發標題列重繪
+                print(f"[UPDATE_TITLE_DEBUG] 強制觸發 MDI 子視窗標題列重繪...")
+                if hasattr(parent, 'setWindowState'):
+                    # 保存當前狀態
+                    current_state = parent.windowState()
+                    # 臨時改變狀態以觸發重繪
+                    from PyQt5.QtCore import Qt
+                    parent.setWindowState(current_state)
+                    QApplication.processEvents()
+                
+                # 最終驗證
+                final_check_title = parent.windowTitle()
+                print(f"[UPDATE_TITLE_DEBUG] 最終檢查標題: {final_check_title}")
+                print(f"[UPDATE_TITLE_DEBUG] 標題是否正確: {final_check_title == new_title}")
+                
+                print(f"[UPDATE_TITLE_DEBUG] ✅ 視窗標題已更新")
                 self._debug(f"🏷️ 視窗標題已更新")
                 self._debug(f"   舊標題: {old_title}")
                 self._debug(f"   新標題: {new_title}")
+            else:
+                print(f"[UPDATE_TITLE_DEBUG] ❌ 無法更新標題：parent_window={parent is not None}, hasattr={hasattr(parent, 'setWindowTitle') if parent else False}")
         except Exception as e:
+            print(f"[UPDATE_TITLE_DEBUG] ❌ 更新視窗標題時發生錯誤: {e}")
             self._error(f"更新視窗標題失敗: {e}")
             import traceback
             traceback.print_exc()

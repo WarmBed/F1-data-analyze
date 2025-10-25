@@ -236,6 +236,12 @@ class AccidentDataManager(UniversalDataLoader):
         session: str,
         force_refresh: bool = False,
     ) -> bool:
+        # ⚠️ 事故分析僅支援正賽 (R) 和排位賽 (Q)
+        if session not in ['R', 'Q']:
+            self._debug(f"⚠️  事故分析僅支援正賽 (R) 和排位賽 (Q)，當前賽段: {session}")
+            self.error_occurred.emit(tr("accident_session_restriction", "事故分析僅適用於正賽 (R) 和排位賽 (Q)，練習賽無賽會控制訊息"))
+            return False
+        
         params = {
             "year": int(year),
             "race": race,

@@ -121,12 +121,13 @@ class IdealLapRankingTableModule(IAnalysisModule):
             # 創建 MDI 核心實例
             if not self._ranking_core:
                 print(f"[RANKING_MODULE] 創建 MDI 核心: {self.current_year} {self.current_race} {self.current_session}")
-                self._ranking_core = IdealLapRankingTableMDI(
-                    year=self.current_year,
-                    race=self.current_race,
-                    session=self.current_session,
-                    parent=parent_widget
-                )
+                # ✅ MDI 構造函數只接受 parent 參數
+                self._ranking_core = IdealLapRankingTableMDI(parent=parent_widget)
+                
+                # ✅ 在初始化前設置必要的屬性
+                self._ranking_core.current_year = self.current_year
+                self._ranking_core.current_race = self.current_race
+                self._ranking_core.current_session = self.current_session
                 
                 # ✅ 初始化 MDI 核心
                 print("[RANKING_MODULE] 初始化 MDI 核心...")

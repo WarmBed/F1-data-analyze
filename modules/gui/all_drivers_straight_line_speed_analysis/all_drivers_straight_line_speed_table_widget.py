@@ -262,7 +262,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         visibility = {
             'driver': True,  # 永遠顯示
             'team': True,    # 永遠顯示
-            'max_speed': settings.get('speed_show_max_speed', False),
+            'max_speed': settings.get('speed_show_max_speed', True),  # ✅ 預設開啟最高速度欄位
             'accel_time': True,  # 永遠顯示（必須）
             'avg_accel': True,   # 永遠顯示（必須）
             'start_speed': settings.get('speed_show_start_speed', False),

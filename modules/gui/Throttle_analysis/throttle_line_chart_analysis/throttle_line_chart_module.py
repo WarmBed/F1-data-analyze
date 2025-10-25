@@ -145,9 +145,9 @@ class ThrottleLineChartModule(IAnalysisModule):
 
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
         if self._mdi:
-            return self._mdi.get_window_title(year or self.current_year, race or self.current_race, session or self.current_session)
+            return self._mdi.get_window_title(year, race, session)
         translated = tr("throttle_line_chart.title", "Throttle Line Chart (Single Driver)")
-        return f"{translated} - {year or self.current_year} {race or self.current_race} {session or self.current_session}"
+        return translated
 
     @property
     def parameter_provider(self):

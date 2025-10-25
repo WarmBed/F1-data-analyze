@@ -619,6 +619,24 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             traceback.print_exc()
             return False
     
+    def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
+        """
+        覆寫基類方法，返回正確的視窗標題 - 只顯示模組名稱
+        
+        Args:
+            year: 年份（忽略）
+            race: 賽事（忽略）
+            session: 賽段（忽略）
+            
+        Returns:
+            str: 視窗標題（純模組名稱）
+        """
+        # 使用 tr() 支援多國語言
+        translated_title = tr("ideal_lap_ranking", "Ideal Lap Ranking")
+        return translated_title
+        
+        return base_title
+    
     def get_widget(self) -> QWidget:
         """
         獲取主要元件（用於模組介面）

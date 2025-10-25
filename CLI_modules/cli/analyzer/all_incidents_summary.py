@@ -454,12 +454,198 @@ def analyze_all_incidents(session):
                 
                 # 轉換 set 為 list 以便 JSON 序列化
                 incidents_data['incident_summary']['involved_drivers'] = list(incidents_data['incident_summary']['involved_drivers'])
+                
+                # 生成 Safety Periods 配對資料
+                print(f"[DEBUG] 開始生成 Safety Periods 配對資料...")
+                incidents_data['safety_periods'] = _generate_safety_periods(incidents_data)
+                print(f"[SUCCESS] 生成了 {len(incidents_data['safety_periods'])} 個 Safety Period(s)")
         
         return incidents_data
         
     except Exception as e:
         print(f"[ERROR] 分析所有事件詳細列表時發生錯誤: {e}")
         return incidents_data
+
+
+def _generate_safety_periods(incidents_data):
+    """
+    從 all_incidents 詳細記錄中生成 safety_periods 配對資料
+    
+    邏輯：使用狀態機配對 DEPLOYED 和 IN THIS LAP/ENDING 訊息
+    - SAFETY CAR DEPLOYED → SAFETY CAR IN THIS LAP = SC Period
+    - VIRTUAL SAFETY CAR DEPLOYED → VIRTUAL SAFETY CAR ENDING = VSC Period
+    
+    Returns:
+        list: 包含 {type, start_lap, end_lap, reason, sector} 的陣列
+    """
+    safety_periods = []
+    
+    # 篩選出所有 Safety Car 相關記錄
+    sc_records = [
+        r for r in incidents_data.get('all_incidents', [])
+        if r.get('category') == 'SAFETY_CAR'
+    ]
+    
+    if not sc_records:
+        print(f"[DEBUG] 沒有找到 Safety Car 相關記錄")
+        return safety_periods
+    
+    print(f"[DEBUG] 找到 {len(sc_records)} 筆 Safety Car 相關記錄")
+    
+    # 狀態機：追蹤當前活動的 Safety Car
+    active_sc = None   # {type, start_lap, message, sector}
+    active_vsc = None
+    
+    for record in sc_records:
+        msg = record.get('message', '')
+        msg_upper = msg.upper()
+        lap = record.get('lap', 0)
+        sector = record.get('sector')
+        
+        # === Safety Car (非 Virtual) ===
+        if 'SAFETY CAR DEPLOYED' in msg_upper and 'VIRTUAL' not in msg_upper:
+            if active_sc is None:  # 防止重複部署
+                active_sc = {
+                    'type': 'SC',
+                    'start_lap': lap,
+                    'message': msg,
+                    'sector': sector
+                }
+                print(f"[DEBUG] SC DEPLOYED at Lap {lap}")
+        
+        elif 'SAFETY CAR IN THIS LAP' in msg_upper:
+            if active_sc is not None:
+                # 提取原因
+                reason = _extract_sc_reason(active_sc, incidents_data, lap)
+                
+                period = {
+                    'type': 'SC',
+                    'start_lap': active_sc['start_lap'],
+                    'end_lap': lap,
+                    'reason': reason,
+                    'sector': active_sc['sector']
+                }
+                safety_periods.append(period)
+                print(f"[DEBUG] SC Period: Lap {period['start_lap']}-{period['end_lap']}, Reason: {reason}")
+                active_sc = None  # 重置
+            else:
+                print(f"[WARNING] 收到 'IN THIS LAP' 但沒有活動的 SC (Lap {lap})")
+        
+        # === Virtual Safety Car ===
+        elif 'VIRTUAL SAFETY CAR DEPLOYED' in msg_upper:
+            if active_vsc is None:
+                active_vsc = {
+                    'type': 'VSC',
+                    'start_lap': lap,
+                    'message': msg,
+                    'sector': sector
+                }
+                print(f"[DEBUG] VSC DEPLOYED at Lap {lap}")
+        
+        elif 'VIRTUAL SAFETY CAR ENDING' in msg_upper:
+            if active_vsc is not None:
+                reason = _extract_sc_reason(active_vsc, incidents_data, lap)
+                
+                period = {
+                    'type': 'VSC',
+                    'start_lap': active_vsc['start_lap'],
+                    'end_lap': lap,
+                    'reason': reason,
+                    'sector': active_vsc['sector']
+                }
+                safety_periods.append(period)
+                print(f"[DEBUG] VSC Period: Lap {period['start_lap']}-{period['end_lap']}, Reason: {reason}")
+                active_vsc = None
+            else:
+                print(f"[WARNING] 收到 'VSC ENDING' 但沒有活動的 VSC (Lap {lap})")
+    
+    # 處理未結束的 Safety Car（比賽以 SC/VSC 結束）
+    if active_sc is not None:
+        print(f"[WARNING] SC 部署後未結束（比賽可能以 SC 結束），起始圈數: {active_sc['start_lap']}")
+    if active_vsc is not None:
+        print(f"[WARNING] VSC 部署後未結束（比賽可能以 VSC 結束），起始圈數: {active_vsc['start_lap']}")
+    
+    return safety_periods
+
+
+def _extract_sc_reason(sc_record, incidents_data, end_lap):
+    """
+    從 Safety Car 記錄中提取部署原因
+    
+    優先順序：
+    1. 同一圈或前後圈的黃旗事件（包含 sector 資訊）
+    2. 同一圈的事故/碰撞事件
+    3. Message 中的關鍵字
+    4. 預設為 "Unspecified"
+    
+    Args:
+        sc_record: SC/VSC 部署記錄 {type, start_lap, message, sector}
+        incidents_data: 完整的事件資料
+        end_lap: SC/VSC 結束圈數
+        
+    Returns:
+        str: 原因描述
+    """
+    start_lap = sc_record['start_lap']
+    msg_upper = sc_record['message'].upper()
+    
+    # 方法 1: 搜索同一圈或附近圈的黃旗事件（包含 sector）
+    all_incidents = incidents_data.get('all_incidents', [])
+    
+    # 搜索範圍：SC 部署前後 1-2 圈
+    related_incidents = [
+        r for r in all_incidents
+        if abs(r.get('lap', 0) - start_lap) <= 2
+        and r.get('lap', 0) <= start_lap  # 只看部署前的事件
+    ]
+    
+    # 優先找黃旗 + sector 資訊
+    yellow_with_sector = [
+        r for r in related_incidents
+        if 'YELLOW' in r.get('message', '').upper()
+        and r.get('sector') is not None
+        and r.get('sector') != 'UNKNOWN'
+    ]
+    
+    if yellow_with_sector:
+        # 取最接近 SC 部署圈數的事件
+        closest = min(yellow_with_sector, key=lambda x: abs(x.get('lap', 0) - start_lap))
+        sector = closest.get('sector')
+        return f"Incident in Sector {sector}"
+    
+    # 方法 2: 搜索事故/碰撞事件
+    accident_keywords = ['ACCIDENT', 'CRASH', 'COLLISION', 'SPIN', 'STOPPED', 'DEBRIS']
+    accidents = [
+        r for r in related_incidents
+        if any(kw in r.get('message', '').upper() for kw in accident_keywords)
+    ]
+    
+    if accidents:
+        closest = accidents[0]
+        msg = closest.get('message', '').upper()
+        
+        if 'ACCIDENT' in msg or 'CRASH' in msg or 'COLLISION' in msg:
+            return "Accident"
+        elif 'DEBRIS' in msg:
+            return "Debris on track"
+        elif 'SPIN' in msg or 'STOPPED' in msg:
+            return "Vehicle incident"
+    
+    # 方法 3: 分析 SC 部署訊息本身的關鍵字
+    if any(kw in msg_upper for kw in ['ACCIDENT', 'CRASH', 'COLLISION']):
+        return "Accident"
+    elif 'DEBRIS' in msg_upper:
+        return "Debris on track"
+    elif 'SPIN' in msg_upper or 'STOPPED' in msg_upper:
+        return "Vehicle incident"
+    elif 'TRACK' in msg_upper and 'UNSAFE' in msg_upper:
+        return "Unsafe track conditions"
+    elif 'WEATHER' in msg_upper or 'RAIN' in msg_upper:
+        return "Weather conditions"
+    
+    # 預設
+    return "Unspecified"
+
 
 def assess_severity_detailed(message):
     """詳細評估事故嚴重程度"""

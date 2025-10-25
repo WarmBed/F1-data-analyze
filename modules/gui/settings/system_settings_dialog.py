@@ -369,7 +369,7 @@ class SystemSettingsDialog(QDialog):
         # 載入 Straight Speed Analysis 設定
         speed_analysis_settings = self._settings_manager.get_straight_speed_analysis_settings()
         self.speed_show_max_speed_checkbox.setChecked(
-            speed_analysis_settings.get("speed_show_max_speed", False)
+            speed_analysis_settings.get("speed_show_max_speed", True)  # ✅ 預設顯示最高速度
         )
         self.speed_show_start_speed_checkbox.setChecked(
             speed_analysis_settings.get("speed_show_start_speed", False)
@@ -410,7 +410,7 @@ class SystemSettingsDialog(QDialog):
 
     def _reset_speed_analysis_defaults(self) -> None:
         """重置 Straight Speed Analysis 預設值"""
-        self.speed_show_max_speed_checkbox.setChecked(False)
+        self.speed_show_max_speed_checkbox.setChecked(True)  # ✅ 預設顯示最高速度
         self.speed_show_start_speed_checkbox.setChecked(False)
         self.speed_show_max_speed_time_checkbox.setChecked(False)
         self.speed_show_performance_bar_checkbox.setChecked(True)

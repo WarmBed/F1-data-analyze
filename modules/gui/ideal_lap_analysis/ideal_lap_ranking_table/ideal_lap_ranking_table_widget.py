@@ -20,7 +20,7 @@ from PyQt5.QtCore import pyqtSignal, Qt, QRect
 from PyQt5.QtGui import QColor, QFont, QBrush, QPainter
 from typing import Dict, List, Any, Optional
 
-from core.gui_i18n import tr
+from core.gui_i18n import tr, get_team_name_text
 from modules.gui.themes.color_palette_provider import color_palette_provider  # ✅ 使用通用顏色系統
 from modules.gui.ideal_lap_analysis.shared_colors import (
     get_gap_color,
@@ -414,12 +414,14 @@ class IdealLapRankingTableWidget(QWidget):
             team = driver.get("team", "Unknown")
             driver_color = self._get_driver_color(driver_code)
             driver_item = self._create_colored_item(driver_code, driver_color)
-            driver_item.setToolTip(f"{driver_code} - {team}")
+            # ✅ 使用多國語言翻譯的車隊名稱
+            team_translated = get_team_name_text(team)
+            driver_item.setToolTip(f"{driver_code} - {team_translated}")
             self.table.setItem(row, 1, driver_item)
             
-            # 2. 車隊（套用車手背景色，自動選擇文字顏色）
-            team_item = self._create_colored_item(team, driver_color)
-            team_item.setToolTip(team)
+            # 2. 車隊（套用車手背景色，自動選擇文字顏色，使用多國語言翻譯）
+            team_item = self._create_colored_item(team_translated, driver_color)
+            team_item.setToolTip(team_translated)
             self.table.setItem(row, 2, team_item)
 
             # 3. 車手最速圈

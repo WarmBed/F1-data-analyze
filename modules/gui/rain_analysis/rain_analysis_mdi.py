@@ -743,6 +743,10 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
             self.current_race = race
             self.current_session = session
             
+            # ✅ 更新視窗標題（響應賽事切換）
+            print(f"[RAIN_MDI] 更新視窗標題...")
+            self.update_window_title()
+            
             # 更新數據管理器參數
             if hasattr(self, 'data_manager') and self.data_manager:
                 print(f"[RAIN_MDI] 更新數據管理器參數...")

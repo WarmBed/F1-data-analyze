@@ -10,7 +10,7 @@ from typing import Dict, Any, List, Optional, Tuple
 
 import requests
 from core.api_base_url import resolve_api_base_url
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QObject, QThread
 
 # 導入翻譯函數
@@ -1202,14 +1202,23 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
 class driverLapAnalysisMDI(UniversalAnalysisMDI):
     """詳細圈速分析 MDI 類 - 實現 UniversalAnalysisMDI 介面"""
     
+    # 信號定義
+    driverChanged = pyqtSignal(str)  # Driver 1 變更
+    driver2Changed = pyqtSignal(str)  # Driver 2 變更
+    
     def __init__(self, parent=None):
         """初始化詳細圈速分析 MDI"""
         super().__init__(analysis_type='laptime', parent=parent)
         print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 基類初始化完成")
         
+        # 創建控制面板
+        self.control_panel = None
+        
         # 調用模組初始化來創建數據管理器和圖表組件
         if self.initialize_module(parent_widget=parent):
             print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 完整初始化成功")
+            # 初始化後創建控制面板
+            self._setup_control_panel()
         else:
             print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 初始化失敗")
         
@@ -1219,27 +1228,128 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
         manager = driverLapAnalysisDataManager(parent=self)
         manager.filter_settings_changed.connect(self._on_filter_settings_changed)
         return manager
+    
+    def _setup_control_panel(self):
+        """設置車手控制面板"""
+        try:
+            print(f"[LAPTIME_MDI] 創建車手控制面板...")
+            self.control_panel = DetailedLapDriverControlPanel(parent=self.main_widget)
+            
+            # 連接信號
+            self.control_panel.driverChanged.connect(self._on_driver_changed)
+            self.control_panel.driver2Changed.connect(self._on_driver2_changed)
+            
+            # 將控制面板添加到主界面
+            if hasattr(self, 'main_widget') and self.main_widget:
+                # 查找主佈局並插入控制面板
+                main_layout = self.main_widget.layout()
+                if main_layout and main_layout.count() > 0:
+                    # 插入到頂部（索引 0）
+                    main_layout.insertWidget(0, self.control_panel)
+                    print(f"[LAPTIME_MDI] ✅ 控制面板已插入主界面")
+                else:
+                    print(f"[LAPTIME_MDI] ⚠️  主界面佈局不可用")
+            
+            # 從主視窗獲取車手列表
+            self._update_driver_list()
+            
+            print(f"[LAPTIME_MDI] ✅ 車手控制面板設置完成")
+        except Exception as e:
+            print(f"[LAPTIME_MDI] ❌ 控制面板設置失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_driver_list(self):
+        """從主視窗更新車手列表"""
+        try:
+            if not self.control_panel:
+                return
+            
+            # 獲取父視窗（主 GUI）
+            parent_window = None
+            if hasattr(self, 'parent_window') and self.parent_window:
+                parent_window = self.parent_window
+            elif hasattr(self, 'parameter_provider') and self.parameter_provider:
+                # 嘗試從 parameter_provider 獲取主視窗
+                parent_window = getattr(self.parameter_provider, 'main_window', None)
+            
+            if not parent_window:
+                # 嘗試向上查找父視窗
+                widget = self.main_widget
+                while widget:
+                    parent = widget.parent()
+                    if hasattr(parent, 'get_drivers_for_year'):
+                        parent_window = parent
+                        break
+                    widget = parent
+            
+            if parent_window and hasattr(parent_window, 'get_drivers_for_year'):
+                year = int(self.current_year) if self.current_year else 2025
+                drivers = parent_window.get_drivers_for_year(year)
+                if drivers:
+                    self.control_panel.set_available_drivers(drivers)
+                    print(f"[LAPTIME_MDI] ✅ 已載入 {len(drivers)} 位車手")
+                else:
+                    print(f"[LAPTIME_MDI] ⚠️  無車手數據")
+            else:
+                print(f"[LAPTIME_MDI] ⚠️  無法獲取主視窗引用")
+        except Exception as e:
+            print(f"[LAPTIME_MDI] ❌ 更新車手列表失敗: {e}")
+    
+    def _on_driver_changed(self, driver: str):
+        """處理 Driver 1 變更"""
+        try:
+            print(f"[LAPTIME_MDI] Driver 1 變更為: {driver}")
+            self.driver1 = driver
+            self.driverChanged.emit(driver)
+            # 重新載入數據
+            self._reload_data_with_current_params()
+        except Exception as e:
+            print(f"[LAPTIME_MDI] ❌ Driver 1 變更處理失敗: {e}")
+    
+    def _on_driver2_changed(self, driver: str):
+        """處理 Driver 2 變更"""
+        try:
+            driver2 = driver if driver else None
+            print(f"[LAPTIME_MDI] Driver 2 變更為: {driver2 if driver2 else 'None'}")
+            self.driver2 = driver2
+            self.driver2Changed.emit(driver if driver else "")
+            # 重新載入數據
+            self._reload_data_with_current_params()
+        except Exception as e:
+            print(f"[LAPTIME_MDI] ❌ Driver 2 變更處理失敗: {e}")
+    
+    def _reload_data_with_current_params(self):
+        """使用當前參數重新載入數據"""
+        try:
+            if not self.data_manager:
+                return
+            
+            # 構建載入參數
+            params = {
+                "year": int(self.current_year) if self.current_year else 2025,
+                "race": self.current_race or "Japan",
+                "session": self.current_session or "R",
+                "driver": getattr(self, 'driver1', None) or "all_drivers",
+                "force_refresh": False
+            }
+            
+            print(f"[LAPTIME_MDI] 重新載入數據: {params}")
+            self.data_manager.load_data(**params)
+        except Exception as e:
+            print(f"[LAPTIME_MDI] ❌ 重新載入數據失敗: {e}")
+    
+    def set_parent_window(self, parent_window):
+        """設置父視窗引用"""
+        self.parent_window = parent_window
+        # 更新車手列表
+        self._update_driver_list()
         
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
-        """覆蓋基類方法，返回英文標題"""
-        year = year or self.current_year
-        race = race or self.current_race
-        session = session or self.current_session
-        
+        """覆蓋基類方法，返回純模組名稱"""
+        from core.gui_i18n import tr
         translated_title = tr("detailed_lap_analysis", "Detailed Lap Analysis")
-        base_title = f"{translated_title} - {year} {race} {session}"
-        
-        if hasattr(self, 'driver1') and hasattr(self, 'driver2'):
-            driver1 = getattr(self, 'driver1', 'VER')
-            driver2 = getattr(self, 'driver2', 'VER')
-
-            if driver1 == driver2:
-                base_title += f" - {driver1}"
-            else:
-                vs_text = tr("versus", "vs")
-                base_title += f" - {driver1} {vs_text} {driver2}"
-        
-        return base_title
+        return translated_title
 
     def create_chart_widget(self):
         """創建圖表組件"""
@@ -1297,6 +1407,164 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
 
 # 導入專用圖表組件
 from .driverlap_analysis_chart_widget import driverLapAnalysisChartWidget
+
+
+class DetailedLapDriverControlPanel(QWidget):
+    """
+    詳細圈速分析車手控制面板
+    參考 Throttle Line Chart 的 ThrottleLineChartControlPanel 實現
+    提供與主 GUI 一致的 driver1/driver2 選擇邏輯
+    """
+    
+    # 信號定義
+    driverChanged = pyqtSignal(str)  # Driver 1 變更
+    driver2Changed = pyqtSignal(str)  # Driver 2 變更
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._available_drivers: List[str] = []
+        self._selected_driver: Optional[str] = None
+        self._selected_driver2: Optional[str] = None
+        self._build_ui()
+    
+    def _build_ui(self) -> None:
+        """構建控制面板 UI"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(5)
+        
+        # 車手選擇器（並排顯示以節省空間）
+        drivers_layout = QHBoxLayout()
+        drivers_layout.setSpacing(10)
+        
+        # Driver 1（左側）- 必選
+        driver1_label = QLabel(tr("detailed_lap.driver1", "Driver 1"))
+        driver1_label.setFixedWidth(55)
+        self.driver_combo = QComboBox()
+        self.driver_combo.setEditable(False)
+        self.driver_combo.setMaximumWidth(100)
+        self.driver_combo.currentTextChanged.connect(self._emit_driver_change)
+        drivers_layout.addWidget(driver1_label)
+        drivers_layout.addWidget(self.driver_combo)
+        
+        drivers_layout.addSpacing(10)  # 間隔
+        
+        # Driver 2（右側）- 選用
+        driver2_label = QLabel(tr("detailed_lap.driver2", "Driver 2"))
+        driver2_label.setFixedWidth(55)
+        self.driver2_combo = QComboBox()
+        self.driver2_combo.setEditable(False)
+        self.driver2_combo.setMaximumWidth(100)
+        self.driver2_combo.currentTextChanged.connect(self._emit_driver2_change)
+        drivers_layout.addWidget(driver2_label)
+        drivers_layout.addWidget(self.driver2_combo)
+        
+        drivers_layout.addStretch()  # 右側留空
+        layout.addLayout(drivers_layout)
+    
+    def set_available_drivers(self, drivers: List[str], selected: Optional[str] = None, selected2: Optional[str] = None) -> None:
+        """
+        設定可用車手列表，並同時更新兩個選擇器
+        與 Throttle Line Chart 和主 GUI 邏輯一致
+        """
+        normalized = [str(driver).upper() for driver in drivers if driver]
+        if normalized == self._available_drivers:
+            return
+        
+        self._available_drivers = normalized
+        
+        # ========== 更新車手1選擇器（必選） ==========
+        self.driver_combo.blockSignals(True)
+        self.driver_combo.clear()
+        
+        if not normalized:
+            placeholder = tr("detailed_lap.select_driver", "Select driver")
+            self.driver_combo.addItem(placeholder, "")
+            self.driver_combo.setCurrentIndex(0)
+            self._selected_driver = None
+        else:
+            for code in normalized:
+                self.driver_combo.addItem(code, code)
+            
+            # 預設選擇邏輯：優先使用 selected，否則第一位
+            desired = (selected or self._selected_driver or normalized[0]).upper()
+            if desired not in normalized:
+                desired = normalized[0]
+            
+            index = self.driver_combo.findData(desired)
+            if index == -1:
+                index = self.driver_combo.findText(desired)
+            if index != -1:
+                self.driver_combo.setCurrentIndex(index)
+                self._selected_driver = desired
+            else:
+                self.driver_combo.setCurrentIndex(0)
+                self._selected_driver = normalized[0]
+        
+        self.driver_combo.blockSignals(False)
+        
+        # ========== 更新車手2選擇器（選用） ==========
+        self.driver2_combo.blockSignals(True)
+        self.driver2_combo.clear()
+        
+        if not normalized:
+            placeholder = tr("detailed_lap.select_driver", "Select driver")
+            self.driver2_combo.addItem(placeholder, "")
+            self.driver2_combo.setCurrentIndex(0)
+            self._selected_driver2 = None
+        else:
+            # 添加「無」選項（與主 GUI 一致）
+            self.driver2_combo.addItem(tr("none_option", "None"), "")
+            for code in normalized:
+                self.driver2_combo.addItem(code, code)
+            
+            # 預設為 None（與主 GUI 和 Throttle Line Chart 一致）
+            if selected2 and selected2.upper() in normalized:
+                desired2 = selected2.upper()
+                index = self.driver2_combo.findData(desired2)
+                if index == -1:
+                    index = self.driver2_combo.findText(desired2)
+                if index != -1:
+                    self.driver2_combo.setCurrentIndex(index)
+                    self._selected_driver2 = desired2
+                else:
+                    self.driver2_combo.setCurrentIndex(0)
+                    self._selected_driver2 = None
+            else:
+                # 未指定 selected2，預設為 None
+                self.driver2_combo.setCurrentIndex(0)
+                self._selected_driver2 = None
+        
+        self.driver2_combo.blockSignals(False)
+    
+    def _emit_driver_change(self, value: str) -> None:
+        """發射 Driver 1 變更訊號"""
+        driver = str(value).strip().upper()
+        if not driver:
+            return
+        if driver == self._selected_driver:
+            return
+        self._selected_driver = driver
+        print(f"[DETAILED_LAP_CTRL] Driver 1 變更: {driver}")
+        self.driverChanged.emit(driver)
+    
+    def _emit_driver2_change(self, value: str) -> None:
+        """發射 Driver 2 變更訊號"""
+        driver = str(value).strip().upper()
+        # 允許空值（表示取消第二位車手）
+        if driver == self._selected_driver2:
+            return
+        self._selected_driver2 = driver if driver else None
+        print(f"[DETAILED_LAP_CTRL] Driver 2 變更: {driver if driver else 'None'}")
+        self.driver2Changed.emit(driver if driver else "")
+    
+    def get_selected_driver(self) -> Optional[str]:
+        """獲取當前選擇的 Driver 1"""
+        return self._selected_driver
+    
+    def get_selected_driver2(self) -> Optional[str]:
+        """獲取當前選擇的 Driver 2"""
+        return self._selected_driver2
 
 
 class driverLapAnalysisControlWidget(QWidget):

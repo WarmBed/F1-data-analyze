@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (
     QHeaderView, QDialog, QDialogButtonBox, QComboBox, QCheckBox,
     QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
     QTabWidget, QScrollArea, QSplitter, QAbstractItemView, QLineEdit,
-    QBoxLayout,
+    QBoxLayout, QSizePolicy,
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
@@ -53,65 +53,42 @@ class AccidentStatisticsWidget(QWidget):
         self.setup_ui()
         
     def setup_ui(self):
-        """設置使用者界面 (按照規格設計，支援響應式隱藏表格)"""
+        """設置使用者界面 - 簡化設計：統計表格 + 車手圖表 + Safety Periods"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
-        layout.setSpacing(15)
+        layout.setContentsMargins(8, 8, 8, 8)  # 減少邊距
+        layout.setSpacing(8)  # 大幅減少間距
         
-        # 統計卡片區域
-        self.cards_layout = self.setup_statistics_cards()
-        layout.addLayout(self.cards_layout)
+        # 第1行：Flag Statistics - 統計表格（固定高度，橫向顯示）
+        self.statistics_table = self.setup_statistics_table()
+        layout.addWidget(self.statistics_table, 0)  # stretch = 0，不擴展
         
-        # 雙欄表格區域 (保存引用以便隱藏)
-        self.tables_layout = QHBoxLayout()
-        self.tables_layout.setSpacing(15)
+        # 第2行：Driver Incident Frequency - 車手事故頻率條形圖（內容驅動）
+        self.driver_chart = DriverIncidentBarChart()
+        layout.addWidget(self.driver_chart, 0)  # stretch = 0，不擴展
         
-        # 旗標統計表格 (左側)
-        self.flag_table_widget = self.setup_flag_statistics_table()
-        self.tables_layout.addWidget(self.flag_table_widget)
+        # 第3行：Safety Periods（可擴展）
+        self.safety_periods_widget = SafetyPeriodsWidget()
+        layout.addWidget(self.safety_periods_widget, 1)  # stretch = 1，可擴展
         
-        # 處罰清單表格 (右側)
-        self.penalty_table_widget = self.setup_penalty_list_table()
-        self.tables_layout.addWidget(self.penalty_table_widget)
-        
-        # 創建表格容器
+        # 保存舊的引用以保持相容性
+        self.cards_layout = None  # 不再使用卡片
+        self.tables_layout = None  # 不再使用舊表格
         self.tables_container = QWidget()
-        self.tables_container.setLayout(self.tables_layout)
-        layout.addWidget(self.tables_container)
-        
-        # 移除時間分佈圖表區域 (用戶要求取消)
-        # self.chart_widget = self.setup_time_distribution_chart()
-        # layout.addWidget(self.chart_widget)
         
         # 狀態列
         self.status_layout = QHBoxLayout()
         layout.addLayout(self.status_layout)
     
     def resizeEvent(self, event):
-        """響應式調整：縮小時改為垂直堆疊，而非隱藏內容"""
+        """響應式調整 - 簡化設計：主要針對表格和圖表優化"""
         super().resizeEvent(event)
 
-        if not hasattr(self, 'tables_layout'):
-            return
-
-        MIN_WIDTH_FOR_HORIZONTAL_LAYOUT = 820
-        MIN_WIDTH_FOR_SIMPLIFIED_CARDS = 760
-
-        if self.width() < MIN_WIDTH_FOR_HORIZONTAL_LAYOUT:
-            self.tables_layout.setDirection(QBoxLayout.TopToBottom)
-        else:
-            self.tables_layout.setDirection(QBoxLayout.LeftToRight)
-
-        simplified = self.width() < MIN_WIDTH_FOR_SIMPLIFIED_CARDS
-        if simplified != self._simplified_cards:
-            self._simplified_cards = simplified
-            self._update_card_display_mode()
-
-        if hasattr(self, 'tables_container'):
-            if self._simplified_cards:
-                self.tables_container.hide()
-            else:
-                self.tables_container.show()
+        # ⚠️ 移除干擾代碼：不再動態調整 stats_table 高度
+        # 簡化設計採用固定高度，所有組件都是垂直堆疊
+        # Flag Statistics Summary: 固定 80px (容器) + 55px (表格)
+        # Driver Chart: 內容驅動高度
+        # Safety Periods: 可擴展填充剩餘空間
+        pass
         
     def setup_statistics_cards(self):
         """設置統計卡片區域 - 新版本：Track Limit、雙黃旗、黃旗、紅旗次數"""
@@ -161,6 +138,101 @@ class AccidentStatisticsWidget(QWidget):
         self._update_card_display_mode()
 
         return cards_layout
+    
+    def setup_statistics_table(self):
+        """設置統計表格 - 橫向顯示，無外框"""
+        # 創建容器 Widget（無邊框）
+        container = QWidget()
+        
+        # ⚠️ 修復：增加容器高度以容納完整的表格內容
+        container.setFixedHeight(64)  # 增加高度確保所有內容可見
+        container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)  # 水平可擴展，垂直固定
+        
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除邊距
+        layout.setSpacing(0)  # 無間距
+        layout.setAlignment(Qt.AlignTop)  # ⚠️ 關鍵修復：內容向上對齊
+        
+        # 標題標籤 - 隱藏
+        # title_label = QLabel(tr('flag_statistics_summary', '📊 Flag Statistics Summary'))
+        # title_label.setStyleSheet("""
+        #     QLabel {
+        #         font-size: 14px;
+        #         font-weight: bold;
+        #         color: #333;
+        #         margin-bottom: 5px;
+        #     }
+        # """)
+        # layout.addWidget(title_label)
+        
+        # 建立橫向統計表格
+        self.stats_table = QTableWidget()
+        self.stats_table.setRowCount(1)  # 只有一行數據
+        self.stats_table.setColumnCount(4)  # 四個旗標類型
+        
+        # 設置橫向標題
+        self.stats_table.setHorizontalHeaderLabels([
+            tr("track_limit_short", "⚠️ Track Limit"),
+            tr("double_yellow_short", "🟡🟡 Double Yellow"),
+            tr("yellow_flag_short", "🟡 Yellow Flag"),
+            tr("red_flag_short", "🔴 Red Flag")
+        ])
+        
+        # 設置表格樣式 - 允許欄位自動調整寬度
+        self.stats_table.setAlternatingRowColors(False)
+        self.stats_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.stats_table.horizontalHeader().setStretchLastSection(True)
+        # ✅ 修復：使用 Stretch 模式讓欄位平均分配空間，確保內容完整顯示
+        self.stats_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.stats_table.verticalHeader().setVisible(False)
+        
+        # ⚠️ 深度修復：調整高度參數以正確顯示數字
+        # 計算：標題行(24px) + 數據行(36px) + 邊框(4px) = 64px
+        self.stats_table.setFixedHeight(64)  # 增加高度確保數字不被截斷
+        
+        # 設置標題行高度
+        header = self.stats_table.horizontalHeader()
+        header.setFixedHeight(24)  # 標題行增加到 24px，確保標題完整顯示
+        
+        # 設置數據行高度 - 增加到 36px 以確保數字不被截斷
+        self.stats_table.setRowHeight(0, 36)  # 數據行 36px，確保數字完整顯示
+        
+        # 設置大小政策：水平可擴展，垂直固定（與Driver Chart類似的行為）
+        self.stats_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        
+        # 簡潔樣式，數字置中且清晰可見
+        self.stats_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QTableWidget::item {
+                text-align: center;
+                padding: 6px 4px;
+                font-size: 20px;
+                font-weight: bold;
+                color: #1a1a1a;
+            }
+            QHeaderView::section {
+                background-color: #f5f5f5;
+                border: 1px solid #ddd;
+                padding: 4px 2px;
+                font-size: 11px;
+                font-weight: bold;
+                text-align: center;
+                height: 24px;
+            }
+        """)
+        
+        # 初始化橫向數據（一行四列） - 使用 Qt.AlignCenter 確保數字置中顯示
+        for col in range(4):
+            item = QTableWidgetItem("0")
+            item.setTextAlignment(Qt.AlignCenter)  # ⚠️ 關鍵修復：確保數字置中
+            self.stats_table.setItem(0, col, item)
+        
+        layout.addWidget(self.stats_table)
+        return container
         
     def create_stat_card(
         self,
@@ -446,21 +518,101 @@ class AccidentStatisticsWidget(QWidget):
         return group_box
         
     def update_statistics_data(self, json_data):
-        """更新統計數據 - 新版本：處理 all_incidents_summary JSON 格式"""
+        """更新統計數據 - 簡化設計版本：統計表格 + 車手圖表 + Safety Periods"""
         try:
-            print(f"[AccidentStatisticsWidget] 開始更新數據")
+            print(f"[AccidentStatisticsWidget] 開始更新數據 (簡化設計)")
             
-            # 更新統計卡片
-            self.update_statistics_cards_from_json(json_data)
+            # 更新統計表格 (替代卡片)
+            self.update_statistics_table_from_json(json_data)
             
-            # 更新表格
-            self.update_flag_table_from_json(json_data)
-            self.update_penalty_table_from_json(json_data)
+            # 更新車手事故頻率圖表
+            self.update_driver_incident_chart(json_data)
             
-            print(f"[AccidentStatisticsWidget] 數據更新完成")
+            # 更新 Safety Periods
+            self.update_safety_periods_data(json_data)
+            
+            print(f"[AccidentStatisticsWidget] 數據更新完成 (簡化設計)")
             
         except Exception as e:
             print(f"[AccidentStatisticsWidget] 數據更新失敗: {e}")
+            traceback.print_exc()
+            
+    def update_statistics_table_from_json(self, json_data):
+        """從JSON數據更新統計表格 - 替代卡片更新"""
+        try:
+            # 從JSON數據中提取統計信息
+            data_section = json_data.get('data', {})
+            all_incidents = data_section.get('all_incidents', [])
+            
+            # 計算各種旗標次數
+            track_limit_count = 0
+            double_yellow_count = 0
+            yellow_count = 0
+            red_count = 0
+            
+            for incident in all_incidents:
+                message = incident.get('message', '').upper()
+                category = incident.get('category', '').upper()
+                
+                # Track Limit違規
+                if 'TRACK LIMITS' in message or 'TRACK LIMIT' in message:
+                    track_limit_count += 1
+                
+                # 檢查 category 字段
+                if category == 'YELLOW_FLAG':
+                    # 檢查是否為雙黃旗
+                    if 'DOUBLE YELLOW' in message:
+                        double_yellow_count += 1
+                    else:
+                        yellow_count += 1
+                elif category == 'RED_FLAG':
+                    red_count += 1
+            
+            # 更新橫向表格數據（一行四列） - 確保數字置中顯示
+            counts = [track_limit_count, double_yellow_count, yellow_count, red_count]
+            
+            for col, count in enumerate(counts):
+                if hasattr(self, 'stats_table'):
+                    item = QTableWidgetItem(str(count))
+                    item.setTextAlignment(Qt.AlignCenter)  # ⚠️ 關鍵修復：確保數字置中
+                    self.stats_table.setItem(0, col, item)
+            
+            print(f"[AccidentStatisticsWidget] 統計表格更新: Track Limit={track_limit_count}, 雙黃旗={double_yellow_count}, 黃旗={yellow_count}, 紅旗={red_count}")
+            
+        except Exception as e:
+            print(f"[AccidentStatisticsWidget] 統計表格更新失敗: {e}")
+            
+    def update_driver_incident_chart(self, json_data):
+        """更新車手事故頻率圖表"""
+        try:
+            data_section = json_data.get('data', {})
+            all_incidents = data_section.get('all_incidents', [])
+            
+            # 統計每個車手的事故數量
+            driver_incidents = {}
+            for incident in all_incidents:
+                # ✅ 修復：正確讀取 driver_codes 列表（複數形式）
+                driver_codes = incident.get('driver_codes', [])
+                for driver in driver_codes:
+                    # ✅ 過濾無效車手代碼
+                    if driver and driver != 'UNK' and driver.strip():
+                        driver_incidents[driver] = driver_incidents.get(driver, 0) + 1
+            
+            self.driver_chart.update_chart_data(driver_incidents)
+            
+        except Exception as e:
+            print(f"[AccidentStatisticsWidget] 車手事故圖表更新失敗: {e}")
+            
+    def update_safety_periods_data(self, json_data):
+        """更新安全車時段數據"""
+        try:
+            data_section = json_data.get('data', {})
+            safety_periods = data_section.get('safety_periods', [])
+            
+            self.safety_periods_widget.update_safety_periods_data(safety_periods)
+            
+        except Exception as e:
+            print(f"[AccidentStatisticsWidget] Safety Periods 更新失敗: {e}")
             
     def update_statistics_cards_from_json(self, json_data):
         """從JSON數據更新統計卡片"""
@@ -993,13 +1145,13 @@ class AccidentAnalysisModule(IAnalysisModule):
         return (900, 700)  # 寬度, 高度
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱，不包含年份/賽事/賽段"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"{tr('accident_analysis')}_{year}_{race}_{session}"
+            return f"{tr('accident_analysis')}"
         else:
-            return f"Accident Analysis_{year}_{race}_{session}"
+            return f"Accident Analysis"
     
     def update_parameters(self, year: int, race: str, session: str) -> None:
         """
@@ -2183,6 +2335,336 @@ class AccidentKeyEventsWidget(QWidget):
         layout.addWidget(consequence_label)
         
         return card
+
+
+class SafetyPeriodsWidget(QWidget):
+    """🏁 Safety Periods Widget - 安全車時段統計"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """設置 Safety Periods UI - 無外框版本"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除邊距
+        layout.setSpacing(5)  # 減少間距
+        
+        # 標題標籤
+        title_label = QLabel(tr('safety_periods', '🏁 Safety Periods (2 total)'))
+        title_label.setStyleSheet("""
+            QLabel {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 3px;
+            }
+        """)
+        layout.addWidget(title_label)
+        
+        # 創建 Safety Periods 表格
+        self.safety_table = QTableWidget()
+        self.safety_table.setColumnCount(4)
+        self.safety_table.setHorizontalHeaderLabels([
+            tr('period', 'Period'),
+            tr('start_lap', 'Start Lap'),
+            tr('end_lap', 'End Lap'),
+            tr('reason', 'Reason')
+        ])
+        
+        # 設置表格樣式 - 簡潔版本
+        self.safety_table.setAlternatingRowColors(True)
+        self.safety_table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.safety_table.horizontalHeader().setStretchLastSection(True)
+        self.safety_table.verticalHeader().setVisible(False)
+        
+        # 設置可擴展的高度 - 隨視窗拖拉而放大
+        self.safety_table.setMinimumHeight(100)  # 最小高度
+        # 移除最大高度限制，讓它可以隨視窗擴展
+        
+        # 設置大小政策：垂直方向可擴展
+        self.safety_table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # 簡潔的表格樣式
+        self.safety_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                background-color: white;
+            }
+            QHeaderView::section {
+                background-color: #f5f5f5;
+                border: 1px solid #ddd;
+                padding: 4px;
+                font-weight: bold;
+                font-size: 12px;
+            }
+        """)
+        
+        # 設置欄位寬度
+        self.safety_table.setColumnWidth(0, 60)    # Period
+        self.safety_table.setColumnWidth(1, 80)    # Start Lap
+        self.safety_table.setColumnWidth(2, 80)    # End Lap
+        
+        layout.addWidget(self.safety_table)
+        
+    def update_safety_periods_data(self, safety_periods_data):
+        """更新 Safety Periods 數據 - 僅使用真實數據"""
+        if not safety_periods_data:
+            # ⚠️ 禁用模擬數據政策：顯示無數據訊息
+            self.safety_table.setRowCount(1)
+            self.safety_table.setItem(0, 0, QTableWidgetItem("-"))
+            self.safety_table.setItem(0, 1, QTableWidgetItem("-"))
+            self.safety_table.setItem(0, 2, QTableWidgetItem("-"))
+            self.safety_table.setItem(0, 3, QTableWidgetItem(tr('no_safety_periods', 'No safety car periods in this session')))
+            return
+            
+        # 處理實際數據
+        self.safety_table.setRowCount(len(safety_periods_data))
+        
+        for row, period in enumerate(safety_periods_data):
+            self.safety_table.setItem(row, 0, QTableWidgetItem(period.get('type', 'SC')))
+            self.safety_table.setItem(row, 1, QTableWidgetItem(str(period.get('start_lap', ''))))
+            self.safety_table.setItem(row, 2, QTableWidgetItem(str(period.get('end_lap', '')))) 
+            self.safety_table.setItem(row, 3, QTableWidgetItem(period.get('reason', '')))
+
+
+class PenaltiesSummaryWidget(QGroupBox):
+    """⚖️ Penalties Summary Widget - 處罰統計摘要"""
+    
+    def __init__(self, parent=None):
+        super().__init__(tr('penalties_summary', '⚖️ Penalties (4 total)'), parent)
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """設置 Penalties Summary UI"""
+        # 設置 GroupBox 樣式
+        self.setStyleSheet("""
+            QGroupBox {
+                font-size: 14px;
+                font-weight: bold;
+                border: 2px solid #ddd;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+            }
+        """)
+        
+        layout = QVBoxLayout(self)
+        
+        # 處罰類型統計卡片區域
+        cards_layout = QHBoxLayout()
+        
+        # 時間處罰卡片
+        self.time_penalty_card = self.create_penalty_card(
+            tr('time_penalties', 'Time'),
+            "2",
+            "#FF9800"
+        )
+        cards_layout.addWidget(self.time_penalty_card)
+        
+        # 位置處罰卡片  
+        self.position_penalty_card = self.create_penalty_card(
+            tr('position_penalties', 'Grid'),
+            "1", 
+            "#F44336"
+        )
+        cards_layout.addWidget(self.position_penalty_card)
+        
+        # 警告卡片
+        self.warning_card = self.create_penalty_card(
+            tr('warnings', 'Warnings'),
+            "1",
+            "#FFC107" 
+        )
+        cards_layout.addWidget(self.warning_card)
+        
+        layout.addLayout(cards_layout)
+        
+        # 最嚴重處罰顯示
+        self.severe_penalty_label = QLabel(tr('most_severe', 'Most severe: 5-second time penalty (VER)'))
+        self.severe_penalty_label.setStyleSheet("""
+            QLabel {
+                font-size: 12px;
+                color: #374151;
+                padding: 5px;
+                background-color: rgba(239, 68, 68, 0.1);
+                border-radius: 4px;
+                margin-top: 5px;
+            }
+        """)
+        layout.addWidget(self.severe_penalty_label)
+        
+    def create_penalty_card(self, title, count, color):
+        """創建處罰統計卡片"""
+        card = QFrame()
+        card.setFrameStyle(QFrame.StyledPanel)
+        card.setStyleSheet(f"""
+            QFrame {{
+                background-color: rgba(255, 255, 255, 0.1);
+                border: 2px solid {color};
+                border-radius: 8px;
+                padding: 10px;
+                margin: 2px;
+            }}
+        """)
+        
+        layout = QVBoxLayout(card)
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setSpacing(4)
+        
+        # 標題
+        title_label = QLabel(title)
+        title_label.setAlignment(Qt.AlignCenter)
+        title_label.setStyleSheet(f"""
+            font-size: 12px; 
+            font-weight: bold; 
+            color: {color};
+        """)
+        layout.addWidget(title_label)
+        
+        # 計數
+        count_label = QLabel(count)
+        count_label.setAlignment(Qt.AlignCenter)
+        count_label.setStyleSheet(f"""
+            font-size: 20px; 
+            font-weight: bold; 
+            color: {color};
+        """)
+        layout.addWidget(count_label)
+        
+        # 儲存標籤引用以便更新
+        card.count_label = count_label
+        
+        return card
+        
+    def update_penalties_data(self, penalties_data):
+        """更新處罰數據"""
+        if not penalties_data:
+            # 使用預設示例數據
+            self.time_penalty_card.count_label.setText("2")
+            self.position_penalty_card.count_label.setText("1")
+            self.warning_card.count_label.setText("1")
+            self.severe_penalty_label.setText(tr('most_severe_example', 'Most severe: 5-second time penalty (VER)'))
+            return
+            
+        # 處理實際數據
+        time_penalties = sum(1 for p in penalties_data if 'time' in p.get('type', '').lower())
+        position_penalties = sum(1 for p in penalties_data if 'grid' in p.get('type', '').lower())
+        warnings = sum(1 for p in penalties_data if 'warning' in p.get('type', '').lower())
+        
+        self.time_penalty_card.count_label.setText(str(time_penalties))
+        self.position_penalty_card.count_label.setText(str(position_penalties))
+        self.warning_card.count_label.setText(str(warnings))
+        
+        # 找出最嚴重的處罰
+        if penalties_data:
+            most_severe = max(penalties_data, key=lambda x: x.get('severity_score', 0))
+            driver = most_severe.get('driver', 'N/A')
+            penalty_type = most_severe.get('type', 'N/A')
+            self.severe_penalty_label.setText(f"Most severe: {penalty_type} ({driver})")
+
+
+class DriverIncidentBarChart(QFrame):
+    """🏆 Driver Incident Frequency - 車手事故頻率條形圖"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setup_ui()
+        self.incident_data = {}
+        
+    def setup_ui(self):
+        """設置條形圖UI - 無外框版本"""
+        # 移除外框
+        self.setFrameStyle(QFrame.NoFrame)
+        
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)  # 移除邊距
+        layout.setSpacing(5)  # 減少間距
+        
+        # 標題
+        title_label = QLabel(tr('driver_incident_frequency', '🏆 Driver Incident Frequency'))
+        title_label.setStyleSheet("""
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 3px;
+        """)
+        layout.addWidget(title_label)
+        
+        # 圖表區域 - 動態調整但以內容為主，放大字體
+        self.chart_area = QLabel()
+        self.chart_area.setStyleSheet("""
+            QLabel {
+                background-color: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 8px;
+                font-family: 'Consolas', 'Monaco', monospace;
+                font-size: 12px;
+                color: #374151;
+                line-height: 1.2;
+            }
+        """)
+        self.chart_area.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        
+        # 設置大小政策：水平方向擴展，垂直方向以內容為主
+        self.chart_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
+        
+        # 調整高度以配合放大的內容
+        self.chart_area.setMinimumHeight(140)  # 增加最小高度
+        self.chart_area.setMaximumHeight(220)  # 增加最大高度
+        
+        layout.addWidget(self.chart_area)
+        
+    def update_chart_data(self, driver_incidents):
+        """更新圖表數據 - 僅使用真實數據"""
+        if not driver_incidents:
+            # ⚠️ 禁用模擬數據政策：顯示無數據訊息
+            self.chart_area.setText(tr('no_incident_data', 'No driver incident data available\n\nPlease load accident analysis data from API or CLI'))
+            return
+            
+        self._render_chart(driver_incidents)
+        
+    def _render_chart(self, data):
+        """渲染ASCII條形圖 - 放大1px，完美對齊線條"""
+        if not data:
+            self.chart_area.setText(tr('no_data_available', 'No incident data available'))
+            return
+            
+        # 排序數據
+        sorted_data = sorted(data.items(), key=lambda x: x[1], reverse=True)
+        max_value = max(data.values()) if data else 1
+        
+        # 放大條形圖寬度 - 增加1px效果
+        max_bar_width = 40  # 從35增加到40
+        
+        chart_lines = []
+        
+        # 添加標題行 - 使用固定寬度確保完美對齊
+        header = f"{'Driver':<6} │ {'Incidents':^40} │ {'Count':>5}"
+        separator = "───────┼─" + "─" * 40 + "─┼──────"
+        
+        chart_lines.append(header)
+        chart_lines.append(separator)
+        
+        for driver, count in sorted_data[:8]:  # 只顯示前8名
+            # 計算條形長度
+            bar_length = int((count / max_value) * max_bar_width) if max_value > 0 else 0
+            bar = "█" * bar_length
+            
+            # 格式化輸出 - 完美對齊所有列
+            # Driver: 左對齊6字符, Bar: 左對齊40字符, Count: 右對齊5字符
+            line = f"{driver:<6} │ {bar:<40} │ {count:>5}"
+            chart_lines.append(line)
+        
+        chart_text = "\n".join(chart_lines)
+        self.chart_area.setText(chart_text)
 
 
 # 註冊模組到工廠

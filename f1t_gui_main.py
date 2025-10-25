@@ -39,7 +39,7 @@ from PyQt5.QtWidgets import (
     QSplitter, QLineEdit, QStatusBar, QLabel, QProgressBar, QGroupBox,
     QFrame, QToolBar, QAction, QMenuBar, QMenu, QGridLayout, QLCDNumber,
     QTextEdit, QScrollArea, QHeaderView, QDialog, QDialogButtonBox, QMessageBox,
-    QListWidget, QListWidgetItem, QSpinBox, QSizePolicy, QFileDialog
+    QListWidget, QListWidgetItem, QSpinBox, QSizePolicy, QFileDialog, QInputDialog
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QPoint, QObject, QRect, QThread
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor, QPainter, QPen, QBrush, QMouseEvent
@@ -67,7 +67,22 @@ from core.logger import setup_logging, get_logger
 
 # 檢測是否為 PyInstaller 打包的 EXE
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-LOG_LEVEL = "CRITICAL" if IS_EXE_MODE else "INFO"
+LOG_LEVEL = "INFO"  # 統一使用 INFO 級別（包含 EXE 模式）以便調試
+
+def get_resource_path(relative_path):
+    """獲取資源文件的絕對路徑（支援 EXE 模式）
+    
+    在開發模式下，返回相對於專案根目錄的路徑
+    在 EXE 模式下，返回 PyInstaller 打包的臨時目錄路徑
+    """
+    if IS_EXE_MODE:
+        # EXE 模式：使用 PyInstaller 的臨時資源目錄
+        base_path = Path(sys._MEIPASS)
+    else:
+        # 開發模式：使用當前工作目錄
+        base_path = Path.cwd()
+    
+    return base_path / relative_path
 
 setup_logging(component="gui", level=LOG_LEVEL, console_level=None)
 logger = get_logger("main", component="gui")
@@ -839,8 +854,21 @@ class LapAnalysisOptionsDialog(QDialog):
         
         layout.addWidget(driver_group)
         
-        # 載入可用車手
-        self._load_available_drivers()
+        # 🆕 從主視窗快取載入車手列表
+        year = int(parent_window.year_combo.currentText())
+        drivers = parent_window.get_drivers_for_year(year)
+        
+        # 填充車手下拉選單
+        if drivers:
+            self.driver1_combo.addItems(drivers)
+            self.driver1_combo.setCurrentText(drivers[0])  # 預設第一位
+            
+            self.driver2_combo.addItem(tr("none_option", "None"))
+            self.driver2_combo.addItems(drivers)
+            self.driver2_combo.setCurrentIndex(0)  # 預設 None
+            print(f"[DIALOG] ✅ 已載入 {len(drivers)} 位車手到對話框")
+        else:
+            print(f"[DIALOG] ⚠️  無車手數據")
         
         # 創建列表控件 - 更緊湊的設計
         telemetry_group = QGroupBox(tr("telemetry_options"))
@@ -913,199 +941,10 @@ class LapAnalysisOptionsDialog(QDialog):
         
         layout.addLayout(button_layout)
         
-    def _load_available_drivers(self):
-        """載入可用的車手列表 - 從進站分析JSON獲取"""
-        try:
-            import json
-            import glob
-            import os
-            
-            # 獲取當前年份和賽事 - 從父視窗獲取
-            year = "2025"
-            race = "Japan"
-            
-            # 嘗試從父視窗獲取參數
-            try:
-                if self.parent() and hasattr(self.parent(), 'get_current_parameters'):
-                    params = self.parent().get_current_parameters()
-                    year = params.get('year', '2025')
-                    race = params.get('race', 'Japan')
-                    print(f"[DRIVERS] 從父視窗獲取參數: {year} {race}")
-            except Exception as param_error:
-                print(f"[DRIVERS] 無法從父視窗獲取參數 ({param_error})，使用預設值: {year} {race}")
-            
-            if hasattr(self, 'year_combo'):
-                year = self.year_combo.currentText()
-                race = self.race_combo.currentText()
-            
-            print(f"[DRIVERS] 載入車手列表: {year} {race}")
-            
-            drivers = []
-            
-            # ========== 策略 1: 從 team_colors JSON 讀取（F98 功能生成） ==========
-            print(f"[DRIVERS] 步驟 1: 從 team_colors JSON 讀取車手列表...")
-            team_color_patterns = [
-                f"json/team_colors_{year}_*.json",
-                f"json/team_colors_2025_*.json",  # 備用：2025 年數據
-                f"json/team_colors_2024_*.json"   # 備用：2024 年數據
-            ]
-            
-            for pattern in team_color_patterns:
-                files = glob.glob(pattern)
-                if files:
-                    latest_file = max(files, key=os.path.getmtime)
-                    try:
-                        with open(latest_file, 'r', encoding='utf-8') as f:
-                            color_data = json.load(f)
-                            if 'data' in color_data and 'drivers' in color_data['data']:
-                                drivers = sorted(list(color_data['data']['drivers'].keys()))
-                                print(f"[DRIVERS] ✅ 從 team_colors JSON 載入 {len(drivers)} 個車手")
-                                break
-                    except Exception as e:
-                        print(f"[DRIVERS] ⚠️  讀取 team_colors 失敗: {e}")
-            
-            # ========== 策略 1.5: 如果沒有 JSON，通過 API 生成 team_colors ==========
-            if not drivers:
-                print(f"[DRIVERS] ⚠️  找不到 team_colors JSON，嘗試通過 API 生成...")
-                try:
-                    import requests
-                    api_base = resolve_api_base_url()
-                    
-                    # 調用 F98 API 生成 team_colors
-                    response = requests.post(
-                        f"{api_base}/analyze",
-                        json={"function_id": "98", "year": int(year)},
-                        timeout=30
-                    )
-                    
-                    if response.status_code == 200:
-                        result = response.json()
-                        if result.get('success') and 'data' in result:
-                            data = result['data'].get('data', {})
-                            if 'drivers' in data:
-                                drivers = sorted(list(data['drivers'].keys()))
-                                print(f"[DRIVERS] ✅ 通過 API 生成並載入 {len(drivers)} 個車手")
-                    else:
-                        print(f"[DRIVERS] ❌ API 調用失敗: HTTP {response.status_code}")
-                except Exception as api_error:
-                    print(f"[DRIVERS] ❌ API 調用異常: {api_error}")
-            
-            # ========== 策略 2: 如果沒有 team_colors，從進站 JSON 讀取 ==========
-            if not drivers:
-                print(f"[DRIVERS] 步驟 2: 從進站分析 JSON 讀取...")
-                pitstop_patterns = [
-                    f"json/pitstop_analysis_{year}_{race}*.json",
-                    f"json_exports/pitstop_analysis_{year}_{race}*.json",
-                    f"cache/driver_fastest_pitstop_{year}_{race}*.pkl",
-                    f"json/driver_pitstop_summary_{year}*.json"
-                ]
-                
-                found_file = None
-                
-                # 嘗試找到進站分析檔案
-                for pattern in pitstop_patterns:
-                    files = glob.glob(pattern)
-                    if files:
-                        found_file = files[0]  # 取第一個找到的檔案
-                        print(f"[DRIVERS] 找到進站分析檔案: {found_file}")
-                        break
-                
-                if found_file and found_file.endswith('.json'):
-                    # 從JSON檔案中提取車手代碼
-                    with open(found_file, 'r', encoding='utf-8') as f:
-                        data = json.load(f)
-                        
-                    # 嘗試從不同的JSON結構中提取車手代碼
-                    if 'drivers' in data:
-                        drivers = data['drivers']
-                        print(f"[DRIVERS] 從 data['drivers'] 提取")
-                    elif 'data' in data:
-                        # 情況 1: data 是 dict（如 driver_detailed_pitstop_records）
-                        if isinstance(data['data'], dict):
-                            # 檢查是否有車手相關的鍵值
-                            for key, value in data['data'].items():
-                                if 'drivers' in key.lower():
-                                    if isinstance(value, list):
-                                        drivers = value
-                                    elif isinstance(value, dict):
-                                        drivers = list(value.keys())
-                                    print(f"[DRIVERS] 從 data['data']['{key}'] 提取")
-                                    break
-                            
-                            # 如果還沒找到，嘗試從進站數據中提取
-                            if not drivers and 'pitstop_data' in data['data']:
-                                pitstop_data = data['data']['pitstop_data']
-                                if isinstance(pitstop_data, dict):
-                                    drivers = list(pitstop_data.keys())
-                                    print(f"[DRIVERS] 從 data['data']['pitstop_data'].keys() 提取")
-                                elif isinstance(pitstop_data, list) and pitstop_data:
-                                    # 從進站記錄中提取唯一的車手代碼
-                                    driver_set = set()
-                                    for record in pitstop_data:
-                                        if isinstance(record, dict) and 'driver' in record:
-                                            driver_set.add(record['driver'])
-                                        elif isinstance(record, dict) and 'Driver' in record:
-                                            driver_set.add(record['Driver'])
-                                    drivers = sorted(list(driver_set))
-                                    print(f"[DRIVERS] 從 data['data']['pitstop_data'] list 提取")
-                        
-                        # 情況 2: data 是 list（如 driver_fastest_pitstop_ranking）
-                        elif isinstance(data['data'], list) and data['data']:
-                            driver_set = set()
-                            for record in data['data']:
-                                if isinstance(record, dict) and 'driver' in record:
-                                    driver_set.add(record['driver'])
-                                elif isinstance(record, dict) and 'Driver' in record:
-                                    driver_set.add(record['Driver'])
-                            drivers = sorted(list(driver_set))
-                            print(f"[DRIVERS] 從 data['data'] list 提取 (ranking 格式)")
-                    
-                    if drivers:
-                        print(f"[DRIVERS] ✅ 從 JSON 提取到 {len(drivers)} 個車手: {drivers}")
-                    else:
-                        print(f"[DRIVERS] ⚠️  JSON 檔案存在但無法提取車手列表")
-            
-            # ========== 最終檢查：如果仍無車手數據，顯示錯誤 ==========
-            if not drivers:
-                print(f"[DRIVERS] ❌ 無法從任何來源載入車手列表")
-                print(f"[DRIVERS] 💡 提示：請執行以下命令生成車手數據：")
-                print(f"[DRIVERS]    python f1_analysis_modular_main.py -f 98 -y {year}")
-                # 不使用硬編碼列表！保持 drivers 為空列表
-            
-            # 添加車手到下拉式選單
-            self.driver1_combo.clear()
-            self.driver2_combo.clear()
-
-            # 車手2先加入"無"選項
-            none_label = tr("none_option", "None")
-            self.driver2_combo.addItem(none_label, None)
-            
-            for driver in drivers:
-                self.driver1_combo.addItem(driver, driver)
-                self.driver2_combo.addItem(driver, driver)
-            
-            # 預設選擇
-            if len(drivers) > 0:
-                self.driver1_combo.setCurrentIndex(0)  # 車手1選擇第一個車手
-                self.driver2_combo.setCurrentIndex(0)  # 車手2預設選擇"無"
-                print(f"[DRIVERS] ✅ 成功載入 {len(drivers)} 個車手，預設選擇: 車手1={drivers[0]}, 車手2={none_label}")
-            
-        except Exception as e:
-            print(f"[ERROR] [DRIVERS] 載入車手列表失敗: {e}")
-            print(f"[ERROR] [DRIVERS] 異常詳情: {str(e)}")
-            
-            # API-ONLY 模式：不使用硬編碼列表
-            self.driver1_combo.clear()
-            self.driver2_combo.clear()
-            
-            # 顯示錯誤訊息
-            none_label = tr("none_option", "無法載入")
-            self.driver1_combo.addItem(tr("error_no_drivers", "❌ 無車手數據"), None)
-            self.driver2_combo.addItem(none_label, None)
-            
-            print(f"[DRIVERS] ❌ 嚴重錯誤：無法載入車手列表")
-            print(f"[DRIVERS] 💡 請執行: python f1_analysis_modular_main.py -f 98 -y 2025")
-        
+    # 🗑️ 舊方法已移除：_load_available_drivers()
+    # 現在統一使用主視窗的 get_drivers_for_year() 方法
+    # 原 API-first 載入邏輯已整合至主視窗的快取機制
+    
     def _on_fastest_lap_changed(self, state):
         """當最速圈勾選框變更時的處理"""
         if state == 2:  # 勾選時 (Qt.Checked)
@@ -2053,7 +1892,7 @@ class DraggableTitleBar(QWidget):
         self.popout_btn = QPushButton("⧉")
         self.popout_btn.setObjectName("PopoutButton")
         self.popout_btn.setFixedSize(16, 16)
-        self.popout_btn.setToolTip("彈出為獨立視窗")
+        self.popout_btn.setToolTip(tr('popout_tooltip'))
         self.popout_btn.clicked.connect(self.parent_window.toggle_popout)
         layout.addWidget(self.popout_btn)
         
@@ -2061,7 +1900,7 @@ class DraggableTitleBar(QWidget):
         close_btn = QPushButton("✕")
         close_btn.setObjectName("WindowControlButton")
         close_btn.setFixedSize(16, 16)
-        close_btn.setToolTip("關閉")
+        close_btn.setToolTip(tr('close_tooltip'))
         close_btn.clicked.connect(self.parent_window.close)
         layout.addWidget(close_btn)
         
@@ -2311,6 +2150,15 @@ class PopoutSubWindow(QMdiSubWindow):
         # [TOOL] 新增：模組支援
         self.analysis_module = analysis_module
         self._parameter_provider = parameter_provider
+        
+        # [DEBUG] 方案A調試：驗證 analysis_module 保存
+        print(f"[POPOUT_INIT] Title: '{title}'")
+        print(f"[POPOUT_INIT] analysis_module parameter: {type(analysis_module).__name__ if analysis_module else None}")
+        print(f"[POPOUT_INIT] analysis_module id: {id(analysis_module) if analysis_module else 'None'}")
+        if analysis_module and hasattr(analysis_module, 'analysis_type'):
+            print(f"[POPOUT_INIT] analysis_module.analysis_type: {analysis_module.analysis_type}")
+        print(f"[POPOUT_INIT] self.analysis_module stored: {type(self.analysis_module).__name__ if self.analysis_module else None}")
+        logger.info(f"[POPOUT_INIT] PopoutSubWindow created: title='{title}', module={type(analysis_module).__name__ if analysis_module else None}")
 
         # 確保關閉後釋放資源並從父層列表移除
         self.setAttribute(Qt.WA_DeleteOnClose, True)
@@ -3743,16 +3591,21 @@ class PopoutSubWindow(QMdiSubWindow):
             window_title = self.windowTitle()
             print(f"[CHART UPDATE] 更新視窗: {window_title}")
             
-            if '速度分析' in window_title or 'Speed Analysis' in window_title:
+            # ✅ 修復：添加日文翻譯支援
+            # ⚠️ 注意順序：先檢查更具體的「加速度分析」，再檢查「速度分析」（避免誤判）
+            if '加速度分析' in window_title or 'Acceleration Analysis' in window_title or 'アクセラレーション分析' in window_title or '加速度分析' in window_title:
+                print(f"[ACCELERATION UPDATE] 檢測到加速度分析視窗，使用專用更新邏輯")
+                self._update_acceleration_analysis_chart(json_data)
+            elif '速度分析' in window_title or 'Speed Analysis' in window_title or '速度分析' in window_title:
                 print(f"[SPEED UPDATE] 檢測到速度分析視窗，使用專用更新邏輯")
                 self._update_speed_analysis_chart(json_data)
-            elif '油門分析' in window_title or 'Throttle Analysis' in window_title:
+            elif '油門分析' in window_title or 'Throttle Analysis' in window_title or 'スロットル分析' in window_title:
                 print(f"[THROTTLE UPDATE] 檢測到油門分析視窗，使用專用更新邏輯")
                 self._update_throttle_analysis_chart(json_data)
-            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
+            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title or 'RPM分析' in window_title:
                 print(f"[RPM UPDATE] 檢測到RPM分析視窗，使用專用更新邏輯")
                 self._update_rpm_analysis_chart(json_data)
-            elif '檔位分析' in window_title or 'Gear Analysis' in window_title:
+            elif '檔位分析' in window_title or 'Gear Analysis' in window_title or 'ギア分析' in window_title:
                 print(f"[GEAR UPDATE] 檢測到檔位分析視窗，使用專用更新邏輯")
                 self._update_gear_analysis_chart(json_data)
             else:
@@ -4368,7 +4221,7 @@ class PopoutSubWindow(QMdiSubWindow):
             self.show()
             self.is_popped_out = False
             self.title_bar.popout_btn.setText("⧉")
-            self.title_bar.popout_btn.setToolTip("彈出為獨立視窗")
+            self.title_bar.popout_btn.setToolTip(tr('popout_tooltip'))
             
     def resizeEvent(self, event):
         """處理視窗大小調整事件 - 簡化版本，避免重複處理"""
@@ -5186,6 +5039,396 @@ class ResizableStandaloneWindow(QMainWindow):
                 self.width() - 3, self.height() - offset
             )
 
+
+class TabStandaloneWindow(ResizableStandaloneWindow):
+    """分頁彈出的獨立視窗，繼承自 ResizableStandaloneWindow"""
+    
+    def __init__(self, tab_name, mdi_area, tab_index, main_window):
+        """
+        初始化分頁獨立視窗
+        
+        Args:
+            tab_name: 分頁名稱
+            mdi_area: CustomMdiArea 實例
+            tab_index: 分頁索引
+            main_window: 主視窗引用
+        """
+        super().__init__()
+        
+        self.tab_name = tab_name
+        self.mdi_area = mdi_area
+        self.tab_index = tab_index
+        self.main_window = main_window
+        self.sync_enabled = True  # 預設啟用參數同步
+        
+        # 設置工具列
+        self.setup_toolbar()
+        
+        # 連接主視窗參數變更信號（如果需要同步）
+        self._connect_parameter_signals()
+        
+        print(f"[TAB_STANDALONE] ✅ 獨立視窗已創建: '{tab_name}'")
+    
+    def setup_toolbar(self):
+        """設定工具列（6 個按鈕）"""
+        toolbar = self.addToolBar("控制")
+        toolbar.setObjectName("TabStandaloneToolbar")
+        toolbar.setMovable(False)
+        
+        # 按鈕 1: ⌂ 返回主畫面
+        return_action = toolbar.addAction("⌂ 返回主畫面")
+        return_action.setToolTip("返回分頁到主視窗")
+        return_action.triggered.connect(self._on_return_to_main)
+        
+        toolbar.addSeparator()
+        
+        # 按鈕 2: 🔗 同步開關
+        self.sync_action = toolbar.addAction("🔗 同步: ON")
+        self.sync_action.setToolTip("切換參數同步（年份/賽事/賽段）")
+        self.sync_action.triggered.connect(self.toggle_sync)
+        
+        toolbar.addSeparator()
+        
+        # 按鈕 3: Show All Data
+        show_all_action = toolbar.addAction("Show All Data")
+        show_all_action.setToolTip("重置所有 MDI 子視窗的 XY 軸視圖")
+        show_all_action.triggered.connect(self.show_all_data)
+        
+        # 按鈕 4: Close All Windows
+        close_all_action = toolbar.addAction("Close All Windows")
+        close_all_action.setToolTip("關閉所有 MDI 子視窗")
+        close_all_action.triggered.connect(self.close_all_windows)
+        
+        toolbar.addSeparator()
+        
+        # 按鈕 5: Tile Windows
+        tile_action = toolbar.addAction("Tile Windows")
+        tile_action.setToolTip("平鋪所有子視窗")
+        tile_action.triggered.connect(self.tile_windows)
+        
+        # 按鈕 6: Cascade Windows
+        cascade_action = toolbar.addAction("Cascade Windows")
+        cascade_action.setToolTip("層疊所有子視窗")
+        cascade_action.triggered.connect(self.cascade_windows)
+        
+        print(f"[TAB_STANDALONE] ✅ 工具列已設置（6 個按鈕）")
+    
+    def _connect_parameter_signals(self):
+        """連接主視窗參數變更信號"""
+        try:
+            if hasattr(self.main_window, 'year_combo'):
+                self.main_window.year_combo.currentIndexChanged.connect(self._on_main_parameter_changed)
+            if hasattr(self.main_window, 'race_combo'):
+                self.main_window.race_combo.currentIndexChanged.connect(self._on_main_parameter_changed)
+            if hasattr(self.main_window, 'session_combo'):
+                self.main_window.session_combo.currentIndexChanged.connect(self._on_main_parameter_changed)
+            print(f"[TAB_STANDALONE] ✅ 已連接主視窗參數變更信號")
+        except Exception as e:
+            print(f"[TAB_STANDALONE] ⚠️ 連接參數信號失敗: {e}")
+    
+    def _disconnect_parameter_signals(self):
+        """斷開主視窗參數變更信號"""
+        try:
+            if hasattr(self.main_window, 'year_combo'):
+                self.main_window.year_combo.currentIndexChanged.disconnect(self._on_main_parameter_changed)
+            if hasattr(self.main_window, 'race_combo'):
+                self.main_window.race_combo.currentIndexChanged.disconnect(self._on_main_parameter_changed)
+            if hasattr(self.main_window, 'session_combo'):
+                self.main_window.session_combo.currentIndexChanged.disconnect(self._on_main_parameter_changed)
+            print(f"[TAB_STANDALONE] ✅ 已斷開主視窗參數變更信號")
+        except Exception as e:
+            print(f"[TAB_STANDALONE] ⚠️ 斷開參數信號失敗: {e}")
+    
+    def toggle_sync(self):
+        """切換參數同步狀態"""
+        self.sync_enabled = not self.sync_enabled
+        new_text = f"🔗 同步: {'ON' if self.sync_enabled else 'OFF'}"
+        self.sync_action.setText(new_text)
+        print(f"[TAB_STANDALONE] 🔄 參數同步已{'啟用' if self.sync_enabled else '禁用'}")
+    
+    def _on_main_parameter_changed(self):
+        """主視窗參數變更時的處理"""
+        if not self.sync_enabled:
+            print(f"[TAB_STANDALONE] ⏭️ 同步已禁用，忽略參數變更")
+            return
+        
+        print(f"[TAB_STANDALONE] 🔄 檢測到主視窗參數變更，準備更新子視窗...")
+        
+        # 獲取當前參數
+        try:
+            year = int(self.main_window.year_combo.currentText()) if hasattr(self.main_window, 'year_combo') else 2025
+            race = self.main_window.race_combo.currentText() if hasattr(self.main_window, 'race_combo') else "Japan"
+            session = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else "R"
+            
+            print(f"[TAB_STANDALONE] 📊 新參數: {year} {race} {session}")
+            
+            # 更新所有 MDI 子視窗
+            self._update_all_subwindows(year, race, session)
+            
+        except Exception as e:
+            print(f"[TAB_STANDALONE] ❌ 更新子視窗失敗: {e}")
+    
+    def _update_all_subwindows(self, year, race, session):
+        """更新所有 MDI 子視窗的參數"""
+        if not self.mdi_area:
+            return
+        
+        subwindows = self.mdi_area.subWindowList()
+        updated_count = 0
+        
+        for sub_win in subwindows:
+            try:
+                # 嘗試調用子視窗的 update_current_window 方法
+                if hasattr(sub_win, 'update_current_window'):
+                    sub_win.update_current_window()
+                    updated_count += 1
+            except Exception as e:
+                print(f"[TAB_STANDALONE] ⚠️ 更新子視窗失敗: {e}")
+        
+        print(f"[TAB_STANDALONE] ✅ 已更新 {updated_count}/{len(subwindows)} 個子視窗")
+    
+    def show_all_data(self):
+        """重置所有子視窗視圖"""
+        if not self.mdi_area:
+            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            return
+        
+        subwindows = self.mdi_area.subWindowList()
+        reset_count = 0
+        
+        for sub_win in subwindows:
+            try:
+                widget = sub_win.widget()
+                if hasattr(widget, 'reset_chart_view'):
+                    widget.reset_chart_view()
+                    reset_count += 1
+                elif hasattr(widget, 'chart_widget') and hasattr(widget.chart_widget, 'reset_view'):
+                    widget.chart_widget.reset_view()
+                    reset_count += 1
+            except Exception as e:
+                print(f"[TAB_STANDALONE] ⚠️ 重置視圖失敗: {e}")
+        
+        print(f"[TAB_STANDALONE] ✅ 已重置 {reset_count}/{len(subwindows)} 個視窗")
+    
+    def close_all_windows(self):
+        """關閉所有子視窗"""
+        if not self.mdi_area:
+            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            return
+        
+        self.mdi_area.closeAllSubWindows()
+        print(f"[TAB_STANDALONE] ✅ 已關閉所有子視窗")
+    
+    def tile_windows(self):
+        """重新排列視窗 - 智能平鋪獨立視窗中的所有子視窗（與主 GUI 邏輯一致）"""
+        if not self.mdi_area:
+            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            return
+        
+        try:
+            # 步驟 1: 獲取所有子視窗並過濾出可見的視窗
+            all_subwindows = self.mdi_area.subWindowList()
+            # 只包含可見且未關閉的視窗，並排除固定的歡迎頁面視窗
+            subwindows = [
+                sw for sw in all_subwindows 
+                if sw.isVisible() 
+                and not sw.isWindowModified() 
+                and not sw.property("is_welcome_fixed")  # 排除固定視窗
+            ]
+            print(f"[TAB_STANDALONE] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
+            
+            if not subwindows:
+                print(f"[TAB_STANDALONE] ⚠️ 沒有可見的非固定子視窗需要排列")
+                return
+            
+            print(f"[TAB_STANDALONE] 準備排列 {len(subwindows)} 個視窗")
+            
+            # 步驟 2: 計算可用空間（預留邊距）
+            available_width = self.mdi_area.width() - 20
+            available_height = self.mdi_area.height() - 20
+            print(f"[TAB_STANDALONE] MDI 區域大小: {self.mdi_area.width()}x{self.mdi_area.height()}")
+            print(f"[TAB_STANDALONE] 📏 可用空間: {available_width}x{available_height}")
+            
+            # 步驟 3: 計算最佳的行列配置
+            num_windows = len(subwindows)
+            print(f"[TAB_STANDALONE] 視窗數量: {num_windows}")
+            
+            if num_windows == 0:
+                print(f"[TAB_STANDALONE] 視窗數量為 0，退出")
+                return
+            
+            # 計算列數（基於平方根）
+            cols = int(num_windows ** 0.5)
+            print(f"[TAB_STANDALONE] 初始計算 cols: {cols}")
+            
+            if cols == 0:  # 防止除零錯誤
+                cols = 1
+                print(f"[TAB_STANDALONE] cols 修正為 1")
+            
+            if cols * cols < num_windows:
+                cols += 1
+                print(f"[TAB_STANDALONE] cols 調整為: {cols}")
+            
+            # 計算行數
+            rows = (num_windows + cols - 1) // cols
+            print(f"[TAB_STANDALONE] 計算得到 rows: {rows}")
+            
+            if rows == 0:  # 額外保護
+                rows = 1
+                print(f"[TAB_STANDALONE] rows 修正為 1")
+            
+            # 步驟 4: 計算每個視窗的尺寸
+            window_width = available_width // cols if cols > 0 else available_width
+            window_height = available_height // rows if rows > 0 else available_height
+            print(f"[TAB_STANDALONE] 每個視窗尺寸: {window_width}x{window_height}")
+            
+            # 步驟 5: 確保最小尺寸
+            min_width, min_height = 250, 150
+            window_width = max(window_width, min_width)
+            window_height = max(window_height, min_height)
+            print(f"[TAB_STANDALONE] 📐 調整後視窗尺寸: {window_width}x{window_height}")
+            
+            # 步驟 6: 開始排列視窗
+            print(f"[TAB_STANDALONE] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
+            
+            # 預檢查：確保所有視窗的基本設定一致
+            print(f"[TAB_STANDALONE] ========== 預檢查視窗設定 ==========")
+            for i, subwindow in enumerate(subwindows):
+                widget = subwindow.widget()
+                if widget:
+                    min_size = widget.minimumSize()
+                    size_policy = widget.sizePolicy()
+                    print(f"[TAB_STANDALONE] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
+                    
+                    # 檢查是否有調試方法可以調用
+                    if hasattr(widget, 'debug_window_status'):
+                        print(f"[TAB_STANDALONE] 調用視窗 {i} 的狀態報告:")
+                        widget.debug_window_status()
+            print(f"[TAB_STANDALONE] ========== 預檢查完成 ==========")
+            
+            # 步驟 7: 逐個設置視窗位置和尺寸
+            for i, subwindow in enumerate(subwindows):
+                row = i // cols
+                col = i % cols
+                
+                x = col * window_width + 10
+                y = row * window_height + 10
+                
+                print(f"[TAB_STANDALONE] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
+                
+                # 設置視窗位置和尺寸
+                subwindow.setGeometry(x, y, window_width, window_height)
+                
+                # 確保視窗可見和正常化
+                subwindow.showNormal()
+                subwindow.raise_()
+                
+                # ⭐ 強制處理事件，確保尺寸更新完成
+                QApplication.processEvents()
+                
+                # 檢查實際尺寸並調試
+                actual_size = subwindow.size()
+                print(f"[TAB_STANDALONE] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
+                
+                if actual_size.width() != window_width or actual_size.height() != window_height:
+                    print(f"[TAB_STANDALONE] ⚠️ 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
+                    
+                    # 嘗試重新設置
+                    subwindow.resize(window_width, window_height)
+                    QApplication.processEvents()
+                    final_size = subwindow.size()
+                    print(f"[TAB_STANDALONE] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
+            
+            # 步驟 8: 最終同步步驟 - 確保所有視窗尺寸一致
+            print(f"[TAB_STANDALONE] ========== 開始最終尺寸同步 ==========")
+            
+            # 收集所有視窗的實際尺寸
+            actual_sizes = []
+            for i, subwindow in enumerate(subwindows):
+                size = subwindow.size()
+                actual_sizes.append((size.width(), size.height()))
+                print(f"[TAB_STANDALONE] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
+            
+            # 找到最小的共同尺寸（確保所有視窗都能適應）
+            if actual_sizes:
+                min_common_width = min(size[0] for size in actual_sizes)
+                min_common_height = min(size[1] for size in actual_sizes)
+                print(f"[TAB_STANDALONE] 統一目標尺寸: {min_common_width}x{min_common_height}")
+                
+                # 將所有視窗設置為相同尺寸
+                for i, subwindow in enumerate(subwindows):
+                    current_pos = subwindow.pos()
+                    subwindow.setGeometry(current_pos.x(), current_pos.y(), min_common_width, min_common_height)
+                    QApplication.processEvents()
+                    
+                    final_size = subwindow.size()
+                    print(f"[TAB_STANDALONE] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
+            
+            print(f"[TAB_STANDALONE] ========== 尺寸同步完成 ==========")
+            
+            # 步驟 9: 調試 - 檢查每個子視窗的邊距設定
+            print(f"[TAB_STANDALONE] ========== 子視窗邊距檢查 ==========")
+            for i, subwindow in enumerate(subwindows):
+                widget = subwindow.widget()
+                print(f"[TAB_STANDALONE] 子視窗 {i}: {subwindow.windowTitle()}")
+                
+                # 檢查 MDI 子視窗的邊距
+                margins = subwindow.contentsMargins()
+                print(f"[TAB_STANDALONE]   MDI 邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
+                
+                # 檢查子視窗的 frameGeometry vs geometry
+                frame_geo = subwindow.frameGeometry()
+                geo = subwindow.geometry()
+                print(f"[TAB_STANDALONE]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
+                print(f"[TAB_STANDALONE]   geometry: {geo.width()}x{geo.height()}")
+                print(f"[TAB_STANDALONE]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
+                
+                if widget:
+                    widget_size = widget.size()
+                    print(f"[TAB_STANDALONE]   內部 widget 尺寸: {widget_size.width()}x{widget_size.height()}")
+            
+            print(f"[TAB_STANDALONE] ========== 邊距檢查完成 ==========")
+            print(f"[TAB_STANDALONE] ✅ 已平鋪 {num_windows} 個子視窗")
+            
+        except Exception as e:
+            print(f"[TAB_STANDALONE] ❌ 平鋪失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def cascade_windows(self):
+        """層疊子視窗"""
+        if not self.mdi_area:
+            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            return
+        
+        self.mdi_area.cascadeSubWindows()
+        print(f"[TAB_STANDALONE] ✅ 已層疊所有子視窗")
+    
+    def _on_return_to_main(self):
+        """返回主畫面按鈕處理"""
+        print(f"[TAB_STANDALONE] 🔄 用戶點擊返回按鈕")
+        if self.main_window and hasattr(self.main_window, 'pop_back_in_tab'):
+            self.main_window.pop_back_in_tab(self.tab_index)
+    
+    def closeEvent(self, event):
+        """關閉事件：自動返回主視窗"""
+        print(f"[TAB_STANDALONE] 🚪 獨立視窗正在關閉...")
+        
+        # 斷開參數信號
+        self._disconnect_parameter_signals()
+        
+        # ✅ 修復：檢查是否仍在彈出列表中（避免重複調用 pop_back_in_tab）
+        if self.main_window and hasattr(self.main_window, 'pop_back_in_tab'):
+            if self.tab_index in self.main_window.popped_out_tabs:
+                print(f"[TAB_STANDALONE] 🔄 自動返回主視窗（closeEvent 觸發）")
+                self.main_window.pop_back_in_tab(self.tab_index)
+            else:
+                print(f"[TAB_STANDALONE] ⚠️ 分頁 {self.tab_index} 已經返回（跳過重複返回）")
+        
+        event.accept()
+        print(f"[TAB_STANDALONE] ✅ 獨立視窗已關閉")
+
+
 class WindowSettingsDialog(QDialog):
     """視窗設定對話框"""
     
@@ -5943,6 +6186,15 @@ class StyleHMainWindow(QMainWindow):
         
         self.setWindowTitle(APP_FULL_TITLE)  # ✅ 使用集中管理的版本號
         
+        # 設定應用程式圖示（視窗左上角） - 支援 EXE 模式
+        icon_path = get_resource_path(Path("image") / "logo.ico")
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
+            print(f"[INIT] ✅ 視窗圖示已設定: {icon_path}")
+        else:
+            print(f"[INIT] ⚠️  找不到圖示檔案: {icon_path}")
+            print(f"[INIT]    EXE 模式: {IS_EXE_MODE}, 基礎路徑: {Path(sys._MEIPASS) if IS_EXE_MODE else Path.cwd()}")
+        
         # 10% - 視窗標題設定完成
         if progress_callback:
             from core.gui_i18n import tr
@@ -5962,15 +6214,31 @@ class StyleHMainWindow(QMainWindow):
         self.mdi_areas = []  # 存儲所有MDI區域的引用
         print("[INIT] ✅ MDI區域引用已初始化")
 
+        # 初始化彈出分頁追蹤字典
+        self.popped_out_tabs = {}  # {tab_index: {'standalone_window': window, 'original_widget': widget, 'tab_name': name}}
+        print("[INIT] ✅ 彈出分頁追蹤字典已初始化")
+
         # 工作區快照紀錄
         self._last_workspace_path: Optional[str] = None
         print("[INIT] ✅ 工作區儲存紀錄已初始化")
+        
+        # Workspace Manager 初始化
+        from core.workspace_database import WorkspaceDatabase
+        from core.workspace_serializer import WorkspaceSerializer
+        workspace_db_path = Path("workspaces") / "f1t_workspaces.db"
+        self.workspace_db = WorkspaceDatabase(str(workspace_db_path))
+        self.workspace_serializer = WorkspaceSerializer(main_window=self)
+        print("[INIT] ✅ Workspace Manager 已初始化")
         
         # 初始化遙測分析狀態追蹤
         self.lap_analysis_active = False  # 是否有遙測分析活動
         self.lap_analysis_windows = set()  # 活動的遙測分析視窗集合
         self.lap_controls_visible = False  # 遙測控件是否可見
         self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
+        
+        # 🆕 車手列表快取機制（啟動時載入，全域共享）
+        self._cached_drivers_by_year = {}  # {year: [driver_codes]}
+        print("[INIT] ✅ 車手列表快取已初始化")
         
         # 20% - 追蹤屬性初始化完成
         if progress_callback:
@@ -6036,10 +6304,19 @@ class StyleHMainWindow(QMainWindow):
         self.setup_api_health_monitor()
         print("[INIT] [API] Health monitor active")
 
-        # 95% - API 監控設定完成
+        # 90% - API 監控設定完成
         if progress_callback:
             from core.gui_i18n import tr
-            progress_callback(95, tr('splash_setup_api'))
+            progress_callback(90, tr('splash_setup_api'))
+        
+        # 🆕 預載入當前年份車手列表（啟動時快取）
+        print("[INIT] 🏎️ 開始預載入車手列表...")
+        if progress_callback:
+            progress_callback(95, "Loading driver list...")
+        
+        current_year = datetime.datetime.now().year
+        drivers = self.get_drivers_for_year(current_year)
+        print(f"[INIT] ✅ 車手列表預載入完成 ({len(drivers)} 位車手)")
         
         # 100% - 初始化完成
         if progress_callback:
@@ -6128,43 +6405,45 @@ class StyleHMainWindow(QMainWindow):
         
         # 檔案菜單
         file_menu = menubar.addMenu(tr('file_menu'))
-        file_menu.addAction(tr('load_workspace_dev', 'Load Workspace… (In Development)'), self.load_workspace)
-        file_menu.addAction(tr('save_workspace_dev', 'Save Workspace (In Development)'), self.save_workspace)
+        file_menu.addAction(tr('save_workspace', 'Save Workspace'), self.save_workspace)
+        file_menu.addAction(tr('load_workspace', 'Load Workspace'), self.load_workspace)
+        file_menu.addSeparator()
+        file_menu.addAction('Exit', self.close)
         file_menu.addSeparator()
         file_menu.addAction('Exit', self.close)
         
-        # 檢視菜單
-        view_menu = menubar.addMenu(tr('view_menu'))
-        view_menu.addAction('Tile Windows', self.tile_windows)
-        view_menu.addAction('Cascade Windows', self.cascade_windows)
-        view_menu.addSeparator()
-        view_menu.addAction('Minimize All Windows', self.minimize_all_windows)
-        view_menu.addAction('Maximize All Windows', self.maximize_all_windows)
-        view_menu.addAction('Restore All Windows', self.restore_all_windows)
-        view_menu.addSeparator()
-        view_menu.addAction('Close All Windows', self.close_all_windows)
-        view_menu.addSeparator()
-        view_menu.addAction('Full Screen', self.toggle_fullscreen)
+        # 檢視菜單 (已隱藏)
+        # view_menu = menubar.addMenu(tr('view_menu'))
+        # view_menu.addAction(tr('tile_windows', 'Tile Windows'), self.tile_windows)
+        # view_menu.addAction(tr('cascade_windows', 'Cascade Windows'), self.cascade_windows)
+        # view_menu.addSeparator()
+        # view_menu.addAction(tr('minimize_all_windows', 'Minimize All Windows'), self.minimize_all_windows)
+        # view_menu.addAction(tr('maximize_all_windows', 'Maximize All Windows'), self.maximize_all_windows)
+        # view_menu.addAction(tr('restore_all_windows', 'Restore All Windows'), self.restore_all_windows)
+        # view_menu.addSeparator()
+        # view_menu.addAction(tr('close_all_windows', 'Close All Windows'), self.close_all_windows)
+        # view_menu.addSeparator()
+        # view_menu.addAction(tr('full_screen', 'Full Screen'), self.toggle_fullscreen)
         
-        # 分析菜單
-        analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
-        analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
-        analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
-        analysis_menu.addSeparator()
-        analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
+        # 分析菜單 (已隱藏)
+        # analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
+        # analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
+        # analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
+        # analysis_menu.addSeparator()
+        # analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
         
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
-        tools_menu.addAction('System Settings', self.system_settings)
-        self.check_api_action = QAction('Check API Status', self)
-        self.check_api_action.setStatusTip('Run an API health check immediately')
+        tools_menu.addAction(tr('system_settings', 'System Settings'), self.system_settings)
+        self.check_api_action = QAction(tr('check_api_status', 'Check API Status'), self)
+        self.check_api_action.setStatusTip(tr('check_api_status_tip', 'Run an API health check immediately'))
         self.check_api_action.triggered.connect(self.manual_api_health_check)
         tools_menu.addAction(self.check_api_action)
 
         tools_menu.addSeparator()
         
         # 語言切換功能
-        language_menu = tools_menu.addMenu('🌐 Language')
+        language_menu = tools_menu.addMenu(tr('language_menu', 'Language'))
         
         # 英文選項
         self.english_action = QAction('🇺🇸 English', self)
@@ -6204,15 +6483,142 @@ class StyleHMainWindow(QMainWindow):
         
         tools_menu.addSeparator()
         
-        # Objgraph 診斷工具
+        # Objgraph 診斷工具 (已禁用)
         self.objgraph_action = QAction(tr('objgraph_diagnostic', 'Memory Diagnostics'), self)
         self.objgraph_action.setStatusTip(tr('objgraph_diagnostic_tip', 'Open memory and object diagnostic tool'))
         self.objgraph_action.triggered.connect(self.open_objgraph_diagnostic)
+        self.objgraph_action.setEnabled(False)  # 禁用診斷功能
         tools_menu.addAction(self.objgraph_action)
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
         help_menu.addAction(tr('about_action', '關於 F1T'), self.show_about_dialog)
+
+    def get_drivers_for_year(self, year: int) -> list:
+        """
+        取得指定年份的車手列表（帶快取機制）
+        
+        此方法提供全域車手列表快取，在系統啟動時預載入當前年份，
+        後續所有模組（工具欄、對話框等）統一調用此方法獲取車手列表。
+        
+        載入策略：
+        1. 檢查快取 → 如果有則直接返回
+        2. 從 team_colors JSON 讀取（F98 功能生成）
+        3. 如果 JSON 不存在，通過 API 調用 F98 生成
+        4. 快取結果供後續使用
+        
+        Args:
+            year: 賽季年份（例如 2025）
+            
+        Returns:
+            車手代碼列表（已排序）例如 ['ALB', 'ALO', 'VER', ...]
+            如果載入失敗返回空列表
+        """
+        # 僅使用 API 作為車手列表來源（移除 JSON 與硬編碼後備）
+        if not IS_EXE_MODE:
+            print(f"[DRIVER_CACHE] DEBUG: get_drivers_for_year called, year={year}")
+            print(f"[DRIVER_CACHE] DEBUG: Cache keys: {list(self._cached_drivers_by_year.keys())}")
+
+        # 檢查快取
+        if year in self._cached_drivers_by_year:
+            cached_list = self._cached_drivers_by_year[year]
+            if not IS_EXE_MODE:
+                print(f"[DRIVER_CACHE] SUCCESS: Returning cached drivers for {year} ({len(cached_list)} drivers)")
+            return cached_list
+
+        if not IS_EXE_MODE:
+            print(f"[DRIVER_CACHE] DEBUG: Cache miss, loading {year} drivers from API...")
+
+        drivers = []
+        try:
+            import requests
+            from core.api_base_url import resolve_api_base_url
+
+            api_base = resolve_api_base_url()
+            api_url = f"{api_base}/api/v2/analysis/execute"  # 使用 v2 API 端點
+            # 使用 Function 97 (Championship Standings) 而不是 Function 98 (Team Colour Export)
+            # 因為 Function 97 會返回車手積分榜，包含所有車手列表
+            query_params = {"function_id": 97, "year": int(year)}
+
+            if not IS_EXE_MODE:
+                print(f"[DRIVER_CACHE] DEBUG: Sending API request to {api_url} with params={query_params}")
+            # 使用 params (URL 查詢參數) 而不是 json (請求 body)，與 Home 畫面的方式一致
+            response = requests.post(api_url, params=query_params, timeout=60, headers={"Accept": "application/json"})
+            if not IS_EXE_MODE:
+                print(f"[DRIVER_CACHE] DEBUG: API status code: {response.status_code}")
+
+            if response.status_code == 200:
+                result = response.json()
+                if not IS_EXE_MODE:
+                    print(f"[DRIVER_CACHE] DEBUG: API response keys: {list(result.keys())}")
+                
+                if result.get('success') and 'data' in result:
+                    data = result['data']
+                    if not IS_EXE_MODE:
+                        print(f"[DRIVER_CACHE] DEBUG: data keys: {list(data.keys())}")
+                    
+                    # Function 97 返回的結構: {"data": {"drivers": [{"driver": {"code": "PIA"}}, ...]}}
+                    if 'data' in data and isinstance(data['data'], dict):
+                        inner_data = data['data']
+                        if 'drivers' in inner_data and isinstance(inner_data['drivers'], list):
+                            # 從積分榜提取車手代碼
+                            drivers = []
+                            for entry in inner_data['drivers']:
+                                # 結構: {"driver": {"code": "PIA", ...}, ...}
+                                driver_info = entry.get('driver', {})
+                                driver_code = driver_info.get('code', '')
+                                if driver_code:
+                                    drivers.append(driver_code)
+                            
+                            if not IS_EXE_MODE:
+                                print(f"[DRIVER_CACHE] DEBUG: Extracted {len(drivers)} drivers from API")
+                            
+                            if drivers:
+                                if not IS_EXE_MODE:
+                                    print(f"[DRIVER_CACHE] SUCCESS: Loaded {len(drivers)} drivers from API")
+                                    print(f"[DRIVER_CACHE] DEBUG: Drivers list: {drivers}")
+                                
+                                # 緩存車手列表
+                                self._cached_drivers_by_year[year] = drivers
+                                if not IS_EXE_MODE:
+                                    print(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(self._cached_drivers_by_year.get(year, []))}")
+                                return drivers
+                            else:
+                                if not IS_EXE_MODE:
+                                    print(f"[DRIVER_CACHE] WARNING: Extracted empty drivers list")
+                        else:
+                            if not IS_EXE_MODE:
+                                print(f"[DRIVER_CACHE] WARNING: Missing 'drivers' key in inner data")
+                                if isinstance(inner_data, dict):
+                                    print(f"[DRIVER_CACHE] DEBUG: inner_data keys: {list(inner_data.keys())}")
+                    else:
+                        if not IS_EXE_MODE:
+                            print(f"[DRIVER_CACHE] WARNING: Missing nested 'data' key or wrong format")
+                            print(f"[DRIVER_CACHE] DEBUG: data structure keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
+                else:
+                    if not IS_EXE_MODE:
+                        print(f"[DRIVER_CACHE] WARNING: API response success=False or invalid format")
+                        print(f"[DRIVER_CACHE] DEBUG: result structure: {result}")
+            else:
+                if not IS_EXE_MODE:
+                    print(f"[DRIVER_CACHE] ERROR: API request failed with HTTP {response.status_code}")
+                    try:
+                        error_detail = response.text[:200]  # 只顯示前 200 字元
+                        print(f"[DRIVER_CACHE] ERROR: Response detail: {error_detail}")
+                    except:
+                        pass
+
+        except Exception as e:
+            if not IS_EXE_MODE:
+                print(f"[DRIVER_CACHE] ERROR: API call exception: {e}")
+
+        # 無論 API 成功與否，快取結果（若沒有資料則快取空列表以避免重複請求）
+        self._cached_drivers_by_year[year] = drivers
+        if not IS_EXE_MODE:
+            print(f"[DRIVER_CACHE] DEBUG: Cached keys after update: {list(self._cached_drivers_by_year.keys())}")
+            print(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(drivers)}")
+
+        return drivers
 
     def show_about_dialog(self):
         """顯示關於對話框"""
@@ -6841,15 +7247,13 @@ class StyleHMainWindow(QMainWindow):
         self.show_lap_controls()
     
     def initialize_driver_lists(self):
-        """初始化車手列表 - API-ONLY 模式"""
-        print("[LAP_CONTROL] [DEBUG]   🎮 開始初始化車手列表（API-ONLY 模式）")
-        # 🔴 移除 traceback 代碼避免 frame 引用洩漏
-        # 調試時可以取消註解：
-        # import traceback
-        # stack = traceback.format_stack()
-        # print("[LAP_CONTROL] [DEBUG]   調用堆疊:")
-        # for frame in stack[-3:]:
-        #     print(f"[LAP_CONTROL] [DEBUG]     {frame.strip()}")
+        """
+        初始化車手列表 - 使用主視窗快取
+        
+        此方法已重構為使用主視窗的統一車手快取機制，
+        不再重複讀取 JSON 或調用 API，提升效能並確保數據一致性。
+        """
+        print("[LAP_CONTROL] [DEBUG]   🎮 開始初始化車手列表（使用快取）")
             
         try:
             # 檢查控件狀態
@@ -6859,92 +7263,59 @@ class StyleHMainWindow(QMainWindow):
             print(f"[LAP_CONTROL] [DEBUG]     driver2_combo.isVisible(): {self.driver2_combo.isVisible()}")
             print(f"[LAP_CONTROL] [DEBUG]     driver2_combo.count(): {self.driver2_combo.count()}")
             
-            # ========== API-ONLY 模式：從 JSON 或 API 載入車手列表 ==========
-            import json
-            import glob
-            import os
-            
             # 獲取當前年份
-            year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
-            race = self.race_combo.currentText() if hasattr(self, 'race_combo') else "Singapore"
+            year_str = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
+            year = int(year_str)
             
-            print(f"[LAP_CONTROL] [DEBUG]   載入車手列表: {year} {race}")
+            print(f"[LAP_CONTROL] [DEBUG]   📅 目標年份: {year} (字串: '{year_str}')")
             
-            drivers = []
+            # 🆕 從主視窗快取獲取車手列表
+            print(f"[LAP_CONTROL] [DEBUG]   🔄 準備調用 self.get_drivers_for_year({year})...")
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 self 類型: {type(self).__name__}")
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 self._cached_drivers_by_year 存在: {hasattr(self, '_cached_drivers_by_year')}")
             
-            # ========== 策略 1: 從 team_colors JSON 讀取（F98 功能生成） ==========
-            print(f"[LAP_CONTROL] [DEBUG]   步驟 1: 從 team_colors JSON 讀取車手列表...")
-            team_color_patterns = [
-                f"json/team_colors_{year}_*.json",
-                f"json/team_colors_2025_*.json",  # 備用：2025 年數據
-                f"json/team_colors_2024_*.json"   # 備用：2024 年數據
-            ]
+            drivers = self.get_drivers_for_year(year)
             
-            for pattern in team_color_patterns:
-                files = glob.glob(pattern)
-                if files:
-                    latest_file = max(files, key=os.path.getmtime)
-                    try:
-                        with open(latest_file, 'r', encoding='utf-8') as f:
-                            color_data = json.load(f)
-                            if 'data' in color_data and 'drivers' in color_data['data']:
-                                drivers = sorted(list(color_data['data']['drivers'].keys()))
-                                print(f"[LAP_CONTROL] [DEBUG]   ✅ 從 team_colors JSON 載入 {len(drivers)} 個車手")
-                                break
-                    except Exception as e:
-                        print(f"[LAP_CONTROL] [DEBUG]   ⚠️  讀取 team_colors 失敗: {e}")
+            print(f"[LAP_CONTROL] [DEBUG]   � get_drivers_for_year 返回: {type(drivers).__name__}, 長度={len(drivers)}")
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 車手列表內容: {drivers[:5] if len(drivers) > 5 else drivers}")
             
-            # ========== 策略 1.5: 如果沒有 JSON，通過 API 生成 team_colors ==========
-            if not drivers:
-                print(f"[LAP_CONTROL] [DEBUG]   ⚠️  找不到 team_colors JSON，嘗試通過 API 生成...")
-                try:
-                    import requests
-                    from core.api_base_url import resolve_api_base_url
-                    api_base = resolve_api_base_url()
-                    
-                    # 調用 F98 API 生成 team_colors
-                    response = requests.post(
-                        f"{api_base}/analyze",
-                        json={"function_id": "98", "year": int(year)},
-                        timeout=30
-                    )
-                    
-                    if response.status_code == 200:
-                        result = response.json()
-                        if result.get('success') and 'data' in result:
-                            data = result['data'].get('data', {})
-                            if 'drivers' in data:
-                                drivers = sorted(list(data['drivers'].keys()))
-                                print(f"[LAP_CONTROL] [DEBUG]   ✅ 通過 API 生成並載入 {len(drivers)} 個車手")
-                    else:
-                        print(f"[LAP_CONTROL] [DEBUG]   ❌ API 調用失敗: HTTP {response.status_code}")
-                except Exception as api_error:
-                    print(f"[LAP_CONTROL] [DEBUG]   ❌ API 調用異常: {api_error}")
-            
-            # ========== 最終檢查：如果仍無車手數據，顯示錯誤 ==========
-            if not drivers:
-                print(f"[LAP_CONTROL] [DEBUG]   ❌ 無法從任何來源載入車手列表")
-                print(f"[LAP_CONTROL] [DEBUG]   💡 提示：請執行以下命令生成車手數據：")
-                print(f"[LAP_CONTROL] [DEBUG]      python f1_analysis_modular_main.py -f 98 -y {year}")
-                # 使用空列表，不使用硬編碼
-            
-            print("[LAP_CONTROL] [DEBUG]   🔄 清空並填充車手列表...")
+            print("[LAP_CONTROL] [DEBUG]   �🔄 清空並填充車手列表...")
             # 清空並添加車手到兩個下拉框
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver1_combo...")
             self.driver1_combo.clear()
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 清空後項目數: {self.driver1_combo.count()}")
+            
             # 🔧 修復：使用 addItem 並設定 UserData
-            for driver in drivers:
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver1_combo...")
+            for idx, driver in enumerate(drivers):
                 self.driver1_combo.addItem(driver, driver)
+                if idx < 3:  # 只顯示前 3 個的詳細信息
+                    print(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
+            
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 添加後項目數: {self.driver1_combo.count()}")
+            
             if drivers:
+                print(f"[LAP_CONTROL] [DEBUG]   🔍 設置 driver1_combo 當前文字為: {drivers[0]}")
                 self.driver1_combo.setCurrentText(drivers[0])  # 預設選擇第一個車手
+                print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo.currentText(): {self.driver1_combo.currentText()}")
             print("[LAP_CONTROL] [DEBUG]   ✅ driver1_combo 設定完成")
             
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver2_combo...")
             self.driver2_combo.clear()
             # 🔧 修復：第一個選項的 UserData 設為 None
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 添加 'None' 選項到 driver2_combo...")
             self.driver2_combo.addItem(tr("none_option", "None"), None)
+            
             # 🔧 修復：使用 addItem 並設定 UserData（不使用 addItems）
-            for driver in drivers:
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver2_combo...")
+            for idx, driver in enumerate(drivers):
                 self.driver2_combo.addItem(driver, driver)
+                if idx < 3:
+                    print(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
+            
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo 添加後項目數: {self.driver2_combo.count()}")
             self.driver2_combo.setCurrentIndex(0)  # 預設選擇 "None"
+            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo.currentText(): {self.driver2_combo.currentText()}")
             print("[LAP_CONTROL] [DEBUG]   ✅ driver2_combo 設定完成")
             
             # 驗證設定結果
@@ -7858,22 +8229,24 @@ class StyleHMainWindow(QMainWindow):
             logger.debug("圈速控制 - 觸發專用圖表更新邏輯...")
             
             # 檢查當前窗口類型並調用對應的更新方法
+            # ✅ 修復：添加日文翻譯支援
+            # ⚠️ 注意順序：先檢查更具體的「加速度分析」，再檢查「速度分析」（避免誤判）
             window_title = self.windowTitle()
-            if '速度分析' in window_title or 'Speed Analysis' in window_title:
-                logger.debug("圈速控制 - 檢測到速度分析視窗，觸發專用更新")
-                self._update_speed_analysis_chart({})  # 使用空的json_data，讓方法依賴loader
-            elif '油門分析' in window_title or 'Throttle Analysis' in window_title:
-                logger.debug("圈速控制 - 檢測到油門分析視窗，觸發專用更新")
-                self._update_throttle_analysis_chart({})
-            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title:
-                logger.debug("圈速控制 - 檢測到RPM分析視窗，觸發專用更新")
-                self._update_rpm_analysis_chart({})
-            elif '檔位分析' in window_title or 'Gear Analysis' in window_title:
-                logger.debug("圈速控制 - 檢測到檔位分析視窗，觸發專用更新")
-                self._update_gear_analysis_chart({})
-            elif '加速度分析' in window_title or 'Acceleration Analysis' in window_title:
+            if '加速度分析' in window_title or 'Acceleration Analysis' in window_title or 'アクセラレーション分析' in window_title or '加速度分析' in window_title:
                 logger.debug("圈速控制 - 檢測到加速度分析視窗，觸發專用更新")
                 self._update_acceleration_analysis_chart({})
+            elif '速度分析' in window_title or 'Speed Analysis' in window_title or '速度分析' in window_title:
+                logger.debug("圈速控制 - 檢測到速度分析視窗，觸發專用更新")
+                self._update_speed_analysis_chart({})  # 使用空的json_data，讓方法依賴loader
+            elif '油門分析' in window_title or 'Throttle Analysis' in window_title or 'スロットル分析' in window_title:
+                logger.debug("圈速控制 - 檢測到油門分析視窗，觸發專用更新")
+                self._update_throttle_analysis_chart({})
+            elif 'RPM分析' in window_title or 'RPM Analysis' in window_title or 'RPM分析' in window_title:
+                logger.debug("圈速控制 - 檢測到RPM分析視窗，觸發專用更新")
+                self._update_rpm_analysis_chart({})
+            elif '檔位分析' in window_title or 'Gear Analysis' in window_title or 'ギア分析' in window_title:
+                logger.debug("圈速控制 - 檢測到檔位分析視窗，觸發專用更新")
+                self._update_gear_analysis_chart({})
             else:
                 logger.debug(f"圈速控制 - 未識別的視窗類型: {window_title}")
                 
@@ -8004,7 +8377,10 @@ class StyleHMainWindow(QMainWindow):
         Returns:
             list: 分析視窗列表
         """
-        logger.info("[DEBUG]    _get_telemetry_analysis_windows() - 開始搜尋視窗")
+        logger.info("=" * 80)
+        logger.info("[DEBUG] _get_telemetry_analysis_windows() - 開始搜尋視窗")
+        print("=" * 80)
+        print("[DEBUG] _get_telemetry_analysis_windows() - 開始搜尋視窗")
         
         # 定義所有支援的分析類型
         all_analysis_types = {
@@ -8044,8 +8420,12 @@ class StyleHMainWindow(QMainWindow):
         analysis_windows = []
         seen_ids = set()
         
+        print(f"[DEBUG] 📊 lap_analysis_windows 集合大小: {len(self.lap_analysis_windows)}")
+        logger.info(f"[DEBUG] 📊 lap_analysis_windows 集合大小: {len(self.lap_analysis_windows)}")
+        
         # ✅ 1. 檢查 MDI 視窗（遙測分析）
         logger.info("[DEBUG]    檢查 lap_analysis_windows: %d 個", len(self.lap_analysis_windows))
+        print(f"[DEBUG] 檢查 lap_analysis_windows: {len(self.lap_analysis_windows)} 個")
         
         for window in self.lap_analysis_windows:
             if hasattr(window, 'analysis_type') and window.analysis_type in all_analysis_types:
@@ -8102,15 +8482,38 @@ class StyleHMainWindow(QMainWindow):
                         logger.info(f"     子視窗數量: {len(sub_windows)}")
                         
                         for sub_win in sub_windows:
-                            if hasattr(sub_win, 'isVisible') and not sub_win.isVisible():
-                                logger.info("       ⏭️  跳過已關閉/隱藏的子視窗")
+                            # [FIX] 不應該跳過隱藏的視窗！
+                            # 隱藏的視窗可能只是在不活動的 Tab 中，它們仍然需要更新
+                            # 只跳過真正已關閉的視窗（isVisible() 和 parent() 都為 None）
+                            if not sub_win or (hasattr(sub_win, 'parent') and sub_win.parent() is None):
+                                logger.info("       ⏭️  跳過已關閉/刪除的子視窗")
                                 continue
 
+                            # [DEBUG] 方案A調試：檢查 PopoutSubWindow 屬性
+                            sub_win_title = sub_win.windowTitle() if hasattr(sub_win, 'windowTitle') else 'Unknown'
+                            sub_win_type = type(sub_win).__name__
+                            is_visible = sub_win.isVisible() if hasattr(sub_win, 'isVisible') else 'N/A'
+                            print(f"       [SUB_WIN_CHECK] 檢查子視窗: '{sub_win_title}' (type={sub_win_type}, visible={is_visible})")
+                            logger.info(f"       [SUB_WIN_CHECK] 檢查子視窗: '{sub_win_title}' (type={sub_win_type}, visible={is_visible})")
+                            
                             # 優先使用 PopoutSubWindow 上綁定的 analysis_module
                             # 🔴 關鍵修復：使用 try-finally 確保 candidate_modules 被清理
                             candidate_modules = []
                             try:
                                 analysis_module = getattr(sub_win, 'analysis_module', None)
+                                
+                                # [DEBUG] 方案A調試：驗證 analysis_module 屬性
+                                print(f"       [SUB_WIN_CHECK] sub_win.analysis_module: {type(analysis_module).__name__ if analysis_module else 'None'}")
+                                logger.info(f"       [SUB_WIN_CHECK] sub_win.analysis_module: {type(analysis_module).__name__ if analysis_module else 'None'}")
+                                if analysis_module:
+                                    module_id = id(analysis_module)
+                                    has_type = hasattr(analysis_module, 'analysis_type')
+                                    type_value = getattr(analysis_module, 'analysis_type', 'N/A')
+                                    print(f"       [SUB_WIN_CHECK]   - module_id: {module_id}")
+                                    print(f"       [SUB_WIN_CHECK]   - has analysis_type: {has_type}")
+                                    print(f"       [SUB_WIN_CHECK]   - analysis_type value: {type_value}")
+                                    logger.info(f"       [SUB_WIN_CHECK]   - module_id: {module_id}, has_type: {has_type}, type: {type_value}")
+                                
                                 if analysis_module is not None:
                                     candidate_modules.append(analysis_module)
                                     if not hasattr(analysis_module, '_sub_window'):
@@ -8170,14 +8573,20 @@ class StyleHMainWindow(QMainWindow):
                 if hasattr(widget, 'analysis_type'):
                     analysis_type_value = widget.analysis_type
                     logger.info(f"     Widget 有 analysis_type: {analysis_type_value}")
+                    print(f"     [DEBUG] Widget 有 analysis_type: {analysis_type_value}")
                     
                     if analysis_type_value in all_analysis_types:
                         candidate_id = id(widget)
                         if candidate_id not in seen_ids:
                             analysis_windows.append(widget)
                             seen_ids.add(candidate_id)
-                            logger.info(f"  找到 Tab 視窗 (widget): {analysis_type_value}")
+                            logger.info(f"  ✅ 找到 Tab 視窗 (widget): {analysis_type_value}")
+                            print(f"  ✅ 找到 Tab 視窗 (widget): {analysis_type_value}")
+                        else:
+                            print(f"  ⏭️  跳過重複 (widget): {analysis_type_value}")
                         continue
+                    else:
+                        print(f"  ⚠️  Widget 的 analysis_type '{analysis_type_value}' 不在 all_analysis_types 中")
                 
                 # ✅ 檢查是否是 RainAnalysisModuleAdapter 等包裝類型
                 # 這些類型的 widget 是通過 get_widget() 返回的
@@ -8256,7 +8665,21 @@ class StyleHMainWindow(QMainWindow):
                     else:
                         logger.info(f"  無法識別 Tab 類型")
         
-        logger.info(f"總共找到 {len(analysis_windows)} 個分析視窗")
+        print("=" * 80)
+        print(f"[DEBUG] ✅ 搜尋完成！總共找到 {len(analysis_windows)} 個分析視窗")
+        logger.info("=" * 80)
+        logger.info(f"[DEBUG] ✅ 搜尋完成！總共找到 {len(analysis_windows)} 個分析視窗")
+        
+        # 列出所有找到的視窗
+        for idx, win in enumerate(analysis_windows):
+            win_type = getattr(win, 'analysis_type', 'unknown')
+            win_id = id(win)
+            win_class = type(win).__name__
+            print(f"  [{idx+1}] {win_type} (class={win_class}, id={win_id})")
+            logger.info(f"  [{idx+1}] {win_type} (class={win_class}, id={win_id})")
+        
+        print("=" * 80)
+        logger.info("=" * 80)
         
         return analysis_windows
         
@@ -8523,7 +8946,62 @@ class StyleHMainWindow(QMainWindow):
         welcome_tab.setObjectName("welcome_tab")  # 添加標識符
         self.tab_widget.addTab(welcome_tab, tr("home_page", "主頁"))  # 顯示 "主頁" 標題
         
+        # 設置分頁右鍵選單
+        self._setup_tab_context_menu()
+        
         self.update_tab_count()
+    
+    def _setup_tab_context_menu(self):
+        """為 QTabWidget 設定右鍵選單"""
+        # 設置 TabBar 的右鍵選單策略
+        self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tab_widget.tabBar().customContextMenuRequested.connect(self._show_tab_context_menu)
+        print("[TAB_POPOUT] ✅ 分頁右鍵選單已設置")
+    
+    def _show_tab_context_menu(self, pos):
+        """顯示分頁右鍵選單"""
+        # 獲取右鍵點擊的分頁索引
+        tab_bar = self.tab_widget.tabBar()
+        tab_index = tab_bar.tabAt(pos)
+        
+        if tab_index == -1:
+            return  # 沒有點擊到分頁
+        
+        # 檢查是否為 HOME 主頁（index=0）或已彈出的分頁
+        is_home_tab = (tab_index == 0)
+        is_popped_out = (tab_index in self.popped_out_tabs)
+        
+        # HOME 主頁不顯示任何選單
+        if is_home_tab:
+            print(f"[TAB_MENU] {tr('home_tab_no_popout')} / {tr('home_tab_no_rename')}")
+            return
+        
+        # 創建右鍵選單
+        menu = QMenu(self)
+        
+        if is_popped_out:
+            # 已彈出：顯示「返回主視窗」+ 「重新命名」選項
+            return_action = menu.addAction(tr('tab_return_menu'))
+            return_action.triggered.connect(lambda: self.pop_back_in_tab(tab_index))
+            
+            menu.addSeparator()  # 分隔線
+            
+            rename_action = menu.addAction(tr('tab_rename_menu'))
+            rename_action.triggered.connect(lambda: self.rename_tab(tab_index))
+        else:
+            # 未彈出：顯示「彈出為獨立視窗」+ 「重新命名」選項
+            popout_action = menu.addAction(tr('tab_popout_menu'))
+            popout_action.triggered.connect(lambda: self.pop_out_tab(tab_index))
+            
+            menu.addSeparator()  # 分隔線
+            
+            rename_action = menu.addAction(tr('tab_rename_menu'))
+            rename_action.triggered.connect(lambda: self.rename_tab(tab_index))
+        
+        # 顯示選單
+        global_pos = tab_bar.mapToGlobal(pos)
+        menu.exec_(global_pos)
+        print(f"[TAB_MENU] Show tab {tab_index} context menu (popped_out={is_popped_out})")
         
     def add_new_tab(self):
         """新增分頁 - 簡化版，直接創建空白工作區"""
@@ -8551,6 +9029,30 @@ class StyleHMainWindow(QMainWindow):
         
         print(f"[TAB] ✅ 已創建新分頁: {tab_name}")
         self.update_tab_count()
+    
+    def create_tab_for_workspace(self, tab_name: str) -> 'CustomMdiArea':
+        """
+        專門用於 Workspace 載入的分頁創建方法
+        ✅ 使用與 add_new_tab() 完全相同的邏輯，確保類別物件一致
+        
+        Returns:
+            CustomMdiArea: 新創建的 MDI 區域（保證是本地類別實例）
+        """
+        # 計算分頁編號（排除歡迎頁）
+        tab_count = self.tab_widget.count()
+        
+        # 創建空白 MDI 工作區（✅ 使用本地 CustomMdiArea 類別）
+        new_mdi_area = CustomMdiArea()
+        new_mdi_area.setObjectName(f"MdiArea_{tab_count}")
+        
+        # 添加到標籤列
+        index = self.tab_widget.addTab(new_mdi_area, tab_name)
+        
+        # 追蹤 MDI 區域
+        self.mdi_areas.append(new_mdi_area)
+        
+        print(f"[WORKSPACE] ✅ 已創建分頁（用於 workspace）: '{tab_name}' (index={index})")
+        return new_mdi_area
     
     def _convert_to_chinese_number(self, num: int) -> str:
         """將數字轉換為中文數字（一、二、三...）"""
@@ -8601,17 +9103,37 @@ class StyleHMainWindow(QMainWindow):
     def close_all_mdi_windows_in_current_tab(self):
         """關閉當前分頁的所有 MDI 視窗（全局工具列按鈕）"""
         try:
+            print(f"[CLOSE_ALL_DEBUG] ===== 開始關閉所有視窗 =====")
+            
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
                 print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
+                print(f"[CLOSE_ALL_DEBUG] ================================")
                 return
             
+            print(f"[CLOSE_ALL_DEBUG] 找到 MDI 區域: {current_mdi_area.objectName()}")
+            
+            # 獲取所有子視窗
+            all_subwindows = current_mdi_area.subWindowList()
+            print(f"[CLOSE_ALL_DEBUG] MDI 區域有 {len(all_subwindows)} 個子視窗")
+            
+            for i, sw in enumerate(all_subwindows):
+                print(f"[CLOSE_ALL_DEBUG]   子視窗 {i}: {sw.windowTitle()}, 可見={sw.isVisible()}")
+            
             # 關閉所有子視窗
+            print(f"[CLOSE_ALL_DEBUG] 調用 closeAllSubWindows()...")
             current_mdi_area.closeAllSubWindows()
+            
+            # 驗證關閉結果
+            remaining = current_mdi_area.subWindowList()
+            print(f"[CLOSE_ALL_DEBUG] 關閉後剩餘 {len(remaining)} 個子視窗")
             print("[GLOBAL_TOOLBAR] ✅ 已關閉當前分頁的所有 MDI 視窗")
+            print(f"[CLOSE_ALL_DEBUG] ================================")
             
         except Exception as e:
             print(f"[GLOBAL_TOOLBAR] ❌ 關閉 MDI 視窗失敗: {e}")
+            import traceback
+            traceback.print_exc()
     
     def show_all_data_in_current_tab(self):
         """顯示當前分頁的所有數據（全局工具列按鈕）- 重置所有已開啟視窗的 XY 軸視圖"""
@@ -8698,6 +9220,323 @@ class StyleHMainWindow(QMainWindow):
         """更新分頁數量顯示"""
         count = self.tab_widget.count()
         self.tab_count_label.setText(f"分頁: {count}")
+    
+    # ==================== 分頁彈出功能 ====================
+    
+    def pop_out_tab(self, tab_index):
+        """彈出指定分頁為獨立視窗"""
+        try:
+            # 檢查是否為 HOME 主頁
+            if tab_index == 0:
+                print(f"[TAB_POPOUT] {tr('home_tab_no_popout')}")
+                return
+            
+            # 檢查是否已經彈出
+            if tab_index in self.popped_out_tabs:
+                print(f"[TAB_POPOUT] {tr('tab_already_popped')}")
+                return
+            
+            # 獲取分頁內容和名稱
+            tab_widget = self.tab_widget.widget(tab_index)
+            tab_name = self.tab_widget.tabText(tab_index)
+            
+            if not tab_widget:
+                print(f"[TAB_POPOUT] Cannot get tab {tab_index} content")
+                return
+            
+            # 檢查是否為 CustomMdiArea
+            if not isinstance(tab_widget, CustomMdiArea):
+                print(f"[TAB_POPOUT] Tab {tab_index} is not MDI area")
+                return
+            
+            print(f"[TAB_POPOUT] {tr('tab_starting_popout').format(index=tab_index, name=tab_name)}")
+            print(f"[TAB_POPOUT] 📊 MDI 子視窗數量: {len(tab_widget.subWindowList())}")
+            
+            # 創建佔位符 widget（保持分頁索引不變）
+            placeholder = QWidget()
+            placeholder.setObjectName("PopoutPlaceholder")
+            placeholder_layout = QVBoxLayout(placeholder)
+            placeholder_label = QLabel(tr('tab_placeholder_label').format(name=tab_name))
+            placeholder_label.setAlignment(Qt.AlignCenter)
+            placeholder_label.setStyleSheet("font-size: 16px; color: #666666;")
+            placeholder_layout.addWidget(placeholder_label)
+            
+            # 創建獨立視窗（複用 ResizableStandaloneWindow）
+            standalone_window = TabStandaloneWindow(
+                tab_name=tab_name,
+                mdi_area=tab_widget,
+                tab_index=tab_index,
+                main_window=self
+            )
+            
+            # 計算視窗大小（主視窗的 80%）
+            main_size = self.size()
+            window_width = int(main_size.width() * 0.8)
+            window_height = int(main_size.height() * 0.8)
+            standalone_window.resize(window_width, window_height)
+            
+            # 設置視窗標題
+            standalone_window.setWindowTitle(f"{tab_name} - {APP_FULL_TITLE}")
+            
+            # ✅ 關鍵修復：先從 QTabWidget 移除，再設置到獨立視窗
+            # 這樣可以保持 MDI 區域的 parent 關係正確
+            self.tab_widget.removeTab(tab_index)
+            self.tab_widget.insertTab(tab_index, placeholder, tab_name)
+            
+            # 移植 MDI 工作區到獨立視窗
+            standalone_window.setCentralWidget(tab_widget)
+            
+            # ✅ 關鍵修復：強制 MDI 區域顯示和更新
+            tab_widget.setVisible(True)
+            tab_widget.show()
+            tab_widget.update()
+            
+            # 強制更新所有 MDI 子視窗
+            for sub_win in tab_widget.subWindowList():
+                sub_win.setVisible(True)
+                sub_win.show()
+                sub_win.update()
+            
+            print(f"[TAB_POPOUT] 🔄 已強制更新 MDI 區域和 {len(tab_widget.subWindowList())} 個子視窗")
+            
+            # 顯示獨立視窗
+            standalone_window.show()
+            
+            # 再次確認 MDI 區域可見性
+            QTimer.singleShot(100, lambda: self._ensure_mdi_visible(tab_widget))
+            print(f"[TAB_POPOUT] 🔍 已設置延遲檢查 MDI 可見性")
+            
+            # 更新分頁標籤為灰色 + 🔗 圖標
+            self._update_tab_appearance(tab_index, is_popped_out=True)
+            
+            # 記錄到追蹤字典
+            self.popped_out_tabs[tab_index] = {
+                'standalone_window': standalone_window,
+                'original_widget': tab_widget,
+                'placeholder': placeholder,
+                'tab_name': tab_name
+            }
+            
+            print(f"[TAB_POPOUT] {tr('tab_popout_success').format(index=tab_index)}")
+            print(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
+            
+        except Exception as e:
+            print(f"[TAB_POPOUT] Pop out failed: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def pop_back_in_tab(self, tab_index):
+        """將彈出的分頁返回主視窗"""
+        try:
+            # ✅ 修復：檢查分頁是否已彈出（避免重複調用導致 KeyError）
+            if tab_index not in self.popped_out_tabs:
+                print(f"[TAB_POPOUT] {tr('tab_not_popped').format(index=tab_index)}")
+                return
+            
+            print(f"[TAB_POPOUT] {tr('tab_starting_return').format(index=tab_index)}")
+            
+            # 獲取彈出信息
+            popout_info = self.popped_out_tabs[tab_index]
+            standalone_window = popout_info['standalone_window']
+            mdi_area = popout_info['original_widget']
+            placeholder = popout_info['placeholder']
+            tab_name = popout_info['tab_name']
+            
+            print(f"[TAB_POPOUT] 📊 返回時 MDI 子視窗數量: {len(mdi_area.subWindowList())}")
+            
+            # ✅ 關鍵修復：先從字典移除（避免 closeEvent 重複調用）
+            del self.popped_out_tabs[tab_index]
+            print(f"[TAB_POPOUT] 🗑️ 已從追蹤字典移除分頁 {tab_index}")
+            
+            # ✅ 關鍵修復：從獨立視窗取出 MDI 區域（避免關閉時刪除）
+            standalone_window.takeCentralWidget()
+            
+            # ✅ 關鍵修復：移除佔位符，恢復 MDI 工作區
+            self.tab_widget.removeTab(tab_index)
+            self.tab_widget.insertTab(tab_index, mdi_area, tab_name)
+            self.tab_widget.setCurrentIndex(tab_index)
+            
+            # 清理佔位符
+            placeholder.deleteLater()
+            
+            # 恢復分頁標籤正常樣式
+            self._update_tab_appearance(tab_index, is_popped_out=False)
+            
+            # 關閉獨立視窗（不會刪除 MDI 區域，因為已經 takeCentralWidget）
+            standalone_window.close()
+            
+            print(f"[TAB_POPOUT] {tr('tab_return_success').format(index=tab_index)}")
+            print(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
+            
+        except KeyError:
+            # ✅ 修復：KeyError 表示分頁已返回，這是正常情況（closeEvent 重複調用）
+            print(f"[TAB_POPOUT] Tab {tab_index} already returned (skip duplicate return)")
+        except Exception as e:
+            # 其他真正的錯誤
+            print(f"[TAB_POPOUT] Return failed: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_tab_appearance(self, tab_index, is_popped_out):
+        """更新分頁標籤外觀（灰色 + 圖標）"""
+        try:
+            tab_name = self.tab_widget.tabText(tab_index)
+            
+            # 移除可能存在的 🔗 圖標
+            tab_name_clean = tab_name.replace("🔗 ", "")
+            
+            if is_popped_out:
+                # 添加 🔗 圖標並設置灰色樣式
+                new_tab_text = f"🔗 {tab_name_clean}"
+                self.tab_widget.setTabText(tab_index, new_tab_text)
+                
+                # 設置灰色樣式
+                tab_bar = self.tab_widget.tabBar()
+                tab_bar.setTabTextColor(tab_index, QColor(102, 102, 102))  # #666666
+                
+                print(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已設為灰色 + 🔗")
+            else:
+                # 恢復正常文字和顏色
+                self.tab_widget.setTabText(tab_index, tab_name_clean)
+                
+                # 恢復正常顏色
+                tab_bar = self.tab_widget.tabBar()
+                tab_bar.setTabTextColor(tab_index, QColor(0, 0, 0))  # 黑色
+                
+                print(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已恢復正常")
+                
+        except Exception as e:
+            print(f"[TAB_POPOUT] ❌ 更新標籤外觀失敗: {e}")
+    
+    def rename_tab(self, tab_index):
+        """重新命名分頁"""
+        try:
+            # 禁止重命名主頁
+            if tab_index == 0:
+                print(f"[TAB_RENAME] {tr('home_tab_no_rename')}")
+                return
+            
+            # 獲取當前分頁名稱（移除可能的 🔗 圖標）
+            current_name = self.tab_widget.tabText(tab_index).replace("🔗 ", "")
+            
+            # 彈出輸入對話框
+            new_name, ok = QInputDialog.getText(
+                self,
+                tr('tab_rename_dialog_title'),
+                tr('tab_rename_dialog_label'),
+                QLineEdit.Normal,
+                current_name
+            )
+            
+            # 用戶取消或未輸入
+            if not ok or not new_name:
+                print(f"[TAB_RENAME] User cancelled rename operation")
+                return
+            
+            # 去除首尾空白
+            new_name = new_name.strip()
+            
+            # 檢查名稱是否與當前相同
+            if new_name == current_name:
+                print(f"[TAB_RENAME] Tab name unchanged: {current_name}")
+                return
+            
+            # 處理重複名稱：自動添加 (1), (2), (3) 後綴
+            final_name = self._get_unique_tab_name(new_name)
+            
+            # 更新分頁名稱
+            is_popped_out = (tab_index in self.popped_out_tabs)
+            
+            if is_popped_out:
+                # 如果已彈出，保留 🔗 圖標
+                self.tab_widget.setTabText(tab_index, f"🔗 {final_name}")
+                
+                # 同步更新獨立視窗標題
+                popout_info = self.popped_out_tabs[tab_index]
+                standalone_window = popout_info['standalone_window']
+                standalone_window.setWindowTitle(f"{final_name} - {APP_FULL_TITLE}")
+                
+                # 更新追蹤字典中的名稱
+                popout_info['tab_name'] = final_name
+                
+                print(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)} (已彈出)")
+            else:
+                # 一般分頁，直接更新名稱
+                self.tab_widget.setTabText(tab_index, final_name)
+                print(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)}")
+            
+        except Exception as e:
+            print(f"[TAB_RENAME] ❌ 重新命名失敗: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _get_unique_tab_name(self, base_name):
+        """
+        獲取唯一的分頁名稱，如果重複則添加 (1), (2), (3) 後綴
+        
+        Args:
+            base_name: 基礎名稱
+            
+        Returns:
+            唯一的分頁名稱
+        """
+        # 收集所有現有分頁名稱（移除 🔗 圖標）
+        existing_names = []
+        for i in range(self.tab_widget.count()):
+            name = self.tab_widget.tabText(i).replace("🔗 ", "")
+            existing_names.append(name)
+        
+        # 如果基礎名稱不重複，直接返回
+        if base_name not in existing_names:
+            return base_name
+        
+        # 名稱重複，添加數字後綴
+        counter = 1
+        while True:
+            new_name = f"{base_name} ({counter})"
+            if new_name not in existing_names:
+                return new_name
+            counter += 1
+    
+    def _ensure_mdi_visible(self, mdi_area):
+        """確保 MDI 區域可見（延遲檢查）"""
+        try:
+            if not mdi_area:
+                return
+            
+            # 檢查 MDI 區域的可見性
+            is_visible = mdi_area.isVisible()
+            geometry = mdi_area.geometry()
+            sub_count = len(mdi_area.subWindowList())
+            
+            print(f"[TAB_POPOUT] 🔍 MDI 可見性檢查:")
+            print(f"[TAB_POPOUT]   - 可見: {is_visible}")
+            print(f"[TAB_POPOUT]   - 幾何: {geometry.width()}x{geometry.height()}")
+            print(f"[TAB_POPOUT]   - 子視窗: {sub_count}")
+            
+            # 如果不可見或大小為 0，強制顯示
+            if not is_visible or geometry.width() == 0 or geometry.height() == 0:
+                print(f"[TAB_POPOUT] ⚠️ MDI 區域異常，嘗試修復...")
+                mdi_area.setVisible(True)
+                mdi_area.show()
+                mdi_area.update()
+                
+                # 強制設置合理的大小
+                if geometry.width() == 0 or geometry.height() == 0:
+                    mdi_area.resize(800, 600)
+                    print(f"[TAB_POPOUT] 🔧 已設置 MDI 區域大小為 800x600")
+            
+            # 確保所有子視窗可見
+            for sub_win in mdi_area.subWindowList():
+                if not sub_win.isVisible():
+                    print(f"[TAB_POPOUT] 🔧 顯示隱藏的子視窗: {sub_win.windowTitle()}")
+                    sub_win.setVisible(True)
+                    sub_win.show()
+                    
+        except Exception as e:
+            print(f"[TAB_POPOUT] ❌ MDI 可見性檢查失敗: {e}")
+    
+    # ==================== 分頁彈出功能結束 ====================
         
     def check_and_hide_tabs(self):
         """✅ 檢查標籤欄狀態（已改為啟用模式）"""
@@ -10601,6 +11440,11 @@ class StyleHMainWindow(QMainWindow):
             content_widget = analysis_module.get_widget()
             analysis_window.setWidget(content_widget)
             
+            # 🔧 [CRITICAL FIX] 設置模組的父視窗引用（與其他模組保持一致）
+            if hasattr(analysis_module, 'set_parent_window'):
+                analysis_module.set_parent_window(analysis_window)
+                print(f"[LINK] [INIT] 已設置模組的父視窗引用: {window_title}")
+            
             # [REMOVED] 不再需要重新設置標題，因為已經使用 get_window_title 設置正確標題
             print(f"[TITLE] [OK] 視窗標題已設置為: {window_title}")
             
@@ -11294,6 +12138,11 @@ class StyleHMainWindow(QMainWindow):
 
     def _create_analysis_module(self, function_name, module_type_hint: Optional[str] = None):
         """創建分析模組實例"""
+        # ✅ 🔥🔥🔥 調試點 0：方法入口 🔥🔥🔥
+        print(f"🔥🔥🔥 [MODULE_FACTORY] _create_analysis_module 被調用！")
+        print(f"🔥 function_name = {function_name}")
+        print(f"🔥 module_type_hint = {module_type_hint}")
+        
         try:
             # 導入模組工廠和類型定義
             from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
@@ -11315,31 +12164,46 @@ class StyleHMainWindow(QMainWindow):
                 TRACK_ANALYSIS_AVAILABLE = False
                 print(f"警告: TrackAnalysisUniversal 不可用: {e}")
             
+            # 🔥 調試點：確認到達映射邏輯前
+            print(f"🔥🔥 [MODULE_FACTORY] TrackAnalysisUniversal 導入後，準備進入映射邏輯")
+            
+            # ✅ 調試訊息：確認進入映射邏輯
+            print(f"[DEBUG] [MODULE_FACTORY] 開始映射邏輯")
+            print(f"[DEBUG] [MODULE_FACTORY] function_name={function_name}, module_type_hint={module_type_hint}")
+            
+            # 🔥🔥🔥 調試點：字典定義前
+            print(f"🔥🔥🔥 [MODULE_FACTORY] 準備定義 module_alias_groups 字典")
+            
             # 根據功能名稱映射到模組類型，支援多語系顯示文字
             module_alias_groups = {
                 "pitstop_analysis": [
                     ("pitstop_analysis", "Pitstop Analysis"),
+                    "pitstop",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "進站分析",
                     "Pitstop Analysis",
                     "ピットストップ分析",
                 ],
                 "accident_analysis": [
                     ("accident_analysis", "Accident Analysis"),
+                    "accident",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "事故分析",
                     "Accident Analysis",
                 ],
                 "speed_analysis": [
                     ("speed_analysis", "Speed Analysis"),
+                    "speed",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "速度分析",
                 ],
                 "throttle_analysis": [
                     ("throttle_analysis", "Throttle Analysis"),
+                    "throttle",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "油門分析",
                     "スロットル分析",
                 ],
                 "throttle_box_plot": [
                     ("throttle_box_plot", "Throttle Box Plot"),
                     ("throttle_box_plot_analysis", "Throttle Box Plot Analysis"),
+                    "throttle_boxplot",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "油門箱型圖",
                     "油門箱線圖",  # 樹節點別名
                     "Throttle Box Plot",
@@ -11347,25 +12211,57 @@ class StyleHMainWindow(QMainWindow):
                 ],
                 "throttle_line_chart": [
                     ("throttle_line_chart", "Throttle Line Chart"),
+                    "throttle_line_chart_single_driver",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "油門折線圖",  # 樹節點別名
                     "スロットル折れ線グラフ",
                 ],
                 "rpm_analysis": [
                     ("rpm_analysis", "RPM Analysis"),
+                    "rpm",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "RPM分析",
                 ],
                 "gear_analysis": [
                     ("gear_analysis", "Gear Analysis"),
+                    "gear",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "檔位分析",
                     "ギア分析",
                 ],
                 "brake_analysis": [
                     ("brake_analysis", "Brake Analysis"),
+                    "brake",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "煞車分析",
                     "ブレーキ分析",
                 ],
+                "acceleration_analysis": [  # ✅ 新增：加速度分析
+                    ("acceleration_analysis", "Acceleration Analysis"),
+                    "acceleration",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
+                    "加速度分析",
+                    "アクセラレーション分析",
+                ],
+                "speeddiff_analysis": [  # ✅ 新增：速度差分析
+                    ("speeddiff_analysis", "Speed Diff Analysis"),
+                    "Speeddiff",  # ✅ Workspace 使用的原始 key（模組的 analysis_type，注意大寫S）
+                    "speed_diff",  # ✅ 額外別名
+                    "速度差分析",
+                    "速度差異分析",
+                ],
+                "distancediff_analysis": [  # ✅ 新增：距離差分析
+                    ("distancediff_analysis", "Distance Diff Analysis"),
+                    "distancediff",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
+                    "distance_diff",  # ✅ 額外別名
+                    "距離差分析",
+                    "距離差異分析",
+                ],
+                "timediff_analysis": [  # ✅ 新增：時間差分析
+                    ("timediff_analysis", "Time Diff Analysis"),
+                    "timediff",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
+                    "time_diff",  # ✅ 額外別名
+                    "時間差分析",
+                    "時間差異分析",
+                ],
                 "rain_analysis": [
                     ("rain_analysis", "Rain Analysis"),
+                    "rain_weather",  # ✅ Workspace 使用的原始 key（不翻譯）
                     "雨況分析",
                     "降雨分析",
                 ],
@@ -11385,6 +12281,7 @@ class StyleHMainWindow(QMainWindow):
                 "tire_analysis": [
                     ("tire_analysis", "Tire Analysis"),
                     ("tire_strategy_analysis", "Tire Strategy Analysis"),
+                    "tire",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "輪胎分析",
                     "輪胎策略分析",
                     "タイヤ戦略分析",
@@ -11392,6 +12289,7 @@ class StyleHMainWindow(QMainWindow):
                 "driverlap_analysis": [
                     ("detailed_lap_analysis", "Detailed Lap Analysis"),
                     ("detailed_lap_table", "Detailed Lap Table"),  # 樹節點別名
+                    "laptime",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "詳細圈速分析",
                     "詳細圈速表格",  # 中文樹節點
                     "詳細ラップ分析",
@@ -11399,6 +12297,7 @@ class StyleHMainWindow(QMainWindow):
                 "laptime_box_plot": [
                     ("laptime_box_plot", "Lap Time Box Plot"),
                     ("lap_time_boxplot", "Lap Time BoxPlot"),
+                    "laptime_boxplot",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "圈速箱線圖",  # 樹節點別名
                     "圈速箱型圖",
                 ],
@@ -11439,33 +12338,94 @@ class StyleHMainWindow(QMainWindow):
                 ],
             }
 
+            # 🔥🔥🔥 調試點：字典定義完成
+            print(f"🔥🔥🔥 [MODULE_FACTORY] module_alias_groups 字典定義完成！共 {len(module_alias_groups)} 個模組類型")
+            print(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 在字典中: {'rain_analysis' in module_alias_groups}")
+            if 'rain_analysis' in module_alias_groups:
+                print(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 別名數量: {len(module_alias_groups['rain_analysis'])}")
+
             module_mapping = {}
+            
+            # ✅ 調試點 1：確認開始建立映射表
+            print(f"[DEBUG] [MODULE_FACTORY] 步驟1: 開始建立映射表")
+            print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 原始別名數量: {len(module_alias_groups.get('rain_analysis', []))}")
 
             def _register_module_alias(alias_value, module_type):
+                # 🔥🔥🔥 調試：顯示註冊過程
+                if module_type == "rain_analysis":
+                    print(f"🔥 [REGISTER] 嘗試註冊: alias_value='{alias_value}' (type={type(alias_value).__name__}), module_type='{module_type}'")
+                    print(f"🔥 [REGISTER] isinstance(alias_value, str) = {isinstance(alias_value, str)}")
+                    print(f"🔥 [REGISTER] bool(alias_value) = {bool(alias_value) if isinstance(alias_value, str) else 'N/A'}")
+                
                 if isinstance(alias_value, str) and alias_value:
                     module_mapping[alias_value] = module_type
+                    if module_type == "rain_analysis":
+                        print(f"🔥 [REGISTER] ✅ 已註冊: '{alias_value}' → '{module_type}'")
+                else:
+                    if module_type == "rain_analysis":
+                        print(f"🔥 [REGISTER] ❌ 跳過註冊（不是字串或為空）")
+
 
             for module_type, aliases in module_alias_groups.items():
+                # ✅ 調試點 2：顯示正在處理的模組類型
+                if module_type == "rain_analysis":
+                    print(f"[DEBUG] [MODULE_FACTORY] 步驟2: 處理 rain_analysis，別名數量={len(aliases)}")
+                    print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名內容: {aliases}")
+                    
                 for alias in aliases:
                     if isinstance(alias, tuple):
                         translated_value = tr(alias[0], alias[1])
+                        # 🔥🔥🔥 調試：顯示翻譯結果
+                        if module_type == "rain_analysis":
+                            print(f"🔥 [TRANSLATE] Tuple {alias} → tr() 返回: '{translated_value}' (type={type(translated_value).__name__})")
                         _register_module_alias(translated_value, module_type)
+                        # ✅ 調試點 3：顯示 tuple 翻譯結果
+                        if module_type == "rain_analysis":
+                            print(f"[DEBUG] [MODULE_FACTORY]   - Tuple {alias} -> '{translated_value}'")
                     else:
                         _register_module_alias(alias, module_type)
+                        # ✅ 調試點 4：顯示字串別名
+                        if module_type == "rain_analysis":
+                            print(f"[DEBUG] [MODULE_FACTORY]   - String '{alias}'")
+            
+            # ✅ 調試：確認映射表已建立
+            print(f"[DEBUG] [MODULE_FACTORY] 映射表已建立，共 {len(module_mapping)} 個條目")
+            if 'rain_weather' in module_mapping:
+                print(f"[DEBUG] [MODULE_FACTORY] ✅ 'rain_weather' 在映射表中: {module_mapping['rain_weather']}")
+            else:
+                print(f"[DEBUG] [MODULE_FACTORY] ❌ 'rain_weather' 不在映射表中！")
+                print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名: {module_alias_groups.get('rain_analysis', [])}")
             
             # 尋找匹配的模組類型
-            module_type = module_type_hint
+            module_type = None
             matched_keyword = None
-            if module_type:
-                print(f"[DEBUG]    [MODULE_FACTORY] 使用提供的模組類型提示: {module_type}")
+            
+            # ✅ 修正：優先檢查 module_type_hint 是否在映射表中
+            if module_type_hint:
+                print(f"[DEBUG]    [MODULE_FACTORY] 收到模組類型提示: {module_type_hint}")
+                # 先嘗試在映射表中查找
+                if module_type_hint in module_mapping:
+                    module_type = module_mapping[module_type_hint]
+                    matched_keyword = module_type_hint
+                    print(f"[DEBUG]    [MODULE_FACTORY] ✅ 類型提示在映射表中找到: '{module_type_hint}' -> '{module_type}'")
+                else:
+                    # 如果不在映射表中，假設它本身就是模組類型
+                    module_type = module_type_hint
+                    print(f"[DEBUG]    [MODULE_FACTORY] 使用類型提示作為模組類型: {module_type}")
             else:
+                # 沒有提供 module_type_hint，從 function_name 中搜索
                 normalized_function_name = function_name.casefold() if isinstance(function_name, str) else ""
                 print(f"[DEBUG]    [MODULE_FACTORY] 開始尋找匹配的模組類型，功能名稱: '{function_name}'")
-                for keyword, mod_type in module_mapping.items():
+                
+                # ✅ 修正：按關鍵字長度排序，優先匹配更長的關鍵字（避免 "speed" 搶先匹配到 "all drivers speed"）
+                sorted_mapping = sorted(module_mapping.items(), key=lambda x: len(x[0]) if isinstance(x[0], str) else 0, reverse=True)
+                
+                for keyword, mod_type in sorted_mapping:
                     normalized_keyword = keyword.casefold() if isinstance(keyword, str) else ""
                     if normalized_keyword and normalized_keyword in normalized_function_name:
                         module_type = mod_type
                         matched_keyword = keyword
+                        print(f"[DEBUG]    [MODULE_FACTORY] 🎯 匹配成功! 關鍵字: '{keyword}' ({len(keyword)} 字元)")
                         break
                 if module_type and matched_keyword:
                     print(f"[DEBUG]    [MODULE_FACTORY] ✅ 找到匹配! 關鍵字: '{matched_keyword}' -> 模組類型: '{module_type}'")
@@ -12175,6 +13135,222 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 處理速度分析模組
+                elif module_type == "speed_analysis":
+                    try:
+                        from modules.gui.lap_analysis.speed_analysis.speed_analysis_mdi import SpeedAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建速度分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = SpeedAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 速度分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 速度分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 速度分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 速度分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理RPM分析模組
+                elif module_type == "rpm_analysis":
+                    try:
+                        from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_mdi import RPMAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建RPM分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = RPMAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] RPM分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] RPM分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] RPM分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] RPM分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理加速度分析模組
+                elif module_type == "acceleration_analysis":
+                    try:
+                        from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi import accelerationAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建加速度分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = accelerationAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 加速度分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 加速度分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 加速度分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 加速度分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理速度差分析模組
+                elif module_type == "speeddiff_analysis":
+                    try:
+                        from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_mdi import SpeeddiffAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建速度差分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = SpeeddiffAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 速度差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 速度差分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 速度差分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 速度差分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理距離差分析模組
+                elif module_type == "distancediff_analysis":
+                    try:
+                        from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi import distancediffAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建距離差分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = distancediffAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 距離差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 距離差分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 距離差分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 距離差分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理時間差分析模組
+                elif module_type == "timediff_analysis":
+                    try:
+                        from modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi import timediffAnalysisModule
+                        print(f"[OK] [MODULE_FACTORY] 創建時間差分析模組實例")
+                        
+                        # 創建模組實例並設置參數提供者
+                        module = timediffAnalysisModule()
+                        module.parameter_provider = parameter_provider
+                        
+                        # 在初始化前先設置當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 直接設置模組參數，避免Unknown標題
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 時間差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                        
+                        # 初始化模組
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 時間差分析模組初始化成功")
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 時間差分析模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 時間差分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
                 # 處理其他模組類型...
                 else:
                     print(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
@@ -12185,6 +13361,8 @@ class StyleHMainWindow(QMainWindow):
             
         except Exception as e:
             print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {e}")
+            import traceback
+            traceback.print_exc()  # ✅ 添加完整的異常追蹤
             return None
         return None
     
@@ -12901,99 +14079,149 @@ class StyleHMainWindow(QMainWindow):
         )
 
     def save_workspace(self, *, default_path: Optional[str] = None):
-        """儲存目前的工作區設定"""
-        default_dir = Path(default_path).parent if default_path else (Path(self._last_workspace_path).parent if getattr(self, '_last_workspace_path', None) else Path.home() / "Documents")
-        default_dir = default_dir.resolve()
-        default_dir.mkdir(parents=True, exist_ok=True)
-        suggested_name = Path(default_path).name if default_path else "f1t_workspace.json"
-        initial_path = str(default_dir / suggested_name)
-
-        file_path, _ = QFileDialog.getSaveFileName(
-            self,
-            tr('save_workspace', '儲存工作區'),
-            initial_path,
-            "F1T Workspace (*.json);;JSON (*.json);;All Files (*.*)"
-        )
-
-        if not file_path:
-            return
-
-        target_path = Path(file_path)
-        if target_path.suffix.lower() != '.json':
-            target_path = target_path.with_suffix('.json')
-
-        snapshot = self._build_workspace_snapshot()
-
+        """儲存目前的工作區設定（使用 Workspace Manager）"""
         try:
-            target_path.parent.mkdir(parents=True, exist_ok=True)
-            with target_path.open('w', encoding='utf-8') as handle:
-                json.dump(snapshot, handle, ensure_ascii=False, indent=2)
-        except OSError as exc:
-            logger.exception("Failed to save workspace snapshot", exc_info=exc)
+            from windows.save_workspace_dialog import SaveWorkspaceDialog
+            
+            # 創建並顯示儲存對話框
+            dialog = SaveWorkspaceDialog(
+                workspace_serializer=self.workspace_serializer,
+                workspace_database=self.workspace_db,
+                parent=self
+            )
+            
+            # 連接信號（如果需要額外處理）
+            dialog.workspace_saved.connect(self._on_workspace_saved)
+            
+            # 顯示對話框
+            dialog.exec_()
+            
+        except Exception as e:
+            logger.exception("Failed to open save workspace dialog", exc_info=e)
             QMessageBox.critical(
                 self,
                 tr('save_workspace_error', '儲存工作區失敗'),
-                f"{tr('error_details', '詳細資訊')}: {exc}"
+                f"{tr('error_details', '詳細資訊')}: {e}"
             )
-            return
-
-        self._last_workspace_path = str(target_path)
-        QMessageBox.information(
-            self,
-            tr('save_workspace', '儲存工作區'),
-            tr('workspace_saved_message', '工作區設定已儲存。')
-        )
 
     def load_workspace(self, *, source_path: Optional[str] = None):
-        """載入工作區設定"""
-        start_dir = Path(source_path).parent if source_path else (Path(self._last_workspace_path).parent if getattr(self, '_last_workspace_path', None) else Path.home() / "Documents")
-        start_dir = start_dir.resolve()
-        if not start_dir.exists():
-            start_dir = Path.home()
-
-        initial_path = str(Path(source_path)) if source_path else str(start_dir)
-
-        file_path, _ = QFileDialog.getOpenFileName(
-            self,
-            tr('load_workspace', '載入工作區'),
-            initial_path,
-            "F1T Workspace (*.json);;JSON (*.json);;All Files (*.*)"
-        )
-
-        if not file_path:
-            return
-
-        target_path = Path(file_path)
-
+        """載入工作區設定（使用 Workspace Manager）"""
         try:
-            with target_path.open('r', encoding='utf-8') as handle:
-                snapshot = json.load(handle)
-        except (OSError, json.JSONDecodeError) as exc:
-            logger.exception("Failed to load workspace snapshot", exc_info=exc)
+            from windows.load_workspace_dialog import LoadWorkspaceDialog
+            
+            # 創建並顯示載入對話框
+            dialog = LoadWorkspaceDialog(
+                workspace_database=self.workspace_db,
+                parent=self
+            )
+            
+            # 連接信號
+            dialog.workspace_selected.connect(self._on_workspace_loaded)
+            
+            # 顯示對話框
+            dialog.exec_()
+            
+        except Exception as e:
+            logger.exception("Failed to open load workspace dialog", exc_info=e)
             QMessageBox.critical(
                 self,
                 tr('load_workspace_error', '載入工作區失敗'),
-                f"{tr('error_details', '詳細資訊')}: {exc}"
+                f"{tr('error_details', '詳細資訊')}: {e}"
             )
-            return
-
+    
+    def _on_workspace_saved(self, workspace_id: int, workspace_name: str):
+        """Workspace 儲存完成的回調"""
+        print(f"[WORKSPACE] ✅ Workspace 已儲存: ID={workspace_id}, Name={workspace_name}")
+        # 未來可以在這裡添加 Recent Workspaces 更新邏輯
+    
+    def _on_workspace_loaded(self, workspace_id: int, config: Dict):
+        """Workspace 載入的回調 - 重建所有分頁和視窗"""
+        print(f"[WORKSPACE] 🔄 開始載入 Workspace: ID={workspace_id}")
+        
         try:
-            self._apply_workspace_snapshot(snapshot)
-        except Exception as exc:  # noqa: BLE001
-            logger.exception("Failed to apply workspace snapshot", exc_info=exc)
+            # 調用 deserialize_workspace 重建 GUI 狀態
+            success = self.workspace_serializer.deserialize_workspace(config)
+            
+            if success:
+                total_tabs = len(config.get('tabs', []))
+                total_windows = sum(len(tab.get('mdi_windows', [])) for tab in config.get('tabs', []))
+                
+                # ✅ 延遲執行自動平鋪，確保 MDI 區域尺寸已正確更新
+                print(f"[WORKSPACE] ⏱️ 延遲 500ms 後執行自動平鋪...")
+                QTimer.singleShot(500, self._tile_all_workspace_windows_delayed)
+                
+                QMessageBox.information(
+                    self,
+                    tr('workspace_load_success_title'),
+                    tr('workspace_load_success_message').format(
+                        tabs=total_tabs,
+                        windows=total_windows
+                    )
+                )
+            else:
+                QMessageBox.warning(
+                    self,
+                    tr('workspace_load_failed_title'),
+                    tr('workspace_load_failed_message')
+                )
+            
+        except Exception as e:
+            logger.exception("Failed to load workspace", exc_info=e)
             QMessageBox.critical(
                 self,
-                tr('load_workspace_error', '載入工作區失敗'),
-                f"{tr('error_details', '詳細資訊')}: {exc}"
+                tr('workspace_load_error_title'),
+                tr('workspace_load_error_message').format(error=str(e))
             )
-            return
+    
+    def _tile_all_workspace_windows_delayed(self):
+        """延遲執行的自動平鋪 - 確保 MDI 區域尺寸已更新"""
+        print(f"[WORKSPACE] 🔲 開始延遲自動平鋪...")
+        
+        # 強制處理所有待處理事件，確保 MDI 區域尺寸已更新
+        QApplication.processEvents()
+        
+        # 保存當前活動分頁
+        current_tab_index = self.tab_widget.currentIndex()
+        print(f"[WORKSPACE] 💾 當前活動分頁: index={current_tab_index}")
+        
+        # 遍歷所有分頁（跳過 HOME）
+        tiled_tabs = 0
+        for tab_index in range(1, self.tab_widget.count()):
+            tab_name = self.tab_widget.tabText(tab_index)
+            
+            print(f"[WORKSPACE] 🔍 處理分頁 {tab_index}: '{tab_name}'")
+            
+            # 切換到該分頁
+            self.tab_widget.setCurrentIndex(tab_index)
+            
+            # 強制處理事件，確保分頁完全激活
+            QApplication.processEvents()
+            
+            # 使用智能 tile_windows() 方法來平鋪當前分頁
+            self.tile_windows()
+            
+            tiled_tabs += 1
+        
+        # 恢復原本的活動分頁
+        print(f"[WORKSPACE] 🔄 恢復活動分頁: index={current_tab_index}")
+        self.tab_widget.setCurrentIndex(current_tab_index)
+        
+        print(f"[WORKSPACE] ✅ 延遲自動平鋪完成: 共處理 {tiled_tabs} 個分頁")
+    
+    def _tile_all_workspace_windows(self):
+        """
+        [已棄用] 舊版自動平鋪方法 - 使用 Qt 原生 tileSubWindows()
+        
+        ⚠️ 此方法已被 _tile_all_workspace_windows_delayed() 取代
+        原因: Qt 原生方法在 MDI 區域尺寸未更新時會計算錯誤的視窗位置
+        新方法使用智能 tile_windows() 並添加延遲處理
+        """
+        print(f"[WORKSPACE] ⚠️ 調用了已棄用的 _tile_all_workspace_windows()")
+        print(f"[WORKSPACE] → 請改用 _tile_all_workspace_windows_delayed()")
+        
+        # 為了向後兼容，直接調用新方法
+        self._tile_all_workspace_windows_delayed()
 
-        self._last_workspace_path = str(target_path)
-        QMessageBox.information(
-            self,
-            tr('load_workspace', '載入工作區'),
-            tr('workspace_loaded_message', '工作區設定已載入。')
-        )
 
     def _build_workspace_snapshot(self) -> Dict[str, object]:
         """產生目前工作區的序列化快照"""
@@ -14897,9 +16125,16 @@ class StyleHMainWindow(QMainWindow):
                 print("[ERROR] 無法獲取當前分頁")
                 return None
             
-            # 檢查是否為主頁（歡迎頁）
+            # [深度調試] 輸出當前分頁資訊
             current_index = self.tab_widget.currentIndex()
+            print(f"[MDI_AREA_DEBUG] ===== 查找 MDI 區域 =====")
+            print(f"[MDI_AREA_DEBUG] 當前分頁索引: {current_index}")
+            print(f"[MDI_AREA_DEBUG] 當前分頁 ObjectName: {current_tab.objectName()}")
+            print(f"[MDI_AREA_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
+            
+            # 檢查是否為主頁（歡迎頁）
             is_welcome_tab = (current_index == 0 and current_tab.objectName() == "welcome_tab")
+            print(f"[MDI_AREA_DEBUG] 是否為歡迎頁: {is_welcome_tab}")
             
             # ✅ 只有明確要求時才自動創建分頁（避免初始化時誤觸發）
             if is_welcome_tab and auto_create_tab:
@@ -14911,6 +16146,19 @@ class StyleHMainWindow(QMainWindow):
                 # 主頁沒有 MDI 區域，直接返回 None
                 print("[TAB] 💡 當前在主頁，無 MDI 區域（未自動創建分頁）")
                 return None
+            
+            # [深度調試] 首先檢查 current_tab 本身是否就是 CustomMdiArea
+            print(f"[MDI_AREA_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
+            print(f"[MDI_AREA_DEBUG] current_tab 類別物件 ID: {id(type(current_tab))}")  # ✅ 新增
+            print(f"[MDI_AREA_DEBUG] CustomMdiArea 類別 ID: {id(CustomMdiArea)}")  # ✅ 新增
+            print(f"[MDI_AREA_DEBUG] 兩者是否相同類別: {type(current_tab) is CustomMdiArea}")  # ✅ 新增
+            
+            if isinstance(current_tab, CustomMdiArea):
+                print(f"[MDI_AREA_DEBUG] ✅ current_tab 本身就是 CustomMdiArea！")
+                print(f"[MDI_AREA_DEBUG] MDI ObjectName: {current_tab.objectName()}")
+                print(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(current_tab.subWindowList())}")
+                print(f"[MDI_AREA_DEBUG] ================================")
+                return current_tab
             
             # 在當前分頁中查找 CustomMdiArea
             def find_mdi_area(widget):
@@ -14926,17 +16174,26 @@ class StyleHMainWindow(QMainWindow):
                                 return result
                 return None
             
+            print(f"[MDI_AREA_DEBUG] current_tab 不是 CustomMdiArea，開始遞歸查找...")
             mdi_area = find_mdi_area(current_tab)
             
             if not mdi_area:
+                print(f"[MDI_AREA_DEBUG] ❌ 遞歸查找失敗")
                 print(f"[ERROR] 在當前分頁中未找到 MDI 區域: {current_tab.objectName()}")
+                print(f"[MDI_AREA_DEBUG] ================================")
                 return None
             
+            print(f"[MDI_AREA_DEBUG] ✅ 遞歸查找成功")
+            print(f"[MDI_AREA_DEBUG] MDI ObjectName: {mdi_area.objectName()}")
+            print(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(mdi_area.subWindowList())}")
             print(f"[OK] 找到當前 MDI 區域: {mdi_area.objectName()}")
+            print(f"[MDI_AREA_DEBUG] ================================")
             return mdi_area
             
         except Exception as e:
             print(f"[ERROR] 獲取當前 MDI 區域失敗: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
     def create_placeholder_telemetry_widget(self, chart_type):
@@ -15284,28 +16541,46 @@ class StyleHMainWindow(QMainWindow):
     def tile_windows(self):
         """重新排列視窗 - 智能平鋪當前活動MDI區域中的所有子視窗"""
         
+        print(f"[TILE_DEBUG] ===== 開始 Tile Windows =====")
+        
         # 獲取當前活動的MDI區域
         current_tab = self.tab_widget.currentWidget()
         if current_tab is None:
+            print(f"[TILE_DEBUG] ❌ current_tab 為 None")
             return
-            
+        
+        print(f"[TILE_DEBUG] 當前分頁: {current_tab.objectName()}")
+        print(f"[TILE_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
+        
         # 查找當前分頁中的MDI區域
         mdi_area = None
         
         # 首先檢查當前分頁是否本身就是MDI區域
+        print(f"[TILE_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
+        
         if isinstance(current_tab, CustomMdiArea):
             mdi_area = current_tab
+            print(f"[TILE_DEBUG] ✅ current_tab 本身就是 MDI 區域")
         else:
             # 否則在分頁的子元件中查找
-            for child in current_tab.findChildren(CustomMdiArea):
+            print(f"[TILE_DEBUG] 開始查找子元件中的 CustomMdiArea...")
+            children = current_tab.findChildren(CustomMdiArea)
+            print(f"[TILE_DEBUG] 找到 {len(children)} 個 CustomMdiArea 子元件")
+            for i, child in enumerate(children):
+                print(f"[TILE_DEBUG]   子元件 {i}: ObjectName={child.objectName()}, 子視窗數={len(child.subWindowList())}")
                 mdi_area = child
                 break
                 
         if mdi_area is None:
+            print(f"[TILE_DEBUG] ❌ 找不到 MDI 區域")
             return
-            
+        
+        print(f"[TILE_DEBUG] ✅ 找到 MDI 區域: {mdi_area.objectName()}")
+        
         # 獲取所有子視窗並過濾出可見的視窗
         all_subwindows = mdi_area.subWindowList()
+        print(f"[TILE_DEBUG] MDI 區域總共有 {len(all_subwindows)} 個子視窗")
+        
         # 只包含可見且未關閉的視窗，並排除固定的歡迎頁面視窗
         subwindows = [
             sw for sw in all_subwindows 
@@ -15313,7 +16588,7 @@ class StyleHMainWindow(QMainWindow):
             and not sw.isWindowModified() 
             and not sw.property("is_welcome_fixed")  # 排除固定視窗
         ]
-        print(f"[TILE DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
+        print(f"[TILE_DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
         
         if not subwindows:
             print(f"[TILE DEBUG] 沒有可見的非固定子視窗需要排列")

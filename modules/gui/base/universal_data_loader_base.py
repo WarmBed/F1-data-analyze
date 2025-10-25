@@ -159,6 +159,10 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
             
         self.analysis_type = analysis_type
         self.config = self.ANALYSIS_TYPES[analysis_type]
+        # 強制 API-ONLY 模式：預設禁止本地 JSON/CLI 回退
+        # 若要在開發環境啟用本地回退，可在子類或測試中顯式設定
+        self._allow_local_fallback = False
+        self._debug("📡 API-ONLY 模式已啟用：本地 JSON 回退與 CLI 自動生成已停用")
         
         # 狀態變數
         self._base_paths = ["json", "json_exports", "cache"]

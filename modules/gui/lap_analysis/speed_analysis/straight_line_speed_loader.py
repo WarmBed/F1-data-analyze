@@ -52,8 +52,41 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         existing = self._find_data_file(**kwargs)
         if not existing:
             self._debug(tr("straight_speed_no_local_file", "找不到本地直線速度檔案，準備透過 API 取得最新資料"))
-            if not self._fetch_via_api_and_cache(**kwargs):
-                return False
+            # ✅ 方案 2：API 調用成功後直接處理數據，不依賴檔案系統
+            api_result = self._fetch_via_api_and_cache(**kwargs)
+            if api_result:
+                self._debug(f"✅ API 調用成功，檔案已儲存至: {api_result}")
+            
+            # ✅ 如果 API 成功返回數據，直接處理 payload
+            if self._last_api_payload:
+                self._debug("✅ 使用 API 返回的數據（不依賴檔案系統）")
+                try:
+                    # 驗證數據格式
+                    if not self._validate_data_format(self._last_api_payload):
+                        self._error("API 返回的數據格式驗證失敗")
+                        self.load_error.emit(tr("straight_speed_invalid_data_format", "數據格式不正確"))
+                        return False
+                    
+                    # 處理數據
+                    processed_data = self._process_data(self._last_api_payload)
+                    self._current_data = processed_data
+                    
+                    # 發送成功信號
+                    self.load_progress.emit(100)
+                    self.status_changed.emit(tr("straight_speed_load_success", "直線速度數據載入完成"))
+                    self.data_loaded.emit(processed_data)
+                    
+                    self._debug("✅ API 數據處理完成，已發送 data_loaded 信號")
+                    return True
+                    
+                except Exception as e:
+                    self._error(f"處理 API 數據時發生錯誤: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    self.load_error.emit(f"數據處理失敗: {str(e)}")
+                    return False
+            else:
+                self._debug("⚠️ API 調用失敗，嘗試回退到基類方法")
 
         return super().load_data(**kwargs)
 
@@ -107,38 +140,66 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
         if not raw_data.get("success", False):
             return False
 
-        first_layer = raw_data.get("data")
-        if not isinstance(first_layer, dict):
+        # ⚠️ 修正：API 返回的數據可能有多層嵌套，需要遞歸穿透
+        # 嘗試找到包含 'driver_speeds' 的層級
+        current = raw_data.get("data")
+        max_depth = 20  # 防止無限遞歸
+        depth = 0
+        
+        while isinstance(current, dict) and depth < max_depth:
+            # 檢查是否到達實際數據層
+            if "driver_speeds" in current:
+                driver_speeds = current.get("driver_speeds")
+                if isinstance(driver_speeds, list):
+                    self._debug(f"✅ 在第 {depth + 1} 層找到有效的 driver_speeds (車手數: {len(driver_speeds)})")
+                    return True
+                else:
+                    self._error(f"driver_speeds 不是列表: {type(driver_speeds)}")
+                    return False
+            
+            # 繼續往下一層穿透
+            if "data" in current:
+                current = current["data"]
+                depth += 1
+            else:
+                # 沒有更多嵌套但也沒找到 driver_speeds
+                self._error(f"在第 {depth + 1} 層找不到 'driver_speeds' 鍵")
+                self._error(f"當前層的鍵: {list(current.keys())}")
+                return False
+        
+        if depth >= max_depth:
+            self._error(f"數據嵌套層數超過 {max_depth}，可能存在循環引用")
             return False
         
-        # ⚠️ API 返回的數據結構是嵌套的兩層 data
-        # 檢查是否有第二層 data
-        if "data" in first_layer:
-            payload = first_layer.get("data")
-        else:
-            # 兼容舊格式或本地 JSON (沒有第二層嵌套)
-            payload = first_layer
-        
-        if not isinstance(payload, dict):
-            return False
-
-        driver_speeds = payload.get("driver_speeds")
-        if not isinstance(driver_speeds, list):
-            return False
-
-        return True
+        self._error("無法找到包含 'driver_speeds' 的數據層")
+        return False
 
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
-        # ⚠️ API 返回的數據結構是嵌套的兩層 data
-        # raw_data["data"]["data"]["driver_speeds"]
-        first_layer = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        # ⚠️ 修正：API 返回的數據可能有多層嵌套，需要遞歸穿透找到實際數據
+        current = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        max_depth = 20
+        depth = 0
         
-        # 檢查是否有嵌套的第二層 data
-        if isinstance(first_layer, dict) and "data" in first_layer:
-            payload = first_layer.get("data", {})
+        # 穿透嵌套找到包含 'driver_speeds' 的層級
+        while isinstance(current, dict) and depth < max_depth:
+            if "driver_speeds" in current:
+                # 找到實際數據層
+                payload = current
+                self._debug(f"✅ 在第 {depth + 1} 層找到實際數據")
+                break
+            
+            if "data" in current:
+                current = current["data"]
+                depth += 1
+            else:
+                # 沒找到，使用當前層作為 fallback
+                payload = current
+                self._debug(f"⚠️ 在第 {depth + 1} 層停止穿透，使用當前層")
+                break
         else:
-            # 兼容舊格式或本地 JSON (沒有第二層嵌套)
-            payload = first_layer
+            # 超過最大深度或 current 不是字典
+            payload = current if isinstance(current, dict) else {}
+            self._debug(f"⚠️ 使用最終層級 (depth={depth})")
         
         metadata = dict(payload.get("metadata") or {})
         summary = payload.get("summary") or {}
@@ -214,28 +275,33 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
 
         self._last_api_payload = payload
 
-        output_path = self._write_payload_to_cache(payload, year, race, session)
-        if output_path:
-            self.load_progress.emit(60)
-            return output_path
-
-        # ⚠️ [API-ONLY 模式修正] 儲存失敗不影響數據使用，不發送 load_error
-        self._error(tr("straight_speed_save_error", "儲存 API 結果時發生錯誤"))
-        self._debug("💡 數據已成功獲取但未能寫入本地緩存，不影響使用")
+        # ✅ [API-ONLY 模式] 禁止自動寫入 JSON 檔案
+        # API 數據僅保存在記憶體中，不寫入磁碟
+        self._debug("✅ API 數據已載入至記憶體（API-ONLY 模式：不寫入本地檔案）")
+        self.load_progress.emit(60)
+        
+        # 返回 None 表示沒有檔案生成（這是正確的行為）
         return None
 
-    def _write_payload_to_cache(self, payload: Dict[str, Any], year: int, race: str, session: str) -> Optional[str]:
-        try:
-            os.makedirs("json", exist_ok=True)
-            filename = self._make_filename(year, race, session)
-            path = os.path.join("json", filename)
-            with open(path, "w", encoding="utf-8") as handle:
-                json.dump(payload, handle, ensure_ascii=False, indent=2, default=str)
-            self._debug(tr("straight_speed_api_result_saved", "API 結果已寫入 {path}").format(path=path))
-            return path
-        except Exception as exc:
-            self._error(tr("straight_speed_write_json_failed", "寫入 JSON 檔案失敗: {error}").format(error=str(exc)))
-            return None
+    # ❌ [API-ONLY 模式] 已禁用自動寫入功能
+    # def _write_payload_to_cache(self, payload: Dict[str, Any], year: int, race: str, session: str) -> Optional[str]:
+    #     """
+    #     [已禁用] 寫入 API 結果到本地緩存
+    #     
+    #     ⚠️ API-ONLY 模式: 此方法已禁用，GUI 不應自動生成 JSON 檔案
+    #     API 數據僅保存在記憶體中（self._last_api_payload）
+    #     """
+    #     try:
+    #         os.makedirs("json", exist_ok=True)
+    #         filename = self._make_filename(year, race, session)
+    #         path = os.path.join("json", filename)
+    #         with open(path, "w", encoding="utf-8") as handle:
+    #             json.dump(payload, handle, ensure_ascii=False, indent=2, default=str)
+    #         self._debug(tr("straight_speed_api_result_saved", "API 結果已寫入 {path}").format(path=path))
+    #         return path
+    #     except Exception as exc:
+    #         self._error(tr("straight_speed_write_json_failed", "寫入 JSON 檔案失敗: {error}").format(error=str(exc)))
+    #         return None
 
     def _make_filename(self, year: int, race: str, session: str) -> str:
         race_slug = self._sanitize_for_filename(race)

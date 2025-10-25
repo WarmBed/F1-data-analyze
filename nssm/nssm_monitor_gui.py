@@ -45,6 +45,57 @@ class ServiceMonitorSingleton:
         return self._monitor
 
 
+class LogLoadWorker(QThread):
+    """日誌載入背景執行緒"""
+    
+    # 信號定義
+    loading_started = pyqtSignal(str)  # (service_name)
+    logs_loaded = pyqtSignal(list, int, float)  # (logs, line_count, file_size_kb)
+    loading_failed = pyqtSignal(str)  # (error_message)
+    
+    def __init__(self, log_file: Path, tail: int = 500, parent=None):
+        super().__init__(parent)
+        self.log_file = log_file
+        self.tail = tail
+    
+    def run(self):
+        """背景執行緒主函數 - 載入日誌"""
+        try:
+            if not os.path.exists(self.log_file):
+                self.loading_failed.emit(f"日誌檔案不存在: {self.log_file}")
+                return
+            
+            # 獲取檔案大小
+            file_size_kb = os.path.getsize(self.log_file) / 1024
+            
+            # 嘗試多種編碼讀取日誌
+            logs = None
+            encodings = ['utf-8', 'cp950', 'gbk', 'big5', 'latin1']
+            
+            for encoding in encodings:
+                try:
+                    print(f"[LOG_WORKER] 嘗試使用編碼: {encoding}")
+                    with open(self.log_file, 'r', encoding=encoding, errors='replace') as f:
+                        lines = f.readlines()
+                        logs = [line.rstrip() for line in lines[-self.tail:]]
+                    print(f"[LOG_WORKER] 成功使用 {encoding} 讀取 {len(logs)} 行")
+                    break
+                except Exception as e:
+                    print(f"[LOG_WORKER] 使用 {encoding} 讀取失敗: {e}")
+                    continue
+            
+            if logs:
+                self.logs_loaded.emit(logs, len(logs), file_size_kb)
+            else:
+                self.loading_failed.emit("無法讀取日誌檔案（所有編碼嘗試均失敗）")
+                
+        except Exception as e:
+            print(f"[LOG_WORKER] 載入日誌時發生異常: {e}")
+            import traceback
+            print(f"[LOG_WORKER] 詳細錯誤:\n{traceback.format_exc()}")
+            self.loading_failed.emit(f"載入日誌時發生錯誤: {str(e)}")
+
+
 class BatchServiceWorker(QThread):
     """批量服務操作背景執行緒"""
     
@@ -331,12 +382,15 @@ class ServiceStatusWidget(QGroupBox):
     
     def view_logs(self):
         """查看日誌（發送信號給主視窗）"""
+        print(f"[SERVICE_WIDGET] view_logs 被點擊: {self.service_name}")
+        
         # 向上找到 NSSMMonitorGUI 主視窗
         widget = self
         while widget and not isinstance(widget, NSSMMonitorGUI):
             widget = widget.parent()
         
         if widget:
+            print(f"[SERVICE_WIDGET] 找到主視窗，調用 show_service_logs")
             widget.show_service_logs(self.service_name)
         else:
             print(f"[ERROR] 無法找到主視窗來顯示 {self.service_name} 的日誌")
@@ -349,6 +403,7 @@ class LogViewerWidget(QWidget):
         super().__init__(parent)
         self.monitor = ServiceMonitorSingleton().get_monitor()  # 使用單例
         self.current_service = None
+        self.log_worker = None  # 日誌載入工作執行緒
         self.init_ui()
     
     def init_ui(self):
@@ -406,8 +461,10 @@ class LogViewerWidget(QWidget):
         status_layout = QHBoxLayout()
         self.line_count_label = QLabel("總行數: 0")
         self.file_size_label = QLabel("檔案大小: 0 KB")
+        self.loading_label = QLabel("")  # 載入狀態指示
         status_layout.addWidget(self.line_count_label)
         status_layout.addWidget(self.file_size_label)
+        status_layout.addWidget(self.loading_label)
         status_layout.addStretch()
         layout.addLayout(status_layout)
         
@@ -417,41 +474,134 @@ class LogViewerWidget(QWidget):
         self.load_logs()
     
     def load_logs(self):
-        """載入日誌"""
+        """載入日誌 - 非阻塞異步版本（改進版）"""
+        # 如果有正在運行的載入任務，直接返回（不等待）
+        if self.log_worker and self.log_worker.isRunning():
+            print("[LOG_VIEWER] 已有載入任務正在進行中，忽略重複請求")
+            return
+        
         service_name = self.service_combo.currentText()
         is_error = self.log_type_combo.currentText() == "錯誤輸出"
         
-        logs = self.monitor.get_service_logs(service_name, tail=500, error_log=is_error)
+        print(f"[LOG_VIEWER] 正在載入日誌: {service_name} (錯誤日誌: {is_error})")
         
-        if logs:
-            self.log_text.setPlainText("\n".join(logs))
-            self.line_count_label.setText(f"總行數: {len(logs)}")
-            
-            # 獲取檔案大小
-            log_file = self.monitor.get_log_file_path(service_name, error_log=is_error)
-            if log_file and os.path.exists(log_file):
-                size_kb = os.path.getsize(log_file) / 1024
-                self.file_size_label.setText(f"檔案大小: {size_kb:.2f} KB")
+        # 顯示載入中狀態
+        self.loading_label.setText("⏳ 載入中...")
+        self.loading_label.setStyleSheet("color: #FFA500;")
+        self.log_text.setPlainText("正在載入日誌，請稍候...")
+        
+        # 禁用控制按鈕
+        self.refresh_btn.setEnabled(False)
+        self.clear_btn.setEnabled(False)
+        self.service_combo.setEnabled(False)
+        self.log_type_combo.setEnabled(False)
+        
+        # 強制刷新 GUI
+        QApplication.processEvents()
+        
+        # 獲取日誌檔案路徑
+        log_file = self.monitor.get_log_file_path(service_name, error_log=is_error)
+        print(f"[LOG_VIEWER] 日誌檔案路徑: {log_file}")
+        
+        if not log_file:
+            self._on_loading_failed(f"找不到服務 {service_name} 的日誌檔案配置")
+            return
+        
+        if not os.path.exists(log_file):
+            self._on_loading_failed(f"日誌檔案不存在: {log_file}")
+            return
+        
+        # 創建並啟動背景載入執行緒
+        self.log_worker = LogLoadWorker(log_file, tail=500, parent=self)
+        
+        # 連接信號
+        self.log_worker.logs_loaded.connect(self._on_logs_loaded)
+        self.log_worker.loading_failed.connect(self._on_loading_failed)
+        self.log_worker.finished.connect(self._on_loading_finished)
+        
+        # 啟動執行緒
+        print("[LOG_VIEWER] 啟動日誌載入執行緒")
+        self.log_worker.start()
+    
+    def _on_logs_loaded(self, logs: list, line_count: int, file_size_kb: float):
+        """日誌載入成功回調"""
+        print(f"[LOG_VIEWER] 日誌載入成功: {line_count} 行")
+        
+        # 使用分批方式設置文字，避免一次性設置大量文字導致阻塞
+        # 限制最多顯示 1000 行
+        max_display_lines = 1000
+        if len(logs) > max_display_lines:
+            logs = logs[-max_display_lines:]
+            display_text = f"（日誌過長，僅顯示最後 {max_display_lines} 行）\n\n" + "\n".join(logs)
         else:
-            self.log_text.setPlainText("找不到日誌檔案或日誌為空")
-            self.line_count_label.setText("總行數: 0")
-            self.file_size_label.setText("檔案大小: 0 KB")
+            display_text = "\n".join(logs)
+        
+        self.log_text.setPlainText(display_text)
+        self.line_count_label.setText(f"總行數: {line_count}")
+        self.file_size_label.setText(f"檔案大小: {file_size_kb:.2f} KB")
+        
+        # 清除載入中狀態
+        self.loading_label.setText("✓ 完成")
+        self.loading_label.setStyleSheet("color: #00FF00;")
+        
+        # 2 秒後清除完成提示
+        QTimer.singleShot(2000, lambda: self.loading_label.setText(""))
+    
+    def _on_loading_failed(self, error_message: str):
+        """日誌載入失敗回調"""
+        print(f"[LOG_VIEWER] {error_message}")
+        self.log_text.setPlainText(error_message)
+        self.line_count_label.setText("總行數: 0")
+        self.file_size_label.setText("檔案大小: 0 KB")
+        
+        # 顯示錯誤狀態
+        self.loading_label.setText("✗ 失敗")
+        self.loading_label.setStyleSheet("color: #FF0000;")
+        
+        # 2 秒後清除錯誤提示
+        QTimer.singleShot(2000, lambda: self.loading_label.setText(""))
+    
+    def _on_loading_finished(self):
+        """日誌載入執行緒結束回調 - 重新啟用控制項"""
+        self.refresh_btn.setEnabled(True)
+        self.clear_btn.setEnabled(True)
+        self.service_combo.setEnabled(True)
+        self.log_type_combo.setEnabled(True)
+        
+        # 清理執行緒引用
+        if self.log_worker:
+            self.log_worker.deleteLater()
+            self.log_worker = None
     
     def filter_logs(self):
-        """過濾日誌"""
+        """過濾日誌 - 非阻塞版本"""
         search_text = self.search_input.text()
         if not search_text:
             self.load_logs()
             return
         
-        service_name = self.service_combo.currentText()
-        is_error = self.log_type_combo.currentText() == "錯誤輸出"
-        logs = self.monitor.get_service_logs(service_name, tail=500, error_log=is_error)
+        print(f"[LOG_VIEWER] 搜尋日誌: '{search_text}'")
         
-        if logs:
-            filtered = [line for line in logs if search_text.lower() in line.lower()]
+        # 從當前顯示的文字中搜尋（避免重新讀取檔案）
+        current_text = self.log_text.toPlainText()
+        
+        if not current_text or current_text.startswith("正在載入") or current_text.startswith("找不到"):
+            # 如果當前沒有有效日誌，先載入
+            self.load_logs()
+            return
+        
+        # 分割成行並過濾
+        all_lines = current_text.split('\n')
+        filtered = [line for line in all_lines if search_text.lower() in line.lower()]
+        
+        # 更新顯示
+        if filtered:
             self.log_text.setPlainText("\n".join(filtered))
             self.line_count_label.setText(f"符合的行數: {len(filtered)}")
+            print(f"[LOG_VIEWER] 找到 {len(filtered)} 行符合搜尋條件")
+        else:
+            self.log_text.setPlainText(f"找不到包含 '{search_text}' 的日誌行")
+            self.line_count_label.setText("符合的行數: 0")
     
     def clear_logs(self):
         """清空日誌檔案"""
@@ -474,9 +624,25 @@ class LogViewerWidget(QWidget):
                     QMessageBox.critical(self, "錯誤", f"清空日誌失敗: {e}")
     
     def show_service_logs(self, service_name: str):
-        """顯示指定服務的日誌"""
+        """顯示指定服務的日誌 - 防止重複調用"""
+        print(f"[LOG_VIEWER] show_service_logs 被調用: {service_name}")
+        
+        # 暫時阻斷信號，避免 setCurrentText 觸發 load_logs
+        self.service_combo.blockSignals(True)
         self.service_combo.setCurrentText(service_name)
+        self.service_combo.blockSignals(False)
+        
+        # 手動調用一次 load_logs
         self.load_logs()
+    
+    def closeEvent(self, event):
+        """Widget 關閉事件 - 清理背景執行緒（非阻塞版）"""
+        if self.log_worker and self.log_worker.isRunning():
+            print("[LOG_VIEWER] 請求停止日誌載入執行緒...")
+            # 使用 requestInterruption 而非 terminate（更溫和）
+            self.log_worker.requestInterruption()
+            # 不等待，直接接受關閉
+        event.accept()
 
 
 class NSSMMonitorGUI(QMainWindow):
@@ -763,7 +929,10 @@ class NSSMMonitorGUI(QMainWindow):
     
     def show_service_logs(self, service_name: str):
         """切換到日誌頁面並顯示指定服務的日誌"""
+        print(f"[MAIN_WINDOW] show_service_logs 被調用: {service_name}")
+        print(f"[MAIN_WINDOW] 切換到日誌分頁")
         self.tabs.setCurrentIndex(1)  # 切換到日誌頁面
+        print(f"[MAIN_WINDOW] 調用 log_viewer.show_service_logs")
         self.log_viewer.show_service_logs(service_name)
     
     def closeEvent(self, event):

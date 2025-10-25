@@ -284,28 +284,19 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
         """
-        生成視窗標題（覆寫基類方法）
+        生成視窗標題（覆寫基類方法）- 只顯示模組名稱
         
         Args:
-            year: 年份（可選，使用當前年份）
-            race: 賽事（可選，使用當前賽事）
-            session: 場次（可選，使用當前場次）
+            year: 年份（忽略）
+            race: 賽事（忽略）
+            session: 場次（忽略）
             
         Returns:
-            str: 格式化的視窗標題
+            str: 模組名稱標題
         """
-        # 使用提供的參數或當前參數
-        year = year or self.current_year or "2025"
-        race = race or self.current_race or "Unknown"
-        session = session or self.current_session or "R"
-        
-        # 使用國際化翻譯
         from core.gui_i18n import tr
-        
-        # 獲取多國語言化的模組名稱
         module_name = tr('all_drivers_brake_performance', 'All Drivers Brake Performance')
-        
-        return f"{module_name}_{year}_{race}_{session}"
+        return module_name
     
     # ========== 事件處理 ==========
     

@@ -3197,11 +3197,11 @@ class F1AnalysisFunctionMapper:
     # ===== 分拆的單一車手分析功能 (24-26) =====
     
     def _execute_driver_race_position(self, year, race, session, driver, **kwargs):
-        """Function 24: 車手比賽位置分析"""
+        """Function 25: 車手比賽位置分析"""
         print("[START] 開始執行車手比賽位置分析...")
         
         try:
-            from CLI_modules.cli.analyzer.cli.analyzer.single_driver_position_analysis import SingleDriverPositionAnalysis
+            from CLI_modules.cli.analyzer.single_driver_position_analysis import SingleDriverPositionAnalysis
             
             analyzer = SingleDriverPositionAnalysis(
                 data_loader=self.data_loader,

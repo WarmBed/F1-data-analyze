@@ -782,6 +782,13 @@ class PitstopDataManager(QObject):
         try:
             print(f"[PITSTOP_MANAGER] 開始載入車手進站數據: {year} {race} {session}")
 
+            # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
+            if session != 'R':
+                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
+                self._is_loading = False
+                return False
+
             if self._is_loading:
                 self.error_occurred.emit("載入器正忙，請稍後再試")
                 return False
@@ -892,6 +899,13 @@ class PitstopDataManager(QObject):
         """載入車隊進站數據 - API 優先"""
         try:
             print(f"[PITSTOP_MANAGER] 開始載入車隊進站數據: {year} {race} {session}")
+
+            # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
+            if session != 'R':
+                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
+                self._team_is_loading = False
+                return False
 
             if self._team_is_loading:
                 self.error_occurred.emit("車隊數據載入中，請稍後再試")
@@ -1071,6 +1085,13 @@ class PitstopDataManager(QObject):
         """載入車手進站詳細數據 - API 優先"""
         try:
             print(f"[PITSTOP_MANAGER] 開始載入車手詳細進站數據: {year} {race} {session}")
+
+            # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
+            if session != 'R':
+                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
+                self._detail_is_loading = False
+                return False
 
             if self._detail_is_loading:
                 self.error_occurred.emit("車手詳細數據載入中，請稍後再試")
@@ -1485,12 +1506,12 @@ class PitstopRankingWidget(QWidget):
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
         self.table_widget.setRowCount(1)
-        error_item = QTableWidgetItem(f"載入失敗: {message}")
+        error_item = QTableWidgetItem(f"{tr('load_failed')}: {message}")
         error_item.setTextAlignment(Qt.AlignCenter)
         self.table_widget.setItem(0, 0, error_item)
         self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
         
-        self.status_label.setText("📊 狀態: 錯誤")
+        self.status_label.setText(f"📊 {tr('status')}: {tr('error')}")
     
     def show_loading_state(self):
         """顯示載入中狀態"""
@@ -1499,7 +1520,7 @@ class PitstopRankingWidget(QWidget):
         # self.progress_bar.setValue(0)
         
         self.table_widget.setRowCount(1)
-        loading_item = QTableWidgetItem("⏳ 正在載入數據...")
+        loading_item = QTableWidgetItem(f"⏳ {tr('loading_data', '正在載入數據...')}")
         loading_item.setTextAlignment(Qt.AlignCenter)
         self.table_widget.setItem(0, 0, loading_item)
         self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
@@ -1622,13 +1643,13 @@ class PitstopAnalysisModule(IAnalysisModule):
         return f"進站分析_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱，不包含年份/賽事/賽段"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"{tr('pitstop_analysis')}_{year}_{race}_{session}"
+            return f"{tr('pitstop_analysis')}"
         else:
-            return f"Pitstop Analysis_{year}_{race}_{session}"
+            return f"Pitstop Analysis"
     
     def get_default_size(self):
         """獲取預設視窗大小 - GUI系統要求的方法"""
@@ -1662,9 +1683,14 @@ class PitstopAnalysisModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
+            print(f"[PITSTOP_MODULE] [DEBUG] update_parameters 被調用: year={year}, race={race}, session={session}")
+            print(f"[PITSTOP_MODULE] [DEBUG] 當前狀態: current_year={self.current_year}, current_race={self.current_race}, current_session={self.current_session}")
+            print(f"[PITSTOP_MODULE] [DEBUG] ranking_widget 狀態: {self.ranking_widget}")
+            
             # 驗證參數
             if not self.validate_parameters(year, race, session):
                 self.module_error.emit(f"無效的參數: {year}, {race}, {session}")
+                print(f"[PITSTOP_MODULE] [DEBUG] ❌ 參數驗證失敗")
                 return False
                 
             # 檢查參數是否有變化（處理初始 None 值）
@@ -1673,6 +1699,8 @@ class PitstopAnalysisModule(IAnalysisModule):
                 self.current_race is None or self.current_race != race or 
                 self.current_session is None or self.current_session != session
             )
+            
+            print(f"[PITSTOP_MODULE] [DEBUG] params_changed={params_changed}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -2182,7 +2210,7 @@ class TeamPitstopRankingWidget(QWidget):
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
         self.table_widget.setRowCount(1)
-        error_item = QTableWidgetItem(f"❌ 錯誤: {message}")
+        error_item = QTableWidgetItem(f"❌ {tr('error')}: {message}")
         error_item.setTextAlignment(Qt.AlignCenter)
         self.table_widget.setItem(0, 0, error_item)
         self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
@@ -2190,7 +2218,7 @@ class TeamPitstopRankingWidget(QWidget):
     def show_loading_state(self):
         """顯示載入中狀態"""
         self.table_widget.setRowCount(1)
-        loading_item = QTableWidgetItem("⏳ 正在載入車隊數據...")
+        loading_item = QTableWidgetItem(f"⏳ {tr('loading_team_data', '正在載入車隊數據...')}")
         loading_item.setTextAlignment(Qt.AlignCenter)
         self.table_widget.setItem(0, 0, loading_item)
         self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
@@ -2544,7 +2572,7 @@ class DriverDetailedPitstopWidget(QWidget):
     def show_loading_state(self):
         """顯示載入狀態"""
         # 創建簡單的載入提示
-        loading_widget = QLabel("🔄 載入車手詳細記錄中...")
+        loading_widget = QLabel(f"🔄 {tr('loading_driver_detailed_records', '載入車手詳細記錄中...')}")
         loading_widget.setAlignment(Qt.AlignCenter)
         loading_widget.setStyleSheet("color: #666; font-size: 14px; padding: 20px;")
         self.table_scroll.setWidget(loading_widget)

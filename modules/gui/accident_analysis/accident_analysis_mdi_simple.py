@@ -413,13 +413,13 @@ class AccidentAnalysisModule(IAnalysisModule):
         return (900, 700)  # 寬度, 高度
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱，不包含年份/賽事/賽段"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"{tr('accident_analysis')}_{year}_{race}_{session}"
+            return f"{tr('accident_analysis')}"
         else:
-            return f"Accident Analysis_{year}_{race}_{session}"
+            return f"Accident Analysis"
     
     def update_parameters(self, year: int, race: str, session: str) -> None:
         """更新分析參數"""

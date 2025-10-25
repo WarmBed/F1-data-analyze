@@ -285,7 +285,7 @@ class NSSMServiceMonitor:
     
     def get_service_logs(self, service_name: str, tail: int = 100, error_log: bool = False) -> List[str]:
         """
-        獲取服務日誌
+        獲取服務日誌 - 增強編碼支援
         
         Args:
             service_name: 服務名稱
@@ -295,21 +295,45 @@ class NSSMServiceMonitor:
         Returns:
             日誌行列表
         """
+        self._debug(f"獲取服務日誌: {service_name} (錯誤日誌: {error_log}, 尾行數: {tail})")
+        
         if service_name not in self.services:
+            self._debug(f"服務 {service_name} 不在配置中")
             return []
         
         log_file = (self.services[service_name]["log_stderr"] if error_log 
                    else self.services[service_name]["log_stdout"])
         
+        self._debug(f"日誌檔案路徑: {log_file}")
+        
         if not log_file.exists():
+            self._debug(f"日誌檔案不存在: {log_file}")
             return []
         
         try:
-            with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
-                lines = f.readlines()
-                return [line.rstrip() for line in lines[-tail:]]
+            # 嘗試多種編碼讀取
+            encodings = ['utf-8', 'cp950', 'gbk', 'big5', 'latin1']
+            
+            for encoding in encodings:
+                try:
+                    self._debug(f"嘗試使用編碼 {encoding} 讀取日誌")
+                    with open(log_file, 'r', encoding=encoding, errors='replace') as f:
+                        lines = f.readlines()
+                        result = [line.rstrip() for line in lines[-tail:]]
+                    self._debug(f"成功使用 {encoding} 讀取 {len(result)} 行")
+                    return result
+                except Exception as e:
+                    self._debug(f"使用 {encoding} 讀取失敗: {e}")
+                    continue
+            
+            # 所有編碼都失敗
+            print(f"[ERROR] 無法讀取日誌檔案 {log_file}（所有編碼嘗試均失敗）")
+            return []
+            
         except Exception as e:
             print(f"[ERROR] 讀取日誌失敗: {e}")
+            import traceback
+            print(f"[ERROR] 詳細錯誤: {traceback.format_exc()}")
             return []
     
     def get_log_file_path(self, service_name: str, error_log: bool = False) -> Optional[Path]:

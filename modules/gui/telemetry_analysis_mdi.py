@@ -1653,9 +1653,9 @@ class TelemetryAnalysisModule(IAnalysisModule):
         return f"{tr('driver_analysis', 'Driver Analysis')}_{year}_{race}_{session}"
     
     def get_window_title(self, year: str, race: str, session: str) -> str:
-        """生成視窗標題"""
+        """生成視窗標題 - 只顯示模組名稱，不包含年份/賽事/賽段"""
         from core.gui_i18n import tr
-        return f"🚗 {tr('driver_analysis', 'Driver Analysis')} - {year} {race} {session}"
+        return f"🚗 {tr('driver_analysis', 'Driver Analysis')}"
     
     def get_default_size(self):
         """獲取預設視窗大小"""

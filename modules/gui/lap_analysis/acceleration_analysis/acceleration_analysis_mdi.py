@@ -502,20 +502,11 @@ class accelerationAnalysisModule(IAnalysisModule):
     def get_window_title(self, year: str = None, race: str = None, session: str = None, 
                          driver1: str = None, driver2: str = None, 
                          lap1: int = None, lap2: int = None) -> str:
-        """獲取視窗標題 - 統一格式，不包含車手資訊以保持模組兼容性"""
-        # 如果提供了參數，使用傳入的參數；否則使用內部狀態
-        use_year = year if year is not None else self.current_year
-        use_race = race if race is not None else self.current_race
-        use_session = session if session is not None else self.current_session
-        
-        # 使用統一的簡潔標題格式，與其他模組保持一致
-        title = f"{tr('acceleration_analysis', '加速度分析')}_{use_year}_{use_race}_{use_session}"
+        """獲取視窗標題 - 只顯示模組名稱，不包含年份/賽事/賽段"""
+        title = f"{tr('acceleration_analysis', '加速度分析')}"
         
         print(f"[acceleration_TITLE_DEBUG] 🏷️ 生成視窗標題: '{title}'")
-        print(f"[acceleration_TITLE_DEBUG]   📊 參數詳情:")
-        print(f"[acceleration_TITLE_DEBUG]     - 年份: {use_year}")
-        print(f"[acceleration_TITLE_DEBUG]     - 賽事: {use_race}")
-        print(f"[acceleration_TITLE_DEBUG]     - 賽段: {use_session}")
+        return title
         return title
     
     def update_window_title(self) -> None:

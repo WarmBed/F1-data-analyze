@@ -301,6 +301,12 @@ class GuiTranslator:
             'analysis_failed': {'zh': '分析失敗', 'en': 'Analysis Failed', 'ja': '分析失敗'},
             'cli_error': {'zh': 'CLI 分析過程中發生錯誤', 'en': 'Error occurred during CLI analysis', 'ja': 'CLI分析中にエラーが発生しました'},
             
+            # 狀態與載入訊息
+            'status': {'zh': '狀態', 'en': 'Status', 'ja': 'ステータス'},
+            'loading_data': {'zh': '正在載入數據...', 'en': 'Loading data...', 'ja': 'データ読み込み中...'},
+            'loading_team_data': {'zh': '正在載入車隊數據...', 'en': 'Loading team data...', 'ja': 'チームデータ読み込み中...'},
+            'loading_driver_detailed_records': {'zh': '載入車手詳細記錄中...', 'en': 'Loading driver detailed records...', 'ja': 'ドライバー詳細記録読み込み中...'},
+            
             # 對話框類型標題
             'info': {'zh': '提示', 'en': 'Information', 'ja': '情報'},
             'information': {'zh': '資訊', 'en': 'Information', 'ja': '情報'},
@@ -460,6 +466,7 @@ class GuiTranslator:
             'accident_comprehensive_analysis_title': {'zh': '事故綜合分析', 'en': 'Accident Comprehensive Analysis', 'ja': '事故総合分析'},
             'please_select_params': {'zh': '請選擇年份、賽事和賽段', 'en': 'Please select year, race and session', 'ja': '年、レース、セッションを選択してください'},
             'accident_data_load_failed': {'zh': '事故分析資料載入失敗,請稍後再試。', 'en': 'Accident data failed to load, please try again later.', 'ja': '事故データの読み込みに失敗しました。後でもう一度お試しください。'},
+            'accident_session_restriction': {'zh': '事故分析僅適用於正賽 (R) 和排位賽 (Q)，練習賽無賽會控制訊息', 'en': 'Accident analysis is only applicable for Race (R) and Qualifying (Q), practice sessions have no race control messages', 'ja': '事故分析は決勝 (R) と予選 (Q) のみ適用、練習走行にはレースコントロールメッセージがありません'},
             'load_failed': {'zh': '載入失敗', 'en': 'Load failed', 'ja': '読み込み失敗'},
             'all_categories': {'zh': '全部類別', 'en': 'All Categories', 'ja': 'すべてのカテゴリー'},
             'all_severities': {'zh': '全部嚴重程度', 'en': 'All Severities', 'ja': 'すべての重大度'},
@@ -632,6 +639,7 @@ class GuiTranslator:
             # File Menu 項目
             'open_session': {'zh': '開啟會話...', 'en': 'Open Session...', 'ja': 'セッションを開く...'},
             'save_workspace': {'zh': '儲存工作區', 'en': 'Save Workspace', 'ja': 'ワークスペースを保存'},
+            'load_workspace': {'zh': '載入工作區', 'en': 'Load Workspace', 'ja': 'ワークスペース読込'},
             'load_workspace_dev': {
                 'zh': '載入工作區…（開發中）',
                 'en': 'Load Workspace… (In Development)',
@@ -667,7 +675,9 @@ class GuiTranslator:
             'data_validation': {'zh': '數據驗證', 'en': 'Data Validation', 'ja': 'データ検証'},
             'system_settings': {'zh': '系統設定', 'en': 'System Settings', 'ja': 'システム設定'},
             'check_api_status': {'zh': '檢查 API 狀態', 'en': 'Check API Status', 'ja': 'APIステータスを確認'},
+            'check_api_status_tip': {'zh': '立即執行 API 健康檢查', 'en': 'Run an API health check immediately', 'ja': 'APIヘルスチェックを即座に実行'},
             'run_api_health_check': {'zh': '立即執行 API 健康檢查', 'en': 'Run an API health check immediately', 'ja': 'APIヘルスチェックを即座に実行'},
+            'language_menu': {'zh': '語言', 'en': 'Language', 'ja': '言語'},
             'objgraph_diagnostic': {'zh': '記憶體診斷', 'en': 'Memory Diagnostics', 'ja': 'メモリ診断'},
             'objgraph_diagnostic_tip': {'zh': '開啟記憶體和物件診斷工具', 'en': 'Open memory and object diagnostic tool', 'ja': 'メモリとオブジェクト診断ツールを開く'},
             
@@ -965,6 +975,112 @@ class GuiTranslator:
             'popout': {'zh': '彈出為獨立視窗', 'en': 'Pop Out as Independent Window', 'ja': 'Pop Out as Independent Window'},
             'window_settings': {'zh': '視窗設定', 'en': 'Window Settings', 'ja': 'Window Settings'},
             'forced_close_gui': {'zh': 'F1 TelemetryStation Pro GUI 已強制關閉', 'en': 'F1 TelemetryStation Pro GUI has been force closed', 'ja': 'F1 TelemetryStation Pro GUI has been force closed'},
+            
+            # Tab Context Menu
+            'tab_popout_menu': {'zh': '彈出為獨立視窗', 'en': 'Pop Out as Independent Window', 'ja': '独立ウィンドウとして表示'},
+            'tab_return_menu': {'zh': '返回主視窗', 'en': 'Return to Main Window', 'ja': 'メインウィンドウに戻す'},
+            'tab_rename_menu': {'zh': '重新命名分頁', 'en': 'Rename Tab', 'ja': 'タブ名を変更'},
+            'tab_already_popped': {'zh': '已彈出為獨立視窗', 'en': 'Already popped out as independent window', 'ja': '既に独立ウィンドウとして表示されています'},
+            'home_tab_no_popout': {'zh': 'HOME 主頁不支援彈出功能', 'en': 'HOME page does not support pop-out', 'ja': 'HOMEページはポップアウトをサポートしていません'},
+            'home_tab_no_rename': {'zh': 'HOME 主頁不支援重新命名', 'en': 'HOME page cannot be renamed', 'ja': 'HOMEページの名前は変更できません'},
+            'tab_popout_success': {'zh': '分頁 {index} 已成功彈出', 'en': 'Tab {index} successfully popped out', 'ja': 'タブ {index} を独立ウィンドウとして表示しました'},
+            'tab_return_success': {'zh': '分頁 {index} 已返回主視窗', 'en': 'Tab {index} returned to main window', 'ja': 'タブ {index} をメインウィンドウに戻しました'},
+            'tab_not_popped': {'zh': '分頁 {index} 未彈出或已返回', 'en': 'Tab {index} not popped out or already returned', 'ja': 'タブ {index} はポップアウトされていないか既に戻されています'},
+            'tab_starting_popout': {'zh': '開始彈出分頁 {index}: {name}', 'en': 'Starting to pop out tab {index}: {name}', 'ja': 'タブ {index} のポップアウトを開始: {name}'},
+            'tab_starting_return': {'zh': '開始返回分頁 {index}', 'en': 'Starting to return tab {index}', 'ja': 'タブ {index} の復帰を開始'},
+            'tab_placeholder_label': {'zh': '{name} 已彈出為獨立視窗', 'en': '{name} popped out as independent window', 'ja': '{name} を独立ウィンドウとして表示中'},
+            'tab_rename_dialog_title': {'zh': '重新命名分頁', 'en': 'Rename Tab', 'ja': 'タブ名を変更'},
+            'tab_rename_dialog_label': {'zh': '請輸入新的分頁名稱:', 'en': 'Enter new tab name:', 'ja': '新しいタブ名を入力:'},
+            'tab_rename_success': {'zh': '分頁 {index} 已重新命名為: {name}', 'en': 'Tab {index} renamed to: {name}', 'ja': 'タブ {index} の名前を変更: {name}'},
+            
+            # Workspace Dialog
+            'load_workspace_title': {'zh': '載入 Workspace', 'en': 'Load Workspace', 'ja': 'ワークスペース読込'},
+            'available_workspaces': {'zh': '可用的 Workspace', 'en': 'Available Workspaces', 'ja': '利用可能なワークスペース'},
+            'workspace_details': {'zh': 'Workspace 詳細資訊', 'en': 'Workspace Details', 'ja': 'ワークスペース詳細'},
+            'workspace_search': {'zh': '搜尋:', 'en': 'Search:', 'ja': '検索:'},
+            'search_placeholder': {'zh': '輸入關鍵字搜尋（名稱、描述、標籤）', 'en': 'Enter keywords to search (name, description, tags)', 'ja': 'キーワードを入力して検索（名前、説明、タグ）'},
+            'refresh': {'zh': '重新整理', 'en': 'Refresh', 'ja': '更新'},
+            'workspace_id': {'zh': 'ID', 'en': 'ID', 'ja': 'ID'},
+            'workspace_name': {'zh': '名稱', 'en': 'Name', 'ja': '名前'},
+            'tab_count': {'zh': '分頁數', 'en': 'Tabs', 'ja': 'タブ数'},
+            'window_count': {'zh': '視窗數', 'en': 'Windows', 'ja': 'ウィンドウ数'},
+            'created_time': {'zh': '建立時間', 'en': 'Created', 'ja': '作成日時'},
+            'description': {'zh': '描述', 'en': 'Description', 'ja': '説明'},
+            'preview_placeholder': {'zh': '請選擇一個 Workspace 查看詳細資訊...', 'en': 'Please select a Workspace to view details...', 'ja': 'ワークスペースを選択して詳細を表示...'},
+            'load_workspace_btn': {'zh': '載入 Workspace', 'en': 'Load Workspace', 'ja': 'ワークスペース読込'},
+            'delete': {'zh': '刪除', 'en': 'Delete', 'ja': '削除'},
+            'load_failed': {'zh': '載入失敗', 'en': 'Load Failed', 'ja': '読込失敗'},
+            'load_workspaces_error': {'zh': '無法載入 Workspace 列表：{error}', 'en': 'Failed to load workspace list: {error}', 'ja': 'ワークスペースリストの読込に失敗: {error}'},
+            'workspace_loaded_count': {'zh': '載入 {count} 個 Workspace', 'en': 'Loaded {count} workspaces', 'ja': '{count} 個のワークスペースを読込'},
+            'search_results': {'zh': '搜尋結果: {count} 個', 'en': 'Search results: {count}', 'ja': '検索結果: {count} 個'},
+            'preview_name': {'zh': '名稱: {name}', 'en': 'Name: {name}', 'ja': '名前: {name}'},
+            'preview_id': {'zh': 'ID: {id}', 'en': 'ID: {id}', 'ja': 'ID: {id}'},
+            'preview_created': {'zh': '建立時間: {time}', 'en': 'Created: {time}', 'ja': '作成日時: {time}'},
+            'preview_modified': {'zh': '修改時間: {time}', 'en': 'Modified: {time}', 'ja': '更新日時: {time}'},
+            'preview_tags': {'zh': '標籤: {tags}', 'en': 'Tags: {tags}', 'ja': 'タグ: {tags}'},
+            'preview_statistics': {'zh': '統計:', 'en': 'Statistics:', 'ja': '統計:'},
+            'preview_total_tabs': {'zh': '  總分頁數: {count}', 'en': '  Total tabs: {count}', 'ja': '  タブ総数: {count}'},
+            'preview_total_windows': {'zh': '  總視窗數: {count}', 'en': '  Total windows: {count}', 'ja': '  ウィンドウ総数: {count}'},
+            'preview_tab_details': {'zh': '分頁詳情:', 'en': 'Tab details:', 'ja': 'タブ詳細:'},
+            'preview_tab_entry': {'zh': '  {index}. {name}{status} - {count} 個視窗', 'en': '  {index}. {name}{status} - {count} windows', 'ja': '  {index}. {name}{status} - {count} ウィンドウ'},
+            'preview_popped_out': {'zh': ' [彈出]', 'en': ' [Popped out]', 'ja': ' [ポップアウト]'},
+            'confirm_load_workspace': {'zh': '確定要載入 Workspace \'{name}\' 嗎？\n\n這將會替換當前所有分頁和視窗。\n\n• 分頁數: {tabs}\n• 視窗數: {windows}\n\n⚠️ 當前未儲存的變更將會遺失！', 'en': 'Are you sure you want to load workspace \'{name}\'?\n\nThis will replace all current tabs and windows.\n\n• Tabs: {tabs}\n• Windows: {windows}\n\n⚠️ Unsaved changes will be lost!', 'ja': 'ワークスペース \'{name}\' を読み込みますか？\n\n現在のすべてのタブとウィンドウが置き換えられます。\n\n• タブ数: {tabs}\n• ウィンドウ数: {windows}\n\n⚠️ 未保存の変更は失われます！'},
+            'confirm_delete_workspace': {'zh': '確定要刪除 Workspace \'{name}\' 嗎？\n\n⚠️ 此操作無法復原！', 'en': 'Are you sure you want to delete workspace \'{name}\'?\n\n⚠️ This operation cannot be undone!', 'ja': 'ワークスペース \'{name}\' を削除しますか？\n\n⚠️ この操作は元に戻せません！'},
+            'confirm_delete_multiple_workspaces': {'zh': '確定要刪除 {count} 個 Workspace 嗎？\n\n將刪除以下項目：\n  • {names}\n\n⚠️ 此操作無法復原！', 'en': 'Are you sure you want to delete {count} workspaces?\n\nThe following items will be deleted:\n  • {names}\n\n⚠️ This operation cannot be undone!', 'ja': '{count} 個のワークスペースを削除しますか？\n\n次の項目が削除されます：\n  • {names}\n\n⚠️ この操作は元に戻せません！'},
+            'delete_success': {'zh': '刪除成功', 'en': 'Delete Successful', 'ja': '削除成功'},
+            'workspace_deleted': {'zh': 'Workspace \'{name}\' 已刪除', 'en': 'Workspace \'{name}\' has been deleted', 'ja': 'ワークスペース \'{name}\' を削除しました'},
+            'workspaces_deleted_success': {'zh': '已成功刪除 {count} 個 Workspace', 'en': 'Successfully deleted {count} workspaces', 'ja': '{count} 個のワークスペースを削除しました'},
+            'workspaces_deleted_partial': {'zh': '刪除完成：成功 {success} 個，失敗 {failed} 個', 'en': 'Delete completed: {success} succeeded, {failed} failed', 'ja': '削除完了：成功 {success} 個、失敗 {failed} 個'},
+            'delete_failed': {'zh': '刪除失敗', 'en': 'Delete Failed', 'ja': '削除失敗'},
+            'delete_workspace_error': {'zh': '無法刪除 Workspace：{error}', 'en': 'Failed to delete workspace: {error}', 'ja': 'ワークスペースの削除に失敗: {error}'},
+            'load_workspace_error': {'zh': '無法載入 Workspace：{error}', 'en': 'Failed to load workspace: {error}', 'ja': 'ワークスペースの読込に失敗: {error}'},
+            
+            # Workspace 載入成功訊息
+            'workspace_load_success_title': {'zh': '載入成功', 'en': 'Load Successful', 'ja': '読込成功'},
+            'workspace_load_success_message': {'zh': 'Workspace 已成功載入！\n\n已重建：\n• {tabs} 個分頁\n• {windows} 個視窗', 'en': 'Workspace loaded successfully!\n\nRestored:\n• {tabs} tabs\n• {windows} windows', 'ja': 'ワークスペースを読込しました！\n\n復元内容：\n• {tabs} タブ\n• {windows} ウィンドウ'},
+            'workspace_load_failed_title': {'zh': '載入失敗', 'en': 'Load Failed', 'ja': '読込失敗'},
+            'workspace_load_failed_message': {'zh': 'Workspace 載入過程中發生錯誤，請查看日誌獲取詳細資訊。', 'en': 'An error occurred while loading workspace. Please check logs for details.', 'ja': 'ワークスペース読込中にエラーが発生しました。詳細はログを確認してください。'},
+            'workspace_load_error_title': {'zh': '載入失敗', 'en': 'Load Failed', 'ja': '読込失敗'},
+            'workspace_load_error_message': {'zh': '無法載入 Workspace：{error}', 'en': 'Failed to load workspace: {error}', 'ja': 'ワークスペースの読込に失敗: {error}'},
+            
+            # SaveWorkspaceDialog
+            'save_workspace_title': {'zh': '儲存 Workspace', 'en': 'Save Workspace', 'ja': 'ワークスペース保存'},
+            'save_workspace_dialog_title': {'zh': '儲存當前 Workspace', 'en': 'Save Current Workspace', 'ja': '現在のワークスペースを保存'},
+            'workspace_basic_info': {'zh': '基本資訊', 'en': 'Basic Information', 'ja': '基本情報'},
+            'workspace_name_label': {'zh': '名稱', 'en': 'Name', 'ja': '名前'},
+            'workspace_name_required': {'zh': '名稱 *', 'en': 'Name *', 'ja': '名前 *'},
+            'workspace_name_placeholder': {'zh': '請輸入 Workspace 名稱（必填）', 'en': 'Enter workspace name (required)', 'ja': 'ワークスペース名を入力（必須）'},
+            'workspace_description_label': {'zh': '描述', 'en': 'Description', 'ja': '説明'},
+            'workspace_description_placeholder': {'zh': '請輸入 Workspace 描述（選填）\n例如：2025 USA GP 正賽分析，包含 VER vs LEC 比較', 'en': 'Enter workspace description (optional)\nExample: 2025 USA GP Race Analysis, including VER vs LEC comparison', 'ja': 'ワークスペースの説明を入力（任意）\n例：2025 USA GP レース分析、VER vs LEC 比較を含む'},
+            'workspace_tags_label': {'zh': '標籤', 'en': 'Tags', 'ja': 'タグ'},
+            'workspace_tags_placeholder': {'zh': '請輸入標籤，用逗號分隔（例如：2025,USA,正賽）', 'en': 'Enter tags, separated by commas (e.g., 2025,USA,Race)', 'ja': 'タグを入力、カンマ区切り（例：2025,USA,レース）'},
+            'workspace_statistics': {'zh': 'Workspace 統計', 'en': 'Workspace Statistics', 'ja': 'ワークスペース統計'},
+            'workspace_loading_stats': {'zh': '正在載入統計資訊...', 'en': 'Loading statistics...', 'ja': '統計情報を読込中...'},
+            'workspace_total_tabs': {'zh': '總分頁數', 'en': 'Total Tabs', 'ja': 'タブ総数'},
+            'workspace_total_windows': {'zh': '總視窗數', 'en': 'Total Windows', 'ja': 'ウィンドウ総数'},
+            'workspace_window_types': {'zh': '視窗類型分布', 'en': 'Window Type Distribution', 'ja': 'ウィンドウタイプ分布'},
+            'workspace_parameters': {'zh': '參數資訊', 'en': 'Parameter Information', 'ja': 'パラメータ情報'},
+            'workspace_year': {'zh': '年份', 'en': 'Year', 'ja': '年'},
+            'workspace_race': {'zh': '賽事', 'en': 'Race', 'ja': 'レース'},
+            'workspace_session': {'zh': '會話', 'en': 'Session', 'ja': 'セッション'},
+            'workspace_preview': {'zh': '儲存預覽', 'en': 'Save Preview', 'ja': '保存プレビュー'},
+            'workspace_preview_placeholder': {'zh': '配置預覽將在這裡顯示...', 'en': 'Configuration preview will be displayed here...', 'ja': '設定プレビューがここに表示されます...'},
+            'workspace_cancel': {'zh': '取消', 'en': 'Cancel', 'ja': 'キャンセル'},
+            'workspace_save_button': {'zh': '儲存 Workspace', 'en': 'Save Workspace', 'ja': 'ワークスペース保存'},
+            'workspace_cannot_save': {'zh': '無法儲存', 'en': 'Cannot Save', 'ja': '保存不可'},
+            'workspace_no_tabs_message': {'zh': '當前沒有可儲存的分頁或視窗。\n請先開啟一些分析模組。', 'en': 'No tabs or windows to save.\nPlease open some analysis modules first.', 'ja': '保存可能なタブまたはウィンドウがありません。\nまず分析モジュールを開いてください。'},
+            'workspace_load_error': {'zh': '錯誤', 'en': 'Error', 'ja': 'エラー'},
+            'workspace_load_data_failed': {'zh': '載入 Workspace 數據失敗：{error}', 'en': 'Failed to load workspace data: {error}', 'ja': 'ワークスペースデータの読込に失敗: {error}'},
+            'workspace_name_hint_exists': {'zh': '此名稱已存在，儲存時將自動附加序號', 'en': 'Name already exists, a number will be appended when saving', 'ja': 'この名前は既に存在します。保存時に番号が追加されます'},
+            'workspace_name_hint_available': {'zh': '名稱可用', 'en': 'Name available', 'ja': '名前は利用可能'},
+            'workspace_validation_failed': {'zh': '驗證失敗', 'en': 'Validation Failed', 'ja': '検証失敗'},
+            'workspace_name_required_message': {'zh': '請輸入 Workspace 名稱', 'en': 'Please enter workspace name', 'ja': 'ワークスペース名を入力してください'},
+            'workspace_name_duplicate': {'zh': '名稱重複', 'en': 'Duplicate Name', 'ja': '名前の重複'},
+            'workspace_name_duplicate_message': {'zh': '名稱 \'{old_name}\' 已存在。\n是否使用 \'{new_name}\'？', 'en': 'Name \'{old_name}\' already exists.\nUse \'{new_name}\' instead?', 'ja': '名前 \'{old_name}\' は既に存在します。\n\'{new_name}\' を使用しますか？'},
+            'workspace_save_success': {'zh': '儲存成功', 'en': 'Save Successful', 'ja': '保存成功'},
+            'workspace_save_success_message': {'zh': 'Workspace \'{name}\' 已成功儲存！\n\n• 分頁數: {tabs}\n• 視窗數: {windows}', 'en': 'Workspace \'{name}\' saved successfully!\n\n• Tabs: {tabs}\n• Windows: {windows}', 'ja': 'ワークスペース \'{name}\' を保存しました！\n\n• タブ数: {tabs}\n• ウィンドウ数: {windows}'},
+            'workspace_save_failed': {'zh': '儲存失敗', 'en': 'Save Failed', 'ja': '保存失敗'},
+            'workspace_save_failed_message': {'zh': '無法儲存 Workspace：{error}', 'en': 'Failed to save workspace: {error}', 'ja': 'ワークスペースの保存に失敗: {error}'},
             
             # Tooltips
             'sync_main_window_tooltip': {'zh': '接收主程式同步：啟用 (綠色) / 停用 (紅色)', 'en': 'Receive Main Window Sync: Enabled (Green) / Disabled (Red)', 'ja': 'Receive Main Window Sync: Enabled (Green) / Disabled (Red)'},
@@ -1462,3 +1578,53 @@ def get_telemetry_option_text(option_key, language=None):
     if option_key in TELEMETRY_OPTIONS:
         return TELEMETRY_OPTIONS[option_key].get(language, option_key)
     return option_key
+
+# F1 車隊名稱的完整翻譯對應
+TEAM_NAMES = {
+    'Red Bull': {'zh': '紅牛', 'en': 'Red Bull', 'ja': 'レッドブル'},
+    'Red Bull Racing': {'zh': '紅牛車隊', 'en': 'Red Bull Racing', 'ja': 'レッドブル・レーシング'},
+    'Ferrari': {'zh': '法拉利', 'en': 'Ferrari', 'ja': 'フェラーリ'},
+    'Mercedes': {'zh': '梅賽德斯', 'en': 'Mercedes', 'ja': 'メルセデス'},
+    'McLaren': {'zh': '麥拉倫', 'en': 'McLaren', 'ja': 'マクラーレン'},
+    'Aston Martin': {'zh': '奧斯頓馬丁', 'en': 'Aston Martin', 'ja': 'アストンマーティン'},
+    'Alpine': {'zh': '阿爾派', 'en': 'Alpine', 'ja': 'アルピーヌ'},
+    'Williams': {'zh': '威廉斯', 'en': 'Williams', 'ja': 'ウィリアムズ'},
+    'RB': {'zh': 'RB', 'en': 'RB', 'ja': 'RB'},
+    'Haas': {'zh': '哈斯', 'en': 'Haas', 'ja': 'ハース'},
+    'Sauber': {'zh': '索伯', 'en': 'Sauber', 'ja': 'ザウバー'},
+    'Kick Sauber': {'zh': 'Kick 索伯', 'en': 'Kick Sauber', 'ja': 'キック・ザウバー'},
+    'AlphaTauri': {'zh': '紅牛二隊', 'en': 'AlphaTauri', 'ja': 'アルファタウリ'},
+    'Alfa Romeo': {'zh': '愛快羅密歐', 'en': 'Alfa Romeo', 'ja': 'アルファロメオ'},
+    'Unknown': {'zh': '未知車隊', 'en': 'Unknown', 'ja': '不明'},
+}
+
+def get_team_name_text(team_key, language=None):
+    """
+    取得車隊名稱的翻譯文字
+    
+    Args:
+        team_key: 車隊名稱（英文原始名稱）
+        language: 語言代碼 ('zh', 'en', 'ja')，若為 None 則使用當前語言
+    
+    Returns:
+        str: 翻譯後的車隊名稱
+    """
+    if language is None:
+        language = _gui_translator.get_language()
+    
+    # 完全匹配
+    if team_key in TEAM_NAMES:
+        return TEAM_NAMES[team_key].get(language, team_key)
+    
+    # 模糊匹配（處理可能包含 "F1 Team" 後綴的情況）
+    team_key_normalized = team_key.replace(" F1 Team", "").strip()
+    if team_key_normalized in TEAM_NAMES:
+        return TEAM_NAMES[team_key_normalized].get(language, team_key)
+    
+    # 部分匹配（檢查是否包含已知車隊名稱）
+    for known_team in TEAM_NAMES.keys():
+        if known_team in team_key or team_key in known_team:
+            return TEAM_NAMES[known_team].get(language, team_key)
+    
+    # 找不到匹配，返回原始名稱
+    return team_key

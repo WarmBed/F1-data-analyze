@@ -108,16 +108,35 @@ class driverLapAnalysisModule(IAnalysisModule):
                 print(f"🔧 [LAPTIME_MODULE] 創建 MDI 實例...")
                 self._detailed_laptime_analysis_core = driverLapAnalysisMDI(parent=parent_widget)
                 
-                # 設置初始參數
-                if hasattr(self._detailed_laptime_analysis_core, 'update_parameters'):
-                    print(f"🔧 [LAPTIME_MODULE] 設置初始參數: {self.current_year} {self.current_race} {self.current_session}")
-                    self._detailed_laptime_analysis_core.update_parameters(
-                        self.current_year, self.current_race, self.current_session
-                    )
+                # ✅ 啟用 Workspace 模式（防止 initialize_module() 觸發數據載入）
+                if hasattr(self._detailed_laptime_analysis_core, '_workspace_loading_mode'):
+                    self._detailed_laptime_analysis_core._workspace_loading_mode = True
+                    print(f"🔧 [LAPTIME_MODULE] Workspace 模式已啟用")
+                
+                # ✅ 只設置參數屬性，不調用 update_parameters()（避免啟動執行緒）
+                # 模仿 Rain Analysis 的安全模式
+                if hasattr(self._detailed_laptime_analysis_core, 'current_year'):
+                    self._detailed_laptime_analysis_core.current_year = str(self.current_year)
+                if hasattr(self._detailed_laptime_analysis_core, 'current_race'):
+                    self._detailed_laptime_analysis_core.current_race = self.current_race
+                if hasattr(self._detailed_laptime_analysis_core, 'current_session'):
+                    self._detailed_laptime_analysis_core.current_session = self.current_session
+                print(f"🔧 [LAPTIME_MODULE] 參數已設置（未觸發數據載入）: {self.current_year} {self.current_race} {self.current_session}")
+                
+                # ✅ 禁用 Workspace 模式（恢復正常）
+                if hasattr(self._detailed_laptime_analysis_core, '_workspace_loading_mode'):
+                    self._detailed_laptime_analysis_core._workspace_loading_mode = False
+                    print(f"🔧 [LAPTIME_MODULE] Workspace 模式已禁用")
             
             # 創建主要 Widget
             if not self._main_widget:
-                self._main_widget = self._detailed_laptime_analysis_core
+                # ✅ 修復：應該獲取 MDI 的內部 Widget，不是 MDI 對象本身
+                if hasattr(self._detailed_laptime_analysis_core, 'get_widget'):
+                    self._main_widget = self._detailed_laptime_analysis_core.get_widget()
+                else:
+                    # 回退：直接使用 MDI 的 main_widget 屬性
+                    self._main_widget = getattr(self._detailed_laptime_analysis_core, 'main_widget', self._detailed_laptime_analysis_core)
+                print(f"🔧 [LAPTIME_MODULE] Widget 已創建: {type(self._main_widget)}")
             
             self._is_initialized = True
             print(f"✅ [LAPTIME_MODULE] 模組已初始化")
@@ -213,13 +232,13 @@ class driverLapAnalysisModule(IAnalysisModule):
         return f"Detailed Lap Analysis_{year}_{race}_{session}"
         
     def get_window_title(self, year: int, race: str, session: str) -> str:
-        """Generate window title"""
+        """Generate window title - 只顯示模組名稱"""
         from core.gui_i18n import tr, get_gui_language
         language = get_gui_language()
         if language == 'zh':
-            return f"{tr('detailed_lap_analysis')}_{year}_{race}_{session}"
+            return f"{tr('detailed_lap_analysis', '詳細圈速分析')}"
         else:
-            return f"Detailed Lap Analysis_{year}_{race}_{session}"
+            return f"Detailed Lap Analysis"
         
     def is_data_available(self, year: int, race: str, session: str) -> bool:
         """Check if data is available"""
@@ -351,9 +370,57 @@ MODULE_INFO = {
 # 預設導出
 __all__ = [
     'driverLapAnalysisModule',
+    'driverLapAnalysisModuleAdapter',
     'create_detailed_laptime_analysis_module',
     'MODULE_INFO'
 ]
+
+
+# ============================================================================
+# Adapter 類別（模仿 Rain Analysis）
+# ============================================================================
+
+class driverLapAnalysisModuleAdapter(driverLapAnalysisModule):
+    """
+    詳細圈速分析模組適配器
+    
+    為了與主 GUI 的工廠模式和 Workspace 系統兼容而提供的適配器類別。
+    完全模仿 RainAnalysisModuleAdapter 的三層隔離架構。
+    
+    架構模式：
+        Adapter → Module → MDI (UniversalAnalysisMDI)
+        
+    安全特性：
+        - 只接受參數並傳遞給父類
+        - 不調用 update_parameters()（避免執行緒啟動）
+        - 適用於 Workspace 快速重建場景
+    """
+    
+    def __init__(self, parent=None, **kwargs):
+        """
+        初始化適配器
+        
+        Args:
+            parent: 父級 QObject
+            **kwargs: 關鍵字參數，支援：
+                - year: 賽季年份
+                - race: 賽事名稱
+                - session: 賽段類型
+                - driver: 車手代碼（可選）
+        """
+        # 提取工廠模式可能傳遞的參數
+        year = kwargs.get('year')
+        race = kwargs.get('race')
+        session = kwargs.get('session')
+        driver = kwargs.get('driver')
+        
+        # 呼叫父類建構函數
+        super().__init__(parent, year, race, session, driver)
+        
+        # 適配器特定設定
+        self.adapter_version = "1.0.0"
+        
+        print(f"✅ [LAPTIME_ADAPTER] driverLapAnalysisModuleAdapter 初始化完成")
 
 
 if __name__ == "__main__":

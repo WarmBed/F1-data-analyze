@@ -175,13 +175,10 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
         return (1200, 700)
 
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
-        """生成視窗標題"""
-        year = year or self.current_year
-        race = race or self.current_race
-        session = session or self.current_session
+        """生成視窗標題 - 只顯示模組名稱"""
         from core.gui_i18n import tr
         translated_name = tr("throttle_box_plot", "油門箱型圖")
-        return f"{translated_name} - {year} {race} {session}"
+        return translated_name
 
     @property
     def parameter_provider(self):

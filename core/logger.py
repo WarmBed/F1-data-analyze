@@ -12,6 +12,9 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
+# 🔇 EXE 模式檢測：當打包為 EXE 時完全禁用日誌
+IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+
 __all__ = [
     "setup_logging",
     "get_logger",
@@ -109,6 +112,38 @@ def setup_logging(
             initialised.
     """
     global _CONFIGURED, _ACTIVE_COMPONENT
+
+    # 🔇 EXE 模式：完全靜默，不記錄任何日誌
+    if IS_EXE_MODE:
+        with _CONFIG_LOCK:
+            if not _CONFIGURED or force:
+                # 配置一個完全靜默的 NullHandler
+                logging.config.dictConfig({
+                    "version": 1,
+                    "disable_existing_loggers": False,
+                    "handlers": {
+                        "null": {
+                            "class": "logging.NullHandler",
+                        },
+                    },
+                    "loggers": {
+                        "f1": {
+                            "handlers": ["null"],
+                            "level": "CRITICAL",
+                            "propagate": False,
+                        },
+                    },
+                    "root": {
+                        "handlers": ["null"],
+                        "level": "CRITICAL",
+                    },
+                })
+                _CONFIGURED = True
+                _ACTIVE_COMPONENT = _normalise_component(component)
+                
+                # EXE 模式下不 patch print（保持原生行為）
+                # 這樣 print() 仍然可以輸出到終端（如果需要的話）
+        return
 
     with _CONFIG_LOCK:
         if _CONFIGURED and not force:
