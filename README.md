@@ -1,5 +1,5 @@
 # F1-TelemetryStation-Pro
-
+![F1 data analysis telemetry visualization tool](/images/initialize.png)
 **F1 data analysis**
 
 English | [繁體中文](README.zh-TW.md)
@@ -134,7 +134,7 @@ Comprehensive theoretical best lap analysis and sector comparison
 - ✅ Unified color standards for all gap displays (0.2s, 0.5s thresholds)
 - ✅ Sortable cumulative delta in sector comparison table
 
-![F1 data analysis telemetry visualization tool](/images/ideal_lap_ranking.png)
+
 
 #### 🌳 Interactive Lap Analysis Tree 
 Hierarchical lap data visualization with intelligent filtering
@@ -146,7 +146,6 @@ Hierarchical lap data visualization with intelligent filtering
 - **Visual Indicators**: Color-coded lap times showing fastest/slowest laps
 - **Responsive Design**: Auto-resizing columns with optimal width distribution
 
-![F1 data analysis telemetry visualization tool](/images/lap_tree_view.png)
 
 ![F1 data analysis telemetry visualization tool](/images/throttle.png)
 
@@ -186,16 +185,36 @@ Hierarchical lap data visualization with intelligent filtering
 
 **Major Features:**
 - ✅ **Startup Interface Enhancement**: Improved initialization screen with progress indicators and loading status to provide better user feedback during application launch
-(/images/initialize.png)
+![F1 data analysis telemetry visualization tool](/images/initialize.png)
 - ✅ **Workspace Management System**: Complete workspace functionality allowing users to save current window layouts, analysis configurations, and restore them on next startup
-(/images/workspace.png)
+![F1 data analysis telemetry visualization tool](/images/workspace.png)
 - ✅ **Tab Pop-out Feature**: Enhanced tab system with support for detaching tabs into independent floating windows for multi-monitor workflows
-(/images/popout.png)
+![F1 data analysis telemetry visualization tool](/images/popout.png)
 **UI Refinements:**
 - 🎨 Startup progress bar with detailed loading stages
 - 🎨 Workspace save/load dialog with preview functionality
 - 🎨 Tab drag-and-drop support for window detachment
 - 🎨 Independent window management for detached analysis modules
+
+#### 🚗 All Drivers Straight Line Speed Analysis (Experimental)
+Comprehensive straight-line acceleration and maximum speed analysis for all drivers
+- **Maximum Speed Tracking**: Peak velocity achieved on track straights
+- **Segment-based Analysis**: Track-specific speed zones and acceleration corridors
+- **Performance Visualization**: Bar charts showing relative acceleration times
+- **Team Color Coding**: Visual driver identification with standardized team colors
+- **Sortable Data Tables**: Click-to-sort functionality for all performance metrics
+![F1 data analysis telemetry visualization tool](/images/all_driver_speed .png)
+
+#### 🛑 All Drivers Brake Performance Analysis (Experimental)
+Detailed braking efficiency and deceleration analysis across the entire grid
+- **Maximum Deceleration**: Peak G-force values during braking zones
+- **Brake Distance Analysis**: Distance required for speed reduction
+- **Brake Time Measurement**: Duration of braking events
+- **Speed Reduction Tracking**: Start/end speeds for braking zones
+- **Visual Performance Bars**: Brake time visualization with relative scaling
+- **Reference Zone Display**: Track-specific brake zone distance markers
+![F1 data analysis telemetry visualization tool](/images/all_driver_brake.png)
+
 
 **Technical Improvements:**
 - Workspace serialization system for MDI layout persistence

@@ -218,26 +218,61 @@ class TrackAnalysisDataManager(UniversalDataLoader):
         return patterns
     
     def _extract_analysis_payload(self, data: Any, *, attach_metadata: bool = False) -> Tuple[Any, Dict[str, Any]]:
-        """Handle API envelope structures and return core analysis payload."""
+        """Handle API envelope structures and return core analysis payload.
+        
+        ⚠️ 處理雙層 data 結構：
+        API 返回: response['data']['data']['official_corners']
+        需要解析兩層 'data' 才能到達真正的分析結果
+        """
         envelope_meta: Dict[str, Any] = {}
 
         if isinstance(data, dict):
-            # API/CLI responses may wrap the payload inside a top-level envelope
+            # 第一層：檢查外層 data
             candidate = data.get("data")
+            
+            # ⚠️ 新增：處理雙層 data 結構 (API v2 返回格式)
+            # 如果第一層 data 中還有 data，且內層才有實際數據，則再解析一層
+            if isinstance(candidate, dict) and "data" in candidate:
+                inner_data = candidate.get("data")
+                # 檢查內層 data 是否包含核心欄位
+                has_inner_core_fields = isinstance(inner_data, dict) and (
+                    "position_records" in inner_data 
+                    or "detailed_position_records" in inner_data
+                    or "official_corners" in inner_data  # 新增：彎道資訊也是核心欄位
+                )
+                if has_inner_core_fields:
+                    self._debug(f"偵測到雙層 data 結構，解析到內層分析結果")
+                    # 使用內層 data 作為真正的分析結果
+                    candidate = inner_data
+                    # 保存外層的元數據
+                    envelope_meta = {
+                        "success": data.get("success"),
+                        "message": data.get("message"),
+                        "source": data.get("source"),
+                        "execution_time": data.get("execution_time"),
+                        "request_id": data.get("request_id"),
+                        "timestamp": data.get("timestamp"),
+                        "cache_used": candidate.get("cache_used"),  # 從中間層取
+                        "function_id": candidate.get("function_id"),  # 從中間層取
+                    }
+            
+            # 原有邏輯：檢查候選數據是否包含核心欄位
             has_core_fields = isinstance(candidate, dict) and (
                 "position_records" in candidate or "detailed_position_records" in candidate
             )
             if has_core_fields:
-                envelope_meta = {
-                    "success": data.get("success"),
-                    "message": data.get("message"),
-                    "source": data.get("source"),
-                    "execution_time": data.get("execution_time"),
-                    "request_id": data.get("request_id"),
-                    "timestamp": data.get("timestamp"),
-                    "cache_used": data.get("cache_used"),
-                    "function_id": data.get("function_id"),
-                }
+                # 如果還沒提取 envelope_meta（單層結構），則提取
+                if not envelope_meta:
+                    envelope_meta = {
+                        "success": data.get("success"),
+                        "message": data.get("message"),
+                        "source": data.get("source"),
+                        "execution_time": data.get("execution_time"),
+                        "request_id": data.get("request_id"),
+                        "timestamp": data.get("timestamp"),
+                        "cache_used": data.get("cache_used"),
+                        "function_id": data.get("function_id"),
+                    }
                 if attach_metadata:
                     metadata = candidate.setdefault("metadata", {})
                     if isinstance(metadata, dict):
@@ -634,6 +669,22 @@ class TrackAnalysisDataManager(UniversalDataLoader):
                     "position_point_count": total_points,
                 }
 
+            # ✅ 提取 official_corners (官方彎道資訊)
+            official_corners = payload.get("official_corners") or {}
+            if official_corners:
+                corner_count = official_corners.get('count', 0)
+                available = official_corners.get('available', False)
+                corners_list = official_corners.get('corners', [])
+                self._debug(f"✅ 已載入官方彎道資訊:")
+                self._debug(f"   - available: {available}")
+                self._debug(f"   - count: {corner_count}")
+                self._debug(f"   - corners 陣列長度: {len(corners_list)}")
+                print(f"[TRACK_ANALYSIS_MDI] ✅ process_loaded_data: 提取到 {corner_count} 個彎道")
+            else:
+                self._debug("❌ 未找到 official_corners 欄位")
+                print(f"[TRACK_ANALYSIS_MDI] ❌ process_loaded_data: 未找到 official_corners")
+                print(f"[TRACK_ANALYSIS_MDI]    payload keys: {list(payload.keys())}")
+
             metadata = payload.get("metadata") or {}
             if not metadata:
                 metadata = {
@@ -662,6 +713,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
                 "track_bounds": self.track_bounds,
                 "position_analysis": position_analysis_normalized,
                 "statistics": statistics,
+                "official_corners": official_corners,  # ✅ 添加官方彎道資訊
                 "metadata": metadata,
                 "raw_data": payload,
             }
@@ -669,6 +721,12 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             self._debug(f"成功處理 {len(self.position_records)} 個位置點數據")
             self._debug(f"賽道: {self.session_info.get('track_name', '未知')}")
             self._debug(f"賽道邊界: {self.track_bounds}")
+            
+            # ✅ 調試：確認 processed_data 包含 official_corners
+            if 'official_corners' in processed_data and processed_data['official_corners']:
+                print(f"[TRACK_ANALYSIS_MDI] ✅ processed_data 包含 official_corners: {processed_data['official_corners'].get('count', 0)} 個彎道")
+            else:
+                print(f"[TRACK_ANALYSIS_MDI] ❌ processed_data 缺少 official_corners")
             
             return processed_data
             
@@ -687,6 +745,7 @@ class TrackAnalysisControlWidget(QWidget):
     zoom_changed = pyqtSignal(float)  # 縮放倍率變更
     show_grid_changed = pyqtSignal(bool)  # 網格顯示切換
     show_markers_changed = pyqtSignal(bool)  # 標記顯示切換
+    show_corners_changed = pyqtSignal(bool)  # 官方彎道顯示切換
     dynamic_marker_visibility_changed = pyqtSignal(bool)  # 連動游標顯示
     fixed_marker_visibility_changed = pyqtSignal(bool)  # 固定游標顯示
     
@@ -729,6 +788,11 @@ class TrackAnalysisControlWidget(QWidget):
         self.show_markers_check.setChecked(True)
         self.show_markers_check.toggled.connect(self.show_markers_changed.emit)
         options_layout.addWidget(self.show_markers_check)
+        
+        self.show_corners_check = QCheckBox("顯示官方彎道")
+        self.show_corners_check.setChecked(True)
+        self.show_corners_check.toggled.connect(self.show_corners_changed.emit)
+        options_layout.addWidget(self.show_corners_check)
 
         self.show_linkage_cursor_check = QCheckBox("同步游標")
         self.show_linkage_cursor_check.setChecked(True)
@@ -917,6 +981,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         control_panel.zoom_changed.connect(self._on_zoom_changed)
         control_panel.show_grid_changed.connect(self._on_show_grid_changed)
         control_panel.show_markers_changed.connect(self._on_show_markers_changed)
+        control_panel.show_corners_changed.connect(self._on_show_corners_changed)
         control_panel.dynamic_marker_visibility_changed.connect(self._on_dynamic_marker_visibility_changed)
         control_panel.fixed_marker_visibility_changed.connect(self._on_fixed_marker_visibility_changed)
 
@@ -1003,12 +1068,24 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     def on_data_loaded(self, data: Dict[str, Any]):
         """數據載入完成處理"""
         try:
-            print(f"[TRACK_ANALYSIS_MDI] 數據載入完成")
+            print(f"[TRACK_ANALYSIS_MDI] ==================== on_data_loaded 開始 ====================")
+            print(f"[TRACK_ANALYSIS_MDI] data keys: {list(data.keys())}")
+            
+            # ✅ 調試：檢查輸入 data 是否包含 official_corners
+            if 'official_corners' in data:
+                corners = data['official_corners']
+                if corners:
+                    print(f"[TRACK_ANALYSIS_MDI] ✅ 輸入 data 包含 official_corners: {corners.get('count', 0)} 個彎道")
+                else:
+                    print(f"[TRACK_ANALYSIS_MDI] ⚠️  輸入 data 的 official_corners 為空")
+            else:
+                print(f"[TRACK_ANALYSIS_MDI] ❌ 輸入 data 缺少 official_corners 欄位")
             
             # 更新圖表組件
             if self.chart_widget and isinstance(self.chart_widget, TrackMapWidget):
                 position_records = data.get('position_records', [])
                 track_bounds = data.get('track_bounds', {})
+                official_corners = data.get('official_corners', {})  # ✅ 提取彎道資訊
                 
                 # 構建 track_data 結構
                 track_data = {
@@ -1016,10 +1093,26 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
                     'position_analysis': {
                         'track_bounds': track_bounds
                     },
+                    'official_corners': official_corners,  # ✅ 傳遞彎道資訊
                     'session_info': data.get('session_info', {}),
                     'statistics': data.get('statistics', {})
                 }
                 
+                # ✅ 調試輸出 - 詳細檢查
+                print(f"[TRACK_ANALYSIS_MDI] ==================== 構建 track_data ====================")
+                print(f"[TRACK_ANALYSIS_MDI] track_data keys: {list(track_data.keys())}")
+                if official_corners:
+                    print(f"[TRACK_ANALYSIS_MDI] ✅ track_data 包含 official_corners:")
+                    print(f"[TRACK_ANALYSIS_MDI]    - available: {official_corners.get('available')}")
+                    print(f"[TRACK_ANALYSIS_MDI]    - count: {official_corners.get('count')}")
+                    print(f"[TRACK_ANALYSIS_MDI]    - corners 陣列長度: {len(official_corners.get('corners', []))}")
+                    if official_corners.get('corners'):
+                        first_corner = official_corners['corners'][0]
+                        print(f"[TRACK_ANALYSIS_MDI]    - 第一個彎道: {first_corner.get('number')}, X={first_corner.get('x'):.2f}, Y={first_corner.get('y'):.2f}")
+                else:
+                    print(f"[TRACK_ANALYSIS_MDI] ❌ track_data 的 official_corners 為空")
+                
+                print(f"[TRACK_ANALYSIS_MDI] ==================== 調用 load_track_data ====================")
                 success = self.chart_widget.load_track_data(track_data)
                 if success:
                     print(f"[TRACK_ANALYSIS_MDI] 賽道數據已載入至地圖組件")
@@ -1092,6 +1185,12 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         print(f"[TRACK_ANALYSIS_MDI] 標記顯示: {show}")
         if self.chart_widget and hasattr(self.chart_widget, 'set_show_markers'):
             self.chart_widget.set_show_markers(show)
+    
+    def _on_show_corners_changed(self, show: bool):
+        """官方彎道顯示切換"""
+        print(f"[TRACK_ANALYSIS_MDI] 官方彎道顯示: {show}")
+        if self.chart_widget and hasattr(self.chart_widget, 'set_display_options'):
+            self.chart_widget.set_display_options(show_corners=show)
 
     def _on_dynamic_marker_visibility_changed(self, visible: bool):
         """同步游標顯示切換"""

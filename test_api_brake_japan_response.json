@@ -422,14 +422,14 @@
       "cache_hit": true,
       "match_type": "exact_match",
       "response_source": "json_cache",
-      "cache_timestamp": "2025-10-26T00:00:37.915032",
+      "cache_timestamp": "2025-10-26T03:49:03.023390",
       "match_description": "完全匹配 - 所有參數完全符合"
     }
   },
   "source": "cache",
   "execution_time": "0.002s",
-  "request_id": "req_76c01c1db8",
-  "timestamp": "2025-10-26T00:00:37.915157",
+  "request_id": "req_3ebfe227d8",
+  "timestamp": "2025-10-26T03:49:03.023489",
   "function_spec": {
     "function_id": "34",
     "name": "All Drivers Brake Performance",
@@ -460,238 +460,238 @@
     "max_concurrency": 1,
     "active_tasks": [],
     "metrics": {
-      "total_requests": 130,
-      "cache_hits": 130,
+      "total_requests": 30,
+      "cache_hits": 30,
       "cache_hit_rate": 1.0,
       "cli_runs": 0,
       "failures": 0,
       "avg_execution_seconds": null,
       "last_execution_seconds": 0.002,
-      "last_request_id": "req_76c01c1db8",
-      "last_completed_request": "req_76c01c1db8",
+      "last_request_id": "req_3ebfe227d8",
+      "last_completed_request": "req_3ebfe227d8",
       "last_completed_source": "cache"
     },
     "recent_history": [
       {
-        "request_id": "req_42b1401d68",
+        "request_id": "req_5fa97799c0",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:36:26.014780",
+        "completed_at": "2025-10-26T03:35:29.327822",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_ed31179032",
+        "request_id": "req_6d91711687",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:36:54.602542",
-        "duration_seconds": 0.062,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_768b8469bd",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:36:55.458176",
+        "completed_at": "2025-10-26T03:35:50.357502",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_b879ed458d",
+        "request_id": "req_92debc84c1",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:37:23.886599",
-        "duration_seconds": 0.062,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_833b9f578f",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:37:24.505838",
+        "completed_at": "2025-10-26T03:35:51.235715",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_c9587d206a",
+        "request_id": "req_07c9db3167",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:43:33.311091",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_5560787391",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:43:34.173602",
+        "completed_at": "2025-10-26T03:38:57.228472",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_2a388e34f2",
+        "request_id": "req_5c880ffa3c",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:44:32.268575",
-        "duration_seconds": 0.064,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_cb5b2215fd",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:44:32.862175",
+        "completed_at": "2025-10-26T03:38:58.113377",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_64ce43b1b6",
+        "request_id": "req_30ce796d6c",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:44:53.748114",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_832c0a0bee",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:44:54.335860",
+        "completed_at": "2025-10-26T03:39:17.955416",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_30761b9bed",
+        "request_id": "req_68801ab42c",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:45:13.549306",
-        "duration_seconds": 0.062,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_a8bb34d5e7",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:45:14.174627",
+        "completed_at": "2025-10-26T03:39:18.549227",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_9171a592d2",
+        "request_id": "req_c31080b68e",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:45:46.063154",
-        "duration_seconds": 0.062,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_044312dd73",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:45:46.953924",
+        "completed_at": "2025-10-26T03:39:57.695378",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_8a39d837a6",
+        "request_id": "req_9106ec3ca4",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:46:34.883476",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_d44b570fcb",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:46:35.497949",
+        "completed_at": "2025-10-26T03:39:58.292542",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_9ecac13f10",
+        "request_id": "req_5d13b0ebaa",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:47:03.178135",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_2236b6b2a5",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:47:04.123412",
+        "completed_at": "2025-10-26T03:40:35.145244",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_547eadbff9",
+        "request_id": "req_d2ec6d1595",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:49:33.428350",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_0933e4ac99",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:49:34.087338",
+        "completed_at": "2025-10-26T03:40:36.063455",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_071d27969c",
+        "request_id": "req_ba69118713",
         "function_id": "34",
-        "completed_at": "2025-10-25T23:54:34.604378",
-        "duration_seconds": 0.065,
-        "success": true,
-        "source": "cache",
-        "message": "cache_hit"
-      },
-      {
-        "request_id": "req_2223d6190b",
-        "function_id": "34",
-        "completed_at": "2025-10-25T23:54:35.505620",
+        "completed_at": "2025-10-26T03:41:08.330497",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_f82da8828f",
+        "request_id": "req_0e62819029",
         "function_id": "34",
-        "completed_at": "2025-10-26T00:00:36.831621",
-        "duration_seconds": 0.065,
+        "completed_at": "2025-10-26T03:41:09.211826",
+        "duration_seconds": 0.002,
         "success": true,
         "source": "cache",
         "message": "cache_hit"
       },
       {
-        "request_id": "req_76c01c1db8",
+        "request_id": "req_8a873c9567",
         "function_id": "34",
-        "completed_at": "2025-10-26T00:00:37.915149",
+        "completed_at": "2025-10-26T03:41:31.651189",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_1a820e3a76",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:41:32.248666",
+        "duration_seconds": 0.003,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_a572dd969f",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:41:59.090573",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_058e3e89ed",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:41:59.964618",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_d5e62b204f",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:42:31.280247",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_58320b6a4a",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:42:31.870188",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_698eab4875",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:42:47.587647",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_7a05bc2e5d",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:42:48.460907",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_c5dcb662a0",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:47:39.006696",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_3cad8046aa",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:47:39.877532",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_57d65675b8",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:49:02.119001",
+        "duration_seconds": 0.002,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_3ebfe227d8",
+        "function_id": "34",
+        "completed_at": "2025-10-26T03:49:03.023481",
         "duration_seconds": 0.002,
         "success": true,
         "source": "cache",

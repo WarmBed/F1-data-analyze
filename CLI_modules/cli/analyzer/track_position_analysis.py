@@ -261,6 +261,106 @@ def print_session_summary(session_info):
     print(f"   📆 日期: {session_info['date']}")
 
 
+def _map_official_corners_to_telemetry(session, telemetry_data, telemetry_distances):
+    """
+    將 FastF1 官方彎道映射到遙測距離
+    
+    Args:
+        session: FastF1 session 對象
+        telemetry_data: 遙測數據 DataFrame (包含 X, Y)
+        telemetry_distances: 遙測距離數組
+    
+    Returns:
+        dict: 官方彎道資訊，包含映射後的距離
+    """
+    try:
+        # 獲取賽道彎道資訊
+        circuit_info = session.get_circuit_info()
+        
+        if circuit_info is None or not hasattr(circuit_info, 'corners'):
+            return None
+        
+        official_corners = circuit_info.corners
+        
+        if official_corners is None or len(official_corners) == 0:
+            return None
+        
+        print(f"   [INFO] FastF1 官方彎道數量: {len(official_corners)}")
+        
+        # 提取遙測座標
+        telemetry_x = telemetry_data['X'].values
+        telemetry_y = telemetry_data['Y'].values
+        
+        mapped_corners = []
+        
+        for idx, corner_row in official_corners.iterrows():
+            corner_num = int(corner_row['Number'])
+            corner_x = float(corner_row['X'])
+            corner_y = float(corner_row['Y'])
+            corner_angle = float(corner_row['Angle'])
+            
+            # 計算遙測中每個點到彎道的歐幾里得距離
+            distances_to_corner = np.sqrt(
+                (telemetry_x - corner_x)**2 + 
+                (telemetry_y - corner_y)**2
+            )
+            
+            # 找到最接近的遙測點
+            closest_idx = int(np.argmin(distances_to_corner))
+            mapping_error = float(distances_to_corner[closest_idx])
+            
+            # 獲取該點的距離
+            if closest_idx < len(telemetry_distances):
+                mapped_distance = float(telemetry_distances[closest_idx])
+            else:
+                mapped_distance = 0.0
+            
+            # 構建彎道資料
+            corner_data = {
+                "number": corner_num,
+                "x": corner_x,
+                "y": corner_y,
+                "angle": corner_angle,
+                "mapped_distance": mapped_distance,
+                "mapping_error": mapping_error
+            }
+            
+            # 如果有 Letter 欄位，也加入
+            if 'Letter' in corner_row.index and pd.notna(corner_row['Letter']):
+                corner_data["letter"] = str(corner_row['Letter'])
+            
+            mapped_corners.append(corner_data)
+        
+        # 按彎道編號排序
+        mapped_corners.sort(key=lambda x: x['number'])
+        
+        # 計算映射品質統計
+        errors = [c['mapping_error'] for c in mapped_corners]
+        avg_error = float(np.mean(errors))
+        max_error = float(np.max(errors))
+        
+        result = {
+            "available": True,
+            "count": len(mapped_corners),
+            "corners": mapped_corners,
+            "mapping_quality": {
+                "average_error_m": round(avg_error, 1),
+                "max_error_m": round(max_error, 1),
+                "min_error_m": round(float(np.min(errors)), 1)
+            }
+        }
+        
+        print(f"   [INFO] 映射品質 - 平均誤差: {avg_error:.1f}m, 最大誤差: {max_error:.1f}m")
+        
+        return result
+        
+    except Exception as e:
+        print(f"   [ERROR] 官方彎道映射異常: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def analyze_track_position_data(data_loader):
     """分析賽道位置數據 - 僅使用FastF1真實數據"""
     position_data = {
@@ -268,7 +368,13 @@ def analyze_track_position_data(data_loader):
         "position_records": [],
         "fastest_lap_info": None,
         "track_bounds": None,
-        "distance_covered": 0
+        "distance_covered": 0,
+        # 新增：FastF1 官方彎道資訊 (向後相容)
+        "official_corners": {
+            "available": False,
+            "count": 0,
+            "corners": []
+        }
     }
     
     if not hasattr(data_loader, 'session') or data_loader.session is None:
@@ -403,6 +509,20 @@ def analyze_track_position_data(data_loader):
                             # 計算總距離
                             if len(distances) > 0:
                                 position_data["distance_covered"] = float(np.max(distances))
+                            
+                            # 新增：映射 FastF1 官方彎道到遙測距離
+                            try:
+                                print(f"\n   [INFO] 嘗試獲取 FastF1 官方彎道資訊...")
+                                official_corners_data = _map_official_corners_to_telemetry(
+                                    session, pos_data, distances
+                                )
+                                if official_corners_data:
+                                    position_data["official_corners"] = official_corners_data
+                                    print(f"   [SUCCESS] 成功映射 {official_corners_data['count']} 個官方彎道")
+                                else:
+                                    print(f"   [WARNING] 無法獲取官方彎道資訊")
+                            except Exception as corner_error:
+                                print(f"   [WARNING] 官方彎道映射失敗: {corner_error}")
                             
                             print(f"   [SUCCESS] 成功獲取 {len(position_data['position_records'])} 個賽道位置點")
                         

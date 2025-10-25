@@ -62,9 +62,13 @@ class TrackMapWidget(QWidget):
         self.show_distance_markers: bool = False
         self.show_track_labels: bool = False
         self.show_grid: bool = False
+        self.show_official_corners: bool = True  # 預設開啟：顯示 FastF1 官方彎道
 
         self._grid_spacing: float = 500.0  # 公尺
         self._max_grid_lines: int = 12
+        
+        # FastF1 官方彎道數據
+        self.official_corners: List[Dict[str, Any]] = []
 
         # 連動狀態
         self._linkage_registered: bool = False
@@ -105,6 +109,9 @@ class TrackMapWidget(QWidget):
     def load_track_data(self, track_data: Dict[str, Any]) -> bool:
         """供 Universal MDI 呼叫的資料載入接口。"""
         try:
+            print(f"[TRACK_MAP] ==================== load_track_data 開始 ====================")
+            print(f"[TRACK_MAP] track_data keys: {list(track_data.keys())}")
+            
             self.track_data = track_data or {}
             records = track_data.get("detailed_position_records") or track_data.get("position_records") or []
             self.position_data = [record for record in records if isinstance(record, dict)]
@@ -116,6 +123,29 @@ class TrackMapWidget(QWidget):
                 bounds = self._calculate_bounds_from_positions(self.position_data)
 
             self.track_bounds = bounds if isinstance(bounds, dict) else None
+            
+            # 載入 FastF1 官方彎道數據
+            print(f"[TRACK_MAP] ==================== 載入 official_corners ====================")
+            official_corners_data = track_data.get("official_corners", {})
+            print(f"[TRACK_MAP] official_corners_data 類型: {type(official_corners_data)}")
+            print(f"[TRACK_MAP] official_corners_data 內容: {official_corners_data if isinstance(official_corners_data, dict) else 'NOT A DICT'}")
+            
+            if official_corners_data.get("available") and official_corners_data.get("corners"):
+                self.official_corners = official_corners_data.get("corners", [])
+                print(f"[TRACK_MAP] ✅ 成功載入 {len(self.official_corners)} 個官方彎道")
+                if self.official_corners:
+                    first = self.official_corners[0]
+                    print(f"[TRACK_MAP]    第一個彎道: number={first.get('number')}, x={first.get('x')}, y={first.get('y')}")
+            else:
+                self.official_corners = []
+                print(f"[TRACK_MAP] ❌ 未載入官方彎道")
+                print(f"[TRACK_MAP]    available: {official_corners_data.get('available')}")
+                print(f"[TRACK_MAP]    corners 存在: {'corners' in official_corners_data}")
+                print(f"[TRACK_MAP]    corners 數量: {len(official_corners_data.get('corners', []))}")
+            
+            print(f"[TRACK_MAP] self.official_corners 最終狀態: 長度={len(self.official_corners)}")
+            print(f"[TRACK_MAP] self.show_official_corners 狀態: {self.show_official_corners}")
+            
             self._build_distance_lookup()
             self._clear_dynamic_marker()
             self._clear_fixed_marker()
@@ -142,6 +172,7 @@ class TrackMapWidget(QWidget):
         """兼容 legacy API。"""
         self.position_data = position_data or []
         self.track_bounds = track_bounds or self._calculate_bounds_from_positions(self.position_data)
+        self.official_corners = []  # Legacy API 不包含官方彎道
         self._build_distance_lookup()
         self._clear_dynamic_marker()
         self._clear_fixed_marker()
@@ -156,6 +187,7 @@ class TrackMapWidget(QWidget):
         show_markers: Optional[bool] = None,
         show_labels: Optional[bool] = None,
         show_grid: Optional[bool] = None,
+        show_corners: Optional[bool] = None,  # 新增：官方彎道開關
     ) -> None:
         if show_start is not None:
             self.show_start_point = bool(show_start)
@@ -167,6 +199,8 @@ class TrackMapWidget(QWidget):
             self.show_track_labels = bool(show_labels)
         if show_grid is not None:
             self.show_grid = bool(show_grid)
+        if show_corners is not None:
+            self.show_official_corners = bool(show_corners)
         self.update()
 
     # ------------------------------------------------------------------
@@ -279,6 +313,16 @@ class TrackMapWidget(QWidget):
 
         if self.show_distance_markers:
             self._draw_distance_markers(painter, points)
+        
+        # 繪製 FastF1 官方彎道標記
+        if self.show_official_corners and self.official_corners:
+            print(f"[TRACK_MAP] paintEvent: 準備繪製 {len(self.official_corners)} 個彎道")
+            self._draw_official_corners(painter)
+        else:
+            if not self.show_official_corners:
+                print(f"[TRACK_MAP] paintEvent: show_official_corners={self.show_official_corners} (未啟用)")
+            if not self.official_corners:
+                print(f"[TRACK_MAP] paintEvent: official_corners 為空 (長度={len(self.official_corners)})")
 
         # 在路徑繪製後呈現同步標記
         self._draw_markers(painter)
@@ -360,6 +404,113 @@ class TrackMapWidget(QWidget):
                 painter.setFont(QFont("Arial", 7))
                 painter.setPen(QPen(QColor(0, 0, 120)))
                 painter.drawText(int(points[idx].x()) + 5, int(points[idx].y()) + 15, f"{distance_m/1000:.1f} km")
+    
+    def _draw_official_corners(self, painter: QPainter) -> None:
+        """繪製 FastF1 官方彎道標記 - 白底黑字，智能偏移避免與賽道重疊"""
+        print(f"[TRACK_MAP] _draw_official_corners: 開始繪製")
+        print(f"[TRACK_MAP]    self.official_corners 長度: {len(self.official_corners)}")
+        
+        if not self.official_corners:
+            print(f"[TRACK_MAP] _draw_official_corners: official_corners 為空，退出")
+            return
+        
+        print(f"[TRACK_MAP] _draw_official_corners: 準備繪製 {len(self.official_corners)} 個彎道")
+        
+        # 設定彎道標記樣式 - 白底黑字
+        bg_color = QColor(255, 255, 255, 240)  # 半透明白色背景
+        border_color = QColor(0, 0, 0)  # 黑色邊框
+        text_color = QColor(0, 0, 0)  # 黑色文字
+        
+        bg_brush = QBrush(bg_color)
+        border_pen = QPen(border_color, 2)
+        text_pen = QPen(text_color)
+        text_font = QFont("Arial", 8, QFont.Bold)
+        
+        painter.setFont(text_font)
+        
+        marker_radius = 11
+        offset_distance = 20  # 基礎偏移距離
+        
+        for corner in self.official_corners:
+            # 獲取彎道位置 (FastF1 的 X, Y 座標)
+            corner_x = corner.get("x", 0.0)
+            corner_y = corner.get("y", 0.0)
+            corner_num = corner.get("number", 0)
+            
+            # 計算智能偏移：找到最近的賽道點，然後向外偏移
+            offset_x, offset_y = self._calculate_corner_offset(
+                corner_x, corner_y, offset_distance
+            )
+            
+            # 轉換為螢幕座標
+            screen_x, screen_y = self.world_to_screen(offset_x, offset_y)
+            
+            # 繪製白色背景圓圈（圓圈中心在 screen_x, screen_y）
+            painter.setPen(border_pen)
+            painter.setBrush(bg_brush)
+            painter.drawEllipse(screen_x - marker_radius, screen_y - marker_radius, 
+                              marker_radius * 2, marker_radius * 2)
+            
+            # 繪製黑色彎道編號（使用 QRect 對齊方式精確居中）
+            painter.setPen(text_pen)
+            text = str(corner_num)
+            
+            # 使用 QRect 來定義文字繪製區域（與圓圈大小相同）
+            from PyQt5.QtCore import QRect
+            text_rect = QRect(
+                screen_x - marker_radius,
+                screen_y - marker_radius,
+                marker_radius * 2,
+                marker_radius * 2
+            )
+            
+            # 使用對齊參數讓 Qt 自動居中文字
+            painter.drawText(text_rect, Qt.AlignCenter, text)
+    
+    def _calculate_corner_offset(self, corner_x: float, corner_y: float, offset_dist: float) -> Tuple[float, float]:
+        """
+        計算彎道標記的智能偏移位置
+        
+        策略：找到最近的賽道點，計算從賽道點到彎道的方向，然後沿該方向偏移
+        """
+        if not self.position_data:
+            return corner_x, corner_y
+        
+        import math
+        
+        # 找到最近的賽道點
+        min_dist = float('inf')
+        nearest_track_x = corner_x
+        nearest_track_y = corner_y
+        
+        for pos in self.position_data:
+            track_x = pos.get("position_x", 0.0)
+            track_y = pos.get("position_y", 0.0)
+            
+            dist = math.sqrt((track_x - corner_x)**2 + (track_y - corner_y)**2)
+            if dist < min_dist:
+                min_dist = dist
+                nearest_track_x = track_x
+                nearest_track_y = track_y
+        
+        # 計算從賽道點到彎道位置的向量（這是向外的方向）
+        dx = corner_x - nearest_track_x
+        dy = corner_y - nearest_track_y
+        
+        # 正規化方向向量
+        length = math.sqrt(dx*dx + dy*dy)
+        if length > 0:
+            dx /= length
+            dy /= length
+        else:
+            # 如果彎道點和賽道點重合，使用預設方向
+            dx, dy = 1.0, 0.0
+        
+        # 沿著向外方向偏移
+        offset_x = corner_x + dx * offset_dist
+        offset_y = corner_y + dy * offset_dist
+        
+        return offset_x, offset_y
 
     # ------------------------------------------------------------------
     # 座標轉換
