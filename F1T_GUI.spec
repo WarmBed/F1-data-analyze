@@ -184,6 +184,33 @@ a = Analysis(
         'modules.gui.all_drivers_straight_line_speed_analysis.straight_line_speed_loader',
         'modules.gui.all_drivers_straight_line_speed_analysis.register_module',
         
+        # ⭐ Corner Performance Analysis 模組（V0.6.0 新增）
+        'modules.gui.all_drivers_corner_performance_analysis',
+        'modules.gui.all_drivers_corner_performance_analysis.all_drivers_corner_performance_mdi',
+        'modules.gui.all_drivers_corner_performance_analysis.corner_performance_loader',
+        'modules.gui.all_drivers_corner_performance_analysis.corner_performance_scatter_widget',
+        
+        # ⭐ Corner Box Plot Analysis 模組（V0.6.0 新增）
+        'modules.gui.all_drivers_corner_box_plot_analysis',
+        
+        # ⭐ Settings 模組
+        'modules.gui.settings',
+        'modules.gui.settings.system_settings_dialog',
+        
+        # ⭐ Diagnostics 模組
+        'modules.gui.diagnostics',
+        'modules.gui.diagnostics.objgraph_window',
+        
+        # ⭐ Driver Analysis 模組
+        'modules.gui.driver_analysis',
+        'modules.gui.driver_analysis.driver_comprehensive_full',
+        'modules.gui.driver_analysis.driver_statistics_overview',
+        'modules.gui.driver_analysis.driver_telemetry_statistics',
+        
+        # ⭐ Championship 模組
+        'modules.gui.championship',
+        'modules.gui.championship.standings_widgets',
+        
         # Module Factory 和 Interfaces
         'modules.gui.interfaces.analysis_module',
         

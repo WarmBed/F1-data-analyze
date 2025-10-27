@@ -18831,10 +18831,34 @@ def main():
     """主函數"""
     print("[MAIN] 🚀 啟動 F1T 專業賽車分析工作站...")
     
+    # ========== Windows 任務欄圖標設定 ==========
+    # 在 Windows 上設定 App User Model ID，讓任務欄顯示自定義圖標
+    if sys.platform == 'win32':
+        try:
+            import ctypes
+            # 設定 App User Model ID，使應用程式在任務欄中獨立顯示
+            myappid = 'F1T.ProfessionalRacingAnalysis.GUI.V060'  # 唯一的應用程式 ID
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+            print("[MAIN] ✅ Windows App User Model ID 已設定")
+        except Exception as e:
+            print(f"[MAIN] ⚠️ 設定 App User Model ID 失敗: {e}")
+    
     app = QApplication(sys.argv)
     
     app.setApplicationName("F1T Professional Racing Analysis Workstation")
     app.setOrganizationName("F1T Professional Racing Analysis Team")
+    
+    # 設置應用程式圖標（應用程式層級）
+    try:
+        icon_path = get_resource_path(Path("image") / "logo.ico")
+        if icon_path.exists():
+            from PyQt5.QtGui import QIcon
+            app.setWindowIcon(QIcon(str(icon_path)))
+            print(f"[MAIN] ✅ 應用程式圖標已設定: {icon_path}")
+        else:
+            print(f"[MAIN] ⚠️ 找不到圖標檔案: {icon_path}")
+    except Exception as e:
+        print(f"[MAIN] ⚠️ 設定應用程式圖標失敗: {e}")
     
     # 設置應用程式字體
     font = QFont("Arial", 8)

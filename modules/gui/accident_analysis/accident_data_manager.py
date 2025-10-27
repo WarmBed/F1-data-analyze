@@ -72,6 +72,26 @@ class AccidentAnalysisApiWorker(QThread):
                 headers={"Accept": "application/json"},
             )
             self.progress.emit(70)
+            
+            # ✅ 修復：優雅處理 HTTP 錯誤（特別是 429）
+            if response.status_code == 429:
+                # API 限流錯誤 - 不要彈窗，靜默失敗
+                self.failure.emit("API 請求過於頻繁，請稍後再試 (429 Too Many Requests)")
+                return
+            elif response.status_code >= 500:
+                # 伺服器錯誤
+                self.failure.emit(f"API 伺服器錯誤 ({response.status_code})")
+                return
+            elif response.status_code >= 400:
+                # 客戶端錯誤（除了 429）
+                try:
+                    error_data = response.json()
+                    error_msg = error_data.get("message", response.text)
+                except Exception:
+                    error_msg = response.text or response.reason
+                self.failure.emit(f"API 請求錯誤 ({response.status_code}): {error_msg}")
+                return
+            
             response.raise_for_status()
 
             payload = response.json()
@@ -349,12 +369,23 @@ class AccidentDataManager(UniversalDataLoader):
     def _on_api_error(self, message: str) -> None:  # pragma: no cover - GUI path
         self._error(f"API 請求失敗: {message}")
         self._is_loading = False
+        
+        # ✅ 修復：如果是 429 錯誤，靜默處理不彈窗
+        is_rate_limit = "429" in message or "Too Many Requests" in message
+        
         if self._allow_local_fallback:
             self.status_changed.emit("API 請求失敗，改用本地資料")
             self._fallback_to_local(message)
         else:
-            self.status_changed.emit("API 請求失敗且未啟用本地 JSON 後備")
-            self.error_occurred.emit(f"API 請求失敗: {message}")
+            if is_rate_limit:
+                # 429 錯誤：靜默處理，只發送狀態訊息
+                self.status_changed.emit("API 請求過於頻繁，請稍後手動重新載入")
+                # ❌ 不發送 error_occurred 信號，避免彈窗
+                print(f"[ACCIDENT_API] ⚠️ API 限流 (429): {message}")
+            else:
+                # 其他錯誤：正常處理
+                self.status_changed.emit("API 請求失敗且未啟用本地 JSON 後備")
+                self.error_occurred.emit(f"API 請求失敗: {message}")
 
     def _cleanup_api_worker(self) -> None:
         if not self._api_worker:

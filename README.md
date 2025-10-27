@@ -149,39 +149,24 @@ Hierarchical lap data visualization with intelligent filtering
 
 ![F1 data analysis telemetry visualization tool](/images/throttle.png)
 
-## 🔗 Special Features
 
-### Linkage System
-- **X-axis Synchronization**: Multiple telemetry charts display the same position
-- **Click Linkage**: Click on one chart, others follow automatically
-- **Master Toggle**: Global enable/disable for linkage functionality
+### Current Version: V0.6.0 (2025-10-27)
 
-### Workspace Management
-- **Save Workspace**: Preserve current analysis configuration
-- **Load Workspace**: Quickly restore previous analysis environment
-- **Multi-tab Support**: Open multiple analysis perspectives simultaneously
+**Major Features:**
+- ✅ **Track Map Enhancement - Corner Numbering**: Added corner number annotations to track map visualization for improved position identification and reference during analysis
+- ✅ **Corner Analysis Module - Dynamic Speed Distribution**: Implements dynamic corner classification system (low/medium/high-speed corners) with speed distribution analysis for three critical phases (entry/apex/exit speed)
 
-### MDI Window System
-- **Free Arrangement**: Drag and resize windows freely
-- **Cascade/Tile**: Quick window layout organization
-- **Pop-out Feature**: Display analysis windows independently
+**UI Refinements:**
+- 🎨 Corner number overlays on track map with optimal positioning
+- 🎨 Speed distribution plots with color-coded corner classifications
+- 🎨 Entry-Apex-Exit phase comparison visualization
 
-### Enhanced Chart Interactions (NEW in V0.2.0)
-- **Draggable Tooltips**: Pin and drag tooltip boxes to any position
-- **Data Point Pinning**: Click to pin data points with persistent tooltips
-- **Connection Lines**: Dashed lines connecting tooltips to original data points
-- **Dual-driver Tooltip Separation**: Independent tooltips for each driver's data
-- **Draggable Legend**: Reposition chart legends for better visibility
+**Technical Improvements:**
+- Dynamic corner detection algorithm based on speed thresholds
+- Multi-phase telemetry data extraction and processing
+- Statistical distribution analysis for corner performance metrics
 
-## 🌐 System Highlights
-
-- **Multi-language Support**: 中文 🇹🇼 / English 🇺🇸 / 日本語 🇯🇵
-- **API-ONLY Mode**: Data retrieval exclusively through REST API 
-- **Parameter Synchronization**: Sync year/race/session settings between main and sub-windows
-- **Modular Design**: Independent and extensible analysis modules
-- **Dynamic Import Architecture**: Optimized memory usage with on-demand module loading
-
-### Current Version: V0.5.0 (2025-10-25)
+### Previous Version: V0.5.0 (2025-10-25)
 
 **Major Features:**
 - ✅ **Startup Interface Enhancement**: Improved initialization screen with progress indicators and loading status to provide better user feedback during application launch
@@ -280,15 +265,44 @@ Detailed braking efficiency and deceleration analysis across the entire grid
 - Basic telemetry analysis
 - MDI workspace system
 
+
+## 🔗 Special Features
+
+### Linkage System
+- **X-axis Synchronization**: Multiple telemetry charts display the same position
+- **Click Linkage**: Click on one chart, others follow automatically
+- **Master Toggle**: Global enable/disable for linkage functionality
+
+### Workspace Management
+- **Save Workspace**: Preserve current analysis configuration
+- **Load Workspace**: Quickly restore previous analysis environment
+- **Multi-tab Support**: Open multiple analysis perspectives simultaneously
+
+### MDI Window System
+- **Free Arrangement**: Drag and resize windows freely
+- **Cascade/Tile**: Quick window layout organization
+- **Pop-out Feature**: Display analysis windows independently
+
+### Enhanced Chart Interactions (NEW in V0.2.0)
+- **Draggable Tooltips**: Pin and drag tooltip boxes to any position
+- **Data Point Pinning**: Click to pin data points with persistent tooltips
+- **Connection Lines**: Dashed lines connecting tooltips to original data points
+- **Dual-driver Tooltip Separation**: Independent tooltips for each driver's data
+- **Draggable Legend**: Reposition chart legends for better visibility
+
+## 🌐 System Highlights
+
+- **Multi-language Support**: 中文 🇹🇼 / English 🇺🇸 / 日本語 🇯🇵
+- **API-ONLY Mode**: Data retrieval exclusively through REST API 
+- **Parameter Synchronization**: Sync year/race/session settings between main and sub-windows
+- **Modular Design**: Independent and extensible analysis modules
+- **Dynamic Import Architecture**: Optimized memory usage with on-demand module loading
+
+
 ## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
 
-### Development Guidelines
-- Follow the existing code structure
-- Update `hiddenimports` in `F1T_GUI.spec` for new dynamic imports
-- Test both Python and EXE environments
-- Update documentation for new features
 
 ## 📄 License
 
@@ -305,21 +319,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **GitHub**: [WarmBed/F1-TelemetryStation-Pro](https://github.com/WarmBed/F1-TelemetryStation-Pro)
 - **Issues**: [Report a Bug](https://github.com/WarmBed/F1-TelemetryStation-Pro/issues)
-- **Discussions**: [Join the Discussion](https://github.com/WarmBed/F1-TelemetryStation-Pro/discussions)
 
-## 📸 Screenshots
-
-### Throttle Line Chart (V0.2.0)
-*Per-lap throttle usage comparison with dual-driver support*
-
-### Throttle Box Plot (V0.2.0)
-*Statistical distribution of throttle usage across all drivers*
-
-### Detailed Lap Analysis
-*Comprehensive lap time analysis with box plot visualization*
-
-### Multi-window MDI Workspace
-*Flexible workspace with multiple analysis views*
 
 ---
 

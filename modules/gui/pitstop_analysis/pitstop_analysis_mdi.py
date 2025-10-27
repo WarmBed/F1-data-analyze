@@ -98,6 +98,21 @@ class PitstopAnalysisApiWorker(QThread):
             data = payload.get("data")
             if not isinstance(data, dict):
                 raise ValueError("API 回傳缺少 data 欄位")
+            
+            # 🔥 修復雙層嵌套問題：如果 data 包含 function_id 和內層 data，提取內層數據
+            if "function_id" in data and "data" in data:
+                print(f"[API_WORKER] 檢測到雙層嵌套結構 (function_id={data.get('function_id')})")
+                inner_data = data.get("data")
+                # 保留外層的 metadata 但使用內層的實際數據
+                data["_original_structure"] = "nested"
+                if isinstance(inner_data, dict):
+                    # 將內層數據提升到外層，保留其他元數據
+                    data.update(inner_data)
+                    print(f"[API_WORKER] 已提取內層數據，鍵值數量: {len(inner_data)}")
+                elif inner_data is None:
+                    print(f"[API_WORKER] ⚠️  內層 data 為 None，保留原始結構")
+                else:
+                    print(f"[API_WORKER] ⚠️  內層 data 類型異常: {type(inner_data)}")
 
             latency_ms = (time.perf_counter() - start_ts) * 1000.0
             meta = {
@@ -1160,28 +1175,71 @@ class PitstopDataManager(QObject):
         try:
             # 檢查基本結構
             if not isinstance(data, dict):
+                print(f"[ERROR] [VALIDATE] 數據不是字典格式: {type(data)}")
                 return False
             
+            # 🔥 檢查是否是錯誤響應
+            if 'detail' in data and 'success' not in data:
+                print(f"[ERROR] [VALIDATE] API 返回錯誤響應: {data.get('detail')}")
+                return False
+            
+            # 🔥 新的雙層嵌套處理：
+            # 如果 Worker 已經提升了內層數據，跳過二次提取
+            if data.get("_original_structure") == "nested":
+                print(f"[INFO] [VALIDATE] 檢測到已處理的雙層嵌套結構")
+                # 移除元數據標記，直接驗證車手記錄
+                records = {k: v for k, v in data.items() 
+                          if k not in ["function_id", "function_name", "analysis_type", 
+                                     "session_info", "timestamp", "file_info", 
+                                     "cache_info", "_original_structure"]}
+                print(f"[INFO] [VALIDATE] 過濾後的車手代碼: {list(records.keys())[:5]}")
             # 檢查新格式：{ "success": true, "data": {...} }
-            if data.get("success") is True and "data" in data:
+            elif data.get("success") is True and "data" in data:
                 records = data["data"]
                 print(f"[INFO] [VALIDATE] 檢測到新格式車手詳細數據")
+                
+                # 🔥 檢查是否是練習賽/排位賽無進站數據的情況
+                if records is None:
+                    file_info = data.get("file_info", {})
+                    file_name = file_info.get("file_name", "Unknown")
+                    print(f"[ERROR] [VALIDATE] ⚠️  數據為 null，可能是練習賽/排位賽無進站數據")
+                    print(f"[ERROR] [VALIDATE] 來源檔案: {file_name}")
+                    if "FP" in file_name or "Q" in file_name:
+                        print(f"[ERROR] [VALIDATE] 確認：練習賽/排位賽不支援進站分析")
+                    return False
+                    
             # 檢查舊格式：{ "function_id": 5, "data": {...} }
-            elif data.get("function_id") == 5:
+            elif data.get("function_id") == 5 and "data" in data:
                 records = data.get("data", {})
                 print(f"[INFO] [VALIDATE] 檢測到舊格式車手詳細數據")
+                
+                # 🔥 檢查舊格式的 null 數據
+                if records is None:
+                    print(f"[ERROR] [VALIDATE] ⚠️  數據為 null (舊格式)")
+                    return False
             else:
                 print(f"[ERROR] [VALIDATE] 車手詳細數據格式不匹配")
+                print(f"[DEBUG] data keys: {list(data.keys())}")
                 return False
+            
+            # 🔥 添加調試信息
+            print(f"[DEBUG] [VALIDATE] records type: {type(records)}")
+            if isinstance(records, dict):
+                print(f"[DEBUG] [VALIDATE] records keys (前5個): {list(records.keys())[:5]}")
             
             # 驗證 data 部分是否為物件（車手代碼為鍵值）
             if not records or not isinstance(records, dict):
-                print(f"[ERROR] [VALIDATE] 車手詳細數據不是物件格式")
+                print(f"[ERROR] [VALIDATE] 車手詳細數據不是物件格式，實際類型: {type(records)}")
+                if isinstance(records, list):
+                    print(f"[ERROR] [VALIDATE] 收到陣列格式（長度 {len(records)}），但期待物件格式")
+                elif records is None:
+                    print(f"[ERROR] [VALIDATE] 數據為 None - 請確認賽段是否為正賽 (Race)")
                 return False
                 
             # 驗證第一個車手記錄的欄位
             for driver, pitstops in records.items():
                 if not isinstance(pitstops, list) or not pitstops:
+                    print(f"[WARNING] [VALIDATE] 車手 {driver} 的進站數據格式錯誤或為空")
                     continue
                     
                 first_pitstop = pitstops[0]
@@ -1190,6 +1248,7 @@ class PitstopDataManager(QObject):
                 for field in required_fields:
                     if field not in first_pitstop:
                         print(f"[ERROR] [VALIDATE] 車手詳細數據缺少必要欄位: {field}")
+                        print(f"[DEBUG] [VALIDATE] 實際欄位: {list(first_pitstop.keys())}")
                         return False
                 
                 print(f"[OK] [VALIDATE] 車手詳細數據驗證通過，記錄數量：{len(records)}")
@@ -1199,6 +1258,8 @@ class PitstopDataManager(QObject):
             
         except Exception as e:
             print(f"[ERROR] [VALIDATE] 車手詳細數據驗證失敗: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def _generate_driver_detailed_via_cli(self, year: str, race: str, session: str) -> bool:

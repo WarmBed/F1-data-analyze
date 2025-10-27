@@ -12,8 +12,10 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-# 🔇 EXE 模式檢測：當打包為 EXE 時完全禁用日誌
+# � EXE 模式檢測：檢查環境變數決定是否啟用日誌
+# 當 F1T_EXE_SILENT_MODE=1 時才禁用日誌，否則正常記錄
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+FORCE_SILENT = os.getenv('F1T_EXE_SILENT_MODE') == '1'
 
 __all__ = [
     "setup_logging",
@@ -113,8 +115,8 @@ def setup_logging(
     """
     global _CONFIGURED, _ACTIVE_COMPONENT
 
-    # 🔇 EXE 模式：完全靜默，不記錄任何日誌
-    if IS_EXE_MODE:
+    # � EXE 模式：只有當 FORCE_SILENT=True 時才完全禁用日誌
+    if IS_EXE_MODE and FORCE_SILENT:
         with _CONFIG_LOCK:
             if not _CONFIGURED or force:
                 # 配置一個完全靜默的 NullHandler
@@ -144,6 +146,9 @@ def setup_logging(
                 # EXE 模式下不 patch print（保持原生行為）
                 # 這樣 print() 仍然可以輸出到終端（如果需要的話）
         return
+    
+    # 🔍 EXE 模式但未設置 FORCE_SILENT：正常記錄日誌到檔案
+    # 這樣可以在 EXE 出問題時查看 logs/ 目錄中的日誌檔案
 
     with _CONFIG_LOCK:
         if _CONFIGURED and not force:

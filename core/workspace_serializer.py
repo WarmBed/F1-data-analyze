@@ -650,8 +650,24 @@ class WorkspaceSerializer:
             print(f"[WORKSPACE] 📌 MDI 區域已由 create_tab_for_workspace() 追蹤")
             
             # 重建每個 MDI 視窗
-            for window_config in mdi_windows_config:
-                self._rebuild_mdi_window(mdi_area, window_config)
+            # ✅ 加入延遲避免 API 429 錯誤
+            import time
+            for window_index, window_config in enumerate(mdi_windows_config):
+                print(f"[WORKSPACE] 🔨 重建視窗 {window_index + 1}/{len(mdi_windows_config)}")
+                
+                # ✅ 在每個視窗之間加入延遲（避免 API 限流）
+                if window_index > 0:
+                    delay_ms = 500  # 500ms 延遲
+                    print(f"[WORKSPACE] ⏱️ 延遲 {delay_ms}ms 避免 API 限流...")
+                    time.sleep(delay_ms / 1000.0)
+                
+                try:
+                    self._rebuild_mdi_window(mdi_area, window_config)
+                except Exception as e:
+                    # ✅ 單個視窗失敗不影響其他視窗
+                    print(f"[WORKSPACE] ⚠️ 視窗重建失敗，繼續處理下一個: {e}")
+                    import traceback
+                    traceback.print_exc()
             
             return True
             

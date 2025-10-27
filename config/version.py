@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.5.0"
+APP_VERSION = "V0.6.0"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,14 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.6.0": {
+        "date": "2025-10-27",
+        "features": [
+            "版本號更新至 V0.6.0",
+            "持續優化系統穩定性",
+            "改進用戶介面體驗",
+        ]
+    },
     "V0.5.0": {
         "date": "2025-10-20",
         "features": [
@@ -64,7 +72,7 @@ FULL_VERSION_INFO = f"""
 {COPYRIGHT_TEXT}
 
 Current Version: {APP_VERSION}
-Release Date: {VERSION_HISTORY[APP_VERSION]['date']}
+Release Date: {VERSION_HISTORY.get(APP_VERSION, {}).get('date', 'Unknown')}
 """
 
 
