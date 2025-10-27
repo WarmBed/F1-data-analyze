@@ -252,6 +252,11 @@ class GuiTranslator:
             'update_progress_preparing': {'zh': '準備序列化更新分析模組...', 'en': 'Preparing to update analysis modules...', 'ja': '分析モジュールの更新を準備中...'},
             'update_progress_updating': {'zh': '正在更新', 'en': 'Updating', 'ja': '更新中'},
             'update_progress_no_windows': {'zh': '沒有需要更新的分析視窗', 'en': 'No analysis windows to update', 'ja': '更新する分析ウィンドウがありません'},
+            'update_progress_no_modules': {
+                'zh': '找不到符合條件的分析模組\n（已跳過 {0} 個不支援的模組）',
+                'en': 'No matching analysis modules found\n({0} unsupported modules skipped)',
+                'ja': '条件に一致する分析モジュールが見つかりません\n（{0}個の非対応モジュールをスキップ）'
+            },
             'update_progress_no_telemetry': {
                 'zh': '沒有需要更新的遙測分析視窗\n（已跳過 {0} 個非遙測模組）',
                 'en': 'No telemetry analysis windows to update\n({0} non-telemetry modules skipped)',
@@ -831,6 +836,43 @@ class GuiTranslator:
             'straight_speed_analysis': {'zh': '直線速度分析(實驗)', 'en': 'Straight Speed Analysis (Experimental)', 'ja': '直線速度分析(実験)'},
             'all_drivers_straight_speed': {'zh': '全車手速度與加速', 'en': 'All Drivers Speed & Acceleration', 'ja': '全ドライバー速度と加速'},
             'all_drivers_brake_performance': {'zh': '全車手煞車性能', 'en': 'All Drivers Brake Performance', 'ja': '全ドライバーブレーキ性能'},
+            
+            # Corner Performance Analysis 主項目與子模組 (F47)
+            'corner_performance_analysis': {'zh': '彎道速度分析', 'en': 'Corner Performance Analysis', 'ja': 'コーナー速度分析'},
+            'low_speed_corner_analysis': {'zh': '低速彎分析', 'en': 'Low-Speed Corner Analysis', 'ja': '低速コーナー分析'},
+            'mid_speed_corner_analysis': {'zh': '中速彎分析', 'en': 'Mid-Speed Corner Analysis', 'ja': '中速コーナー分析'},
+            'high_speed_corner_analysis': {'zh': '高速彎分析', 'en': 'High-Speed Corner Analysis', 'ja': '高速コーナー分析'},
+            'low_speed_corner': {'zh': '低速彎', 'en': 'Low-Speed Corner', 'ja': '低速コーナー'},
+            'mid_speed_corner': {'zh': '中速彎', 'en': 'Mid-Speed Corner', 'ja': '中速コーナー'},
+            'high_speed_corner': {'zh': '高速彎', 'en': 'High-Speed Corner', 'ja': '高速コーナー'},
+            'corner_type': {'zh': '彎道類型', 'en': 'Corner Type', 'ja': 'コーナータイプ'},
+            'corner_performance': {'zh': '彎道性能', 'en': 'Corner Performance', 'ja': 'コーナーパフォーマンス'},
+            'corner_missing_params': {'zh': '缺少必要參數', 'en': 'Missing required parameters', 'ja': '必須パラメータが不足しています'},
+            'corner_data_loaded': {'zh': '彎道性能數據載入完成', 'en': 'Corner performance data loaded', 'ja': 'コーナーパフォーマンスデータ読み込み完了'},
+            
+            # Corner Performance Scatter Widget 圖表標籤
+            'apex_speed_kmh': {'zh': '彎中心速度 (km/h)', 'en': 'Apex Speed (km/h)', 'ja': 'コーナー頂点速度 (km/h)'},
+            'entry_speed_50m': {'zh': '進彎速度 (-50m) [km/h]', 'en': 'Entry Speed (-50m) [km/h]', 'ja': '進入速度 (-50m) [km/h]'},
+            'exit_speed_50m': {'zh': '出彎速度 (+50m) [km/h]', 'en': 'Exit Speed (+50m) [km/h]', 'ja': '出口速度 (+50m) [km/h]'},
+            'no_corner_data': {'zh': '該彎道無數據', 'en': 'No data for this corner', 'ja': 'このコーナーのデータがありません'},
+            'entry_label': {'zh': '進彎', 'en': 'Entry', 'ja': '進入'},
+            'apex_label': {'zh': '彎心', 'en': 'Apex', 'ja': '頂点'},
+            'exit_label': {'zh': '出彎', 'en': 'Exit', 'ja': '出口'},
+            'save_chart': {'zh': '儲存圖表', 'en': 'Save Chart', 'ja': 'チャート保存'},
+            'chart_exported_to': {'zh': '圖表已匯出至', 'en': 'Chart exported to', 'ja': 'チャートをエクスポートしました'},
+            
+            # Corner Performance Loader 載入器訊息
+            'corner_perf_load_param_validation_failed': {'zh': '載入參數驗證失敗', 'en': 'Load parameter validation failed', 'ja': 'ロードパラメータの検証に失敗しました'},
+            'corner_perf_load_param_invalid': {'zh': '載入參數不正確', 'en': 'Invalid load parameters', 'ja': 'ロードパラメータが無効です'},
+            'corner_perf_no_local_file': {'zh': '找不到本地彎道性能檔案，準備透過 API 取得最新資料', 'en': 'Local corner performance file not found, fetching latest data via API', 'ja': 'ローカルのコーナーパフォーマンスファイルが見つかりません、API経由で最新データを取得します'},
+            'corner_perf_invalid_data_format': {'zh': '數據格式不正確', 'en': 'Invalid data format', 'ja': 'データ形式が無効です'},
+            'corner_perf_load_success': {'zh': '彎道性能數據載入完成', 'en': 'Corner performance data loaded successfully', 'ja': 'コーナーパフォーマンスデータの読み込みが完了しました'},
+            'corner_perf_fetching_api': {'zh': '正在從 API 獲取彎道性能數據...', 'en': 'Fetching corner performance data from API...', 'ja': 'APIからコーナーパフォーマンスデータを取得しています...'},
+            
+            # 通用錯誤訊息
+            'data_empty': {'zh': '資料為空', 'en': 'Data is empty', 'ja': 'データが空です'},
+            'data_processing_error': {'zh': '資料處理錯誤', 'en': 'Data processing error', 'ja': 'データ処理エラー'},
+            'load_error': {'zh': '載入錯誤', 'en': 'Load Error', 'ja': '読み込みエラー'},
             
             # 通用項目
             'coming_soon': {'zh': '即將推出...', 'en': 'Coming Soon...', 'ja': '近日公開...'},

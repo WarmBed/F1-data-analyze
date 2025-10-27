@@ -5,13 +5,107 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Any, Dict, List, Optional
 
 import requests
+from PyQt5.QtCore import QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
+
+
+class BrakePerformanceApiWorker(QThread):
+    """
+    全車手煞車性能 API 請求工作執行緒
+    
+    ✅ 修復 GUI 阻塞問題：使用 QThread 在背景執行緒執行 API 請求
+    參考實現：IdealLapRankingApiWorker
+    """
+    
+    # 信號
+    progress = pyqtSignal(int)  # 進度 (0-100)
+    success = pyqtSignal(dict)  # 成功 (返回數據)
+    failure = pyqtSignal(str)   # 失敗 (錯誤訊息)
+    
+    def __init__(self, params: Dict[str, Any], base_url: str, timeout: float = 45.0):
+        """
+        初始化 API Worker
+        
+        Args:
+            params: API 參數 (function_id, year, race, session)
+            base_url: API 基礎 URL
+            timeout: 請求超時時間（秒）
+        """
+        super().__init__()
+        self.params = dict(params)
+        self.base_url = base_url.rstrip('/')
+        self.timeout = timeout
+    
+    def run(self):
+        """✅ 在背景執行緒執行 API 請求"""
+        try:
+            self.progress.emit(20)
+            
+            # 構建 API 端點
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            
+            print(f"[BRAKE_API_WORKER] 🌐 調用 API: {endpoint}")
+            print(f"[BRAKE_API_WORKER] 📋 參數: {self.params}")
+            
+            # ✅ 在背景執行緒發送 POST 請求（不阻塞主 GUI）
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=self.params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(70)
+            
+            # 檢查 HTTP 狀態
+            response.raise_for_status()
+            
+            # 解析 JSON 回應
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API 回應必須是 JSON 物件")
+            
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API 返回 success=False"))
+            
+            # 計算延遲
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            
+            # 構建元數據
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "function_spec": payload.get("function_spec"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+            }
+            
+            print(f"[BRAKE_API_WORKER] ✅ API 調用成功")
+            print(f"[BRAKE_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            print(f"[BRAKE_API_WORKER] 📊 數據源: {meta['source']}")
+            
+            self.progress.emit(90)
+            # ✅ 通過信號將結果返回主線程
+            self.success.emit({"payload": payload, "meta": meta})
+            
+        except Exception as exc:
+            error_msg = f"API 請求失敗: {str(exc)}"
+            print(f"[BRAKE_API_WORKER] ❌ {error_msg}")
+            import traceback
+            traceback.print_exc()
+            # ✅ 通過信號發送錯誤訊息
+            self.failure.emit(error_msg)
+        finally:
+            self.progress.emit(100)
 
 
 class BrakePerformanceDataLoader(UniversalDataLoader):
@@ -36,6 +130,7 @@ class BrakePerformanceDataLoader(UniversalDataLoader):
         self._api_base_url = self._determine_api_base_url()
         self._api_timeout = 45.0
         self._last_api_payload: Optional[Dict[str, Any]] = None
+        self._api_worker: Optional[BrakePerformanceApiWorker] = None  # ✅ API Worker 實例
 
     # ------------------------------------------------------------------
     # Public API
@@ -52,41 +147,9 @@ class BrakePerformanceDataLoader(UniversalDataLoader):
         existing = self._find_data_file(**kwargs)
         if not existing:
             self._debug(tr("brake_perf_no_local_file", "找不到本地煞車性能檔案，準備透過 API 取得最新資料"))
-            # ✅ 方案 2：API 調用成功後直接處理數據，不依賴檔案系統
-            api_result = self._fetch_via_api_and_cache(**kwargs)
-            if api_result:
-                self._debug(f"✅ API 調用成功，檔案已儲存至: {api_result}")
-            
-            # ✅ 如果 API 成功返回數據，直接處理 payload
-            if self._last_api_payload:
-                self._debug("✅ 使用 API 返回的數據（不依賴檔案系統）")
-                try:
-                    # 驗證數據格式
-                    if not self._validate_data_format(self._last_api_payload):
-                        self._error("API 返回的數據格式驗證失敗")
-                        self.load_error.emit(tr("brake_perf_invalid_data_format", "數據格式不正確"))
-                        return False
-                    
-                    # 處理數據
-                    processed_data = self._process_data(self._last_api_payload)
-                    self._current_data = processed_data
-                    
-                    # 發送成功信號
-                    self.load_progress.emit(100)
-                    self.status_changed.emit(tr("brake_perf_load_success", "煞車性能數據載入完成"))
-                    self.data_loaded.emit(processed_data)
-                    
-                    self._debug("✅ API 數據處理完成，已發送 data_loaded 信號")
-                    return True
-                    
-                except Exception as e:
-                    self._error(f"處理 API 數據時發生錯誤: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    self.load_error.emit(f"數據處理失敗: {str(e)}")
-                    return False
-            else:
-                self._debug("⚠️ API 調用失敗，嘗試回退到基類方法")
+            # ✅ 修復：使用異步 API Worker（不阻塞主 GUI）
+            self._fetch_via_api_async(**kwargs)
+            return True  # 立即返回，不阻塞
 
         return super().load_data(**kwargs)
 
@@ -222,6 +285,103 @@ class BrakePerformanceDataLoader(UniversalDataLoader):
             "raw_payload": raw_data,
         }
         return processed
+
+    # ------------------------------------------------------------------
+    # Async API Methods (✅ 修復 GUI 阻塞)
+    # ------------------------------------------------------------------
+
+    def _fetch_via_api_async(self, **kwargs):
+        """
+        ✅ 異步 API 請求（不阻塞主 GUI）
+        
+        使用 BrakePerformanceApiWorker 在背景執行緒執行 API 請求
+        """
+        try:
+            year = int(kwargs["year"])
+            race = str(kwargs["race"])
+            session = str(kwargs["session"])
+        except (KeyError, TypeError, ValueError) as exc:
+            self._error(tr("brake_perf_api_missing_params", "缺少必要參數，無法呼叫 API: {error}").format(error=str(exc)))
+            self.load_error.emit(tr("brake_perf_load_missing_params", "缺少必要參數，無法載入煞車性能分析"))
+            return
+
+        params = {
+            "function_id": 34,
+            "year": year,
+            "race": race,
+            "session": session,
+        }
+        if kwargs.get("force_refresh"):
+            params["force_refresh"] = True
+
+        self.status_changed.emit(tr("brake_perf_loading_via_api", "透過 API 載入全部車手煞車性能資料..."))
+        self.load_progress.emit(10)
+
+        # ✅ 創建並啟動 API Worker
+        self._api_worker = BrakePerformanceApiWorker(
+            params,
+            self._api_base_url,
+            self._api_timeout
+        )
+
+        # ✅ 連接信號
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_failure)
+        self._api_worker.progress.connect(self.load_progress.emit)
+
+        # ✅ 啟動背景執行緒（主 GUI 不阻塞）
+        self._api_worker.start()
+        self._debug("✅ API Worker 已啟動，主 GUI 保持響應")
+
+    def _on_api_success(self, result: dict):
+        """
+        ✅ API 成功回調（在主線程執行）
+        
+        Args:
+            result: {"payload": API回應, "meta": 元數據}
+        """
+        payload = result.get("payload")
+        meta = result.get("meta", {})
+        
+        self._debug(f"✅ API 調用成功，延遲: {meta.get('latency_ms')}ms")
+        self._last_api_payload = payload
+
+        try:
+            # 驗證數據格式
+            if not self._validate_data_format(payload):
+                self._error("API 返回的數據格式驗證失敗")
+                self.load_error.emit(tr("brake_perf_invalid_data_format", "數據格式不正確"))
+                return
+
+            # 處理數據
+            processed_data = self._process_data(payload)
+            self._current_data = processed_data
+
+            # 發送成功信號
+            self.load_progress.emit(100)
+            self.status_changed.emit(tr("brake_perf_load_success", "煞車性能數據載入完成"))
+            self.data_loaded.emit(processed_data)
+
+            self._debug("✅ API 數據處理完成，已發送 data_loaded 信號")
+
+        except Exception as e:
+            self._error(f"處理 API 數據時發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+            self.load_error.emit(f"數據處理失敗: {str(e)}")
+
+    def _on_api_failure(self, error_msg: str):
+        """
+        ✅ API 失敗回調（在主線程執行）
+        
+        Args:
+            error_msg: 錯誤訊息
+        """
+        self._error(f"API 請求失敗: {error_msg}")
+        self.load_progress.emit(0)
+        self.status_changed.emit("API 請求失敗")
+        # ⚠️ 不發送 load_error 信號，避免彈窗（API 失敗是正常情況）
+        self._debug("💡 提示: API 暫時不可用，請稍後重試或檢查網絡連接")
 
     # ------------------------------------------------------------------
     # Helpers

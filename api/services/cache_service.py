@@ -75,6 +75,7 @@ class F1AnalysisCacheService:
             "14.4": ["driver_fastest_lap_ranking", "fastest_lap_report"],
             "14.9": ["all_drivers_comprehensive", "driver_comprehensive_full"],
             "34": ["brake_performance", "all_drivers_brake_performance"],  # ✅ Function 34 - 全部車手煞車性能
+            "47": ["all_drivers_cornering_analysis", "corner_performance", "cornering"],  # ✅ Function 47 - 全車手彎道性能分析
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
@@ -103,8 +104,8 @@ class F1AnalysisCacheService:
             "azerbaijan": ["azerbaijan", "azerbaijani", "azerbaijan_grand_prix", "baku"],
             "singapore": ["singapore", "singapore_grand_prix"],
             "united_states": ["united_states", "us", "american", "austin", "cota"],
-            "mexico": ["mexico", "mexican", "mexican_grand_prix"],
-            "brazil": ["brazil", "brazilian", "brazilian_grand_prix", "interlagos"],
+            "mexico": ["mexico", "mexican", "mexican_grand_prix", "mexico city"],
+            "brazil": ["brazil", "brazilian", "brazilian_grand_prix", "interlagos", "são paulo", "sao paulo"],
             "qatar": ["qatar", "qatari", "qatar_grand_prix"],
             "abu_dhabi": ["abu_dhabi", "uae", "abu_dhabi_grand_prix"],
             "las_vegas": ["las_vegas", "vegas", "las_vegas_grand_prix"],

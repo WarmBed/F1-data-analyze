@@ -357,6 +357,15 @@ _make_spec(
         notes="Provides brake zone analysis data for GUI brake performance widgets. Calculates deceleration from hardcoded brake endpoints to earliest Brake=1 point.",
     ),
     _make_spec(
+        "47",
+        name="All Drivers Corner Performance Analysis",
+        description="Analyzes cornering performance for all drivers across selected corners (low/mid/high-speed). Provides entry speed, apex speed, exit speed metrics with corner classification.",
+        required_params=["year", "race", "session"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s"},
+        cache_patterns=["all_drivers_cornering_analysis", "corner_performance", "cornering"],
+        notes="CLI function -f 47. Outputs all_drivers_cornering_analysis_{year}_{race}_{session}.json with fastest_lap_analysis and selected_corners data for low/mid/high-speed corner visualizations.",
+    ),
+    _make_spec(
         "48",
         name="All Drivers Straight-Line Speed",
         description="Calculates the maximum straight-line speed achieved by every driver in the session.",

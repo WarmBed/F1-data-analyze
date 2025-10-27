@@ -7834,6 +7834,7 @@ class StyleHMainWindow(QMainWindow):
             'track_analysis',  # 賽道分析
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
         }
         
         # 獲取當前設置
@@ -7936,6 +7937,8 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_ranking', 'ideal_lap_sector_comparison', 'ideal_lap_sector_heatmap',
             'laptime_boxplot', 'throttle_boxplot', 'track_analysis',
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'corner_performance',               # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
         }
 
         def _attempt_module_update(module, attempts):
@@ -8415,6 +8418,7 @@ class StyleHMainWindow(QMainWindow):
             'track_analysis',  # 賽道分析
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
         }
         
         analysis_windows = []
@@ -8773,6 +8777,13 @@ class StyleHMainWindow(QMainWindow):
         straight_speed.setExpanded(False)
         QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_straight_speed", "All Drivers Speed & Acceleration")])  # ✅ 已啟用
         QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_brake_performance", "All Drivers Brake Performance")])  # ✅ F34 煞車性能分析
+        
+        # Corner Performance Analysis - 全車手彎道速度分析 ⭐ F47 新增
+        corner_performance = QTreeWidgetItem(driver_performance_group, [tr("corner_performance_analysis", "Corner Performance Analysis")])
+        corner_performance.setExpanded(False)
+        QTreeWidgetItem(corner_performance, ["    " + tr("low_speed_corner_analysis", "Low-Speed Corner Analysis")])  # ✅ F47 低速彎
+        QTreeWidgetItem(corner_performance, ["    " + tr("mid_speed_corner_analysis", "Mid-Speed Corner Analysis")])  # ✅ F47 中速彎
+        QTreeWidgetItem(corner_performance, ["    " + tr("high_speed_corner_analysis", "High-Speed Corner Analysis")])  # ✅ F47 高速彎
         
         # ========== Multi-Season Analysis ==========
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
@@ -12336,6 +12347,23 @@ class StyleHMainWindow(QMainWindow):
                     "全車手煞車分析",
                     "All Drivers Brake Performance",
                 ],
+                "corner_performance": [  # ⭐ F47 彎道性能分析（統一 analysis_type）
+                    ("low_speed_corner_analysis", "Low-Speed Corner Analysis"),
+                    ("mid_speed_corner_analysis", "Mid-Speed Corner Analysis"),
+                    ("high_speed_corner_analysis", "High-Speed Corner Analysis"),
+                    ("corner_low_speed", "Corner Low Speed"),
+                    ("corner_mid_speed", "Corner Mid Speed"),
+                    ("corner_high_speed", "Corner High Speed"),
+                    "低速彎分析",
+                    "中速彎分析",
+                    "高速彎分析",
+                    "Low-Speed Corner Analysis",
+                    "Mid-Speed Corner Analysis",
+                    "High-Speed Corner Analysis",
+                    "低速コーナー分析",
+                    "中速コーナー分析",
+                    "高速コーナー分析",
+                ],
             }
 
             # 🔥🔥🔥 調試點：字典定義完成
@@ -13131,6 +13159,57 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理彎道性能分析模組 (F47) - 統一處理所有類型
+                elif module_type == "corner_performance":
+                    try:
+                        # 🔑 根據 matched_keyword 判斷彎道類型
+                        corner_type = "low_speed"  # 預設
+                        if matched_keyword:
+                            keyword_lower = matched_keyword.lower()
+                            if "mid" in keyword_lower or "中速" in keyword_lower:
+                                corner_type = "mid_speed"
+                            elif "high" in keyword_lower or "高速" in keyword_lower:
+                                corner_type = "high_speed"
+                            # 其他情況保持 low_speed
+                        
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建彎道性能分析模組 (corner_type={corner_type})...")
+                        from modules.gui.all_drivers_corner_performance_analysis.all_drivers_corner_performance_mdi import (
+                            AllDriversCornerPerformanceMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 彎道性能分析 MDI 導入成功")
+                        
+                        # 創建 MDI 實例（傳遞彎道類型）
+                        module = AllDriversCornerPerformanceMDI(parent=self, corner_type=corner_type)
+                        print(f"✅ [MODULE_FACTORY] 彎道性能分析 MDI 實例創建成功 (corner_type={corner_type})")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 彎道性能分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 彎道性能分析模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

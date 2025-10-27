@@ -23,7 +23,9 @@ JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 # 🔄 Standings 刷新策略：智能加速機制
 STANDINGS_REFRESH_HOURS_NORMAL = 120  # 5 天 (正常模式：賽程間期)
 STANDINGS_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時 (臨近模式：賽前 2 天)
+STANDINGS_REFRESH_HOURS_POST_RACE = 6  # 6 小時 (賽後模式：賽後 24 小時內)
 RACE_APPROACHING_THRESHOLD_DAYS = 2  # 賽前 2 天啟動加速刷新
+POST_RACE_MONITORING_HOURS = 24  # 賽後持續監控 24 小時
 
 DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")  # ✅ 新增：覆寫配置路徑
 
@@ -140,11 +142,12 @@ def _format_timedelta(delta: timedelta) -> str:
 
 def _determine_standings_refresh_interval(year: int) -> float:
     """
-    判斷積分榜刷新間隔：根據是否有賽事臨近決定刷新頻率
+    判斷積分榜刷新間隔：根據賽事狀態決定刷新頻率
     
     策略：
     - 正常模式：120 小時（5 天）- 賽程間期穩定時段
-    - 加速模式：12 小時 - 賽前 2 天內，頻繁檢查積分更新
+    - 賽前加速模式：12 小時 - 賽前 2 天內，頻繁檢查積分更新
+    - 賽後加速模式：6 小時 - 賽後 24 小時內，密集監控積分變化（處罰、修正等）
     
     Args:
         year: 賽季年份
@@ -183,36 +186,64 @@ def _determine_standings_refresh_interval(year: int) -> float:
         if not year_events:
             return STANDINGS_REFRESH_HOURS_NORMAL
         
-        # 找到未完成的賽事
         now = datetime.now(timezone.utc)
+        
+        # 分離已完成和未完成的賽事
+        completed_events = [e for e in year_events if e.get("is_completed", False)]
         upcoming_events = [e for e in year_events if not e.get("is_completed", False)]
         
-        if not upcoming_events:
-            # 賽季已結束，使用正常模式
-            return STANDINGS_REFRESH_HOURS_NORMAL
-        
-        # 檢查最近的賽事是否在臨近閾值內
-        for event in upcoming_events[:3]:  # 只檢查最近 3 場賽事
-            race_date_str = event.get("race_date")
+        # 🔥 優先檢查：賽後 24 小時內的加速模式（最高優先級）
+        if completed_events:
+            # 獲取最近完成的賽事
+            latest_completed = completed_events[-1]
+            race_date_str = latest_completed.get("race_date")
+            
             if race_date_str:
                 try:
-                    # 解析賽事日期（格式: "2025-10-26"）
                     race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
-                    days_until_race = (race_date - now).days
+                    hours_since_race = (now - race_date).total_seconds() / 3600
                     
-                    # 🚨 賽前 2 天內或賽後 1 天內，啟用加速模式
-                    if -1 <= days_until_race <= RACE_APPROACHING_THRESHOLD_DAYS:
-                        race_name = event.get("event_name", "Unknown")
-                        print(f"[STANDINGS] 🏁 賽事臨近！{race_name} 在 {days_until_race} 天{'後' if days_until_race >= 0 else '前'}，啟用加速刷新模式（12 小時）")
-                        return STANDINGS_REFRESH_HOURS_RACE_APPROACHING
+                    # 🏁 賽後 24 小時內，啟用賽後加速模式（6 小時刷新）
+                    if 0 <= hours_since_race <= POST_RACE_MONITORING_HOURS:
+                        race_name = latest_completed.get("event_name", "Unknown")
+                        remaining_hours = POST_RACE_MONITORING_HOURS - hours_since_race
+                        print(f"[STANDINGS] 🏁 賽後監控期！{race_name} 結束後 {hours_since_race:.1f} 小時")
+                        print(f"[STANDINGS] 🔥 啟用賽後加速模式（6 小時刷新），剩餘監控時間 {remaining_hours:.1f} 小時")
+                        return STANDINGS_REFRESH_HOURS_POST_RACE
                 except ValueError:
-                    continue
+                    pass
         
-        # 沒有臨近賽事，使用正常模式
+        # 🚨 次要檢查：賽前 2 天內的加速模式
+        if upcoming_events:
+            for event in upcoming_events[:3]:  # 只檢查最近 3 場賽事
+                race_date_str = event.get("race_date")
+                if race_date_str:
+                    try:
+                        # 解析賽事日期（格式: "2025-10-26"）
+                        race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        days_until_race = (race_date - now).days
+                        
+                        # 🏎️ 賽前 2 天內，啟用賽前加速模式
+                        if 0 <= days_until_race <= RACE_APPROACHING_THRESHOLD_DAYS:
+                            race_name = event.get("event_name", "Unknown")
+                            print(f"[STANDINGS] �️ 賽事臨近！{race_name} 在 {days_until_race} 天後")
+                            print(f"[STANDINGS] ⚡ 啟用賽前加速模式（12 小時刷新）")
+                            return STANDINGS_REFRESH_HOURS_RACE_APPROACHING
+                    except ValueError:
+                        continue
+        
+        # ✅ 正常模式：賽程間期
+        if not upcoming_events:
+            print(f"[STANDINGS] ✅ 賽季已結束，使用正常模式（120 小時）")
+        else:
+            print(f"[STANDINGS] ✅ 無特殊事件，使用正常模式（120 小時）")
+        
         return STANDINGS_REFRESH_HOURS_NORMAL
         
     except Exception as e:
-        print(f"[STANDINGS] 判斷刷新間隔時出錯: {e}，降級使用正常模式")
+        print(f"[STANDINGS] ❌ 判斷刷新間隔時出錯: {e}，降級使用正常模式")
+        import traceback
+        traceback.print_exc()
         return STANDINGS_REFRESH_HOURS_NORMAL
 
 

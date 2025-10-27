@@ -89,7 +89,7 @@ class WeatherTimelineDataLoader(UniversalDataLoader):
         Validate data format
         
         Args:
-            raw_data: Raw JSON data
+            raw_data: Raw JSON data (支援 API 回應格式與直接格式)
             
         Returns:
             True if valid, False otherwise
@@ -99,6 +99,11 @@ class WeatherTimelineDataLoader(UniversalDataLoader):
             if not isinstance(raw_data, dict):
                 self._debug("[VALIDATE] ❌ Data is not a dictionary")
                 return False
+            
+            # 檢查是否為 API 回應格式（有 data 包裝層）
+            if "data" in raw_data and isinstance(raw_data["data"], dict):
+                self._debug("[VALIDATE] 📦 檢測到 API 回應格式，解包 data 層")
+                raw_data = raw_data["data"]
             
             # Must have forecast data
             if "forecast" not in raw_data:
@@ -161,13 +166,18 @@ class WeatherTimelineDataLoader(UniversalDataLoader):
         Transform raw data for display in widget
         
         Args:
-            raw_data: Validated raw JSON data
+            raw_data: Validated raw JSON data (支援 API 回應格式與直接格式)
             
         Returns:
             Transformed data dictionary optimized for WeatherTimelineWidget
         """
         try:
             self._debug("[TRANSFORM] Starting data transformation")
+            
+            # 檢查是否為 API 回應格式（有 data 包裝層）
+            if "data" in raw_data and isinstance(raw_data["data"], dict):
+                self._debug("[TRANSFORM] 📦 檢測到 API 回應格式，解包 data 層")
+                raw_data = raw_data["data"]
             
             # Extract forecast days
             forecast_days = raw_data.get("forecast", {}).get("days", [])
@@ -215,22 +225,35 @@ class WeatherTimelineDataLoader(UniversalDataLoader):
         year = kwargs.get("year", self.year)
         event = kwargs.get("event", self.event)
         
-        # Normalize event name for filename matching
-        event_normalized = event.lower().replace(" ", "_")
-        
-        # Search pattern: race_weather_forecast_{year}_{event}_*.json
+        # JSON directory
         json_dir = Path("json/weather")
         if not json_dir.exists():
             self._debug(f"[SEARCH] ⚠️ JSON directory does not exist: {json_dir}")
             return []
         
-        pattern = f"race_weather_forecast_{year}_*{event_normalized}*.json"
-        matches = list(json_dir.glob(pattern))
+        # 修正：檔案名稱可能包含空格（如 "São Paulo"）或底線（如 "sao_paulo"）
+        # 使用 glob 的模糊匹配來支援兩種格式
+        # Pattern 1: 完全匹配（支援空格）
+        pattern1 = f"race_weather_forecast_{year}_{event}_*.json"
+        matches = list(json_dir.glob(pattern1))
+        
+        # Pattern 2: 底線格式（向後兼容）
+        event_normalized = event.lower().replace(" ", "_")
+        pattern2 = f"race_weather_forecast_{year}_{event_normalized}_*.json"
+        matches.extend(json_dir.glob(pattern2))
+        
+        # Pattern 3: 萬用字元匹配（event 名稱的部分匹配）
+        # 例如: "Brazil" 可匹配 "São Paulo" 或 "Sao Paulo"
+        pattern3 = f"race_weather_forecast_{year}_*{event}*.json"
+        matches.extend(json_dir.glob(pattern3))
+        
+        # 去重
+        matches = list(set(matches))
         
         # Sort by modification time (newest first)
         matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
         
-        self._debug(f"[SEARCH] Found {len(matches)} JSON files matching pattern: {pattern}")
+        self._debug(f"[SEARCH] Found {len(matches)} JSON files (patterns: {pattern1}, {pattern2}, {pattern3})")
         return matches
     
     def _generate_data_via_cli(self, **kwargs) -> bool:

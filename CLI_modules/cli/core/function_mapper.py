@@ -2782,8 +2782,46 @@ class F1AnalysisFunctionMapper:
         return {"success": True, "message": "全部車手分段分析功能開發中", "function_id": "40"}
     
     def _execute_all_drivers_cornering_analysis(self, **kwargs):
-        """全部車手彎道分析"""
-        return {"success": True, "message": "全部車手彎道分析功能開發中", "function_id": "41"}
+        """Function 47: 全車手彎道速度分析（多彎道模式）"""
+        try:
+            from CLI_modules.cli.analyzer.all_drivers_cornering_analysis import (
+                run_all_drivers_cornering_analysis
+            )
+            
+            print("[START] 開始執行全車手彎道速度分析 (Function 47)")
+            
+            # 檢查數據是否已載入
+            if not self._check_data_loaded(47):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料",
+                    "function_id": "47"
+                }
+            
+            # 執行分析
+            result = run_all_drivers_cornering_analysis(
+                data_loader=self.data_loader,
+                year=getattr(self.data_loader, 'year', None),
+                race=getattr(self.data_loader, 'race_name', None),
+                session=getattr(self.data_loader, 'session_type', None),
+                show_detailed_output=kwargs.get('show_detailed_output', True)
+            )
+            
+            # 導出 JSON
+            if result and result.get("success"):
+                self._export_to_json(result, 47, "all_drivers_cornering_analysis")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] 全車手彎道速度分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"分析失敗: {str(e)}",
+                "function_id": "47"
+            }
     
     def _execute_all_drivers_straight_line_speed(self, **kwargs):
         """全部車手直線速度分析"""
