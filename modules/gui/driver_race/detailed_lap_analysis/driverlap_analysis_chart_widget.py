@@ -1045,6 +1045,7 @@ class driverLapAnalysisChartWidget(QWidget):
         self.settings_manager = gui_settings_manager
         self.filter_pit_laps = True
         self.filter_yellow_flags = True
+        self.filter_first_laps = True
         self._apply_boxplot_settings(self.settings_manager.get_boxplot_settings())
         self.settings_manager.boxplot_settings_changed.connect(self._on_boxplot_settings_changed)
         
@@ -1167,6 +1168,7 @@ class driverLapAnalysisChartWidget(QWidget):
                 data_points = []
                 filtered_pit = 0
                 filtered_caution = 0
+                filtered_first_laps = 0
 
                 for lap_info in lap_data:
                     lap_num_raw = lap_info.get('lap_number', 0)
@@ -1176,6 +1178,11 @@ class driverLapAnalysisChartWidget(QWidget):
 
                     # 檢查數值有效性：不為 None 且大於 0
                     if lap_time_sec is None or lap_time_sec <= 0:
+                        continue
+
+                    # 過濾前兩圈 (Lap 1 & 2)
+                    if self.filter_first_laps and lap_num_raw in (1, 2):
+                        filtered_first_laps += 1
                         continue
 
                     if self.filter_yellow_flags and lap_is_under_caution(
@@ -1286,17 +1293,20 @@ class driverLapAnalysisChartWidget(QWidget):
     def _apply_boxplot_settings(self, settings: Dict[str, Any]) -> None:
         self.filter_pit_laps = settings.get('filter_pit_laps', True)
         self.filter_yellow_flags = settings.get('filter_yellow_flags', True)
+        self.filter_first_laps = settings.get('filter_first_laps', True)
 
     def _on_boxplot_settings_changed(self, settings: Dict[str, Any]) -> None:
         previous_filter = (
             self.filter_pit_laps,
             self.filter_yellow_flags,
+            self.filter_first_laps,
         )
         self._apply_boxplot_settings(settings)
 
         current_filter = (
             self.filter_pit_laps,
             self.filter_yellow_flags,
+            self.filter_first_laps,
         )
 
         if previous_filter != current_filter and self.chart_data:

@@ -584,6 +584,7 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
             filter_pit_laps=self._global_filter_settings.get("filter_pit_laps", True),
             filter_yellow_flags=self._global_filter_settings.get("filter_yellow_flags", True),
             filter_red_flags=self._global_filter_settings.get("filter_red_flags", True),
+            filter_first_laps=self._global_filter_settings.get("filter_first_laps", True),
             reprocess=False,
         )
         return loader
@@ -931,9 +932,10 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
             "filter_pit_laps": settings.get("filter_pit_laps", True),
             "filter_yellow_flags": settings.get("filter_yellow_flags", True),
             "filter_red_flags": settings.get("filter_red_flags", True),
+            "filter_first_laps": settings.get("filter_first_laps", True),
         })
         
-        print(f"🌐🌐🌐 [Global Settings Updated] New state: pit={self._global_filter_settings.get('filter_pit_laps')}, yellow={self._global_filter_settings.get('filter_yellow_flags')}, red={self._global_filter_settings.get('filter_red_flags')}")
+        print(f"🌐🌐🌐 [Global Settings Updated] New state: pit={self._global_filter_settings.get('filter_pit_laps')}, yellow={self._global_filter_settings.get('filter_yellow_flags')}, red={self._global_filter_settings.get('filter_red_flags')}, first_laps={self._global_filter_settings.get('filter_first_laps')}")
         
         # ✅ 修復：更新 Driver 1 的過濾設定
         if isinstance(self.data_manager, ThrottleLineChartDataLoader):
@@ -942,6 +944,7 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
                 filter_pit_laps=self._global_filter_settings["filter_pit_laps"],
                 filter_yellow_flags=self._global_filter_settings["filter_yellow_flags"],
                 filter_red_flags=self._global_filter_settings["filter_red_flags"],
+                filter_first_laps=self._global_filter_settings["filter_first_laps"],
                 reprocess=True,
             )
             print(f"✅✅✅ [_on_global_filter_settings_changed] Driver 1 updated")

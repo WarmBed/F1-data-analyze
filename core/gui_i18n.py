@@ -294,6 +294,11 @@ class GuiTranslator:
                 'en': 'Filter red flag laps',
                 'ja': 'レッドフラッグ周回を除外'
             },
+            'boxplot_filter_first_laps': {
+                'zh': '過濾前兩圈 (Lap 1 & 2)',
+                'en': 'Filter first 2 laps (Lap 1 & 2)',
+                'ja': '最初の2周を除外 (Lap 1 & 2)'
+            },
             'boxplot_outlier_threshold': {'zh': '異常值閾值', 'en': 'Outlier threshold', 'ja': '外れ値の閾値'},
             'boxplot_outlier_threshold_hint': {
                 'zh': '設定用於異常值判定的 IQR 倍數',
@@ -836,6 +841,22 @@ class GuiTranslator:
             'straight_speed_analysis': {'zh': '直線速度分析(實驗)', 'en': 'Straight Speed Analysis (Experimental)', 'ja': '直線速度分析(実験)'},
             'all_drivers_straight_speed': {'zh': '全車手速度與加速', 'en': 'All Drivers Speed & Acceleration', 'ja': '全ドライバー速度と加速'},
             'all_drivers_brake_performance': {'zh': '全車手煞車性能', 'en': 'All Drivers Brake Performance', 'ja': '全ドライバーブレーキ性能'},
+            
+            # Driver Position Analysis 車手比賽排名分析 (F25)
+            'driver_position_analysis': {'zh': '車手比賽排名', 'en': 'Driver Race Position', 'ja': 'ドライバーレースポジション'},
+            
+            # Driver Position Analysis Widget - Table Headers (F25)
+            'table_header_position': {'zh': '排名', 'en': 'Position', 'ja': '順位'},
+            'table_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'table_header_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'table_header_starting_position': {'zh': '起始排名', 'en': 'Starting Position', 'ja': '開始順位'},
+            'table_header_finishing_position': {'zh': '結束排名', 'en': 'Finishing Position', 'ja': '最終順位'},
+            'table_header_best_position': {'zh': '最佳排名', 'en': 'Best Position', 'ja': '最高順位'},
+            'table_header_worst_position': {'zh': '最差排名', 'en': 'Worst Position', 'ja': '最低順位'},
+            'table_header_position_change': {'zh': '位置變化', 'en': 'Position Change', 'ja': '順位変動'},
+            
+            # Driver Position Analysis - Common Strings
+            'unknown_team': {'zh': 'Unknown', 'en': 'Unknown', 'ja': '不明'},
             
             # Corner Performance Analysis 主項目與子模組 (F47)
             'corner_performance_analysis': {'zh': '彎道速度分析', 'en': 'Corner Performance Analysis', 'ja': 'コーナー速度分析'},
@@ -1387,6 +1408,10 @@ class GuiTranslator:
             # Ideal Lap MDI - 視窗標題
             'ideal_lap_ranking_window_title': {'zh': '理想圈排名表格 - {year} {race} {session}', 'en': 'Ideal Lap Ranking - {year} {race} {session}', 'ja': '理想ラップランキング - {year} {race} {session}'},
             'ideal_lap_module_description': {'zh': 'F1 理想圈排名分析', 'en': 'F1 Ideal Lap Ranking Analysis', 'ja': 'F1 理想ラップランキング分析'},
+            
+            # Driver Position Analysis - 視窗標題 (F25)
+            'driver_position_window_title': {'zh': '車手比賽排名 - {year} {race} {session}', 'en': 'Driver Race Position - {year} {race} {session}', 'ja': 'ドライバーレースポジション - {year} {race} {session}'},
+            'driver_position_module_description': {'zh': 'F1 車手比賽排名分析', 'en': 'F1 Driver Race Position Analysis', 'ja': 'F1 ドライバーレースポジション分析'},
             
             # Sector Comparison - 表格欄位標題
             'sector_comparison_header_position': {'zh': '排名', 'en': 'Pos', 'ja': '順位'},

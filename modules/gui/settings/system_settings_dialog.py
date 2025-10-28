@@ -85,6 +85,11 @@ class SystemSettingsDialog(QDialog):
         )
         group_layout.addRow(self.filter_red_flags_checkbox)
 
+        self.filter_first_laps_checkbox = QCheckBox(
+            tr("boxplot_filter_first_laps", "Filter first 2 laps (Lap 1 & 2)")
+        )
+        group_layout.addRow(self.filter_first_laps_checkbox)
+
         self.outlier_threshold_spinbox = QDoubleSpinBox()
         self.outlier_threshold_spinbox.setDecimals(1)
         self.outlier_threshold_spinbox.setRange(0.5, 3.0)
@@ -343,6 +348,7 @@ class SystemSettingsDialog(QDialog):
         self.filter_outliers_checkbox.setChecked(settings.get("filter_outliers", True))
         self.filter_yellow_flags_checkbox.setChecked(settings.get("filter_yellow_flags", True))
         self.filter_red_flags_checkbox.setChecked(settings.get("filter_red_flags", True))
+        self.filter_first_laps_checkbox.setChecked(settings.get("filter_first_laps", True))
         self.outlier_threshold_spinbox.setValue(settings.get("outlier_threshold", 1.5))
 
         # 載入 Throttle Line Chart 設定
@@ -395,6 +401,7 @@ class SystemSettingsDialog(QDialog):
         self.filter_outliers_checkbox.setChecked(True)
         self.filter_yellow_flags_checkbox.setChecked(True)
         self.filter_red_flags_checkbox.setChecked(True)
+        self.filter_first_laps_checkbox.setChecked(True)
         self.outlier_threshold_spinbox.setValue(1.5)
 
     def _reset_throttle_defaults(self) -> None:
@@ -424,6 +431,7 @@ class SystemSettingsDialog(QDialog):
             filter_outliers=self.filter_outliers_checkbox.isChecked(),
             filter_yellow_flags=self.filter_yellow_flags_checkbox.isChecked(),
             filter_red_flags=self.filter_red_flags_checkbox.isChecked(),
+            filter_first_laps=self.filter_first_laps_checkbox.isChecked(),
             outlier_threshold=float(self.outlier_threshold_spinbox.value()),
         )
         

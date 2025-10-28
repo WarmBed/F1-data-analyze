@@ -486,6 +486,7 @@ class LapTimeBoxPlotWidget(QWidget):
         self.filter_pit_laps = True
         self.filter_yellow_flags = True
         self.filter_red_flags = True
+        self.filter_first_laps = True
         self.filter_outliers = True
         self.outlier_threshold = 1.5  # IQR 倍數
         
@@ -638,16 +639,23 @@ class LapTimeBoxPlotWidget(QWidget):
                 filtered_caution = 0
                 filtered_red_flag = 0
                 filtered_pit = 0
+                filtered_first_laps = 0
                 
                 for lap in detailed_laps:
                     lap_time_seconds = lap.get('lap_time_seconds')
+                    lap_number = lap.get('lap_number')
                     
                     # 跳過無效圈速
                     if lap_time_seconds is None or lap_time_seconds <= 0:
                         continue
 
+                    # 過濾前兩圈 (Lap 1 & 2)
+                    if self.filter_first_laps and lap_number in (1, 2):
+                        filtered_first_laps += 1
+                        continue
+
                     if self.filter_yellow_flags and lap_is_under_caution(
-                        lap.get('lap_number'),
+                        lap_number,
                         lap,
                         caution_laps,
                     ):
@@ -655,7 +663,7 @@ class LapTimeBoxPlotWidget(QWidget):
                         continue
 
                     if self.filter_red_flags and lap_is_under_red_flag(
-                        lap.get('lap_number'),
+                        lap_number,
                         lap,
                         red_flag_laps,
                     ):
@@ -806,6 +814,7 @@ class LapTimeBoxPlotWidget(QWidget):
         self.filter_pit_laps = settings.get('filter_pit_laps', True)
         self.filter_yellow_flags = settings.get('filter_yellow_flags', True)
         self.filter_red_flags = settings.get('filter_red_flags', True)
+        self.filter_first_laps = settings.get('filter_first_laps', True)
         self.filter_outliers = settings.get('filter_outliers', True)
         self.outlier_threshold = settings.get('outlier_threshold', 1.5)
         self._update_settings_summary()
@@ -816,6 +825,7 @@ class LapTimeBoxPlotWidget(QWidget):
             self.filter_pit_laps,
             self.filter_yellow_flags,
             self.filter_red_flags,
+            self.filter_first_laps,
             self.filter_outliers,
             self.outlier_threshold,
         )
@@ -825,6 +835,7 @@ class LapTimeBoxPlotWidget(QWidget):
             self.filter_pit_laps,
             self.filter_yellow_flags,
             self.filter_red_flags,
+            self.filter_first_laps,
             self.filter_outliers,
             self.outlier_threshold,
         )

@@ -15,6 +15,7 @@ class BoxPlotSettings:
     outlier_threshold: float = 1.5
     filter_yellow_flags: bool = True  # 新增：過濾黃旗圈
     filter_red_flags: bool = True  # 新增：過濾紅旗圈
+    filter_first_laps: bool = True  # 新增：過濾前兩圈（Lap 1 & 2）
 
 
 @dataclass(frozen=True)
@@ -68,6 +69,7 @@ class GuiSettingsManager(QObject):
             "outlier_threshold": self._boxplot_settings.outlier_threshold,
             "filter_yellow_flags": self._boxplot_settings.filter_yellow_flags,
             "filter_red_flags": self._boxplot_settings.filter_red_flags,
+            "filter_first_laps": self._boxplot_settings.filter_first_laps,
         }
         return settings
 

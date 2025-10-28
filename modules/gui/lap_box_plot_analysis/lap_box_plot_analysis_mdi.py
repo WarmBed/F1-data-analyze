@@ -164,6 +164,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             'outlier_threshold': 1.5,
             'filter_yellow_flags': True,
             'filter_red_flags': True,
+            'filter_first_laps': True,
         }
         self.settings_manager = gui_settings_manager
         self._raw_data_cache: Optional[Dict[str, Any]] = None
@@ -236,7 +237,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             return
 
         updates: Dict[str, Any] = {}
-        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags"):
+        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags", "filter_first_laps"):
             if key in settings and self.filter_settings.get(key) != settings[key]:
                 updates[key] = settings[key]
 
@@ -642,14 +643,20 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
                 if lap_time_float <= 0:
                     continue
                 
+                # 過濾前兩圈 (Lap 1 & 2)
+                lap_number = lap.get('lap_number')
+                if self.filter_settings.get('filter_first_laps', True):
+                    if lap_number in (1, 2):
+                        continue
+                
                 # 過濾黃旗/安全車圈
                 if self.filter_settings.get('filter_yellow_flags', True):
-                    if lap_is_under_caution(lap.get('lap_number'), lap, caution_laps):
+                    if lap_is_under_caution(lap_number, lap, caution_laps):
                         continue
 
                 # 過濾紅旗圈
                 if self.filter_settings.get('filter_red_flags', True):
-                    if lap_is_under_red_flag(lap.get('lap_number'), lap, red_flag_laps):
+                    if lap_is_under_red_flag(lap_number, lap, red_flag_laps):
                         continue
 
                 # 過濾進站圈

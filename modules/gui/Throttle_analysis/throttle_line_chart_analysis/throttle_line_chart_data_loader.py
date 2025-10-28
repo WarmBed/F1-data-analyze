@@ -126,6 +126,7 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         self._filter_pit_laps: bool = True
         self._filter_yellow_flags: bool = True
         self._filter_red_flags: bool = True
+        self._filter_first_laps: bool = True
         self._filter_statistics: Dict[str, Any] = {}
         self.settings_manager = gui_settings_manager
 
@@ -143,16 +144,17 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         # 🔍 DEBUG: 讀取初始過濾設定
         initial_filters = self.settings_manager.get_boxplot_settings()
         print(f"🔍🔍🔍 [DataLoader.__init__] Initial filters from settings_manager: {initial_filters}")
-        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes BEFORE update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes BEFORE update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
         
         self.update_filter_settings(
             filter_pit_laps=initial_filters.get("filter_pit_laps", True),
             filter_yellow_flags=initial_filters.get("filter_yellow_flags", True),
             filter_red_flags=initial_filters.get("filter_red_flags", True),
+            filter_first_laps=initial_filters.get("filter_first_laps", True),
             reprocess=False,
         )
         
-        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes AFTER update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes AFTER update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
 
         try:
             self.settings_manager.boxplot_settings_changed.connect(
@@ -473,7 +475,7 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
         print(f"🔍🔍🔍 [_apply_filters] Starting filtering process...")
         print(f"🔍🔍🔍 [_apply_filters] Input lap_records count: {len(lap_records) if lap_records else 0}")
-        print(f"🔍🔍🔍 [_apply_filters] Filter settings: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+        print(f"🔍🔍🔍 [_apply_filters] Filter settings: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
         print(f"🔍🔍🔍 [_apply_filters] helper_sets provided: {helper_sets is not None}")
         
         if not lap_records:
@@ -481,20 +483,23 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
                 "filter_pit_laps": bool(self._filter_pit_laps),
                 "filter_yellow_flags": bool(self._filter_yellow_flags),
                 "filter_red_flags": bool(self._filter_red_flags),
+                "filter_first_laps": bool(self._filter_first_laps),
                 "removed_pit_laps": 0,
                 "removed_caution_laps": 0,
                 "removed_red_flag_laps": 0,
+                "removed_first_laps": 0,
                 "remaining_laps": 0,
                 "original_laps": 0,
             }
 
         # 🔍 DEBUG: 追蹤過濾設定狀態
-        self._debug(f"🔧 [Filter Status] filter_pit_laps={self._filter_pit_laps}, filter_yellow_flags={self._filter_yellow_flags}, filter_red_flags={self._filter_red_flags}")
+        self._debug(f"🔧 [Filter Status] filter_pit_laps={self._filter_pit_laps}, filter_yellow_flags={self._filter_yellow_flags}, filter_red_flags={self._filter_red_flags}, filter_first_laps={self._filter_first_laps}")
 
         filtered: List[Dict[str, Any]] = []
         removed_pit = 0
         removed_caution = 0
         removed_red_flag = 0
+        removed_first_laps = 0
 
         # ✅ 方案 B: 使用已提取的 helper_sets 數據（推薦）
         # 如果有 helper_sets，直接從中提取 Yellow Flag 和 Red Flag 圈數
@@ -529,6 +534,12 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         for record in lap_records:
             lap_number = record.get("lap_number")
 
+            # 過濾前兩圈 (Lap 1 & 2)
+            if self._filter_first_laps and lap_number in (1, 2):
+                removed_first_laps += 1
+                print(f"🚫 [_apply_filters] Removed First Lap: {lap_number}")
+                continue
+
             if self._filter_yellow_flags and lap_is_under_caution(lap_number, record, caution_laps):
                 removed_caution += 1
                 print(f"🚫 [_apply_filters] Removed Yellow Flag lap: {lap_number}")
@@ -550,9 +561,11 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             "filter_pit_laps": bool(self._filter_pit_laps),
             "filter_yellow_flags": bool(self._filter_yellow_flags),
             "filter_red_flags": bool(self._filter_red_flags),
+            "filter_first_laps": bool(self._filter_first_laps),
             "removed_pit_laps": removed_pit,
             "removed_caution_laps": removed_caution,
             "removed_red_flag_laps": removed_red_flag,
+            "removed_first_laps": removed_first_laps,
             "remaining_laps": len(filtered),
             "original_laps": len(lap_records),
         }
@@ -889,10 +902,11 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         filter_pit_laps: Optional[bool] = None,
         filter_yellow_flags: Optional[bool] = None,
         filter_red_flags: Optional[bool] = None,
+        filter_first_laps: Optional[bool] = None,
         reprocess: bool = True,
     ) -> bool:
-        print(f"🔍🔍🔍 [update_filter_settings] Called with: pit={filter_pit_laps}, yellow={filter_yellow_flags}, red={filter_red_flags}, reprocess={reprocess}")
-        print(f"🔍🔍🔍 [update_filter_settings] Current values BEFORE: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+        print(f"🔍🔍🔍 [update_filter_settings] Called with: pit={filter_pit_laps}, yellow={filter_yellow_flags}, red={filter_red_flags}, first_laps={filter_first_laps}, reprocess={reprocess}")
+        print(f"🔍🔍🔍 [update_filter_settings] Current values BEFORE: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
         
         changed = False
 
@@ -926,13 +940,23 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             else:
                 print(f"ℹ️ [update_filter_settings] filter_red_flags unchanged: {self._filter_red_flags}")
 
+        if filter_first_laps is not None:
+            new_value = bool(filter_first_laps)
+            if new_value != self._filter_first_laps:
+                self._debug(f"⚙️ [Settings] filter_first_laps changed: {self._filter_first_laps} → {new_value}")
+                print(f"✅✅✅ [update_filter_settings] filter_first_laps changed: {self._filter_first_laps} → {new_value}")
+                self._filter_first_laps = new_value
+                changed = True
+            else:
+                print(f"ℹ️ [update_filter_settings] filter_first_laps unchanged: {self._filter_first_laps}")
+
         if not changed:
-            self._debug(f"⚙️ [Settings] No changes detected (pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags})")
+            self._debug(f"⚙️ [Settings] No changes detected (pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps})")
             print(f"ℹ️ℹ️ℹ️ [update_filter_settings] No changes detected, reprocess={reprocess}")
-            print(f"🔍🔍🔍 [update_filter_settings] Final values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+            print(f"🔍🔍🔍 [update_filter_settings] Final values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
             return False
 
-        print(f"✅✅✅ [update_filter_settings] Settings changed! New values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}")
+        print(f"✅✅✅ [update_filter_settings] Settings changed! New values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
         
         if reprocess and self._last_raw_data is not None:
             try:
@@ -960,6 +984,7 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             filter_pit_laps=settings.get("filter_pit_laps"),
             filter_yellow_flags=settings.get("filter_yellow_flags"),
             filter_red_flags=settings.get("filter_red_flags"),
+            filter_first_laps=settings.get("filter_first_laps"),
             reprocess=True,
         )
 

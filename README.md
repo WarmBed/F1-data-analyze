@@ -66,7 +66,9 @@ Comprehensive throttle usage analysis and comparison
 - **Percentage modes**: Toggle between actual percentage or lap percentage display
 - **Min/Max tooltips**: Hover to see extreme values and outliers
 - **Multi-driver comparison**: Analyze throttle patterns for entire grid
-- **Team color coding**: Visual identification by team colors
+
+
+![F1 data analysis telemetry visualization tool](/images/throttle.png)
 
 **Key Features:**
 - 📊 Lap-by-lap throttle usage tracking

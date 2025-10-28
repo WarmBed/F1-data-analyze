@@ -160,6 +160,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             "outlier_threshold": 1.5,
             "filter_yellow_flags": True,
             "filter_red_flags": True,
+            "filter_first_laps": True,
         }
         self.settings_manager = gui_settings_manager
         self._raw_data_cache: Optional[Dict[str, Any]] = None
@@ -531,6 +532,10 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
 
                 lap_number = lap.get("lap_number")
 
+                # 過濾前兩圈 (Lap 1 & 2)
+                if self.filter_settings.get("filter_first_laps", True) and lap_number in (1, 2):
+                    continue
+
                 if self.filter_settings.get("filter_yellow_flags", True):
                     track_status = str(lap.get("track_status") or "").strip()
                     if track_status and any(ch not in {"1"} for ch in track_status if ch.isdigit()):
@@ -632,7 +637,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             return
 
         updates: Dict[str, Any] = {}
-        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags"):
+        for key in ("filter_pit_laps", "filter_outliers", "outlier_threshold", "filter_yellow_flags", "filter_red_flags", "filter_first_laps"):
             if key in settings and self.filter_settings.get(key) != settings[key]:
                 updates[key] = settings[key]
 

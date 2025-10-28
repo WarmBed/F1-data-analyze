@@ -7832,6 +7832,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_comparison', # 理想圈分段對比
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
+            'driver_position',  # 車手比賽排名分析 (F25)
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -7935,7 +7936,7 @@ class StyleHMainWindow(QMainWindow):
         session_only_types = {
             'rain_weather', 'pitstop', 'accident', 'tire', 'ideal_lap',
             'ideal_lap_ranking', 'ideal_lap_sector_comparison', 'ideal_lap_sector_heatmap',
-            'laptime_boxplot', 'throttle_boxplot', 'track_analysis',
+            'laptime_boxplot', 'throttle_boxplot', 'track_analysis', 'driver_position',
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',               # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -8416,6 +8417,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_comparison', # 理想圈分段對比
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
+            'driver_position',  # 車手比賽排名分析 (F25)
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -8735,6 +8737,7 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(race_overview_group, [tr("pitstop_analysis", "Pitstop Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("accident_analysis", "Accident Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
+        QTreeWidgetItem(race_overview_group, [tr("driver_position_analysis", "Driver Race Position")])
         
         # ========== Driver Performance Analysis ==========
         driver_performance_group = QTreeWidgetItem(tree, [tr("driver_performance_analysis", "Driver Performance Analysis")])
@@ -11994,6 +11997,83 @@ class StyleHMainWindow(QMainWindow):
             traceback.print_exc()
             return None
 
+    def _create_driver_position_window(self, mdi_area, year, race, session):
+        """建立車手比賽排名分析視窗並加入 MDI"""
+        try:
+            print(f"[DRIVER_POSITION] 🚀 啟動車手比賽排名分析模組...")
+            from modules.gui.driver_position_analysis.driver_position_analysis_module import DriverPositionAnalysisModule
+            print(f"[DRIVER_POSITION] ✅ 模組導入成功")
+        except ImportError as exc:
+            message = f"無法載入車手比賽排名分析模組: {exc}"
+            print(f"[DRIVER_POSITION] ❌ {message}")
+            QMessageBox.critical(self, tr("module_load_failed", "模組載入失敗"), message)
+            import traceback
+            traceback.print_exc()
+            return None
+
+        try:
+            print(f"[DRIVER_POSITION] 🔧 創建模組實例...")
+            # 創建模組實例
+            analysis_module = DriverPositionAnalysisModule(
+                parent=self,
+                year=year,
+                race=race,
+                session=session
+            )
+            print(f"[DRIVER_POSITION] ✅ 模組實例創建成功")
+            
+            # 初始化模組
+            print(f"[DRIVER_POSITION] 🚀 初始化模組...")
+            if not analysis_module.initialize_module(parent_widget=self):
+                raise RuntimeError("Module initialization failed")
+            print(f"[DRIVER_POSITION] ✅ 模組初始化成功！")
+            
+            # 獲取模組標題
+            window_title = analysis_module.get_title()
+            print(f"[DRIVER_POSITION] 📝 視窗標題: {window_title}")
+            
+            # 創建子視窗
+            print(f"[DRIVER_POSITION] 🖼️ 創建 MDI 子視窗...")
+            sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
+            sub_window.setWidget(analysis_module.get_widget())
+            
+            # 設置視窗尺寸
+            width, height = analysis_module.get_default_size()
+            sub_window.resize(width, height)
+            print(f"[DRIVER_POSITION] 📐 設置視窗尺寸: {width}x{height}")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            print(f"[DRIVER_POSITION] ✅ 已添加到 MDI 區域")
+            
+            # 連接關閉信號
+            if hasattr(sub_window, 'window_closed'):
+                sub_window.window_closed.connect(
+                    partial(self.on_subwindow_closed, sub_window)
+                )
+            
+            # 添加到追蹤列表
+            if hasattr(self, 'active_subwindows'):
+                self.active_subwindows.append(sub_window)
+            
+            # 顯示視窗
+            sub_window.show()
+            print(f"[DRIVER_POSITION] 🎉 車手比賽排名分析視窗創建完成！")
+            
+            # 載入資料
+            print(f"[DRIVER_POSITION] 📊 開始載入資料...")
+            analysis_module.load_data()
+            
+            return sub_window
+            
+        except Exception as exc:
+            message = f"建立車手比賽排名分析視窗時發生錯誤: {exc}"
+            print(f"[DRIVER_POSITION] ❌ {message}")
+            QMessageBox.critical(self, tr("creation_failed", "創建失敗"), message)
+            import traceback
+            traceback.print_exc()
+            return None
+
     def _create_ideal_lap_heatmap_window(self, mdi_area, year, race, session):
         """建立理想圈分段熱力圖視窗"""
         try:
@@ -12165,6 +12245,7 @@ class StyleHMainWindow(QMainWindow):
             import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
             import modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
+            import modules.gui.driver_position_analysis.driver_position_analysis_mdi  # 車手比賽排名分析模組 (F25)
             
             # 賽道分析模組導入與註冊
             try:
@@ -12363,6 +12444,13 @@ class StyleHMainWindow(QMainWindow):
                     "低速コーナー分析",
                     "中速コーナー分析",
                     "高速コーナー分析",
+                ],
+                "driver_position_analysis": [  # ⭐ F25 車手比賽排名分析
+                    ("driver_position_analysis", "Driver Race Position"),
+                    "driver_position",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
+                    "車手比賽排名",
+                    "Driver Race Position",
+                    "ドライバーポジション",
                 ],
             }
 
@@ -13159,6 +13247,47 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理車手比賽排名分析模組 ⭐ F25 新增
+                elif module_type == "driver_position_analysis":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建車手比賽排名分析模組...")
+                        from modules.gui.driver_position_analysis.driver_position_analysis_mdi import (
+                            DriverPositionAnalysisMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 車手比賽排名 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = DriverPositionAnalysisMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 車手比賽排名 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 車手比賽排名模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 車手比賽排名模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

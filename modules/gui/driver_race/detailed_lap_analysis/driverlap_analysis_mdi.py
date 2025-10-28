@@ -159,6 +159,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         self.filter_settings = {
             "filter_pit_laps": True,
             "filter_yellow_flags": True,
+            "filter_first_laps": True,
         }
         self._filter_statistics: Dict[str, Dict[str, int]] = {}
         self._raw_driver_payloads: Dict[str, Any] = {}
@@ -836,6 +837,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             self.update_filter_settings(
                 filter_pit_laps=settings.get("filter_pit_laps"),
                 filter_yellow_flags=settings.get("filter_yellow_flags"),
+                filter_first_laps=settings.get("filter_first_laps"),
                 sync_global=False,
                 emit_signal=False,
             )
@@ -851,6 +853,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             self.update_filter_settings(
                 filter_pit_laps=settings.get("filter_pit_laps"),
                 filter_yellow_flags=settings.get("filter_yellow_flags"),
+                filter_first_laps=settings.get("filter_first_laps"),
                 sync_global=False,
             )
         finally:
@@ -861,6 +864,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         *,
         filter_pit_laps: Optional[bool] = None,
         filter_yellow_flags: Optional[bool] = None,
+        filter_first_laps: Optional[bool] = None,
         sync_global: bool = True,
         emit_signal: bool = True,
     ) -> bool:
@@ -870,6 +874,8 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             new_settings["filter_pit_laps"] = bool(filter_pit_laps)
         if filter_yellow_flags is not None:
             new_settings["filter_yellow_flags"] = bool(filter_yellow_flags)
+        if filter_first_laps is not None:
+            new_settings["filter_first_laps"] = bool(filter_first_laps)
 
         if new_settings == self.filter_settings:
             return False
@@ -881,6 +887,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 self.settings_manager.update_boxplot_settings(
                     filter_pit_laps=self.filter_settings["filter_pit_laps"],
                     filter_yellow_flags=self.filter_settings["filter_yellow_flags"],
+                    filter_first_laps=self.filter_settings["filter_first_laps"],
                 )
             except Exception as exc:
                 self._debug(f"無法同步全域設定: {exc}")
@@ -906,6 +913,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             filtered_laps: List[Any] = []
             removed_pit = 0
             removed_caution = 0
+            removed_first_laps = 0
             caution_laps = extract_caution_laps(payload)
             smart_summary = payload.get("smart_markers_summary", {})
 
@@ -916,6 +924,11 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 lap_number = lap.get("lap_number") if isinstance(lap, dict) else None
                 is_caution = lap_is_under_caution(lap_number, lap, caution_laps)
                 is_pit = lap_is_pit_stop(lap, smart_summary)
+
+                # 過濾前兩圈 (Lap 1 & 2)
+                if self.filter_settings.get("filter_first_laps", True) and lap_number in (1, 2):
+                    removed_first_laps += 1
+                    continue
 
                 if self.filter_settings.get("filter_yellow_flags", True) and is_caution:
                     removed_caution += 1
@@ -934,8 +947,10 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 {
                     "filter_pit_laps": bool(self.filter_settings.get("filter_pit_laps", True)),
                     "filter_yellow_flags": bool(self.filter_settings.get("filter_yellow_flags", True)),
+                    "filter_first_laps": bool(self.filter_settings.get("filter_first_laps", True)),
                     "removed_pit_laps": removed_pit,
                     "removed_caution_laps": removed_caution,
+                    "removed_first_laps": removed_first_laps,
                     "remaining_laps": len(filtered_laps),
                     "original_laps": len(laps),
                 }
@@ -945,6 +960,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             statistics[driver_code] = {
                 "removed_pit_laps": removed_pit,
                 "removed_caution_laps": removed_caution,
+                "removed_first_laps": removed_first_laps,
                 "remaining_laps": len(filtered_laps),
                 "original_laps": len(laps),
             }

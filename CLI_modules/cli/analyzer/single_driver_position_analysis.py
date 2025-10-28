@@ -7,7 +7,6 @@
 
 import os
 import json
-import pickle
 from datetime import datetime
 from typing import Dict, Any, Optional
 from prettytable import PrettyTable
@@ -20,9 +19,9 @@ class SingleDriverPositionAnalysis:
         self.year = year
         self.race = race
         self.session = session
-        self.cache_dir = "cache"
+        self.cache_dir = "json"
         
-        # 確保緩存目錄存在
+        # 確保輸出目錄存在
         os.makedirs(self.cache_dir, exist_ok=True)
     
     def analyze_position_changes(self, driver: Optional[str] = None, **kwargs) -> Dict[str, Any]:
@@ -42,29 +41,39 @@ class SingleDriverPositionAnalysis:
             analysis_mode = "all"
         
         try:
-            # 生成緩存鍵
+            # 生成檔案名稱（符合 API 搜索模式）
             if analysis_mode == "single":
-                cache_key = f"position_analysis_{self.year}_{self.race}_{self.session}_{driver}"
+                cache_key = f"driver_race_position_{self.year}_{self.race}_{self.session}_{driver}"
             else:
-                cache_key = f"position_analysis_{self.year}_{self.race}_{self.session}_all_drivers"
-            cache_file = os.path.join(self.cache_dir, f"{cache_key}.pkl")
+                cache_key = f"driver_race_position_{self.year}_{self.race}_{self.session}"
             
-            # 檢查緩存
-            if os.path.exists(cache_file):
-                print("📦 從緩存載入位置分析數據...")
-                with open(cache_file, 'rb') as f:
-                    cached_result = pickle.load(f)
-                
-                # 顯示對應的 JSON 檔案路徑
-                json_file = cache_file.replace('.pkl', '.json')
-                if os.path.exists(json_file):
-                    print(f"📄 對應 JSON 檔案: {json_file}")
-                
-                # 顯示位置變化表格
-                self._display_position_analysis_table(cached_result, driver)
-                
-                print("✅ 位置分析完成 (使用緩存)")
-                return cached_result
+            # ✅ 改為僅使用 JSON 檔案
+            json_file = os.path.join(self.cache_dir, f"{cache_key}.json")
+            
+            # 檢查 JSON 緩存
+            if os.path.exists(json_file):
+                print("📦 從 JSON 緩存載入位置分析數據...")
+                try:
+                    with open(json_file, 'r', encoding='utf-8') as f:
+                        cached_result = json.load(f)
+                    
+                    # ✅ 驗證數據有效性
+                    if not cached_result.get("success"):
+                        print("⚠️  緩存數據標記為失敗，重新生成...")
+                    elif analysis_mode == "all" and not cached_result.get("all_drivers_position_analysis"):
+                        print("⚠️  緩存數據缺少車手分析，重新生成...")
+                    elif analysis_mode == "single" and not cached_result.get("position_analysis"):
+                        print("⚠️  緩存數據缺少位置分析，重新生成...")
+                    else:
+                        print(f"📄 使用 JSON 檔案: {json_file}")
+                        
+                        # 顯示位置變化表格
+                        self._display_position_analysis_table(cached_result, driver)
+                        
+                        print("✅ 位置分析完成 (使用 JSON 緩存)")
+                        return cached_result
+                except Exception as e:
+                    print(f"⚠️  讀取 JSON 緩存失敗: {e}，重新生成...")
             
             # 載入賽事數據
             session_data = self.data_loader.get_loaded_data()
@@ -72,13 +81,15 @@ class SingleDriverPositionAnalysis:
             if session_data is None:
                 raise ValueError("無法載入賽事數據")
             
-            # 從數據字典中獲取圈速數據
+            # 從數據字典中獲取圈速數據和結果數據
             if isinstance(session_data, dict):
                 laps_data = session_data.get('laps')
+                results_data = session_data.get('results')
                 if laps_data is None:
                     raise ValueError("無法找到圈速數據")
             else:
                 laps_data = getattr(session_data, 'laps', None)
+                results_data = getattr(session_data, 'results', None)
                 if laps_data is None:
                     raise ValueError("無法找到圈速數據")
             
@@ -118,7 +129,7 @@ class SingleDriverPositionAnalysis:
                     "analysis_timestamp": datetime.now().isoformat(),
                     "position_analysis": {
                         "starting_position": self._get_starting_position(driver_data_dict[driver]),
-                        "finishing_position": self._get_finishing_position(driver_data_dict[driver]),
+                        "finishing_position": self._get_finishing_position(driver_data_dict[driver], results_data, driver),
                         "position_changes": self._analyze_position_changes(driver_data_dict[driver]),
                         "best_position": self._get_best_position(driver_data_dict[driver]),
                         "worst_position": self._get_worst_position(driver_data_dict[driver]),
@@ -130,9 +141,20 @@ class SingleDriverPositionAnalysis:
                 # 全部車手分析
                 all_drivers_position_data = {}
                 for drv, drv_data in driver_data_dict.items():
+                    # 從 results 中獲取車隊資訊
+                    team_name = "Unknown"
+                    if results_data is not None:
+                        try:
+                            driver_result = results_data[results_data['Abbreviation'] == drv]
+                            if not driver_result.empty:
+                                team_name = driver_result.iloc[0]['TeamName']
+                        except Exception as e:
+                            print(f"⚠️ 無法獲取車手 {drv} 的車隊資訊: {e}")
+                    
                     all_drivers_position_data[drv] = {
+                        "team": team_name,
                         "starting_position": self._get_starting_position(drv_data),
-                        "finishing_position": self._get_finishing_position(drv_data),
+                        "finishing_position": self._get_finishing_position(drv_data, results_data, drv),
                         "position_changes": self._analyze_position_changes(drv_data),
                         "best_position": self._get_best_position(drv_data),
                         "worst_position": self._get_worst_position(drv_data),
@@ -151,12 +173,7 @@ class SingleDriverPositionAnalysis:
                     "all_drivers_position_analysis": all_drivers_position_data
                 }
             
-            # 保存到緩存
-            with open(cache_file, 'wb') as f:
-                pickle.dump(result, f)
-            
-            # 同時保存為 JSON
-            json_file = cache_file.replace('.pkl', '.json')
+            # ✅ 僅保存為 JSON（移除 .pkl）
             with open(json_file, 'w', encoding='utf-8') as f:
                 json.dump(result, f, ensure_ascii=False, indent=2)
             
@@ -189,10 +206,29 @@ class SingleDriverPositionAnalysis:
             pass
         return None
     
-    def _get_finishing_position(self, driver_data) -> Optional[int]:
-        """獲取完賽位置"""
+    def _get_finishing_position(self, driver_data, results_data=None, driver_abbr=None):
+        """
+        獲取完賽位置
+        
+        返回:
+            - int: 完賽位置 (1-20)
+            - str: "DNF" (退賽)
+            - None: 無數據
+        """
         try:
             if not driver_data.empty:
+                # 檢查 DNF 狀態 (從 session.results 獲取)
+                if results_data is not None and driver_abbr is not None:
+                    try:
+                        driver_result = results_data[results_data['Abbreviation'] == driver_abbr]
+                        if not driver_result.empty:
+                            status = driver_result.iloc[0]['Status']
+                            if status == 'Retired':
+                                return "DNF"
+                    except Exception as e:
+                        print(f"⚠️ 無法檢查車手 {driver_abbr} 的 Status: {e}")
+                
+                # 正常完賽：返回位置
                 return int(driver_data.iloc[-1]['Position'])
         except:
             pass
