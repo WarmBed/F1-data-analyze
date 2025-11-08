@@ -297,7 +297,16 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             self._last_api_meta = meta or {}
             self._last_data_source = "api"
 
+            # 🔧 處理雙層嵌套格式：API 返回 {success, data: {success, data: {metadata, analysis}}}
+            # 如果 raw_data 是雙層嵌套格式，提取內層 data
+            if isinstance(raw_data, dict) and "data" in raw_data and "success" in raw_data:
+                self._debug(f"⚠️ 檢測到雙層嵌套格式，提取內層 data")
+                self._debug(f"外層 keys: {list(raw_data.keys())}")
+                raw_data = raw_data["data"]
+                self._debug(f"內層 keys: {list(raw_data.keys()) if isinstance(raw_data, dict) else 'NOT DICT'}")
+
             if not self._validate_data_format(raw_data):
+                self._debug(f"❌ 驗證失敗！數據結構: {list(raw_data.keys()) if isinstance(raw_data, dict) else type(raw_data)}")
                 raise ValueError("API 回傳數據格式不符合預期")
 
             processed_data = self._process_data(raw_data)

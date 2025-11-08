@@ -283,6 +283,10 @@ class TireAnalysisDataManager(UniversalDataLoader):
             self._last_api_meta = meta or {}
             self._last_data_source = "api"
 
+            # 🔧 處理雙層嵌套格式：API 返回 {success, data: {success, data: {metadata, analysis}}}
+            if isinstance(raw_data, dict) and "data" in raw_data and "success" in raw_data:
+                raw_data = raw_data["data"]
+
             if not self._validate_data_format(raw_data):
                 raise ValueError("API 回傳數據格式不符合預期")
 

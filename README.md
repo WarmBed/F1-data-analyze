@@ -150,22 +150,17 @@ Hierarchical lap data visualization with intelligent filtering
 
 
 ![F1 data analysis telemetry visualization tool](/images/throttle.png)
+
+
 ###  Version: V0.7.0 (2025-11-08)
 
 **Major Features:**
 - ✅ **Driver Race Position Analysis**: Track position changes during race with start/finish/best/worst rankings and visual indicators (▲▼━)
 - ✅ **Qualifying Prediction Module**: ML-based FP3→Q prediction using XGBoost v3.10 track-specific models with R²/MAE metrics
+![Qualifying Prediction Module](/images/QualifyingPrediction.png)
+
 - ✅ **Vehicle Parts Changes Analysis**: FIA technical document parsing with 15 main categories, 61 sub-categories, and multi-filter system
-
-**UI Refinements:**
-- 🎨 Unified team color system across all new modules
-- 🎨 Renamed "FIA Parts Analysis" to "車輛零件變動 (Vehicle Parts Changes)"
-- 🎨 Hidden confidence column in parts analysis table
-
-**Technical Improvements:**
-- API-ONLY mode for all new modules
-- UniversalAnalysisMDI standardized architecture
-- Full multi-language support (EN/中文/日本語)
+![Vehicle Parts Changes Analysis](/images/Vehicle Parts Changes.png)
 
 ###  Version: V0.6.0 (2025-10-27)
 
@@ -193,7 +188,7 @@ Hierarchical lap data visualization with intelligent filtering
 ![F1 data analysis telemetry visualization tool](/images/workspace.png)
 - ✅ **Tab Pop-out Feature**: Enhanced tab system with support for detaching tabs into independent floating windows for multi-monitor workflows
 ![F1 data analysis telemetry visualization tool](/images/popout.png)
-**UI Refinements:**
+**UI Refinements:**W
 - 🎨 Startup progress bar with detailed loading stages
 - 🎨 Workspace save/load dialog with preview functionality
 - 🎨 Tab drag-and-drop support for window detachment
