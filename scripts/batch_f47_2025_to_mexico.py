@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-F47 全車手彎道分析 - 2025 賽季批量執行腳本
+F47 全車手彎道分析 - 2025 賽季批量執行腳本（反向下載）
 ============================================================
 功能：自動執行 CLI Function 47（全車手彎道速度分析）
-範圍：2025 年所有賽事到墨西哥站（第 20 場）
+範圍：2025 年所有賽事（從墨西哥站往回下載到澳洲站）
 會話：R（正賽）、Q（排位賽）、FP1/FP2/FP3（練習賽）
+順序：第 20 場（墨西哥）→ 第 1 場（澳洲）
 ============================================================
 """
 
@@ -62,8 +63,9 @@ class SimpleProgressBar:
 
 
 def get_2025_races() -> List[Dict]:
-    """獲取 2025 年到墨西哥站的賽事列表"""
-    return [
+    """獲取 2025 年賽事列表（反向順序：墨西哥 → 澳洲）"""
+    # 原始順序的賽事列表
+    races_forward = [
         {"round": 1,  "name": "Australia",      "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
         {"round": 2,  "name": "China",          "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
         {"round": 3,  "name": "Japan",          "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
@@ -83,8 +85,11 @@ def get_2025_races() -> List[Dict]:
         {"round": 17, "name": "Azerbaijan",     "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
         {"round": 18, "name": "Singapore",      "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
         {"round": 19, "name": "United States",  "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},
-        {"round": 20, "name": "Mexico",         "sessions": ["Q"]},  # 墨西哥站只有排位賽
+        {"round": 20, "name": "Mexico",         "sessions": ["R", "Q", "FP1", "FP2", "FP3"]},  # 墨西哥站包含所有會話
     ]
+    
+    # 反轉順序：墨西哥 (20) → 澳洲 (1)
+    return list(reversed(races_forward))
 
 
 def check_json_exists(year: int, race: str, session: str) -> bool:
@@ -150,7 +155,7 @@ def run_f47_analysis(year: int, race: str, session: str, verbose: bool = False) 
 def main():
     """主函數"""
     print("=" * 70)
-    print("  F47 全車手彎道分析 - 2025 賽季批量執行")
+    print("  F47 全車手彎道分析 - 2025 賽季批量執行（反向下載）")
     print("=" * 70)
     print()
     
@@ -163,6 +168,8 @@ def main():
     print(f"  - 賽事數量：{total_races} 場")
     print(f"  - 總會話數：{total_sessions} 個")
     print(f"  - CLI 功能：F47 (全車手彎道速度分析)")
+    print(f"  - 下載順序：墨西哥站 (R20) → 澳洲站 (R1)")
+    print(f"  - 包含插值法：修復缺失的 Entry/Exit 50m 數據")
     print()
     
     # 詢問是否跳過已存在的檔案

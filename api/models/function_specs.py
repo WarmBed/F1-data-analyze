@@ -324,6 +324,24 @@ _FUNCTION_SPEC_LIST = [
         notes="Driver parameter optional – when omitted analyzes all drivers. Provides starting position, finishing position, best/worst positions, lap-by-lap changes, and position statistics (average, median, time in top 5/10).",
     ),
     _make_spec(
+        "29",
+        name="FIA Parts Changes Analysis V2.0",
+        description="Analyzes FIA technical document part changes with V2.0 classifier including confidence scoring and noise filtering. Provides comprehensive statistics on team upgrades, repairs, and modifications.",
+        required_params=["year"],
+        optional_params=["team", "driver", "race", "change_type", "min_confidence", "exclude_noise"],
+        cli_flag_map={
+            "year": "-y",
+            "team": "--team",
+            "driver": "-d",
+            "race": "-r",
+            "change_type": "--change-type",
+            "min_confidence": "--min-confidence",
+            "exclude_noise": "--include-noise"
+        },
+        cache_patterns=["fia_parts_analysis_v2", "fia_parts_analysis"],
+        notes="V2.0 classifier with 6 categories (變更/維修/重大更新/參數調整/安全標準件/未分類/噪音), dynamic confidence scoring (0.60-0.95+), automatic noise filtering (default: exclude_noise=True). No FastF1 data required - reads from classified JSON files.",
+    ),
+    _make_spec(
         "26",
         name="Tire Strategy Analysis",
         description="Generates tire strategy timelines leveraging FastF1 cache data.",
@@ -421,6 +439,34 @@ _make_spec(
         cli_flag_map={"year": "-y", "colormap": "--colormap"},
         cache_patterns=["team_colors", "driver_colors"],
         notes="CLI function -f 98 exposes this colour palette for GUI/API consumption.",
+    ),
+    _make_spec(
+        "73",
+        name="v3.8 Batch Trainer (Qualifying Prediction Model Training)",
+        description="Trains XGBoost qualifying prediction models using v3.8 feature set (17 features). Supports single track or all-track batch training with Optuna hyperparameter optimization.",
+        required_params=[],
+        optional_params=["trials", "cv_folds", "workers", "track"],
+        cli_flag_map={
+            "trials": "--trials",
+            "cv_folds": "--cv-folds",
+            "workers": "--workers",
+            "track": "--track"
+        },
+        cache_patterns=["v3.8_training_results", "track_specific_v3.8"],
+        notes="CLI function -f 73 trains qualifying prediction models. Returns training metrics (R², MAE, CV scores). Used by GUI qualifying prediction module to check model availability and quality.",
+    ),
+    _make_spec(
+        "74",
+        name="Qualifying Prediction Generator (v3.8)",
+        description="Generates qualifying predictions using trained v3.8 models. Loads FP3 data, extracts features, predicts Q times, and outputs JSON file to json/qualifying_prediction_{year}_{race}.json",
+        required_params=["year", "race"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r"
+        },
+        cache_patterns=["qualifying_prediction"],
+        notes="CLI function -f 74 generates qualifying predictions JSON. Session is fixed to 'Q'. Requires pre-trained v3.8 model for the specified track (run -f 73 first). GUI module reads the generated JSON for display.",
     ),
     _make_spec(
         "99",

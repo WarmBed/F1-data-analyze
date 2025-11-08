@@ -1,0 +1,106 @@
+{
+  "function_id": "76",
+  "function_name": "集成學習訓練",
+  "timestamp": "20251103_002310",
+  "training_period": "2018-2024",
+  "test_year": 2025,
+  "training_samples": 1433,
+  "validation_samples": 359,
+  "test_samples": 545,
+  "feature_count": 15,
+  "features": [
+    "year",
+    "race",
+    "driver",
+    "team",
+    "fp3_best_lap",
+    "fp3_avg_lap",
+    "fp3_lap_std",
+    "fp3_sector1",
+    "fp3_sector2",
+    "fp3_sector3",
+    "fp3_speed_trap",
+    "fp3_valid_laps",
+    "fp1_best_lap",
+    "fp2_best_lap",
+    "fp1_fastest_lap",
+    "fp1_all_laps_mean",
+    "fp1_all_laps_std",
+    "fp2_fastest_lap",
+    "fp2_all_laps_mean",
+    "fp2_all_laps_std",
+    "fp3_fastest_lap",
+    "fp3_all_laps_mean",
+    "fp3_all_laps_std",
+    "fp3_race_sim_avg",
+    "fp3_race_sim_degradation",
+    "fp1_to_fp2_improvement",
+    "fp2_to_fp3_improvement",
+    "improvement_fp3_fp1",
+    "improvement_fp3_fp2",
+    "fp3_consistency",
+    "fp3_sector_balance",
+    "fp3_air_temp",
+    "fp3_track_temp",
+    "fp3_humidity",
+    "q_air_temp",
+    "q_track_temp",
+    "q_humidity",
+    "temp_delta_air",
+    "temp_delta_track",
+    "q_position",
+    "q_time"
+  ],
+  "models": {
+    "xgboost": {
+      "mae": 0.4094874206372956,
+      "r2": 0.9883499040592808,
+      "rmse": 1.1557103324967632
+    },
+    "lightgbm": {
+      "mae": 0.4547013512127043,
+      "r2": 0.9878805121450608,
+      "rmse": 1.1787626841505026
+    },
+    "catboost": {
+      "mae": 0.4783957012211925,
+      "r2": 0.9881610642129537,
+      "rmse": 1.165039305519417
+    },
+    "weighted_average": {
+      "mae": 0.41230427798898484,
+      "r2": 0.9886604155457267,
+      "rmse": 1.140204668998461,
+      "weights": {
+        "xgboost": 0.3627758442426005,
+        "lightgbm": 0.3267026683167447,
+        "catboost": 0.3105214874406548
+      }
+    },
+    "stacking": {
+      "mae": 0.41857188378081217,
+      "r2": 0.9880427053252836,
+      "rmse": 1.1708485196111158,
+      "weights": {
+        "xgboost": 1.2967738232177222,
+        "lightgbm": -0.21581077062236736,
+        "catboost": -0.08073679636756362,
+        "intercept": -0.019455137800619582
+      }
+    }
+  },
+  "best_method": "xgboost",
+  "best_validation_performance": {
+    "mae": 0.4094874206372956,
+    "r2": 0.9883499040592808,
+    "rmse": 1.1557103324967632
+  },
+  "test_performance": {
+    "mae": 0.766201317351455,
+    "r2": 0.9385530281198415,
+    "rmse": 1.9602803113772154,
+    "baseline_mae": 0.8264,
+    "improvement_pct": 7.284448529591601,
+    "target_achieved": true
+  }
+}

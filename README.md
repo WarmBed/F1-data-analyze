@@ -150,9 +150,24 @@ Hierarchical lap data visualization with intelligent filtering
 
 
 ![F1 data analysis telemetry visualization tool](/images/throttle.png)
+###  Version: V0.7.0 (2025-11-08)
 
+**Major Features:**
+- ✅ **Driver Race Position Analysis**: Track position changes during race with start/finish/best/worst rankings and visual indicators (▲▼━)
+- ✅ **Qualifying Prediction Module**: ML-based FP3→Q prediction using XGBoost v3.10 track-specific models with R²/MAE metrics
+- ✅ **Vehicle Parts Changes Analysis**: FIA technical document parsing with 15 main categories, 61 sub-categories, and multi-filter system
 
-### Current Version: V0.6.0 (2025-10-27)
+**UI Refinements:**
+- 🎨 Unified team color system across all new modules
+- 🎨 Renamed "FIA Parts Analysis" to "車輛零件變動 (Vehicle Parts Changes)"
+- 🎨 Hidden confidence column in parts analysis table
+
+**Technical Improvements:**
+- API-ONLY mode for all new modules
+- UniversalAnalysisMDI standardized architecture
+- Full multi-language support (EN/中文/日本語)
+
+###  Version: V0.6.0 (2025-10-27)
 
 **Major Features:**
 - ✅ **Track Map Enhancement - Corner Numbering**: Added corner number annotations to track map visualization for improved position identification and reference during analysis

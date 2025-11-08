@@ -1,0 +1,165 @@
+{
+  "export_date": "2025-11-06T00:07:09.474996",
+  "total_upgrades": 7,
+  "by_team": {
+    "Red Bull Racing": 2,
+    "Ferrari": 2,
+    "Mercedes": 1,
+    "McLaren": 1,
+    "Aston Martin": 1
+  },
+  "by_race": {
+    "Bahrain": 2,
+    "Japan": 1,
+    "Monaco": 1,
+    "Spain": 1,
+    "Singapore": 1,
+    "Italy": 1
+  },
+  "by_category": {
+    "aerodynamic": 5,
+    "mechanical": 2
+  },
+  "timeline": {
+    "Bahrain": {
+      "Red Bull Racing": [
+        {
+          "component": "front_wing",
+          "category": "aerodynamic",
+          "date": "2025-11-06"
+        }
+      ],
+      "Ferrari": [
+        {
+          "component": "sidepod",
+          "category": "aerodynamic",
+          "date": "2025-11-06"
+        }
+      ]
+    },
+    "Japan": {
+      "Red Bull Racing": [
+        {
+          "component": "floor",
+          "category": "aerodynamic",
+          "date": "2025-11-06"
+        }
+      ]
+    },
+    "Monaco": {
+      "Ferrari": [
+        {
+          "component": "cooling",
+          "category": "mechanical",
+          "date": "2025-11-06"
+        }
+      ]
+    },
+    "Spain": {
+      "Mercedes": [
+        {
+          "component": "rear_wing",
+          "category": "aerodynamic",
+          "date": "2025-11-06"
+        }
+      ]
+    },
+    "Singapore": {
+      "McLaren": [
+        {
+          "component": "brake_duct",
+          "category": "mechanical",
+          "date": "2025-11-06"
+        }
+      ]
+    },
+    "Italy": {
+      "Aston Martin": [
+        {
+          "component": "diffuser",
+          "category": "aerodynamic",
+          "date": "2025-11-06"
+        }
+      ]
+    }
+  },
+  "all_upgrades": [
+    {
+      "team": "Red Bull Racing",
+      "team_code": "RBR",
+      "component": "front_wing",
+      "category": "aerodynamic",
+      "race": "Bahrain",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "開季前翼升級包",
+      "added_at": "2025-11-06T00:06:58.223724"
+    },
+    {
+      "team": "Red Bull Racing",
+      "team_code": "RBR",
+      "component": "floor",
+      "category": "aerodynamic",
+      "race": "Japan",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "新地板設計",
+      "added_at": "2025-11-06T00:06:58.224332"
+    },
+    {
+      "team": "Ferrari",
+      "team_code": "FER",
+      "component": "sidepod",
+      "category": "aerodynamic",
+      "race": "Bahrain",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "側箱改良",
+      "added_at": "2025-11-06T00:06:58.225003"
+    },
+    {
+      "team": "Ferrari",
+      "team_code": "FER",
+      "component": "cooling",
+      "category": "mechanical",
+      "race": "Monaco",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "街道賽散熱升級",
+      "added_at": "2025-11-06T00:06:58.225437"
+    },
+    {
+      "team": "Mercedes",
+      "team_code": "MER",
+      "component": "rear_wing",
+      "category": "aerodynamic",
+      "race": "Spain",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "高下壓力後翼",
+      "added_at": "2025-11-06T00:06:58.225833"
+    },
+    {
+      "team": "McLaren",
+      "team_code": "MCL",
+      "component": "brake_duct",
+      "category": "mechanical",
+      "race": "Singapore",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "高溫煞車散熱",
+      "added_at": "2025-11-06T00:06:58.226334"
+    },
+    {
+      "team": "Aston Martin",
+      "team_code": "AMR",
+      "component": "diffuser",
+      "category": "aerodynamic",
+      "race": "Italy",
+      "date": "2025-11-06",
+      "source": "manual_entry",
+      "description": "擴散器優化",
+      "added_at": "2025-11-06T00:06:58.226818"
+    }
+  ]
+}

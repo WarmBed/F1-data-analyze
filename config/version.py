@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.6.0"
+APP_VERSION = "V0.7.0"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,19 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.7.0": {
+        "date": "2025-11-08",
+        "features": [
+            "實作 FIA Parts Analysis 模組完整多國語言化",
+            "整合 color_palette_provider 車手與車隊顏色系統",
+            "實作內容翻譯映射系統（變更類型、分類、描述）",
+            "支援 Type 欄位英文提取（從 '維修 (Repair)' 提取 'Repair'）",
+            "支援 Description 欄位完整翻譯（6 種類型說明）",
+            "顯示格式完全對齊 Ideal Ranking Table 標準",
+            "新增 35 位車手名稱到代碼映射系統",
+            "實作 Tooltip 顯示原始中英文內容",
+        ]
+    },
     "V0.6.0": {
         "date": "2025-10-27",
         "features": [

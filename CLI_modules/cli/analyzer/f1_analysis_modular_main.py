@@ -135,24 +135,49 @@ try:
                 self.session_type = None
                 
             def load_race_data(self, year, race_name, session_type):
-                """載入賽事數據"""
+                """載入賽事數據（支援 FP3→Sprint 自動降級）"""
                 try:
                     fastf1.Cache.enable_cache('f1_analysis_cache')
                     
-                    # 載入賽段
-                    session = fastf1.get_session(year, race_name, session_type)
-                    session.load()
-                    
-                    self.session = session
-                    self.results = session.results
-                    self.laps = session.laps
-                    self.session_loaded = True
-                    self.year = year
-                    self.race_name = race_name
-                    self.session_type = session_type
-                    
-                    print(f"[OK] 成功載入 {year} {race_name} {session_type} 數據")
-                    return True
+                    # 嘗試載入原始 Session
+                    try:
+                        session = fastf1.get_session(year, race_name, session_type)
+                        session.load()
+                        
+                        self.session = session
+                        self.results = session.results
+                        self.laps = session.laps
+                        self.session_loaded = True
+                        self.year = year
+                        self.race_name = race_name
+                        self.session_type = session_type
+                        
+                        print(f"[OK] 成功載入 {year} {race_name} {session_type} 數據")
+                        return True
+                        
+                    except Exception as e:
+                        # Session Fallback 機制：FP3 不存在時嘗試 Sprint
+                        if session_type == 'FP3' and 'does not exist' in str(e):
+                            print(f"[INFO] FP3 不存在，嘗試使用 Sprint session...")
+                            try:
+                                session = fastf1.get_session(year, race_name, 'Sprint')
+                                session.load()
+                                
+                                self.session = session
+                                self.results = session.results
+                                self.laps = session.laps
+                                self.session_loaded = True
+                                self.year = year
+                                self.race_name = race_name
+                                self.session_type = 'Sprint'  # 記錄實際使用的 session
+                                
+                                print(f"[SUCCESS] 自動降級：使用 {year} {race_name} Sprint 數據（替代 FP3）")
+                                return True
+                            except Exception as sprint_error:
+                                print(f"[ERROR] Sprint session 也不存在: {sprint_error}")
+                                raise e  # 拋出原始錯誤
+                        else:
+                            raise e  # 非 FP3 錯誤，直接拋出
                     
                 except Exception as e:
                     print(f"[ERROR] 載入賽事數據失敗: {e}")

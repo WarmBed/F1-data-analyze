@@ -1,0 +1,6 @@
+{
+  "track": "Monaco",
+  "year": 2025,
+  "error": "缺少特徵: ['max_speed', 'avg_speed', 'min_speed', 'sector_1_time', 'sector_2_time', 'sector_3_time', 'throttle_pct', 'brake_pct', 'gear_changes', 'drs_usage', 'tire_type', 'compound', 'track_temp', 'air_temp', 'improvement_rate_max_speed', 'improvement_rate_avg_speed', 'improvement_rate_throttle', 'improvement_rate_brake', 'improvement_rate_gear_changes', 'improvement_rate_drs']",
+  "top5_accuracy": 0.0
+}

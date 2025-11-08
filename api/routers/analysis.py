@@ -47,7 +47,11 @@ async def execute_analysis(
     force_refresh: bool = Query(False, description="強制重新執行分析"),
     lap: Optional[int] = Query(None, ge=1, description="統一圈數參數 (單圈分析)"),
     lap1: Optional[int] = Query(None, ge=1, description="車手1圈數 (遙測比較)"),
-    lap2: Optional[int] = Query(None, ge=1, description="車手2圈數 (遙測比較)")
+    lap2: Optional[int] = Query(None, ge=1, description="車手2圈數 (遙測比較)"),
+    team: Optional[str] = Query(None, description="車隊名稱 (Function 29 - FIA Parts Analysis)"),
+    change_type: Optional[str] = Query(None, description="變更類型 (Function 29)"),
+    min_confidence: Optional[float] = Query(None, ge=0.0, le=1.0, description="最低信心度 (Function 29)"),
+    exclude_noise: Optional[bool] = Query(None, description="排除噪音記錄 (Function 29)")
 ) -> Dict[str, Any]:
     """
     執行 F1 分析功能
@@ -91,6 +95,16 @@ async def execute_analysis(
             params["lap1"] = lap1
         if lap2:
             params["lap2"] = lap2
+        
+        # Function 29 (FIA Parts Analysis) 專用參數
+        if team:
+            params["team"] = team
+        if change_type:
+            params["change_type"] = change_type
+        if min_confidence is not None:
+            params["min_confidence"] = min_confidence
+        if exclude_noise is not None:
+            params["exclude_noise"] = exclude_noise
             
         # 執行分析
         result = await analysis_service.execute_analysis(normalized_id, **params)

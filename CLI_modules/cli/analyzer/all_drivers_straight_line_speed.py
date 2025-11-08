@@ -155,10 +155,13 @@ class AllDriversStraightLineSpeedAnalysis:
                 print("[WARNING] 無法獲取車手圈速數據")
                 return False
             
-            lap_obj = driver_laps.pick_lap(lap_number)
-            if lap_obj is None:
-                print("[WARNING] 無法獲取圈對象")
+            # ✅ 修正: 使用索引方式獲取圈對象，而不是 pick_lap
+            lap_mask = driver_laps['LapNumber'] == lap_number
+            if not lap_mask.any():
+                print(f"[WARNING] 無法找到圈數 {lap_number}")
                 return False
+            
+            lap_obj = driver_laps[lap_mask].iloc[0]
             
             # 嘗試獲取位置數據
             pos_data = lap_obj.get_pos_data()
@@ -185,6 +188,8 @@ class AllDriversStraightLineSpeedAnalysis:
             
         except Exception as e:
             print(f"[WARNING] 位置數據檢查失敗: {e}")
+            import traceback
+            traceback.print_exc()  # ✅ 添加完整錯誤追蹤
             return False
 
     def run(self, *, top_n: Optional[int] = None, include_chart: bool = True) -> Dict[str, Any]:
@@ -695,12 +700,14 @@ class AllDriversStraightLineSpeedAnalysis:
                 "Monza": 4216,
                 "Spa": 4997,
                 "Silverstone": 1288,
+                "Great Britain": 1288,  # Silverstone 別名
                 "Austria": 4857,
                 "Canada": 2725,
                 "Miami": 3600,
                 "Las Vegas": 5190,
                 "Qatar": 5076,
                 "Abu Dhabi": 1452,
+                "United Arab Emirates": 1452,  # Abu Dhabi 別名
                 "Bahrain": 4850,
                 "Australia": 4807,
                 "United States": 3625,
@@ -708,6 +715,13 @@ class AllDriversStraightLineSpeedAnalysis:
                 "Brazil": 823,
                 "Spain": 4333,
                 "Emilia Romagna": 3600,
+                "Italy": 4216,  # Monza 別名
+                "Belgium": 4997,  # Spa 別名
+                "Netherlands": 3840,  # Zandvoort 別名
+                "Germany": 0,  # Hockenheimring (系統自動計算)
+                "Russia": 0,  # Sochi (系統自動計算)
+                "Azerbaijan": 0,  # Baku (系統自動計算)
+                "France": 0,  # Paul Ricard (系統自動計算)
             }
             
             race_name = self.race
@@ -2629,6 +2643,11 @@ class AllDriversStraightLineSpeedAnalysis:
             sorted_speeds = sorted(speeds)
             median = sorted_speeds[len(sorted_speeds) // 2]
             summary["median_speed_kmh"] = round(float(median), 3)
+        
+        # ✅ 新增：從最快圈提取整體賽道速度統計（用於賽道分類）
+        track_speed_stats = self._calculate_track_speed_statistics(records)
+        if track_speed_stats:
+            summary["track_speed_statistics"] = track_speed_stats
             
         # 添加加速性能摘要
         acceleration_summary = self._build_acceleration_summary(records)
@@ -2636,6 +2655,63 @@ class AllDriversStraightLineSpeedAnalysis:
             summary["acceleration_performance"] = acceleration_summary
             
         return summary
+
+    def _calculate_track_speed_statistics(self, records: List[DriverSpeedRecord]) -> Optional[Dict[str, Any]]:
+        """
+        從最快圈遙測數據計算整體賽道速度統計（用於賽道分類建模）
+        
+        新增功能 (2025-10-31): 支援賽道特徵提取
+        - avg_speed_kmh: 全圈平均速度
+        - min_speed_kmh: 全圈最低速度（彎道最慢點）
+        - speed_std_kmh: 速度標準差（反映賽道速度變化）
+        """
+        if not records:
+            return None
+        
+        try:
+            # 找出最快車手的最快圈
+            fastest_record = max(records, key=lambda rec: rec.max_speed_kmh)
+            driver_code = fastest_record.driver
+            lap_number = fastest_record.lap_number
+            
+            # 獲取該圈的完整遙測數據
+            driver_laps = self._pick_driver_laps(driver_code)
+            if driver_laps is None or getattr(driver_laps, "empty", False):
+                return None
+            
+            # 找到對應的圈
+            target_lap = driver_laps[driver_laps['LapNumber'] == lap_number]
+            if target_lap.empty:
+                return None
+            
+            fastest_lap = target_lap.iloc[0]
+            car_data = self._extract_car_data(fastest_lap)
+            
+            if car_data is None or "Speed" not in car_data.columns:
+                return None
+            
+            # 提取速度數據並移除 NaN
+            speeds = pd.to_numeric(car_data["Speed"], errors="coerce")
+            speeds = speeds.dropna()
+            
+            if len(speeds) == 0:
+                return None
+            
+            # 計算統計值
+            import numpy as np
+            return {
+                "avg_speed_kmh": round(float(speeds.mean()), 3),
+                "min_speed_kmh": round(float(speeds.min()), 3),
+                "max_speed_kmh": round(float(speeds.max()), 3),  # 與 fastest_speed_kmh 應該一致
+                "speed_std_kmh": round(float(speeds.std()), 3),
+                "reference_driver": driver_code,
+                "reference_lap": int(lap_number),
+                "data_points": len(speeds)
+            }
+            
+        except Exception as e:
+            print(f"[WARNING] 計算賽道速度統計失敗: {e}")
+            return None
 
     def _build_acceleration_summary(self, records: List[DriverSpeedRecord]) -> Optional[Dict[str, Any]]:
         """構建加速性能摘要"""

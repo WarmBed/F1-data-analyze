@@ -227,8 +227,23 @@ class CompatibleF1DataLoader:
             fastf1.Cache.enable_cache('f1_analysis_cache')
             
             # 載入 FastF1 session - 關鍵：要載入天氣數據
-            self.session = fastf1.get_session(year, fastf1_race_name, session_type)
-            self.session.load(weather=True)  # 確保載入天氣數據
+            # Session Fallback 機制：FP3 不存在時嘗試 Sprint
+            try:
+                self.session = fastf1.get_session(year, fastf1_race_name, session_type)
+                self.session.load(weather=True)  # 確保載入天氣數據
+            except Exception as e:
+                if session_type == 'FP3' and 'does not exist' in str(e):
+                    print(f"[INFO] FP3 不存在，嘗試使用 Sprint session...")
+                    try:
+                        self.session = fastf1.get_session(year, fastf1_race_name, 'Sprint')
+                        self.session.load(weather=True)
+                        session_type = 'Sprint'  # 更新 session_type
+                        print(f"[SUCCESS] 自動降級：使用 {year} {race_name} Sprint 數據（替代 FP3）")
+                    except Exception as sprint_error:
+                        print(f"[ERROR] Sprint session 也不存在: {sprint_error}")
+                        raise e  # 拋出原始錯誤
+                else:
+                    raise e  # 非 FP3 錯誤，直接拋出
             
             # 初始化 OpenF1 分析器
             openf1_analyzer = F1OpenDataAnalyzer()

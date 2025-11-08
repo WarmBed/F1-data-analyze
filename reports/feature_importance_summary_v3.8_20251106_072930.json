@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "model_version": "v3.8",
+    "generated_at": "2025-11-06T07:29:30.621561",
+    "total_tracks": 24,
+    "top_n_features": 5
+  },
+  "tracks": {
+    "Australia": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 

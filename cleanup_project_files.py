@@ -79,7 +79,17 @@ def main():
         "README.md",
         "F1T_GUI.spec",
         script_name,  # 🔒 自動保護：忽略腳本本身
-        "cleanup_project_files.ps1"  # 保留 PS1 腳本
+    }
+    
+    # 🔒 保留特定 PS1 腳本（其餘 PS1 會被移除）
+    keep_ps1_scripts = {
+        # 目前無需保留任何 PS1 腳本，全部移至刪除資料夾
+    }
+    
+    # 🔒 保留特定 JSON 檔案（其餘 JSON 會被移除）
+    keep_json_files = {
+        # JSON 檔案通常是數據或配置，可在此指定需保留的
+        # 例如: "config.json", "package.json"
     }
     
     # 測試相關檔案的正則表達式
@@ -107,7 +117,7 @@ def main():
     }
     
     # 獲取所有符合條件的檔案（僅掃描根目錄）
-    extensions = {'.py', '.bat', '.md', '.txt'}
+    extensions = {'.py', '.bat', '.md', '.txt', '.ps1', '.json'}
     all_files = [f for f in current_dir.iterdir() 
                  if f.is_file() and f.suffix in extensions]
     
@@ -130,6 +140,18 @@ def main():
             stats['kept'] += 1
             continue
         
+        # 🆕 檢查是否為需保留的 PS1 腳本
+        if file_path.suffix == '.ps1' and file_name in keep_ps1_scripts:
+            print_color(f"  ✓ 保留 PS1: {file_name}", Colors.GREEN)
+            stats['kept'] += 1
+            continue
+        
+        # 🆕 檢查是否為需保留的 JSON 檔案
+        if file_path.suffix == '.json' and file_name in keep_json_files:
+            print_color(f"  ✓ 保留 JSON: {file_name}", Colors.GREEN)
+            stats['kept'] += 1
+            continue
+        
         # 檢查是否為測試相關檔案
         is_test_file = any(re.search(pattern, file_name) for pattern in test_patterns)
         
@@ -145,6 +167,18 @@ def main():
                     stats['moved_to_tests'] += 1
                 except Exception as e:
                     print_color(f"  ✗ 移動失敗: {file_name} - {e}", Colors.RED)
+            continue
+        
+        # 🆕 PS1 和 JSON 檔案移到刪除資料夾（除非在保留清單中）
+        if file_path.suffix in {'.ps1', '.json'}:
+            dest_path = delete_folder_with_time / file_name
+            try:
+                shutil.move(str(file_path), str(dest_path))
+                file_type = "PS1 腳本" if file_path.suffix == '.ps1' else "JSON 檔案"
+                print_color(f"  ✗ 移至刪除資料夾 ({file_type}): {file_name}", Colors.RED)
+                stats['moved_to_delete'] += 1
+            except Exception as e:
+                print_color(f"  ✗ 移動失敗: {file_name} - {e}", Colors.RED)
             continue
         
         # 其他檔案移到刪除資料夾

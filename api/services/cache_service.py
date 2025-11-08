@@ -69,6 +69,7 @@ class F1AnalysisCacheService:
             "26": ["driver_tire_strategy", "tire_strategy"],
             "27": ["driver_fastest_lap_analysis", "fastest_lap"],
             "28": ["driver_lap_time_analysis", "laptime_analysis", "detailed_laptime"],
+            "29": ["fia_parts_analysis_v2", "fia_parts_analysis"],  # ✅ Function 29 - FIA 部件變更分析 V2.0
             "14.1": ["driver_statistics_overview", "driver_summary"],
             "14.2": ["driver_telemetry_statistics", "telemetry_statistics"],
             "14.3": ["driver_overtaking_analysis", "overtaking_analysis"],
@@ -79,6 +80,7 @@ class F1AnalysisCacheService:
             "48": ["all_drivers_straight_line_speed", "straight_line_speed"],
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
+            "74": ["qualifying_prediction"],  # ✅ 添加 Function 74 - 排位賽預測 (v3.8)
             "96": ["race_weather_forecast"],  # ✅ 添加 Function 96 - 賽事天氣預報
             "97": ["championship_standings"],  # ✅ 添加 Function 97 - 賽季積分榜 (車手/車隊)
             "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
@@ -233,6 +235,41 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}season_calendar_{year}_*.json",      # 單年格式
                     f"{self.json_dir}season_calendar_*.json"              # 任何賽季日曆
                 ]
+            elif function_id == "29":  # ✅ FIA 部件變更分析 V2.0 - 僅 year 參數
+                # 檔案格式: fia_parts_analysis_v2_{year}.json 或帶過濾條件的變體
+                # 範例: fia_parts_analysis_v2_2025.json
+                #       fia_parts_analysis_v2_2025_team_McLaren.json
+                #       fia_parts_analysis_v2_2025_conf80.json
+                team = params.get("team")
+                driver = params.get("driver")
+                race_filter = params.get("race")  # 注意：這是過濾條件，不是賽事參數
+                change_type = params.get("change_type")
+                min_confidence = params.get("min_confidence")
+                
+                search_patterns = []
+                # 優先搜索完全匹配的檔案
+                if team or driver or race_filter or change_type or min_confidence:
+                    # 有過濾條件時，搜索帶過濾後綴的檔案
+                    filter_suffix = ""
+                    if team:
+                        filter_suffix += f"_team_{team}"
+                    if driver:
+                        filter_suffix += f"_driver_{driver}"
+                    if race_filter:
+                        filter_suffix += f"_race_{race_filter}"
+                    if change_type:
+                        filter_suffix += f"_type_{change_type}"
+                    if min_confidence:
+                        conf_str = int(min_confidence * 100) if isinstance(min_confidence, float) else min_confidence
+                        filter_suffix += f"_conf{conf_str}"
+                    
+                    search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}{filter_suffix}.json")
+                
+                # 備用：搜索基本檔案（無過濾）
+                search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}.json")
+                # 最後：搜索任何包含 year 的檔案
+                search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}*.json")
+                
             elif function_id == "98":  # ✅ 團隊顏色配置 - 特殊處理
                 # 檔案格式: team_colors_{year}_{colormap}_{timestamp}.json
                 # 預設 colormap = "fastf1"

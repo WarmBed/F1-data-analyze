@@ -1,0 +1,100 @@
+﻿2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 數據格式驗證通過
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 步驟1: 數據格式驗證通過
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 📝 步驟2: 設置 metadata
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 步驟2: metadata 設置完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] � 步驟3: 處理遙測數據
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 🔧 處理遙測數據...
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 常規遙測原始數據鍵值: ['name', 'driver1_data', 'driver2_data', 'distance', 'driver1_time_seconds', 'driver2_time_seconds', 'time_reference']
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 距離數據點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 車手1數據點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 車手2數據點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 🕒 [TIME_AXIS_DEBUG] 提取時間數據:
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 🕒 [TIME_AXIS_DEBUG]   driver1_time_seconds 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 🕒 [TIME_AXIS_DEBUG]   driver2_time_seconds 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ Speed Analysis數據處理完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG]    Distance點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG]    車手1數據點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG]    車手2數據點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 步驟3: API 數據處理完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 📊 步驟4: 發送進度和狀態信號
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 步驟4: 狀態更新完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 🚀 步驟5: 即將發送 data_loaded 信號
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] 📡 信號接收者數量: 1
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI_DATA] 速度數據載入完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] ========== 更新速度圖表回調 ==========
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📦 接收到數據類型: <class 'dict'>
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📦 接收到數據鍵值: ['metadata', 'speed_data', 'statistics']
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📊 speed_data 鍵值: ['distance', 'driver1_speed', 'driver2_speed', 'driver1_time_seconds', 'driver2_time_seconds', 'driver1_name', 'driver2_name']
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📊 distance 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📊 driver1_speed 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 📊 driver2_speed 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 🎨 調用 speed_chart_widget.update_speed_data...
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] ========== 更新速度數據 ==========
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 📦 接收到數據類型: <class 'dict'>
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 📦 接收到數據鍵值: ['metadata', 'speed_data', 'statistics']
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 📊 speed_data 鍵值: ['distance', 'driver1_speed', 'driver2_speed', 'driver1_time_seconds', 'driver2_time_seconds', 'driver1_name', 'driver2_name']
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 9: update_speed_data 提取時間數據
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver1_time_seconds: True
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver2_time_seconds: True
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 📏 distance 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🏎️ driver1_speed 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🏎️ driver2_speed 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🕒 driver1_time 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🕒 driver2_time 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver1_time 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver2_time 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 👤 driver1_name: VER
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 👤 driver2_name: VER
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🔢 提取圈數: lap1=1, lap2=1
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 🎯 使用單車手模式顯示
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🎨 調用 chart_widget.set_speed_data...
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] ========== set_speed_data 被調用 ==========
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 📏 distance 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 🏎️ driver1_speed 點數: 500
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 🏎️ driver2_speed 點數: 0
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 👤 driver1_name: VER
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 👤 driver2_name: 
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 🔢 lap1: 1, lap2: None
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] set_speed_data 計算 X 軸範圍
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   當前 use_time_axis: False
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 📊 距離範圍: -0.0 - 5163.9
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 📊 速度範圍: 0.0 - 324.0
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] 🖌️ 調用 repaint()...
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   繪製距離軸標題: Distance (m)
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver1_time 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver2_time 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   distance_data 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART] ✅ set_speed_data 完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] 🖌️ 強制重繪圖表...
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   繪製距離軸標題: Distance (m)
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver1_time 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver2_time 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   distance_data 長度: 500
+2025-10-24 01:02:51 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] ✅ 圖表重繪完成
+2025-10-24 01:02:51 | INFO | f1.console | [LAP_SET] 圈數已設置: 第1圈 vs 第1圈
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_CHART_WIDGET] ✅ update_speed_data 全部完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] ✅ 圖表更新完成
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_MDI] 已更新工具欄狀態: 速度分析
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ✅ 步驟5: data_loaded 信號已發送
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED DEBUG] ========== _handle_api_success 完成 ==========
+2025-10-24 01:02:51 | INFO | f1.console | [SPEED_LOADER] 🏁 API Worker 執行緒已完成
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   繪製距離軸標題: Distance (m)
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: False
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver1_time 長度: 500
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   driver2_time 長度: 500
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   distance_data 長度: 500
+2025-10-24 01:02:53 | INFO | f1.console | 🕒 [TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)

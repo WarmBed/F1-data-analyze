@@ -23,6 +23,10 @@ class DriverBrakeRecord:
     使用加速度動態偵測邏輯（2025-10-XX 更新）：
     - brake_end_position: 從加速度最大負值自動偵測（取代硬編碼）
     - brake_start_position: 從終點往前找加速度 > -1 m/s² 的點
+    
+    新增欄位（2025-10-31）：
+    - lap_time_s: 圈速時間（秒），用於計算煞車時間百分比
+    - brake_time_percentage: 煞車時間占圈速時間的百分比（用於賽道分類）
     """
 
     driver: str
@@ -38,12 +42,15 @@ class DriverBrakeRecord:
     brake_start_position: float  # 煞車開始位置（從終點往前計算）
     lap_number: Optional[int]
     session_time: Optional[str]
+    # ✅ 新增：圈速與煞車時間百分比（用於賽道特徵分析）
+    lap_time_s: Optional[float] = None          # 圈速時間（秒）
+    brake_time_percentage: Optional[float] = None  # 煞車時間百分比 (%)
     # 位置標註欄位
     in_core_range: bool = True  # 是否在參考終點±50m 範圍內
     measurement_notes: Optional[str] = None  # 測量註記（偏離距離等）
 
     def as_dict(self) -> Dict[str, Any]:
-        return {
+        result = {
             "driver": self.driver,
             "driver_number": self.driver_number,
             "team": self.team,
@@ -62,6 +69,14 @@ class DriverBrakeRecord:
             "in_core_range": self.in_core_range,
             "measurement_notes": self.measurement_notes,
         }
+        
+        # ✅ 新增：圈速與煞車時間百分比（保持 JSON 結構向後兼容）
+        if self.lap_time_s is not None:
+            result["lap_time_s"] = round(float(self.lap_time_s), 3)
+        if self.brake_time_percentage is not None:
+            result["brake_time_percentage"] = round(float(self.brake_time_percentage), 2)
+        
+        return result
 
 
 class BrakePerformanceAnalyzer:
@@ -635,6 +650,20 @@ class BrakePerformanceAnalyzer:
             lap_number = self._extract_lap_number(fastest_lap)
             session_time = self._extract_session_time(fastest_lap)
             
+            # ✅ 新增：提取圈速時間並計算煞車時間百分比（用於賽道特徵分析）
+            lap_time_s = None
+            brake_time_percentage = None
+            try:
+                if hasattr(fastest_lap, 'LapTime') and fastest_lap['LapTime'] is not None:
+                    lap_time_timedelta = fastest_lap['LapTime']
+                    if hasattr(lap_time_timedelta, 'total_seconds'):
+                        lap_time_s = float(lap_time_timedelta.total_seconds())
+                        # 計算煞車時間百分比
+                        if lap_time_s > 0:
+                            brake_time_percentage = (brake_data["time_seconds"] / lap_time_s) * 100
+            except Exception as e:
+                print(f"      [DEBUG] {driver_code}: 無法計算圈速時間或煞車百分比: {e}")
+            
             # 檢查是否在核心範圍內（±50m）
             distance_from_reference = abs(driver_brake_distance - reference_brake_distance)
             in_core_range = distance_from_reference <= 50.0
@@ -658,6 +687,8 @@ class BrakePerformanceAnalyzer:
                 brake_start_position=brake_data["actual_distance_start"],
                 lap_number=lap_number,
                 session_time=session_time,
+                lap_time_s=lap_time_s,  # ✅ 新增
+                brake_time_percentage=brake_time_percentage,  # ✅ 新增
                 in_core_range=in_core_range,
                 measurement_notes=measurement_notes
             )

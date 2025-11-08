@@ -1,0 +1,23 @@
+All Drivers Straight Line Speed - Title Fix Verification
+Timestamp: 2025-10-19 00:59:07
+================================================================================
+
+================================================================================
+TEST: All Drivers Straight Line Speed MDI Title Fix
+================================================================================
+
+[Test] All Drivers Straight Line Speed MDI
+--------------------------------------------------------------------------------
+Status: [PASS]
+Details:
+  - get_window_title() method exists: YES
+  - Method signature: get_window_title(year, race, session)
+  - Expected format: All Drivers Straight Line Speed_{year}_{race}_{session}
+  - Example (English): All Drivers Straight Line Speed_2025_Japan_R
+  - Example (Chinese): 全車手直線速度_2025_Japan_R
+
+================================================================================
+VERIFICATION COMPLETE
+================================================================================
+
+Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_straight_speed_title_result.txt

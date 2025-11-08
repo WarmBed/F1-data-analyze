@@ -518,7 +518,12 @@ class AllDriversCorneringAnalysis:
                                target_distance: float,
                                tolerance: float = 10) -> Optional[float]:
         """
-        獲取最接近目標距離的速度
+        獲取最接近目標距離的速度（支援插值法）
+        
+        策略：
+        1. 優先查找容差範圍內的直接數據
+        2. 若無數據，嘗試擴大容差範圍（15m, 20m）
+        3. 若仍無數據，使用線性插值估算
         
         Args:
             telemetry: 遙測數據
@@ -529,19 +534,89 @@ class AllDriversCorneringAnalysis:
             速度（km/h）或 None
         """
         try:
+            # 策略 1: 在標準容差範圍內查找
             nearby = telemetry[
                 (telemetry['Distance'] >= target_distance - tolerance) &
                 (telemetry['Distance'] <= target_distance + tolerance)
             ]
             
-            if nearby.empty:
-                return None
+            if not nearby.empty:
+                # 返回最接近的點
+                closest_idx = (nearby['Distance'] - target_distance).abs().idxmin()
+                return float(nearby.loc[closest_idx, 'Speed'])
             
-            # 返回最接近的點
-            closest_idx = (nearby['Distance'] - target_distance).abs().idxmin()
-            return float(nearby.loc[closest_idx, 'Speed'])
+            # 策略 2: 擴大容差範圍重試（15m, 20m）
+            for extended_tolerance in [15, 20]:
+                nearby = telemetry[
+                    (telemetry['Distance'] >= target_distance - extended_tolerance) &
+                    (telemetry['Distance'] <= target_distance + extended_tolerance)
+                ]
+                
+                if not nearby.empty:
+                    closest_idx = (nearby['Distance'] - target_distance).abs().idxmin()
+                    speed = float(nearby.loc[closest_idx, 'Speed'])
+                    # 標記為擴大容差獲得的數據
+                    # print(f"[INFO] 使用擴大容差 {extended_tolerance}m 獲得數據: {speed:.1f} km/h")
+                    return speed
+            
+            # 策略 3: 線性插值（當前後都有數據時）
+            interpolated_speed = self._interpolate_speed_at_distance(telemetry, target_distance)
+            if interpolated_speed is not None:
+                # print(f"[INFO] 使用插值法估算速度: {interpolated_speed:.1f} km/h @ {target_distance:.1f}m")
+                return interpolated_speed
+            
+            return None
             
         except Exception:
+            return None
+    
+    def _interpolate_speed_at_distance(self, telemetry: pd.DataFrame,
+                                       target_distance: float) -> Optional[float]:
+        """
+        使用線性插值估算目標距離的速度
+        
+        策略：找到目標距離前後最近的兩個數據點，進行線性插值
+        
+        Args:
+            telemetry: 遙測數據
+            target_distance: 目標距離
+        
+        Returns:
+            插值速度（km/h）或 None
+        """
+        try:
+            # 查找目標距離之前的最近點
+            before = telemetry[telemetry['Distance'] < target_distance]
+            if before.empty:
+                return None
+            before_point = before.iloc[-1]  # 距離最近的前一個點
+            
+            # 查找目標距離之後的最近點
+            after = telemetry[telemetry['Distance'] > target_distance]
+            if after.empty:
+                return None
+            after_point = after.iloc[0]  # 距離最近的後一個點
+            
+            # 確保前後點距離不會太遠（最多 30m，避免不合理的插值）
+            distance_gap = after_point['Distance'] - before_point['Distance']
+            if distance_gap > 30:
+                return None
+            
+            # 線性插值公式：
+            # speed = speed_before + (speed_after - speed_before) * (target - dist_before) / (dist_after - dist_before)
+            dist_before = float(before_point['Distance'])
+            dist_after = float(after_point['Distance'])
+            speed_before = float(before_point['Speed'])
+            speed_after = float(after_point['Speed'])
+            
+            interpolated_speed = speed_before + \
+                (speed_after - speed_before) * \
+                (target_distance - dist_before) / (dist_after - dist_before)
+            
+            return float(interpolated_speed)
+            
+        except Exception as e:
+            # print(f"[WARNING] 插值失敗: {e}")
             return None
     
     def _is_yellow_flag_lap(self, lap, session) -> bool:
@@ -558,7 +633,8 @@ class AllDriversCorneringAnalysis:
             lap_messages = race_control[race_control['Lap'] == lap_number]
             
             for _, msg in lap_messages.iterrows():
-                message = msg.get('Message', '').upper()
+                message = msg.get('Message', '') or ''
+                message = message.upper()
                 if 'YELLOW FLAG' in message or 'DOUBLE YELLOW' in message:
                     return True
             
@@ -581,7 +657,8 @@ class AllDriversCorneringAnalysis:
             lap_messages = race_control[race_control['Lap'] == lap_number]
             
             for _, msg in lap_messages.iterrows():
-                message = msg.get('Message', '').upper()
+                message = msg.get('Message', '') or ''
+                message = message.upper()
                 if 'RED FLAG' in message:
                     return True
             
@@ -604,7 +681,8 @@ class AllDriversCorneringAnalysis:
             lap_messages = race_control[race_control['Lap'] == lap_number]
             
             for _, msg in lap_messages.iterrows():
-                message = msg.get('Message', '').upper()
+                message = msg.get('Message', '') or ''
+                message = message.upper()
                 if 'SAFETY CAR' in message or 'VSC' in message or 'VIRTUAL SAFETY CAR' in message:
                     return True
             

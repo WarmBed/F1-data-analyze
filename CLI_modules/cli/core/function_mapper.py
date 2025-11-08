@@ -63,7 +63,7 @@ class F1AnalysisFunctionMapper:
             28: self._execute_driver_lap_time_analysis,      # 車手每圈圈速分析
             
             # 29-47: 預留擴展功能 (編號順延)
-            29: self._execute_weather_analysis_advanced,
+            29: self._execute_fia_parts_analysis,           # FIA 部件變更分析
             30: self._execute_tire_strategy_optimization,
             31: self._execute_lap_time_prediction,
             32: self._execute_fuel_consumption_analysis,
@@ -85,14 +85,27 @@ class F1AnalysisFunctionMapper:
             47: self._execute_all_drivers_cornering_analysis,
             48: self._execute_all_drivers_straight_line_speed,
             
-            # 49-53: 系統功能 (編號順延)
+            # 49-54: 系統功能
             49: self._execute_data_export_manager,
             50: self._execute_cache_optimization,
             51: self._execute_system_diagnostics,
             52: self._execute_performance_benchmarking,
             53: self._execute_ideal_lap_analysis,
             54: self._execute_driver_throttle_ratio,
-            96: self._execute_race_weather_forecast,  # 賽事天氣預報
+            
+            # 70-79: 預測系統功能 (AI/ML)
+            70: self._execute_fp_q_data_collector,     # FP→Q 訓練數據收集器
+            71: self._execute_q_race_data_collector,   # Q→R 訓練數據收集器 (規劃中)
+            72: self._execute_xgboost_trainer,         # XGBoost 模型訓練器 (規劃中)
+            73: self._execute_placeholder_73,          # v3.10 批次訓練器 (16 特徵 XGBoost - 移除 is_top_driver)
+            74: self._execute_placeholder_74,          # [已刪除] 混合預測器
+            75: self._execute_placeholder_75,          # [已刪除] 純 FP3 特徵優化訓練
+            76: self._execute_ensemble_training,       # 集成學習訓練 (XGB+LGB+CTB) (2025-11-02)
+            77: self._execute_track_specific_training, # 賽道特定模型訓練 (v2.0 + F78) (2025-11-03)
+            78: self._execute_driver_fp3_q_feature_extraction, # 車手 FP3→Q 特徵提取 (2025-11-03)
+            
+            # 96-99: 特殊功能
+            96: self._execute_race_weather_forecast,   # 賽事天氣預報
             97: self._execute_championship_standings_analysis,
             98: self._execute_team_color_analysis,
             99: self._execute_season_calendar_analysis,
@@ -272,9 +285,13 @@ class F1AnalysisFunctionMapper:
     def _check_data_loaded(self, function_id: Union[str, int]) -> bool:
         """檢查是否需要載入數據"""
         # 系統功能不需要檢查數據載入
+        # 29: FIA 部件變更分析 (使用本地 JSON 檔案，不需要 FastF1 數據)
+        # 70: FP→Q 訓練數據收集器 (使用預收集的 JSON 檔案)
+        # 75: 純 FP3 特徵優化訓練 (使用預收集的 JSON 檔案)
+        # 76: 集成學習訓練 (使用預收集的 JSON 檔案)
         # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
         # 98: 車隊顏色分析, 99: 賽季賽程查詢
-        system_functions = {"18", "19", "20", "21", "22", "49", "50", "51", "52", "96", "98", "99"}
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "70", "75", "76", "96", "98", "99"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -2731,9 +2748,496 @@ class F1AnalysisFunctionMapper:
                 "function_id": "34",
             }
     
+    def _check_parts_freshness(self, year: int) -> dict:
+        """
+        檢查部件分析數據的新鮮度（與 Function 97 一致）
+        
+        Returns:
+            dict: {
+                "exists": bool,
+                "path": str,
+                "age_hours": float,
+                "is_fresh": bool,
+                "should_regenerate": bool,
+                "refresh_interval_hours": float
+            }
+        """
+        import os
+        from pathlib import Path
+        from datetime import datetime, timezone
+        
+        json_dir = Path("json")
+        if not json_dir.exists():
+            return {
+                "exists": False,
+                "path": None,
+                "age_hours": None,
+                "is_fresh": False,
+                "should_regenerate": True,
+                "reason": "JSON 目錄不存在",
+                "refresh_interval_hours": 120
+            }
+        
+        # 搜尋最新版檔案（固定檔名）
+        pattern = f"fia_parts_analysis_v2_{year}.json"
+        latest_file = json_dir / pattern
+        
+        if not latest_file.exists():
+            return {
+                "exists": False,
+                "path": None,
+                "age_hours": None,
+                "is_fresh": False,
+                "should_regenerate": True,
+                "reason": "找不到現有部件分析檔案",
+                "refresh_interval_hours": 120
+            }
+        
+        # 計算檔案年齡
+        file_mtime = datetime.fromtimestamp(latest_file.stat().st_mtime, tz=timezone.utc)
+        now = datetime.now(timezone.utc)
+        age = now - file_mtime
+        age_hours = age.total_seconds() / 3600
+        
+        # 🔄 使用智能刷新間隔判斷（與 Function 97 一致）
+        refresh_interval = self._determine_parts_refresh_interval(year)
+        is_fresh = age_hours < refresh_interval
+        
+        return {
+            "exists": True,
+            "path": str(latest_file),
+            "age_hours": round(age_hours, 2),
+            "is_fresh": is_fresh,
+            "should_regenerate": not is_fresh,
+            "reason": "檔案仍在有效期內" if is_fresh else "檔案已過期",
+            "refresh_interval_hours": refresh_interval
+        }
+    
+    def _determine_parts_refresh_interval(self, year: int) -> float:
+        """
+        判斷部件分析刷新間隔：根據賽事狀態決定刷新頻率（與 Function 97 一致）
+        
+        策略：
+        - 正常模式：120 小時（5 天）- 賽程間期穩定時段
+        - 賽前加速模式：12 小時 - 賽前 2 天內，頻繁檢查部件變更
+        - 賽後加速模式：6 小時 - 賽後 24 小時內，密集監控部件更新
+        
+        Args:
+            year: 賽季年份
+            
+        Returns:
+            刷新間隔（小時）
+        """
+        from pathlib import Path
+        from datetime import datetime, timezone
+        import json
+        
+        # 刷新間隔常數（與 Function 97 一致）
+        PARTS_REFRESH_HOURS_NORMAL = 120  # 5 天
+        PARTS_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時
+        PARTS_REFRESH_HOURS_POST_RACE = 6  # 6 小時
+        RACE_APPROACHING_THRESHOLD_DAYS = 2
+        POST_RACE_MONITORING_HOURS = 24
+        
+        try:
+            json_dir = Path("json")
+            if not json_dir.exists():
+                return PARTS_REFRESH_HOURS_NORMAL
+            
+            # 尋找最新的 season_calendar JSON
+            calendar_files = sorted(
+                json_dir.glob("season_calendar_*.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True
+            )
+            
+            if not calendar_files:
+                return PARTS_REFRESH_HOURS_NORMAL
+            
+            # 讀取 calendar JSON
+            with open(calendar_files[0], "r", encoding="utf-8") as f:
+                calendar_data = json.load(f)
+            
+            events = calendar_data.get("data", {}).get("events", [])
+            if not events:
+                return PARTS_REFRESH_HOURS_NORMAL
+            
+            # 過濾指定年份的賽事
+            year_events = [e for e in events if e.get("season_year") == year]
+            if not year_events:
+                return PARTS_REFRESH_HOURS_NORMAL
+            
+            now = datetime.now(timezone.utc)
+            
+            # 分離已完成和未完成的賽事
+            completed_events = [e for e in year_events if e.get("is_completed", False)]
+            upcoming_events = [e for e in year_events if not e.get("is_completed", False)]
+            
+            # 🔥 優先檢查：賽後 24 小時內的加速模式（最高優先級）
+            if completed_events:
+                latest_completed = completed_events[-1]
+                race_date_str = latest_completed.get("race_date")
+                
+                if race_date_str:
+                    try:
+                        race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        hours_since_race = (now - race_date).total_seconds() / 3600
+                        
+                        # 🏁 賽後 24 小時內，啟用賽後加速模式（6 小時刷新）
+                        if 0 <= hours_since_race <= POST_RACE_MONITORING_HOURS:
+                            race_name = latest_completed.get("event_name", "Unknown")
+                            remaining_hours = POST_RACE_MONITORING_HOURS - hours_since_race
+                            print(f"[PARTS] 🏁 賽後監控期！{race_name} 結束後 {hours_since_race:.1f} 小時")
+                            print(f"[PARTS] 🔥 啟用賽後加速模式（6 小時刷新），剩餘監控時間 {remaining_hours:.1f} 小時")
+                            return PARTS_REFRESH_HOURS_POST_RACE
+                    except ValueError:
+                        pass
+            
+            # 🚨 次要檢查：賽前 2 天內的加速模式
+            if upcoming_events:
+                for event in upcoming_events[:3]:
+                    race_date_str = event.get("race_date")
+                    if race_date_str:
+                        try:
+                            race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                            days_until_race = (race_date - now).days
+                            
+                            # 🏎️ 賽前 2 天內，啟用賽前加速模式
+                            if 0 <= days_until_race <= RACE_APPROACHING_THRESHOLD_DAYS:
+                                race_name = event.get("event_name", "Unknown")
+                                print(f"[PARTS] 🏎️ 賽事臨近！{race_name} 在 {days_until_race} 天後")
+                                print(f"[PARTS] ⚡ 啟用賽前加速模式（12 小時刷新）")
+                                return PARTS_REFRESH_HOURS_RACE_APPROACHING
+                        except ValueError:
+                            continue
+            
+            # ✅ 正常模式：賽程間期
+            if not upcoming_events:
+                print(f"[PARTS] ✅ 賽季已結束，使用正常模式（120 小時）")
+            else:
+                print(f"[PARTS] ✅ 無特殊事件，使用正常模式（120 小時）")
+            
+            return PARTS_REFRESH_HOURS_NORMAL
+            
+        except Exception as e:
+            print(f"[PARTS] ❌ 判斷刷新間隔時出錯: {e}，降級使用正常模式")
+            return PARTS_REFRESH_HOURS_NORMAL
+    
+    def _execute_fia_parts_analysis(self, **kwargs):
+        """FIA Parts Changes Analysis (Function 29)
+        
+        分析 FIA 技術文件中的部件變更記錄
+        支援按年份、車隊、車手、變更類型篩選
+        使用 V2.0 分類器提供高品質分析
+        
+        ✅ 智能刷新機制（與 Function 97 一致）：
+        - 賽後 24 小時內：6 小時刷新（密集監控部件更新）
+        - 賽前 2 天內：12 小時刷新（頻繁檢查部件變更）
+        - 正常時期：120 小時刷新（5 天穩定期）
+        """
+        try:
+            import json
+            import os
+            from pathlib import Path
+            from collections import Counter, defaultdict
+            from CLI_modules.cli.core.fia_parts_classifier import UpgradeClassifierV2
+            
+            print("[START] FIA 部件變更分析 (Function 29) - 使用 V2.0 分類器")
+            print("🔄 智能刷新機制：根據賽事狀態自動調整更新頻率")
+            
+            # 獲取參數
+            year = kwargs.get("year", 2025)
+            force = kwargs.get("force", False)  # 是否強制刷新
+            team = kwargs.get("team")  # 可選：篩選特定車隊
+            driver = kwargs.get("driver")  # 可選：篩選特定車手
+            change_type = kwargs.get("change_type")  # 可選：篩選變更類型
+            race = kwargs.get("race")  # 可選：篩選特定賽事
+            min_confidence = kwargs.get("min_confidence", 0.0)  # 最低信心度過濾
+            exclude_noise = kwargs.get("exclude_noise", True)  # 預設排除噪音
+            
+            # ✅ 智能刷新機制：檢查現有檔案新鮮度（與 Function 97 一致）
+            if not force:
+                freshness = self._check_parts_freshness(year)
+                if freshness.get("is_fresh"):
+                    print("=" * 80)
+                    print("✅ 部件分析資料仍在有效期內，使用既有 JSON")
+                    print(f"📄 路徑: {freshness['path']}")
+                    print(f"⏰ 年齡: {freshness['age_hours']} 小時")
+                    print(f"🔄 刷新間隔: {freshness['refresh_interval_hours']} 小時")
+                    print("=" * 80)
+                    try:
+                        with open(freshness["path"], "r", encoding="utf-8") as handle:
+                            payload = json.load(handle)
+                        
+                        # 更新 metadata
+                        payload["metadata"] = payload.get("metadata", {})
+                        payload["metadata"]["last_freshness_check"] = datetime.now().isoformat()
+                        payload["metadata"]["file_age_hours"] = freshness["age_hours"]
+                        payload["metadata"]["is_fresh"] = True
+                        payload["metadata"]["refresh_interval_hours"] = freshness["refresh_interval_hours"]
+                        payload["message"] = payload.get("message", "使用既有部件分析資料")
+                        
+                        print(f"[SUCCESS] 載入既有分析結果：{len(payload.get('records', []))} 筆記錄")
+                        return payload
+                    except Exception as exc:
+                        print(f"[PARTS] 讀取既有 JSON 失敗: {exc}，改為重新生成")
+            
+            # 如果強制刷新或檔案已過期，重新生成
+            if force:
+                print("=" * 80)
+                print("🔥 強制刷新模式：忽略緩存，重新生成分析")
+                print("=" * 80)
+            else:
+                print("=" * 80)
+                print("⚠️  部件分析資料已過期，重新生成...")
+                freshness = self._check_parts_freshness(year)
+                print(f"📄 舊檔案年齡: {freshness.get('age_hours', 'N/A')} 小時")
+                print(f"🔄 刷新間隔: {freshness.get('refresh_interval_hours', 120)} 小時")
+                print("=" * 80)
+            
+            # 讀取原始資料 (V2 優先，回退到 V1)
+            json_file_v2 = f"{year}_f1_parts_changes_v2_classified.json"
+            json_file_v1 = f"{year}_f1_parts_changes_classified.json"
+            
+            json_file = None
+            use_v2_data = False
+            
+            if os.path.exists(json_file_v2):
+                json_file = json_file_v2
+                use_v2_data = True
+                print(f"[INFO] 使用 V2.0 分類資料: {json_file_v2}")
+            elif os.path.exists(json_file_v1):
+                json_file = json_file_v1
+                print(f"[INFO] 使用 V1.0 分類資料 (將自動升級): {json_file_v1}")
+            else:
+                print(f"[ERROR] 找不到資料檔案: {json_file_v2} 或 {json_file_v1}")
+                return {
+                    "success": False,
+                    "message": f"找不到 FIA 部件變更資料檔案",
+                    "function_id": "29"
+                }
+            
+            with open(json_file, 'r', encoding='utf-8') as f:
+                all_records = json.load(f)
+            
+            # 如果使用 V1 資料，自動用 V2 分類器重新分類
+            if not use_v2_data:
+                print("[INFO] 使用 V2.0 分類器重新分類...")
+                classifier = UpgradeClassifierV2()
+                all_records = classifier.classify_batch(all_records, remove_duplicates=True)
+                print(f"[INFO] V2.0 分類完成，共 {len(all_records)} 筆記錄")
+            
+            print(f"[INFO] 載入 {len(all_records)} 筆部件變更記錄")
+            
+            # 篩選資料
+            filtered_records = all_records
+            
+            # 排除噪音（預設啟用）
+            if exclude_noise:
+                original_count = len(filtered_records)
+                filtered_records = [r for r in filtered_records if "噪音" not in r.get("變更類型", "")]
+                noise_count = original_count - len(filtered_records)
+                if noise_count > 0:
+                    print(f"[FILTER] 已排除 {noise_count} 筆噪音記錄")
+            
+            # 信心度過濾
+            if min_confidence > 0.0:
+                original_count = len(filtered_records)
+                filtered_records = [r for r in filtered_records if r.get("分類信心度", 0.0) >= min_confidence]
+                low_conf_count = original_count - len(filtered_records)
+                if low_conf_count > 0:
+                    print(f"[FILTER] 已過濾 {low_conf_count} 筆低信心度記錄 (<{min_confidence})")
+            
+            if team:
+                filtered_records = [r for r in filtered_records if r.get("車隊") == team]
+                print(f"[FILTER] 車隊={team}, 剩餘 {len(filtered_records)} 筆")
+            
+            if driver:
+                filtered_records = [r for r in filtered_records if r.get("車手") == driver]
+                print(f"[FILTER] 車手={driver}, 剩餘 {len(filtered_records)} 筆")
+            
+            if race:
+                filtered_records = [r for r in filtered_records if r.get("比賽") == race]
+                print(f"[FILTER] 賽事={race}, 剩餘 {len(filtered_records)} 筆")
+            
+            if change_type:
+                filtered_records = [r for r in filtered_records if change_type in r.get("變更類型", "")]
+                print(f"[FILTER] 變更類型={change_type}, 剩餘 {len(filtered_records)} 筆")
+            
+            if not filtered_records:
+                print("[WARNING] 篩選後無資料")
+                return {
+                    "success": False,
+                    "message": "篩選條件過嚴，無符合的記錄",
+                    "function_id": "29"
+                }
+            
+            # 統計分析
+            stats = {
+                "total_records": len(filtered_records),
+                "by_team": dict(Counter([r["車隊"] for r in filtered_records])),
+                "by_change_type": dict(Counter([r["變更類型"] for r in filtered_records])),
+                "by_race": dict(Counter([r["比賽"] for r in filtered_records])),
+                "by_driver": dict(Counter([r["車手"] for r in filtered_records]))
+            }
+            
+            # 信心度統計（V2 特有）
+            confidences = [r.get("分類信心度", 0.0) for r in filtered_records]
+            confidence_ranges = {
+                "0.95+": len([c for c in confidences if c >= 0.95]),
+                "0.90-0.94": len([c for c in confidences if 0.90 <= c < 0.95]),
+                "0.80-0.89": len([c for c in confidences if 0.80 <= c < 0.90]),
+                "0.70-0.79": len([c for c in confidences if 0.70 <= c < 0.80]),
+                "0.60-0.69": len([c for c in confidences if 0.60 <= c < 0.70]),
+                "<0.60": len([c for c in confidences if c < 0.60])
+            }
+            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+            
+            # 變更類型分佈（百分比）
+            type_percentages = {}
+            for change_type_key, count in stats["by_change_type"].items():
+                percentage = (count / stats["total_records"]) * 100
+                type_percentages[change_type_key] = {
+                    "count": count,
+                    "percentage": round(percentage, 2)
+                }
+            
+            # 前 5 名車隊
+            top5_teams = dict(Counter(stats["by_team"]).most_common(5))
+            
+            # 輸出結果
+            print("\n" + "="*80)
+            print(f"FIA 部件變更分析報告 - {year} (V2.0 分類器)")
+            print("="*80)
+            print(f"總記錄數: {stats['total_records']}")
+            print(f"平均信心度: {avg_confidence:.2f}")
+            
+            print(f"\n信心度分佈:")
+            for range_name, count in confidence_ranges.items():
+                if count > 0:
+                    percentage = (count / stats['total_records']) * 100
+                    print(f"  {range_name}: {count} 筆 ({percentage:.1f}%)")
+            
+            print(f"\n變更類型分佈:")
+            for ct, info in sorted(type_percentages.items(), key=lambda x: x[1]['count'], reverse=True):
+                print(f"  {ct}: {info['count']} 筆 ({info['percentage']}%)")
+            
+            print(f"\n前 5 名車隊 (部件變更次數):")
+            for idx, (team_name, count) in enumerate(top5_teams.items(), 1):
+                print(f"  {idx}. {team_name}: {count} 筆")
+            
+            # 構建結果
+            # ✅ 添加智能刷新間隔資訊（與 Function 97 一致）
+            refresh_interval = self._determine_parts_refresh_interval(year)
+            
+            result = {
+                "success": True,
+                "message": f"FIA 部件變更分析完成 ({stats['total_records']} 筆記錄) - V2.0 分類器",
+                "function_id": "29",
+                "classifier_version": "V2.0",
+                "year": year,
+                "filters": {
+                    "team": team,
+                    "driver": driver,
+                    "race": race,
+                    "change_type": change_type,
+                    "min_confidence": min_confidence,
+                    "exclude_noise": exclude_noise
+                },
+                "metadata": {
+                    "generated_at": None,  # 將在下方設定
+                    "refresh_interval_hours": refresh_interval,  # 🔄 動態刷新間隔
+                    "is_fresh": True,  # 新生成的檔案當然是新鮮的
+                    "force_refresh": force
+                },
+                "statistics": stats,
+                "confidence_stats": {
+                    "average": round(avg_confidence, 2),
+                    "ranges": confidence_ranges
+                },
+                "type_percentages": type_percentages,
+                "top5_teams": top5_teams,
+                "records": filtered_records  # 返回所有記錄（已移除 50 筆限制）
+            }
+            
+            # 導出 JSON（Function 29 專用：只用 year 不用 race/session）
+            # ✅ 與 Function 97 (Championship Standings) 保持一致的命名邏輯
+            json_dir = "json"
+            os.makedirs(json_dir, exist_ok=True)
+            
+            # 構建過濾器後綴（如果有過濾條件）
+            filter_suffix = ""
+            if team:
+                filter_suffix += f"_team_{team}"
+            if driver:
+                filter_suffix += f"_driver_{driver}"
+            if race:
+                filter_suffix += f"_race_{race}"
+            if change_type:
+                filter_suffix += f"_type_{change_type}"
+            if min_confidence > 0.0:
+                filter_suffix += f"_conf{int(min_confidence*100)}"
+            
+            # 📝 時間戳格式：與 Function 97 一致（ISO 8601 格式）
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%dT%H%M%SZ")
+            
+            # 📝 檔名規則：
+            # - 最新版（無時間戳）：fia_parts_analysis_v2_{year}.json
+            # - 歷史版（帶時間戳）：fia_parts_analysis_v2_{year}_{filter}_{timestamp}.json
+            
+            # 生成兩個檔案（與 Function 97 不同，97 只生成帶時間戳版本）
+            json_filename_latest = f"fia_parts_analysis_v2_{year}{filter_suffix}.json"
+            json_filename_archive = f"fia_parts_analysis_v2_{year}{filter_suffix}_{timestamp}.json"
+            
+            # 添加時間戳到 result 內容（與 Function 97 一致）
+            result["generated_at"] = datetime.now().isoformat()
+            result["timestamp"] = timestamp
+            
+            # 保存最新版（固定檔名，供 GUI 讀取）
+            json_path_latest = os.path.join(json_dir, json_filename_latest)
+            with open(json_path_latest, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+            print(f"\n📄 JSON 最新版已保存: {json_path_latest}")
+            
+            # 保存歷史版（帶時間戳，供備份）
+            json_path_archive = os.path.join(json_dir, json_filename_archive)
+            with open(json_path_archive, 'w', encoding='utf-8') as f:
+                json.dump(result, f, ensure_ascii=False, indent=2, default=str)
+            print(f"📄 JSON 歷史版已保存: {json_path_archive}")
+            
+            print("\n[SUCCESS] FIA 部件變更分析完成 (V2.0 分類器)")
+            return result
+            
+        except Exception as exc:
+            print(f"[ERROR] FIA 部件變更分析失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"FIA 部件變更分析失敗: {exc}",
+                "function_id": "29"
+            }
+    
+    def _execute_tire_strategy_optimization(self, **kwargs):
+        """輪胎策略優化 (Function 30)"""
+        return {"success": True, "message": "輪胎策略優化功能開發中", "function_id": "30"}
+    
+    def _execute_lap_time_prediction(self, **kwargs):
+        """圈速預測分析 (Function 31)"""
+        return {"success": True, "message": "圈速預測分析功能開發中", "function_id": "31"}
+    
+    def _execute_fuel_consumption_analysis(self, **kwargs):
+        """燃料消耗分析 (Function 32)"""
+        return {"success": True, "message": "燃料消耗分析功能開發中", "function_id": "32"}
+    
+    def _execute_aerodynamic_efficiency_analysis(self, **kwargs):
+        """空氣動力學效率分析 (Function 33)"""
+        return {"success": True, "message": "空氣動力學效率分析功能開發中", "function_id": "33"}
+    
     def _execute_engine_performance_analysis(self, **kwargs):
-        """引擎性能分析"""
-        return {"success": True, "message": "引擎性能分析功能開發中", "function_id": "29"}
+        """引擎性能分析 (Function 35)"""
+        return {"success": True, "message": "引擎性能分析功能開發中", "function_id": "35"}
     
     def _execute_race_strategy_simulation(self, **kwargs):
         """賽事策略模擬"""
@@ -3002,9 +3506,14 @@ class F1AnalysisFunctionMapper:
                 threshold=float(threshold) if threshold is not None else DEFAULT_FULL_THROTTLE_THRESHOLD,
                 coast_threshold=float(coast_threshold) if coast_threshold is not None else DEFAULT_COAST_THRESHOLD,
                 show_summary=bool(show_summary),
-                save_json=bool(save_json),
+                save_json=False,  # JSON 保存由下方 _export_to_json() 統一處理
             )
-            return self._standardize_result(result, 54, "全車手每圈油門比例分析")
+            
+            # 統一 JSON 導出邏輯（與 F34/F47/F48 一致）
+            if result.get("success"):
+                self._export_to_json(result, 54, "driver_throttle_ratio")
+            
+            return result
         except Exception as exc:  # pragma: no cover - runtime safeguard
             message = f"全車手油門比例分析失敗: {exc}"
             print(f"[ERROR] {message}")
@@ -3454,6 +3963,1325 @@ class F1AnalysisFunctionMapper:
             
         except Exception as e:
             print(f"⚠️ 車手資料JSON保存失敗: {e}")
+    
+    # ============================================================================
+    # 預測系統功能 (功能 70-79)
+    # ============================================================================
+    
+    def _execute_fp_q_data_collector(self, **kwargs):
+        """
+        功能 70: FP→Q 訓練數據收集器
+        
+        用途: 收集 FP1/FP2/FP3 和 Q 的數據用於機器學習訓練
+        輸出: JSON 格式的訓練數據
+        """
+        try:
+            from CLI_modules.cli.prediction.fp_q_data_collector import FPQDataCollector
+            from CLI_modules.cli.prediction.race_calendar import get_races_for_year
+            
+            print("\n" + "="*60)
+            print("功能 70: FP→Q 訓練數據收集器")
+            print("="*60)
+            
+            # 初始化收集器
+            collector = FPQDataCollector()
+            
+            # 獲取參數
+            year = kwargs.get('year')
+            race = kwargs.get('race')
+            collect_season = kwargs.get('collect_season', False)
+            start_year = kwargs.get('start_year')
+            end_year = kwargs.get('end_year')
+            start_race = kwargs.get('start_race', 1)
+            end_race = kwargs.get('end_race')
+            
+            include_fp1 = not kwargs.get('no_fp1', False)
+            include_fp2 = not kwargs.get('no_fp2', False)
+            include_fp3 = not kwargs.get('no_fp3', False)
+            
+            # 執行收集
+            if start_year and end_year:
+                # 多賽季模式 - 使用賽事名稱列表
+                print(f"\n🏁 多賽季模式: {start_year}-{end_year}")
+                
+                for year in range(start_year, end_year + 1):
+                    print(f"\n{'#'*60}")
+                    print(f"# 處理賽季: {year}")
+                    print(f"{'#'*60}")
+                    
+                    # 獲取該年份的賽事列表
+                    races = get_races_for_year(year)
+                    
+                    if not races:
+                        print(f"⚠️  {year} 年份沒有賽事數據，跳過")
+                        continue
+                    
+                    print(f"📅 {year} 賽季共 {len(races)} 場賽事")
+                    season_success = 0
+                    
+                    for idx, race_name in enumerate(races, 1):
+                        try:
+                            print(f"\n🏁 [{idx}/{len(races)}] 收集 {year} {race_name}...")
+                            data = collector.collect_single_race(
+                                year,
+                                race_name,
+                                include_fp1=include_fp1,
+                                include_fp2=include_fp2,
+                                include_fp3=include_fp3
+                            )
+                            
+                            if data:
+                                # 立即保存每場賽事
+                                collector.save_to_json(data)
+                                season_success += 1
+                                print(f"✅ {race_name} 收集成功 ({season_success}/{len(races)})")
+                            else:
+                                print(f"⚠️  {race_name} 數據不完整，跳過")
+                            
+                        except Exception as e:
+                            error_str = str(e)
+                            print(f"❌ {race_name} 錯誤: {str(e)[:150]}")
+                            continue
+                    
+                    print(f"\n✅ {year} 賽季完成: {season_success}/{len(races)} 場賽事成功")
+            
+            elif collect_season and year:
+                # 單賽季模式
+                print(f"\n🏁 賽季模式: {year}")
+                
+                race_num = start_race
+                season_success = 0
+                
+                while True:
+                    if end_race and race_num > end_race:
+                        break
+                    
+                    try:
+                        print(f"\n🏁 收集賽事 {race_num} ({year})...")
+                        data = collector.collect_single_race(
+                            year,
+                            race_num,
+                            include_fp1=include_fp1,
+                            include_fp2=include_fp2,
+                            include_fp3=include_fp3
+                        )
+                        
+                        if data:
+                            # 立即保存每場賽事
+                            collector.save_to_json(data)
+                            season_success += 1
+                        else:
+                            print(f"⚠️  賽事 {race_num} 數據不完整，跳過")
+                        
+                        race_num += 1
+                        
+                    except Exception as e:
+                        error_str = str(e)
+                        if "No matching round" in error_str or "cannot be found" in error_str:
+                            print(f"\n✅ {year} 賽季結束 (共 {season_success} 場賽事)")
+                            break
+                        else:
+                            print(f"❌ 賽事 {race_num} 錯誤: {str(e)[:100]}")
+                            race_num += 1
+                            continue
+            
+            elif year and race:
+                # 單場賽事模式
+                print(f"\n🏁 單場賽事模式: {year} {race}")
+                
+                data = collector.collect_single_race(
+                    year,
+                    race,
+                    include_fp1=include_fp1,
+                    include_fp2=include_fp2,
+                    include_fp3=include_fp3
+                )
+                
+                if data:
+                    collector.save_to_json(data)
+            else:
+                print("❌ 錯誤: 請提供必要的參數")
+                print("   - 單場賽事: --year YEAR --race RACE")
+                print("   - 單賽季: --year YEAR --season")
+                print("   - 多賽季: --start-year START --end-year END")
+                return False
+            
+            print("\n✅ 功能 70 執行完成！")
+            return True
+            
+        except Exception as e:
+            print(f"\n❌ 功能 70 執行失敗: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _execute_q_race_data_collector(self, **kwargs):
+        """功能 71: Q→R 訓練數據收集器 (規劃中)"""
+        print("\n⚠️  功能 71 (Q→R 數據收集器) 尚未實現")
+        print("   狀態: 規劃中")
+        print("   預計實現: Phase 1 Week 3-4")
+        return False
+    
+    def _execute_xgboost_trainer(self, **kwargs):
+        """功能 72: XGBoost 模型訓練器"""
+        try:
+            print("\n🤖 執行 XGBoost 模型訓練器 (功能 72)...")
+            
+            from CLI_modules.cli.prediction.xgboost_trainer import run_xgboost_training
+            
+            # 參數處理
+            start_year = kwargs.get('start_year', 2018)
+            end_year = kwargs.get('end_year', 2023)
+            exclude_wet = kwargs.get('exclude_wet', True)
+            verbose = kwargs.get('show_detailed_output', True)
+            
+            # 執行訓練
+            result = run_xgboost_training(
+                start_year=start_year,
+                end_year=end_year,
+                exclude_wet=exclude_wet,
+                verbose=verbose
+            )
+            
+            return result
+            
+        except ImportError as e:
+            return {
+                "success": False,
+                "message": f"缺少必要套件: {str(e)}",
+                "hint": "請執行: pip install xgboost scikit-learn",
+                "function_id": "72"
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"XGBoost 訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "72"
+            }
+    
+    def _execute_placeholder_73(self, **kwargs):
+        """功能 73: v3.10 批次訓練器 (XGBoost 模型訓練)
+        
+        v3.10 = v3.8 - is_top_driver
+        基於 V3.8 vs V3.9 對比分析，移除無效特徵：
+        - is_top_driver (V3.8 所有賽道重要性為 0%)
+        
+        v3.10 特徵架構 (16 特徵):
+        - v3.0 基礎特徵 (8): ideal_s1/s2/s3/lap, apex speeds, max_speed
+        - v3.3 交互特徵 (3): s1_s2_ratio, sector_cv, s2_lap_ratio
+        - v3.4 速度特徵 (3): max_speed_lap_ratio, max_speed_s2_ratio, speed_consistency
+        - v3.5 有效特徵 (2): fp3_relative_position, fp3_gap_to_fastest
+        
+        參數:
+            --trials: Optuna 試驗次數 (預設: 500)
+            --cv-folds: 交叉驗證 folds (預設: 3)
+            --workers: 並行 workers (預設: 1)
+            --track: 指定單一賽道訓練 (預設: 訓練所有 24 個賽道)
+        
+        輸出:
+            - models/track_specific_v3.10/{track}.pkl
+            - v3.10_training_results.json
+        """
+        try:
+            print("\n" + "="*70)
+            print("功能 73: v3.10 批次訓練器")
+            print("="*70)
+            print("版本: v3.10 (16 特徵 - 移除 is_top_driver)")
+            print("改進: 移除 V3.8 中重要性為 0% 的 is_top_driver 特徵")
+            
+            # 導入訓練器 (使用 importlib 因為檔名有小數點)
+            import importlib.util
+            from pathlib import Path
+            
+            module_path = Path(__file__).parent.parent.parent.parent / "batch_train_all_tracks_v3.10.py"
+            if not module_path.exists():
+                return {
+                    "success": False,
+                    "message": "找不到 batch_train_all_tracks_v3.10.py",
+                    "function_id": "73"
+                }
+            
+            spec = importlib.util.spec_from_file_location("batch_trainer_v310", module_path)
+            batch_trainer_module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(batch_trainer_module)
+            BatchTrainerV3_10 = batch_trainer_module.BatchTrainerV3_10
+            
+            # 參數處理
+            trials = kwargs.get('trials', 500)
+            cv_folds = kwargs.get('cv_folds', 3)
+            workers = kwargs.get('workers', 1)
+            specific_track = kwargs.get('track', None)
+            
+            print(f"\n訓練參數:")
+            print(f"  Optuna trials: {trials}")
+            print(f"  CV folds: {cv_folds}")
+            print(f"  Workers: {workers}")
+            if specific_track:
+                print(f"  指定賽道: {specific_track}")
+            else:
+                print(f"  模式: 訓練所有 24 個賽道")
+            
+            # 創建訓練器
+            trainer = BatchTrainerV3_10(
+                trials=trials,
+                cv_folds=cv_folds,
+                workers=workers
+            )
+            
+            # 執行訓練
+            if specific_track:
+                print(f"\n開始訓練: {specific_track}")
+                result = trainer.train_single_track(specific_track)
+                if result:
+                    return {
+                        "success": True,
+                        "message": f"{specific_track} 訓練完成",
+                        "track": specific_track,
+                        "cv_mae": result['cv_mae'],
+                        "train_mae": result['train_mae'],
+                        "train_r2": result['train_r2'],
+                        "sample_count": result['sample_count'],
+                        "function_id": "73"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"{specific_track} 訓練失敗",
+                        "function_id": "73"
+                    }
+            else:
+                print(f"\n開始訓練所有賽道...")
+                trainer.train_all_tracks()
+                
+                # 計算統計
+                all_cv_mae = [r['cv_mae'] for r in trainer.results.values()]
+                avg_cv_mae = sum(all_cv_mae) / len(all_cv_mae)
+                all_r2 = [r['train_r2'] for r in trainer.results.values()]
+                avg_r2 = sum(all_r2) / len(all_r2)
+                
+                print(f"\n{'='*70}")
+                print("v3.10 訓練完成！")
+                print(f"{'='*70}")
+                print(f"\n模型保存位置: models/track_specific_v3.10/")
+                print(f"結果檔案: v3.10_training_results.json")
+                print(f"\n整體性能:")
+                print(f"  平均 CV MAE: {avg_cv_mae:.3f}s")
+                print(f"  平均 R²: {avg_r2:.4f}")
+                print(f"  訓練賽道數: {len(trainer.results)}/24")
+                
+                return {
+                    "success": True,
+                    "message": f"所有賽道訓練完成 ({len(trainer.results)}/24)",
+                    "avg_cv_mae": avg_cv_mae,
+                    "avg_r2": avg_r2,
+                    "tracks_trained": len(trainer.results),
+                    "results": trainer.results,
+                    "function_id": "73"
+                }
+        
+        except ImportError as e:
+            return {
+                "success": False,
+                "message": f"缺少必要模組: {str(e)}",
+                "hint": "請確認 batch_train_all_tracks_v3.10.py 存在",
+                "function_id": "73"
+            }
+        except Exception as e:
+            print(f"[ERROR] v3.10 訓練失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"v3.10 訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "73"
+            }
+    
+    def _execute_placeholder_74(self, **kwargs):
+        """功能 74: 排位賽預測 JSON 生成器 (v3.10 模型)
+        
+        使用已訓練的 v3.10 模型生成排位賽預測結果並輸出 JSON 檔案。
+        
+        工作流程:
+        1. 載入 models/track_specific_v3.10/{track}.pkl
+        2. 提取 FP3 數據作為預測特徵
+        3. 生成排位賽時間預測
+        4. 輸出 JSON: json/qualifying_prediction_{year}_{race}.json
+        
+        參數:
+            year: 賽季年份 (必填)
+            race: 賽事名稱 (必填)
+            session: 會話類型，固定為 "Q" (排位賽)
+        
+        輸出結構:
+            {
+                "metadata": {
+                    "track": "Monaco",
+                    "year": 2024,
+                    "session": "Q",
+                    "model_r2": 0.8923,
+                    "model_mae": 2.534,
+                    "sample_count": 145,
+                    "prediction_time": "2025-11-05T14:30:00"
+                },
+                "predictions": [
+                    {
+                        "rank": 1,
+                        "driver": "VER",
+                        "team": "Red Bull Racing",
+                        "fp3_time": 64.643,
+                        "predicted_time": 64.523,
+                        "actual_q_time": null,
+                        "improvement": -0.120
+                    },
+                    ...
+                ]
+            }
+        
+        返回:
+            Dict: 執行結果
+        """
+        try:
+            import pickle
+            import json
+            import pandas as pd
+            import numpy as np
+            from pathlib import Path
+            from datetime import datetime
+            
+            print("\n" + "="*70)
+            print("功能 74: 排位賽預測 JSON 生成器 (v3.10)")
+            print("="*70)
+            
+            # ========================================
+            # 1. 參數驗證
+            # ========================================
+            year = kwargs.get('year')
+            race = kwargs.get('race')
+            
+            if not year or not race:
+                return {
+                    "success": False,
+                    "message": "缺少必要參數: year 和 race",
+                    "function_id": "74"
+                }
+            
+            print(f"\n目標賽事: {year} {race} (排位賽預測)")
+            
+            # ========================================
+            # 2. 載入 v3.10 模型
+            # ========================================
+            model_dir = Path(__file__).parent.parent.parent.parent / "models" / "track_specific_v3.10"
+            model_file = model_dir / f"{race}.pkl"  # ✅ 修正: 檔名格式為 {race}.pkl
+            
+            if not model_file.exists():
+                return {
+                    "success": False,
+                    "message": f"找不到 {race} 的 v3.10 模型檔案",
+                    "hint": f"請先執行: python f1_analysis_modular_main.py -f 73 --track {race}",
+                    "expected_file": str(model_file),
+                    "function_id": "74"
+                }
+            
+            print(f"✅ 載入模型: {model_file}")
+            with open(model_file, 'rb') as f:
+                model_data = pickle.load(f)
+            
+            model = model_data['model']
+            feature_names = model_data['feature_names']
+            
+            # ✅ v3.10 模型結構：{model, feature_names, cv_mae, train_mae, train_r2, sample_count, version}
+            model_r2 = model_data.get('train_r2', 0.0)
+            model_mae = model_data.get('train_mae', 0.0)
+            cv_mae = model_data.get('cv_mae', 0.0)
+            sample_count = model_data.get('sample_count', 0)
+            model_version = model_data.get('version', 'v3.10')
+            
+            # 如果完全沒有指標，顯示警告
+            if model_r2 == 0.0 and model_mae == 0.0 and sample_count == 0:
+                print(f"⚠️  警告: 模型檔案缺少訓練指標 (train_r2, train_mae, sample_count)")
+                print(f"   提示: 這是舊版本模型，請重新訓練以獲取完整指標")
+                print(f"   命令: python f1_analysis_modular_main.py -f 73 --track {race}")
+            else:
+                print(f"   模型版本: {model_version}")
+                print(f"   模型 R²: {model_r2:.4f}")
+                print(f"   模型 MAE: {model_mae:.3f}s")
+                print(f"   交叉驗證 MAE: {cv_mae:.3f}s")
+                print(f"   樣本數: {sample_count}")
+            print(f"   特徵數: {len(feature_names)} (v3.10 移除 is_top_driver)")
+            
+            # ========================================
+            # 3. 提取 FP3 數據
+            # ========================================
+            print(f"\n正在載入 {year} {race} FP3 數據...")
+            
+            if not self.data_loader:
+                return {
+                    "success": False,
+                    "message": "數據載入器未初始化",
+                    "function_id": "74"
+                }
+            
+            # 載入 FP3 會話
+            fp3_loaded = self.data_loader.load_race_data(year, race, 'FP3')
+            if not fp3_loaded:
+                return {
+                    "success": False,
+                    "message": f"無法載入 {year} {race} FP3 數據",
+                    "hint": "請確認該賽事有 FP3 會話且數據可用",
+                    "function_id": "74"
+                }
+            
+            # ✅ 修正: 直接訪問 self.data_loader.session
+            session = self.data_loader.session
+            if not session:
+                return {
+                    "success": False,
+                    "message": "會話數據未載入",
+                    "function_id": "74"
+                }
+            
+            laps = session.laps
+            
+            # 過濾有效圈速
+            laps = laps[laps['LapTime'].notna()]
+            laps = laps[laps['IsAccurate'] == True]
+            
+            if laps.empty:
+                return {
+                    "success": False,
+                    "message": f"{year} {race} FP3 無有效圈速數據",
+                    "function_id": "74"
+                }
+            
+            print(f"✅ FP3 數據載入成功 ({len(laps)} 個有效圈速)")
+            
+            # ========================================
+            # 4. 計算每位車手的 FP3 最快圈特徵
+            # ========================================
+            print("\n計算車手特徵...")
+            predictions = []
+            
+            # 獲取所有車手
+            drivers = laps['Driver'].unique()
+            
+            for driver_code in drivers:
+                driver_laps = laps[laps['Driver'] == driver_code]
+                
+                # 找到最快圈
+                fastest_lap = driver_laps.loc[driver_laps['LapTime'].idxmin()]
+                
+                # 提取基礎時間
+                lap_time = fastest_lap['LapTime'].total_seconds()
+                
+                # 提取扇區時間（v3.8 需要的基礎特徵）
+                try:
+                    s1 = fastest_lap['Sector1Time'].total_seconds() if pd.notna(fastest_lap['Sector1Time']) else lap_time / 3
+                    s2 = fastest_lap['Sector2Time'].total_seconds() if pd.notna(fastest_lap['Sector2Time']) else lap_time / 3
+                    s3 = fastest_lap['Sector3Time'].total_seconds() if pd.notna(fastest_lap['Sector3Time']) else lap_time / 3
+                except:
+                    s1, s2, s3 = lap_time / 3, lap_time / 3, lap_time / 3
+                
+                # 提取速度數據
+                try:
+                    telemetry = fastest_lap.get_telemetry()
+                    speeds = telemetry['Speed'].values if 'Speed' in telemetry.columns else np.array([250.0])
+                    max_speed = float(speeds.max())
+                    avg_speed = float(speeds.mean())
+                    speed_std = float(speeds.std())
+                    
+                    # 計算低/中/高速彎道平均速度
+                    low_speed_apex = float(np.percentile(speeds, 25))   # 25th percentile
+                    mid_speed_apex = float(np.percentile(speeds, 50))   # median
+                    high_speed_apex = float(np.percentile(speeds, 75))  # 75th percentile
+                except:
+                    max_speed = 300.0
+                    avg_speed = 250.0
+                    speed_std = 10.0
+                    low_speed_apex = 200.0
+                    mid_speed_apex = 250.0
+                    high_speed_apex = 280.0
+                
+                # ✅ 修正: 構建 v3.8 特徵向量（17 特徵，匹配實際模型）
+                features = {
+                    # v3.0 基礎特徵 (8)
+                    'ideal_s1': s1,
+                    'ideal_s2': s2,
+                    'ideal_s3': s3,
+                    'ideal_lap': lap_time,
+                    'low_speed_apex': low_speed_apex,     # ✅ 修正特徵名稱
+                    'mid_speed_apex': mid_speed_apex,     # ✅ 修正特徵名稱
+                    'high_speed_apex': high_speed_apex,   # ✅ 修正特徵名稱
+                    'max_speed': max_speed,
+                    
+                    # v3.3 交互特徵 (3)
+                    's1_s2_ratio': s1 / s2 if s2 > 0 else 1.0,
+                    'sector_cv': speed_std / avg_speed if avg_speed > 0 else 0.1,
+                    's2_lap_ratio': s2 / lap_time if lap_time > 0 else 0.33,
+                    
+                    # v3.4 速度特徵 (3)
+                    'max_speed_lap_ratio': max_speed * lap_time / 1000 if lap_time > 0 else 20.0,
+                    'max_speed_s2_ratio': max_speed / s2 if s2 > 0 else 10.0,
+                    'speed_consistency': 1.0 - (speed_std / avg_speed) if avg_speed > 0 else 0.9,
+                    
+                    # v3.5 排位相關特徵 (2) - v3.10 移除 is_top_driver
+                    'fp3_relative_position': 0.5,  # 待計算
+                    'fp3_gap_to_fastest': 0.0,      # 待計算
+                    # ❌ v3.10: 已移除 is_top_driver (V3.8 證明重要性為 0%)
+                }
+                
+                predictions.append({
+                    'driver': driver_code,
+                    'fp3_time': lap_time,
+                    'features': features,
+                    'team': fastest_lap.get('Team', 'Unknown')
+                })
+            
+            # 計算 FP3 排位相關特徵
+            predictions.sort(key=lambda x: x['fp3_time'])
+            fastest_fp3 = predictions[0]['fp3_time']
+            
+            for i, pred in enumerate(predictions):
+                pred['features']['fp3_relative_position'] = (i + 1) / len(predictions)
+                pred['features']['fp3_gap_to_fastest'] = pred['fp3_time'] - fastest_fp3
+            
+            print(f"✅ 提取 {len(predictions)} 位車手的特徵")
+            
+            # ========================================
+            # 5. 生成預測
+            # ========================================
+            print("\n生成排位賽預測...")
+            
+            for pred in predictions:
+                # 構建特徵向量（依照模型訓練時的特徵順序）
+                feature_vector = [pred['features'][fname] for fname in feature_names]
+                
+                # 預測排位賽時間
+                predicted_q_time = model.predict([feature_vector])[0]
+                pred['predicted_time'] = float(predicted_q_time)
+                pred['improvement'] = float(predicted_q_time - pred['fp3_time'])
+            
+            # 按預測時間排序
+            predictions.sort(key=lambda x: x['predicted_time'])
+            
+            # ========================================
+            # 6. 嘗試獲取實際排位賽結果（如果賽事已完成）
+            # ========================================
+            actual_q_times = {}  # driver_code -> actual_q_time
+            
+            try:
+                print(f"\n嘗試載入 {year} {race} Q 會話數據...")
+                q_loaded = self.data_loader.load_race_data(year, race, 'Q')
+                
+                if q_loaded and self.data_loader.session:
+                    q_session = self.data_loader.session
+                    q_laps = q_session.laps
+                    
+                    # 過濾有效圈速
+                    q_laps = q_laps[q_laps['LapTime'].notna()]
+                    
+                    if not q_laps.empty:
+                        print(f"✅ Q 會話數據載入成功 ({len(q_laps)} 個圈速)")
+                        
+                        # 提取每位車手的最快圈
+                        for driver_code in q_laps['Driver'].unique():
+                            driver_q_laps = q_laps[q_laps['Driver'] == driver_code]
+                            fastest_q_lap = driver_q_laps.loc[driver_q_laps['LapTime'].idxmin()]
+                            q_time = fastest_q_lap['LapTime'].total_seconds()
+                            actual_q_times[driver_code] = float(q_time)
+                        
+                        print(f"✅ 提取 {len(actual_q_times)} 位車手的實際 Q 結果")
+                    else:
+                        print("⚠️  Q 會話無有效圈速數據")
+                else:
+                    print("⚠️  Q 會話數據不可用（可能賽事尚未進行）")
+                    
+            except Exception as e:
+                print(f"⚠️  無法載入 Q 會話數據: {e}")
+                print("   提示: 如果賽事尚未進行，這是正常的")
+            
+            # ========================================
+            # 7. 構建 JSON 輸出（包含名次計算）
+            # ========================================
+            
+            # 7.1 計算 FP3 預測名次（根據 FP3 時間排序）
+            fp3_sorted = sorted(predictions, key=lambda x: x['fp3_time'])
+            fp3_rank_map = {pred['driver']: rank for rank, pred in enumerate(fp3_sorted, 1)}
+            
+            # 7.2 計算 Q 名次（根據實際 Q 結果排序）
+            q_rank_map = {}  # driver_code -> q_rank
+            if actual_q_times:
+                # 將有 Q 結果的車手按時間排序
+                q_sorted = sorted(actual_q_times.items(), key=lambda x: x[1])
+                q_rank_map = {driver: rank for rank, (driver, _) in enumerate(q_sorted, 1)}
+                print(f"✅ 已計算 {len(q_rank_map)} 位車手的 Q 名次")
+            else:
+                print("⚠️  無實際 Q 結果，Q 名次將為 None")
+            
+            output_data = {
+                "metadata": {
+                    "track": race,
+                    "year": year,
+                    "session": "Q",
+                    "model_r2": float(model_r2),
+                    "model_mae": float(model_mae),
+                    "sample_count": int(sample_count),
+                    "prediction_time": datetime.now().isoformat(),
+                    "model_version": "v3.8",
+                    "feature_count": len(feature_names),
+                    "has_actual_results": len(actual_q_times) > 0  # ✅ 新增: 標記是否有實際結果
+                },
+                "predictions": []
+            }
+            
+            for rank, pred in enumerate(predictions, 1):
+                driver_code = pred['driver']
+                actual_q_time = actual_q_times.get(driver_code)  # ✅ 修正: 從實際結果獲取
+                fp3_rank = fp3_rank_map[driver_code]
+                actual_q_rank = q_rank_map.get(driver_code)
+                
+                # 計算名次變化（FP3 預測 vs Q 實際）
+                # 正數 = 進步（排名上升），負數 = 退步（排名下降）
+                rank_change = None
+                if actual_q_rank is not None:
+                    rank_change = fp3_rank - actual_q_rank  # FP3 第3名 → Q 第1名 = +2（進步）
+                
+                output_data["predictions"].append({
+                    "rank": rank,
+                    "driver": driver_code,
+                    "team": pred['team'],
+                    "fp3_time": float(pred['fp3_time']),
+                    "predicted_time": float(pred['predicted_time']),
+                    "actual_q_time": actual_q_time,  # ✅ 修正: 填入實際結果（如果有）
+                    "improvement": float(pred['improvement']),
+                    "fp3_predicted_rank": fp3_rank,  # ✅ 新增: FP3 預測名次
+                    "actual_q_rank": actual_q_rank,  # ✅ 新增: Q 名次（如果有）
+                    "rank_change": rank_change  # ✅ 新增: 名次變化（FP3預測 → Q實際）
+                })
+            
+            # ========================================
+            # 8. 保存 JSON 檔案
+            # ========================================
+            json_dir = Path(__file__).parent.parent.parent.parent / "json"
+            json_dir.mkdir(exist_ok=True)
+            
+            json_file = json_dir / f"qualifying_prediction_{year}_{race}.json"
+            
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(output_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"\n✅ JSON 檔案已保存: {json_file}")
+            
+            # ========================================
+            # 9. 輸出預測摘要和名次變化分析
+            # ========================================
+            print(f"\n預測摘要:")
+            print(f"  前 5 名預測:")
+            for i, pred in enumerate(output_data['predictions'][:5], 1):
+                fp3_rank = pred.get('fp3_predicted_rank', 'N/A')
+                q_rank = pred.get('actual_q_rank', 'N/A')
+                rank_change = pred.get('rank_change')
+                
+                change_str = ""
+                if rank_change is not None:
+                    if rank_change > 0:
+                        change_str = f" [↑{rank_change}]"  # 進步
+                    elif rank_change < 0:
+                        change_str = f" [↓{abs(rank_change)}]"  # 退步
+                    else:
+                        change_str = " [→]"  # 持平
+                
+                print(f"    P{i}: {pred['driver']} - {pred['predicted_time']:.3f}s (FP3: {pred['fp3_time']:.3f}s, △{pred['improvement']:.3f}s) FP3排名:{fp3_rank} → Q排名:{q_rank}{change_str}")
+            
+            # 如果有實際結果，顯示名次變化統計
+            if actual_q_times:
+                print(f"\n名次變化分析:")
+                
+                # 計算進步、退步、持平的車手數量
+                improved = [p for p in output_data['predictions'] if p.get('rank_change') and p['rank_change'] > 0]
+                declined = [p for p in output_data['predictions'] if p.get('rank_change') and p['rank_change'] < 0]
+                unchanged = [p for p in output_data['predictions'] if p.get('rank_change') == 0]
+                
+                print(f"  進步（排名上升）: {len(improved)} 位車手")
+                if improved:
+                    # 按進步幅度排序
+                    improved.sort(key=lambda x: x['rank_change'], reverse=True)
+                    for p in improved[:3]:  # 顯示前 3 名進步最多的
+                        print(f"    {p['driver']}: FP3 第{p['fp3_predicted_rank']}名 → Q 第{p['actual_q_rank']}名 (↑{p['rank_change']})")
+                
+                print(f"  退步（排名下降）: {len(declined)} 位車手")
+                if declined:
+                    # 按退步幅度排序
+                    declined.sort(key=lambda x: x['rank_change'])
+                    for p in declined[:3]:  # 顯示前 3 名退步最多的
+                        print(f"    {p['driver']}: FP3 第{p['fp3_predicted_rank']}名 → Q 第{p['actual_q_rank']}名 (↓{abs(p['rank_change'])})")
+                
+                print(f"  持平（排名不變）: {len(unchanged)} 位車手")
+            
+            # ✅ 修正: 添加 data 欄位，包含完整的預測數據和 JSON 檔案資訊
+            return {
+                "success": True,
+                "message": f"{year} {race} 排位賽預測生成成功",
+                "data": {
+                    "json_data": [str(json_file)],  # API 期望的 JSON 檔案列表格式
+                    "metadata": output_data["metadata"],
+                    "predictions": output_data["predictions"],
+                    "predictions_count": len(predictions)
+                },
+                "json_file": str(json_file),
+                "predictions_count": len(predictions),
+                "model_r2": float(model_r2),
+                "model_mae": float(model_mae),
+                "function_id": "74"
+            }
+        
+        except FileNotFoundError as e:
+            return {
+                "success": False,
+                "message": f"檔案未找到: {str(e)}",
+                "function_id": "74"
+            }
+        except Exception as e:
+            print(f"[ERROR] 排位賽預測生成失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"排位賽預測生成失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "74"
+            }
+    
+    def _execute_placeholder_75(self, **kwargs):
+        """功能 75: [已刪除] 純 FP3 特徵優化訓練"""
+        print("\n[已刪除] 功能 75 已刪除")
+        print("   狀態: 已移除")
+        print("   原功能: 純 FP3 特徵優化訓練")
+        return {
+            "success": False,
+            "message": "功能 75 已刪除",
+            "function_id": "75"
+        }
+
+    def _execute_ensemble_training(self, **kwargs) -> Dict[str, Any]:
+        """
+        功能 76: 集成學習訓練（XGBoost + LightGBM + CatBoost）(2025-11-02)
+        
+        使用三個 GBDT 模型的集成策略，包含：
+        - XGBoost (Function 75 最佳參數)
+        - LightGBM (匹配參數)
+        - CatBoost (匹配參數)
+        - 加權平均集成（逆 MAE 權重）
+        - Stacking 集成（Ridge 元模型）
+        
+        目標：在 Function 75 基礎上（MAE 0.8264s）進一步優化至 < 0.80s
+        
+        參數：
+            --start-year: 訓練起始年份（默認 2018）
+            --end-year: 訓練結束年份（默認 2024）
+            --test-year: 測試年份（默認 2025）
+            --val-split: 驗證集比例（默認 0.2）
+        
+        返回：
+            Dict: 包含集成性能指標的結果
+        """
+        try:
+            from CLI_modules.cli.prediction.ensemble_trainer import EnsembleTrainer
+            import numpy as np
+            import pandas as pd
+            import json
+            from pathlib import Path
+            from datetime import datetime
+            
+            # 獲取參數，使用默認值
+            start_year = kwargs.get('start_year') or 2018
+            end_year = kwargs.get('end_year') or 2024
+            test_year = kwargs.get('test_year') or 2025
+            val_split = kwargs.get('val_split') or 0.2
+            
+            print("="*70)
+            print(f"功能 76: 集成學習訓練（XGBoost + LightGBM + CatBoost）")
+            print("="*70)
+            print(f"訓練資料: {start_year}-{end_year}")
+            print(f"測試資料: {test_year}")
+            print(f"驗證集比例: {val_split*100:.0f}%")
+            print(f"目標: MAE < 0.80s（Function 75 基準: 0.8264s）")
+            print("="*70)
+            
+            # ===== 步驟 1: 載入訓練數據（複用 Function 75 的 XGBoostTrainer）=====
+            print("\n[1/6] 載入訓練數據...")
+            
+            # 使用 XGBoostTrainer 載入數據（與 Function 75 一致）
+            from CLI_modules.cli.prediction.xgboost_trainer import XGBoostTrainer
+            
+            trainer = XGBoostTrainer(verbose=True)
+            
+            print(f"  載入 {start_year}-{end_year} 訓練數據...")
+            training_data = trainer.load_training_data(
+                start_year=start_year,
+                end_year=end_year,
+                exclude_wet=True
+            )
+            
+            if training_data.empty:
+                return {
+                    "success": False,
+                    "message": "未找到有效訓練數據",
+                    "function_id": "76"
+                }
+            
+            # 準備特徵（使用 XGBoostTrainer 的 prepare_features）
+            X_train_full, y_train_full = trainer.prepare_features(training_data)
+            
+            print(f"\n✅ 訓練數據載入完成: {len(X_train_full)} 樣本")
+            print(f"   特徵維度: {X_train_full.shape[1]}")
+            print(f"   目標範圍: {y_train_full.min():.3f}s - {y_train_full.max():.3f}s")
+            
+            # 獲取特徵數量（從 XGBoostTrainer）
+            features_count = X_train_full.shape[1]
+            
+            # ===== 步驟 2: 分割訓練/驗證集 =====
+            print(f"\n[2/6] 分割訓練/驗證集（{int((1-val_split)*100)}%/{int(val_split*100)}%）...")
+            
+            from sklearn.model_selection import train_test_split
+            X_train, X_val, y_train, y_val = train_test_split(
+                X_train_full, y_train_full, test_size=val_split, random_state=42
+            )
+            
+            print(f"   訓練集: {len(X_train)} 樣本")
+            print(f"   驗證集: {len(X_val)} 樣本")
+            
+            # ===== 步驟 3: 訓練集成模型 =====
+            print(f"\n[3/6] 訓練集成模型（XGBoost + LightGBM + CatBoost）...")
+            
+            ensemble = EnsembleTrainer(features_count=features_count, verbose=True)
+            
+            # 訓練 XGBoost
+            print("\n  [3.1] 訓練 XGBoost...")
+            ensemble.train_xgboost(X_train, y_train, X_val, y_val)
+            xgb_perf = ensemble.performance['xgboost']
+            print(f"     MAE: {xgb_perf['mae']:.4f}s  R²: {xgb_perf['r2']:.4f}  RMSE: {xgb_perf['rmse']:.4f}s")
+            
+            # 訓練 LightGBM
+            print("\n  [3.2] 訓練 LightGBM...")
+            ensemble.train_lightgbm(X_train, y_train, X_val, y_val)
+            lgb_perf = ensemble.performance['lightgbm']
+            print(f"     MAE: {lgb_perf['mae']:.4f}s  R²: {lgb_perf['r2']:.4f}  RMSE: {lgb_perf['rmse']:.4f}s")
+            
+            # 訓練 CatBoost
+            print("\n  [3.3] 訓練 CatBoost...")
+            ensemble.train_catboost(X_train, y_train, X_val, y_val)
+            ctb_perf = ensemble.performance['catboost']
+            print(f"     MAE: {ctb_perf['mae']:.4f}s  R²: {ctb_perf['r2']:.4f}  RMSE: {ctb_perf['rmse']:.4f}s")
+            
+            # ===== 步驟 4: 創建集成策略 =====
+            print(f"\n[4/6] 創建集成策略...")
+            
+            # 加權平均集成
+            print("\n  [4.1] 加權平均集成（逆 MAE 權重）...")
+            ensemble.create_weighted_average(X_val, y_val)
+            weighted_perf = ensemble.performance['weighted_avg']
+            print(f"     權重: XGB={ensemble.ensemble_weights['xgboost']:.3f}, "
+                  f"LGB={ensemble.ensemble_weights['lightgbm']:.3f}, "
+                  f"CTB={ensemble.ensemble_weights['catboost']:.3f}")
+            print(f"     MAE: {weighted_perf['mae']:.4f}s  R²: {weighted_perf['r2']:.4f}  RMSE: {weighted_perf['rmse']:.4f}s")
+            
+            # Stacking 集成
+            print("\n  [4.2] Stacking 集成（Ridge 元模型）...")
+            ensemble.create_stacking(X_train, y_train, X_val, y_val)
+            stacking_perf = ensemble.performance['stacking']
+            stacking_weights = stacking_perf.get('weights', {})
+            print(f"     權重: XGB={stacking_weights.get('xgboost', 0):.3f}, "
+                  f"LGB={stacking_weights.get('lightgbm', 0):.3f}, "
+                  f"CTB={stacking_weights.get('catboost', 0):.3f}")
+            print(f"     MAE: {stacking_perf['mae']:.4f}s  R²: {stacking_perf['r2']:.4f}  RMSE: {stacking_perf['rmse']:.4f}s")
+            
+            # ===== 步驟 5: 選擇最佳方法 =====
+            print(f"\n[5/6] 選擇最佳方法...")
+            best_method = ensemble.select_best_method()
+            best_perf = ensemble.performance[best_method]
+            
+            print(f"\n   🏆 最佳方法: {best_method}")
+            print(f"      MAE: {best_perf['mae']:.4f}s")
+            print(f"      R²: {best_perf['r2']:.4f}")
+            print(f"      RMSE: {best_perf['rmse']:.4f}s")
+            
+            # ===== 步驟 6: 2025 測試集驗證 =====
+            print(f"\n[6/6] 2025 測試集驗證...")
+            
+            # 使用 XGBoostTrainer 載入測試數據
+            trainer_test = XGBoostTrainer(verbose=False)
+            
+            print(f"  載入 {test_year} 測試數據...")
+            test_data = trainer_test.load_training_data(
+                start_year=test_year,
+                end_year=test_year,
+                exclude_wet=True
+            )
+            
+            if test_data.empty:
+                print(f"   ⚠️ 未找到 {test_year} 測試數據，跳過測試集驗證")
+                X_test, y_test = None, None
+                mae_test, r2_test, rmse_test = None, None, None
+            else:
+                X_test, y_test = trainer_test.prepare_features(test_data)
+                
+                y_test_pred = ensemble.predict(X_test, method='best')
+                
+                from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
+                mae_test = mean_absolute_error(y_test, y_test_pred)
+                r2_test = r2_score(y_test, y_test_pred)
+                rmse_test = np.sqrt(mean_squared_error(y_test, y_test_pred))
+                
+                print(f"\n   測試集樣本: {len(X_test)}")
+                print(f"   測試集 MAE: {mae_test:.4f}s")
+                print(f"   測試集 R²: {r2_test:.4f}")
+                print(f"   測試集 RMSE: {rmse_test:.4f}s")
+                
+                # 與 Function 75 比較
+                baseline_mae = 0.8264
+                improvement = ((baseline_mae - mae_test) / baseline_mae) * 100
+                print(f"\n   📊 vs Function 75:")
+                print(f"      基準 MAE: {baseline_mae:.4f}s")
+                print(f"      改進幅度: {improvement:+.2f}%")
+                print(f"      目標達成: {'✅ 是' if mae_test < 0.80 else '❌ 否'} (目標 < 0.80s)")
+            
+            # ===== 保存模型和結果 =====
+            print(f"\n保存集成模型...")
+            model_dir = Path("models")
+            model_dir.mkdir(exist_ok=True)
+            ensemble.save(str(model_dir))
+            print(f"   ✅ 模型已保存至 {model_dir}/")
+            
+            # 生成報告
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            report = {
+                "function_id": "76",
+                "function_name": "集成學習訓練",
+                "timestamp": timestamp,
+                "training_period": f"{start_year}-{end_year}",
+                "test_year": test_year,
+                "training_samples": int(len(X_train)),
+                "validation_samples": int(len(X_val)),
+                "test_samples": int(len(X_test)) if X_test is not None else 0,
+                "feature_count": features_count,
+                "features": list(training_data.columns),  # 從 DataFrame 獲取特徵名稱
+                "models": {
+                    "xgboost": {
+                        "mae": float(xgb_perf['mae']),
+                        "r2": float(xgb_perf['r2']),
+                        "rmse": float(xgb_perf['rmse'])
+                    },
+                    "lightgbm": {
+                        "mae": float(lgb_perf['mae']),
+                        "r2": float(lgb_perf['r2']),
+                        "rmse": float(lgb_perf['rmse'])
+                    },
+                    "catboost": {
+                        "mae": float(ctb_perf['mae']),
+                        "r2": float(ctb_perf['r2']),
+                        "rmse": float(ctb_perf['rmse'])
+                    },
+                    "weighted_average": {
+                        "mae": float(weighted_perf['mae']),
+                        "r2": float(weighted_perf['r2']),
+                        "rmse": float(weighted_perf['rmse']),
+                        "weights": {
+                            "xgboost": float(ensemble.ensemble_weights['xgboost']),
+                            "lightgbm": float(ensemble.ensemble_weights['lightgbm']),
+                            "catboost": float(ensemble.ensemble_weights['catboost'])
+                        }
+                    },
+                    "stacking": {
+                        "mae": float(stacking_perf['mae']),
+                        "r2": float(stacking_perf['r2']),
+                        "rmse": float(stacking_perf['rmse']),
+                        "weights": stacking_weights
+                    }
+                },
+                "best_method": best_method,
+                "best_validation_performance": {
+                    "mae": float(best_perf['mae']),
+                    "r2": float(best_perf['r2']),
+                    "rmse": float(best_perf['rmse'])
+                }
+            }
+            
+            # 添加測試集結果（如果有）
+            if mae_test is not None:
+                report["test_performance"] = {
+                    "mae": float(mae_test),
+                    "r2": float(r2_test),
+                    "rmse": float(rmse_test),
+                    "baseline_mae": baseline_mae,
+                    "improvement_pct": float(improvement),
+                    "target_achieved": mae_test < 0.80
+                }
+            
+            # 保存 JSON 報告
+            report_dir = Path("reports")
+            report_dir.mkdir(exist_ok=True)
+            report_path = report_dir / f"ensemble_training_{timestamp}.json"
+            
+            with open(report_path, 'w', encoding='utf-8') as f:
+                json.dump(report, f, ensure_ascii=False, indent=2)
+            
+            print(f"\n✅ 報告已保存至 {report_path}")
+            
+            # ===== 總結 =====
+            print("\n" + "="*70)
+            print("集成學習訓練完成！")
+            print("="*70)
+            print(f"最佳方法: {best_method}")
+            print(f"驗證集 MAE: {best_perf['mae']:.4f}s")
+            if mae_test is not None:
+                print(f"測試集 MAE: {mae_test:.4f}s")
+                print(f"目標達成: {'✅ 是' if mae_test < 0.80 else '❌ 否'} (< 0.80s)")
+                print(f"vs Function 75: {improvement:+.2f}%")
+            print("="*70)
+            
+            return {
+                "success": True,
+                "message": f"集成學習訓練完成（最佳方法：{best_method}）",
+                "best_method": best_method,
+                "validation_mae": float(best_perf['mae']),
+                "test_mae": float(mae_test) if mae_test is not None else None,
+                "improvement_pct": float(improvement) if mae_test is not None else None,
+                "target_achieved": mae_test < 0.80 if mae_test is not None else None,
+                "report_path": str(report_path),
+                "function_id": "76"
+            }
+            
+        except ImportError as e:
+            return {
+                "success": False,
+                "message": f"缺少必要套件: {str(e)}",
+                "hint": "請確認已安裝 xgboost, lightgbm, catboost, scikit-learn",
+                "function_id": "76"
+            }
+        except Exception as e:
+            print(f"[ERROR] 集成學習訓練失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"集成學習訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "76"
+            }
+    
+    def _execute_track_specific_training(self, **kwargs) -> Dict[str, Any]:
+        """
+        功能 77: 賽道特定模型訓練（v2.0 + Function 78）(2025-11-03)
+        
+        為每個賽道訓練獨立的 XGBoost 模型，並整合 Function 78 的車手 FP3→Q 特徵
+        
+        參數：
+            --track: 賽道名稱（例如：Mexico）
+            --train: 訓練模式（生成模型）
+            --predict: 預測模式（使用已訓練模型）
+            --year: 預測年份（默認 2025）
+        
+        返回：
+            Dict: 包含訓練或預測結果
+        """
+        try:
+            from CLI_modules.cli.prediction.track_specific_trainer import TrackSpecificTrainer
+            from pathlib import Path
+            
+            # 獲取參數
+            track_name = kwargs.get('track') or 'Mexico'
+            train_mode = kwargs.get('train', False)
+            predict_mode = kwargs.get('predict', False)
+            year = kwargs.get('year', 2025)
+            
+            print("="*70)
+            print(f"功能 77: 賽道特定模型訓練 (v2.0 + Function 78)")
+            print("="*70)
+            print(f"賽道: {track_name}")
+            print(f"模式: {'訓練' if train_mode else '預測' if predict_mode else '訓練'}")
+            if predict_mode:
+                print(f"預測年份: {year}")
+            print("="*70)
+            
+            # 建立訓練器
+            trainer = TrackSpecificTrainer(verbose=True)
+            
+            if train_mode or (not predict_mode):
+                # 訓練模式
+                print(f"\n[訓練模式] 載入 2018-2024 歷史數據...")
+                
+                # 載入訓練數據
+                track_data = trainer.load_training_data(
+                    start_year=2018,
+                    end_year=2024,
+                    exclude_wet=True
+                )
+                
+                if not track_data:
+                    return {
+                        "success": False,
+                        "message": "無法載入訓練數據",
+                        "function_id": "77"
+                    }
+                
+                # 檢查指定賽道是否有數據
+                if track_name not in trainer.track_data:
+                    available_tracks = list(trainer.track_data.keys())
+                    return {
+                        "success": False,
+                        "message": f"找不到賽道 {track_name} 的數據",
+                        "available_tracks": available_tracks,
+                        "function_id": "77"
+                    }
+                
+                # 訓練單一賽道模型
+                result = trainer.train_track_model(track_name)
+                
+                if result['success']:
+                    # 儲存模型
+                    model_file = trainer.models_dir / f"{track_name}.pkl"
+                    import pickle
+                    with open(model_file, 'wb') as f:
+                        pickle.dump({
+                            'model': trainer.track_models[track_name],
+                            'performance': trainer.track_performance[track_name],
+                            'track': track_name
+                        }, f)
+                    
+                    print(f"\n💾 模型已儲存: {model_file}")
+                    
+                    return {
+                        "success": True,
+                        "message": f"{track_name} 模型訓練完成",
+                        "track": track_name,
+                        "train_mae": result['train_mae'],
+                        "test_mae": result['test_mae'],
+                        "test_r2": result['test_r2'],
+                        "model_file": str(model_file),
+                        "function_id": "77"
+                    }
+                else:
+                    return result
+            
+            else:
+                # 預測模式
+                print(f"\n[預測模式] 使用 {track_name} 模型預測 {year} 年排位賽")
+                
+                result = trainer.predict_2025_qualifying(track_name, year)
+                
+                if result['success']:
+                    return {
+                        "success": True,
+                        "message": f"{year} {track_name} 排位預測完成",
+                        "track": track_name,
+                        "year": year,
+                        "mae": result['mae'],
+                        "r2": result['r2'],
+                        "spearman": result['spearman'],
+                        "predictions": result['predictions'],
+                        "function_id": "77"
+                    }
+                else:
+                    return result
+        
+        except ImportError as e:
+            return {
+                "success": False,
+                "message": f"缺少必要套件: {str(e)}",
+                "hint": "請確認已安裝 xgboost, scikit-learn",
+                "function_id": "77"
+            }
+        except Exception as e:
+            print(f"[ERROR] 賽道特定訓練失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"賽道特定訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "77"
+            }
+    
+    def _execute_driver_fp3_q_feature_extraction(self, **kwargs) -> Dict[str, Any]:
+        """
+        功能 78: 車手 FP3→Q 特徵提取 (2025-11-03)
+        
+        從 2022-2024 的 FP3 和 Q 數據中提取車手的歷史改進模式特徵
+        
+        參數：
+            --track: 賽道名稱（默認 Mexico）
+        
+        返回：
+            Dict: 包含特徵提取結果
+        """
+        try:
+            import subprocess
+            import sys
+            from pathlib import Path
+            
+            # 獲取參數
+            track_name = kwargs.get('track') or 'Mexico'
+            
+            print("="*70)
+            print(f"功能 78: 車手 FP3→Q 特徵提取")
+            print("="*70)
+            print(f"賽道: {track_name}")
+            print("="*70)
+            
+            # 執行特徵提取腳本
+            script_path = Path("scripts/extract_driver_fp3_q_features.py")
+            
+            if not script_path.exists():
+                return {
+                    "success": False,
+                    "message": f"找不到特徵提取腳本: {script_path}",
+                    "function_id": "78"
+                }
+            
+            print(f"\n執行特徵提取腳本: {script_path}")
+            
+            # 執行腳本（不使用 subprocess，直接導入執行）
+            import sys
+            import os
+            
+            # 添加腳本目錄到 Python 路徑
+            script_dir = script_path.parent
+            if str(script_dir) not in sys.path:
+                sys.path.insert(0, str(script_dir))
+            
+            # 導入並執行
+            import extract_driver_fp3_q_features
+            extractor = extract_driver_fp3_q_features.DriverFP3QFeatureExtractor(track_name=track_name)
+            success = extractor.run()
+            
+            if success:
+                output_file = Path("json") / f"driver_fp3_q_features_{track_name}.json"
+                return {
+                    "success": True,
+                    "message": f"{track_name} 賽道的車手 FP3→Q 特徵提取完成",
+                    "track": track_name,
+                    "output_file": str(output_file),
+                    "function_id": "78"
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "特徵提取失敗",
+                    "function_id": "78"
+                }
+        
+        except Exception as e:
+            print(f"[ERROR] 特徵提取失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"特徵提取失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "78"
+            }
 
 # ===== 支援函數和工具 =====
 

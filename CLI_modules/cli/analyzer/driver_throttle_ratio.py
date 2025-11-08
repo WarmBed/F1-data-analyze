@@ -99,28 +99,10 @@ def run_driver_throttle_ratio_analysis(
     show_summary : bool, default True
         Whether to print a compact summary per driver to stdout.
     save_json : bool, default True
-        When True, writes the analysis payload to ``json/``.
+        (已廢棄) 此參數保留以維持 API 相容性，但 JSON 保存由 function_mapper 統一處理
     """
     print("[INFO] 啟動 Function 54 - 全車手每圈油門比例分析")
     _validate_loader(data_loader)
-
-    if save_json:
-        year, race, session_label = _extract_session_identifiers(data_loader)
-        existing_path = _build_output_path(year, race, session_label)
-        existing_payload = _load_existing_analysis(existing_path)
-        if existing_payload and _thresholds_match(existing_payload, threshold, coast_threshold):
-            resolved_path = os.path.abspath(existing_path)
-            print(f"[CACHE] 發現既有油門分析 JSON，直接載入：{resolved_path}")
-            return {
-                "success": True,
-                "message": "Function 54 分析完成 (載入既有 JSON)",
-                "function_id": "54",
-                "data": existing_payload,
-                "cache_used": True,
-                "json_output": resolved_path,
-            }
-        elif existing_payload:
-            print(f"[CACHE] 既有油門分析 JSON 門檻不同，將重新計算並覆寫：{os.path.abspath(existing_path)}")
 
     laps = getattr(data_loader, "laps", None)
     if laps is None or len(laps) == 0:
@@ -157,21 +139,18 @@ def run_driver_throttle_ratio_analysis(
         "drivers": driver_payloads,
         "summary": _aggregate_global_summary(all_lap_summaries),
     }
+    
+    # 返回標準格式，由 function_mapper 統一處理 JSON 保存（與 F34/F47/F48 一致）
     result = {
         "success": True,
-        "message": "Function 54 分析完成",
+        "message": f"Function 54 分析完成，共 {len(driver_payloads)} 位車手",
         "function_id": "54",
         "data": {
             "metadata": metadata,
             "analysis": analysis_payload,
+            "total_drivers": len(driver_payloads),
         },
-        "cache_used": False,
     }
-
-    if save_json:
-        json_path = _save_analysis_json(metadata, analysis_payload)
-        result["json_output"] = json_path
-        print(f"💾 JSON 輸出已保存：{json_path}")
 
     return result
 
@@ -562,6 +541,10 @@ def _build_metadata(data_loader: Any, threshold: float, coast_threshold: float) 
 
 
 def _save_analysis_json(metadata: Dict[str, Any], analysis: Dict[str, Any]) -> str:
+    """
+    [已廢棄] 此函數已不再使用，JSON 保存由 function_mapper._export_to_json() 統一處理
+    保留此函數僅供單元測試使用
+    """
     path = _build_output_path(metadata.get("year"), metadata.get("race"), metadata.get("session"))
 
     with open(path, "w", encoding="utf-8") as fp:

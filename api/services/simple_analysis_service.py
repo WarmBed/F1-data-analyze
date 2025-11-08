@@ -98,7 +98,14 @@ class SimpleF1AnalysisService:
                 value = params[param_name]
                 if value in (None, ""):
                     continue
-                cmd.extend([flag, str(value)])
+                
+                # 處理布林旗標（action='store_true'）
+                # 只有當值為 True 時才添加旗標，不帶參數值
+                if isinstance(value, bool):
+                    if value:
+                        cmd.append(flag)
+                else:
+                    cmd.extend([flag, str(value)])
 
         return cmd
     

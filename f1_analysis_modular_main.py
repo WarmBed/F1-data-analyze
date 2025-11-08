@@ -127,24 +127,49 @@ try:
                 self.session_type = None
                 
             def load_race_data(self, year, race_name, session_type):
-                """載入賽事數據"""
+                """載入賽事數據（支援 FP3→Sprint 自動降級）"""
                 try:
                     fastf1.Cache.enable_cache('f1_analysis_cache')
                     
-                    # 載入賽段
-                    session = fastf1.get_session(year, race_name, session_type)
-                    session.load()
-                    
-                    self.session = session
-                    self.results = session.results
-                    self.laps = session.laps
-                    self.session_loaded = True
-                    self.year = year
-                    self.race_name = race_name
-                    self.session_type = session_type
-                    
-                    print(f"[OK] 成功載入 {year} {race_name} {session_type} 數據")
-                    return True
+                    # 嘗試載入原始 Session
+                    try:
+                        session = fastf1.get_session(year, race_name, session_type)
+                        session.load()
+                        
+                        self.session = session
+                        self.results = session.results
+                        self.laps = session.laps
+                        self.session_loaded = True
+                        self.year = year
+                        self.race_name = race_name
+                        self.session_type = session_type
+                        
+                        print(f"[OK] 成功載入 {year} {race_name} {session_type} 數據")
+                        return True
+                        
+                    except Exception as e:
+                        # Session Fallback 機制：FP3 不存在時嘗試 Sprint
+                        if session_type == 'FP3' and 'does not exist' in str(e):
+                            print(f"[INFO] FP3 不存在，嘗試使用 Sprint session...")
+                            try:
+                                session = fastf1.get_session(year, race_name, 'Sprint')
+                                session.load()
+                                
+                                self.session = session
+                                self.results = session.results
+                                self.laps = session.laps
+                                self.session_loaded = True
+                                self.year = year
+                                self.race_name = race_name
+                                self.session_type = 'Sprint'  # 記錄實際使用的 session
+                                
+                                print(f"[SUCCESS] 自動降級：使用 {year} {race_name} Sprint 數據（替代 FP3）")
+                                return True
+                            except Exception as sprint_error:
+                                print(f"[ERROR] Sprint session 也不存在: {sprint_error}")
+                                raise e  # 拋出原始錯誤
+                        else:
+                            raise e  # 非 FP3 錯誤，直接拋出
                     
                 except Exception as e:
                     print(f"[ERROR] 載入賽事數據失敗: {e}")
@@ -596,7 +621,28 @@ class F1AnalysisModularCLI:
                 colormap=colormap,
                 save_json=save_json_flag,
                 include_drivers=include_driver_colors,
-                force=force
+                force=force,
+                # 預測系統參數 (功能 70-79)
+                start_year=getattr(self.args, 'start_year', None),
+                end_year=getattr(self.args, 'end_year', None),
+                collect_season=getattr(self.args, 'season', False),
+                start_race=getattr(self.args, 'start_race', 1),
+                end_race=getattr(self.args, 'end_race', None),
+                no_fp1=getattr(self.args, 'no_fp1', False),
+                no_fp2=getattr(self.args, 'no_fp2', False),
+                no_fp3=getattr(self.args, 'no_fp3', False),
+                # 功能 73 賽道分類訓練參數
+                mode=getattr(self.args, 'mode', None),
+                fast=getattr(self.args, 'fast', False),
+                # 功能 77/78 賽道特定訓練參數 (2025-11-03)
+                track=getattr(self.args, 'track', None),
+                train=getattr(self.args, 'train', False),
+                predict=getattr(self.args, 'predict', False),
+                # 功能 29 FIA 部件分析參數 (2025-11-06 V2.0)
+                team=getattr(self.args, 'team', None),
+                change_type=getattr(self.args, 'change_type', None),
+                min_confidence=getattr(self.args, 'min_confidence', 0.0),
+                exclude_noise=not getattr(self.args, 'include_noise', False)
             )
             
             if result.get("success", False):
@@ -1576,9 +1622,10 @@ class F1AnalysisModularCLI:
         function_id = str(self.args.function) if self.args.function else None
         # 系統功能和工具功能不需要載入賽事數據
         # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 
+        # 70: FP→Q 訓練數據收集器, 75: 純 FP3 特徵優化訓練, 76: 集成學習訓練
         # 96: 賽事天氣預報, 98: API 健康檢查, 99: 賽季賽程查詢
         # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
-        data_optional_functions = {"49", "50", "51", "52", "96", "98", "99"}
+        data_optional_functions = {"49", "50", "51", "52", "70", "75", "76", "96", "98", "99"}
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 
@@ -1687,6 +1734,18 @@ def create_argument_parser():
   21 👥 所有車手綜合分析             22 [F1] 彎道速度分析 ⚠️棄用
   23 [START] 全部車手超車分析         24 [STATS] 全部車手DNF分析
   
+  📋 FIA 技術分析 (29 - V2.0 分類器):
+  29 [FIA] 部件變更分析 (FIA Parts Changes Analysis V2.0)
+     使用 V2.0 分類器提供高品質分析 (6 類分類系統 + 信心度評分)
+     支援篩選: --team 車隊, --driver 車手, --race 賽事, --change-type 變更類型
+     信心度過濾: --min-confidence 0.0-1.0 (預設 0.0)
+     噪音控制: --include-noise (預設排除 PDF 元數據)
+     
+     範例: python f1_analysis_modular_main.py -f 29 -y 2025
+     範例: python f1_analysis_modular_main.py -f 29 -y 2025 --team "Red Bull Racing"
+     範例: python f1_analysis_modular_main.py -f 29 -y 2025 --race Japan --change-type "參數調整"
+     範例: python f1_analysis_modular_main.py -f 29 -y 2025 --min-confidence 0.80 (僅高信心度)
+  
   [TOOL] 系統功能 (49-53):
   49 [REFRESH] 數據匯出管理器         50 [CACHE] 快取優化
   51 [DIAG] 系統診斷                 52 [PERF] 性能基準測試
@@ -1713,8 +1772,8 @@ def create_argument_parser():
     )
     
     # 賽事參數
-    parser.add_argument('-y', '--year', type=int, choices=list(range(2020, 2026)), 
-                       help='賽季年份 (2020-2025，與 API 和功能 99 一致)')
+    parser.add_argument('-y', '--year', type=int, choices=list(range(2018, 2026)), 
+                       help='賽季年份 (2018-2025，支援 FP→Q 預測訓練數據收集)')
     parser.add_argument('-r', '--race', type=str,
                        help='賽事名稱 (如: China, Bahrain, Australia 等)')
     parser.add_argument('-s', '--session', type=str,
@@ -1742,6 +1801,16 @@ def create_argument_parser():
     parser.add_argument('--corner', type=int,
                        help='指定彎道編號 (用於彎道詳細分析，如: 1, 2, 3 等)')
     
+    # FIA 部件分析參數 (功能 29 - V2.0 分類器)
+    parser.add_argument('--team', type=str,
+                       help='車隊名稱 (用於 FIA 部件分析篩選，如: "Red Bull Racing", "McLaren" 等)')
+    parser.add_argument('--change-type', type=str,
+                       help='變更類型 (用於 FIA 部件分析篩選，如: "參數調整", "重大更新", "變更", "維修", "安全/標準件" 等)')
+    parser.add_argument('--min-confidence', type=float, default=0.0,
+                       help='最低分類信心度 (0.0-1.0，預設 0.0 表示不過濾)')
+    parser.add_argument('--include-noise', action='store_true',
+                       help='包含噪音記錄 (預設排除 PDF 元數據等噪音)')
+    
     # 額外選項
     parser.add_argument('--list-races', action='store_true',
                        help='列出支援的賽事列表')
@@ -1760,6 +1829,46 @@ def create_argument_parser():
                        help='顏色配置輸出時僅生成車隊色票，不包含車手')
     parser.add_argument('--force', action='store_true',
                        help='強制重新生成，忽略智能刷新檢查 (適用於 -f98, -f99 等有緩存的功能)')
+    
+    # 預測系統參數 (功能 70-79)
+    parser.add_argument('--start-year', type=int,
+                       help='多賽季收集起始年份 (適用於 -f70, -f73)')
+    parser.add_argument('--end-year', type=int,
+                       help='多賽季收集結束年份 (適用於 -f70, -f73)')
+    parser.add_argument('--season', action='store_true',
+                       help='收集整個賽季數據 (適用於 -f70)')
+    parser.add_argument('--start-race', type=int, default=1,
+                       help='賽季收集起始賽事編號 (適用於 -f70, 預設: 1)')
+    parser.add_argument('--end-race', type=int,
+                       help='賽季收集結束賽事編號 (適用於 -f70)')
+    parser.add_argument('--no-fp1', action='store_true',
+                       help='排除 FP1 數據 (適用於 -f70)')
+    parser.add_argument('--no-fp2', action='store_true',
+                       help='排除 FP2 數據 (適用於 -f70)')
+    parser.add_argument('--no-fp3', action='store_true',
+                       help='排除 FP3 數據 (適用於 -f70)')
+    
+    # 功能 73 賽道分類訓練參數
+    parser.add_argument('--mode', type=str,
+                       help='功能模式選擇 (適用於 -f73: kmeans=K-Means分類, train-by-category=按類別訓練模型)')
+    parser.add_argument('--fast', action='store_true',
+                       help='使用快速參數進行測試 (適用於 -f73 --mode train-by-category)')
+    
+    # 功能 73 v3.8 訓練器參數 (2025-11-04)
+    parser.add_argument('--trials', type=int, default=500,
+                       help='Optuna 超參數優化試驗次數 (適用於 -f73, 預設: 500)')
+    parser.add_argument('--cv-folds', type=int, default=3,
+                       help='交叉驗證 folds 數量 (適用於 -f73, 預設: 3)')
+    parser.add_argument('--workers', type=int, default=1,
+                       help='並行 workers 數量 (適用於 -f73, 預設: 1)')
+    
+    # 功能 77 賽道特定訓練參數 (2025-11-03)
+    parser.add_argument('--track', type=str,
+                       help='賽道名稱 (適用於 -f73, -f77, -f78: Mexico, Spain, Bahrain 等)')
+    parser.add_argument('--train', action='store_true',
+                       help='訓練模式：訓練賽道特定模型 (適用於 -f77)')
+    parser.add_argument('--predict', action='store_true',
+                       help='預測模式：使用已訓練模型進行預測 (適用於 -f77)')
 
     return parser
 

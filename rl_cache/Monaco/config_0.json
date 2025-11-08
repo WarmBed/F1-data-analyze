@@ -1,0 +1,25 @@
+{
+  "track": "Monaco",
+  "weights": {
+    "max_speed": 0.07534419745206833,
+    "avg_speed": 0.423570454120636,
+    "min_speed": 0.019230084493756294,
+    "sector_1_time": 0.028344420716166496,
+    "sector_2_time": 0.028344420716166496,
+    "sector_3_time": 0.028344420716166496,
+    "throttle_pct": 0.028344420716166496,
+    "brake_pct": 0.028344420716166496,
+    "gear_changes": 0.028344420716166496,
+    "drs_usage": 0.028344420716166496,
+    "tire_type": 0.028344420716166496,
+    "compound": 0.028344420716166496,
+    "track_temp": 0.028344420716166496,
+    "air_temp": 0.028344420716166496,
+    "improvement_rate_max_speed": 0.028344420716166496,
+    "improvement_rate_avg_speed": 0.028344420716166496,
+    "improvement_rate_throttle": 0.028344420716166496,
+    "improvement_rate_brake": 0.028344420716166496,
+    "improvement_rate_gear_changes": 0.028344420716166496,
+    "improvement_rate_drs": 0.028344420716166496
+  }
+}

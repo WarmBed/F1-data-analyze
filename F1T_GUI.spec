@@ -22,7 +22,6 @@ a = Analysis(
         'modules.gui.Throttle_analysis.throttle_line_chart_analysis.linked_chart_widget',
         'modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_module',
         'modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_mdi',
-        'modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_data_loader',
         'modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_chart_widget',
         
         # Detailed Lap Analysis 模組（動態導入）
@@ -34,45 +33,34 @@ a = Analysis(
         'modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils',
         'modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_analysis_mdi',
         'modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_analysis_module',
-        'modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_data_loader',
         'modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_chart_widget',
         
         # ⭐ Lap Box Plot Analysis（根目錄版本）
         'modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_mdi',
         'modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_module',
-        'modules.gui.lap_box_plot_analysis.lap_box_plot_data_loader',
         'modules.gui.lap_box_plot_analysis.lap_box_plot_chart_widget',
         
         # Lap Analysis Chart Widgets（動態導入）
         'modules.gui.lap_analysis.speed_analysis.speed_analysis_chart_widget',
-        'modules.gui.lap_analysis.speed_analysis.speed_analysis_module',
         'modules.gui.lap_analysis.speed_analysis.speed_analysis_mdi',
         'modules.gui.lap_analysis.speed_analysis.speed_analysis_data_loader',
         'modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_chart_widget',
         'modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_mdi',
-        'modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_module',
         'modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_data_loader',
         'modules.gui.lap_analysis.rpm_analysis.rpm_analysis_chart_widget',
         'modules.gui.lap_analysis.rpm_analysis.rpm_analysis_mdi',
-        'modules.gui.lap_analysis.rpm_analysis.rpm_analysis_module',
         'modules.gui.lap_analysis.rpm_analysis.rpm_analysis_data_loader',
         'modules.gui.lap_analysis.gear_analysis.gear_analysis_chart_widget',
         'modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi',
-        'modules.gui.lap_analysis.gear_analysis.gear_analysis_module',
         'modules.gui.lap_analysis.gear_analysis.gear_analysis_data_loader',
         'modules.gui.lap_analysis.brake_analysis.brake_analysis_chart_widget',
         'modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi',
-        'modules.gui.lap_analysis.brake_analysis.brake_analysis_module',
         'modules.gui.lap_analysis.brake_analysis.brake_analysis_data_loader',
         'modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_chart_widget',
         'modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi',
-        'modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_module',
         'modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_data_loader',
         
         # 其他分析模組（動態導入）
-        'modules.gui.lap_analysis.lap_time_analysis_module',
-        'modules.gui.lap_analysis.lap_time_analysis_mdi',
-        'modules.gui.speed_analysis.speed_analysis_module',
         'modules.gui.pitstop_analysis.pitstop_analysis_mdi',
         'modules.gui.pitstop_analysis.pitstop_analysis_complete',
         'modules.gui.accident_analysis.accident_analysis_mdi',
@@ -87,11 +75,9 @@ a = Analysis(
         'modules.gui.telemetry_analysis_mdi',
         'modules.gui.rain_analysis.rain_analysis_module',
         'modules.gui.rain_analysis.rain_analysis_mdi',
-        'modules.gui.rain_analysis.rain_analysis_data_loader',
         'modules.gui.rain_analysis.rain_analysis_chart_widget',
         'modules.gui.tire_analysis.tire_analysis_module',
         'modules.gui.tire_analysis.tire_analysis_mdi',
-        'modules.gui.tire_analysis.tire_analysis_data_loader',
         'modules.gui.tire_analysis.tire_analysis_chart_widget',
         
         # ⭐ Track Analysis 模組（完整子模組）
@@ -104,15 +90,12 @@ a = Analysis(
         
         # ⭐ 缺失的 Lap Analysis 子模組（speeddiff, distancediff, timediff）
         'modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_mdi',
-        'modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_module',
         'modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_chart_widget',
         'modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_data_loader',
         'modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi',
-        'modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_module',
         'modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_chart_widget',
         'modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_data_loader',
         'modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi',
-        'modules.gui.lap_analysis.timediff_analysis.timediff_analysis_module',
         'modules.gui.lap_analysis.timediff_analysis.timediff_analysis_chart_widget',
         'modules.gui.lap_analysis.timediff_analysis.timediff_analysis_data_loader',
         
@@ -142,7 +125,6 @@ a = Analysis(
         'modules.gui.ideal_lap_analysis.shared_colors',
         'modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_module',
         'modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_mdi',
-        'modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_data_loader',
         'modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_widget',
         'modules.gui.ideal_lap_analysis.ideal_lap_sector_heatmap.ideal_lap_sector_heatmap_module',
         'modules.gui.ideal_lap_analysis.ideal_lap_sector_heatmap.ideal_lap_sector_heatmap_mdi',
@@ -156,7 +138,6 @@ a = Analysis(
         
         # ⭐ 缺失的 Shared 模組
         'modules.gui.shared.season_calendar_provider',
-        'modules.gui.shared.race_selection_manager',
         
         # ⭐ 缺失的 Themes 模組
         'modules.gui.themes.color_palette_provider',
@@ -164,7 +145,6 @@ a = Analysis(
         
         # ⭐ Linkage 模組
         'modules.gui.lap_analysis.linkage',
-        'modules.gui.lap_analysis.linkage_manager',
         
         # ⭐ All Drivers 分析模組（新增）
         'modules.gui.all_drivers_brake_performance_analysis',
@@ -181,7 +161,6 @@ a = Analysis(
         'modules.gui.all_drivers_straight_line_speed_analysis.all_drivers_straight_line_speed_widget',
         'modules.gui.all_drivers_straight_line_speed_analysis.all_drivers_straight_line_speed_table_widget',
         'modules.gui.all_drivers_straight_line_speed_analysis.all_drivers_straight_line_speed_dual_view',
-        'modules.gui.all_drivers_straight_line_speed_analysis.straight_line_speed_loader',
         'modules.gui.all_drivers_straight_line_speed_analysis.register_module',
         
         # ⭐ Corner Performance Analysis 模組（V0.6.0 新增）
@@ -191,7 +170,18 @@ a = Analysis(
         'modules.gui.all_drivers_corner_performance_analysis.corner_performance_scatter_widget',
         
         # ⭐ Corner Box Plot Analysis 模組（V0.6.0 新增）
-        'modules.gui.all_drivers_corner_box_plot_analysis',
+        
+        # ⭐ Qualifying Prediction 模組（V0.7.0 新增）
+        'modules.gui.qualifying_prediction',
+        'modules.gui.qualifying_prediction.qualifying_prediction_mdi',
+        'modules.gui.qualifying_prediction.qualifying_prediction_widget',
+        'modules.gui.qualifying_prediction.qualifying_prediction_data_loader',
+        
+        # ⭐ Driver Position Analysis 模組（V0.7.0 新增）
+        'modules.gui.driver_position_analysis',
+        'modules.gui.driver_position_analysis.driver_position_analysis_mdi',
+        'modules.gui.driver_position_analysis.driver_position_analysis_module',
+        'modules.gui.driver_position_analysis.driver_position_analysis_widget',
         
         # ⭐ Settings 模組
         'modules.gui.settings',
@@ -217,14 +207,12 @@ a = Analysis(
         # Universal Chart Widget 和 Base 模組
         'modules.gui.splash_screen',
         'modules.gui.universal_chart_widget',
-        'modules.gui.throttle_duration_chart_widget',
-        'modules.gui.lap_time_chart_widget',
         'modules.gui.base.universal_data_loader_base',
         'modules.gui.base.universal_chart_widget_base',
-        'modules.gui.base.universal_analysis_mdi',
         'modules.gui.base.universal_analysis_mdi_base',
         
         # ⭐ Telemetry Base 模組
+        'modules.gui.lap_analysis.base',
         'modules.gui.lap_analysis.base.telemetry_data_loader',
         'modules.gui.lap_analysis.base.telemetry_chart_widget_base',
         
@@ -237,6 +225,12 @@ a = Analysis(
         'modules.gui.workspace.workspace_manager',
         'modules.gui.workspace.workspace_serializer',
         'modules.gui.workspace.analysis_module_adapters',
+        
+        # ⭐ FIA Parts Analysis 模組 (V0.7.0 新增)
+        'modules.gui.partupdated_analysis',
+        'modules.gui.partupdated_analysis.parts_analysis_mdi',
+        'modules.gui.partupdated_analysis.parts_analysis_widget',
+        'modules.gui.partupdated_analysis.parts_analysis_data_loader',
         
         # ⭐ Championship Demo（如果存在）
         'modules.gui.championship_standings_demo',
@@ -258,13 +252,11 @@ a = Analysis(
         'matplotlib.backends.backend_agg',
         'matplotlib.figure',
         'matplotlib.pyplot',
-        'numpy.core._methods',
         'numpy.core._multiarray_umath',
         'pandas._libs',
         'pandas._libs.tslibs.timedeltas',
         'pandas._libs.tslibs.np_datetime',
         'pandas._libs.tslibs.nattype',
-        'pandas._libs.skiplist',
         'urllib3',
         'certifi',
         'charset_normalizer',

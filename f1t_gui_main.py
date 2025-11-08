@@ -4859,6 +4859,11 @@ class ContextMenuTreeWidget(QTreeWidget):
             print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
             self.main_window.open_track_analysis_window()
         
+        # FIA Parts Analysis / 車輛零件變動 ⭐ 支援多國語言
+        elif clean_name in ["FIA Parts Analysis", "車輛零件變動", "Vehicle Parts Changes", "車両部品変更", "部件分析", "FIA 部件分析", "部品解析"]:
+            print(f"[TREE_CLICK] 開啟 Parts Analysis（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
         else:
             # 未知模組，使用原有邏輯
             print(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
@@ -6425,12 +6430,14 @@ class StyleHMainWindow(QMainWindow):
         # view_menu.addSeparator()
         # view_menu.addAction(tr('full_screen', 'Full Screen'), self.toggle_fullscreen)
         
-        # 分析菜單 (已隱藏)
-        # analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
-        # analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
-        # analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
-        # analysis_menu.addSeparator()
-        # analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
+        # 分析菜單
+        analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
+        analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
+        analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
+        analysis_menu.addSeparator()
+        analysis_menu.addAction(tr('menu_parts_analysis', 'Vehicle Parts Changes'), self.open_parts_analysis)
+        analysis_menu.addSeparator()
+        analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
         
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
@@ -7833,6 +7840,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
             'driver_position',  # 車手比賽排名分析 (F25)
+            'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -7936,6 +7944,7 @@ class StyleHMainWindow(QMainWindow):
         session_only_types = {
             'rain_weather', 'pitstop', 'accident', 'tire', 'ideal_lap',
             'ideal_lap_ranking', 'ideal_lap_sector_comparison', 'ideal_lap_sector_heatmap',
+            'qualifying_prediction_table',      # 排位賽預測表格 (F74 v3.8)
             'laptime_boxplot', 'throttle_boxplot', 'track_analysis', 'driver_position',
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
@@ -8418,6 +8427,7 @@ class StyleHMainWindow(QMainWindow):
             'ideal_lap_sector_heatmap',    # 理想圈分段熱力圖
             'track_analysis',  # 賽道分析
             'driver_position',  # 車手比賽排名分析 (F25)
+            'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -8738,10 +8748,16 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(race_overview_group, [tr("accident_analysis", "Accident Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("driver_position_analysis", "Driver Race Position")])
+        QTreeWidgetItem(race_overview_group, [tr("parts_analysis", "Vehicle Parts Changes")])  # ⭐ 車輛零件變動
         
         # ========== Driver Performance Analysis ==========
         driver_performance_group = QTreeWidgetItem(tree, [tr("driver_performance_analysis", "Driver Performance Analysis")])
         driver_performance_group.setExpanded(True)
+        
+        # ========== Qualifying Prediction (排位賽預測) ⭐ 頂層模組 ==========
+        qualifying_prediction_group = QTreeWidgetItem(tree, [tr("qualifying_prediction", "Qualifying Prediction")])
+        qualifying_prediction_group.setExpanded(False)
+        QTreeWidgetItem(qualifying_prediction_group, ["    " + tr("qualifying_prediction_table", "FP3 → Q Prediction Table")])  # ✅ F74 排位賽預測
         
         # Lap Analysis (Telemetry) - 8 個子模組
         lap_analysis = QTreeWidgetItem(driver_performance_group, [tr("lap_analysis", "Lap Analysis (Telemetry)")])
@@ -12400,6 +12416,12 @@ class StyleHMainWindow(QMainWindow):
                     "排名表格",  # 樹節點別名
                     "理想圈排名",
                 ],
+                "qualifying_prediction_table": [  # ✅ F74 排位賽預測（修正 key）
+                    ("qualifying_prediction", "Qualifying Prediction"),
+                    ("qualifying_prediction_table", "FP3 → Q Prediction Table"),
+                    "排位賽預測",
+                    "FP3 → Q Prediction Table",
+                ],
                 "ideal_lap_sector_heatmap": [
                     ("ideal_lap_sector_heatmap", "Ideal Lap Sector Heatmap"),
                     ("sector_heatmap", "Sector Heat Map"),
@@ -12451,6 +12473,14 @@ class StyleHMainWindow(QMainWindow):
                     "車手比賽排名",
                     "Driver Race Position",
                     "ドライバーポジション",
+                ],
+                "parts_analysis": [  # ⭐ F29 FIA 部件分析
+                    ("parts_analysis", "FIA Parts Analysis"),
+                    "parts",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
+                    "部件分析",
+                    "FIA 部件分析",
+                    "FIA Parts Analysis",
+                    "部品解析",
                 ],
             }
 
@@ -13091,6 +13121,47 @@ class StyleHMainWindow(QMainWindow):
                         traceback.print_exc()
                         return None
                 
+                # 處理排位賽預測表格模組 ⭐ F74 v3.8 新增
+                elif module_type == "qualifying_prediction_table":
+                    try:
+                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建排位賽預測表格模組 (v3.8)...")
+                        from modules.gui.qualifying_prediction.qualifying_prediction_mdi import (
+                            QualifyingPredictionMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 排位賽預測 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = QualifyingPredictionMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 排位賽預測 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 排位賽預測模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 排位賽預測模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
                 # 處理理想圈分段熱力圖模組
                 elif module_type == "ideal_lap_sector_heatmap":
                     try:
@@ -13288,6 +13359,43 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理 FIA Parts Analysis 模組 ⭐ 新增
+                elif module_type == "parts_analysis":
+                    try:
+                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建 FIA Parts Analysis 模組...")
+                        from modules.gui.partupdated_analysis.parts_analysis_mdi import PartsAnalysisMDI
+                        print(f"[OK] [MODULE_FACTORY] FIA Parts Analysis MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        mdi_module = PartsAnalysisMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] FIA Parts Analysis MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        mdi_module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = parameter_provider.get_current_year()
+                            print(f"[INIT] [MODULE_FACTORY] FIA Parts Analysis 模組參數預設為: 年份={current_year}")
+                            mdi_module.year = str(current_year)
+                        else:
+                            mdi_module.year = "2025"
+                        
+                        # ✅ 初始化模組（UniversalAnalysisMDI 要求）
+                        print(f"[INIT] [MODULE_FACTORY] 初始化 FIA Parts Analysis 模組...")
+                        if not mdi_module.initialize_module(parent_widget=self):
+                            raise RuntimeError("Module initialization failed")
+                        print(f"✅ [MODULE_FACTORY] FIA Parts Analysis 模組初始化成功")
+                        
+                        # ✅ 返回 MDI 模組本身（它實現了 get_widget() 方法）
+                        print(f"[OK] [MODULE_FACTORY] FIA Parts Analysis 模組創建成功（返回 MDI 模組）")
+                        return self._mark_module_factory_type(mdi_module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] FIA Parts Analysis 模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -17235,6 +17343,31 @@ class StyleHMainWindow(QMainWindow):
                 print(f"[MENU] Opened Constructor Standings (year={current_year})")
         except Exception as e:
             print(f"[MENU] Failed to open Constructor Standings: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def open_parts_analysis(self):
+        """Open FIA Parts Analysis MDI window"""
+        try:
+            from modules.gui.partupdated_analysis import PartsAnalysisMDI
+            
+            # Get current year from year combo
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
+            
+            # Create MDI window
+            parts_mdi = PartsAnalysisMDI(year=current_year)
+            parts_sub = QMdiSubWindow()
+            parts_sub.setWidget(parts_mdi)
+            parts_sub.setWindowTitle(tr('menu_parts_analysis', 'Vehicle Parts Changes'))
+            parts_sub.resize(1200, 700)  # 較大視窗以容納 10 欄位表格
+            
+            # Add to MDI area
+            if hasattr(self, 'mdi_area'):
+                self.mdi_area.addSubWindow(parts_sub)
+                parts_sub.show()
+                print(f"[MENU] Opened FIA Parts Analysis (year={current_year})")
+        except Exception as e:
+            print(f"[MENU] Failed to open FIA Parts Analysis: {e}")
             import traceback
             traceback.print_exc()
     

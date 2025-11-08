@@ -1,0 +1,71 @@
+{
+  "timestamp": "2025-11-02T19:29:47.060929",
+  "training_period": "2022-2023",
+  "total_samples": 674,
+  "categories": {
+    "high_speed": {
+      "mae_mean": 3.875334653727214,
+      "mae_std": 5.880200585215092,
+      "r2_mean": -6.153691667159764,
+      "params": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 3,
+        "gamma": 0.1,
+        "random_state": 42,
+        "objective": "reg:squarederror",
+        "n_jobs": -1
+      },
+      "samples": 60,
+      "tracks": 2,
+      "model_path": "models\\xgboost_high_speed.pkl"
+    },
+    "street": {
+      "mae_mean": 5.788773241424559,
+      "mae_std": 6.173805722089582,
+      "r2_mean": -137.28892361334164,
+      "params": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 3,
+        "gamma": 0.1,
+        "random_state": 42,
+        "objective": "reg:squarederror",
+        "n_jobs": -1
+      },
+      "samples": 119,
+      "tracks": 4,
+      "model_path": "models\\xgboost_street.pkl"
+    },
+    "mixed": {
+      "mae_mean": 1.9027517816716972,
+      "mae_std": 1.373511072041211,
+      "r2_mean": -1.01216622257543,
+      "params": {
+        "n_estimators": 100,
+        "max_depth": 6,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 3,
+        "gamma": 0.1,
+        "random_state": 42,
+        "objective": "reg:squarederror",
+        "n_jobs": -1
+      },
+      "samples": 495,
+      "tracks": 16,
+      "model_path": "models\\xgboost_mixed.pkl"
+    }
+  },
+  "overall": {
+    "weighted_mae": 2.764460277270987,
+    "total_samples": 674
+  }
+}

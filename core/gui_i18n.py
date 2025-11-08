@@ -845,6 +845,10 @@ class GuiTranslator:
             # Driver Position Analysis 車手比賽排名分析 (F25)
             'driver_position_analysis': {'zh': '車手比賽排名', 'en': 'Driver Race Position', 'ja': 'ドライバーレースポジション'},
             
+            # Qualifying Prediction 排位賽預測分析 (F74)
+            'qualifying_prediction': {'zh': '排位賽預測', 'en': 'Qualifying Prediction', 'ja': '予選予測'},
+            'qualifying_prediction_table': {'zh': 'FP3 → Q 預測表格', 'en': 'FP3 → Q Prediction Table', 'ja': 'FP3 → Q 予測テーブル'},
+            
             # Driver Position Analysis Widget - Table Headers (F25)
             'table_header_position': {'zh': '排名', 'en': 'Position', 'ja': '順位'},
             'table_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
@@ -1547,6 +1551,34 @@ Acceleration (100 → {max_speed_full} km/h):
                 'ja': '2023年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降水量 {precip:.1f}mm'
             },
             
+            # Qualifying Prediction Widget (F74) - 視窗標題與模組描述
+            'qualifying_prediction_window_title': {'zh': '排位賽預測 - {year} {race}', 'en': 'Qualifying Prediction - {year} {race}', 'ja': '予選予測 - {year} {race}'},
+            'qualifying_prediction_module_description': {'zh': 'F1 排位賽預測分析', 'en': 'F1 Qualifying Prediction Analysis', 'ja': 'F1 予選予測分析'},
+            
+            # Qualifying Prediction Widget - 統計摘要面板
+            'prediction_statistics': {'zh': '預測統計摘要', 'en': 'Prediction Statistics', 'ja': '予測統計サマリー'},
+            'total_drivers_label': {'zh': '總車手數: -', 'en': 'Total Drivers: -', 'ja': '総ドライバー数: -'},
+            'total_drivers_value': {'zh': '總車手數: {count}', 'en': 'Total Drivers: {count}', 'ja': '総ドライバー数: {count}'},
+            'track_info_label': {'zh': '賽道: -', 'en': 'Track: -', 'ja': 'サーキット: -'},
+            'track_info_value': {'zh': '賽道: {track} {year}', 'en': 'Track: {track} {year}', 'ja': 'サーキット: {track} {year}'},
+            'model_r2_label': {'zh': '模型 R²: -', 'en': 'Model R²: -', 'ja': 'モデル R²: -'},
+            'model_r2_value': {'zh': '模型 R²: {r2} (樣本數: {count})', 'en': 'Model R²: {r2} (Samples: {count})', 'ja': 'モデル R²: {r2} (サンプル数: {count})'},
+            'model_mae_label': {'zh': '模型 MAE: -', 'en': 'Model MAE: -', 'ja': 'モデル MAE: -'},
+            'model_mae_value': {'zh': '模型 MAE: {mae}s (平均誤差)', 'en': 'Model MAE: {mae}s (Avg Error)', 'ja': 'モデル MAE: {mae}s (平均誤差)'},
+            'r2_explanation': {'zh': 'R² 說明: {text}', 'en': 'R² Explanation: {text}', 'ja': 'R² 説明: {text}'},
+            
+            # Qualifying Prediction Widget - 表格欄位標題
+            'rank': {'zh': '排名', 'en': 'Rank', 'ja': '順位'},
+            'driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'fp3_time': {'zh': 'FP3 時間', 'en': 'FP3 Time', 'ja': 'FP3 タイム'},
+            'predicted_time': {'zh': '預測時間', 'en': 'Predicted Time', 'ja': '予測タイム'},
+            'q_result': {'zh': 'Q 時間', 'en': 'Q Time', 'ja': 'Q タイム'},
+            'delta_fp3': {'zh': '△ FP3', 'en': '△ FP3', 'ja': '△ FP3'},
+            'fp3_rank': {'zh': '預測名次', 'en': 'Pred Rank', 'ja': '予測順位'},
+            'q_rank': {'zh': 'Q 名次', 'en': 'Q Rank', 'ja': 'Q 順位'},
+            'rank_change': {'zh': '變化', 'en': 'Change', 'ja': '変化'},
+            
             # Splash Screen - Startup Progress Messages
             'splash_initializing': {'zh': '正在初始化系統', 'en': 'Initializing System', 'ja': 'システムを初期化中'},
             'splash_loading_window': {'zh': '正在載入視窗', 'en': 'Loading Window', 'ja': 'ウィンドウを読み込み中'},
@@ -1562,6 +1594,51 @@ Acceleration (100 → {max_speed_full} km/h):
             'splash_error_opening': {'zh': '初始化失敗，嘗試開啟', 'en': 'Init failed, attempting to open', 'ja': '初期化失敗、開こうとしています'},
             'error_initialization_failed': {'zh': '初始化失敗', 'en': 'Initialization Failed', 'ja': '初期化失敗'},
             'error_init_message': {'zh': 'GUI 初始化過程中發生錯誤，部分功能可能無法使用', 'en': 'An error occurred during GUI initialization. Some features may be unavailable.', 'ja': 'GUI初期化中にエラーが発生しました。一部の機能が利用できない可能性があります'},
+            
+            # ==== FIA Parts Analysis Module ====
+            # 類型說明翻譯 (Description)
+            'desc_repair': {
+                'zh': '損壞後更換舊件/備件、小零件維護、冷卻系統管路',
+                'en': 'Replacement of damaged parts/spares, minor maintenance, cooling system lines',
+                'ja': '破損部品/スペアの交換、小部品のメンテナンス、冷却システム配管'
+            },
+            'desc_major_update': {
+                'zh': '結構性改動、觸發 FIA 重新檢驗、非全新套件',
+                'en': 'Structural modifications, triggers FIA re-inspection, non-new package',
+                'ja': '構造的変更、FIA再検査トリガー、非新パッケージ'
+            },
+            'desc_change': {
+                'zh': 'Parc Fermé 內合法調整、空力/配置切換、摩擦材料、懸吊',
+                'en': 'Legal adjustments within Parc Fermé, aero/config switches, friction materials, suspension',
+                'ja': 'Parc Fermé内合法調整、空力/設定切替、摩擦材料、サスペンション'
+            },
+            'desc_param_adjustment': {
+                'zh': '純軟體參數變更，無硬體更換',
+                'en': 'Software parameter changes only, no hardware replacement',
+                'ja': 'ソフトウェアパラメータ変更のみ、ハードウェア交換なし'
+            },
+            'desc_safety_standard': {
+                'zh': 'FIA 標準安全設備、駕駛介面',
+                'en': 'FIA standard safety equipment, driver interface',
+                'ja': 'FIA標準安全装備、ドライバーインターフェース'
+            },
+            'desc_unclassified': {
+                'zh': '無法根據現有規則分類（信心度低於 0.60）',
+                'en': 'Cannot be classified by existing rules (confidence below 0.60)',
+                'ja': '既存ルールで分類不可（信頼度0.60未満）'
+            },
+            
+            # 選單和樹狀圖項目
+            'parts_analysis': {
+                'zh': '車輛零件變動',
+                'en': 'Vehicle Parts Changes',
+                'ja': '車両部品変更'
+            },
+            'menu_parts_analysis': {
+                'zh': '車輛零件變動',
+                'en': 'Vehicle Parts Changes',
+                'ja': '車両部品変更'
+            },
         }
     
     def t(self, key, default=None):
