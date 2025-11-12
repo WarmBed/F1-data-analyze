@@ -65,6 +65,9 @@ class IdealLapSectorComparisonWidget(QWidget):
         self.hover_driver = None
         self.hover_row = -1
         
+        # 🆕 數據過濾管理
+        self.hidden_drivers = set()  # 儲存被隱藏的車手代碼集合
+        
         # 佈局參數
         self.header_height = 60
         self.row_height = 45

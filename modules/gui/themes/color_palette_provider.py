@@ -51,6 +51,7 @@ DEFAULT_DRIVER_MAP: Dict[str, Tuple[str, str]] = {
     # Mercedes
     "RUS": ("mercedes", "George Russell"),
     "ANT": ("mercedes", "Andrea Kimi Antonelli"),
+    "KIM": ("mercedes", "Kimi Antonelli"),  # FastF1 別名（簡稱版本）
     # McLaren
     "NOR": ("mclaren", "Lando Norris"),
     "PIA": ("mclaren", "Oscar Piastri"),

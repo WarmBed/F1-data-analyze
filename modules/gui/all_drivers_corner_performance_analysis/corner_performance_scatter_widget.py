@@ -23,9 +23,10 @@ import numpy as np
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, 
-    QLabel, QComboBox, QMessageBox
+    QLabel, QComboBox, QMessageBox, QMenu
 )
 from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QCursor
 from typing import Dict, List, Any, Optional
 
 # 導入國際化和車隊配色
@@ -74,6 +75,9 @@ class CornerPerformanceScatterWidget(QWidget):
         self.pinned_annotations = []  # 儲存已固定的標籤 [{annotation, driver, xy, custom_pos, data_point}]
         self.dragging_annotation = None  # 當前拖動的標籤
         self.drag_start_pos = None  # 拖動起始位置（用於計算偏移）
+        
+        # 🆕 數據過濾管理
+        self.hidden_drivers = set()  # 儲存被隱藏的車手代碼集合
         
         # 設定中文字體
         plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'SimHei', 'DejaVu Sans']
@@ -150,7 +154,7 @@ class CornerPerformanceScatterWidget(QWidget):
         self.info_label.setAlignment(Qt.AlignCenter)
         self.info_label.setStyleSheet("color: #666; font-size: 10pt;")
         
-        # ✅ 只顯示說明標籤
+        # ✅ 只顯示說明標籤（主 GUI 已有 "Show All Data" 按鈕）
         control_layout.addStretch()
         control_layout.addWidget(self.info_label)
         control_layout.addStretch()
@@ -246,6 +250,12 @@ class CornerPerformanceScatterWidget(QWidget):
             
             for driver_data in drivers_data:
                 driver = driver_data.get("driver", "")
+                
+                # 🆕 過濾被隱藏的車手
+                if driver in self.hidden_drivers:
+                    print(f"[CORNER_SCATTER] 過濾隱藏車手: {driver}")
+                    continue
+                
                 corners = driver_data.get("corners", {})
                 corner_speeds = corners.get(corner_key)
                 
@@ -675,15 +685,25 @@ class CornerPerformanceScatterWidget(QWidget):
         2. 如果點擊散點，固定該散點的標籤
         
         右鍵點擊：
-        1. 如果點擊固定標籤，移除該標籤
-        2. 如果點擊空白處，清除所有固定標籤
+        1. 如果點擊散點圓圈，顯示選單（含 Hide Driver 選項）
+        2. 如果點擊固定標籤，移除該標籤
+        3. 如果點擊空白處，清除所有固定標籤
         """
         if event.inaxes != self.ax or self.scatter_points is None:
             return
         
-        # 右鍵：移除固定標籤或清除全部
+        # 右鍵：顯示選單或移除標籤
         if event.button == 3:  # 右鍵
-            # 先檢查是否點擊了固定標籤
+            # 🆕 優先檢查是否點擊散點圓圈（最高優先級）
+            cont, ind = self.scatter_points.contains(event)
+            if cont:
+                index = ind['ind'][0]
+                if index in self.driver_data_map:
+                    # 顯示右鍵選單
+                    self._show_context_menu(index, event)
+                    return
+            
+            # 檢查是否點擊了固定標籤
             clicked_pinned = None
             for pinned in self.pinned_annotations:
                 annotation = pinned['annotation']
@@ -844,6 +864,87 @@ class CornerPerformanceScatterWidget(QWidget):
         self.pinned_annotations.clear()
         self.canvas.draw_idle()
         print("[CORNER_SCATTER] 已清除所有固定標籤")
+    
+    # ========== 🆕 右鍵選單與數據過濾功能 ==========
+    
+    def _show_context_menu(self, index: int, event):
+        """
+        顯示右鍵選單
+        
+        Args:
+            index: 散點索引
+            event: 滑鼠事件
+        """
+        driver_info = self.driver_data_map.get(index)
+        if not driver_info:
+            return
+        
+        driver = driver_info['driver']
+        
+        # 創建選單
+        menu = QMenu(self)
+        
+        # 添加 "Hide Driver" 選項
+        hide_action = menu.addAction(f"🚫 {tr('hide_driver', 'Hide')} {driver}")
+        hide_action.triggered.connect(lambda: self._hide_driver(driver))
+        
+        # 顯示選單（使用全局坐標）
+        # 將 matplotlib 事件座標轉換為螢幕座標
+        try:
+            # 獲取 canvas 在螢幕上的位置
+            canvas_pos = self.canvas.mapToGlobal(self.canvas.pos())
+            # 將 matplotlib 座標轉換為 widget 座標
+            x_widget = int(event.x)
+            y_widget = int(self.canvas.height() - event.y)  # matplotlib Y 軸是從下往上
+            # 計算全局座標
+            global_pos = canvas_pos + self.canvas.mapToParent(self.canvas.pos())
+            global_pos.setX(global_pos.x() + x_widget)
+            global_pos.setY(global_pos.y() + y_widget)
+            
+            menu.exec_(QCursor.pos())  # 使用滑鼠當前位置更準確
+        except Exception as e:
+            print(f"[ERROR] [CORNER_SCATTER] 顯示選單失敗: {e}")
+            menu.exec_(QCursor.pos())
+        
+        print(f"[CORNER_SCATTER] 顯示右鍵選單: {driver}")
+    
+    def _hide_driver(self, driver: str):
+        """
+        隱藏指定車手的數據
+        
+        Args:
+            driver: 車手代碼
+        """
+        if driver in self.hidden_drivers:
+            print(f"[CORNER_SCATTER] 車手 {driver} 已經被隱藏")
+            return
+        
+        # 添加到隱藏集合
+        self.hidden_drivers.add(driver)
+        print(f"[CORNER_SCATTER] 隱藏車手: {driver}")
+        print(f"[CORNER_SCATTER] 當前隱藏車手: {self.hidden_drivers}")
+        
+        # 重繪圖表（會自動過濾隱藏的車手並調整軸範圍）
+        self.draw_scatter_chart()
+    
+    def show_all_drivers(self):
+        """
+        顯示所有車手數據（恢復所有隱藏的車手）
+        
+        這是一個公開方法，供 MDI 視窗的 "Show All Data" 按鈕調用
+        """
+        if not self.hidden_drivers:
+            print("[CORNER_SCATTER] 沒有隱藏的車手需要恢復")
+            return
+        
+        # 清空隱藏集合
+        hidden_count = len(self.hidden_drivers)
+        self.hidden_drivers.clear()
+        print(f"[CORNER_SCATTER] 已恢復 {hidden_count} 個隱藏車手")
+        
+        # 重繪圖表（顯示所有數據並調整軸範圍）
+        self.draw_scatter_chart()
+
     
     def _export_chart(self):
         """匯出圖表"""

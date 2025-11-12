@@ -318,6 +318,9 @@ def analyze_all_incidents(session):
                     # 提取賽道區段信息
                     sector_info = extract_sector(msg_text)
                     
+                    # 提取賽道位置資訊（TURN, CORNER）
+                    track_location = extract_track_location(msg_text)
+                    
                     incident_detail = {
                         'sequence_number': incident_sequence,
                         'lap': lap,
@@ -332,7 +335,8 @@ def analyze_all_incidents(session):
                         'car_numbers': [d['car_number'] for d in involved_drivers],
                         'keywords': extract_keywords(msg_upper),
                         'flags_mentioned': extract_flags(msg_upper),
-                        'sector': sector_info
+                        'sector': sector_info,
+                        'track_location': track_location  # 新增：結構化賽道位置資訊
                     }
                     
                     incidents_data['all_incidents'].append(incident_detail)
@@ -718,6 +722,45 @@ def extract_sector(message):
     
     # 如果找到 SECTOR 但沒有數字，返回 "UNKNOWN"
     return "UNKNOWN"
+
+def extract_track_location(message):
+    """提取賽道位置資訊（TURN, CORNER）- 返回結構化數據
+    
+    Args:
+        message: 事件訊息文字
+        
+    Returns:
+        dict: {
+            "type": "TURN" or "CORNER",
+            "number": int,
+            "description": str
+        } or None if no location found
+    """
+    import re
+    message_upper = message.upper()
+    
+    # 優先匹配 TURN
+    turn_match = re.search(r'TURN\s+(\d+)', message_upper)
+    if turn_match:
+        turn_number = int(turn_match.group(1))
+        return {
+            "type": "TURN",
+            "number": turn_number,
+            "description": f"Turn {turn_number}"
+        }
+    
+    # 次優先匹配 CORNER
+    corner_match = re.search(r'CORNER\s+(\d+)', message_upper)
+    if corner_match:
+        corner_number = int(corner_match.group(1))
+        return {
+            "type": "CORNER",
+            "number": corner_number,
+            "description": f"Corner {corner_number}"
+        }
+    
+    # 沒有找到賽道位置資訊
+    return None
 
 def extract_flags(message):
     """提取旗幟相關資訊 - 增強版本包含詳細信息"""

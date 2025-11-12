@@ -1,40 +1,38 @@
-"""
-檢查 API 實際返回的數據結構
-"""
 import requests
 import json
 
-url = 'https://api.f1telemetrystationpro.org/api/v2/analysis/execute'
+url = "https://api.f1telemetrystationpro.org/api/v2/analysis/execute"
 params = {
-    'function_id': 2,
-    'year': 2024,
-    'race': 'Japan',
-    'session': 'R'
+    "function_id": "100",
+    "year": "2025",
+    "race": "Brazil",
+    "session": "R"
 }
 
 print("正在請求 API...")
 response = requests.post(url, params=params, timeout=60)
+print(f"狀態碼: {response.status_code}\n")
 
-if response.status_code == 200:
-    data = response.json()
+data = response.json()
+print("=== Top Level ===")
+print(f"Keys: {list(data.keys())}")
+print(f"success: {data.get('success')}")
+
+print("\n=== data (Level 1) ===")
+level1 = data.get("data")
+print(f"Type: {type(level1)}")
+if isinstance(level1, dict):
+    print(f"Keys: {list(level1.keys())}")
     
-    print("\n=== API 返回結構 ===")
-    print(f"Top-level keys: {list(data.keys())}")
-    
-    if 'data' in data:
-        print(f"\ndata 類型: {type(data['data'])}")
-        if isinstance(data['data'], dict):
-            print(f"data keys: {list(data['data'].keys())}")
-        elif isinstance(data['data'], str):
-            print(f"data 是字串，長度: {len(data['data'])}")
-            print(f"前 500 字元:\n{data['data'][:500]}")
-    
-    # 保存完整數據到檔案
-    output_file = "test_api_track_position_response.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    
-    print(f"\n✅ 完整數據已保存到: {output_file}")
-    print(f"檔案大小: {len(json.dumps(data))} bytes")
-else:
-    print(f"❌ API 請求失敗: {response.status_code}")
+    print("\n=== data.data (Level 2) ===")
+    level2 = level1.get("data")
+    print(f"Type: {type(level2)}")
+    if isinstance(level2, dict):
+        print(f"Keys: {list(level2.keys())}")
+        print(f"\nHas 'yearly_summary': {'yearly_summary' in level2}")
+        print(f"Has 'corner_analysis': {'corner_analysis' in level2}")
+        
+        print("\n=== 正確的數據位置 ===")
+        print(f"payload.get('data').get('data') 包含:")
+        for key in list(level2.keys())[:8]:
+            print(f"  - {key}")

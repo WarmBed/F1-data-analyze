@@ -338,8 +338,8 @@ _FUNCTION_SPEC_LIST = [
             "min_confidence": "--min-confidence",
             "exclude_noise": "--include-noise"
         },
-        cache_patterns=["fia_parts_analysis_v2", "fia_parts_analysis"],
-        notes="V2.0 classifier with 6 categories (變更/維修/重大更新/參數調整/安全標準件/未分類/噪音), dynamic confidence scoring (0.60-0.95+), automatic noise filtering (default: exclude_noise=True). No FastF1 data required - reads from classified JSON files.",
+        cache_patterns=["fia_parts_analysis"],
+        notes="Simplified parser with 15 main categories + 61 sub-categories, dynamic confidence scoring (0.60-0.95+), automatic noise filtering (default: exclude_noise=True). No FastF1 data required - reads from classified JSON files.",
     ),
     _make_spec(
         "26",
@@ -476,6 +476,16 @@ _make_spec(
         cli_flag_map={"year": "-y"},
         cache_patterns=["season_calendar"],
         notes="CLI function -f 99 exposes this calendar for GUI/API consumption.",
+    ),
+    _make_spec(
+        "100",
+        name="Historical Flags Analysis",
+        description="Analyzes historical flag events (Yellow, Double Yellow, Red, Safety Car) across multiple seasons (2022-2025) for a specific race track. Provides yearly statistics, corner-by-corner analysis, and detailed position records with track coordinates and elevation data.",
+        required_params=["race"],
+        optional_params=["year", "session", "start_year", "end_year"],
+        cli_flag_map={"year": "-y", "race": "-r", "session": "-s", "start_year": "--start-year", "end_year": "--end-year"},
+        cache_patterns=["historical_flags_{race}"],
+        notes="CLI function -f 100. Outputs historical_flags_{race}_{start_year}-{end_year}.json (FIXED FILENAME, no timestamp). Only requires race parameter. Year range defaults to 2022-2025, session defaults to 'R' (Race). Used by GUI Historical Track Map module for multi-season flag visualization. Simplified API: -f 100 -r [race]",
     ),
 ]
 

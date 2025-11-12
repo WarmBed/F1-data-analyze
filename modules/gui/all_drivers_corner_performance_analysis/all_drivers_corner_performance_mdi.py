@@ -446,6 +446,37 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             import traceback
             traceback.print_exc()
             return False
+    
+    # ========== 🆕 主 GUI "Show All Data" 按鈕橋接方法 ==========
+    
+    def reset_chart_view(self):
+        """
+        重置圖表視圖（主 GUI "Show All Data" 按鈕調用）
+        
+        這個方法會被主 GUI 的 show_all_data_in_current_tab() 調用
+        用於恢復所有被隱藏的車手數據
+        """
+        try:
+            print("[CORNER_MDI] 🔄 收到 reset_chart_view 請求")
+            
+            # 檢查 chart_widget 是否存在
+            if not hasattr(self, 'chart_widget') or not self.chart_widget:
+                print("[CORNER_MDI] ⚠️  chart_widget 不存在")
+                return
+            
+            # 檢查 chart_widget 是否有 show_all_drivers 方法
+            if not hasattr(self.chart_widget, 'show_all_drivers'):
+                print("[CORNER_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                return
+            
+            # 調用 Widget 的 show_all_drivers() 方法
+            print("[CORNER_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            self.chart_widget.show_all_drivers()
+            
+        except Exception as e:
+            print(f"[CORNER_MDI] ❌ reset_chart_view 失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
 
 __all__ = ["AllDriversCornerPerformanceMDI"]

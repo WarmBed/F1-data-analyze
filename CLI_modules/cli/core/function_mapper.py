@@ -109,6 +109,7 @@ class F1AnalysisFunctionMapper:
             97: self._execute_championship_standings_analysis,
             98: self._execute_team_color_analysis,
             99: self._execute_season_calendar_analysis,
+            100: self._execute_historical_flags_analysis,  # 歷年旗幟統計分析 (2020-2025)
         }
         
         # 子功能映射表
@@ -287,11 +288,13 @@ class F1AnalysisFunctionMapper:
         # 系統功能不需要檢查數據載入
         # 29: FIA 部件變更分析 (使用本地 JSON 檔案，不需要 FastF1 數據)
         # 70: FP→Q 訓練數據收集器 (使用預收集的 JSON 檔案)
+        # 74: 排位賽預測 (內部自動載入練習數據，不需要預先載入)
         # 75: 純 FP3 特徵優化訓練 (使用預收集的 JSON 檔案)
         # 76: 集成學習訓練 (使用預收集的 JSON 檔案)
         # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
         # 98: 車隊顏色分析, 99: 賽季賽程查詢
-        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "70", "75", "76", "96", "98", "99"}
+        # 100: 歷年旗幟統計分析 (掃描 2020-2025 年數據)
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "70", "74", "75", "76", "96", "98", "99", "100"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -1466,7 +1469,12 @@ class F1AnalysisFunctionMapper:
             return {"success": False, "message": f"賽事位置變化分析失敗: {str(e)}", "function_id": "14"}
     
     def _execute_race_overtaking_statistics(self, **kwargs):
-        """執行賽事超車統計分析 - 符合開發核心原則"""
+        """執行賽事超車統計分析 - 符合開發核心原則
+        
+        🆕 支援多年度分析模式：
+        - 單年度模式：-f 15 -y 2024 -r Japan -s R
+        - 多年度模式：-f 15 --start-year 2022 --end-year 2025 -r Japan -s R
+        """
         import os
         import pickle
         import json
@@ -1475,7 +1483,38 @@ class F1AnalysisFunctionMapper:
         try:
             print("[TEST] 開始執行賽事超車統計分析...")
             
-            # 1. 參數處理 - 符合統一測試參數標準
+            # 1. 參數處理 - 檢查是否為多年度模式
+            start_year = kwargs.get('start_year')
+            end_year = kwargs.get('end_year')
+            
+            # 🆕 多年度模式
+            if start_year and end_year:
+                print(f"[INFO] 檢測到多年度分析模式：{start_year}-{end_year}")
+                race = kwargs.get('race') or getattr(self.data_loader, 'race_name', 'Japan')
+                session = kwargs.get('session') or getattr(self.data_loader, 'session', 'R')
+                
+                # 調用多年度分析函數
+                from CLI_modules.cli.analyzer.all_drivers_annual_overtaking_statistics import run_multi_year_overtaking_statistics
+                result = run_multi_year_overtaking_statistics(start_year, end_year, race, session)
+                
+                if result:
+                    return {
+                        "success": True,
+                        "data": result,
+                        "cache_used": False,
+                        "function_id": 15,
+                        "message": f"多年度超車統計分析完成 ({start_year}-{end_year})",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "message": "多年度超車統計分析失敗",
+                        "function_id": 15,
+                        "timestamp": datetime.now().isoformat()
+                    }
+            
+            # 原有單年度模式
             year = kwargs.get('year') or getattr(self.data_loader, 'year', 2025)
             race = kwargs.get('race') or getattr(self.data_loader, 'race_name', 'Japan') 
             session = kwargs.get('session') or getattr(self.data_loader, 'session', 'R')
@@ -2778,8 +2817,8 @@ class F1AnalysisFunctionMapper:
                 "refresh_interval_hours": 120
             }
         
-        # 搜尋最新版檔案（固定檔名）
-        pattern = f"fia_parts_analysis_v2_{year}.json"
+        # 搜尋最新版檔案（簡化版固定檔名）
+        pattern = f"fia_parts_analysis_{year}.json"
         latest_file = json_dir / pattern
         
         if not latest_file.exists():
@@ -2799,7 +2838,7 @@ class F1AnalysisFunctionMapper:
         age = now - file_mtime
         age_hours = age.total_seconds() / 3600
         
-        # 🔄 使用智能刷新間隔判斷（與 Function 97 一致）
+        # 🔄 使用智能刷新間隔判斷
         refresh_interval = self._determine_parts_refresh_interval(year)
         is_fresh = age_hours < refresh_interval
         
@@ -2985,8 +3024,65 @@ class F1AnalysisFunctionMapper:
             # 如果強制刷新或檔案已過期，重新生成
             if force:
                 print("=" * 80)
-                print("🔥 強制刷新模式：忽略緩存，重新生成分析")
+                print("🔥 強制刷新模式：從 FIAdoc PDF 重新解析生成完整分析")
                 print("=" * 80)
+                
+                # ✅ 簡化模式：使用 SimplePartsParser
+                try:
+                    from CLI_modules.cli.core.fia_parts_pdf_parser_simple import SimplePartsParser
+                    
+                    print(f"\n[STEP 1/3] 從 PDF 解析部件變更記錄...")
+                    parser = SimplePartsParser(year=year, fiadoc_dir="FIAdoc")
+                    parser.analyze_all_documents()
+                    
+                    if not parser.all_changes:
+                        print("⚠️  沒有解析到任何部件變更記錄")
+                        return {
+                            "success": False,
+                            "message": "PDF 解析無結果，請檢查 FIAdoc 資料夾",
+                            "function_id": "29"
+                        }
+                    
+                    # ✅ 只保存 PDF 原始資料（移除分類器）
+                    print(f"\n[STEP 2/3] 保存 PDF 原始資料...")
+                    json_file = f"{year}_f1_parts_changes_raw.json"
+                    
+                    # 結構化輸出（包含 FastF1 映射表）
+                    output_data = {
+                        "success": True,
+                        "message": f"從 PDF 解析完成，共 {len(parser.all_changes)} 筆記錄",
+                        "year": year,
+                        "total_records": len(parser.all_changes),
+                        "records": parser.all_changes,
+                        "driver_mapping": parser.fastf1_mapping if parser.fastf1_mapping else None,
+                        "metadata": {
+                            "source": "FIAdoc PDF - Parts and parameters been replaced",
+                            "parser_version": "SimplePartsParser v2.0",
+                            "mapping_source": parser.mapping_source,
+                            "extracted_fields": ["賽事", "賽事日期", "車隊", "車手", "車號", "部件", "來源文件", "年份"],
+                            "note": "此資料包含 PDF 原始資訊 + FastF1 動態車號映射"
+                        }
+                    }
+                    
+                    with open(json_file, 'w', encoding='utf-8') as f:
+                        json.dump(output_data, f, ensure_ascii=False, indent=2)
+                    
+                    print(f"✅ PDF 解析完成：{len(parser.all_changes)} 筆記錄")
+                    print(f"💾 已保存: {json_file}")
+                    print(f"📋 資料欄位: 賽事、賽事日期、車隊、車手、車號、部件")
+                    print(f"🗺️  車號映射: {parser.mapping_source} ({len(parser.CAR_NUMBER_TO_DRIVER)} 位車手)")
+                    if parser.fastf1_mapping:
+                        print(f"🗺️  映射已包含在主 JSON 的 driver_mapping 欄位中")
+                    
+                except Exception as pdf_error:
+                    print(f"❌ PDF 解析失敗: {pdf_error}")
+                    import traceback
+                    traceback.print_exc()
+                    return {
+                        "success": False,
+                        "message": f"PDF 解析失敗: {str(pdf_error)}",
+                        "function_id": "29"
+                    }
             else:
                 print("=" * 80)
                 print("⚠️  部件分析資料已過期，重新生成...")
@@ -2995,58 +3091,36 @@ class F1AnalysisFunctionMapper:
                 print(f"🔄 刷新間隔: {freshness.get('refresh_interval_hours', 120)} 小時")
                 print("=" * 80)
             
-            # 讀取原始資料 (V2 優先，回退到 V1)
-            json_file_v2 = f"{year}_f1_parts_changes_v2_classified.json"
-            json_file_v1 = f"{year}_f1_parts_changes_classified.json"
+            # 讀取 PDF 原始資料（唯一版本）
+            json_file = f"{year}_f1_parts_changes_raw.json"
             
-            json_file = None
-            use_v2_data = False
-            
-            if os.path.exists(json_file_v2):
-                json_file = json_file_v2
-                use_v2_data = True
-                print(f"[INFO] 使用 V2.0 分類資料: {json_file_v2}")
-            elif os.path.exists(json_file_v1):
-                json_file = json_file_v1
-                print(f"[INFO] 使用 V1.0 分類資料 (將自動升級): {json_file_v1}")
-            else:
-                print(f"[ERROR] 找不到資料檔案: {json_file_v2} 或 {json_file_v1}")
+            if not os.path.exists(json_file):
+                print(f"[ERROR] 找不到資料檔案: {json_file}")
+                print(f"💡 提示: 使用 --force 參數重新生成")
                 return {
                     "success": False,
-                    "message": f"找不到 FIA 部件變更資料檔案",
+                    "message": f"找不到 FIA 部件變更資料檔案: {json_file}",
                     "function_id": "29"
                 }
             
+            print(f"[INFO] 讀取 PDF 原始資料: {json_file}")
             with open(json_file, 'r', encoding='utf-8') as f:
-                all_records = json.load(f)
+                json_data = json.load(f)
             
-            # 如果使用 V1 資料，自動用 V2 分類器重新分類
-            if not use_v2_data:
-                print("[INFO] 使用 V2.0 分類器重新分類...")
-                classifier = UpgradeClassifierV2()
-                all_records = classifier.classify_batch(all_records, remove_duplicates=True)
-                print(f"[INFO] V2.0 分類完成，共 {len(all_records)} 筆記錄")
+            # 提取記錄列表（新格式包含 metadata）
+            if isinstance(json_data, dict) and "records" in json_data:
+                all_records = json_data["records"]
+            else:
+                all_records = json_data  # 舊格式直接是列表
             
             print(f"[INFO] 載入 {len(all_records)} 筆部件變更記錄")
             
             # 篩選資料
             filtered_records = all_records
             
-            # 排除噪音（預設啟用）
-            if exclude_noise:
-                original_count = len(filtered_records)
-                filtered_records = [r for r in filtered_records if "噪音" not in r.get("變更類型", "")]
-                noise_count = original_count - len(filtered_records)
-                if noise_count > 0:
-                    print(f"[FILTER] 已排除 {noise_count} 筆噪音記錄")
-            
-            # 信心度過濾
-            if min_confidence > 0.0:
-                original_count = len(filtered_records)
-                filtered_records = [r for r in filtered_records if r.get("分類信心度", 0.0) >= min_confidence]
-                low_conf_count = original_count - len(filtered_records)
-                if low_conf_count > 0:
-                    print(f"[FILTER] 已過濾 {low_conf_count} 筆低信心度記錄 (<{min_confidence})")
+            # ❌ 移除噪音過濾（PDF 原始資料無分類資訊）
+            # ❌ 移除信心度過濾（PDF 原始資料無信心度）
+            # ❌ 移除變更類型過濾（PDF 原始資料無變更類型）
             
             if team:
                 filtered_records = [r for r in filtered_records if r.get("車隊") == team]
@@ -3057,12 +3131,8 @@ class F1AnalysisFunctionMapper:
                 print(f"[FILTER] 車手={driver}, 剩餘 {len(filtered_records)} 筆")
             
             if race:
-                filtered_records = [r for r in filtered_records if r.get("比賽") == race]
+                filtered_records = [r for r in filtered_records if r.get("賽事") == race]
                 print(f"[FILTER] 賽事={race}, 剩餘 {len(filtered_records)} 筆")
-            
-            if change_type:
-                filtered_records = [r for r in filtered_records if change_type in r.get("變更類型", "")]
-                print(f"[FILTER] 變更類型={change_type}, 剩餘 {len(filtered_records)} 筆")
             
             if not filtered_records:
                 print("[WARNING] 篩選後無資料")
@@ -3072,92 +3142,57 @@ class F1AnalysisFunctionMapper:
                     "function_id": "29"
                 }
             
-            # 統計分析
+            # ✅ 統計分析（只包含 PDF 原始欄位）
             stats = {
                 "total_records": len(filtered_records),
                 "by_team": dict(Counter([r["車隊"] for r in filtered_records])),
-                "by_change_type": dict(Counter([r["變更類型"] for r in filtered_records])),
-                "by_race": dict(Counter([r["比賽"] for r in filtered_records])),
+                "by_race": dict(Counter([r.get("賽事", "Unknown") for r in filtered_records])),
                 "by_driver": dict(Counter([r["車手"] for r in filtered_records]))
             }
-            
-            # 信心度統計（V2 特有）
-            confidences = [r.get("分類信心度", 0.0) for r in filtered_records]
-            confidence_ranges = {
-                "0.95+": len([c for c in confidences if c >= 0.95]),
-                "0.90-0.94": len([c for c in confidences if 0.90 <= c < 0.95]),
-                "0.80-0.89": len([c for c in confidences if 0.80 <= c < 0.90]),
-                "0.70-0.79": len([c for c in confidences if 0.70 <= c < 0.80]),
-                "0.60-0.69": len([c for c in confidences if 0.60 <= c < 0.70]),
-                "<0.60": len([c for c in confidences if c < 0.60])
-            }
-            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
-            
-            # 變更類型分佈（百分比）
-            type_percentages = {}
-            for change_type_key, count in stats["by_change_type"].items():
-                percentage = (count / stats["total_records"]) * 100
-                type_percentages[change_type_key] = {
-                    "count": count,
-                    "percentage": round(percentage, 2)
-                }
             
             # 前 5 名車隊
             top5_teams = dict(Counter(stats["by_team"]).most_common(5))
             
             # 輸出結果
             print("\n" + "="*80)
-            print(f"FIA 部件變更分析報告 - {year} (V2.0 分類器)")
+            print(f"FIA 部件變更分析報告 - {year} (PDF 原始資料)")
             print("="*80)
             print(f"總記錄數: {stats['total_records']}")
-            print(f"平均信心度: {avg_confidence:.2f}")
             
-            print(f"\n信心度分佈:")
-            for range_name, count in confidence_ranges.items():
-                if count > 0:
-                    percentage = (count / stats['total_records']) * 100
-                    print(f"  {range_name}: {count} 筆 ({percentage:.1f}%)")
-            
-            print(f"\n變更類型分佈:")
-            for ct, info in sorted(type_percentages.items(), key=lambda x: x[1]['count'], reverse=True):
-                print(f"  {ct}: {info['count']} 筆 ({info['percentage']}%)")
+            print(f"\n賽事分佈:")
+            for race_name, count in sorted(stats["by_race"].items(), key=lambda x: x[1], reverse=True):
+                percentage = (count / stats['total_records']) * 100
+                print(f"  {race_name}: {count} 筆 ({percentage:.1f}%)")
             
             print(f"\n前 5 名車隊 (部件變更次數):")
             for idx, (team_name, count) in enumerate(top5_teams.items(), 1):
                 print(f"  {idx}. {team_name}: {count} 筆")
             
             # 構建結果
-            # ✅ 添加智能刷新間隔資訊（與 Function 97 一致）
+            # ✅ 添加智能刷新間隔資訊
             refresh_interval = self._determine_parts_refresh_interval(year)
             
             result = {
                 "success": True,
-                "message": f"FIA 部件變更分析完成 ({stats['total_records']} 筆記錄) - V2.0 分類器",
+                "message": f"FIA 部件變更分析完成 ({stats['total_records']} 筆記錄) - PDF 原始資料",
                 "function_id": "29",
-                "classifier_version": "V2.0",
+                "data_version": "Raw PDF Data Only",
                 "year": year,
                 "filters": {
                     "team": team,
                     "driver": driver,
-                    "race": race,
-                    "change_type": change_type,
-                    "min_confidence": min_confidence,
-                    "exclude_noise": exclude_noise
+                    "race": race
                 },
                 "metadata": {
                     "generated_at": None,  # 將在下方設定
-                    "refresh_interval_hours": refresh_interval,  # 🔄 動態刷新間隔
-                    "is_fresh": True,  # 新生成的檔案當然是新鮮的
-                    "force_refresh": force
+                    "refresh_interval_hours": refresh_interval,
+                    "is_fresh": True,
+                    "force_refresh": force,
+                    "note": "此資料僅包含 PDF 原始資訊（賽事、賽事日期、車隊、車手、車號、部件），無自動分類或推斷說明"
                 },
                 "statistics": stats,
-                "confidence_stats": {
-                    "average": round(avg_confidence, 2),
-                    "ranges": confidence_ranges
-                },
-                "type_percentages": type_percentages,
                 "top5_teams": top5_teams,
-                "records": filtered_records  # 返回所有記錄（已移除 50 筆限制）
+                "records": filtered_records
             }
             
             # 導出 JSON（Function 29 專用：只用 year 不用 race/session）
@@ -3178,17 +3213,17 @@ class F1AnalysisFunctionMapper:
             if min_confidence > 0.0:
                 filter_suffix += f"_conf{int(min_confidence*100)}"
             
-            # 📝 時間戳格式：與 Function 97 一致（ISO 8601 格式）
+            # 📝 時間戳格式：ISO 8601 格式
             from datetime import datetime
             timestamp = datetime.now().strftime("%Y%m%dT%H%M%SZ")
             
-            # 📝 檔名規則：
-            # - 最新版（無時間戳）：fia_parts_analysis_v2_{year}.json
-            # - 歷史版（帶時間戳）：fia_parts_analysis_v2_{year}_{filter}_{timestamp}.json
+            # 📝 檔名規則（簡化版）：
+            # - 最新版（無時間戳）：fia_parts_analysis_{year}.json
+            # - 歷史版（帶時間戳）：fia_parts_analysis_{year}_{filter}_{timestamp}.json
             
-            # 生成兩個檔案（與 Function 97 不同，97 只生成帶時間戳版本）
-            json_filename_latest = f"fia_parts_analysis_v2_{year}{filter_suffix}.json"
-            json_filename_archive = f"fia_parts_analysis_v2_{year}{filter_suffix}_{timestamp}.json"
+            # 生成兩個檔案
+            json_filename_latest = f"fia_parts_analysis_{year}{filter_suffix}.json"
+            json_filename_archive = f"fia_parts_analysis_{year}{filter_suffix}_{timestamp}.json"
             
             # 添加時間戳到 result 內容（與 Function 97 一致）
             result["generated_at"] = datetime.now().isoformat()
@@ -3634,6 +3669,74 @@ class F1AnalysisFunctionMapper:
                 "message": f"賽季賽程查詢失敗: {exc}",
                 "function_id": "99",
                 "data": None,
+            }
+
+    def _execute_historical_flags_analysis(self, **kwargs):
+        """Function 100: 歷年旗幟統計分析 (2020-2025 賽道旗幟歷史)"""
+        
+        try:
+            from CLI_modules.cli.analyzer.historical_flags_analysis import (
+                run_historical_flags_analysis_json
+            )
+            
+            # 參數處理
+            race = kwargs.get("race")
+            if not race:
+                if self.data_loader and getattr(self.data_loader, "race", None):
+                    race = self.data_loader.race
+                else:
+                    return {
+                        "success": False,
+                        "message": "缺少必要參數: race (賽道名稱)",
+                        "function_id": "100"
+                    }
+            
+            # ⚠️ CLI 使用 -y 傳遞 year，但此功能需要多年範圍
+            # 優先使用 start_year 和 end_year，如果不存在則使用 year
+            # 預設 2022-2025（跳過 COVID-19 取消的 2020-2021）
+            start_year = kwargs.get("start_year")
+            end_year = kwargs.get("end_year")
+            year = kwargs.get("year")
+            
+            # ✅ 修復：優先使用 start_year/end_year，如果不存在才使用 year
+            if start_year and end_year:
+                # 明確指定了年份範圍
+                start_year = int(start_year)
+                end_year = int(end_year)
+            elif year:
+                # 只有 year 參數：預設為 2022-2025 範圍
+                start_year = 2022
+                end_year = 2025
+                print(f"[FUNCTION 100] ⚠️  只提供 year={year}，自動設定範圍 2022-2025")
+            else:
+                # 沒有任何年份參數：使用預設值
+                start_year = 2022
+                end_year = 2025
+            
+            session_type = kwargs.get("session") or "R"  # ✅ 修復：確保 None 會使用預設值
+            
+            print(f"\n[FUNCTION 100] 歷年旗幟統計分析")
+            print(f"  賽道: {race}")
+            print(f"  年份範圍: {start_year}-{end_year}")
+            print(f"  會話類型: {session_type}")
+            print(f"  功能: 統計 Yellow/Double Yellow/Red Flag + Safety Car")
+            
+            # 執行分析
+            result = run_historical_flags_analysis_json(
+                race=race,
+                start_year=int(start_year),
+                end_year=int(end_year),
+                session_type=session_type
+            )
+            
+            return self._standardize_result(result, 100, "歷年旗幟統計分析")
+            
+        except Exception as exc:
+            return {
+                "success": False,
+                "message": f"歷年旗幟統計分析失敗: {exc}",
+                "function_id": "100",
+                "data": None
             }
 
     def _execute_race_weather_forecast(self, **kwargs):
@@ -4412,24 +4515,44 @@ class F1AnalysisFunctionMapper:
             print(f"   特徵數: {len(feature_names)} (v3.10 移除 is_top_driver)")
             
             # ========================================
-            # 3. 提取 FP3 數據
+            # 3. 智能載入練習數據（支援 Sprint 賽制）
             # ========================================
-            print(f"\n正在載入 {year} {race} FP3 數據...")
+            print(f"\n正在載入 {year} {race} 練習數據...")
             
+            # 🔧 初始化 data_loader（如果尚未初始化）
             if not self.data_loader:
-                return {
-                    "success": False,
-                    "message": "數據載入器未初始化",
-                    "function_id": "74"
-                }
+                print("   初始化數據載入器...")
+                from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
+                self.data_loader = CompatibleF1DataLoader()
+                print("   ✅ 數據載入器已初始化")
             
-            # 載入 FP3 會話
-            fp3_loaded = self.data_loader.load_race_data(year, race, 'FP3')
-            if not fp3_loaded:
+            # 🔧 智能數據源選擇邏輯
+            # 傳統賽制: FP3 → FP2 → FP1
+            # Sprint 賽制: Sprint Qualifying → Sprint → FP1
+            session_loaded = False
+            session_type_used = None
+            
+            # 嘗試載入順序
+            fallback_sessions = ['FP3', 'Sprint Qualifying', 'FP2', 'Sprint', 'FP1']
+            
+            for session_type in fallback_sessions:
+                try:
+                    print(f"   嘗試載入 {session_type}...")
+                    loaded = self.data_loader.load_race_data(year, race, session_type)
+                    if loaded:
+                        session_loaded = True
+                        session_type_used = session_type
+                        print(f"   ✅ 成功載入 {session_type} 數據")
+                        break
+                except Exception as e:
+                    print(f"   ⚠️  {session_type} 不可用: {str(e)[:50]}")
+                    continue
+            
+            if not session_loaded:
                 return {
                     "success": False,
-                    "message": f"無法載入 {year} {race} FP3 數據",
-                    "hint": "請確認該賽事有 FP3 會話且數據可用",
+                    "message": f"無法載入 {year} {race} 任何練習數據",
+                    "hint": "請確認該賽事有可用的練習/排位數據（FP3/Sprint Qualifying/FP2/Sprint/FP1）",
                     "function_id": "74"
                 }
             
@@ -4451,14 +4574,14 @@ class F1AnalysisFunctionMapper:
             if laps.empty:
                 return {
                     "success": False,
-                    "message": f"{year} {race} FP3 無有效圈速數據",
+                    "message": f"{year} {race} {session_type_used} 無有效圈速數據",
                     "function_id": "74"
                 }
             
-            print(f"✅ FP3 數據載入成功 ({len(laps)} 個有效圈速)")
+            print(f"✅ {session_type_used} 數據載入成功 ({len(laps)} 個有效圈速)")
             
             # ========================================
-            # 4. 計算每位車手的 FP3 最快圈特徵
+            # 4. 計算每位車手的練習最快圈特徵
             # ========================================
             print("\n計算車手特徵...")
             predictions = []
@@ -4557,10 +4680,11 @@ class F1AnalysisFunctionMapper:
                 # 構建特徵向量（依照模型訓練時的特徵順序）
                 feature_vector = [pred['features'][fname] for fname in feature_names]
                 
-                # 預測排位賽時間
-                predicted_q_time = model.predict([feature_vector])[0]
-                pred['predicted_time'] = float(predicted_q_time)
-                pred['improvement'] = float(predicted_q_time - pred['fp3_time'])
+                # ✅ 修正: 模型預測的是改進值 (improvement/delta)，而非絕對時間
+                # 模型輸出: FP3 → Q 的時間變化 (通常為負值，表示進步)
+                predicted_improvement = model.predict([feature_vector])[0]
+                pred['predicted_time'] = float(pred['fp3_time'] + predicted_improvement)  # 絕對時間 = FP3 + delta
+                pred['improvement'] = float(predicted_improvement)  # 改進值
             
             # 按預測時間排序
             predictions.sort(key=lambda x: x['predicted_time'])
@@ -4605,7 +4729,7 @@ class F1AnalysisFunctionMapper:
             # 7. 構建 JSON 輸出（包含名次計算）
             # ========================================
             
-            # 7.1 計算 FP3 預測名次（根據 FP3 時間排序）
+            # 7.1 計算練習數據預測名次（根據練習時間排序）
             fp3_sorted = sorted(predictions, key=lambda x: x['fp3_time'])
             fp3_rank_map = {pred['driver']: rank for rank, pred in enumerate(fp3_sorted, 1)}
             
@@ -4624,11 +4748,12 @@ class F1AnalysisFunctionMapper:
                     "track": race,
                     "year": year,
                     "session": "Q",
+                    "data_source": session_type_used,  # 🔧 新增: 實際使用的數據源
                     "model_r2": float(model_r2),
                     "model_mae": float(model_mae),
                     "sample_count": int(sample_count),
                     "prediction_time": datetime.now().isoformat(),
-                    "model_version": "v3.8",
+                    "model_version": "v3.10",  # 修正版本號
                     "feature_count": len(feature_names),
                     "has_actual_results": len(actual_q_times) > 0  # ✅ 新增: 標記是否有實際結果
                 },

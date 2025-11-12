@@ -16,7 +16,7 @@ ThrottleBoxPlotChartWidget - 全油門百分比箱型圖圖表組件 (純 PyQt5 
 
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QMenu
 from PyQt5.QtCore import Qt, QRect, QPoint, pyqtSignal, QRectF
 from PyQt5.QtGui import (
     QPainter,
@@ -29,6 +29,7 @@ from PyQt5.QtGui import (
     QPainterPath,
     QImage,
     QPainter as QPainterForExport,
+    QCursor,
 )
 
 # 匯入多國語言支援
@@ -62,6 +63,9 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
         self.y_min = 0.0
         self.y_max = 100.0
+
+        # 🆕 數據過濾管理
+        self.hidden_drivers = set()  # 儲存被隱藏的車手代碼集合
 
         self.setMouseTracking(True)
         self.setMinimumSize(200, 100)
@@ -128,14 +132,17 @@ class ThrottleBoxPlotChartWidget(QWidget):
         return QColor(self.DEFAULT_COLOR)
 
     def _calculate_y_range(self):
+        """計算 Y 軸範圍（只考慮可見車手）"""
         if not self.driver_throttle_durations:
             self.y_min = 0.0
             self.y_max = 100.0
             return
 
         all_values: List[float] = []
-        for durations in self.driver_throttle_durations.values():
-            all_values.extend(durations)
+        # 🆕 只收集可見車手的數據
+        for driver, durations in self.driver_throttle_durations.items():
+            if driver not in self.hidden_drivers:
+                all_values.extend(durations)
 
         if all_values:
             self.y_min = min(all_values)
@@ -231,14 +238,23 @@ class ThrottleBoxPlotChartWidget(QWidget):
             return
 
         drivers = sorted(self.driver_throttle_durations.keys())
-        n_drivers = len(drivers)
+        
+        # 🆕 過濾被隱藏的車手
+        visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
+        
+        if not visible_drivers:
+            print("[THROTTLE_CHART] 所有車手都被隱藏")
+            self._draw_no_data_message(painter)
+            return
+        
+        n_drivers = len(visible_drivers)
         if n_drivers == 0:
             return
 
         box_spacing = self.chart_rect.width() / (n_drivers + 1)
         box_width = min(40, box_spacing * 0.6)
 
-        for idx, driver in enumerate(drivers):
+        for idx, driver in enumerate(visible_drivers):
             durations = self.driver_throttle_durations.get(driver)
             if not durations:
                 continue
@@ -417,25 +433,34 @@ class ThrottleBoxPlotChartWidget(QWidget):
         self.update()
 
     def mousePressEvent(self, event: QMouseEvent):
-        if event.button() != Qt.LeftButton:
-            return
-
+        """滑鼠點擊事件處理（左鍵和右鍵）"""
         driver = self._detect_hovered_driver(event.pos())
-        if driver:
+        if not driver:
+            return
+        
+        # 左鍵：發射點擊信號
+        if event.button() == Qt.LeftButton:
             self.chart_clicked.emit(driver)
+        
+        # 右鍵：顯示選單
+        elif event.button() == Qt.RightButton:
+            self._show_context_menu(driver, event)
 
     def _detect_hovered_driver(self, position: QPoint) -> Optional[str]:
         if not self.driver_throttle_durations:
             return None
 
         drivers = sorted(self.driver_throttle_durations.keys())
-        if not drivers:
+        
+        # 🆕 只檢測可見的車手
+        visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
+        if not visible_drivers:
             return None
 
-        box_spacing = self.chart_rect.width() / (len(drivers) + 1)
+        box_spacing = self.chart_rect.width() / (len(visible_drivers) + 1)
         box_width = min(40, box_spacing * 0.6)
 
-        for idx, driver in enumerate(drivers):
+        for idx, driver in enumerate(visible_drivers):
             x_center = self.chart_rect.left() + (idx + 1) * box_spacing
             rect = QRectF(
                 x_center - box_width / 2,
@@ -446,6 +471,77 @@ class ThrottleBoxPlotChartWidget(QWidget):
             if rect.contains(position):
                 return driver
         return None
+    
+    # ========== 🆕 右鍵選單與數據過濾功能 ==========
+    
+    def _show_context_menu(self, driver: str, event: QMouseEvent):
+        """
+        顯示右鍵選單
+        
+        Args:
+            driver: 車手代碼
+            event: 滑鼠事件
+        """
+        if not driver:
+            return
+        
+        # 創建選單
+        menu = QMenu(self)
+        
+        # 添加 "Hide Driver" 選項
+        hide_action = menu.addAction(f"🚫 {tr('hide_driver', 'Hide')} {driver}")
+        hide_action.triggered.connect(lambda: self._hide_driver(driver))
+        
+        # 顯示選單（使用全局坐標）
+        try:
+            menu.exec_(QCursor.pos())
+        except Exception as e:
+            print(f"[ERROR] [THROTTLE_CHART] 顯示選單失敗: {e}")
+        
+        print(f"[THROTTLE_CHART] 顯示右鍵選單: {driver}")
+    
+    def _hide_driver(self, driver: str):
+        """
+        隱藏指定車手的數據
+        
+        Args:
+            driver: 車手代碼
+        """
+        if driver in self.hidden_drivers:
+            print(f"[THROTTLE_CHART] 車手 {driver} 已經被隱藏")
+            return
+        
+        # 添加到隱藏集合
+        self.hidden_drivers.add(driver)
+        print(f"[THROTTLE_CHART] 隱藏車手: {driver}")
+        print(f"[THROTTLE_CHART] 當前隱藏車手: {self.hidden_drivers}")
+        
+        # 重新計算 Y 軸範圍（只考慮可見車手）
+        self._calculate_y_range()
+        
+        # 重繪圖表（會自動過濾隱藏的車手）
+        self.update()
+    
+    def show_all_drivers(self):
+        """
+        顯示所有車手數據（恢復所有隱藏的車手）
+        
+        這是一個公開方法，供 MDI 視窗的 "Show All Data" 按鈕調用
+        """
+        if not self.hidden_drivers:
+            print("[THROTTLE_CHART] 沒有隱藏的車手需要恢復")
+            return
+        
+        # 清空隱藏集合
+        hidden_count = len(self.hidden_drivers)
+        self.hidden_drivers.clear()
+        print(f"[THROTTLE_CHART] 已恢復 {hidden_count} 個隱藏車手")
+        
+        # 重新計算 Y 軸範圍（包含所有車手）
+        self._calculate_y_range()
+        
+        # 重繪圖表（顯示所有數據）
+        self.update()
 
     def export_chart(self, file_path: str) -> bool:
         try:

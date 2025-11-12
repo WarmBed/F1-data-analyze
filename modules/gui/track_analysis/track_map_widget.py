@@ -19,22 +19,84 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, Tuple
 from bisect import bisect_left
 
-from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize
+from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize, QPoint, QTimer, QRectF
 from PyQt5.QtGui import (
     QBrush,
     QColor,
     QFont,
+    QLinearGradient,
     QPainter,
     QPainterPath,
     QPen,
 )
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QWidget, QToolTip, QLabel
 
 # 連動管理器 (Lap Analysis linkage)
 try:
     from modules.gui.lap_analysis.linkage import linkage_manager
 except ImportError:
     linkage_manager = None
+
+
+class CornerTooltipLabel(QLabel):
+    """
+    自定義彎道標籤 Widget - TrackMapWidget 的子 Widget
+    
+    特點：
+    - 半透明背景
+    - 圓角邊框
+    - 支援 HTML 格式
+    - 右鍵關閉
+    - 跟隨父 Widget 移動（使用相對座標）
+    """
+    
+    def __init__(self, html_content: str, parent: QWidget):
+        """
+        初始化標籤
+        
+        Args:
+            html_content: HTML 格式的標籤內容
+            parent: 父 Widget (TrackMapWidget)，必須提供！
+        """
+        super().__init__(html_content, parent)  # 必須有 parent
+        
+        # 設定 HTML 內容
+        self.setTextFormat(Qt.RichText)
+        
+        # 設定樣式
+        self.setStyleSheet("""
+            QLabel {
+                background-color: rgba(255, 255, 240, 240);
+                border: 2px solid #2980b9;
+                border-radius: 8px;
+                padding: 8px;
+                font-family: Arial;
+                font-size: 10pt;
+            }
+        """)
+        
+        # ✅ 不設定 WindowFlags - 作為普通子 Widget
+        # ❌ 不使用 Qt.ToolTip - 那會讓它變成頂層視窗！
+        
+        # 設定滑鼠追蹤和游標
+        self.setMouseTracking(True)
+        self.setCursor(Qt.PointingHandCursor)
+        
+        # 調整大小以適應內容
+        self.adjustSize()
+        
+        # 確保標籤在最上層（相對於父 Widget 的其他子元素）
+        self.raise_()
+    
+    def mousePressEvent(self, event):
+        """右鍵關閉標籤"""
+        if event.button() == Qt.RightButton:
+            # 通知父 Widget 移除此標籤
+            if self.parent():
+                self.parent().remove_tooltip_label(self)
+            event.accept()
+        else:
+            super().mousePressEvent(event)
 
 
 class TrackMapWidget(QWidget):
@@ -63,12 +125,39 @@ class TrackMapWidget(QWidget):
         self.show_track_labels: bool = False
         self.show_grid: bool = False
         self.show_official_corners: bool = True  # 預設開啟：顯示 FastF1 官方彎道
+        self.use_speed_gradient: bool = False  # 預設關閉：速度漸層模式
+        self.show_speed_distribution: bool = True  # ✅ 新增：速度分布圓餅圖（預設開啟）
+        self.speed_distribution_data: Optional[Dict[str, Any]] = None  # ✅ 儲存速度分布數據
 
         self._grid_spacing: float = 500.0  # 公尺
         self._max_grid_lines: int = 12
         
         # FastF1 官方彎道數據
         self.official_corners: List[Dict[str, Any]] = []
+        
+        # 🚩 彎道旗幟數據（用於危險度標記）
+        self.corner_flags: Dict[str, Dict[str, Any]] = {}  # {"T1": {corner_analysis_data}, ...}
+        
+        # 🏁 Sector 邊界數據（S1/S2/S3 分隔線）
+        self.sector_boundaries: List[Dict[str, Any]] = []  # [{"sector": 1, "name": "S1 End", "position_x": ..., ...}, ...]
+        self.show_sector_boundaries: bool = True  # 預設開啟：顯示 Sector 邊界
+        self._last_track_name: Optional[str] = None  # 記錄上次載入的賽道名稱（用於檢測賽道變更）
+        
+        # ✅ 新版標籤系統：多標籤支援，隨視窗移動
+        self.hovered_corner: Optional[str] = None  # 當前懸停的彎道（例如 "T7"）
+        self.pinned_tooltips: List[Dict[str, Any]] = []  # 固定的標籤列表
+        # 每個元素: {
+        #   'corner_key': str,           # 例如 "T5"
+        #   'label': CornerTooltipLabel, # QLabel 實例
+        #   'corner_world_pos': tuple,   # (x, y) 彎道世界座標
+        #   'offset': tuple,             # (dx, dy) 相對彎道的偏移
+        #   'custom_pos': QPoint or None # 自訂位置（拖動後）
+        # }
+        
+        # 🆕 標籤拖動功能（參考 UniversalChartWidget）
+        self.dragging_tooltip = False  # 是否正在拖動標籤
+        self.dragging_tooltip_index = -1  # 正在拖動的標籤索引
+        self.tooltip_drag_offset = QPoint(0, 0)  # 拖動偏移量
 
         # 連動狀態
         self._linkage_registered: bool = False
@@ -110,6 +199,9 @@ class TrackMapWidget(QWidget):
         """供 Universal MDI 呼叫的資料載入接口。"""
         try:
             print(f"[TRACK_MAP] ==================== load_track_data 開始 ====================")
+            session_info = track_data.get("session_info", {})
+            track_name = session_info.get("track_name") or session_info.get("event_name") or "Unknown"
+            print(f"[TRACK_MAP] 賽道名稱: {track_name}")
             print(f"[TRACK_MAP] track_data keys: {list(track_data.keys())}")
             
             self.track_data = track_data or {}
@@ -146,6 +238,58 @@ class TrackMapWidget(QWidget):
             print(f"[TRACK_MAP] self.official_corners 最終狀態: 長度={len(self.official_corners)}")
             print(f"[TRACK_MAP] self.show_official_corners 狀態: {self.show_official_corners}")
             
+            # 🏁 載入 Sector 邊界數據
+            print(f"[TRACK_MAP] ==================== 載入 sector_boundaries ====================")
+            
+            # 🚨 檢測賽道變更（用於智能保護邏輯）
+            current_track = track_name  # 從上方 session_info 已取得
+            track_changed = (self._last_track_name is not None and 
+                           current_track != "Unknown" and 
+                           self._last_track_name != current_track)
+            
+            if track_changed:
+                print(f"[TRACK_MAP] 🔄 檢測到賽道變更: {self._last_track_name} → {current_track}")
+            else:
+                print(f"[TRACK_MAP] ✅ 同一賽道: {current_track}")
+            
+            # ⚠️ 關鍵問題：API 響應中 sector_boundaries 可能不存在
+            # 原因：CLI Function 100 在 Line 1440-1441 只在有數據時才添加到 result
+            #   if sector_boundaries:
+            #       result["sector_boundaries"] = sector_boundaries
+            # 這導致：API 響應可能完全沒有 "sector_boundaries" 欄位
+            
+            sector_boundaries_data = track_data.get("sector_boundaries", None)  # 改用 None 作為預設值
+            print(f"[TRACK_MAP] sector_boundaries_data 類型: {type(sector_boundaries_data)}")
+            print(f"[TRACK_MAP] sector_boundaries_data: {sector_boundaries_data if sector_boundaries_data is not None else '欄位不存在'}")
+            print(f"[TRACK_MAP] 當前 self.sector_boundaries 數量: {len(self.sector_boundaries)}")
+            
+            if sector_boundaries_data and isinstance(sector_boundaries_data, list):
+                # ✅ 有新數據：直接載入
+                self.sector_boundaries = sector_boundaries_data
+                print(f"[TRACK_MAP] ✅ 成功載入 {len(self.sector_boundaries)} 個 Sector 邊界")
+                for boundary in self.sector_boundaries:
+                    print(f"[TRACK_MAP]    - {boundary.get('name')}: distance={boundary.get('distance_m'):.1f}m, pos=({boundary.get('position_x'):.1f}, {boundary.get('position_y'):.1f})")
+            else:
+                # 🛡️ 智能保護邏輯：區分「欄位不存在」vs「空列表」
+                if track_changed:
+                    # ✅ 賽道變更且無新數據：清空（避免座標錯位）
+                    self.sector_boundaries = []
+                    print(f"[TRACK_MAP] 🧹 賽道變更且無新 Sector 數據，清空避免座標錯位")
+                elif self.sector_boundaries:
+                    # ✅ 同一賽道且無新數據：保留（避免消失）
+                    print(f"[TRACK_MAP] 🛡️ 同一賽道，保留現有 {len(self.sector_boundaries)} 個 Sector 邊界（API 未返回數據）")
+                    # 不修改 self.sector_boundaries - 保留現有數據
+                else:
+                    self.sector_boundaries = []
+                    print(f"[TRACK_MAP] ⚠️ 無 Sector 邊界數據且當前為空，設置為空列表")
+            
+            # 更新記錄的賽道名稱
+            if current_track != "Unknown":
+                self._last_track_name = current_track
+            
+            print(f"[TRACK_MAP] self.sector_boundaries 最終狀態: 長度={len(self.sector_boundaries)}")
+            print(f"[TRACK_MAP] self.show_sector_boundaries 狀態: {self.show_sector_boundaries}")
+            
             self._build_distance_lookup()
             self._clear_dynamic_marker()
             self._clear_fixed_marker()
@@ -163,10 +307,49 @@ class TrackMapWidget(QWidget):
             info = track_data.get("session_info", {})
             track_name = info.get("track_name") or info.get("event_name") or "Unknown"
             print(f"[TRACK_MAP] Data loaded: {track_name}, points={len(self.position_data)} bounds={self.track_bounds}")
+            
+            # ✅ 載入速度分布數據
+            speed_dist = track_data.get("speed_distribution")
+            if speed_dist:
+                self.speed_distribution_data = speed_dist
+                print(f"[TRACK_MAP] ✅ 已載入速度分布數據: Low={speed_dist.get('low_speed_percentage', 0):.1f}%, Mid={speed_dist.get('mid_speed_percentage', 0):.1f}%, High={speed_dist.get('high_speed_percentage', 0):.1f}%")
+            else:
+                self.speed_distribution_data = None
+                print(f"[TRACK_MAP] ⚠️  未找到速度分布數據")
+            
             return bool(self.position_data)
         except Exception as exc:
             print(f"[TRACK_MAP] Failed to load data: {exc}")
             return False
+
+    def set_corner_flags(self, corner_flags_data: Dict[str, Dict[str, Any]]) -> None:
+        """
+        設定彎道旗幟數據用於危險度視覺化
+        
+        Args:
+            corner_flags_data: {"T1": {corner_analysis_data}, "T2": {...}, ...}
+        """
+        self.corner_flags = corner_flags_data
+        print(f"[TRACK_MAP] 🚩 已載入 {len(corner_flags_data)} 個彎道的旗幟數據")
+        self.update()  # 觸發重繪
+
+    def set_sector_boundaries(self, sector_boundaries_data: List[Dict[str, Any]]) -> None:
+        """
+        設定 Sector 邊界數據用於分隔線繪製
+        
+        Args:
+            sector_boundaries_data: [
+                {"sector": 1, "name": "S1 End", "position_x": 2126.9, "position_y": -2616.1, "distance_m": 1233.1},
+                {"sector": 2, "name": "S2 End", "position_x": -4.0, "position_y": 660.0, "distance_m": 3130.3},
+                {"sector": 3, "name": "S3 End (Finish Line)", "position_x": -3674.2, "position_y": -5269.4, "distance_m": 0.0}
+            ]
+        """
+        self.sector_boundaries = sector_boundaries_data or []
+        print(f"[TRACK_MAP] 🏁 已載入 {len(self.sector_boundaries)} 個 Sector 邊界")
+        if self.sector_boundaries:
+            for boundary in self.sector_boundaries:
+                print(f"  - {boundary.get('name', 'Unknown')}: {boundary.get('distance_m', 0):.1f}m")
+        self.update()  # 觸發重繪
 
     def set_track_data(self, position_data: List[Dict[str, Any]], track_bounds: Dict[str, float]) -> None:
         """兼容 legacy API。"""
@@ -247,6 +430,16 @@ class TrackMapWidget(QWidget):
         self.show_distance_markers = bool(show)
         self.update()
 
+    def set_speed_gradient_enabled(self, enabled: bool) -> None:
+        """設置是否啟用速度漸層模式"""
+        self.use_speed_gradient = bool(enabled)
+        self.update()
+    
+    def set_speed_distribution_enabled(self, enabled: bool) -> None:
+        """設置是否顯示速度分布圓餅圖"""
+        self.show_speed_distribution = bool(enabled)
+        self.update()
+
     def _recenter_after_zoom(self) -> None:
         if not self.track_bounds:
             return
@@ -305,11 +498,8 @@ class TrackMapWidget(QWidget):
 
         path = self._build_track_path(points)
 
-        painter.setPen(QPen(QColor(40, 40, 200), 4))
-        painter.drawPath(path)
-
-        painter.setPen(QPen(QColor(120, 120, 255), 1))
-        painter.drawPath(path)
+        # 🚀 根據 Speed 數據繪製不同顏色的路徑
+        self._draw_speed_colored_path(painter, points)
 
         if self.show_distance_markers:
             self._draw_distance_markers(painter, points)
@@ -323,9 +513,89 @@ class TrackMapWidget(QWidget):
                 print(f"[TRACK_MAP] paintEvent: show_official_corners={self.show_official_corners} (未啟用)")
             if not self.official_corners:
                 print(f"[TRACK_MAP] paintEvent: official_corners 為空 (長度={len(self.official_corners)})")
+        
+        # 繪製 Sector 邊界分隔線
+        if self.show_sector_boundaries and self.sector_boundaries:
+            print(f"[TRACK_MAP] paintEvent: 準備繪製 {len(self.sector_boundaries)} 個 Sector 邊界")
+            self._draw_sector_boundaries(painter)
+        else:
+            if not self.show_sector_boundaries:
+                print(f"[TRACK_MAP] paintEvent: show_sector_boundaries={self.show_sector_boundaries} (未啟用)")
+            if not self.sector_boundaries:
+                print(f"[TRACK_MAP] paintEvent: sector_boundaries 為空 (長度={len(self.sector_boundaries)})")
 
         # 在路徑繪製後呈現同步標記
         self._draw_markers(painter)
+        
+        # ✅ 繪製速度分布圓餅圖（左下角）
+        if self.show_speed_distribution and self.speed_distribution_data:
+            self._draw_speed_distribution_pie(painter)
+        else:
+            if not self.show_speed_distribution:
+                print(f"[DEBUG] ⚠️  show_speed_distribution = False（未啟用）")
+            if not self.speed_distribution_data:
+                print(f"[DEBUG] ⚠️  無 speed_distribution 數據")
+
+    def _draw_speed_colored_path(self, painter: QPainter, points: List[QPointF]) -> None:
+        """使用逐段繪製根據速度繪製漸層色賽道
+        
+        顏色方案：藍色（最高速） → 紅色（最慢速）
+        
+        ⚠️ 修復：不再使用 QLinearGradient（會導致對角線漸層錯位）
+        改用逐段繪製，為每段線段設定精確速度顏色
+        """
+        # 檢查是否啟用速度漸層模式
+        if not self.use_speed_gradient or not self.position_data or len(self.position_data) == 0:
+            # 使用原始藍色（一般模式）
+            path = self._build_track_path(points)
+            painter.setPen(QPen(QColor(40, 40, 200), 4))
+            painter.drawPath(path)
+            painter.setPen(QPen(QColor(120, 120, 255), 1))
+            painter.drawPath(path)
+            return
+        
+        # 1. 收集所有速度值
+        speeds = [record.get('speed', 0) for record in self.position_data]
+        if not speeds or max(speeds) == 0:
+            # 無有效速度數據，使用原始藍色
+            path = self._build_track_path(points)
+            painter.setPen(QPen(QColor(40, 40, 200), 4))
+            painter.drawPath(path)
+            return
+        
+        min_speed = min(speeds)
+        max_speed = max(speeds)
+        
+        # 2. 逐段繪製賽道，為每段設定精確顏色
+        # 設定圓滑線條樣式
+        pen = QPen()
+        pen.setWidth(5)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        
+        for i in range(len(points) - 1):
+            # 獲取當前線段的速度（使用線段中點的速度）
+            if i < len(speeds):
+                speed = speeds[i]
+            else:
+                speed = speeds[-1]
+            
+            # 計算速度對應的顏色（藍色 → 紅色）
+            speed_ratio = (speed - min_speed) / (max_speed - min_speed) if max_speed > min_speed else 0.5
+            
+            # 速度漸層：高速=藍色，低速=紅色
+            # 藍色 RGB(33, 150, 243) - Material Blue 500
+            # 紅色 RGB(244, 67, 54) - Material Red 500
+            r = int(33 + (244 - 33) * (1 - speed_ratio))
+            g = int(150 + (67 - 150) * (1 - speed_ratio))
+            b = int(243 + (54 - 243) * (1 - speed_ratio))
+            
+            color = QColor(r, g, b)
+            pen.setColor(color)
+            painter.setPen(pen)
+            
+            # 繪製線段
+            painter.drawLine(points[i], points[i + 1])
 
     def _draw_grid(self, painter: QPainter) -> None:
         if not self.track_bounds:
@@ -355,6 +625,83 @@ class TrackMapWidget(QWidget):
             painter.drawLine(sx1, sy1, sx2, sy2)
             count += 1
             y += spacing
+    
+    def _draw_speed_distribution_pie(self, painter: QPainter) -> None:
+        """
+        在左下角繪製速度分布圓餅圖
+        
+        顏色方案（與速度梯度一致）：
+        - 低速 (<120 km/h): 紅色
+        - 中速 (120-200 km/h): 黃色
+        - 高速 (>200 km/h): 藍色
+        """
+        if not self.speed_distribution_data:
+            return
+        
+        # 提取百分比數據
+        low_pct = self.speed_distribution_data.get('low_speed_percentage', 0)
+        mid_pct = self.speed_distribution_data.get('mid_speed_percentage', 0)
+        high_pct = self.speed_distribution_data.get('high_speed_percentage', 0)
+        
+        # 圓餅圖參數
+        pie_diameter = 120  # 圓餅圖直徑（120px）
+        margin_x = 15  # 左邊距
+        margin_y = 15  # 下邊距
+        
+        # 計算圓餅圖位置（左下角）
+        pie_x = margin_x
+        pie_y = self.height() - pie_diameter - margin_y
+        pie_rect = QRectF(pie_x, pie_y, pie_diameter, pie_diameter)
+        
+        # 定義顏色（與速度梯度一致）
+        low_color = QColor(244, 67, 54)      # 紅色（低速）
+        mid_color = QColor(255, 193, 7)      # 黃色（中速）
+        high_color = QColor(33, 150, 243)    # 藍色（高速）
+        
+        # 繪製圓餅圖扇區
+        # Qt 使用 16 分度（1度 = 16單位），起始角度從3點鐘方向開始，逆時針為正
+        start_angle = 90 * 16  # 從12點鐘方向開始（90度）
+        
+        # 🔴 低速扇區
+        low_span = int(low_pct * 360 / 100 * 16)
+        painter.setBrush(QBrush(low_color))
+        painter.setPen(QPen(Qt.white, 2))  # 白色邊框
+        painter.drawPie(pie_rect, start_angle, -low_span)  # 逆時針
+        
+        # 🟡 中速扇區
+        mid_span = int(mid_pct * 360 / 100 * 16)
+        painter.setBrush(QBrush(mid_color))
+        painter.drawPie(pie_rect, start_angle - low_span, -mid_span)
+        
+        # 🔵 高速扇區
+        high_span = int(high_pct * 360 / 100 * 16)
+        painter.setBrush(QBrush(high_color))
+        painter.drawPie(pie_rect, start_angle - low_span - mid_span, -high_span)
+        
+        # 繪製文字標籤（圓餅圖右側）
+        label_x = pie_x + pie_diameter + 10  # 圓餅圖右側 + 10px 間距
+        label_start_y = pie_y + 15  # 從圓餅圖頂部往下一點開始
+        label_spacing = 20  # 行間距
+        
+        # 設定文字字體（8pt，與表格一致）
+        font = QFont()
+        font.setPointSize(8)
+        painter.setFont(font)
+        
+        # 🔴 低速標籤
+        painter.setPen(QPen(low_color))
+        low_text = f"<120km/h: {low_pct:.1f}%"
+        painter.drawText(label_x, label_start_y, low_text)
+        
+        # 🟡 中速標籤
+        painter.setPen(QPen(mid_color))
+        mid_text = f"120-200km/h: {mid_pct:.1f}%"
+        painter.drawText(label_x, label_start_y + label_spacing, mid_text)
+        
+        # 🔵 高速標籤
+        painter.setPen(QPen(high_color))
+        high_text = f">200km/h: {high_pct:.1f}%"
+        painter.drawText(label_x, label_start_y + label_spacing * 2, high_text)
 
     def _create_screen_points(self) -> List[QPointF]:
         return [QPointF(*self.world_to_screen(rec.get("position_x", 0), rec.get("position_y", 0))) for rec in self.position_data]
@@ -406,22 +753,29 @@ class TrackMapWidget(QWidget):
                 painter.drawText(int(points[idx].x()) + 5, int(points[idx].y()) + 15, f"{distance_m/1000:.1f} km")
     
     def _draw_official_corners(self, painter: QPainter) -> None:
-        """繪製 FastF1 官方彎道標記 - 白底黑字，智能偏移避免與賽道重疊"""
-        print(f"[TRACK_MAP] _draw_official_corners: 開始繪製")
-        print(f"[TRACK_MAP]    self.official_corners 長度: {len(self.official_corners)}")
+        """繪製 FastF1 官方彎道標記 - 根據旗幟數據顯示危險度"""
+        
+        print(f"\n[DEBUG] === _draw_official_corners() 執行 ===")
+        print(f"[DEBUG] self.official_corners 數量: {len(self.official_corners)}")
         
         if not self.official_corners:
-            print(f"[TRACK_MAP] _draw_official_corners: official_corners 為空，退出")
+            print(f"[DEBUG] ❌ self.official_corners 為空，跳過繪製")
             return
         
-        print(f"[TRACK_MAP] _draw_official_corners: 準備繪製 {len(self.official_corners)} 個彎道")
+        print(f"[DEBUG] ✅ 準備繪製 {len(self.official_corners)} 個彎道標記")
+        if len(self.official_corners) > 0:
+            first = self.official_corners[0]
+            print(f"[DEBUG]    第 1 個彎道: {first}")
         
-        # 設定彎道標記樣式 - 白底黑字
-        bg_color = QColor(255, 255, 255, 240)  # 半透明白色背景
-        border_color = QColor(0, 0, 0)  # 黑色邊框
-        text_color = QColor(0, 0, 0)  # 黑色文字
+        # 預設樣式 - 白底黑字
+        default_bg_color = QColor(255, 255, 255, 240)
+        border_color = QColor(0, 0, 0)
+        text_color = QColor(0, 0, 0)
         
-        bg_brush = QBrush(bg_color)
+        # 旗幟顏色
+        yellow_color = QColor(255, 255, 0, 220)  # 黃色
+        red_color = QColor(255, 0, 0, 220)  # 紅色
+        
         border_pen = QPen(border_color, 2)
         text_pen = QPen(text_color)
         text_font = QFont("Arial", 8, QFont.Bold)
@@ -429,33 +783,83 @@ class TrackMapWidget(QWidget):
         painter.setFont(text_font)
         
         marker_radius = 11
-        offset_distance = 20  # 基礎偏移距離
+        offset_distance = 20
         
+        drawn_count = 0
         for corner in self.official_corners:
-            # 獲取彎道位置 (FastF1 的 X, Y 座標)
             corner_x = corner.get("x", 0.0)
             corner_y = corner.get("y", 0.0)
             corner_num = corner.get("number", 0)
             
-            # 計算智能偏移：找到最近的賽道點，然後向外偏移
-            offset_x, offset_y = self._calculate_corner_offset(
-                corner_x, corner_y, offset_distance
-            )
-            
-            # 轉換為螢幕座標
+            # 計算偏移
+            offset_x, offset_y = self._calculate_corner_offset(corner_x, corner_y, offset_distance)
             screen_x, screen_y = self.world_to_screen(offset_x, offset_y)
             
-            # 繪製白色背景圓圈（圓圈中心在 screen_x, screen_y）
-            painter.setPen(border_pen)
-            painter.setBrush(bg_brush)
-            painter.drawEllipse(screen_x - marker_radius, screen_y - marker_radius, 
-                              marker_radius * 2, marker_radius * 2)
+            # 檢查視口
+            margin = 50
+            if (screen_x < -margin or screen_x > self.width() + margin or
+                screen_y < -margin or screen_y > self.height() + margin):
+                continue
             
-            # 繪製黑色彎道編號（使用 QRect 對齊方式精確居中）
+            # 🚩 檢查該彎道的旗幟數據
+            corner_key = f"T{corner_num}"
+            has_yellow = False
+            has_safety_car = False
+            
+            if corner_key in self.corner_flags:
+                corner_data = self.corner_flags[corner_key]
+                yearly_breakdown = corner_data.get('yearly_breakdown', {})
+                
+                # 統計所有年份的旗幟
+                for year_data in yearly_breakdown.values():
+                    if year_data.get('yellow', 0) > 0 or year_data.get('double_yellow', 0) > 0:
+                        has_yellow = True
+                    if year_data.get('safety_car', 0) > 0:
+                        has_safety_car = True
+            
+            # 🎨 根據旗幟類型繪製圓圈
+            # 黃色 = 黃旗/雙黃旗，淺紫色 = 安全車觸發點
+            lavender_color = QColor(200, 162, 200, 220)  # 淺紫色（薰衣草色）
+            
+            if has_yellow and has_safety_car:
+                # 左半圓黃色，右半圓淺紫色
+                from PyQt5.QtCore import QRectF
+                rect = QRectF(screen_x - marker_radius, screen_y - marker_radius, 
+                            marker_radius * 2, marker_radius * 2)
+                
+                # 繪製左半圓（黃色）
+                painter.setPen(border_pen)
+                painter.setBrush(QBrush(yellow_color))
+                painter.drawPie(rect, 90 * 16, 180 * 16)  # 從 90° 繪製 180°
+                
+                # 繪製右半圓（淺紫色）
+                painter.setBrush(QBrush(lavender_color))
+                painter.drawPie(rect, 270 * 16, 180 * 16)  # 從 270° 繪製 180°
+                
+            elif has_safety_car:
+                # 全淺紫色（安全車）
+                painter.setPen(border_pen)
+                painter.setBrush(QBrush(lavender_color))
+                painter.drawEllipse(screen_x - marker_radius, screen_y - marker_radius, 
+                                  marker_radius * 2, marker_radius * 2)
+                
+            elif has_yellow:
+                # 全黃色（黃旗/雙黃旗）
+                painter.setPen(border_pen)
+                painter.setBrush(QBrush(yellow_color))
+                painter.drawEllipse(screen_x - marker_radius, screen_y - marker_radius, 
+                                  marker_radius * 2, marker_radius * 2)
+            else:
+                # 預設白色（無旗幟事件）
+                painter.setPen(border_pen)
+                painter.setBrush(QBrush(default_bg_color))
+                painter.drawEllipse(screen_x - marker_radius, screen_y - marker_radius, 
+                                  marker_radius * 2, marker_radius * 2)
+            
+            # 繪製黑色彎道編號
             painter.setPen(text_pen)
             text = str(corner_num)
             
-            # 使用 QRect 來定義文字繪製區域（與圓圈大小相同）
             from PyQt5.QtCore import QRect
             text_rect = QRect(
                 screen_x - marker_radius,
@@ -464,8 +868,11 @@ class TrackMapWidget(QWidget):
                 marker_radius * 2
             )
             
-            # 使用對齊參數讓 Qt 自動居中文字
             painter.drawText(text_rect, Qt.AlignCenter, text)
+            drawn_count += 1
+        
+        if drawn_count == 0:
+            print(f"[TRACK_MAP] ⚠️ 警告：0 個彎道在視口內（共 {len(self.official_corners)} 個彎道）")
     
     def _calculate_corner_offset(self, corner_x: float, corner_y: float, offset_dist: float) -> Tuple[float, float]:
         """
@@ -512,6 +919,175 @@ class TrackMapWidget(QWidget):
         
         return offset_x, offset_y
 
+    def _draw_sector_boundaries(self, painter: QPainter) -> None:
+        """
+        繪製 Sector 邊界分隔線 (S1/S2/S3)
+        
+        在每個 Sector 邊界位置繪製垂直於賽道的線段，並標註 S1/S2/S3 文字
+        """
+        import math
+        import numpy as np
+        
+        print(f"[TRACK_MAP] 🏁 準備繪製 {len(self.sector_boundaries)} 個 Sector 邊界")
+        
+        for boundary in self.sector_boundaries:
+            sector_num = boundary.get('sector', 0)
+            sector_name = boundary.get('name', f'S{sector_num}')
+            position_x = boundary.get('position_x', 0.0)
+            position_y = boundary.get('position_y', 0.0)
+            distance_m = boundary.get('distance_m', 0.0)
+            
+            # 轉換到屏幕座標
+            screen_x, screen_y = self.world_to_screen(position_x, position_y)
+            
+            # 檢查是否在視口內
+            margin = 100
+            if (screen_x < -margin or screen_x > self.width() + margin or
+                screen_y < -margin or screen_y > self.height() + margin):
+                continue
+            
+            # 🎯 計算賽道切線方向（找到該位置附近的賽道點）
+            tangent_vector = self._get_track_tangent_at_position(position_x, position_y)
+            
+            # 🎯 計算法向量（垂直方向）
+            if tangent_vector:
+                # 法向量 = (-tangent_y, tangent_x) - 逆時針旋轉 90°
+                normal_x = -tangent_vector[1]
+                normal_y = tangent_vector[0]
+                
+                # 正規化
+                length = math.sqrt(normal_x**2 + normal_y**2)
+                if length > 0:
+                    normal_x /= length
+                    normal_y /= length
+            else:
+                # 預設方向（水平）
+                normal_x, normal_y = 0.0, 1.0
+            
+            # 🎨 繪製垂直線段（兩側各延伸，垂直於賽道方向）
+            line_length = 400.0  # 世界座標單位（公尺） - 改為 400m
+            start_x = position_x - normal_x * line_length
+            start_y = position_y - normal_y * line_length
+            end_x = position_x + normal_x * line_length
+            end_y = position_y + normal_y * line_length
+            
+            # 轉換到屏幕座標
+            start_screen_x, start_screen_y = self.world_to_screen(start_x, start_y)
+            end_screen_x, end_screen_y = self.world_to_screen(end_x, end_y)
+            
+            # 🎨 繪製黑色虛線（垂直於賽道）
+            pen = QPen(QColor(0, 0, 0), 1, Qt.DashLine)  # 黑色虛線，細 1px
+            painter.setPen(pen)
+            painter.drawLine(int(start_screen_x), int(start_screen_y), int(end_screen_x), int(end_screen_y))
+            
+            print(f"  🖊️  繪製 {sector_name} 線條: 世界座標 ({start_x:.1f},{start_y:.1f})->({end_x:.1f},{end_y:.1f})")
+            print(f"       屏幕座標 ({int(start_screen_x)},{int(start_screen_y)})->({int(end_screen_x)},{int(end_screen_y)})")
+            
+            # 🎨 繪製 Sector 標籤文字（例如 "S1", "S2", "S3"）
+            # 決定標籤簡稱
+            if sector_num == 1:
+                label_text = "S1"
+            elif sector_num == 2:
+                label_text = "S2"
+            elif sector_num == 3:
+                label_text = "S3"
+            else:
+                label_text = f"S{sector_num}"
+            
+            # 標籤背景框
+            font = QFont("Arial", 10, QFont.Normal)  # 字體改小 (12→10)，不要粗體
+            painter.setFont(font)
+            
+            # 計算文字尺寸
+            from PyQt5.QtCore import QRectF
+            text_rect = painter.boundingRect(QRectF(), Qt.AlignCenter, label_text)
+            text_width = text_rect.width()
+            text_height = text_rect.height()
+            
+            # 標籤位置：放在線段尾端（賽道外側 - 反方向）
+            label_offset = -800.0  # 負值 = 往法向量反方向，-800m 更遠離賽道
+            label_x = position_x + normal_x * label_offset
+            label_y = position_y + normal_y * label_offset
+            label_screen_x, label_screen_y = self.world_to_screen(label_x, label_y)
+            
+            # 繪製白色半透明背景框（無外框）
+            padding = 6
+            box_rect = QRectF(
+                label_screen_x - text_width / 2 - padding,
+                label_screen_y - text_height / 2 - padding,
+                text_width + 2 * padding,
+                text_height + 2 * padding
+            )
+            
+            painter.setPen(Qt.NoPen)  # 取消黑色外框
+            painter.setBrush(QBrush(QColor(255, 255, 255, 230)))  # 白色半透明背景
+            painter.drawRoundedRect(box_rect, 5, 5)
+            
+            # 繪製黑色文字
+            painter.setPen(QPen(QColor(0, 0, 0)))
+            text_draw_rect = QRectF(
+                label_screen_x - text_width / 2,
+                label_screen_y - text_height / 2,
+                text_width,
+                text_height
+            )
+            painter.drawText(text_draw_rect, Qt.AlignCenter, label_text)
+            
+            print(f"  ✅ 已繪製 {sector_name} at ({position_x:.1f}, {position_y:.1f})")
+    
+    def _get_track_tangent_at_position(self, target_x: float, target_y: float) -> Optional[Tuple[float, float]]:
+        """
+        計算賽道在指定位置的切線方向
+        
+        Args:
+            target_x: 目標位置的 X 座標（世界座標）
+            target_y: 目標位置的 Y 座標（世界座標）
+            
+        Returns:
+            (tangent_x, tangent_y): 正規化的切線向量，如果無法計算則返回 None
+        """
+        import math
+        
+        if not self.position_data or len(self.position_data) < 2:
+            return None
+        
+        # 找到最接近目標位置的賽道點索引
+        min_dist = float('inf')
+        nearest_index = 0
+        
+        for i, pos in enumerate(self.position_data):
+            track_x = pos.get("position_x", 0.0)
+            track_y = pos.get("position_y", 0.0)
+            dist = math.sqrt((track_x - target_x)**2 + (track_y - target_y)**2)
+            
+            if dist < min_dist:
+                min_dist = dist
+                nearest_index = i
+        
+        # 取前後各 5 個點計算平均切線方向（更平滑）
+        window = 5
+        start_idx = max(0, nearest_index - window)
+        end_idx = min(len(self.position_data) - 1, nearest_index + window)
+        
+        if start_idx >= end_idx:
+            return None
+        
+        # 計算從起點到終點的向量
+        start_pos = self.position_data[start_idx]
+        end_pos = self.position_data[end_idx]
+        
+        dx = end_pos.get("position_x", 0.0) - start_pos.get("position_x", 0.0)
+        dy = end_pos.get("position_y", 0.0) - start_pos.get("position_y", 0.0)
+        
+        # 正規化
+        length = math.sqrt(dx**2 + dy**2)
+        if length > 0:
+            dx /= length
+            dy /= length
+            return (dx, dy)
+        
+        return None
+
     # ------------------------------------------------------------------
     # 座標轉換
     # ------------------------------------------------------------------
@@ -538,20 +1114,174 @@ class TrackMapWidget(QWidget):
     # ------------------------------------------------------------------
     # 互動事件
     # ------------------------------------------------------------------
+    def mouseMoveEvent(self, event) -> None:
+        """滑鼠移動事件 - 處理標籤拖動和懸停顯示"""
+        # 🆕 處理標籤拖動（最優先）
+        if self.dragging_tooltip and 0 <= self.dragging_tooltip_index < len(self.pinned_tooltips):
+            # 計算新位置（滑鼠位置 - 拖動偏移量）
+            new_pos = event.pos() - self.tooltip_drag_offset
+            
+            # 限制在視窗範圍內
+            tooltip_info = self.pinned_tooltips[self.dragging_tooltip_index]
+            label = tooltip_info['label']
+            new_x = max(0, min(new_pos.x(), self.width() - label.width()))
+            new_y = max(0, min(new_pos.y(), self.height() - label.height()))
+            new_pos = QPoint(new_x, new_y)
+            
+            # 更新標籤位置
+            label.move(new_pos)
+            
+            # 儲存自訂位置
+            tooltip_info['custom_pos'] = new_pos
+            
+            # 拖動時不再執行其他邏輯
+            event.accept()
+            return
+        
+        # 如果有固定的標籤，不處理懸停（避免懸停提示干擾固定標籤）
+        if self.pinned_tooltips:
+            super().mouseMoveEvent(event)
+            return
+        
+        # 檢測滑鼠是否懸停在彎道圓圈上
+        detected_corner = self._get_corner_at_position(event.x(), event.y())
+        
+        if detected_corner != self.hovered_corner:
+            self.hovered_corner = detected_corner
+            
+            if self.hovered_corner:
+                # 顯示 tooltip
+                tooltip_text = self._format_corner_tooltip(self.hovered_corner)
+                if tooltip_text:
+                    QToolTip.showText(event.globalPos(), tooltip_text, self)
+            else:
+                # 隱藏 tooltip
+                QToolTip.hideText()
+        
+        super().mouseMoveEvent(event)
+    
     def mousePressEvent(self, event) -> None:  # noqa: D401 - Qt override
-        if event.button() == Qt.LeftButton and self.position_data:
-            info = {
-                "x": event.x(),
-                "y": event.y(),
-                "total_points": len(self.position_data),
-            }
-            self.point_clicked.emit(info)
+        if event.button() == Qt.LeftButton:
+            # 🆕 【最優先】檢查是否點擊已固定的標籤（用於拖動）
+            for i, tooltip_info in enumerate(self.pinned_tooltips):
+                label = tooltip_info['label']
+                # 檢查點擊位置是否在標籤範圍內
+                label_rect = label.geometry()
+                if label_rect.contains(event.pos()):
+                    # 開始拖動此標籤
+                    self.dragging_tooltip = True
+                    self.dragging_tooltip_index = i
+                    self.tooltip_drag_offset = event.pos() - label.pos()
+                    self.setCursor(Qt.ClosedHandCursor)
+                    print(f"[TRACK_MAP] 🎯 開始拖動標籤 #{i}: {tooltip_info['corner_key']}")
+                    event.accept()
+                    return
+            
+            # 檢查是否點擊彎道圓圈
+            clicked_corner = self._get_corner_at_position(event.x(), event.y())
+            
+            if clicked_corner:
+                # ✅ 新版：創建固定標籤（靜態，不重複載入）
+                
+                # 檢查是否已固定該彎道
+                for tooltip_info in self.pinned_tooltips:
+                    if tooltip_info['corner_key'] == clicked_corner:
+                        print(f"[TRACK_MAP] 彎道 {clicked_corner} 的標籤已固定")
+                        event.accept()
+                        return
+                
+                # 生成 HTML 內容（只生成一次）
+                html_content = self._format_corner_tooltip(clicked_corner)
+                if not html_content:
+                    print(f"[TRACK_MAP] 彎道 {clicked_corner} 沒有旗幟數據")
+                    return
+                
+                # 獲取彎道世界座標
+                corner_data = self.corner_flags[clicked_corner]
+                corner_num = corner_data.get('corner_number', 0)
+                corner_world_pos = None
+                
+                for corner in self.official_corners:
+                    if corner.get('number') == corner_num:
+                        corner_world_pos = (
+                            corner.get('x', 0.0),
+                            corner.get('y', 0.0)
+                        )
+                        break
+                
+                if not corner_world_pos:
+                    print(f"[TRACK_MAP] 找不到彎道 {clicked_corner} 的座標")
+                    return
+                
+                # 計算智能偏移量
+                offset = self._calculate_tooltip_offset(corner_world_pos)
+                
+                # 創建 QLabel 標籤
+                label = CornerTooltipLabel(html_content, self)
+                
+                # 計算初始位置
+                screen_x, screen_y = self.world_to_screen(*corner_world_pos)
+                label.move(int(screen_x + offset[0]), int(screen_y + offset[1]))
+                label.show()
+                
+                # 儲存標籤資訊
+                self.pinned_tooltips.append({
+                    'corner_key': clicked_corner,
+                    'label': label,
+                    'corner_world_pos': corner_world_pos,
+                    'offset': offset,
+                    'custom_pos': None  # 初始化自訂位置
+                })
+                
+                print(f"[TRACK_MAP] 已固定標籤: {clicked_corner}")
+                event.accept()
+                return
+            
+            # 原有的點擊事件處理
+            if self.position_data:
+                info = {
+                    "x": event.x(),
+                    "y": event.y(),
+                    "total_points": len(self.position_data),
+                }
+                self.point_clicked.emit(info)
+        
+        elif event.button() == Qt.RightButton:
+            # 🆕 右鍵清除所有固定標籤（在空白處點擊）
+            if self.pinned_tooltips:
+                # 清理所有標籤
+                for tooltip_info in self.pinned_tooltips:
+                    tooltip_info['label'].hide()
+                    tooltip_info['label'].deleteLater()
+                self.pinned_tooltips.clear()
+                print("[TRACK_MAP] 🗑️ 右鍵清除所有固定標籤")
+                self.update()
+                event.accept()
+                return
+        
         super().mousePressEvent(event)
+    
+    def mouseReleaseEvent(self, event) -> None:
+        """滑鼠放開事件 - 結束標籤拖動"""
+        if event.button() == Qt.LeftButton:
+            if self.dragging_tooltip:
+                # 結束拖動
+                print(f"[TRACK_MAP] ✅ 結束拖動標籤 (索引: {self.dragging_tooltip_index})")
+                self.dragging_tooltip = False
+                self.dragging_tooltip_index = -1
+                self.tooltip_drag_offset = QPoint(0, 0)  # 重置偏移量
+                self.setCursor(Qt.ArrowCursor)
+                event.accept()
+                return  # 重要：立即返回，不執行後續處理
+        
+        super().mouseReleaseEvent(event)
 
     def resizeEvent(self, event) -> None:  # noqa: D401 - Qt override
         super().resizeEvent(event)
         if self.track_bounds:
             self._pending_fit = True
+        # ✅ 更新所有標籤位置
+        self._update_tooltip_positions()
         self.update()
 
     # ------------------------------------------------------------------
@@ -650,6 +1380,11 @@ class TrackMapWidget(QWidget):
                 self._linkage_registered = False
 
     def closeEvent(self, event) -> None:  # noqa: D401 - Qt override
+        # ✅ 清理所有標籤
+        for tooltip_info in self.pinned_tooltips:
+            tooltip_info['label'].deleteLater()
+        self.pinned_tooltips.clear()
+        
         self._unregister_linkage()
         super().closeEvent(event)
 
@@ -1006,6 +1741,237 @@ class TrackMapWidget(QWidget):
 
     def get_distance_scale(self) -> float:
         return self._distance_scale
+    
+    def _get_corner_at_position(self, x: int, y: int) -> Optional[str]:
+        """
+        檢測滑鼠位置是否在彎道圓圈上
+        
+        Args:
+            x: 滑鼠 X 座標（螢幕座標）
+            y: 滑鼠 Y 座標（螢幕座標）
+            
+        Returns:
+            彎道 key（例如 "T7"）或 None
+        """
+        if not self.official_corners or not self.track_bounds:
+            return None
+        
+        # 彎道圓圈的半徑（與繪製時一致）
+        marker_radius = 12
+        hit_tolerance = marker_radius + 5  # 增加5像素容錯範圍
+        
+        closest_corner = None
+        closest_distance = float('inf')
+        
+        for corner in self.official_corners:
+            corner_num = corner.get('number', corner.get('Number', 0))
+            corner_x = corner.get('x', corner.get('X', 0.0))
+            corner_y = corner.get('y', corner.get('Y', 0.0))
+            
+            if corner_x == 0.0 and corner_y == 0.0:
+                continue
+            
+            # 計算偏移（與繪製時一致）
+            offset_x, offset_y = self._calculate_corner_offset(corner_x, corner_y, 20)
+            # 轉換世界座標到螢幕座標（使用與繪製相同的方法）
+            screen_x, screen_y = self.world_to_screen(offset_x, offset_y)
+            
+            # 計算距離
+            dx = x - screen_x
+            dy = y - screen_y
+            distance = (dx * dx + dy * dy) ** 0.5
+            
+            if distance < closest_distance:
+                closest_distance = distance
+                closest_corner = (corner_num, distance)
+            
+            if distance <= hit_tolerance:
+                corner_key = f"T{corner_num}"
+                # 檢查該彎道是否有旗幟數據（只有有顏色的彎道才顯示 tooltip）
+                if corner_key in self.corner_flags:
+                    corner_data = self.corner_flags[corner_key]
+                    yearly_breakdown = corner_data.get('yearly_breakdown', {})
+                    if yearly_breakdown:  # 有歷史數據才返回
+                        return corner_key
+        
+        return None
+    
+    def _format_corner_tooltip(self, corner_key: str) -> str:
+        """
+        格式化彎道 tooltip 文字
+        
+        Args:
+            corner_key: 彎道 key（例如 "T7"）
+            
+        Returns:
+            格式化的 HTML 文字
+        """
+        if corner_key not in self.corner_flags:
+            return ""
+        
+        corner_data = self.corner_flags[corner_key]
+        corner_num = corner_data.get('corner_number', '')
+        yearly_breakdown = corner_data.get('yearly_breakdown', {})
+        
+        if not yearly_breakdown:
+            return ""
+        
+        # 構建 tooltip HTML
+        html_lines = [
+            f"<b style='font-size:12pt;'>Turn {corner_num}</b>",
+            "<hr style='margin:4px 0;'>",
+        ]
+        
+        # 按年份排序
+        sorted_years = sorted(yearly_breakdown.keys(), reverse=True)
+        
+        for year in sorted_years:
+            year_data = yearly_breakdown[year]
+            yellow_count = year_data.get('yellow', 0)
+            double_yellow_count = year_data.get('double_yellow', 0)
+            safety_car_count = year_data.get('safety_car', 0)
+            messages = year_data.get('messages', [])  # ✅ 獲取詳細訊息
+            
+            # 只顯示有事件的年份
+            if yellow_count == 0 and double_yellow_count == 0 and safety_car_count == 0:
+                continue
+            
+            html_lines.append(f"<b>{year}:</b>")
+            
+            # ✅ 按 flag_type 分組圈數
+            yellow_laps = []
+            double_yellow_laps = []
+            safety_car_laps = []
+            
+            for msg in messages:
+                lap = msg.get('lap', 0)
+                flag_type = msg.get('flag_type', '')
+                
+                if lap > 0:
+                    if flag_type == 'yellow':
+                        yellow_laps.append(lap)
+                    elif flag_type == 'double_yellow':
+                        double_yellow_laps.append(lap)
+                    elif flag_type == 'safety_car':
+                        safety_car_laps.append(lap)
+            
+            # 顯示每種旗幟及其圈數
+            if yellow_count > 0:
+                if yellow_count >= 1:
+                    html_lines.append(f"<span style='color:#FFD700;'>●</span> Yellow Flag")
+                else:
+                    html_lines.append(f"<span style='color:#FFD700;'>●</span> Yellow Flag (partial)")
+                
+                # 顯示圈數
+                for lap in sorted(yellow_laps):
+                    html_lines.append(f"<span style='font-size:9pt;color:#666;'>  → Lap {lap}</span>")
+                    
+            if double_yellow_count > 0:
+                if double_yellow_count >= 1:
+                    html_lines.append(f"<span style='color:#FFA500;'>●</span> Double Yellow")
+                else:
+                    html_lines.append(f"<span style='color:#FFA500;'>●</span> Double Yellow (partial)")
+                
+                # 顯示圈數
+                for lap in sorted(double_yellow_laps):
+                    html_lines.append(f"<span style='font-size:9pt;color:#666;'>  → Lap {lap}</span>")
+                    
+            if safety_car_count > 0:
+                if safety_car_count >= 1:
+                    html_lines.append(f"<span style='color:#C8A2C8;'>●</span> Safety Car")
+                else:
+                    html_lines.append(f"<span style='color:#C8A2C8;'>●</span> Safety Car (partial)")
+                
+                # 顯示圈數
+                for lap in sorted(safety_car_laps):
+                    html_lines.append(f"<span style='font-size:9pt;color:#666;'>  → Lap {lap}</span>")
+            
+            html_lines.append("")  # 空行
+        
+        # 移除最後的空行
+        if html_lines and html_lines[-1] == "":
+            html_lines.pop()
+        
+        return "<br>".join(html_lines)
+    
+    def _calculate_tooltip_offset(self, corner_world_pos: Tuple[float, float]) -> Tuple[int, int]:
+        """
+        根據彎道在地圖中的位置，智能計算標籤偏移量
+        
+        Args:
+            corner_world_pos: 彎道的世界座標 (x, y)
+            
+        Returns:
+            (offset_x, offset_y): 相對於彎道圓圈的像素偏移量
+        """
+        if not self.track_bounds:
+            # 無法計算，使用預設偏移
+            return (15, -30)
+        
+        # 計算賽道中心點
+        center_x = (self.track_bounds["x_min"] + self.track_bounds["x_max"]) / 2.0
+        center_y = (self.track_bounds["y_min"] + self.track_bounds["y_max"]) / 2.0
+        
+        corner_x, corner_y = corner_world_pos
+        
+        # 根據彎道相對於中心的位置，決定標籤方向
+        # 水平方向
+        if corner_x > center_x:
+            offset_x = -15  # 彎道在右側 → 標籤在左側
+        else:
+            offset_x = 15   # 彎道在左側 → 標籤在右側
+        
+        # 垂直方向
+        if corner_y > center_y:
+            offset_y = -40  # 彎道在上方 → 標籤在下方
+        else:
+            offset_y = -40  # 彎道在下方 → 標籤在上方（保持在上方以避免遮擋）
+        
+        return (offset_x, offset_y)
+    
+    def _update_tooltip_positions(self):
+        """更新所有固定標籤的位置（當視窗移動/縮放時調用）"""
+        for tooltip_info in self.pinned_tooltips:
+            label = tooltip_info['label']
+            
+            # 🆕 如果有自訂位置（拖動過），使用自訂位置
+            custom_pos = tooltip_info.get('custom_pos')
+            if custom_pos:
+                # 使用拖動後的自訂位置（不跟隨彎道）
+                label.move(custom_pos)
+            else:
+                # 使用預設位置（跟隨彎道）
+                corner_world_pos = tooltip_info['corner_world_pos']
+                offset = tooltip_info['offset']
+                
+                # 世界座標 → 螢幕座標
+                screen_x, screen_y = self.world_to_screen(*corner_world_pos)
+                
+                # 應用偏移量
+                final_x = int(screen_x + offset[0])
+                final_y = int(screen_y + offset[1])
+                
+                # 移動標籤
+                label.move(final_x, final_y)
+            
+            # 確保標籤可見
+            label.show()
+    
+    def remove_tooltip_label(self, label: CornerTooltipLabel):
+        """
+        移除指定的標籤（由 CornerTooltipLabel 的右鍵事件調用）
+        
+        Args:
+            label: 要移除的標籤實例
+        """
+        # 找到對應的 tooltip_info
+        for tooltip_info in self.pinned_tooltips:
+            if tooltip_info['label'] == label:
+                label.hide()
+                label.deleteLater()
+                self.pinned_tooltips.remove(tooltip_info)
+                print(f"[TRACK_MAP] 已移除標籤: {tooltip_info['corner_key']}")
+                break
 
 
 __all__ = ["TrackMapWidget"]

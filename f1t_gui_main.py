@@ -2514,7 +2514,7 @@ class PopoutSubWindow(QMdiSubWindow):
                 elif self.session_combo.count() > 0:
                     self.session_combo.setCurrentIndex(0)
         else:
-            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+            for code in ["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]:
                 self.session_combo.addItem(code)
             target_code = preserve_session_code or self.local_session
             if target_code:
@@ -5786,7 +5786,7 @@ class WindowSettingsDialog(QDialog):
                 elif self.session_combo.count() > 0:
                     self.session_combo.setCurrentIndex(0)
         else:
-            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+            for code in ["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]:
                 self.session_combo.addItem(code)
             if current_code:
                 index = self.session_combo.findText(current_code)
@@ -6435,7 +6435,10 @@ class StyleHMainWindow(QMainWindow):
         analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
         analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
         analysis_menu.addSeparator()
-        analysis_menu.addAction(tr('menu_parts_analysis', 'Vehicle Parts Changes'), self.open_parts_analysis)
+        # Vehicle Parts Changes - 暫時禁用開發中
+        parts_action = analysis_menu.addAction(tr('menu_parts_analysis', 'Vehicle Parts Changes'), self.open_parts_analysis)
+        parts_action.setEnabled(False)  # 禁用
+        parts_action.setStatusTip(tr('parts_analysis_disabled', 'This feature is under development'))
         analysis_menu.addSeparator()
         analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
         
@@ -6672,7 +6675,7 @@ class StyleHMainWindow(QMainWindow):
         toolbar.addWidget(QLabel(tr("session_label", "Session:")))
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("ParameterCombo")
-        self.session_combo.addItems(["FP1", "FP2", "FP3", "Q", "SQ", "R"])  # [TOOL] 修復: 與子視窗一致
+        self.session_combo.addItems(["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"])  # Sprint (S) 支援
         self.session_combo.setCurrentText("R")
         self.session_combo.setFixedWidth(50)
         toolbar.addWidget(self.session_combo)
@@ -6854,7 +6857,7 @@ class StyleHMainWindow(QMainWindow):
             elif self.session_combo.count() > 0:
                 self.session_combo.setCurrentIndex(0)
         else:
-            for code in ["FP1", "FP2", "FP3", "SQ", "Q", "R"]:
+            for code in ["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]:
                 self.session_combo.addItem(code)
             if preserve_session_code:
                 index = self.session_combo.findText(preserve_session_code)
@@ -7844,6 +7847,7 @@ class StyleHMainWindow(QMainWindow):
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
+            'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100)
         }
         
         # 獲取當前設置
@@ -7949,6 +7953,7 @@ class StyleHMainWindow(QMainWindow):
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',               # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
+            'historical_track_map',             # ✅ 歷年賽道旗幟統計 (F100)
         }
 
         def _attempt_module_update(module, attempts):
@@ -8431,6 +8436,7 @@ class StyleHMainWindow(QMainWindow):
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
+            'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100) - 修復參數更新問題
         }
         
         analysis_windows = []
@@ -8748,7 +8754,11 @@ class StyleHMainWindow(QMainWindow):
         QTreeWidgetItem(race_overview_group, [tr("accident_analysis", "Accident Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("driver_position_analysis", "Driver Race Position")])
-        QTreeWidgetItem(race_overview_group, [tr("parts_analysis", "Vehicle Parts Changes")])  # ⭐ 車輛零件變動
+        # Vehicle Parts Changes - 暫時禁用開發中
+        parts_item = QTreeWidgetItem(race_overview_group, [tr("parts_analysis", "Vehicle Parts Changes")])
+        parts_item.setDisabled(True)  # 設為灰色且禁用
+        parts_item.setForeground(0, QColor("#999999"))  # 灰色字體
+        parts_item.setToolTip(0, tr('parts_analysis_disabled', 'This feature is under development'))
         
         # ========== Driver Performance Analysis ==========
         driver_performance_group = QTreeWidgetItem(tree, [tr("driver_performance_analysis", "Driver Performance Analysis")])
@@ -8807,9 +8817,7 @@ class StyleHMainWindow(QMainWindow):
         # ========== Multi-Season Analysis ==========
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
         multi_season_group.setExpanded(False)
-        future_item = QTreeWidgetItem(multi_season_group, ["    " + tr("coming_soon", "Coming Soon...")])
-        future_item.setForeground(0, QColor("#999999"))
-        future_item.setFlags(future_item.flags() & ~Qt.ItemIsEnabled)  # 禁用點擊
+        QTreeWidgetItem(multi_season_group, [tr("historical_track_map", "Historical Track Map")])  # ✅ F100 歷年賽道旗幟統計
         
         layout.addWidget(tree)
         
@@ -9884,6 +9892,10 @@ class StyleHMainWindow(QMainWindow):
             season_progress_sub.setProperty("welcome_position", "left_top")  # 標記位置
             mdi_area.addSubWindow(season_progress_sub)
             
+            # 🔧 修復：追蹤 Season Progress 以便參數更新
+            if not hasattr(self, 'welcome_season_progress'):
+                self.welcome_season_progress = season_progress_mdi
+            
             # 2. 天氣時間軸 (左下) - 使用下一場未開賽的賽事
             weather_timeline_mdi = WeatherTimelineMDI(year=current_year, event=weather_race)
             weather_timeline_sub = QMdiSubWindow()
@@ -9892,6 +9904,10 @@ class StyleHMainWindow(QMainWindow):
             weather_timeline_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             weather_timeline_sub.setProperty("welcome_position", "left_bottom")  # 標記位置
             mdi_area.addSubWindow(weather_timeline_sub)
+            
+            # 🔧 修復：追蹤 Weather Timeline 以便參數更新
+            if not hasattr(self, 'welcome_weather_timeline'):
+                self.welcome_weather_timeline = weather_timeline_mdi
             
             # 3. 車隊積分榜 (中欄)
             constructor_mdi = ConstructorStandingsMDI(year=current_year)
@@ -9902,6 +9918,10 @@ class StyleHMainWindow(QMainWindow):
             constructor_sub.setProperty("welcome_position", "middle")  # 標記位置
             mdi_area.addSubWindow(constructor_sub)
             
+            # 🔧 修復：追蹤 Constructor Standings 以便參數更新
+            if not hasattr(self, 'welcome_constructor_standings'):
+                self.welcome_constructor_standings = constructor_mdi
+            
             # 4. 車手積分榜 (右欄)
             driver_mdi = DriverStandingsMDI(year=current_year)
             driver_sub = QMdiSubWindow()
@@ -9910,6 +9930,10 @@ class StyleHMainWindow(QMainWindow):
             driver_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             driver_sub.setProperty("welcome_position", "right")  # 標記位置
             mdi_area.addSubWindow(driver_sub)
+            
+            # 🔧 修復：追蹤 Driver Standings 以便參數更新
+            if not hasattr(self, 'welcome_driver_standings'):
+                self.welcome_driver_standings = driver_mdi
             
             # 使用 QTimer 延遲設定視窗位置（等待 MDI 區域完成佈局）
             from PyQt5.QtCore import QTimer
@@ -10821,6 +10845,37 @@ class StyleHMainWindow(QMainWindow):
 
         try:
             logger.info("[PARAMS] Executing parameter broadcast: %s", payload)
+            
+            # 🔧 修復：更新 Welcome Screen 的固定視窗
+            current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else '2025'
+            print(f"🔍 [BROADCAST] 檢查 Welcome Screen 視窗更新: year={current_year}")
+            
+            # 更新 Season Progress
+            if hasattr(self, 'welcome_season_progress') and self.welcome_season_progress:
+                try:
+                    print(f"🔍 [BROADCAST] 更新 Season Progress: {current_year}")
+                    self.welcome_season_progress.update_year(current_year)
+                except Exception as e:
+                    print(f"❌ [BROADCAST] Season Progress 更新失敗: {e}")
+            
+            # 更新 Constructor Standings
+            if hasattr(self, 'welcome_constructor_standings') and self.welcome_constructor_standings:
+                try:
+                    print(f"🔍 [BROADCAST] 更新 Constructor Standings: {current_year}")
+                    if hasattr(self.welcome_constructor_standings, 'update_year'):
+                        self.welcome_constructor_standings.update_year(current_year)
+                except Exception as e:
+                    print(f"❌ [BROADCAST] Constructor Standings 更新失敗: {e}")
+            
+            # 更新 Driver Standings
+            if hasattr(self, 'welcome_driver_standings') and self.welcome_driver_standings:
+                try:
+                    print(f"🔍 [BROADCAST] 更新 Driver Standings: {current_year}")
+                    if hasattr(self.welcome_driver_standings, 'update_year'):
+                        self.welcome_driver_standings.update_year(current_year)
+                except Exception as e:
+                    print(f"❌ [BROADCAST] Driver Standings 更新失敗: {e}")
+            
             logger.info("[BROADCAST_DEBUG] 調用 on_race_parameters_changed()")
             self.on_race_parameters_changed()
             logger.info("[BROADCAST_DEBUG] on_race_parameters_changed() 完成")
@@ -11841,31 +11896,20 @@ class StyleHMainWindow(QMainWindow):
         return selected_types
 
     def _create_detailed_lap_boxplot_window(self, mdi_area, year, race, session):
-        """建立圈速箱型圖視窗並加入 MDI (使用新版 API 化模組)。"""
+        """建立圈速箱型圖視窗並加入 MDI (✅ 使用 module_factory 模式 - 2025-11-13 重構)。"""
         try:
-            print(f"[BOXPLOT] 🚀 啟動新版 API 化圈速箱型圖模組...")
-            from modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
-                LapTimeBoxPlotAnalysis,
-            )
-            print(f"[BOXPLOT] ✅ 新版模組導入成功")
-        except ImportError as exc:
-            message = f"Unable to load Lap Time Box Plot Analysis (API version): {exc}"
-            print(f"[BOXPLOT] ❌ {message}")
-            self.show_error_message("Lap Time Box Plot", message)
-            import traceback
-            traceback.print_exc()
-            return None
-
-        try:
-            print(f"[BOXPLOT] 🔧 創建模組實例...")
-            # 創建新版 MDI 模組實例
-            analysis_module = LapTimeBoxPlotAnalysis(parent=self)
-            print(f"[BOXPLOT] ✅ 模組實例創建成功")
+            print(f"[BOXPLOT] 🚀 使用 module_factory 創建圈速箱型圖模組...")
             
-            # 創建參數提供者
-            parameter_provider = MainWindowParameterProvider(self)
-            analysis_module.parameter_provider = parameter_provider
-            print(f"[BOXPLOT] ✅ 參數提供者設置完成")
+            # ✅ 使用 module_factory 創建包裝器模組
+            analysis_module = self.create_module_from_factory(
+                function_name="Lap Time Box Plot",
+                module_type_hint="laptime_box_plot"
+            )
+            
+            if not analysis_module:
+                raise RuntimeError("Module factory 創建失敗")
+            
+            print(f"[BOXPLOT] ✅ 模組工廠創建成功")
             
             # 設置當前參數
             analysis_module.current_year = str(year)
@@ -11873,11 +11917,11 @@ class StyleHMainWindow(QMainWindow):
             analysis_module.current_session = session
             print(f"[BOXPLOT] ✅ 基本參數設置完成: {year} {race} {session}")
             
-            # 初始化模組
-            print(f"[BOXPLOT] 🚀 初始化圈速箱型圖模組...")
-            if not analysis_module.initialize_module():
-                raise RuntimeError("Module initialization failed")
-            print(f"[BOXPLOT] ✅ 模組初始化成功！")
+            # 更新參數（觸發數據載入）
+            print(f"[BOXPLOT] 🚀 更新模組參數...")
+            if hasattr(analysis_module, 'update_parameters'):
+                analysis_module.update_parameters(int(year), race, session)
+            print(f"[BOXPLOT] ✅ 參數更新成功！")
             
             # 獲取模組標題
             window_title = analysis_module.get_window_title(
@@ -11892,8 +11936,9 @@ class StyleHMainWindow(QMainWindow):
             sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             sub_window.setWidget(analysis_module.get_widget())
             
-            # 設置模組的父視窗引用
-            analysis_module.set_parent_window(sub_window)
+            # 設置模組的父視窗引用（如果 MDI 支持）
+            if hasattr(analysis_module, '_laptime_boxplot_core') and hasattr(analysis_module._laptime_boxplot_core, 'set_parent_window'):
+                analysis_module._laptime_boxplot_core.set_parent_window(sub_window)
             
             # 設置視窗尺寸
             width, height = analysis_module.get_default_size()
@@ -11906,12 +11951,8 @@ class StyleHMainWindow(QMainWindow):
             
             # 連接關閉信號
             if hasattr(sub_window, 'window_closed'):
-                # 🔴 使用 partial 避免 lambda 閉包洩漏
-
                 sub_window.window_closed.connect(
-
                     partial(self.on_subwindow_closed, sub_window)
-
                 )
             
             # 添加到追蹤列表
@@ -11920,7 +11961,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 顯示視窗
             sub_window.show()
-            print(f"[BOXPLOT] 🎉 圈速箱型圖視窗創建完成！")
+            print(f"[BOXPLOT] 🎉 圈速箱型圖視窗創建完成（使用包裝器架構）！")
             
             return sub_window
             
@@ -12262,6 +12303,7 @@ class StyleHMainWindow(QMainWindow):
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
             import modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
             import modules.gui.driver_position_analysis.driver_position_analysis_mdi  # 車手比賽排名分析模組 (F25)
+            import modules.gui.Historical_track_map.historical_track_map_mdi  # 歷年賽道旗幟統計模組 (F100)
             
             # 賽道分析模組導入與註冊
             try:
@@ -12481,6 +12523,13 @@ class StyleHMainWindow(QMainWindow):
                     "FIA 部件分析",
                     "FIA Parts Analysis",
                     "部品解析",
+                ],
+                "historical_track_map": [  # ⭐ F100 歷年賽道旗幟統計
+                    ("historical_track_map", "Historical Track Map"),
+                    "historical_flags",  # ✅ 別名
+                    "歷年賽道旗幟統計",
+                    "Historical Track Map",
+                    "歴年トラック旗統計",
                 ],
             }
 
@@ -12818,6 +12867,66 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # ✅ 圈速箱型圖分析模組（新增 - 2025-11-13）
+                elif module_type == "laptime_box_plot":
+                    try:
+                        from modules.gui.driver_race.lap_box_plot_analysis.lap_box_plot_analysis_module import (
+                            LapTimeBoxPlotAnalysisModule,
+                        )
+
+                        print(f"[OK] [MODULE_FACTORY] 創建圈速箱型圖分析模組實例")
+
+                        module = LapTimeBoxPlotAnalysisModule(parent=self)
+                        module.parameter_provider = parameter_provider
+
+                        current_year_value = None
+                        current_race = None
+                        current_session = None
+
+                        if parameter_provider:
+                            current_year_value = parameter_provider.get_current_year()
+                            try:
+                                current_year = int(current_year_value)
+                            except (TypeError, ValueError):
+                                current_year = current_year_value
+
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+
+                            print(
+                                f"[INIT] [MODULE_FACTORY] 圈速箱型圖模組參數預設為: {module.current_year} {module.current_race} {module.current_session}"
+                            )
+
+                        if module.initialize_module():
+                            print(f"[OK] [MODULE_FACTORY] 圈速箱型圖模組初始化成功")
+                            if parameter_provider:
+                                sync_year = current_year_value
+                                try:
+                                    sync_year_int = int(sync_year)
+                                except (TypeError, ValueError):
+                                    sync_year_int = sync_year
+
+                                update_year = sync_year_int if sync_year_int is not None else module.current_year
+
+                                try:
+                                    module.update_parameters(update_year, current_race, current_session)
+                                except Exception as sync_exc:
+                                    print(f"[WARN] [MODULE_FACTORY] 圈速箱型圖模組參數同步失敗: {sync_exc}")
+
+                            return self._mark_module_factory_type(module, module_type)
+                        else:
+                            print(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組初始化失敗")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -13663,6 +13772,56 @@ class StyleHMainWindow(QMainWindow):
                             return None
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 時間差分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理歷年賽道旗幟統計模組 (F100)
+                elif module_type == "historical_track_map":
+                    try:
+                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建歷年賽道旗幟統計模組...")
+                        from modules.gui.Historical_track_map.historical_track_map_mdi import HistoricalTrackMapMDI
+                        print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 歷年賽道旗幟統計模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = HistoricalTrackMapMDI(parent=None)
+                            
+                            # ✅ 關鍵修復：在初始化前設置參數
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                            print(f"[INIT] [MODULE_FACTORY] ✅ 參數已預設: {module.current_year} {module.current_race} {module.current_session}")
+                            
+                            # 初始化模組
+                            if module.initialize_module():
+                                print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化成功")
+                                
+                                # ❌ 移除重複調用：initialize_module() 已經調用 load_initial_data()
+                                # 再次調用 update_lap_parameters() 會導致數據被載入兩次，
+                                # 第二次載入可能返回不完整的 track_data，導致 sector_boundaries 被清空
+                                # 
+                                # module.update_lap_parameters(current_year, current_race, current_session)
+                                # print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組參數已設置")
+                                
+                                print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組已就緒（跳過重複參數設置）")
+                                
+                                return self._mark_module_factory_type(module, module_type)
+                            else:
+                                print(f"[ERROR] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化失敗")
+                                return None
+                        else:
+                            print(f"[ERROR] 歷年賽道旗幟統計模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        print(f"[ERROR] 歷年賽道旗幟統計模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

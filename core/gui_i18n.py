@@ -347,6 +347,7 @@ class GuiTranslator:
             'tire_analysis': {'zh': '輪胎分析', 'en': 'Tire Analysis', 'ja': 'タイヤ分析'},
             'accident_analysis': {'zh': '事故分析', 'en': 'Accident Analysis', 'ja': '事故分析'},
             'rain_analysis': {'zh': '雨況分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
+            'historical_track_map': {'zh': '歷年賽道旗幟統計', 'en': 'Historical Track Map', 'ja': '歴年トラック旗統計'},
             'laptime_boxplot': {'zh': '圈速箱型圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイムボックスプロット'},
             'throttle_box_plot': {'zh': '油門箱型圖', 'en': 'Throttle Box Plot', 'ja': 'スロットル箱ひげ図'},
             'throttle_box_plot.export_dialog_title': {

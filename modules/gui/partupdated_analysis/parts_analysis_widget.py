@@ -60,6 +60,7 @@ DRIVER_NAME_TO_CODE = {
     # Mercedes
     "George Russell": "RUS",
     "Andrea Kimi Antonelli": "ANT",
+    "Kimi Antonelli": "ANT",  # FastF1 使用的簡稱
     # McLaren
     "Lando Norris": "NOR",
     "Oscar Piastri": "PIA",
@@ -88,6 +89,8 @@ DRIVER_NAME_TO_CODE = {
     "Alexander Albon": "ALB",
     "Carlos Sainz": "SAI",
     "Logan Sargeant": "SAR",
+    # 未知車手（PDF 解析失敗或缺少車手資訊時的預設值）
+    "Unknown": "UNK",
 }
 
 # 🌐 JSON 數據內容翻譯映射（中文 → 翻譯鍵）
@@ -309,19 +312,15 @@ class PartsAnalysisWidget(QWidget):
         layout.addWidget(self.table_widget)
         
     def setup_table_structure(self):
-        """設置表格結構 - 增加主分類和子分類欄位"""
+        """設置表格結構 - 增加 Action 欄位"""
         headers = [
             tr('sequence_number', 'No.'),
             tr('race', 'Race'),
             tr('team', 'Team'),
             tr('driver', 'Driver'),
-            tr('main_category', 'Main Cat'),      # 新增主分類
-            tr('sub_category', 'Sub Cat'),        # 新增子分類
-            tr('change_type', 'Type'),
-            # tr('confidence', 'Confidence'),     # 隱藏信心度欄位
-            tr('description', 'Description'),
             tr('part', 'Part'),
-            tr('date', 'Date')
+            tr('date', 'Date'),
+            tr('action', 'Action')  # 新增 Action 欄位
         ]
         self.table_widget.setColumnCount(len(headers))
         self.table_widget.setHorizontalHeaderLabels(headers)
@@ -334,50 +333,58 @@ class PartsAnalysisWidget(QWidget):
         # 響應式列寬設定
         header = self.table_widget.horizontalHeader()
         
-        # 設定初始寬度
+        # 設定初始寬度（增加 Action 欄位）
         self.table_widget.setColumnWidth(0, 40)   # 序號
         self.table_widget.setColumnWidth(1, 120)  # 賽事
         self.table_widget.setColumnWidth(2, 120)  # 車隊
         self.table_widget.setColumnWidth(3, 150)  # 車手
-        self.table_widget.setColumnWidth(4, 100)  # 主分類
-        self.table_widget.setColumnWidth(5, 120)  # 子分類
-        self.table_widget.setColumnWidth(6, 150)  # 變更類型
-        # self.table_widget.setColumnWidth(7, 80)   # 信心度（已隱藏）
-        self.table_widget.setColumnWidth(7, 350)  # 描述
-        self.table_widget.setColumnWidth(8, 250)  # 部件
-        self.table_widget.setColumnWidth(9, 100)  # 日期
+        self.table_widget.setColumnWidth(4, 400)  # 部件
+        self.table_widget.setColumnWidth(5, 100)  # 日期
+        self.table_widget.setColumnWidth(6, 80)   # Action
         
         # 所有欄位都設為可手動調整
         for col in range(len(headers)):
             header.setSectionResizeMode(col, QHeaderView.Interactive)
             
     def setup_connections(self):
-        """設置信號連接 - 增加主分類和子分類篩選"""
+        """設置信號連接 - 只保留 PDF 原始欄位篩選"""
         # UI事件連接
         self.race_combo.currentTextChanged.connect(self.apply_filters)
         self.team_combo.currentTextChanged.connect(self.apply_filters)
         self.driver_combo.currentTextChanged.connect(self.apply_filters)
-        self.main_category_combo.currentTextChanged.connect(self.on_main_category_changed)
-        self.sub_category_combo.currentTextChanged.connect(self.apply_filters)
-        self.type_combo.currentTextChanged.connect(self.apply_filters)
         self.search_input.textChanged.connect(self.apply_filters)
         
     def on_data_loaded(self, data: Dict[str, Any]):
         """數據載入成功 - 從 MDI 調用"""
         try:
-            print(f"[DEBUG] PartsAnalysisWidget.on_data_loaded called")
-            print(f"[DEBUG] Data type: {type(data)}")
-            print(f"[DEBUG] Data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            print(f"🔥🔥🔥 [DEBUG] PartsAnalysisWidget.on_data_loaded called")
+            print(f"🔥🔥🔥 [DEBUG] Data type: {type(data)}")
+            print(f"🔥🔥🔥 [DEBUG] Data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
             
+            # 🔍 深度調試：檢查是否有嵌套的 data
+            if isinstance(data, dict):
+                if 'data' in data:
+                    print(f"🔥 [DEBUG] Found nested 'data' key")
+                    print(f"🔥 [DEBUG] Nested data type: {type(data['data'])}")
+                    if isinstance(data['data'], dict):
+                        print(f"🔥 [DEBUG] Nested data keys: {list(data['data'].keys())}")
+                if 'records' in data:
+                    print(f"🔥 [DEBUG] Found 'records' at top level, count: {len(data['records'])}")
+            
+            print(f"🔥 [DEBUG] 準備調用 _validate_records_data()...")
             records_list = self._validate_records_data(data)
+            print(f"🔥🔥🔥 [DEBUG] _validate_records_data() 返回: {type(records_list)}, is None: {records_list is None}")
+            
             if records_list is None:
-                print(f"[ERROR] Data validation failed")
+                print(f"❌❌❌ [ERROR] Data validation failed - records_list is None!")
                 self.show_error_message(tr('invalid_data_format', 'Invalid data format'))
                 return
 
+            print(f"🔥 [DEBUG] records_list 不是 None，準備賦值...")
+            print(f"🔥 [DEBUG] records_list 不是 None，準備賦值...")
             self.records_data = records_list
             print(
-                f"[DEBUG] Successfully got records list, count: {len(self.records_data)}, "
+                f"🔥🔥🔥 [DEBUG] Successfully got records list, count: {len(self.records_data)}, "
                 f"source path: {self._last_record_path or 'unknown'}"
             )
 
@@ -385,13 +392,23 @@ class PartsAnalysisWidget(QWidget):
             self.stats_label.setStyleSheet("font-weight: bold; color: #495057;")
 
             # 更新篩選選項
+            print(f"🔥 [DEBUG] 準備調用 update_filter_options()...")
             self.update_filter_options()
+            print(f"🔥 [DEBUG] update_filter_options() 完成, _is_initializing={self._is_initializing}")
+            
+            # 🔥 確保初始化標誌已重置
+            self._is_initializing = False
+            print(f"🔥 [DEBUG] 強制設置 _is_initializing=False")
             
             # 應用當前篩選
+            print(f"🔥 [DEBUG] 準備調用 apply_filters()...")
             self.apply_filters()
+            print(f"🔥 [DEBUG] apply_filters() 完成")
             
             # 更新統計
+            print(f"🔥 [DEBUG] 準備調用 update_statistics()...")
             self.update_statistics()
+            print(f"🔥🔥🔥 [DEBUG] on_data_loaded() 全部完成！")
             
         except Exception as e:
             print(f"[ERROR] Failed to update records data: {str(e)}")
@@ -467,8 +484,13 @@ class PartsAnalysisWidget(QWidget):
         sub_categories = set()
         
         for record in self.records_data:
+            # ⚠️ 跳過噪音記錄
+            change_type = record.get("變更類型", "")
+            if "噪音" in change_type or "Noise" in change_type.upper():
+                continue
+            
             # 使用中文 API 欄位名
-            race = record.get("比賽", "")
+            race = record.get("賽事", "")
             if race:
                 races.add(race)
                 
@@ -560,40 +582,60 @@ class PartsAnalysisWidget(QWidget):
     
     def apply_filters(self, _=None):
         """應用篩選條件 - 增加主分類和子分類篩選"""
+        print(f"🔥🔥 [FILTER] apply_filters() 開始執行")
+        print(f"🔥🔥 [FILTER] _is_initializing={self._is_initializing}")
+        
         # 如果正在初始化，跳過篩選
         if self._is_initializing:
+            print(f"🔥🔥 [FILTER] 跳過篩選（正在初始化）")
             return
-            
+        
+        print(f"🔥🔥 [FILTER] records_data 數量: {len(self.records_data)}")
+        
         # 收集篩選條件
-        filters = {
-            "race": self.race_combo.currentData() if self.race_combo.currentData() else "",
-            "team": self.team_combo.currentData() if self.team_combo.currentData() else "",
-            "driver": self.driver_combo.currentData() if self.driver_combo.currentData() else "",
-            "main_category": self.main_category_combo.currentData() if self.main_category_combo.currentData() else "",
-            "sub_category": self.sub_category_combo.currentData() if self.sub_category_combo.currentData() else "",
-            "type": self.type_combo.currentData() if self.type_combo.currentData() else "",
-            "search": self.search_input.text().strip().lower()
-        }
+        try:
+            filters = {
+                "race": self.race_combo.currentData() if self.race_combo.currentData() else "",
+                "team": self.team_combo.currentData() if self.team_combo.currentData() else "",
+                "driver": self.driver_combo.currentData() if self.driver_combo.currentData() else "",
+                "main_category": self.main_category_combo.currentData() if self.main_category_combo.currentData() else "",
+                "sub_category": self.sub_category_combo.currentData() if self.sub_category_combo.currentData() else "",
+                "type": self.type_combo.currentData() if self.type_combo.currentData() else "",
+                "search": self.search_input.text().strip().lower()
+            }
+            print(f"🔥🔥 [FILTER] 篩選條件: {filters}")
+        except Exception as e:
+            print(f"❌❌ [FILTER] 收集篩選條件時出錯: {e}")
+            import traceback
+            traceback.print_exc()
+            return
+            traceback.print_exc()
+            return
         
         # 篩選數據
+        print(f"🔥🔥 [FILTER] 開始篩選...")
         self.filtered_data = []
         for record in self.records_data:
             if self._matches_filters(record, filters):
                 self.filtered_data.append(record)
         
-        print(f"[DEBUG] Filter result: {len(self.filtered_data)}/{len(self.records_data)} records")
+        print(f"🔥🔥🔥 [DEBUG] Filter result: {len(self.filtered_data)}/{len(self.records_data)} records")
         
         # 更新表格
+        print(f"🔥🔥 [FILTER] 準備調用 populate_table()...")
         self.populate_table()
+        print(f"🔥🔥 [FILTER] populate_table() 完成")
         
         # 更新統計
+        print(f"🔥🔥 [FILTER] 準備調用 update_statistics()...")
         self.update_statistics()
+        print(f"🔥🔥 [FILTER] apply_filters() 全部完成")
         
     def _matches_filters(self, record: dict, filters: dict) -> bool:
-        """檢查記錄是否符合篩選條件 - 增加主分類和子分類篩選"""
+        """檢查記錄是否符合篩選條件 - 只檢查 PDF 原始欄位"""
         # 賽事篩選
         if filters["race"]:
-            race = record.get("比賽", "")
+            race = record.get("賽事", "")
             if race != filters["race"]:
                 return False
         
@@ -609,36 +651,14 @@ class PartsAnalysisWidget(QWidget):
             if driver != filters["driver"]:
                 return False
         
-        # 主分類篩選（新增）
-        if filters.get("main_category"):
-            main_cat = record.get("主分類", "")
-            if main_cat != filters["main_category"]:
-                return False
-        
-        # 子分類篩選（新增）
-        if filters.get("sub_category"):
-            sub_cat = record.get("子分類", "")
-            if sub_cat != filters["sub_category"]:
-                return False
-        
-        # 變更類型篩選
-        if filters["type"]:
-            change_type = record.get("變更類型", "")
-            if change_type != filters["type"]:
-                return False
-        
-        # 文字搜尋
+        # 文字搜尋（只搜尋 PDF 原始欄位）
         if filters["search"]:
             search_text = filters["search"].lower()
             searchable_fields = [
-                str(record.get("類型說明", "")),
                 str(record.get("部件", "")),
                 str(record.get("車隊", "")),
                 str(record.get("車手", "")),
-                str(record.get("比賽", "")),
-                str(record.get("變更類型", "")),
-                str(record.get("主分類", "")),
-                str(record.get("子分類", ""))
+                str(record.get("賽事", ""))
             ]
             
             search_content = " ".join(searchable_fields).lower()
@@ -648,10 +668,11 @@ class PartsAnalysisWidget(QWidget):
         return True
         
     def populate_table(self):
-        """填充表格數據 - 增加主分類和子分類欄位顯示"""
+        """填充表格數據 - 只顯示 PDF 原始欄位（6欄：序號、賽事、車隊、車手、部件、日期）"""
+        print(f"🔥🔥 [POPULATE] 開始填充表格，filtered_data 數量: {len(self.filtered_data)}")
         self.table_widget.setRowCount(len(self.filtered_data))
         
-        # 🎨 確保顏色配置已載入（與 Ideal Lap Ranking 保持一致）
+        # 🎨 確保顏色配置已載入
         if color_palette_provider:
             try:
                 color_palette_provider.ensure_loaded()
@@ -659,83 +680,66 @@ class PartsAnalysisWidget(QWidget):
                 print(f"[PARTS_WIDGET] ⚠️  顏色配置載入失敗: {e}")
         
         for row, record in enumerate(self.filtered_data):
-            # 序號
-            seq_item = QTableWidgetItem(str(row + 1))
-            seq_item.setTextAlignment(Qt.AlignCenter)
-            self.table_widget.setItem(row, 0, seq_item)
-            
-            # 賽事
-            race = record.get("比賽", "")
-            self.table_widget.setItem(row, 1, QTableWidgetItem(str(race)))
-            
-            # 🔄 將車手全名轉換為代碼（與 Ideal Lap Ranking 一致）
-            driver_full_name = record.get("車手", "")
-            driver_code = DRIVER_NAME_TO_CODE.get(driver_full_name, driver_full_name)
-            
-            # 🔄 獲取翻譯後的車隊名稱（與 Ideal Lap Ranking 一致）
-            team_original = record.get("車隊", "")
-            team_translated = get_team_name_text(team_original)
-            
-            # 車隊欄位 ✨ 顯示翻譯後的車隊名稱 + 車手顏色背景
-            team_item = self._create_colored_item(team_translated, driver_code)
-            team_item.setToolTip(f"{team_translated} - {driver_full_name}")
-            self.table_widget.setItem(row, 2, team_item)
-            
-            # 車手欄位 ✨ 顯示車手代碼（如 "NOR", "VER"）+ 車手顏色背景
-            driver_item = self._create_colored_item(driver_code, driver_code)
-            driver_item.setTextAlignment(Qt.AlignCenter)
-            driver_item.setToolTip(f"{driver_code} - {team_translated}")
-            self.table_widget.setItem(row, 3, driver_item)
-            
-            # 主分類 ✨ 翻譯英文分類名稱
-            main_cat_original = record.get("主分類", "")
-            main_cat_translated = self._translate_category(main_cat_original, is_main=True)
-            main_cat_item = QTableWidgetItem(main_cat_translated)
-            main_cat_item.setTextAlignment(Qt.AlignCenter)
-            main_cat_item.setToolTip(main_cat_original)  # Tooltip 顯示原始英文
-            self.table_widget.setItem(row, 4, main_cat_item)
-            
-            # 子分類 ✨ 翻譯英文分類名稱
-            sub_cat_original = record.get("子分類", "")
-            sub_cat_translated = self._translate_category(sub_cat_original, is_main=False)
-            sub_cat_item = QTableWidgetItem(sub_cat_translated)
-            sub_cat_item.setToolTip(sub_cat_original)  # Tooltip 顯示原始英文
-            self.table_widget.setItem(row, 5, sub_cat_item)
-            
-            # 變更類型 ✨ 翻譯中文類型名稱（帶顏色）
-            change_type_original = record.get("變更類型", "")
-            change_type_translated = self._translate_change_type(change_type_original)
-            type_item = QTableWidgetItem(change_type_translated)
-            type_item.setBackground(QColor(self.get_type_color(change_type_original)))
-            type_item.setToolTip(change_type_original)  # Tooltip 顯示原始中文
-            self.table_widget.setItem(row, 6, type_item)
-            
-            # 信心度（已隱藏）
-            # confidence = record.get("分類信心度", 0)
-            # try:
-            #     conf_value = float(confidence) if confidence else 0
-            #     conf_text = f"{conf_value:.2f}"
-            # except (ValueError, TypeError):
-            #     conf_text = str(confidence)
-            # confidence_item = QTableWidgetItem(conf_text)
-            # confidence_item.setTextAlignment(Qt.AlignCenter)
-            # confidence_item.setBackground(QColor(self.get_confidence_color(confidence)))
-            # self.table_widget.setItem(row, 7, confidence_item)
-            
-            # 描述 ✨ 翻譯中文描述（欄位索引調整：8 → 7）
-            description_original = record.get("類型說明", "")
-            description_translated = self._translate_description(description_original)
-            desc_item = QTableWidgetItem(description_translated)
-            desc_item.setToolTip(description_original)  # Tooltip 顯示原始中文
-            self.table_widget.setItem(row, 7, desc_item)
-            
-            # 部件（欄位索引調整：9 → 8）
-            part = record.get("部件", "")
-            self.table_widget.setItem(row, 8, QTableWidgetItem(str(part)))
-            
-            # 日期（欄位索引調整：10 → 9）
-            date = record.get("日期", "")
-            self.table_widget.setItem(row, 9, QTableWidgetItem(str(date)))
+            try:
+                # 欄 0: 序號
+                seq_item = QTableWidgetItem(str(row + 1))
+                seq_item.setTextAlignment(Qt.AlignCenter)
+                self.table_widget.setItem(row, 0, seq_item)
+                
+                # 欄 1: 賽事
+                race = record.get("賽事", "")
+                race_item = QTableWidgetItem(str(race))
+                self.table_widget.setItem(row, 1, race_item)
+                
+                # 🔄 將車手全名轉換為代碼（與 Ideal Lap Ranking 一致）
+                driver_full_name = record.get("車手", "")
+                driver_code = DRIVER_NAME_TO_CODE.get(driver_full_name, None)
+                
+                # 如果找不到映射，使用前三個字母並記錄警告
+                if driver_code is None:
+                    driver_code = driver_full_name[:3].upper() if driver_full_name else "UNK"
+                    print(f"⚠️ [POPULATE] 找不到車手映射: '{driver_full_name}' (車隊: {record.get('車隊', 'Unknown')})")
+                
+                # 🔄 獲取翻譯後的車隊名稱（與 Ideal Lap Ranking 一致）
+                team_original = record.get("車隊", "")
+                team_translated = get_team_name_text(team_original)
+                
+                # 🎨 獲取車手顏色
+                driver_color = self._get_driver_color(driver_code)
+                
+                # 欄 2: 車隊（使用車手顏色背景 + 翻譯後的車隊名稱）
+                team_item = self._create_colored_item(team_translated, driver_color)
+                team_item.setToolTip(f"{team_translated} - {driver_full_name}")
+                self.table_widget.setItem(row, 2, team_item)
+                
+                # 欄 3: 車手（使用車手代碼 + 車手顏色背景）
+                driver_item = self._create_colored_item(driver_code, driver_color)
+                driver_item.setToolTip(f"{driver_code} - {team_translated}")
+                self.table_widget.setItem(row, 3, driver_item)
+                
+                # 欄 4: 部件
+                part = record.get("部件", "")
+                part_item = QTableWidgetItem(str(part))
+                self.table_widget.setItem(row, 4, part_item)
+                
+                # 欄 5: 日期
+                race_date = record.get("賽事日期", "")
+                date_item = QTableWidgetItem(str(race_date))
+                self.table_widget.setItem(row, 5, date_item)
+                
+                # 欄 6: Action（來自 PDF 文件，固定顯示 N/A）
+                action_item = QTableWidgetItem("N/A")
+                action_item.setTextAlignment(Qt.AlignCenter)
+                action_item.setForeground(QColor("#888888"))  # 灰色文字表示不適用
+                action_item.setToolTip(tr('action_na_tooltip', 'Data from PDF document - Action not available'))
+                self.table_widget.setItem(row, 6, action_item)
+                
+            except Exception as e:
+                print(f"❌ [POPULATE] 填充第 {row} 行時出錯: {e}")
+                import traceback
+                traceback.print_exc()
+        
+        print(f"🔥🔥 [POPULATE] 表格填充完成，共 {len(self.filtered_data)} 行")
             
     def get_type_color(self, change_type: str) -> str:
         """
@@ -829,22 +833,19 @@ class PartsAnalysisWidget(QWidget):
         # Fallback: 返回預設灰色
         return QColor(128, 128, 128)
     
-    def _create_colored_item(self, text: str, driver_code: str) -> QTableWidgetItem:
+    def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
         """
         創建帶背景色的表格項目，自動選擇文字顏色（與 Ideal Lap Ranking 完全一致）
         
         Args:
             text: 顯示文字
-            driver_code: 車手代碼（用於獲取顏色）
+            bg_color: 背景顏色（QColor）
             
         Returns:
             QTableWidgetItem: 帶顏色的表格項目
         """
         item = QTableWidgetItem(text)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-        
-        # 獲取車手顏色
-        bg_color = self._get_driver_color(driver_code)
         item.setBackground(QBrush(bg_color))
         
         # 根據背景色亮度決定文字顏色（與 Ideal Lap Ranking 使用相同算法）

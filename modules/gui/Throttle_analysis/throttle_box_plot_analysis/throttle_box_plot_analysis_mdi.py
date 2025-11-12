@@ -1047,6 +1047,35 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             self.chart_widget.update_data({"driver_throttle_durations": {}, "statistics": {}})
         if self.control_widget:
             self.control_widget.update_statistics(tr("waiting_for_data", "等待數據..."))
+    
+    def reset_chart_view(self):
+        """
+        重置圖表視圖（主 GUI "Show All Data" 按鈕調用）
+        
+        這個方法會被主 GUI 的 show_all_data_in_current_tab() 調用
+        用於恢復所有被隱藏的車手數據
+        """
+        try:
+            print("[THROTTLE_MDI] 🔄 收到 reset_chart_view 請求")
+            
+            # 檢查 chart_widget 是否存在
+            if not hasattr(self, 'chart_widget') or not self.chart_widget:
+                print("[THROTTLE_MDI] ⚠️  chart_widget 不存在")
+                return
+            
+            # 檢查 chart_widget 是否有 show_all_drivers 方法
+            if not hasattr(self.chart_widget, 'show_all_drivers'):
+                print("[THROTTLE_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                return
+            
+            # 調用 Widget 的 show_all_drivers() 方法
+            print("[THROTTLE_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            self.chart_widget.show_all_drivers()
+            
+        except Exception as e:
+            print("[THROTTLE_MDI] ❌ reset_chart_view 失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         if export_format.lower() != "json":

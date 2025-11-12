@@ -22,11 +22,12 @@ LapTimeBoxPlotChartWidget - 圈速箱型圖圖表組件 (純 PyQt5 實現)
 版本: 2.1.0 (QPainter + i18n)
 """
 
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QMessageBox
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QMessageBox, QMenu
 from PyQt5.QtCore import Qt, QRect, QPoint, pyqtSignal, QRectF
 from PyQt5.QtGui import (
     QPainter, QPen, QColor, QBrush, QFont, QFontMetrics, 
-    QMouseEvent, QPainterPath, QImage, QPainter as QPainterForExport
+    QMouseEvent, QPainterPath, QImage, QPainter as QPainterForExport,
+    QCursor
 )
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
@@ -70,8 +71,15 @@ class LapTimeBoxPlotChartWidget(QWidget):
         self.y_min = 0.0
         self.y_max = 100.0
         
+        # 🆕 數據過濾管理
+        self.hidden_drivers = set()  # 儲存被隱藏的車手代碼集合
+        
         # 啟用滑鼠追蹤
         self.setMouseTracking(True)
+        
+        # 🔧 強制啟用滑鼠事件接收
+        self.setFocusPolicy(Qt.StrongFocus)  # 允許接收鍵盤和滑鼠焦點
+        self.setAttribute(Qt.WA_Hover, True)  # 啟用 hover 事件
         
         # 設置最小尺寸（與其他通用模組一致：Rain, Tire, Driver Lap 都是 200x100）
         self.setMinimumSize(200, 100)  # 統一為 200x100，提供更高的佈局靈活性
@@ -147,15 +155,17 @@ class LapTimeBoxPlotChartWidget(QWidget):
         return QColor(self.DEFAULT_COLOR)
 
     def _calculate_y_range(self):
-        """計算 Y 軸的合適範圍"""
+        """計算 Y 軸的合適範圍（只考慮可見車手）"""
         if not self.driver_laptimes:
             self.y_min = 0.0
             self.y_max = 100.0
             return
             
         all_times = []
-        for lap_times in self.driver_laptimes.values():
-            all_times.extend(lap_times)
+        # 🆕 只收集可見車手的數據
+        for driver, lap_times in self.driver_laptimes.items():
+            if driver not in self.hidden_drivers:
+                all_times.extend(lap_times)
             
         if all_times:
             self.y_min = min(all_times)
@@ -309,8 +319,15 @@ class LapTimeBoxPlotChartWidget(QWidget):
             return
             
         drivers = sorted(self.driver_laptimes.keys())
-        n_drivers = len(drivers)
         
+        # 🆕 過濾被隱藏的車手
+        visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
+        
+        if not visible_drivers:
+            print("[BOXPLOT_CHART] 所有車手都被隱藏")
+            return
+        
+        n_drivers = len(visible_drivers)
         if n_drivers == 0:
             return
             
@@ -318,7 +335,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         box_spacing = self.chart_rect.width() / (n_drivers + 1)
         box_width = min(40, box_spacing * 0.6)
         
-        for i, driver in enumerate(drivers):
+        for i, driver in enumerate(visible_drivers):
             lap_times = self.driver_laptimes[driver]
             if not lap_times:
                 continue
@@ -593,46 +610,90 @@ class LapTimeBoxPlotChartWidget(QWidget):
                 line
             )
             
-    def mouseMoveEvent(self, event: QMouseEvent):
-        """滑鼠移動事件"""
-        if not self.driver_laptimes:
-            return
-            
-        # 檢測滑鼠是否在某個箱型圖上
-        drivers = sorted(self.driver_laptimes.keys())
-        n_drivers = len(drivers)
+    def _detect_hovered_driver(self, position: QPoint) -> Optional[str]:
+        """
+        檢測滑鼠位置是否懸停在某個車手的箱型圖上
         
-        if n_drivers == 0:
-            return
+        Args:
+            position: 滑鼠位置
             
+        Returns:
+            車手代碼，如果沒有懸停則返回 None
+        """
+        if not self.driver_laptimes:
+            return None
+        
+        drivers = sorted(self.driver_laptimes.keys())
+        
+        # 只檢測可見的車手
+        visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
+        if not visible_drivers:
+            return None
+        
+        n_drivers = len(visible_drivers)
         box_spacing = self.chart_rect.width() / (n_drivers + 1)
         box_width = min(40, box_spacing * 0.6)
         
-        mouse_x = event.pos().x()
-        mouse_y = event.pos().y()
-        
-        # 檢查是否在圖表區域內
-        if not self.chart_rect.contains(event.pos()):
-            if self.hover_driver:
-                self.hover_driver = None
-                self.hover_position = None
-                self.update()
-            return
-            
-        # 查找最近的箱型圖
-        found_driver = None
-        for i, driver in enumerate(drivers):
+        for i, driver in enumerate(visible_drivers):
             x_center = self.chart_rect.left() + (i + 1) * box_spacing
             
-            # 檢查 X 座標是否在箱型圖範圍內
-            if abs(mouse_x - x_center) < box_width:
-                found_driver = driver
-                break
-                
-        if found_driver != self.hover_driver:
-            self.hover_driver = found_driver
-            self.hover_position = event.pos() if found_driver else None
+            # 檢查 X 座標是否在箱型圖範圍內（擴大點擊區域）
+            rect = QRectF(
+                x_center - box_width / 2,
+                self.chart_rect.top(),
+                box_width,
+                self.chart_rect.height()
+            )
+            
+            if rect.contains(position):
+                return driver
+        
+        return None
+    
+    def mouseMoveEvent(self, event: QMouseEvent):
+        """滑鼠移動事件"""
+        position = event.pos()
+        previous_driver = self.hover_driver
+        
+        # 使用統一的檢測方法
+        hovered_driver = self._detect_hovered_driver(position)
+        
+        if hovered_driver != previous_driver:
+            self.hover_driver = hovered_driver
+            self.hover_position = position if hovered_driver else None
             self.update()
+        else:
+            self.hover_position = position if hovered_driver else None
+    
+    def leaveEvent(self, event):
+        """滑鼠離開事件"""
+        self.hover_driver = None
+        self.hover_position = None
+        self.update()
+    
+    def mousePressEvent(self, event: QMouseEvent):
+        """滑鼠點擊事件處理（左鍵和右鍵）"""
+        print(f"[BOXPLOT_CHART] 🖱️ mousePressEvent 被觸發！")
+        print(f"[BOXPLOT_CHART]    - 滑鼠位置: {event.pos()}")
+        print(f"[BOXPLOT_CHART]    - 按鍵類型: {event.button()} (Left=1, Right=2)")
+        
+        # 實時檢測點擊位置的車手（不依賴 hover_driver）
+        driver = self._detect_hovered_driver(event.pos())
+        print(f"[BOXPLOT_CHART]    - 檢測到車手: {driver}")
+        
+        if not driver:
+            print(f"[BOXPLOT_CHART]    ❌ 沒有檢測到車手，退出")
+            return
+        
+        # 左鍵：發射點擊信號
+        if event.button() == Qt.LeftButton:
+            print(f"[BOXPLOT_CHART]    ✅ 左鍵點擊 {driver}")
+            self.chart_clicked.emit(driver)
+        
+        # 右鍵：顯示選單
+        elif event.button() == Qt.RightButton:
+            print(f"[BOXPLOT_CHART]    ✅ 右鍵點擊 {driver}，準備顯示選單")
+            self._show_context_menu(driver, event)
             
     def export_chart(self, filepath: str) -> bool:
         """
@@ -691,3 +752,74 @@ class LapTimeBoxPlotChartWidget(QWidget):
     def get_current_data(self) -> Optional[Dict]:
         """獲取當前數據"""
         return self.current_data
+    
+    # ========== 🆕 右鍵選單與數據過濾功能 ==========
+    
+    def _show_context_menu(self, driver: str, event: QMouseEvent):
+        """
+        顯示右鍵選單
+        
+        Args:
+            driver: 車手代碼
+            event: 滑鼠事件
+        """
+        if not driver:
+            return
+        
+        # 創建選單
+        menu = QMenu(self)
+        
+        # 添加 "Hide Driver" 選項
+        hide_action = menu.addAction(f"🚫 {tr('hide_driver', 'Hide')} {driver}")
+        hide_action.triggered.connect(lambda: self._hide_driver(driver))
+        
+        # 顯示選單（使用全局坐標）
+        try:
+            menu.exec_(QCursor.pos())
+        except Exception as e:
+            print(f"[ERROR] [BOXPLOT_CHART] 顯示選單失敗: {e}")
+        
+        print(f"[BOXPLOT_CHART] 顯示右鍵選單: {driver}")
+    
+    def _hide_driver(self, driver: str):
+        """
+        隱藏指定車手的數據
+        
+        Args:
+            driver: 車手代碼
+        """
+        if driver in self.hidden_drivers:
+            print(f"[BOXPLOT_CHART] 車手 {driver} 已經被隱藏")
+            return
+        
+        # 添加到隱藏集合
+        self.hidden_drivers.add(driver)
+        print(f"[BOXPLOT_CHART] 隱藏車手: {driver}")
+        print(f"[BOXPLOT_CHART] 當前隱藏車手: {self.hidden_drivers}")
+        
+        # 重新計算 Y 軸範圍（只考慮可見車手）
+        self._calculate_y_range()
+        
+        # 重繪圖表（會自動過濾隱藏的車手）
+        self.update()
+    
+    def show_all_drivers(self):
+        """
+        顯示所有車手數據（恢復所有隱藏的車手）
+        
+        這是一個公開方法，供 MDI 視窗的 "Show All Data" 按鈕調用
+        """
+        if not self.hidden_drivers:
+            print("[BOXPLOT_CHART] 沒有隱藏的車手需要恢復")
+            return
+        
+        # 清空隱藏集合
+        hidden_count = len(self.hidden_drivers)
+        self.hidden_drivers.clear()
+        print(f"[BOXPLOT_CHART] 已恢復 {hidden_count} 個隱藏車手")
+        
+        # 重新計算 Y 軸範圍（包含所有車手）
+        self._calculate_y_range()
+        
+        # 重繪圖表（顯示所有數據）
+        self.update()

@@ -325,6 +325,43 @@ class SeasonProgressMDI(QWidget):
         # parent = self.progress_widget if hasattr(self, 'progress_widget') else None
         # QMessageBox.critical(parent, title, message)
         print(f"[SEASON_PROGRESS_MDI] ⚠️ 錯誤: {title} - {message}")
+    
+    def update_year(self, year: str):
+        """
+        更新年份並重新載入數據
+        
+        Args:
+            year: 新的年份 (例如: "2025")
+        """
+        print(f"🔍 [SEASON_PROGRESS_MDI] update_year 被調用: {self.year} → {year}")
+        
+        if str(year) == str(self.year):
+            print(f"[SEASON_PROGRESS_MDI] 年份相同，跳過更新")
+            return
+        
+        # 更新年份
+        self.year = str(year)
+        print(f"🔍 [SEASON_PROGRESS_MDI] 年份已更新為: {self.year}")
+        
+        # 重新載入數據
+        print(f"🔍 [SEASON_PROGRESS_MDI] 開始重新載入數據...")
+        self._start_load_analysis()
+    
+    def update_parameters(self, year: str = None, **kwargs):
+        """
+        通用參數更新方法（與其他模組保持一致）
+        
+        Args:
+            year: 年份
+            **kwargs: 其他參數（忽略）
+        """
+        print(f"🔍 [SEASON_PROGRESS_MDI] update_parameters 被調用: year={year}")
+        
+        if year is not None:
+            self.update_year(year)
+            return True
+        
+        return False
 
 
 # Test code

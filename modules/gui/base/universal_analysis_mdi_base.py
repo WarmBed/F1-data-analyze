@@ -280,14 +280,18 @@ class UniversalAnalysisMDI(IAnalysisModule):
         """更新參數 - 通用參數更新邏輯"""
         try:
             self._debug(f"========== 更新參數 ==========")
+            print(f"🔍 [BASE_MDI] update_parameters 被調用: year={year}, race={race}, session={session}")
             
             # 更新基本參數
             if year is not None:
                 self.current_year = str(year)
+                print(f"🔍 [BASE_MDI] current_year 更新為: {self.current_year}")
             if race is not None:
                 self.current_race = race
+                print(f"🔍 [BASE_MDI] current_race 更新為: {self.current_race}")
             if session is not None:
                 self.current_session = session
+                print(f"🔍 [BASE_MDI] current_session 更新為: {self.current_session}")
             
             # 更新車手參數（如果支援）
             if self.config.requires_driver_params:
@@ -336,7 +340,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.update_window_title()
             
             # 觸發數據載入
+            print(f"🔍 [BASE_MDI] 準備調用 _load_data_with_current_parameters()")
             self._load_data_with_current_parameters()
+            print(f"🔍 [BASE_MDI] _load_data_with_current_parameters() 調用完成")
             
             return True
             
@@ -652,6 +658,11 @@ class UniversalAnalysisMDI(IAnalysisModule):
         if self.chart_widget:
             chart_frame = QFrame()
             chart_frame.setFrameStyle(QFrame.StyledPanel)
+            
+            # 🔧 修復：讓 QFrame 透明傳遞滑鼠事件到 chart_widget
+            chart_frame.setAttribute(Qt.WA_TransparentForMouseEvents, False)  # QFrame 本身接收事件
+            chart_frame.setFocusPolicy(Qt.NoFocus)  # 但不搶焦點
+            
             chart_layout = QVBoxLayout(chart_frame)
             chart_layout.setContentsMargins(5, 5, 5, 5)
             chart_layout.addWidget(self.chart_widget)

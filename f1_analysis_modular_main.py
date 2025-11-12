@@ -1622,10 +1622,11 @@ class F1AnalysisModularCLI:
         function_id = str(self.args.function) if self.args.function else None
         # 系統功能和工具功能不需要載入賽事數據
         # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 
-        # 70: FP→Q 訓練數據收集器, 75: 純 FP3 特徵優化訓練, 76: 集成學習訓練
+        # 70: FP→Q 訓練數據收集器, 74: 排位賽預測 (內部自動載入), 75: 純 FP3 特徵優化訓練, 76: 集成學習訓練
         # 96: 賽事天氣預報, 98: API 健康檢查, 99: 賽季賽程查詢
+        # 100: 歷年旗幟統計分析 (內部處理多年數據載入)
         # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
-        data_optional_functions = {"49", "50", "51", "52", "70", "75", "76", "96", "98", "99"}
+        data_optional_functions = {"49", "50", "51", "52", "70", "74", "75", "76", "96", "98", "99", "100"}
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 
@@ -1832,9 +1833,9 @@ def create_argument_parser():
     
     # 預測系統參數 (功能 70-79)
     parser.add_argument('--start-year', type=int,
-                       help='多賽季收集起始年份 (適用於 -f70, -f73)')
+                       help='多賽季收集起始年份 (適用於 -f15, -f70, -f73)')
     parser.add_argument('--end-year', type=int,
-                       help='多賽季收集結束年份 (適用於 -f70, -f73)')
+                       help='多賽季收集結束年份 (適用於 -f15, -f70, -f73)')
     parser.add_argument('--season', action='store_true',
                        help='收集整個賽季數據 (適用於 -f70)')
     parser.add_argument('--start-race', type=int, default=1,

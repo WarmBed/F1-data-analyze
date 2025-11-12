@@ -23,9 +23,9 @@ JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 # 🔄 Standings 刷新策略：智能加速機制
 STANDINGS_REFRESH_HOURS_NORMAL = 120  # 5 天 (正常模式：賽程間期)
 STANDINGS_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時 (臨近模式：賽前 2 天)
-STANDINGS_REFRESH_HOURS_POST_RACE = 6  # 6 小時 (賽後模式：賽後 24 小時內)
+STANDINGS_REFRESH_HOURS_POST_RACE = 6  # 6 小時 (賽後模式：賽後 72 小時內)
 RACE_APPROACHING_THRESHOLD_DAYS = 2  # 賽前 2 天啟動加速刷新
-POST_RACE_MONITORING_HOURS = 24  # 賽後持續監控 24 小時
+POST_RACE_MONITORING_HOURS = 72  # 賽後持續監控 72 小時 (3 天) - 留給官方確認積分
 
 DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")  # ✅ 新增：覆寫配置路徑
 

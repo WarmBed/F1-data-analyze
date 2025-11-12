@@ -69,7 +69,7 @@ class F1AnalysisCacheService:
             "26": ["driver_tire_strategy", "tire_strategy"],
             "27": ["driver_fastest_lap_analysis", "fastest_lap"],
             "28": ["driver_lap_time_analysis", "laptime_analysis", "detailed_laptime"],
-            "29": ["fia_parts_analysis_v2", "fia_parts_analysis"],  # ✅ Function 29 - FIA 部件變更分析 V2.0
+            "29": ["fia_parts_analysis"],  # ✅ Function 29 - FIA 部件變更分析 (簡化版)
             "14.1": ["driver_statistics_overview", "driver_summary"],
             "14.2": ["driver_telemetry_statistics", "telemetry_statistics"],
             "14.3": ["driver_overtaking_analysis", "overtaking_analysis"],
@@ -85,6 +85,7 @@ class F1AnalysisCacheService:
             "97": ["championship_standings"],  # ✅ 添加 Function 97 - 賽季積分榜 (車手/車隊)
             "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
             "99": ["season_calendar"],
+            "100": ["historical_flags"],  # ✅ 添加 Function 100 - 歷年旗幟統計分析
         }
         
         # 賽事名稱標準化映射
@@ -235,11 +236,11 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}season_calendar_{year}_*.json",      # 單年格式
                     f"{self.json_dir}season_calendar_*.json"              # 任何賽季日曆
                 ]
-            elif function_id == "29":  # ✅ FIA 部件變更分析 V2.0 - 僅 year 參數
-                # 檔案格式: fia_parts_analysis_v2_{year}.json 或帶過濾條件的變體
-                # 範例: fia_parts_analysis_v2_2025.json
-                #       fia_parts_analysis_v2_2025_team_McLaren.json
-                #       fia_parts_analysis_v2_2025_conf80.json
+            elif function_id == "29":  # ✅ FIA 部件變更分析 (簡化版) - 僅 year 參數
+                # 檔案格式: fia_parts_analysis_{year}.json 或帶過濾條件的變體
+                # 範例: fia_parts_analysis_2025.json
+                #       fia_parts_analysis_2025_team_McLaren.json
+                #       fia_parts_analysis_2025_conf80.json
                 team = params.get("team")
                 driver = params.get("driver")
                 race_filter = params.get("race")  # 注意：這是過濾條件，不是賽事參數
@@ -263,12 +264,12 @@ class F1AnalysisCacheService:
                         conf_str = int(min_confidence * 100) if isinstance(min_confidence, float) else min_confidence
                         filter_suffix += f"_conf{conf_str}"
                     
-                    search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}{filter_suffix}.json")
+                    search_patterns.append(f"{self.json_dir}fia_parts_analysis_{year}{filter_suffix}.json")
                 
                 # 備用：搜索基本檔案（無過濾）
-                search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}.json")
+                search_patterns.append(f"{self.json_dir}fia_parts_analysis_{year}.json")
                 # 最後：搜索任何包含 year 的檔案
-                search_patterns.append(f"{self.json_dir}fia_parts_analysis_v2_{year}*.json")
+                search_patterns.append(f"{self.json_dir}fia_parts_analysis_{year}*.json")
                 
             elif function_id == "98":  # ✅ 團隊顏色配置 - 特殊處理
                 # 檔案格式: team_colors_{year}_{colormap}_{timestamp}.json
@@ -289,6 +290,25 @@ class F1AnalysisCacheService:
                     # 使用 ** 遞迴搜尋 weather/ 子目錄，固定匹配 _R.json
                     search_patterns.extend([
                         f"{self.json_dir}**/race_weather_forecast*{year_token}*{race_str}*R*.json",
+                    ])
+            elif function_id == "100":  # ✅ 歷年旗幟統計 - 特殊處理
+                # 檔案格式: historical_flags_{race}_{start_year}-{end_year}.json
+                # ⚠️ 注意：檔案名不包含 session 和 timestamp（固定檔名，每次覆蓋）
+                # 範例: historical_flags_Japan_2022-2025.json (首字母大寫)
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                print(f"[CACHE] 🏁 Function 100: 搜尋歷年旗幟統計")
+                print(f"[CACHE]    賽道參數: {race_param}")
+                print(f"[CACHE]    標準化賽道: {normalized_race}")
+                print(f"[CACHE]    搜尋 tokens: {effective_tokens[:5]}")  # 顯示前5個
+                
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    # 🔧 搜尋多種大小寫變體（CLI 可能生成 Japan 或 japan）
+                    search_patterns.extend([
+                        f"{self.json_dir}historical_flags_{race_str}_*-*.json",  # 原始格式
+                        f"{self.json_dir}historical_flags_{race_str.lower()}_*-*.json",  # 小寫
+                        f"{self.json_dir}historical_flags_{race_str.title()}_*-*.json",  # 首字母大寫
                     ])
             else:  # 一般分析
                 effective_tokens = race_tokens or ["*"]
@@ -340,10 +360,11 @@ class F1AnalysisCacheService:
                 print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
-                    # ✅ Function 96/97/98/99 跳過額外驗證（glob pattern 已足夠精確）
+                    # ✅ Function 96/97/98/99/100 跳過額外驗證（glob pattern 已足夠精確）
                     # Function 96: 天氣預報 - 已通過 glob pattern 精確匹配
                     # Function 97/98/99: 賽季級別分析 - 不需要 race/session
-                    if function_id not in {"96", "97", "98", "99"}:
+                    # Function 100: 歷年旗幟統計 - 檔案名不包含 session
+                    if function_id not in {"96", "97", "98", "99", "100"}:
                         if not self._file_matches_race(file_path, race):
                             continue
                         if not self._file_matches_session(file_path, session):
@@ -354,8 +375,8 @@ class F1AnalysisCacheService:
                     if function_id == "96":
                         if result:
                             return result
-                    # ✅ Function 97/98/99 使用特殊驗證邏輯
-                    elif function_id in {"97", "98", "99"}:
+                    # ✅ Function 97/98/99/100 使用特殊驗證邏輯
+                    elif function_id in {"97", "98", "99", "100"}:
                         if result and self._season_level_result_matches(result, year, function_id, params):
                             return result
                     elif result and self._result_matches_params(result, year, race, session, driver1, driver2, lap, lap1, lap2):
@@ -654,15 +675,43 @@ class F1AnalysisCacheService:
         params: Dict[str, Any]
     ) -> bool:
         """
-        驗證賽季級別分析結果 (Function 97, 98, 99)
+        驗證賽季級別分析結果 (Function 97, 98, 99, 100)
         
         這些功能不需要 race/session 參數，只驗證 year 和特定參數
         """
         if not isinstance(result, dict):
             return False
         
+        # Function 100: Historical Flags Analysis - 驗證 race (不驗證 session)
+        if function_id == "100":
+            # 檢查 metadata 中的 race
+            data = result.get("data", {})
+            if not isinstance(data, dict):
+                return False
+            
+            metadata = data.get("metadata", {})
+            if not isinstance(metadata, dict):
+                return False
+            
+            # 驗證賽道名稱
+            race_param = params.get("race")
+            if race_param:
+                circuit_name = metadata.get("circuit_name", "").lower()
+                country = metadata.get("country", "").lower()
+                race_lower = race_param.lower()
+                
+                # 檢查是否匹配賽道名稱或國家
+                if race_lower not in circuit_name and race_lower not in country:
+                    return False
+            
+            # 驗證基本數據結構
+            if not data.get("yearly_summary"):
+                return False
+            
+            return True
+        
         # Function 97: Championship Standings - 驗證 year
-        if function_id == "97":
+        elif function_id == "97":
             # 檢查 metadata 中的 year
             metadata = result.get("metadata", {})
             if isinstance(metadata, dict):

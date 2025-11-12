@@ -149,6 +149,32 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
                 self._throttle_boxplot_core.clear_data()
         except Exception as exc:
             print(f"❌ [THROTTLE_MODULE] clear_data 失敗: {exc}")
+    
+    def reset_chart_view(self) -> None:
+        """
+        重置圖表視圖（主 GUI "Show All Data" 按鈕調用）
+        
+        這個方法橋接主 GUI 與內部 MDI 實例的 reset_chart_view()
+        """
+        try:
+            print("[THROTTLE_MODULE] 🔄 收到 reset_chart_view 請求")
+            
+            if not self._throttle_boxplot_core:
+                print("[THROTTLE_MODULE] ⚠️  MDI 核心實例不存在")
+                return
+            
+            if not hasattr(self._throttle_boxplot_core, 'reset_chart_view'):
+                print("[THROTTLE_MODULE] ⚠️  MDI 核心沒有 reset_chart_view 方法")
+                return
+            
+            # 轉發到內部 MDI 實例
+            print("[THROTTLE_MODULE] ✅ 轉發 reset_chart_view 至 MDI 核心")
+            self._throttle_boxplot_core.reset_chart_view()
+            
+        except Exception as exc:
+            print(f"❌ [THROTTLE_MODULE] reset_chart_view 失敗: {exc}")
+            import traceback
+            traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         try:

@@ -82,7 +82,175 @@ class SimpleF1AnalysisService:
             if name in raw_params and raw_params[name] not in (None, ""):
                 prepared[name] = raw_params[name]
 
+        # ❌ 移除 Function 100 特殊處理：不再自動添加 start_year/end_year
+        # 使用者需求：直接使用 -f 100 -y [year] -r [race] -s [session] 即可
+        # 不需要強制添加 --start-year 和 --end-year 參數
+
         return prepared
+
+    async def _check_standings_freshness(self, year: int) -> bool:
+        """
+        檢查積分榜數據新鮮度（Function 97 專用）
+        
+        直接調用 CLI 的智慧判斷邏輯來檢查數據是否過時
+        
+        Args:
+            year: 賽季年份
+            
+        Returns:
+            bool: True 表示數據過時需要刷新，False 表示數據還新鮮
+        """
+        try:
+            # 導入 CLI 的新鮮度檢查功能
+            from CLI_modules.cli.analyzer.championship_standings_analysis import check_standings_freshness
+            
+            print(f"[SERVICE] 🔍 檢查積分榜新鮮度 (year={year})...")
+            
+            # 在線程中執行同步的 CLI 函數
+            freshness_result = await asyncio.to_thread(check_standings_freshness, year)
+            
+            # CLI 返回的鍵名是 "should_regenerate" (True=需要刷新)
+            should_regenerate = freshness_result.get("should_regenerate", False)
+            is_fresh = freshness_result.get("is_fresh", True)
+            age_info = freshness_result.get("age_formatted", "未知")
+            refresh_interval = freshness_result.get("refresh_interval_hours", "N/A")
+            reason = freshness_result.get("reason", "")
+            
+            if should_regenerate:
+                print(f"[SERVICE] ⚠️ 積分榜數據過時！")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+            else:
+                print(f"[SERVICE] ✅ 積分榜數據還新鮮")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+            
+            return should_regenerate
+            
+        except ImportError as e:
+            print(f"[SERVICE] ⚠️ 無法導入 CLI 新鮮度檢查模組: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            return False
+            
+        except Exception as e:
+            print(f"[SERVICE] ❌ 檢查新鮮度時發生錯誤: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            import traceback
+            traceback.print_exc()
+            return False
+
+    async def _check_weather_freshness(self, year: int, event_name: str) -> bool:
+        """
+        檢查天氣預報數據新鮮度（Function 96 專用）
+        
+        調用 CLI 的天氣預報新鮮度檢查邏輯
+        
+        Args:
+            year: 賽季年份
+            event_name: 賽事名稱
+            
+        Returns:
+            bool: True 表示數據過時需要刷新，False 表示數據還新鮮
+        """
+        try:
+            # 導入 CLI 的新鮮度檢查功能
+            from CLI_modules.cli.analyzer.race_weather_forecast import check_weather_forecast_freshness
+            
+            print(f"[SERVICE] 🔍 檢查天氣預報新鮮度 (year={year}, event={event_name})...")
+            
+            # 在線程中執行同步的 CLI 函數
+            freshness_result = await asyncio.to_thread(
+                check_weather_forecast_freshness, 
+                year, 
+                event_name
+            )
+            
+            # CLI 返回的鍵名是 "should_regenerate" (True=需要刷新)
+            should_regenerate = freshness_result.get("should_regenerate", False)
+            is_fresh = freshness_result.get("is_fresh", True)
+            age_info = freshness_result.get("age_formatted", "未知")
+            refresh_interval = freshness_result.get("refresh_interval_hours", "N/A")
+            reason = freshness_result.get("reason", "")
+            
+            if should_regenerate:
+                print(f"[SERVICE] ⚠️ 天氣預報數據過時！")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+            else:
+                print(f"[SERVICE] ✅ 天氣預報數據還新鮮")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+            
+            return should_regenerate
+            
+        except ImportError as e:
+            print(f"[SERVICE] ⚠️ 無法導入 CLI 天氣預報檢查模組: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            return False
+            
+        except Exception as e:
+            print(f"[SERVICE] ❌ 檢查天氣預報新鮮度時發生錯誤: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    async def _check_calendar_freshness(self) -> bool:
+        """
+        檢查 Season Calendar (Function 99) 數據的新鮮度
+        
+        Returns:
+            True: 數據過時，需要強制刷新
+            False: 數據新鮮，可以使用緩存
+        """
+        try:
+            from CLI_modules.cli.analyzer.season_calendar_analysis import check_calendar_freshness
+            
+            # 在線程池中執行 CLI 的同步函數
+            freshness_result = await asyncio.to_thread(
+                check_calendar_freshness,
+                all_years=True  # 檢查多年批量日曆
+            )
+            
+            should_regenerate = freshness_result.get("should_regenerate", False)
+            is_fresh = freshness_result.get("is_fresh", True)
+            age_hours = freshness_result.get("age_hours")
+            reason = freshness_result.get("reason", "未知")
+            refresh_interval = freshness_result.get("refresh_interval_hours", 168)
+            
+            age_info = f"{age_hours:.1f} 小時" if age_hours is not None else "未知"
+            
+            if should_regenerate:
+                print(f"[SERVICE] ⚠️ 賽季日曆數據過時！")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+            else:
+                print(f"[SERVICE] ✅ 賽季日曆數據還新鮮")
+                print(f"[SERVICE]    └─ 原因: {reason}")
+                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
+                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+            
+            return should_regenerate
+            
+        except ImportError as e:
+            print(f"[SERVICE] ⚠️ 無法導入 CLI 賽季日曆檢查模組: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            return False
+            
+        except Exception as e:
+            print(f"[SERVICE] ❌ 檢查賽季日曆新鮮度時發生錯誤: {e}")
+            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            import traceback
+            traceback.print_exc()
+            return False
 
     def _build_cli_command(self, spec: FunctionSpec, params: Dict[str, Any]) -> list[str]:
         """Construct the CLI command for the given specification."""
@@ -92,6 +260,12 @@ class SimpleF1AnalysisService:
             "f1_analysis_modular_main.py",
             "-f", str(spec.function_id)
         ]
+
+        # 🔍 調試：顯示 Function 100 的參數
+        if spec.function_id == "100":
+            print(f"[SERVICE] 🔍 _build_cli_command for Function 100:")
+            print(f"[SERVICE]    params = {params}")
+            print(f"[SERVICE]    cli_flag_map = {spec.cli_flag_map}")
 
         for param_name, flag in spec.cli_flag_map.items():
             if param_name in params:
@@ -106,6 +280,10 @@ class SimpleF1AnalysisService:
                         cmd.append(flag)
                 else:
                     cmd.extend([flag, str(value)])
+
+        # 🔍 調試：顯示 Function 100 的最終命令
+        if spec.function_id == "100":
+            print(f"[SERVICE] 🔍 CLI 命令: {' '.join(cmd)}")
 
         return cmd
     
@@ -125,6 +303,27 @@ class SimpleF1AnalysisService:
             print(f"[SERVICE] 開始分析 {request_id}: 功能 {canonical_id}")
             prepared_params = self._prepare_params(spec, params)
             force_refresh = bool(params.get("force_refresh"))
+            
+            # 🔄 智慧刷新檢查：Function 97 (Championship Standings) 專用
+            if canonical_id == "97" and not force_refresh:
+                force_refresh = await self._check_standings_freshness(prepared_params.get("year"))
+                if force_refresh:
+                    print(f"[SERVICE] 🔄 積分榜數據過時，啟用強制刷新")
+            
+            # 🔄 智慧刷新檢查：Function 96 (Weather Forecast) 專用
+            if canonical_id == "96" and not force_refresh:
+                force_refresh = await self._check_weather_freshness(
+                    prepared_params.get("year"),
+                    prepared_params.get("race")
+                )
+                if force_refresh:
+                    print(f"[SERVICE] 🔄 天氣預報數據過時，啟用強制刷新")
+            
+            # 🔄 智慧刷新檢查：Function 99 (Season Calendar) 專用
+            if canonical_id == "99" and not force_refresh:
+                force_refresh = await self._check_calendar_freshness()
+                if force_refresh:
+                    print(f"[SERVICE] 🔄 賽季日曆數據過時，啟用強制刷新")
 
             if not force_refresh:
                 print("[SERVICE] 檢查緩存...")

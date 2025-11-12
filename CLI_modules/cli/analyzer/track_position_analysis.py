@@ -453,12 +453,10 @@ def analyze_track_position_data(data_loader):
                                 )
                                 print(f"   [WARNING] 基於位置計算距離")
                             
-                            # 處理位置記錄 - 取樣以避免過多數據
+                            # ✅ 使用完整位置數據（不再限制採樣）
                             total_points = len(pos_data)
-                            sample_size = min(50, total_points)  # 最多取50個點
-                            sample_indices = np.linspace(0, total_points-1, sample_size, dtype=int)
                             
-                            print(f"   [INFO] 處理 {total_points} 個賽道位置點，取樣 {sample_size} 個")
+                            print(f"   [INFO] 處理 {total_points} 個賽道位置點（使用完整數據）")
                             
                             # 檢查是否有時間數據
                             has_time = 'Time' in pos_data.columns or 'SessionTime' in pos_data.columns
@@ -469,9 +467,9 @@ def analyze_track_position_data(data_loader):
                             else:
                                 print(f"   [WARNING] 時間數據: 不可用，將使用點索引")
                             
-                            for i, idx in enumerate(sample_indices):
-                                row = pos_data.iloc[idx]
-                                distance = distances[idx] if idx < len(distances) else 0
+                            for i in range(total_points):
+                                row = pos_data.iloc[i]
+                                distance = distances[i] if i < len(distances) else 0
                                 
                                 # 提取時間數據（秒為單位）
                                 time_seconds = 0.0
@@ -605,16 +603,14 @@ def extract_position_from_car_data(car_data, position_data):
         else:
             print(f"   [WARNING] 時間數據: 不可用，將使用點索引")
         
-        # 處理位置記錄 - 取樣以避免過多數據
+        # ✅ 使用完整車輛位置數據（不再限制採樣）
         total_points = len(car_data)
-        sample_size = min(50, total_points)  # 最多取50個點
-        sample_indices = np.linspace(0, total_points-1, sample_size, dtype=int)
         
-        print(f"   [INFO] 處理 {total_points} 個車輛位置點，取樣 {sample_size} 個")
+        print(f"   [INFO] 處理 {total_points} 個車輛位置點（使用完整數據）")
         
-        for i, idx in enumerate(sample_indices):
-            row = car_data.iloc[idx]
-            distance = distances[idx] if idx < len(distances) else 0
+        for i in range(total_points):
+            row = car_data.iloc[i]
+            distance = distances[i] if i < len(distances) else 0
             
             # 提取時間數據（秒為單位）
             time_seconds = 0.0

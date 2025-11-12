@@ -51,6 +51,7 @@ SESSION_NAME_MAPPING = (
     ("practice 4", "FP4"),
     ("sprint shootout", "SQ"),
     ("sprint qualifying", "SQ"),
+    ("sprint", "S"),  # Sprint race
     ("qualifying", "Q"),
     ("race", "R"),
 )
@@ -501,7 +502,7 @@ class SeasonCalendarProvider:
         unique: Dict[str, SeasonSession] = {}
         for session in sorted(sessions, key=lambda s: (s.utc_time or s.local_time or reference)):
             unique.setdefault(session.code, session)
-        ordered_codes = ["FP1", "FP2", "FP3", "FP4", "SQ", "Q", "R"]
+        ordered_codes = ["FP1", "FP2", "FP3", "FP4", "SQ", "S", "Q", "R"]
         return sorted(unique.values(), key=lambda sess: ordered_codes.index(sess.code) if sess.code in ordered_codes else 99)
 
     def _map_session_code(self, name: str) -> Optional[str]:
