@@ -158,6 +158,29 @@ class GuiTranslator:
             'cascade_windows_action': {'zh': '層疊視窗', 'en': 'Cascade Windows', 'ja': 'ウィンドウを重ねて表示'},
             'sync_checkbox_main': {'zh': '[LINK] 接收主程式同步 (年份/賽事/賽段)', 'en': '[LINK] Receive Main Window Sync (Year/Race/Session)', 'ja': '[LINK] Receive Main Window Sync (Year/Race/Session)'},
             'sync_checkbox_tooltip_main': {'zh': '勾選時接收主程式參數同步，下方分析參數將變為不可編輯', 'en': 'When checked, receive parameters from main window and lock analysis controls', 'ja': 'When checked, receive parameters from main window and lock analysis controls'},
+            
+            # Window Settings 對話框
+            'window_settings_title': {'zh': 'Window Settings', 'en': 'Window Settings', 'ja': 'Window Settings'},
+            'window_settings_dialog_title': {'zh': '[TOOL] 視窗分析設定', 'en': '[TOOL] Window Analysis Settings', 'ja': '[TOOL] ウィンドウ分析設定'},
+            'window_sync_control_group': {'zh': '視窗同步控制', 'en': 'Window Sync Control', 'ja': 'ウィンドウ同期制御'},
+            'analysis_params_group': {'zh': '分析參數', 'en': 'Analysis Parameters', 'ja': '分析パラメータ'},
+            'year_label_window_settings': {'zh': '年份:', 'en': 'Year:', 'ja': '年:'},
+            'race_label_window_settings': {'zh': '賽事:', 'en': 'Race:', 'ja': 'レース:'},
+            'session_label_window_settings': {'zh': '賽段:', 'en': 'Session:', 'ja': 'セッション:'},
+            'params_locked_tooltip': {'zh': '已啟用同步接收，參數由主程式控制', 'en': 'Sync enabled, parameters controlled by main window', 'ja': '同期有効、パラメータはメインウィンドウで制御'},
+            
+            # 車手與圈數同步控制
+            'driver1_section': {'zh': '車手 1:', 'en': 'Driver 1:', 'ja': 'ドライバー 1:'},
+            'driver2_section': {'zh': '車手 2:', 'en': 'Driver 2:', 'ja': 'ドライバー 2:'},
+            'use_time_axis_checkbox': {'zh': '使用時間軸 (Use Time Axis)', 'en': 'Use Time Axis', 'ja': '時間軸を使用'},
+            'use_time_axis_tooltip': {'zh': '使用時間（秒）作為 X 軸，而非距離（米）', 'en': 'Use time (seconds) as X-axis instead of distance (meters)', 'ja': '距離（メートル）ではなく時間（秒）をX軸として使用'},
+            
+            # 資訊標籤
+            'driver_1_info': {'zh': '車手 1:', 'en': 'Driver 1:', 'ja': 'ドライバー 1:'},
+            'driver_2_info': {'zh': '車手 2:', 'en': 'Driver 2:', 'ja': 'ドライバー 2:'},
+            'race_info': {'zh': '賽事:', 'en': 'Race:', 'ja': 'レース:'},
+            'driver_info': {'zh': '車手:', 'en': 'Driver:', 'ja': 'ドライバー:'},
+            'lap_info': {'zh': '圈', 'en': 'Lap', 'ja': '周'},
 
             
             # 進度對話框

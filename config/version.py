@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.7.0"
+APP_VERSION = "V0.8.0"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,19 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.8.0": {
+        "date": "2025-11-14",
+        "features": [
+            "修復 Python 3.13 執行緒清理警告（_DeleteDummyThreadOnDel TypeError）",
+            "改善主視窗 closeEvent 執行緒清理流程（收集所有活動 QThread）",
+            "延長執行緒等待時間（2秒→3秒）並強制終止未退出執行緒",
+            "增強 Python 3.13 警告抑制器（sys.excepthook + threading.excepthook）",
+            "實作雙層防護：主動清理 + 警告抑制，確保優雅關閉",
+            "新增執行緒清理日誌，清楚顯示每個執行緒的清理狀態",
+            "修復 QThread 與 Python threading 混用導致的資源洩漏問題",
+            "提供完整的執行緒清理測試指南和修復報告文檔",
+        ]
+    },
     "V0.7.0": {
         "date": "2025-11-08",
         "features": [

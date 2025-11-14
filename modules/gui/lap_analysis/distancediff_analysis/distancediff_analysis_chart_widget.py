@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 distancediff分析圖表組件
 使用 PyQt5 原生繪圖實現距離-distancediff曲線圖表

@@ -330,7 +330,8 @@ class TelemetryDataLoader(QObject):
     def load_telemetry_data(self, year: int, race: str, session: str,
                            driver1: str, driver2: str = None,
                            lap1: int = 1, lap2: int = None,
-                           is_fastest_lap: bool = False) -> bool:
+                           is_fastest_lap: bool = False,
+                           use_time_axis: bool = False) -> bool:
         """
         載入遙測分析數據 - 通用載入方法
         
@@ -343,6 +344,7 @@ class TelemetryDataLoader(QObject):
             lap1: 車手1圈數
             lap2: 車手2圈數 (可選)
             is_fastest_lap: 是否為最快圈分析
+            use_time_axis: 是否使用時間軸模式 (預設: False)
             
         Returns:
             bool: 載入是否成功啟動
@@ -376,7 +378,8 @@ class TelemetryDataLoader(QObject):
                 'lap2': lap2,
                 'is_fastest_lap': is_fastest_lap,
                 'force_refresh': False,
-                'single_driver_mode': single_driver_mode
+                'single_driver_mode': single_driver_mode,
+                'use_time_axis': use_time_axis  # ✅ 新增時間軸參數
             }
             incoming_session['signature'] = self._build_request_signature(incoming_session)
 
@@ -653,7 +656,8 @@ class TelemetryDataLoader(QObject):
             "driver2": driver2,
             "lap1": lap1,
             "lap2": lap2,
-            "force_refresh": params.get('force_refresh', False)
+            "force_refresh": params.get('force_refresh', False),
+            "use_time_axis": params.get('use_time_axis', False)  # ✅ 新增時間軸參數
         }
 
         if params.get('is_fastest_lap'):

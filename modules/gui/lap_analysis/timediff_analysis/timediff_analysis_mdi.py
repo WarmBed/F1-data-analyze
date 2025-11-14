@@ -10,6 +10,8 @@ import os
 import json
 import datetime
 import traceback
+import time
+import requests
 from typing import Dict, List, Any, Optional
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -23,6 +25,103 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
 from core.gui_i18n import tr
+from core.api_base_url import resolve_api_base_url
+
+class CrossEventComparisonWorker(QThread):
+    """跨賽事比較 API Worker - 調用 /api/v2/analysis/cross-event-comparison 端點"""
+
+    progress = pyqtSignal(int)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(self, driver1: str, year1: int, race1: str, session1: str, lap1: int,
+                 driver2: str, year2: int, race2: str, session2: str, lap2: int,
+                 force_refresh: bool = False, timeout: float = 120.0, parent=None):
+        super().__init__(parent)
+        self.driver1 = driver1
+        self.year1 = year1
+        self.race1 = race1
+        self.session1 = session1
+        self.lap1 = lap1
+        
+        self.driver2 = driver2
+        self.year2 = year2
+        self.race2 = race2
+        self.session2 = session2
+        self.lap2 = lap2
+        
+        self.force_refresh = force_refresh
+        self.timeout = timeout
+        self.base_url = resolve_api_base_url().rstrip('/')
+
+    def run(self):
+        try:
+            self.progress.emit(20)
+            endpoint = f"{self.base_url}/api/v2/analysis/cross-event-comparison"
+            
+            # 構建請求參數
+            query_params: Dict[str, Any] = {
+                "driver1": self.driver1,
+                "year1": int(self.year1),
+                "race1": self.race1,
+                "session1": self.session1,
+                "lap1": self.lap1,
+                "driver2": self.driver2,
+                "year2": int(self.year2),
+                "race2": self.race2,
+                "session2": self.session2,
+                "lap2": self.lap2,
+            }
+            
+            if self.force_refresh:
+                query_params["force_refresh"] = True
+
+            print(f"[TIMEDIFF-CROSS-EVENT-WORKER] 請求 API: {endpoint}")
+            print(f"[TIMEDIFF-CROSS-EVENT-WORKER] 參數: {query_params}")
+            
+            start_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(70)
+            response.raise_for_status()
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API response must be a JSON object")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API returned success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API response missing 'data' object")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": "cross_event_api",
+                "cross_event": True,
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+            }
+
+            self.progress.emit(90)
+            self.success.emit({"data": data, "meta": meta})
+            
+        except Exception as exc:
+            print(f"[TIMEDIFF-CROSS-EVENT-WORKER] ❌ 請求失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+            self.failure.emit(str(exc))
+            
+        finally:
+            self.progress.emit(100)
+
 
 class timediffDataManager(QObject):
     """timediff數據管理器 - 負責JSON緩存和CLI備援"""
@@ -342,8 +441,8 @@ class timediffAnalysisModule(IAnalysisModule):
     def __init__(self, parent=None):
         super().__init__(parent)
         
-        # 設置分析類型（用於批次更新識別）
-        self.analysis_type = 'timediff'
+        # ✅ 設置分析類型（用於批次更新識別）
+        self.analysis_type = 'Timediff'  # 注意：使用大寫T以匹配規範
         
         # 參數狀態
         self.current_year = "2025"
@@ -356,6 +455,21 @@ class timediffAnalysisModule(IAnalysisModule):
         self.driver2 = "VER" 
         self.lap1 = 1
         self.lap2 = 1
+        
+        # 🆕 同步功能相關屬性（與主視窗同步車手與圈數）
+        self.sync_driver_lap_enabled = True  # 預設啟用同步
+        self._updating_from_shared = False  # 防止遞迴更新的 guard flag
+        
+        # 跨賽事比較參數（支援不同年份/賽事的比較）
+        self.driver1_year = None
+        self.driver1_race = None
+        self.driver1_session = None
+        self.driver2_year = None
+        self.driver2_race = None
+        self.driver2_session = None
+        
+        # 時間軸設定
+        self.use_time_axis = False
         
         # 組件
         self.data_manager = None
@@ -469,6 +583,25 @@ class timediffAnalysisModule(IAnalysisModule):
         # 創建主容器 widget
         self.main_widget = QWidget()
         layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
+        
+        # 新增：參數資訊標籤（淺色背景）
+        self.info_label = QLabel()
+        self.info_label.setObjectName("AnalysisInfoLabel")
+        self.info_label.setStyleSheet("""
+            QLabel#AnalysisInfoLabel {
+                background-color: #F0F0F0;
+                color: #333333;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 11pt;
+                font-family: 'Segoe UI', Arial, sans-serif;
+            }
+        """)
+        self.info_label.setWordWrap(True)
+        self._update_info_label()  # 初始化標籤內容
+        layout.addWidget(self.info_label)
         
         # 添加timediff圖表
         if self.timediff_chart_widget:
@@ -550,110 +683,6 @@ class timediffAnalysisModule(IAnalysisModule):
         
         # 使用QTimer延遲執行
         QTimer.singleShot(100, update_title)
-
-    def update_lap_parameters(self, year: str, race: str, session: str,
-                              driver1: str, driver2: Optional[str] = None,
-                              lap1: int = 1, lap2: Optional[int] = None,
-                              is_fastest: bool = False,
-                              use_time_axis: bool = False) -> bool:
-        """更新圈速參數並刷新時間差資料"""
-        try:
-            print("[timediff_MDI] ========== 圈速參數更新 ==========")
-            print(f"[timediff_MDI] 收到參數: {year} {race} {session}")
-            print(f"[timediff_MDI] 車手: {driver1} vs {driver2}")
-            print(f"[timediff_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
-            print(f"[timediff_MDI] 最速圈: {is_fastest}")
-            print(f"[timediff_MDI] 🕒 時間軸模式: {use_time_axis}")
-
-            if is_fastest and hasattr(self, '_ensure_telemetry_data_for_fastest_laps'):
-                fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
-                if fastest_laps:
-                    if driver1 in fastest_laps:
-                        lap1 = fastest_laps[driver1]
-                        print(f"[timediff_MDI] 🏁 {driver1} 最速圈: 第{lap1}圈")
-                    if driver2 and driver2 in fastest_laps:
-                        lap2 = fastest_laps[driver2]
-                        print(f"[timediff_MDI] 🏁 {driver2} 最速圈: 第{lap2}圈")
-                else:
-                    print("[timediff_MDI] ⚠️ 無法取得最速圈資訊，沿用既有圈數")
-
-            normalized_year = str(year)
-            normalized_driver2 = driver2 if driver2 else driver1
-            normalized_lap2 = lap2 if lap2 is not None else lap1
-
-            params_changed = (
-                self.current_year != normalized_year or
-                self.current_race != race or
-                self.current_session != session or
-                self.driver1 != driver1 or
-                self.driver2 != normalized_driver2 or
-                self.lap1 != lap1 or
-                self.lap2 != normalized_lap2
-            )
-
-            self.current_year = normalized_year
-            self.current_race = race
-            self.current_session = session
-            self.driver1 = driver1
-            self.driver2 = normalized_driver2
-            self.lap1 = lap1
-            self.lap2 = normalized_lap2
-
-            if hasattr(self.timediff_chart_widget, 'set_lap_numbers'):
-                self.timediff_chart_widget.set_lap_numbers(self.lap1, self.lap2)
-                
-                # 🆕 設置時間軸模式
-                if hasattr(self.timediff_chart_widget, 'set_time_axis_mode'):
-                    self.timediff_chart_widget.set_time_axis_mode(use_time_axis)
-                    print(f"[timediff_MDI] ✅ 已設置時間軸模式: {use_time_axis}")
-
-            self.update_window_title()
-
-            if not params_changed:
-                print("[timediff_MDI] ℹ️ 參數無變化，保持當前資料")
-                return True
-
-            if not self.data_manager:
-                print("[timediff_MDI] ❌ 數據管理器未初始化，無法更新")
-                return False
-
-            self.data_manager.current_year = self.current_year
-            self.data_manager.current_race = self.current_race
-            self.data_manager.current_session = self.current_session
-
-            print("[timediff_MDI] 🚀 重新載入timediff數據...")
-            success = self.data_manager.load_timediff_data(
-                year=self.current_year,
-                race=self.current_race,
-                session=self.current_session,
-                driver1=self.driver1,
-                driver2=self.driver2,
-                lap1=self.lap1,
-                lap2=self.lap2,
-                is_fastest=is_fastest
-            )
-
-            if success:
-                self.parameters_updated.emit({
-                    'year': self.current_year,
-                    'race': self.current_race,
-                    'session': self.current_session,
-                    'driver1': self.driver1,
-                    'driver2': self.driver2,
-                    'lap1': self.lap1,
-                    'lap2': self.lap2
-                })
-                print("[timediff_MDI] ✅ 圈速參數更新完成")
-                return True
-
-            print("[timediff_MDI] ❌ 數據載入失敗")
-            return False
-
-        except Exception as e:
-            print(f"[ERROR] [timediff_MDI] update_lap_parameters 失敗: {e}")
-            import traceback
-            traceback.print_exc()
-            return False
     
     def get_default_size(self) -> tuple:
         """獲取預設視窗大小"""
@@ -742,6 +771,7 @@ class timediffAnalysisModule(IAnalysisModule):
                     
                     if success:
                         print(f"[timediff_MDI] ✅ 圈速參數更新後數據重載成功")
+                        
                         # 發送參數更新信號
                         self.parameters_updated.emit({
                             'year': self.current_year,
@@ -752,6 +782,19 @@ class timediffAnalysisModule(IAnalysisModule):
                             'lap1': self.lap1,
                             'lap2': self.lap2
                         })
+                        
+                        # 更新資訊標籤
+                        self._update_info_label()
+                        
+                        # 更新視窗標題以反映新的參數 - 使用統一的 get_window_title
+                        parent = getattr(self, 'parent_window', None)
+                        if parent and hasattr(parent, 'setWindowTitle'):
+                            new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                            parent.setWindowTitle(new_title)
+                            print(f"[timediff_MDI] 🏷️ 視窗標題已更新為: {new_title}")
+                        else:
+                            print(f"[timediff_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                        
                         return True
                     else:
                         print(f"[timediff_MDI] ❌ 圈速參數更新後數據重載失敗")
@@ -760,7 +803,17 @@ class timediffAnalysisModule(IAnalysisModule):
                     print(f"[timediff_MDI] ❌ 數據管理器未初始化")
                     return False
             else:
-                print(f"[timediff_MDI] ℹ️ 參數未變更，跳過數據重載")
+                print(f"[timediff_MDI] ℹ️ 圈速參數未變化，保持現有數據")
+                
+                # 即使參數未變化，也確保視窗標題是正確的
+                parent = getattr(self, 'parent_window', None)
+                if parent and hasattr(parent, 'setWindowTitle'):
+                    current_title = parent.windowTitle()
+                    expected_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                    if current_title != expected_title:
+                        parent.setWindowTitle(expected_title)
+                        print(f"[timediff_MDI] ✅ 已更新視窗標題: {expected_title}")
+                
                 return True
                 
         except Exception as e:
@@ -1446,6 +1499,324 @@ class timediffAnalysisModule(IAnalysisModule):
             self._refresh_data()
         except Exception as e:
             print(f"[ERROR] [timediff_MDI] refresh_analysis 失敗: {e}")
+            
+    def update_cross_event_comparison(self, year1: str, race1: str, session1: str, driver1: str, lap1: int,
+                                      year2: str, race2: str, session2: str, driver2: str, lap2: int,
+                                      is_fastest: bool = False, use_time_axis: bool = False):
+        """
+        更新跨賽事比較參數
+        
+        參數：
+        - year1, race1, session1, driver1, lap1: 車手 1 的賽事資訊
+        - year2, race2, session2, driver2, lap2: 車手 2 的賽事資訊
+        - is_fastest: 是否使用最快圈（暫未使用）
+        - use_time_axis: 是否使用時間軸模式
+        """
+        try:
+            print(f"[TIMEDIFF-CROSS-EVENT] ========== 更新跨賽事比較參數 ==========")
+            print(f"[TIMEDIFF-CROSS-EVENT] 車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+            print(f"[TIMEDIFF-CROSS-EVENT] 車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+            print(f"[TIMEDIFF-CROSS-EVENT] 時間軸模式: {use_time_axis}")
+            
+            # 儲存所有參數
+            self.driver1_year = year1
+            self.driver1_race = race1
+            self.driver1_session = session1
+            self.driver1 = driver1
+            self.lap1 = lap1
+            
+            self.driver2_year = year2
+            self.driver2_race = race2
+            self.driver2_session = session2
+            self.driver2 = driver2
+            self.lap2 = lap2
+            
+            # 關鍵：取消同步模式（避免觸發遞迴更新）
+            self.sync_driver_lap_enabled = False
+            self.use_time_axis = use_time_axis
+            
+            # 更新資訊標籤
+            self._update_info_label()
+            
+            # 創建 API Worker
+            print(f"[TIMEDIFF-CROSS-EVENT] 🚀 創建跨賽事比較 Worker...")
+            self.api_worker = CrossEventComparisonWorker(
+                driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
+                driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2
+            )
+            
+            # 連接信號
+            self.api_worker.success.connect(self._on_cross_event_data_loaded)
+            self.api_worker.failure.connect(self._on_cross_event_load_error)
+            self.api_worker.progress.connect(lambda value: print(f"[TIMEDIFF-CROSS-EVENT] 進度: {value}%"))
+            
+            # 啟動 Worker
+            print(f"[TIMEDIFF-CROSS-EVENT] 🔄 啟動 API 請求...")
+            self.api_worker.start()
+            
+            return True
+        except Exception as e:
+            print(f"[ERROR] [TIMEDIFF-CROSS-EVENT] 更新參數失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _on_cross_event_data_loaded(self, result: Dict[str, Any]) -> None:
+        """處理跨賽事比較數據載入成功"""
+        try:
+            print(f"[TIMEDIFF-CROSS-EVENT] ✅ 數據載入成功")
+            
+            # 提取數據
+            data = result.get("data", {})
+            meta = result.get("meta", {})
+            
+            print(f"[TIMEDIFF-CROSS-EVENT] 數據鍵值: {list(data.keys())}")
+            print(f"[TIMEDIFF-CROSS-EVENT] 元數據: {meta}")
+            
+            # 檢查是否有遙測比較數據
+            if "telemetry_comparison" in data:
+                telemetry_comp = data["telemetry_comparison"]
+                print(f"[TIMEDIFF-CROSS-EVENT] 遙測參數: {list(telemetry_comp.keys())}")
+                
+                # 提取時間差異數據（優先檢查 "Timediff"）
+                timediff_key = None
+                if "Timediff" in telemetry_comp:
+                    timediff_key = "Timediff"
+                    print(f"[TIMEDIFF-CROSS-EVENT] ✅ 使用 Timediff 參數（跨賽事計算的時間差）")
+                
+                if timediff_key:
+                    timediff_telemetry = telemetry_comp[timediff_key]
+                    
+                    # ✅ 構建符合 chart_widget 期望的數據格式
+                    # 參考 Speed Diff 的成功模式
+                    chart_data = {
+                        "timediff_data": {
+                            "time": timediff_telemetry.get("time", []),  # X軸：時間
+                            "cumulative_time_difference": timediff_telemetry.get("time_difference", []),  # Y軸：時間差
+                            "reference": "Time Difference",  # 參考標籤
+                            "driver1_name": "Time Difference",  # 車手名稱
+                        },
+                        "metadata": {
+                            "drivers": [
+                                {
+                                    "code": self.driver1 or "Driver1",
+                                    "lap_number": self.lap1 or 1,
+                                },
+                                {
+                                    "code": self.driver2 or "Driver2",
+                                    "lap_number": self.lap2 or 1,
+                                }
+                            ],
+                            "sectors": [],  # 賽道區段（跨賽事比較可能沒有）
+                            "reference_info": f"{self.driver1} vs {self.driver2}",
+                        },
+                        "statistics": {},  # 統計數據（如需要可從 API 獲取）
+                        "comparison_info": data.get("comparison_info", {}),
+                        "cross_event_metadata": data.get("cross_event_metadata", {}),
+                        "use_time_axis": False,  # Time Diff 固定使用時間軸
+                    }
+                    
+                    print(f"[TIMEDIFF-CROSS-EVENT] 構建圖表數據:")
+                    print(f"[TIMEDIFF-CROSS-EVENT]   時間點數: {len(chart_data['timediff_data'].get('time', []))}")
+                    print(f"[TIMEDIFF-CROSS-EVENT]   時間差點數: {len(chart_data['timediff_data'].get('cumulative_time_difference', []))}")
+                    print(f"[TIMEDIFF-CROSS-EVENT]   車手1: {chart_data['metadata']['drivers'][0]}")
+                    print(f"[TIMEDIFF-CROSS-EVENT]   車手2: {chart_data['metadata']['drivers'][1]}")
+                    
+                    # 直接調用圖表更新方法
+                    print(f"[TIMEDIFF-CROSS-EVENT] 開始更新圖表...")
+                    self._update_chart(chart_data)
+                    print(f"[TIMEDIFF-CROSS-EVENT] ✅ 跨賽事比較完成")
+                else:
+                    print(f"[TIMEDIFF-CROSS-EVENT] ⚠️ 數據中沒有 Timediff 遙測")
+            else:
+                print(f"[TIMEDIFF-CROSS-EVENT] ⚠️ 數據中沒有 telemetry_comparison")
+                
+        except Exception as e:
+            print(f"[ERROR] [TIMEDIFF-CROSS-EVENT] 數據處理失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _on_cross_event_load_error(self, error_msg: str) -> None:
+        """處理跨賽事比較數據載入錯誤"""
+        print(f"[TIMEDIFF-CROSS-EVENT] ❌ 數據載入失敗: {error_msg}")
+    
+    def update_from_shared_params(self, params: dict):
+        """
+        從全域共享參數池更新參數（跨模組同步功能）
+        
+        當用戶取消勾選"與主視窗同步車手與圈數"時，此方法會被主 GUI 調用
+        所有停用同步的視窗（Speed/RPM/Gear/Timediff 等）會共享同一組參數
+        
+        參數：
+        - params: 全域共享參數字典
+          {
+              'year1': str,      # 車手 1 年份
+              'race1': str,      # 車手 1 賽事
+              'session1': str,   # 車手 1 賽段
+              'driver1': str,    # 車手 1 代號
+              'lap1': int,       # 車手 1 圈數
+              'year2': str,      # 車手 2 年份
+              'race2': str,      # 車手 2 賽事
+              'session2': str,   # 車手 2 賽段
+              'driver2': str,    # 車手 2 代號
+              'lap2': int,       # 車手 2 圈數
+              'use_time_axis': bool  # 時間軸模式
+          }
+        """
+        if self._updating_from_shared:
+            print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ⚠️  正在更新中，防止遞迴")
+            return
+        
+        self._updating_from_shared = True
+        try:
+            print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 🔄 從全域共享池更新參數")
+            print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 收到參數: {params}")
+            
+            # 更新所有參數
+            year1 = params.get('year1', self.driver1_year)
+            race1 = params.get('race1', self.driver1_race)
+            session1 = params.get('session1', self.driver1_session)
+            driver1 = params.get('driver1', self.driver1)
+            lap1 = params.get('lap1', self.lap1)
+            
+            year2 = params.get('year2', self.driver2_year)
+            race2 = params.get('race2', self.driver2_race)
+            session2 = params.get('session2', self.driver2_session)
+            driver2 = params.get('driver2', self.driver2)
+            lap2 = params.get('lap2', self.lap2)
+            
+            use_time_axis = params.get('use_time_axis', self.use_time_axis)
+            
+            # 檢測是否為跨賽事比較
+            is_cross_event = (year1 != year2 or session1 != session2)
+            
+            if is_cross_event:
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 🌍 檢測到跨賽事比較:")
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS]   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS]   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+                
+                # 調用跨賽事比較方法
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 🔄 調用 update_cross_event_comparison")
+                success = self.update_cross_event_comparison(
+                    year1=year1, race1=race1, session1=session1, driver1=driver1, lap1=lap1,
+                    year2=year2, race2=race2, session2=session2, driver2=driver2, lap2=lap2,
+                    is_fastest=False,
+                    use_time_axis=use_time_axis
+                )
+                
+                if success:
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ✅ 跨賽事比較更新成功")
+                    # 更新資訊標籤顯示
+                    self._update_info_label()
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
+                else:
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ❌ 跨賽事比較更新失敗")
+            else:
+                # 標準模式（同一賽事比較）
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ✅ 標準比較模式:")
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS]   賽事: {year1} {race1} {session1}")
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS]   車手: {driver1} vs {driver2}")
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS]   圈數: 第{lap1}圈 vs 第{lap2}圈")
+                
+                # 調用標準更新方法
+                print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 🔄 調用 update_lap_parameters")
+                success = self.update_lap_parameters(
+                    year=year1,
+                    race=race1,
+                    session=session1,
+                    driver1=driver1,
+                    driver2=driver2,
+                    lap1=lap1,
+                    lap2=lap2,
+                    is_fastest=False,
+                    use_time_axis=use_time_axis
+                )
+                
+                if success:
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ✅ 標準參數更新成功")
+                    # 更新資訊標籤顯示
+                    self._update_info_label()
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
+                else:
+                    print(f"[TIMEDIFF_MDI] [SHARED_PARAMS] ❌ 標準參數更新失敗")
+                
+        except Exception as e:
+            print(f"[ERROR] [TIMEDIFF_MDI] [SHARED_PARAMS] 更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+        finally:
+            self._updating_from_shared = False
+    
+    def _update_info_label(self):
+        """更新參數資訊標籤（只在取消同步時顯示）"""
+        try:
+            # 檢查同步狀態
+            sync_enabled = getattr(self, 'sync_driver_lap_enabled', True)
+            
+            if sync_enabled:
+                # 同步模式：隱藏資訊標籤
+                if hasattr(self, 'info_label'):
+                    self.info_label.hide()
+                print(f"[TIMEDIFF_MDI] 同步模式：隱藏資訊標籤")
+                return
+            
+            # 取消同步模式：顯示資訊標籤
+            if hasattr(self, 'info_label'):
+                self.info_label.show()
+            
+            # 獲取當前參數
+            year1 = getattr(self, 'driver1_year', self.current_year)
+            race1 = getattr(self, 'driver1_race', self.current_race)
+            session1 = getattr(self, 'driver1_session', self.current_session)
+            driver1 = self.driver1
+            lap1 = self.lap1
+            
+            year2 = getattr(self, 'driver2_year', self.current_year)
+            race2 = getattr(self, 'driver2_race', self.current_race)
+            session2 = getattr(self, 'driver2_session', self.current_session)
+            driver2 = self.driver2
+            lap2 = self.lap2
+            
+            # 檢測是否為跨賽事比較
+            is_cross_event = (year1 != year2) or (session1 != session2)
+            
+            if is_cross_event:
+                # 跨賽事比較格式
+                driver1_label = tr("driver_1_info", "Driver 1:")
+                driver2_label = tr("driver_2_info", "Driver 2:")
+                versus_label = tr("versus", "vs")
+                info_text = (
+                    f"<b>{driver1_label}</b> {year1} {race1} {session1} - {driver1} Lap {lap1}  "
+                    f"<b style='color: #999;'>{versus_label}</b>  "
+                    f"<b>{driver2_label}</b> {year2} {race2} {session2} - {driver2} Lap {lap2}"
+                )
+            else:
+                # 標準比較格式
+                race_label = tr("race_info", "Race:")
+                driver_label = tr("driver_info", "Driver:")
+                versus_label = tr("versus", "vs")
+                info_text = (
+                    f"<b>{race_label}</b> {year1} {race1} {session1}  |  "
+                    f"<b>{driver_label}</b> {driver1} (Lap {lap1}) {versus_label} {driver2} (Lap {lap2})"
+                )
+            
+            self.info_label.setText(info_text)
+            print(f"[TIMEDIFF_MDI] 取消同步模式：顯示資訊標籤")
+            
+        except Exception as e:
+            print(f"[ERROR] [TIMEDIFF_MDI] 更新資訊標籤失敗: {e}")
+    
+    def get_module_type(self) -> str:
+        """返回模組類型"""
+        return "telemetry_timediff"
+    
+    def supports_sync(self) -> bool:
+        """返回模組是否支援與主視窗同步車手與圈數"""
+        return True
+    
+    def get_parameter_interface(self) -> Optional[QWidget]:
+        """返回參數設定介面（如果有的話）"""
+        return None
 
 # 主程式測試
 if __name__ == "__main__":

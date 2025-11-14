@@ -48,7 +48,8 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
     def load_distancediff_data(self, year: int, race: str, session: str, 
                               driver1: str, driver2: str = None, 
                               lap1: int = 1, lap2: int = None, 
-                              is_fastest_lap: bool = False) -> bool:
+                              is_fastest_lap: bool = False,
+                              use_time_axis: bool = False) -> bool:
         """
         載入距離差分析數據 - 向後兼容接口
         
@@ -61,6 +62,7 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
             lap1: 車手1圈數
             lap2: 車手2圈數
             is_fastest_lap: 是否為最快圈
+            use_time_axis: 是否使用時間軸模式 (預設: False)
             
         Returns:
             bool: 載入是否成功啟動
@@ -81,7 +83,7 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
         }
         
         # 調用新的載入方法
-        return self.load_telemetry_data(year, race, session, driver1, driver2, lap1, lap2, is_fastest_lap)
+        return self.load_telemetry_data(year, race, session, driver1, driver2, lap1, lap2, is_fastest_lap, use_time_axis)
     
     def load_distancediff_analysis_data(self, session_info: Dict[str, Any]) -> None:
         """

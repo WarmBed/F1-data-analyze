@@ -251,32 +251,56 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         # 強制重繪
         self.repaint()
     
-    def set_time_axis_mode(self, use_time: bool):
-        """設置時間軸模式
-        
-        Args:
-            use_time: True=使用時間軸, False=使用距離軸
+    def set_time_axis_mode(self, use_time_axis: bool):
         """
-        if self.use_time_axis == use_time:
-            return
+        設置時間軸模式
         
-        self.use_time_axis = use_time
+        Parameters:
+            use_time_axis: True = 使用時間軸, False = 使用距離軸
         
-        # 切換時重新計算 X 軸範圍
-        if use_time and self.driver1_time:
-            self.min_speed = min(self.driver1_time)
-            self.max_speed = max(self.driver1_time)
-        elif not use_time and self.speed_data:
-            self.min_speed = min(self.speed_data)
-            self.max_speed = max(self.speed_data)
+        ⚠️ 注意：Speed Diff 的數據結構與 Speed Analysis 不同
+        - Speed Analysis: self.distance_data (原始距離), self.speed_data (原始速度)
+        - Speed Diff: self.speed_data (實際是距離/時間), self.driver1_speeddiff (速度差)
+        """
+        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 6: SpeeddiffChartWidget.set_time_axis_mode 被調用")
+        print(f"🕒 [TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
+        print(f"🕒 [TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
+        print(f"[SPEEDDIFF_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
+        self.use_time_axis = use_time_axis
+        print(f"🕒 [TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
         
-        # 重置視圖範圍
-        self.view_min_speed = None
-        self.view_max_speed = None
+        # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
+        if use_time_axis and self.driver1_time:
+            # 使用時間數據計算範圍
+            all_time_values = list(self.driver1_time)
+            if self.driver2_time:
+                all_time_values.extend(self.driver2_time)
+            
+            self.min_distance = min(all_time_values)
+            self.max_distance = max(all_time_values)
+            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+        elif self.speed_data:
+            # ✅ 修復：使用 self.speed_data (實際存儲距離)，不是 self.distance_data
+            # Speed Diff 的 speed_data 變數實際存儲的是距離或時間軸數據
+            self.min_distance = min(self.speed_data)
+            self.max_distance = max(self.speed_data)
+            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+        
+        # 重置視圖狀態
+        self.view_min_distance = None
+        self.view_max_distance = None
+        self.view_min_speeddiff = None
+        self.view_max_speeddiff = None
+        self.show_fixed_line = False
+        self.fixed_distance_value = None
+        
+        print(f"🕒 [TIME_AXIS_DEBUG]   視圖狀態已重置")
+        print(f"🕒 [TIME_AXIS_DEBUG]   調用 update() 和 repaint()")
         
         # 強制重繪
         self.update()
         self.repaint()
+        print(f"🕒 [TIME_AXIS_DEBUG] ✅ set_time_axis_mode 完成")
     
     def reset_view(self):
         """重置視圖到原始範圍"""

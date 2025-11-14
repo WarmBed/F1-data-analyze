@@ -70,6 +70,10 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.driver1_time = []
         self.driver2_time = []
         
+        # ✅ 新增時間範圍屬性（用於時間軸模式）
+        self.min_time = 0
+        self.max_time = 100
+        
         # 數據範圍 - 剎車專用設置（百分比 0-100%）
         self.min_distance = 0
         self.max_distance = 5807
@@ -172,12 +176,21 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.driver1_time = driver1_time or []
         self.driver2_time = driver2_time or []
         
-        # 計算 X 軸數據範圍（根據時間軸模式選擇）
+        # ✅ 修復：無論當前時間軸狀態如何，都要計算並儲存時間範圍
+        # 原因：首次載入時 use_time_axis=False，但後續勾選時間軸需要這些範圍
         print(f"🕒 [TIME_AXIS] set_brake_data 計算 X 軸範圍")
         print(f"🕒 [TIME_AXIS]   當前 use_time_axis: {self.use_time_axis}")
+        print(f"🕒 [TIME_AXIS]   driver1_time 長度: {len(driver1_time) if driver1_time else 0}")
+        print(f"🕒 [TIME_AXIS]   driver2_time 長度: {len(driver2_time) if driver2_time else 0}")
         
-        if self.use_time_axis and (driver1_time or driver2_time):
-            # 時間軸模式：使用時間數據計算範圍
+        # 計算距離範圍（始終需要）
+        if distance:
+            self.min_distance = min(distance)
+            self.max_distance = max(distance)
+            print(f"[BRAKE_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
+        
+        # ✅ 計算時間範圍（如果有時間數據，必須計算，以便切換時使用）
+        if driver1_time or driver2_time:
             all_time_values = []
             if driver1_time:
                 all_time_values.extend(driver1_time)
@@ -185,14 +198,15 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                 all_time_values.extend(driver2_time)
             
             if all_time_values:
-                self.min_distance = min(all_time_values)
-                self.max_distance = max(all_time_values)
-                print(f"🕒 [TIME_AXIS]   使用時間數據計算範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
-        elif distance:
-            # 距離軸模式：使用距離數據計算範圍
-            self.min_distance = min(distance)
-            self.max_distance = max(distance)
-            print(f"[BRAKE_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
+                self.min_time = min(all_time_values)
+                self.max_time = max(all_time_values)
+                print(f"🕒 [TIME_AXIS]   時間範圍已計算: {self.min_time:.2f}s - {self.max_time:.2f}s")
+                
+                # 如果當前是時間軸模式，使用時間範圍
+                if self.use_time_axis:
+                    self.min_distance = self.min_time
+                    self.max_distance = self.max_time
+                    print(f"🕒 [TIME_AXIS]   ✅ 當前使用時間軸，X 軸範圍已設為時間範圍")
         
         all_brakes = []
         if driver1_brake:
@@ -244,21 +258,23 @@ class BrakeChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.use_time_axis = use_time_axis
         print(f"🕒 [TIME_AXIS]   更新後 self.use_time_axis: {self.use_time_axis}")
         
-        # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
-        if use_time_axis and self.driver1_time:
-            # 使用時間數據計算範圍
-            all_time_values = list(self.driver1_time)
-            if self.driver2_time:
-                all_time_values.extend(self.driver2_time)
-            
-            self.min_distance = min(all_time_values)
-            self.max_distance = max(all_time_values)
-            print(f"🕒 [TIME_AXIS]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
-        elif self.distance_data:
-            # 使用距離數據計算範圍
-            self.min_distance = min(self.distance_data)
-            self.max_distance = max(self.distance_data)
-            print(f"🕒 [TIME_AXIS]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+        # ✅ 修復：使用預先計算好的時間範圍（在 set_brake_data 中已計算）
+        if use_time_axis:
+            # 切換到時間軸模式：使用時間範圍
+            if hasattr(self, 'min_time') and hasattr(self, 'max_time'):
+                self.min_distance = self.min_time
+                self.max_distance = self.max_time
+                print(f"🕒 [TIME_AXIS]   ✅ 切換到時間軸，X 軸範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+            else:
+                print(f"🕒 [TIME_AXIS]   ⚠️ 時間範圍未計算，保持當前範圍")
+        else:
+            # 切換回距離軸模式：重新計算距離範圍
+            if self.distance_data:
+                self.min_distance = min(self.distance_data)
+                self.max_distance = max(self.distance_data)
+                print(f"🕒 [TIME_AXIS]   ✅ 切換到距離軸，X 軸範圍: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+            else:
+                print(f"🕒 [TIME_AXIS]   ⚠️ 距離數據不存在，保持當前範圍")
         
         # 重置視圖狀態
         self.view_min_distance = None

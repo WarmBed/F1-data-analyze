@@ -1833,24 +1833,36 @@ class DraggableTitleBar(QWidget):
         layout.addWidget(self.title_label)
         
         # [LINK] 接收同步控制按鈕
-        self.sync_btn = QPushButton("[LINK]")
+        self.sync_btn = QPushButton("S")
         self.sync_btn.setObjectName("SyncButton")
         self.sync_btn.setFixedSize(16, 16)
-        self.sync_btn.setToolTip("接收主程式同步：啟用 (綠色) / 停用 (紅色)")
+        self.sync_btn.setToolTip("接收主程式同步：啟用 (S) / 停用 (X)")
         self.sync_btn.setCheckable(True)
         self.sync_btn.setChecked(True)  # 預設啟用
         self.sync_btn.clicked.connect(self.toggle_x_sync)
         layout.addWidget(self.sync_btn)
         
         # [LINKAGE] 個別連動控制按鈕
-        self.linkage_btn = QPushButton("🔗")
+        self.linkage_btn = QPushButton("L")
         self.linkage_btn.setObjectName("LinkageButton")
         self.linkage_btn.setFixedSize(16, 16)
-        self.linkage_btn.setToolTip("個別連動：啟用 / 停用")
+        self.linkage_btn.setToolTip("個別連動：啟用 (L) / 停用 (X)")
         self.linkage_btn.setCheckable(True)
         self.linkage_btn.setChecked(True)  # 預設啟用
         self.linkage_btn.clicked.connect(self.toggle_individual_linkage)
         layout.addWidget(self.linkage_btn)
+        
+        # [DRIVER_LAP_SYNC] 車手與圈數同步控制按鈕（僅遙測模組）
+        self.driver_lap_sync_btn = QPushButton("D")
+        self.driver_lap_sync_btn.setObjectName("DriverLapSyncButton")
+        self.driver_lap_sync_btn.setFixedSize(16, 16)
+        self.driver_lap_sync_btn.setToolTip("與主視窗同步車手與圈數：啟用 (D) / 停用 (X)")
+        self.driver_lap_sync_btn.setCheckable(True)
+        self.driver_lap_sync_btn.setChecked(True)  # 預設啟用
+        self.driver_lap_sync_btn.clicked.connect(self.toggle_driver_lap_sync)
+        # 只有遙測模組才顯示此按鈕
+        self.driver_lap_sync_btn.setVisible(False)  # 預設隱藏，由模組控制
+        layout.addWidget(self.driver_lap_sync_btn)
         
         # 初始化顏色狀態 - 確保預設綠色正確顯示
         print(f"[GREEN] 接收同步初始化為啟動狀態")
@@ -2018,20 +2030,18 @@ class DraggableTitleBar(QWidget):
         self.title_label.setText(title)
     
     def toggle_x_sync(self):
-        """切換接收同步狀態 - 綠色=接收主程式同步，紅色=獨立運作"""
+        """切換接收同步狀態 - S=接收主程式同步，X=獨立運作"""
         is_enabled = self.sync_btn.isChecked()
         
         # 更新按鈕外觀和提示
         if is_enabled:
-            self.sync_btn.setText("[LINK]")
-            self.sync_btn.setToolTip("接收主程式同步：啟用 (綠色)")
-            # 強制更新為綠色樣式
-            print(f"[GREEN] 接收同步已啟動 - 將接收主程式參數")
+            self.sync_btn.setText("S")
+            self.sync_btn.setToolTip("接收主程式同步：啟用 (S)")
+            print(f"[SYNC] 接收同步已啟動 (S) - 將接收主程式參數")
         else:
-            self.sync_btn.setText("[LINK]̸")  # 帶斜線的連結圖示
-            self.sync_btn.setToolTip("接收主程式同步：停用 (紅色)")
-            # 強制更新為紅色樣式
-            print(f"🔴 接收同步已停用 - 獨立運作模式")
+            self.sync_btn.setText("X")
+            self.sync_btn.setToolTip("接收主程式同步：停用 (X)")
+            print(f"[SYNC] 接收同步已停用 (X) - 獨立運作模式")
         
         # 強制重新應用樣式確保顏色更新
         self.sync_btn.style().unpolish(self.sync_btn)
@@ -2053,13 +2063,13 @@ class DraggableTitleBar(QWidget):
         
         # 更新按鈕外觀和提示
         if is_enabled:
-            self.linkage_btn.setText("🔗")
-            self.linkage_btn.setToolTip("個別連動：啟用")
-            print(f"[LINKAGE] 個別連動已啟用")
+            self.linkage_btn.setText("L")
+            self.linkage_btn.setToolTip("個別連動：啟用 (L)")
+            print(f"[LINKAGE] 個別連動已啟用 (L)")
         else:
-            self.linkage_btn.setText("🔗❌")
-            self.linkage_btn.setToolTip("個別連動：停用")
-            print(f"[LINKAGE] 個別連動已停用")
+            self.linkage_btn.setText("X")
+            self.linkage_btn.setToolTip("個別連動：停用 (X)")
+            print(f"[LINKAGE] 個別連動已停用 (X)")
         
         # 強制重新應用樣式確保顏色更新
         self.linkage_btn.style().unpolish(self.linkage_btn)
@@ -2070,6 +2080,268 @@ class DraggableTitleBar(QWidget):
         if hasattr(self.parent_window, 'set_linkage_enabled'):
             self.parent_window.set_linkage_enabled(is_enabled)
             print(f"[LINKAGE] 視窗 '{self.parent_window.windowTitle()}' 個別連動狀態已更新: {is_enabled}")
+    
+    def toggle_driver_lap_sync(self):
+        """切換車手與圈數同步狀態（僅遙測模組）"""
+        is_enabled = self.driver_lap_sync_btn.isChecked()
+        
+        # 更新按鈕外觀和提示
+        if is_enabled:
+            self.driver_lap_sync_btn.setText("D")
+            self.driver_lap_sync_btn.setToolTip("與主視窗同步車手與圈數：啟用 (D)")
+            print(f"[DRIVER_LAP_SYNC] 車手與圈數同步已啟用 (D)")
+        else:
+            self.driver_lap_sync_btn.setText("X")
+            self.driver_lap_sync_btn.setToolTip("與主視窗同步車手與圈數：停用 (X)")
+            print(f"[DRIVER_LAP_SYNC] 車手與圈數同步已停用 (X)")
+        
+        # 強制重新應用樣式確保顏色更新
+        self.driver_lap_sync_btn.style().unpolish(self.driver_lap_sync_btn)
+        self.driver_lap_sync_btn.style().polish(self.driver_lap_sync_btn)
+        self.driver_lap_sync_btn.update()
+        
+        # 通知分析模組更新同步狀態
+        if hasattr(self.parent_window, 'analysis_module'):
+            analysis_module = self.parent_window.analysis_module
+            if hasattr(analysis_module, 'sync_driver_lap_enabled'):
+                analysis_module.sync_driver_lap_enabled = is_enabled
+                logger.info(f"[DRIVER_LAP_SYNC] 分析模組同步狀態已更新: {is_enabled}")
+                
+                # 如果有設定對話框，同步更新 checkbox 狀態
+                if hasattr(self.parent_window, 'settings_dialog') and self.parent_window.settings_dialog:
+                    if hasattr(self.parent_window.settings_dialog, 'sync_driver_lap_checkbox'):
+                        # 阻止信號避免遞迴
+                        self.parent_window.settings_dialog.sync_driver_lap_checkbox.blockSignals(True)
+                        self.parent_window.settings_dialog.sync_driver_lap_checkbox.setChecked(is_enabled)
+                        self.parent_window.settings_dialog.sync_driver_lap_checkbox.blockSignals(False)
+                        logger.info(f"[DRIVER_LAP_SYNC] 設定對話框 checkbox 已同步更新")
+                        
+                        # 如果 Settings 對話框打開，更新控制項的可編輯性
+                        if hasattr(self.parent_window.settings_dialog, '_update_driver_lap_controls_editability'):
+                            self.parent_window.settings_dialog._update_driver_lap_controls_editability()
+                
+                # 根據同步狀態載入對應的資料（無論 Settings 對話框是否打開）
+                if not is_enabled:
+                    logger.info(f"[DRIVER_LAP_SYNC] 同步已停用，載入全域參數池")
+                    # 如果 Settings 對話框打開，通過它載入參數（只更新 UI）
+                    if hasattr(self.parent_window, 'settings_dialog') and self.parent_window.settings_dialog:
+                        if hasattr(self.parent_window.settings_dialog, '_load_shared_params_to_ui'):
+                            logger.info(f"[DRIVER_LAP_SYNC] Settings 對話框打開，更新 UI 控制項")
+                            self.parent_window.settings_dialog._load_shared_params_to_ui()
+                    
+                    # 無論 Settings 對話框是否打開，都要載入資料
+                    logger.info(f"[DRIVER_LAP_SYNC] 載入全域參數池資料")
+                    self._reload_data_with_shared_params()
+                else:
+                    logger.info(f"[DRIVER_LAP_SYNC] 同步已啟用，載入主視窗資料")
+                    # 觸發資料重新載入（使用主視窗參數）
+                    self._reload_data_with_main_window_params()
+    
+    def _reload_data_with_main_window_params(self):
+        """重新載入資料（使用主視窗參數）"""
+        try:
+            logger.info(f"[RELOAD_DATA] 開始重新載入資料（同步模式）")
+            
+            # 檢查是否有 Settings 對話框且是遙測模組
+            if not hasattr(self.parent_window, 'main_window'):
+                logger.warning(f"[RELOAD_DATA] 找不到 main_window")
+                return
+            
+            main_window = self.parent_window.main_window
+            
+            # 從主視窗讀取所有參數
+            main_driver1 = main_window.driver1_combo.currentText()
+            main_driver2_data = main_window.driver2_combo.currentData()
+            main_driver2 = main_window.driver2_combo.currentText() if main_driver2_data is not None else None
+            main_lap1 = main_window.lap1_spinbox.value()
+            main_lap2 = main_window.lap2_spinbox.value()
+            main_is_fastest = main_window.fastest_lap_checkbox.isChecked()
+            
+            logger.info(f"[RELOAD_DATA] 主視窗參數:")
+            logger.info(f"[RELOAD_DATA]   車手 1: {main_driver1}")
+            logger.info(f"[RELOAD_DATA]   車手 2: {main_driver2}")
+            logger.info(f"[RELOAD_DATA]   圈數 1: {main_lap1}")
+            logger.info(f"[RELOAD_DATA]   圈數 2: {main_lap2}")
+            logger.info(f"[RELOAD_DATA]   最速圈: {main_is_fastest}")
+            
+            # 檢查是否有打開的 Settings 對話框
+            if hasattr(self.parent_window, 'settings_dialog') and self.parent_window.settings_dialog:
+                # 如果 Settings 對話框打開，使用它的 _apply_driver_lap_settings 方法
+                logger.info(f"[RELOAD_DATA] 使用 Settings 對話框的 _apply_driver_lap_settings()")
+                self.parent_window.settings_dialog._apply_driver_lap_settings(
+                    main_driver1, main_driver2, main_lap1, main_lap2, main_is_fastest
+                )
+            else:
+                # Settings 對話框未打開，直接調用分析模組的載入方法
+                logger.info(f"[RELOAD_DATA] Settings 對話框未打開，直接調用分析模組")
+                
+                if hasattr(self.parent_window, 'analysis_module'):
+                    analysis_module = self.parent_window.analysis_module
+                    
+                    # 獲取主視窗的 year, race, session
+                    year = main_window.year_combo.currentText()
+                    race_display = main_window.race_combo.currentText()
+                    race = main_window._get_race_key_from_display(race_display)
+                    session = main_window.session_combo.currentText()
+                    
+                    # 獲取時間軸設定
+                    use_time_axis = getattr(analysis_module, 'use_time_axis', False)
+                    
+                    logger.info(f"[RELOAD_DATA] 賽事參數: {year} {race} {session}")
+                    logger.info(f"[RELOAD_DATA] 時間軸: {use_time_axis}")
+                    
+                    # 優先使用 update_lap_parameters 方法（完整的參數更新 + 資料載入）
+                    if hasattr(analysis_module, 'update_lap_parameters'):
+                        logger.info(f"[RELOAD_DATA] 調用 update_lap_parameters()")
+                        success = analysis_module.update_lap_parameters(
+                            year=year,
+                            race=race,
+                            session=session,
+                            driver1=main_driver1,
+                            driver2=main_driver2,
+                            lap1=main_lap1,
+                            lap2=main_lap2,
+                            is_fastest=main_is_fastest,
+                            use_time_axis=use_time_axis
+                        )
+                        if success:
+                            logger.info(f"[RELOAD_DATA] ✅ update_lap_parameters 執行成功")
+                        else:
+                            logger.warning(f"[RELOAD_DATA] ⚠️ update_lap_parameters 執行失敗")
+                    # 備用方案：使用 load_speed_data 或 load_data
+                    elif hasattr(analysis_module, 'load_speed_data'):
+                        logger.info(f"[RELOAD_DATA] 調用 load_speed_data()")
+                        analysis_module.load_speed_data(
+                            year=year, race=race, session=session,
+                            driver1=main_driver1, driver2=main_driver2, lap_number=main_lap1
+                        )
+                    elif hasattr(analysis_module, 'load_data'):
+                        logger.info(f"[RELOAD_DATA] 調用 load_data()")
+                        analysis_module.load_data(
+                            year=year, race=race, session=session,
+                            driver1=main_driver1, driver2=main_driver2, lap_number=main_lap1
+                        )
+                    else:
+                        logger.warning(f"[RELOAD_DATA] 分析模組沒有 load_data 方法")
+                else:
+                    logger.warning(f"[RELOAD_DATA] 找不到 analysis_module")
+                
+        except Exception as e:
+            logger.error(f"[RELOAD_DATA] 重新載入資料失敗: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+    
+    def _reload_data_with_shared_params(self):
+        """重新載入資料（使用全域參數池）"""
+        try:
+            logger.info(f"[RELOAD_SHARED] 開始重新載入資料（獨立模式）")
+            
+            # 獲取主視窗以存取全域參數池
+            if not hasattr(self.parent_window, 'main_window'):
+                logger.warning(f"[RELOAD_SHARED] 找不到 main_window")
+                return
+            
+            main_window = self.parent_window.main_window
+            
+            # 檢查全域參數池是否存在
+            if not hasattr(main_window, 'shared_independent_params'):
+                logger.warning(f"[RELOAD_SHARED] 主視窗沒有 shared_independent_params")
+                return
+            
+            shared_params = main_window.shared_independent_params
+            
+            logger.info(f"[RELOAD_SHARED] 全域參數池內容:")
+            for key, value in shared_params.items():
+                logger.info(f"[RELOAD_SHARED]   {key}: {value}")
+            
+            # 檢查是否為空（所有值都是 None）
+            if all(v is None for k, v in shared_params.items() if k != 'use_time_axis'):
+                logger.warning(f"[RELOAD_SHARED] 全域參數池為空，無法載入資料")
+                return
+            
+            # 讀取參數
+            year1 = shared_params.get('year1')
+            race1 = shared_params.get('race1')
+            session1 = shared_params.get('session1')
+            driver1 = shared_params.get('driver1')
+            lap1 = shared_params.get('lap1', 1)
+            
+            year2 = shared_params.get('year2')
+            race2 = shared_params.get('race2')
+            session2 = shared_params.get('session2')
+            driver2 = shared_params.get('driver2')
+            lap2 = shared_params.get('lap2', 1)
+            
+            use_time_axis = shared_params.get('use_time_axis', False)
+            
+            logger.info(f"[RELOAD_SHARED] 參數: {year1} {race1} {session1}")
+            logger.info(f"[RELOAD_SHARED] 車手 1: {driver1} (Lap {lap1})")
+            logger.info(f"[RELOAD_SHARED] 車手 2: {driver2} (Lap {lap2}) - {year2} {race2} {session2}")
+            
+            # 檢測是否為跨賽段/跨賽事比較
+            is_cross_event = (year1 != year2) or (race1 != race2) or (session1 != session2)
+            logger.info(f"[RELOAD_SHARED] 跨賽段/賽事比較: {is_cross_event}")
+            
+            # 調用分析模組的載入方法
+            if hasattr(self.parent_window, 'analysis_module'):
+                analysis_module = self.parent_window.analysis_module
+                
+                # 如果是跨賽段比較，使用 update_cross_event_comparison
+                if is_cross_event and hasattr(analysis_module, 'update_cross_event_comparison'):
+                    logger.info(f"[RELOAD_SHARED] 調用 update_cross_event_comparison() 處理跨賽段比較")
+                    is_fastest = (lap1 == 99 or lap2 == 99)
+                    success = analysis_module.update_cross_event_comparison(
+                        year1=str(year1), race1=race1, session1=session1, driver1=driver1, lap1=lap1,
+                        year2=str(year2), race2=race2, session2=session2, driver2=driver2, lap2=lap2,
+                        is_fastest=is_fastest,
+                        use_time_axis=use_time_axis
+                    )
+                    if success:
+                        logger.info(f"[RELOAD_SHARED] ✅ 跨賽段比較載入成功")
+                    else:
+                        logger.warning(f"[RELOAD_SHARED] ⚠️ 跨賽段比較載入失敗")
+                # 單一賽段比較，使用 update_lap_parameters
+                elif hasattr(analysis_module, 'update_lap_parameters'):
+                    logger.info(f"[RELOAD_SHARED] 調用 update_lap_parameters() 處理單一賽段比較")
+                    is_fastest = (lap1 == 99 or lap2 == 99)
+                    success = analysis_module.update_lap_parameters(
+                        year=str(year1),
+                        race=race1,
+                        session=session1,
+                        driver1=driver1,
+                        driver2=driver2,
+                        lap1=lap1,
+                        lap2=lap2,
+                        is_fastest=is_fastest,
+                        use_time_axis=use_time_axis
+                    )
+                    if success:
+                        logger.info(f"[RELOAD_SHARED] ✅ update_lap_parameters 執行成功")
+                    else:
+                        logger.warning(f"[RELOAD_SHARED] ⚠️ update_lap_parameters 執行失敗")
+                # 備用方案：使用 load_speed_data 或 load_data
+                elif hasattr(analysis_module, 'load_speed_data'):
+                    logger.info(f"[RELOAD_SHARED] 調用 load_speed_data()")
+                    analysis_module.load_speed_data(
+                        year=str(year1), race=race1, session=session1,
+                        driver1=driver1, driver2=driver2, lap_number=lap1
+                    )
+                elif hasattr(analysis_module, 'load_data'):
+                    logger.info(f"[RELOAD_SHARED] 調用 load_data()")
+                    analysis_module.load_data(
+                        year=str(year1), race=race1, session=session1,
+                        driver1=driver1, driver2=driver2, lap_number=lap1
+                    )
+                else:
+                    logger.warning(f"[RELOAD_SHARED] 分析模組沒有 load_data 方法")
+            else:
+                logger.warning(f"[RELOAD_SHARED] 找不到 analysis_module")
+                
+        except Exception as e:
+            logger.error(f"[RELOAD_SHARED] 重新載入資料失敗: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+
     
     def set_linkage_button_state(self, enabled: bool):
         """設置連動按鈕狀態（由主視窗總開關調用）"""
@@ -2658,6 +2930,30 @@ class PopoutSubWindow(QMdiSubWindow):
                 background-color: #BDBDBD;  /* 灰色懸停 */
             }
             
+            /* 車手與圈數同步按鈕 - 紫色主題（遙測模組專用） */
+            #DriverLapSyncButton {
+                background-color: #9C27B0;  /* 紫色 - 同步啟用 */
+                color: white;
+                border: 1px solid #7B1FA2;
+                border-radius: 3px;
+                font-size: 8px;
+                font-weight: bold;
+                text-align: center;
+            }
+            #DriverLapSyncButton:hover {
+                background-color: #AB47BC;  /* 紫色懸停 */
+            }
+            #DriverLapSyncButton:pressed {
+                background-color: #6A1B9A;  /* 紫色按下 */
+            }
+            #DriverLapSyncButton:!checked {
+                background-color: #9E9E9E;  /* 灰色 - 同步停用 */
+                border: 1px solid #757575;
+            }
+            #DriverLapSyncButton:!checked:hover {
+                background-color: #BDBDBD;  /* 灰色懸停 */
+            }
+            
             /* 視窗控制按鈕 - 與主視窗保持一致 */
             #WindowControlButton {
                 background-color: #F0F0F0;
@@ -2967,6 +3263,15 @@ class PopoutSubWindow(QMdiSubWindow):
         # 創建可拖拽的自定義標題欄
         self.title_bar = DraggableTitleBar(self, self.windowTitle())
         wrapper_layout.addWidget(self.title_bar)
+        
+        # [DRIVER_LAP_SYNC] 檢查是否為遙測模組，顯示車手與圈數同步按鈕
+        if self.analysis_module and hasattr(self.analysis_module, 'sync_driver_lap_enabled'):
+            # 這是遙測模組（速度/RPM/煞車/油門），顯示專用按鈕
+            self.title_bar.driver_lap_sync_btn.setVisible(True)
+            # 從模組讀取初始同步狀態
+            initial_sync_state = getattr(self.analysis_module, 'sync_driver_lap_enabled', True)
+            self.title_bar.driver_lap_sync_btn.setChecked(initial_sync_state)
+            print(f"[DRIVER_LAP_SYNC] 遙測模組檢測到，顯示車手與圈數同步按鈕，初始狀態: {initial_sync_state}")
         
         # 確保標題欄使用正確的 QSS
         self.title_bar.setStyleSheet(self.styleSheet())
@@ -4243,8 +4548,16 @@ class PopoutSubWindow(QMdiSubWindow):
             
     def show_settings_dialog(self):
         """顯示設定對話框"""
-        dialog = WindowSettingsDialog(self)
-        dialog.exec_()
+        # 保存對話框引用以便實時同步
+        if not hasattr(self, 'settings_dialog') or self.settings_dialog is None:
+            self.settings_dialog = WindowSettingsDialog(self)
+        
+        # 顯示對話框
+        result = self.settings_dialog.exec_()
+        
+        # 對話框關閉後清理引用（避免內存洩漏）
+        if result == QDialog.Rejected:
+            self.settings_dialog = None
 
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數變更通知"""
@@ -5443,9 +5756,18 @@ class WindowSettingsDialog(QDialog):
         self.main_window = parent_window.main_window if hasattr(parent_window, 'main_window') else parent_window
         self._season_event_lookup: Dict[str, SeasonEvent] = {}
         self._display_to_race_key: Dict[str, str] = {}
-        self.setWindowTitle("Window Settings")
+        self.setWindowTitle(tr("window_settings_title", "Window Settings"))
         self.setObjectName("SettingsDialog")
-        self.setFixedSize(400, 300)
+        
+        # 判斷是否為遙測模組（需要車手/圈數控制）
+        self.is_telemetry_module = self._check_if_telemetry_module()
+        
+        # 根據模組類型調整對話框尺寸
+        if self.is_telemetry_module:
+            self.setFixedSize(500, 750)  # 遙測模組需要更大的對話框（支援跨賽事比較）
+        else:
+            self.setFixedSize(400, 300)  # 其他模組維持原尺寸
+        
         self.setModal(True)
         
         # 設置對話框佈局
@@ -5454,12 +5776,12 @@ class WindowSettingsDialog(QDialog):
         layout.setSpacing(10)
         
         # 標題
-        title_label = QLabel("[TOOL] 視窗分析設定")
+        title_label = QLabel(tr("window_settings_dialog_title", "[TOOL] Window Analysis Settings"))
         title_label.setObjectName("DialogTitle")
         layout.addWidget(title_label)
         
         # 連動控制區域
-        sync_group = QGroupBox("視窗同步控制")
+        sync_group = QGroupBox(tr("window_sync_control_group", "Window Sync Control"))
         sync_group.setObjectName("SettingsGroup")
         sync_layout = QVBoxLayout(sync_group)
         
@@ -5477,12 +5799,12 @@ class WindowSettingsDialog(QDialog):
         layout.addWidget(sync_group)
         
         # 分析參數區域
-        params_group = QGroupBox("分析參數")
+        params_group = QGroupBox(tr("analysis_params_group", "Analysis Parameters"))
         params_group.setObjectName("SettingsGroup")
         params_layout = QGridLayout(params_group)
         
         # 年份選擇器
-        params_layout.addWidget(QLabel("年份:"), 0, 0)
+        params_layout.addWidget(QLabel(tr("year_label", "Year:")), 0, 0)
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("AnalysisComboBox")
         self.year_combo.addItems([str(year) for year in range(2020, 2026)])
@@ -5497,7 +5819,7 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(self.year_combo, 0, 1)
         
         # 賽事選擇器
-        params_layout.addWidget(QLabel("賽事:"), 1, 0)
+        params_layout.addWidget(QLabel(tr("race_label", "Race:")), 1, 0)
         self.race_combo = QComboBox()
         self.race_combo.setObjectName("AnalysisComboBox")
         # [TOOL] 修復: 使用動態賽事列表而非硬編碼
@@ -5512,7 +5834,7 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(self.race_combo, 1, 1)
         
         # 賽段選擇器
-        params_layout.addWidget(QLabel("賽段:"), 2, 0)
+        params_layout.addWidget(QLabel(tr("session_label", "Session:")), 2, 0)
         self.session_combo = QComboBox()
         self.session_combo.setObjectName("AnalysisComboBox")
         # [TOOL] 修復: 優先從子視窗本地參數獲取，其次從主視窗獲取
@@ -5538,6 +5860,10 @@ class WindowSettingsDialog(QDialog):
         params_layout.addWidget(self.session_combo, 2, 1)
         
         layout.addWidget(params_group)
+        
+        # [TOOL] 新增: 遙測模組專用 - 車手與圈數同步控制
+        if self.is_telemetry_module:
+            self._setup_driver_lap_controls(layout)
         
         # [TOOL] 新增: 根據同步狀態設置分析參數的可編輯性
         self.update_analysis_params_editability()
@@ -5571,9 +5897,9 @@ class WindowSettingsDialog(QDialog):
         
         # 更新提示文字
         if is_sync_enabled:
-            self.year_combo.setToolTip("已啟用同步接收，參數由主程式控制")
-            self.race_combo.setToolTip("已啟用同步接收，參數由主程式控制")
-            self.session_combo.setToolTip("已啟用同步接收，參數由主程式控制")
+            self.year_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
+            self.race_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
+            self.session_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
             print(f"[LOCK] [SETTING] 分析參數已鎖定 - 接收主程式同步")
         else:
             self.year_combo.setToolTip(tr("year_tooltip", "Set year manually"))
@@ -5880,6 +6206,701 @@ class WindowSettingsDialog(QDialog):
             self.race_combo.setCurrentIndex(0)
 
         self._update_session_combo()
+    
+    def _check_if_telemetry_module(self) -> bool:
+        """檢查當前模組是否為遙測分析模組（需要車手/圈數控制）"""
+        try:
+            # 方法1: 檢查父視窗的分析模組
+            if hasattr(self.parent_window, 'analysis_module'):
+                analysis_module = self.parent_window.analysis_module
+                if hasattr(analysis_module, 'analysis_type'):
+                    analysis_type = analysis_module.analysis_type
+                    # 定義遙測模組類型列表（支援大小寫變體以兼容 Workspace 序列化）
+                    telemetry_types = [
+                        'speed', 'rpm', 'throttle', 'gear', 
+                        'acceleration', 'speeddiff', 'Speeddiff',  # 同時支援小寫和大寫S
+                        'timediff', 'Timediff',  # 🆕 添加 Time Diff 支援
+                        'distancediff', 'brake', 'steering', 'drs'
+                    ]
+                    is_telemetry = analysis_type in telemetry_types
+                    print(f"[WINDOW_SETTINGS] 模組類型: {analysis_type}, 是否為遙測模組: {is_telemetry}")
+                    return is_telemetry
+            
+            # 方法2: 檢查父視窗的 _analysis_type 屬性
+            if hasattr(self.parent_window, '_analysis_type'):
+                analysis_type = self.parent_window._analysis_type
+                telemetry_types = [
+                    'speed', 'rpm', 'throttle', 'gear',
+                    'acceleration', 'speeddiff', 'Speeddiff',  # 同時支援小寫和大寫S
+                    'timediff', 'Timediff',  # 🆕 添加 Time Diff 支援
+                    'distancediff', 'brake', 'steering', 'drs'
+                ]
+                is_telemetry = analysis_type in telemetry_types
+                print(f"[WINDOW_SETTINGS] 模組類型 (_analysis_type): {analysis_type}, 是否為遙測模組: {is_telemetry}")
+                return is_telemetry
+            
+            print(f"[WINDOW_SETTINGS] 無法判斷模組類型，預設為非遙測模組")
+            return False
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 檢查模組類型失敗: {e}")
+            return False
+    
+    def _setup_driver_lap_controls(self, parent_layout):
+        """設置車手與圈數控制（僅遙測模組） - 支援跨賽事比較"""
+        try:
+            from PyQt5.QtGui import QIntValidator
+            
+            # 車手與圈數同步控制分組
+            driver_lap_group = QGroupBox(tr("driver_lap_sync_control", "車手與圈數同步控制"))
+            driver_lap_group.setObjectName("SettingsGroup")
+            driver_lap_layout = QVBoxLayout(driver_lap_group)
+            
+            # 同步控制勾選框
+            self.sync_driver_lap_checkbox = QCheckBox(tr("sync_driver_lap_checkbox", "[LINK] 與主視窗同步車手與圈數"))
+            self.sync_driver_lap_checkbox.setObjectName("SyncDriverLapCheckbox")
+            
+            # 從分析模組讀取同步狀態（如果存在）
+            if hasattr(self.parent_window, 'analysis_module'):
+                analysis_module = self.parent_window.analysis_module
+                current_sync_state = getattr(analysis_module, 'sync_driver_lap_enabled', True)
+                self.sync_driver_lap_checkbox.setChecked(current_sync_state)
+                logger.info(f"[WINDOW_SETTINGS] 從分析模組載入同步狀態: {current_sync_state}")
+            else:
+                self.sync_driver_lap_checkbox.setChecked(True)  # 預設啟用同步
+            
+            self.sync_driver_lap_checkbox.setToolTip(tr("sync_driver_lap_tooltip", "勾選時車手與圈數由主視窗控制，取消勾選可手動設定"))
+            self.sync_driver_lap_checkbox.toggled.connect(self._on_sync_driver_lap_toggled)
+            logger.info(f"[WINDOW_SETTINGS] 車手與圈數同步 checkbox 信號已連接到 _on_sync_driver_lap_toggled")
+            driver_lap_layout.addWidget(self.sync_driver_lap_checkbox)
+            
+            # 車手與圈數控制區域
+            controls_widget = QWidget()
+            controls_layout = QGridLayout(controls_widget)
+            controls_layout.setContentsMargins(10, 10, 10, 10)
+            controls_layout.setSpacing(6)
+            
+            # === 車手 1 控制 ===
+            row = 0
+            controls_layout.addWidget(QLabel(tr("driver1_section", "車手 1:")), row, 0, 1, 5)
+            
+            row += 1
+            # 年份
+            controls_layout.addWidget(QLabel(tr("year_label", "年份:")), row, 0)
+            self.driver1_year_combo = QComboBox()
+            self.driver1_year_combo.setObjectName("YearComboBox")
+            self.driver1_year_combo.addItems([str(y) for y in range(2020, 2026)])
+            self.driver1_year_combo.setMinimumWidth(70)
+            self.driver1_year_combo.currentTextChanged.connect(self._on_driver1_year_changed)
+            controls_layout.addWidget(self.driver1_year_combo, row, 1)
+            
+            # 賽事
+            controls_layout.addWidget(QLabel(tr("race_label", "賽事:")), row, 2)
+            self.driver1_race_combo = QComboBox()
+            self.driver1_race_combo.setObjectName("RaceComboBox")
+            self.driver1_race_combo.setMinimumWidth(120)
+            self.driver1_race_combo.currentIndexChanged.connect(self._on_driver1_race_changed)
+            controls_layout.addWidget(self.driver1_race_combo, row, 3)
+            
+            # 賽段
+            controls_layout.addWidget(QLabel(tr("session_label", "賽段:")), row, 4)
+            self.driver1_session_combo = QComboBox()
+            self.driver1_session_combo.setObjectName("SessionComboBox")
+            self.driver1_session_combo.setMinimumWidth(50)
+            controls_layout.addWidget(self.driver1_session_combo, row, 5)
+            
+            row += 1
+            # 車手
+            controls_layout.addWidget(QLabel(tr("driver_label", "車手:")), row, 0)
+            self.driver1_combo = QComboBox()
+            self.driver1_combo.setObjectName("DriverComboBox")
+            self.driver1_combo.setMinimumWidth(80)
+            self._populate_driver_combo(self.driver1_combo)
+            controls_layout.addWidget(self.driver1_combo, row, 1)
+            
+            # 圈數
+            controls_layout.addWidget(QLabel(tr("lap_label", "圈數:")), row, 2)
+            self.lap1_input = QLineEdit()
+            self.lap1_input.setObjectName("LapInput")
+            self.lap1_input.setText("1")
+            self.lap1_input.setMaximumWidth(50)
+            self.lap1_input.setValidator(QIntValidator(1, 999))
+            controls_layout.addWidget(self.lap1_input, row, 3)
+            
+            # 最速圈
+            self.fastest_lap1_checkbox = QCheckBox(tr("fastest_lap_label", "最速圈"))
+            self.fastest_lap1_checkbox.setObjectName("FastestLapCheckbox")
+            self.fastest_lap1_checkbox.stateChanged.connect(lambda state: self._on_fastest_lap_changed(state, 1))
+            controls_layout.addWidget(self.fastest_lap1_checkbox, row, 4, 1, 2)
+            
+            # === 分隔線 ===
+            row += 1
+            separator = QFrame()
+            separator.setFrameShape(QFrame.HLine)
+            separator.setFrameShadow(QFrame.Sunken)
+            controls_layout.addWidget(separator, row, 0, 1, 6)
+            
+            # === 車手 2 控制 ===
+            row += 1
+            controls_layout.addWidget(QLabel(tr("driver2_section", "車手 2:")), row, 0, 1, 5)
+            
+            row += 1
+            # 年份
+            controls_layout.addWidget(QLabel(tr("year_label", "年份:")), row, 0)
+            self.driver2_year_combo = QComboBox()
+            self.driver2_year_combo.setObjectName("YearComboBox")
+            self.driver2_year_combo.addItems([str(y) for y in range(2020, 2026)])
+            self.driver2_year_combo.setMinimumWidth(70)
+            self.driver2_year_combo.currentTextChanged.connect(self._on_driver2_year_changed)
+            controls_layout.addWidget(self.driver2_year_combo, row, 1)
+            
+            # 賽事（自動同步車手 1，灰色不可編輯）
+            controls_layout.addWidget(QLabel(tr("race_label", "賽事:")), row, 2)
+            self.driver2_race_combo = QComboBox()
+            self.driver2_race_combo.setObjectName("RaceComboBox")
+            self.driver2_race_combo.setMinimumWidth(120)
+            self.driver2_race_combo.setEnabled(False)  # 強制灰色
+            controls_layout.addWidget(self.driver2_race_combo, row, 3)
+            
+            # 賽段
+            controls_layout.addWidget(QLabel(tr("session_label", "賽段:")), row, 4)
+            self.driver2_session_combo = QComboBox()
+            self.driver2_session_combo.setObjectName("SessionComboBox")
+            self.driver2_session_combo.setMinimumWidth(50)
+            controls_layout.addWidget(self.driver2_session_combo, row, 5)
+            
+            row += 1
+            # 車手
+            controls_layout.addWidget(QLabel(tr("driver_label", "車手:")), row, 0)
+            self.driver2_combo = QComboBox()
+            self.driver2_combo.setObjectName("DriverComboBox")
+            self.driver2_combo.setMinimumWidth(80)
+            self._populate_driver_combo(self.driver2_combo)
+            controls_layout.addWidget(self.driver2_combo, row, 1)
+            
+            # 圈數
+            controls_layout.addWidget(QLabel(tr("lap_label", "圈數:")), row, 2)
+            self.lap2_input = QLineEdit()
+            self.lap2_input.setObjectName("LapInput")
+            self.lap2_input.setText("1")
+            self.lap2_input.setMaximumWidth(50)
+            self.lap2_input.setValidator(QIntValidator(1, 999))
+            controls_layout.addWidget(self.lap2_input, row, 3)
+            
+            # 最速圈
+            self.fastest_lap2_checkbox = QCheckBox(tr("fastest_lap_label", "最速圈"))
+            self.fastest_lap2_checkbox.setObjectName("FastestLapCheckbox")
+            self.fastest_lap2_checkbox.stateChanged.connect(lambda state: self._on_fastest_lap_changed(state, 2))
+            controls_layout.addWidget(self.fastest_lap2_checkbox, row, 4, 1, 2)
+            
+            driver_lap_layout.addWidget(controls_widget)
+            
+            # === 時間軸控制 ===
+            self.use_time_axis_checkbox = QCheckBox(tr("use_time_axis_checkbox", "使用時間軸 (Use Time Axis)"))
+            self.use_time_axis_checkbox.setObjectName("UseTimeAxisCheckbox")
+            
+            # 從主視窗或分析模組載入時間軸狀態
+            if hasattr(self.main_window, 'use_time_axis_checkbox'):
+                current_time_axis_state = self.main_window.use_time_axis_checkbox.isChecked()
+                self.use_time_axis_checkbox.setChecked(current_time_axis_state)
+                print(f"[WINDOW_SETTINGS] 從主視窗載入時間軸狀態: {current_time_axis_state}")
+            elif hasattr(self.parent_window, 'analysis_module'):
+                analysis_module = self.parent_window.analysis_module
+                current_time_axis_state = getattr(analysis_module, 'use_time_axis', False)
+                self.use_time_axis_checkbox.setChecked(current_time_axis_state)
+                print(f"[WINDOW_SETTINGS] 從分析模組載入時間軸狀態: {current_time_axis_state}")
+            else:
+                self.use_time_axis_checkbox.setChecked(False)  # 預設不使用時間軸
+            
+            self.use_time_axis_checkbox.setToolTip(tr("use_time_axis_tooltip", "切換橫軸為時間軸（秒）或距離軸（米）"))
+            driver_lap_layout.addWidget(self.use_time_axis_checkbox)
+            
+            parent_layout.addWidget(driver_lap_group)
+            
+            # 從父視窗的分析模組獲取當前車手和圈數
+            self._load_current_driver_lap_settings()
+            
+            # 初始化控制項的可編輯性
+            self._update_driver_lap_controls_editability()
+            
+            print(f"[OK] [WINDOW_SETTINGS] 車手與圈數控制已設置（支援跨賽事比較）")
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 設置車手與圈數控制失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _populate_driver_combo(self, combo: QComboBox):
+        """填充車手下拉選單"""
+        try:
+            # 從主視窗獲取車手列表
+            if hasattr(self.main_window, 'driver1_combo') and self.main_window.driver1_combo:
+                # 複製主視窗的車手列表
+                for i in range(self.main_window.driver1_combo.count()):
+                    driver_text = self.main_window.driver1_combo.itemText(i)
+                    driver_data = self.main_window.driver1_combo.itemData(i)
+                    combo.addItem(driver_text, driver_data)
+            else:
+                # 預設車手列表
+                default_drivers = ["VER", "LEC", "HAM", "PER", "SAI", "RUS", "NOR", "PIA", "ALO", "STR"]
+                combo.addItems(default_drivers)
+                
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手列表失敗: {e}")
+            # 使用最小預設列表
+            combo.addItems(["VER", "LEC", "HAM"])
+    
+    def _load_current_driver_lap_settings(self):
+        """從分析模組載入當前的車手和圈數設定"""
+        try:
+            # 判斷是否勾選同步
+            sync_enabled = self.sync_driver_lap_checkbox.isChecked()
+            
+            # 決定資料來源：同步時從主視窗，否則從分析模組
+            if sync_enabled:
+                # 從主視窗載入
+                source_year = str(self.main_window.year_combo.currentText()) if hasattr(self.main_window, 'year_combo') else "2024"
+                source_race = self.main_window.race_combo.currentText() if hasattr(self.main_window, 'race_combo') else ""
+                source_session = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else "R"
+                source_driver1 = self.main_window.driver1_combo.currentText() if hasattr(self.main_window, 'driver1_combo') else "VER"
+                source_driver2 = self.main_window.driver2_combo.currentText() if hasattr(self.main_window, 'driver2_combo') else "NOR"
+                
+                # 同步模式：兩個車手使用相同的 Year/Race/Session
+                year1, race1, session1 = source_year, source_race, source_session
+                year2, race2, session2 = source_year, source_race, source_session
+                lap1, lap2 = 1, 1  # 預設值
+            else:
+                # 從分析模組載入（如果存在）
+                if not hasattr(self.parent_window, 'analysis_module'):
+                    source_year = "2024"
+                    source_race = ""
+                    source_session = "R"
+                    source_driver1 = "VER"
+                    source_driver2 = "NOR"
+                    year1, race1, session1 = source_year, source_race, source_session
+                    year2, race2, session2 = source_year, source_race, source_session
+                    lap1, lap2 = 1, 1
+                else:
+                    analysis_module = self.parent_window.analysis_module
+                    
+                    # 從分析模組載入車手 1 的參數
+                    year1 = str(getattr(analysis_module, 'driver1_year', getattr(analysis_module, 'current_year', '2025')))
+                    race1 = getattr(analysis_module, 'driver1_race', getattr(analysis_module, 'current_race', ''))
+                    session1 = getattr(analysis_module, 'driver1_session', getattr(analysis_module, 'current_session', 'R'))
+                    source_driver1 = getattr(analysis_module, 'driver1', 'VER')
+                    lap1 = getattr(analysis_module, 'lap1', 1)
+                    
+                    # 從分析模組載入車手 2 的參數
+                    year2 = str(getattr(analysis_module, 'driver2_year', year1))  # 預設與車手 1 相同
+                    race2 = getattr(analysis_module, 'driver2_race', race1)  # 預設與車手 1 相同
+                    session2 = getattr(analysis_module, 'driver2_session', session1)  # 預設與車手 1 相同
+                    source_driver2 = getattr(analysis_module, 'driver2', 'NOR')
+                    lap2 = getattr(analysis_module, 'lap2', 1)
+            
+            # === 填充車手 1 的年份/賽事/賽段 ===
+            self.driver1_year_combo.setCurrentText(year1)
+            self._populate_race_combo_for_driver(1, year1, race1)
+            self._populate_session_combo_for_driver(1, race1, session1)
+            
+            # === 填充車手 2 的年份/賽事/賽段 ===
+            self.driver2_year_combo.setCurrentText(year2)
+            # 賽事強制同步車手 1（灰色）
+            self._populate_race_combo_for_driver(2, year2, race2)
+            self._populate_session_combo_for_driver(2, race2, session2)
+            
+            # === 載入車手設定 ===
+            index = self.driver1_combo.findText(source_driver1)
+            if index >= 0:
+                self.driver1_combo.setCurrentIndex(index)
+            
+            index = self.driver2_combo.findText(source_driver2)
+            if index >= 0:
+                self.driver2_combo.setCurrentIndex(index)
+            
+            # === 載入圈數設定 ===
+            if lap1 == 99:
+                self.fastest_lap1_checkbox.setChecked(True)
+                self.lap1_input.setText("99")
+            else:
+                self.lap1_input.setText(str(lap1))
+            
+            if lap2 == 99:
+                self.fastest_lap2_checkbox.setChecked(True)
+                self.lap2_input.setText("99")
+            else:
+                self.lap2_input.setText(str(lap2))
+            
+            print(f"[WINDOW_SETTINGS] 已載入設定:")
+            print(f"  車手 1: {year1} {race1} {session1} {source_driver1} 第{lap1}圈")
+            print(f"  車手 2: {year2} {race2} {session2} {source_driver2} 第{lap2}圈")
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 載入車手與圈數設定失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _populate_race_combo_for_driver(self, driver_num: int, year: str, current_race: str = ""):
+        """為指定車手填充賽事下拉選單"""
+        try:
+            combo = self.driver1_race_combo if driver_num == 1 else self.driver2_race_combo
+            combo.blockSignals(True)
+            combo.clear()
+            
+            # 獲取該年份的賽事列表（使用與主視窗相同的邏輯）
+            year_int = int(year)
+            events = []
+            
+            if hasattr(self.main_window, '_get_calendar_events'):
+                events = self.main_window._get_calendar_events(year_int)
+            elif hasattr(self.main_window, '_season_provider'):
+                try:
+                    events = self.main_window._season_provider.get_completed_events(year_int)
+                except Exception as exc:
+                    print(f"[WINDOW_SETTINGS] 獲取賽事列表失敗: {exc}")
+            
+            if events:
+                for event in events:
+                    if event.is_completed:  # 只顯示已完成的賽事
+                        display_name = event.race_key  # 使用賽事名稱（如 "Brazil"）
+                        combo.addItem(display_name, event)
+            else:
+                # 無賽事時使用預設列表
+                combo.addItems(["Brazil", "Japan", "Singapore", "Monaco", "Bahrain"])
+            
+            # 設定當前賽事
+            if current_race:
+                index = combo.findText(current_race)
+                if index >= 0:
+                    combo.setCurrentIndex(index)
+                elif combo.count() > 0:
+                    combo.setCurrentIndex(0)
+            elif combo.count() > 0:
+                combo.setCurrentIndex(0)
+            
+            combo.blockSignals(False)
+            print(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽事列表已填充: {combo.count()} 個賽事")
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽事列表失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _populate_session_combo_for_driver(self, driver_num: int, race: str, current_session: str = "R"):
+        """為指定車手填充賽段下拉選單"""
+        try:
+            combo = self.driver1_session_combo if driver_num == 1 else self.driver2_session_combo
+            combo.blockSignals(True)
+            combo.clear()
+            
+            # 預設 Session 列表
+            default_sessions = ["FP1", "FP2", "FP3", "SQ", "S", "Q", "R"]
+            combo.addItems(default_sessions)
+            
+            # 設定當前賽段
+            if current_session:
+                index = combo.findText(current_session)
+                if index >= 0:
+                    combo.setCurrentIndex(index)
+                else:
+                    # 預設選擇 R（正賽）
+                    index = combo.findText("R")
+                    if index >= 0:
+                        combo.setCurrentIndex(index)
+            
+            combo.blockSignals(False)
+            print(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽段列表已填充")
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽段列表失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _on_driver1_year_changed(self, year: str):
+        """處理車手 1 年份變更 → 動態更新賽事列表"""
+        try:
+            print(f"[WINDOW_SETTINGS] 車手 1 年份變更: {year} → 重新載入賽事列表")
+            
+            # 保留當前選擇的賽事（如果存在）
+            current_race = self.driver1_race_combo.currentText()
+            
+            # 重新填充車手 1 的賽事列表
+            self._populate_race_combo_for_driver(1, year, current_race)
+            
+            # 同步更新車手 2 的賽事列表（因為賽事必須同步）
+            self._populate_race_combo_for_driver(2, self.driver2_year_combo.currentText(), current_race)
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 年份變更失敗: {e}")
+    
+    def _on_driver2_year_changed(self, year: str):
+        """處理車手 2 年份變更 → 動態更新賽事列表"""
+        try:
+            print(f"[WINDOW_SETTINGS] 車手 2 年份變更: {year} → 重新載入賽事列表")
+            
+            # 保留當前選擇的賽事（必須與車手 1 同步）
+            current_race = self.driver1_race_combo.currentText()
+            
+            # 重新填充車手 2 的賽事列表（賽事與車手 1 同步）
+            self._populate_race_combo_for_driver(2, year, current_race)
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 2 年份變更失敗: {e}")
+    
+    def _on_driver1_race_changed(self, index: int):
+        """處理車手 1 賽事變更 → 自動同步車手 2 賽事"""
+        try:
+            if index < 0:
+                return
+            selected_race = self.driver1_race_combo.currentText()
+            print(f"[WINDOW_SETTINGS] 車手 1 賽事變更: {selected_race} → 同步車手 2")
+            
+            # 強制同步車手 2 賽事（防止選錯賽道）
+            self.driver2_race_combo.blockSignals(True)  # 避免觸發遞迴
+            self.driver2_race_combo.setCurrentText(selected_race)
+            self.driver2_race_combo.blockSignals(False)
+            
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 賽事變更失敗: {e}")
+    
+    def _on_sync_driver_lap_toggled(self, checked: bool):
+        """處理車手與圈數同步勾選框變更"""
+        logger.info(f"🔔 [SYNC_TOGGLED] 方法被調用! checked={checked}")
+        logger.info(f"{'='*80}")
+        logger.info(f"[SYNC_TOGGLED] 車手與圈數同步: {'啟用' if checked else '停用'}")
+        logger.info(f"[SYNC_TOGGLED] parent_window 類型: {type(self.parent_window).__name__}")
+        logger.info(f"{'='*80}")
+        
+        # 步驟 1: 同步更新標題欄按鈕狀態
+        if hasattr(self.parent_window, 'title_bar'):
+            logger.info(f"[SYNC_TOGGLED] ✅ parent_window 有 title_bar 屬性")
+            if hasattr(self.parent_window.title_bar, 'driver_lap_sync_btn'):
+                logger.info(f"[SYNC_TOGGLED] ✅ title_bar 有 driver_lap_sync_btn 按鈕")
+                # 阻止信號避免遞迴
+                self.parent_window.title_bar.driver_lap_sync_btn.blockSignals(True)
+                self.parent_window.title_bar.driver_lap_sync_btn.setChecked(checked)
+                # 手動更新按鈕外觀
+                if checked:
+                    self.parent_window.title_bar.driver_lap_sync_btn.setText("D")
+                    logger.info(f"[SYNC_TOGGLED] 標題欄按鈕已更新為 D (啟用)")
+                else:
+                    self.parent_window.title_bar.driver_lap_sync_btn.setText("X")
+                    logger.info(f"[SYNC_TOGGLED] 標題欄按鈕已更新為 X (停用)")
+                self.parent_window.title_bar.driver_lap_sync_btn.blockSignals(False)
+            else:
+                logger.warning(f"[SYNC_TOGGLED] ❌ title_bar 沒有 driver_lap_sync_btn 按鈕")
+        else:
+            logger.warning(f"[SYNC_TOGGLED] ❌ parent_window 沒有 title_bar 屬性")
+        
+        # 步驟 2: 更新分析模組的同步狀態
+        if hasattr(self.parent_window, 'analysis_module'):
+            analysis_module = self.parent_window.analysis_module
+            if hasattr(analysis_module, 'sync_driver_lap_enabled'):
+                analysis_module.sync_driver_lap_enabled = checked
+                logger.info(f"[SYNC_TOGGLED] 分析模組同步狀態已更新: {checked}")
+        
+        # 步驟 3: 更新控制項的可編輯性
+        self._update_driver_lap_controls_editability()
+        
+        # 步驟 4: 如果停用同步，載入全域參數池的值
+        if not checked:
+            logger.info(f"[SYNC_TOGGLED] 同步已停用，準備載入全域參數池")
+            self._load_shared_params_to_ui()
+        else:
+            logger.info(f"[SYNC_TOGGLED] 同步已啟用，使用主視窗參數")
+    
+    def _load_shared_params_to_ui(self):
+        """從全域參數池載入參數到 UI 控制項"""
+        try:
+            # 獲取全域參數池
+            if not hasattr(self.main_window, 'shared_independent_params'):
+                print(f"[LOAD_SHARED] ⚠️  主視窗沒有 shared_independent_params")
+                return
+            
+            shared_params = self.main_window.shared_independent_params
+            
+            print(f"[LOAD_SHARED] 全域參數池內容:")
+            for key, value in shared_params.items():
+                print(f"   {key}: {value}")
+            
+            # 檢查是否為空（所有值都是 None）
+            if all(v is None for k, v in shared_params.items() if k != 'use_time_axis'):
+                print(f"[LOAD_SHARED] ⚠️  全域參數池為空，跳過載入")
+                return
+            
+            # 載入車手 1 參數
+            year1 = shared_params.get('year1')
+            race1 = shared_params.get('race1')
+            session1 = shared_params.get('session1')
+            driver1 = shared_params.get('driver1')
+            lap1 = shared_params.get('lap1')
+            
+            # 載入車手 2 參數
+            year2 = shared_params.get('year2')
+            race2 = shared_params.get('race2')
+            session2 = shared_params.get('session2')
+            driver2 = shared_params.get('driver2')
+            lap2 = shared_params.get('lap2')
+            
+            # 載入時間軸參數
+            use_time_axis = shared_params.get('use_time_axis', False)
+            
+            print(f"[LOAD_SHARED] 🔄 開始更新 UI 控制項...")
+            
+            # === 更新車手 1 UI ===
+            if year1:
+                self.driver1_year_combo.setCurrentText(str(year1))
+                print(f"[LOAD_SHARED] ✅ 車手 1 年份: {year1}")
+            
+            if race1:
+                # 需要先載入賽事列表
+                self._populate_race_combo_for_driver(1, str(year1) if year1 else "2025", race1)
+                print(f"[LOAD_SHARED] ✅ 車手 1 賽事: {race1}")
+            
+            if session1:
+                # 需要先載入賽段列表
+                self._populate_session_combo_for_driver(1, race1 if race1 else "", session1)
+                print(f"[LOAD_SHARED] ✅ 車手 1 賽段: {session1}")
+            
+            if driver1:
+                index = self.driver1_combo.findText(driver1)
+                if index >= 0:
+                    self.driver1_combo.setCurrentIndex(index)
+                    print(f"[LOAD_SHARED] ✅ 車手 1: {driver1}")
+            
+            if lap1 is not None:
+                if lap1 == 99:
+                    self.fastest_lap1_checkbox.setChecked(True)
+                    self.lap1_input.setText("99")
+                    print(f"[LOAD_SHARED] ✅ 車手 1 圈數: 99 (最速圈)")
+                else:
+                    self.fastest_lap1_checkbox.setChecked(False)
+                    self.lap1_input.setText(str(lap1))
+                    print(f"[LOAD_SHARED] ✅ 車手 1 圈數: {lap1}")
+            
+            # === 更新車手 2 UI ===
+            if year2:
+                self.driver2_year_combo.setCurrentText(str(year2))
+                print(f"[LOAD_SHARED] ✅ 車手 2 年份: {year2}")
+            
+            if race2:
+                # 車手 2 的賽事自動同步車手 1
+                self._populate_race_combo_for_driver(2, str(year2) if year2 else "2025", race2)
+                print(f"[LOAD_SHARED] ✅ 車手 2 賽事: {race2}")
+            
+            if session2:
+                self._populate_session_combo_for_driver(2, race2 if race2 else "", session2)
+                print(f"[LOAD_SHARED] ✅ 車手 2 賽段: {session2}")
+            
+            if driver2:
+                index = self.driver2_combo.findText(driver2)
+                if index >= 0:
+                    self.driver2_combo.setCurrentIndex(index)
+                    print(f"[LOAD_SHARED] ✅ 車手 2: {driver2}")
+            
+            if lap2 is not None:
+                if lap2 == 99:
+                    self.fastest_lap2_checkbox.setChecked(True)
+                    self.lap2_input.setText("99")
+                    print(f"[LOAD_SHARED] ✅ 車手 2 圈數: 99 (最速圈)")
+                else:
+                    self.fastest_lap2_checkbox.setChecked(False)
+                    self.lap2_input.setText(str(lap2))
+                    print(f"[LOAD_SHARED] ✅ 車手 2 圈數: {lap2}")
+            
+            # === 更新時間軸 checkbox ===
+            if hasattr(self, 'use_time_axis_checkbox'):
+                self.use_time_axis_checkbox.setChecked(use_time_axis)
+                print(f"[LOAD_SHARED] ✅ 時間軸模式: {use_time_axis}")
+            
+            print(f"\n{'='*80}")
+            print(f"[LOAD_SHARED] ✅ 全域參數池已載入到 UI")
+            print(f"{'='*80}\n")
+            
+        except Exception as e:
+            print(f"[LOAD_SHARED] ❌ 載入失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _update_driver_lap_controls_editability(self):
+        """根據同步狀態更新車手與圈數控制項的可編輯性"""
+        if not hasattr(self, 'sync_driver_lap_checkbox'):
+            return
+        
+        is_sync_enabled = self.sync_driver_lap_checkbox.isChecked()
+        
+        # === 設置 Year/Race/Session 控制項的可編輯性 ===
+        # 車手 1 的 Year/Race/Session（同步時不可編輯）
+        self.driver1_year_combo.setEnabled(not is_sync_enabled)
+        self.driver1_race_combo.setEnabled(not is_sync_enabled)
+        self.driver1_session_combo.setEnabled(not is_sync_enabled)
+        
+        # 車手 2 的 Year/Session（同步時不可編輯）
+        self.driver2_year_combo.setEnabled(not is_sync_enabled)
+        # 車手 2 的 Race **始終灰色**（強制與車手 1 同步）
+        self.driver2_race_combo.setEnabled(False)  # 永遠不可編輯
+        self.driver2_session_combo.setEnabled(not is_sync_enabled)
+        
+        # === 設置車手與圈數控制項的可編輯性 ===
+        self.driver1_combo.setEnabled(not is_sync_enabled)
+        self.driver2_combo.setEnabled(not is_sync_enabled)
+        self.lap1_input.setEnabled(not is_sync_enabled and not self.fastest_lap1_checkbox.isChecked())
+        self.lap2_input.setEnabled(not is_sync_enabled and not self.fastest_lap2_checkbox.isChecked())
+        self.fastest_lap1_checkbox.setEnabled(not is_sync_enabled)
+        self.fastest_lap2_checkbox.setEnabled(not is_sync_enabled)
+        
+        # === 更新提示文字 ===
+        if is_sync_enabled:
+            tooltip = tr("sync_driver_lap_enabled_tooltip", "已啟用同步，參數由主視窗控制")
+            self.driver1_year_combo.setToolTip(tooltip)
+            self.driver1_race_combo.setToolTip(tooltip)
+            self.driver1_session_combo.setToolTip(tooltip)
+            self.driver2_year_combo.setToolTip(tooltip)
+            self.driver2_race_combo.setToolTip(tr("race_sync_tooltip", "賽事自動同步車手 1（防止選錯賽道）"))
+            self.driver2_session_combo.setToolTip(tooltip)
+            self.driver1_combo.setToolTip(tooltip)
+            self.driver2_combo.setToolTip(tooltip)
+            self.lap1_input.setToolTip(tooltip)
+            self.lap2_input.setToolTip(tooltip)
+            print(f"[LOCK] [WINDOW_SETTINGS] 所有控制已鎖定（同步模式）")
+        else:
+            self.driver1_year_combo.setToolTip(tr("year1_tooltip", "設定車手 1 的年份"))
+            self.driver1_race_combo.setToolTip(tr("race1_tooltip", "設定車手 1 的賽事"))
+            self.driver1_session_combo.setToolTip(tr("session1_tooltip", "設定車手 1 的賽段"))
+            self.driver2_year_combo.setToolTip(tr("year2_tooltip", "設定車手 2 的年份"))
+            self.driver2_race_combo.setToolTip(tr("race_sync_tooltip", "賽事自動同步車手 1（防止選錯賽道）"))
+            self.driver2_session_combo.setToolTip(tr("session2_tooltip", "設定車手 2 的賽段"))
+            self.driver1_combo.setToolTip(tr("driver1_tooltip", "選擇車手 1"))
+            self.driver2_combo.setToolTip(tr("driver2_tooltip", "選擇車手 2"))
+            self.lap1_input.setToolTip(tr("lap1_tooltip", "設定圈數 1"))
+            self.lap2_input.setToolTip(tr("lap2_tooltip", "設定圈數 2"))
+            print(f"🔓 [WINDOW_SETTINGS] 所有控制已解鎖（手動模式）")
+    
+    def _on_fastest_lap_changed(self, state, driver_num: int):
+        """處理最速圈勾選框變更"""
+        is_checked = (state == 2)  # Qt.Checked
+        
+        if driver_num == 1:
+            if is_checked:
+                self.lap1_input.setText("99")
+                self.lap1_input.setEnabled(False)
+                self.lap1_input.setStyleSheet("color: #666666;")
+                print(f"[WINDOW_SETTINGS] 車手 1 最速圈已啟用（圈數=99）")
+            else:
+                self.lap1_input.setText("1")
+                self.lap1_input.setEnabled(not self.sync_driver_lap_checkbox.isChecked())
+                self.lap1_input.setStyleSheet("")
+                print(f"[WINDOW_SETTINGS] 車手 1 最速圈已停用")
+        elif driver_num == 2:
+            if is_checked:
+                self.lap2_input.setText("99")
+                self.lap2_input.setEnabled(False)
+                self.lap2_input.setStyleSheet("color: #666666;")
+                print(f"[WINDOW_SETTINGS] 車手 2 最速圈已啟用（圈數=99）")
+            else:
+                self.lap2_input.setText("1")
+                self.lap2_input.setEnabled(not self.sync_driver_lap_checkbox.isChecked())
+                self.lap2_input.setStyleSheet("")
+                print(f"[WINDOW_SETTINGS] 車手 2 最速圈已停用")
         
     def accept_settings(self):
         """確認設定"""
@@ -5889,24 +6910,286 @@ class WindowSettingsDialog(QDialog):
         session = self.get_selected_session_code()
         sync_windows = self.sync_windows_checkbox.isChecked()
         
-        print(f"[TOOL] [SETTING] [{window_title}] 設定已更新:")
-        print(f"   參數: {year} {race} {session}")
-        print(f"   同步接收狀態: {'啟用' if sync_windows else '停用'}")
+        print(f"\n{'='*80}")
+        print(f"[ACCEPT_SETTINGS] 設定對話框 OK 按鈕被點擊")
+        print(f"[ACCEPT_SETTINGS] 視窗: {window_title}")
+        print(f"[ACCEPT_SETTINGS] 參數: {year} {race} {session}")
+        print(f"[ACCEPT_SETTINGS] 同步接收狀態: {'啟用' if sync_windows else '停用'}")
+        print(f"[ACCEPT_SETTINGS] 是否為遙測模組: {self.is_telemetry_module}")
+        print(f"{'='*80}\n")
         
         # 保存同步狀態到父視窗
         self.parent_window.sync_enabled = sync_windows
         
+        # [TOOL] 新增: 處理遙測模組的車手與圈數設定
+        if self.is_telemetry_module:
+            sync_driver_lap = self.sync_driver_lap_checkbox.isChecked()
+            print(f"\n[TELEMETRY_MODULE_DETECTED]")
+            print(f"   車手與圈數同步: {'啟用' if sync_driver_lap else '停用'}")
+            
+            if not sync_driver_lap:
+                print(f"[MANUAL_MODE] 車手與圈數同步已停用，進入手動模式")
+                # 手動模式：獲取車手和圈數設定
+                driver1 = self.driver1_combo.currentText()
+                driver2 = self.driver2_combo.currentText()
+                
+                try:
+                    lap1 = int(self.lap1_input.text())
+                except ValueError:
+                    lap1 = 1
+                
+                try:
+                    lap2 = int(self.lap2_input.text())
+                except ValueError:
+                    lap2 = 1
+                
+                is_fastest_lap = (lap1 == 99 or lap2 == 99)
+                
+                print(f"   車手設定: {driver1} vs {driver2}")
+                print(f"   圈數設定: 第{lap1}圈 vs 第{lap2}圈")
+                print(f"   最速圈: {is_fastest_lap}")
+                
+                # 應用車手與圈數設定到分析模組
+                print(f"[CALLING] _apply_driver_lap_settings()")
+                self._apply_driver_lap_settings(driver1, driver2, lap1, lap2, is_fastest_lap)
+                print(f"[RETURNED] _apply_driver_lap_settings()")
+            else:
+                # 啟用同步：從主視窗讀取參數並應用
+                print(f"[SYNC_MODE] 車手與圈數同步已啟用，從主視窗讀取參數")
+                
+                # ✅ 從主視窗讀取所有參數
+                main_driver1 = self.main_window.driver1_combo.currentText()
+                main_driver2_data = self.main_window.driver2_combo.currentData()
+                main_driver2 = self.main_window.driver2_combo.currentText() if main_driver2_data is not None else None
+                main_lap1 = self.main_window.lap1_spinbox.value()
+                main_lap2 = self.main_window.lap2_spinbox.value()
+                main_is_fastest = self.main_window.fastest_lap_checkbox.isChecked()
+                
+                print(f"[SYNC_MODE] 主視窗參數:")
+                print(f"   車手 1: {main_driver1}")
+                print(f"   車手 2: {main_driver2}")
+                print(f"   圈數 1: {main_lap1}")
+                print(f"   圈數 2: {main_lap2}")
+                print(f"   最速圈: {main_is_fastest}")
+                
+                # ✅ 調用 _apply_driver_lap_settings 實際套用主視窗參數
+                print(f"[CALLING] _apply_driver_lap_settings() with main window params")
+                self._apply_driver_lap_settings(main_driver1, main_driver2, main_lap1, main_lap2, main_is_fastest)
+                print(f"[RETURNED] _apply_driver_lap_settings()")
+                print(f"[SYNC_MODE] ✅ 主視窗參數已套用到當前視窗")
+        
         # [TOOL] 修改邏輯：根據同步狀態決定行為
+        # ⚠️ 關鍵修復：檢查 sync_driver_lap_enabled，如果停用則跳過主視窗同步
         if sync_windows:
-            # 當啟用同步時，只接收不發送，確保與主程式一致
-            print(f"[REFRESH] [SETTING] [{window_title}] 同步接收模式 - 僅更新當前視窗")
-            self.update_current_window_only()
+            # ✅ 車手與圈數同步已在上面的 if-else 處理完畢
+            # 不需要再調用 update_current_window_only()
+            print(f"[REFRESH] [SETTING] [{window_title}] ✅ 車手與圈數已同步完成")
+            print(f"[REFRESH] [SETTING] [{window_title}] sync_driver_lap = {sync_driver_lap}")
         else:
             # 當停用同步時，允許手動設定並應用到當前視窗
             print(f"[TOOL] [SETTING] [{window_title}] 手動設定模式 - 應用自定義參數")
             self.apply_manual_settings(year, race, session)
         
         self.accept()
+    
+    def _apply_driver_lap_settings(self, driver1: str, driver2: str, lap1: int, lap2: int, is_fastest_lap: bool):
+        """應用車手與圈數設定到分析模組（支援跨賽事比較）"""
+        print(f"\n{'='*80}")
+        print(f"[_APPLY_DRIVER_LAP_SETTINGS] 方法開始執行")
+        print(f"[_APPLY_DRIVER_LAP_SETTINGS] 參數: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+        print(f"{'='*80}\n")
+        
+        try:
+            if not hasattr(self.parent_window, 'analysis_module'):
+                print(f"[WARNING] [WINDOW_SETTINGS] 父視窗沒有 analysis_module 屬性")
+                return
+            
+            analysis_module = self.parent_window.analysis_module
+            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 獲取到 analysis_module: {type(analysis_module).__name__}")
+            
+            # === 保存同步狀態到分析模組 ===
+            sync_enabled = self.sync_driver_lap_checkbox.isChecked()
+            analysis_module.sync_driver_lap_enabled = sync_enabled
+            print(f"[WINDOW_SETTINGS] 同步狀態已保存: {sync_enabled}")
+            
+            # === 保存時間軸設定到分析模組 ===
+            use_time_axis = self.use_time_axis_checkbox.isChecked()
+            analysis_module.use_time_axis = use_time_axis
+            print(f"[WINDOW_SETTINGS] 時間軸設定已保存: {use_time_axis}")
+            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 時間軸 checkbox 狀態: {use_time_axis}")
+            
+            # === 獲取車手 1 和車手 2 的 Year/Race/Session ===
+            year1 = self.driver1_year_combo.currentText()
+            race1 = self.driver1_race_combo.currentText()
+            session1 = self.driver1_session_combo.currentText()
+            
+            year2 = self.driver2_year_combo.currentText()
+            race2 = self.driver2_race_combo.currentText()  # 應該與 race1 相同（灰色同步）
+            session2 = self.driver2_session_combo.currentText()
+            
+            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 1: {year1} {race1} {session1} {driver1} Lap{lap1}")
+            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 2: {year2} {race2} {session2} {driver2} Lap{lap2}")
+            
+            # === 保存所有參數到分析模組（用於下次開啟時載入）===
+            analysis_module.driver1_year = year1
+            analysis_module.driver1_race = race1
+            analysis_module.driver1_session = session1
+            analysis_module.driver1 = driver1
+            analysis_module.lap1 = lap1
+            
+            analysis_module.driver2_year = year2
+            analysis_module.driver2_race = race2
+            analysis_module.driver2_session = session2
+            analysis_module.driver2 = driver2
+            analysis_module.lap2 = lap2
+            
+            print(f"[WINDOW_SETTINGS] 所有參數已保存到分析模組")
+            
+            # === 檢測是否為跨賽事比較 ===
+            # ⚠️ 關鍵修復：如果啟用同步，強制使用主視窗參數（單賽事模式）
+            if sync_enabled:
+                print(f"[SYNC_FIX] 🔒 已啟用同步，強制使用主視窗參數（單賽事模式）")
+                # 從主視窗獲取當前參數（使用 combo box）
+                year1 = self.main_window.year_combo.currentText()
+                race1_display = self.main_window.race_combo.currentText()
+                race1 = self.main_window._get_race_key_from_display(race1_display)
+                session1 = self.main_window.session_combo.currentText()
+                year2 = year1  # 強制相同
+                race2 = race1  # 強制相同
+                session2 = session1  # 強制相同
+                
+                print(f"[SYNC_FIX] 主視窗參數: {year1} {race1} {session1}")
+                print(f"[SYNC_FIX] 強制設定: year2={year2}, session2={session2}")
+                
+                # 更新分析模組的跨賽事參數為主視窗值
+                analysis_module.driver1_year = year1
+                analysis_module.driver1_race = race1
+                analysis_module.driver1_session = session1
+                analysis_module.driver2_year = year2
+                analysis_module.driver2_race = race2
+                analysis_module.driver2_session = session2
+                
+                is_cross_event = False  # 強制設為 False
+                print(f"[SYNC_FIX] ✅ 已強制切換為單賽事模式（is_cross_event = False）")
+            else:
+                is_cross_event = (year1 != year2) or (session1 != session2)
+            
+            if is_cross_event:
+                print(f"[CROSS-EVENT] 檢測到跨賽事比較:")
+                print(f"   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+                print(f"   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+                
+                # 檢查分析模組是否支援跨賽事比較
+                if hasattr(analysis_module, 'update_cross_event_comparison'):
+                    print(f"[CROSS-EVENT] 調用 update_cross_event_comparison 方法")
+                    
+                    success = analysis_module.update_cross_event_comparison(
+                        year1=year1, race1=race1, session1=session1, driver1=driver1, lap1=lap1,
+                        year2=year2, race2=race2, session2=session2, driver2=driver2, lap2=lap2,
+                        is_fastest=is_fastest_lap,
+                        use_time_axis=use_time_axis  # 傳遞時間軸設定
+                    )
+                    
+                    if success:
+                        print(f"[OK] [CROSS-EVENT] 跨賽事比較設定已套用")
+                    else:
+                        print(f"[INFO] [CROSS-EVENT] 跨賽事比較功能開發中")
+                else:
+                    print(f"[INFO] [CROSS-EVENT] 分析模組不支援跨賽事比較")
+            else:
+                # === 標準模式（同一賽事比較）===
+                print(f"[STANDARD] 標準比較模式:")
+                print(f"   賽事: {year1} {race1} {session1}")
+                print(f"   車手: {driver1} vs {driver2}")
+                print(f"   圈數: 第{lap1}圈 vs 第{lap2}圈")
+                
+                # 檢查分析模組是否有 update_lap_parameters 方法
+                if hasattr(analysis_module, 'update_lap_parameters'):
+                    print(f"[STANDARD] 調用 update_lap_parameters 更新車手與圈數")
+                    
+                    success = analysis_module.update_lap_parameters(
+                        year=year1,
+                        race=race1,
+                        session=session1,
+                        driver1=driver1,
+                        driver2=driver2,
+                        lap1=lap1,
+                        lap2=lap2,
+                        is_fastest=is_fastest_lap,
+                        use_time_axis=use_time_axis  # 傳遞時間軸設定
+                    )
+                    
+                    if success:
+                        print(f"[OK] [STANDARD] 車手與圈數設定已套用，視窗標題應已更新")
+                    else:
+                        print(f"[WARNING] [STANDARD] 車手與圈數設定套用失敗")
+                else:
+                    # 舊版模組：直接設定屬性
+                    print(f"[STANDARD] 使用直接屬性設定方式（舊版相容）")
+                    analysis_module.driver1 = driver1
+                    analysis_module.driver2 = driver2
+                    analysis_module.lap1 = lap1
+                    analysis_module.lap2 = lap2
+                    
+                    # 手動更新視窗標題
+                    if hasattr(self.parent_window, 'setWindowTitle'):
+                        new_title = f"Speed Analysis - {year1} {race1} {session1}"
+                        self.parent_window.setWindowTitle(new_title)
+                        print(f"[OK] [STANDARD] 車手與圈數屬性已設定，視窗標題已更新: {new_title}")
+            
+            # ⚠️ [全域共享參數池] 新增：同步所有停用同步的視窗
+            if not sync_enabled:
+                print(f"\n{'='*80}")
+                print(f"[SHARED_PARAMS] 當前視窗已停用同步，準備更新全域參數池")
+                print(f"{'='*80}\n")
+                
+                # 構建參數字典
+                updated_params = {
+                    'year1': year1,
+                    'race1': race1,
+                    'session1': session1,
+                    'driver1': driver1,
+                    'lap1': lap1,
+                    'year2': year2,
+                    'race2': race2,
+                    'session2': session2,
+                    'driver2': driver2,
+                    'lap2': lap2,
+                    'use_time_axis': use_time_axis
+                }
+                
+                print(f"[SHARED_PARAMS] 構建的參數字典:")
+                for key, value in updated_params.items():
+                    print(f"   {key}: {value}")
+                
+                # 檢查全域參數池是否為空（首次停用同步）
+                if all(v is None for k, v in self.main_window.shared_independent_params.items() if k != 'use_time_axis'):
+                    print(f"[SHARED_PARAMS] 全域參數池為空，複製當前參數到全域池")
+                    self.main_window.shared_independent_params.update(updated_params)
+                    print(f"[SHARED_PARAMS] ✅ 全域參數池已初始化")
+                else:
+                    print(f"[SHARED_PARAMS] 全域參數池已有值，更新全域池並同步所有停用同步的視窗")
+                
+                # 通知主 GUI 同步所有停用同步的視窗
+                if hasattr(self.main_window, 'sync_all_independent_windows'):
+                    print(f"[SHARED_PARAMS] ✅ 找到 sync_all_independent_windows() 方法")
+                    print(f"[SHARED_PARAMS] 🚀 準備調用 sync_all_independent_windows()")
+                    self.main_window.sync_all_independent_windows(updated_params)
+                    print(f"[SHARED_PARAMS] ✅ sync_all_independent_windows() 調用完成")
+                    print(f"[SHARED_PARAMS] ✅ 所有停用同步的視窗已同步")
+                else:
+                    print(f"[SHARED_PARAMS] ⚠️  主視窗沒有 sync_all_independent_windows() 方法")
+                
+                print(f"\n{'='*80}")
+                print(f"[SHARED_PARAMS] 全域參數池同步流程結束")
+                print(f"{'='*80}\n")
+            else:
+                print(f"[SHARED_PARAMS] ⚠️  當前視窗啟用了同步，跳過全域參數池更新")
+                
+        except Exception as e:
+            print(f"[ERROR] [WINDOW_SETTINGS] 套用車手與圈數設定失敗: {e}")
+            import traceback
+            traceback.print_exc()
         
     def update_current_window_only(self):
         """僅更新當前視窗（同步接收模式）"""
@@ -6240,6 +7523,23 @@ class StyleHMainWindow(QMainWindow):
         self.lap_analysis_windows = set()  # 活動的遙測分析視窗集合
         self.lap_controls_visible = False  # 遙測控件是否可見
         self._lap_controls_added = False  # 追蹤控件是否已添加到工具欄
+        
+        # ⚠️ 新增：全域共享參數池（所有停用同步的視窗共享）
+        # 當用戶取消勾選"與主視窗同步車手與圈數"時，所有停用同步的視窗將使用此參數池
+        self.shared_independent_params = {
+            'year1': None,           # 車手 1 年份
+            'race1': None,           # 車手 1 賽事
+            'session1': None,        # 車手 1 賽段
+            'driver1': None,         # 車手 1 代號
+            'lap1': None,            # 車手 1 圈數
+            'year2': None,           # 車手 2 年份
+            'race2': None,           # 車手 2 賽事
+            'session2': None,        # 車手 2 賽段
+            'driver2': None,         # 車手 2 代號
+            'lap2': None,            # 車手 2 圈數
+            'use_time_axis': False   # 時間軸模式
+        }
+        print("[INIT] ✅ 全域共享參數池已初始化（用於跨模組停用同步功能）")
         
         # 🆕 車手列表快取機制（啟動時載入，全域共享）
         self._cached_drivers_by_year = {}  # {year: [driver_codes]}
@@ -8170,20 +9470,26 @@ class StyleHMainWindow(QMainWindow):
                         ('onParametersChanged', base_kwargs, ('year', 'race', 'session')),
                     ]
 
-                # 🔒 [SYNC_FIX] 檢查視窗的同步狀態（支援 PopoutSubWindow 的 sync_enabled）
+                # 🔒 [SYNC_FIX] 檢查視窗的同步狀態（支援多種同步屬性）
                 # ⚠️ 關鍵修復：批次更新必須尊重視窗的獨立同步設定
                 # 如果視窗已停用同步，則跳過批次更新
                 skip_update = False
-                if hasattr(analysis_module, '_sub_window'):
-                    # 檢查子視窗（PopoutSubWindow）的 sync_enabled 屬性
+                
+                # 檢查 sync_driver_lap_enabled（遙測模組的同步屬性）
+                if hasattr(analysis_module, 'sync_driver_lap_enabled') and not analysis_module.sync_driver_lap_enabled:
+                    logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用車手圈數同步 (sync_driver_lap_enabled=False)，跳過批次更新")
+                    print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用車手圈數同步，跳過批次更新")
+                    skip_update = True
+                # 檢查子視窗的 sync_enabled 屬性（PopoutSubWindow）
+                elif hasattr(analysis_module, '_sub_window'):
                     sub_window = analysis_module._sub_window
                     if hasattr(sub_window, 'sync_enabled') and not sub_window.sync_enabled:
-                        logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                        logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步 (sub_window.sync_enabled=False)，跳過批次更新")
                         print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
                         skip_update = True
+                # 檢查模組自己的 sync_enabled 屬性
                 elif hasattr(analysis_module, 'sync_enabled') and not analysis_module.sync_enabled:
-                    # 直接檢查模組自己的 sync_enabled 屬性
-                    logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                    logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步 (sync_enabled=False)，跳過批次更新")
                     print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
                     skip_update = True
                 
@@ -8334,6 +9640,140 @@ class StyleHMainWindow(QMainWindow):
         # ⚠️ 已移除自動更新邏輯
         # 不再啟動計時器或調用 update_all_lap_analysis()
         # 用戶必須手動點擊更新按鈕
+
+    def sync_all_independent_windows(self, updated_params: dict):
+        """
+        同步所有停用同步的視窗（全域共享參數池功能）
+        
+        功能說明：
+        - 當任一視窗取消勾選"與主視窗同步車手與圈數"時觸發
+        - 更新全域共享參數池 (self.shared_independent_params)
+        - 同步所有停用同步的視窗（跨模組類型：Speed/RPM/Gear 等）
+        
+        參數：
+        - updated_params: 更新後的參數字典
+          {
+              'year1': str,      # 車手 1 年份
+              'race1': str,      # 車手 1 賽事
+              'session1': str,   # 車手 1 賽段
+              'driver1': str,    # 車手 1 代號
+              'lap1': int,       # 車手 1 圈數
+              'year2': str,      # 車手 2 年份
+              'race2': str,      # 車手 2 賽事
+              'session2': str,   # 車手 2 賽段
+              'driver2': str,    # 車手 2 代號
+              'lap2': int,       # 車手 2 圈數
+              'use_time_axis': bool  # 時間軸模式
+          }
+        
+        流程：
+        1. 更新全域共享參數池
+        2. 遍歷所有 MDI 子視窗
+        3. 篩選出 sync_driver_lap_enabled=False 的視窗
+        4. 調用 update_from_shared_params() 方法同步參數
+        
+        使用場景：
+        - 用戶在任一視窗取消勾選同步 checkbox
+        - 用戶在停用同步的視窗修改 Year/Race/Session/Driver/Lap
+        """
+        from PyQt5.QtWidgets import QApplication
+        
+        print(f"\n{'='*100}")
+        print(f"[SYNC_ALL_INDEPENDENT_WINDOWS] 方法被調用！")
+        print(f"{'='*100}")
+        print(f"[SHARED_PARAMS] 🔄 開始同步所有停用同步的視窗")
+        print(f"[SHARED_PARAMS] 更新參數:")
+        for key, value in updated_params.items():
+            print(f"   {key}: {value}")
+        print(f"{'='*100}\n")
+        
+        # 步驟 1: 更新全域共享參數池
+        self.shared_independent_params.update(updated_params)
+        print(f"[SHARED_PARAMS] ✅ 全域參數池已更新")
+        
+        # 步驟 2: 遍歷所有 MDI 子視窗
+        synchronized_count = 0
+        skipped_count = 0
+        dialog_sync_count = 0
+        total_windows = 0
+        no_analysis_module = 0
+        no_sync_attribute = 0
+        
+        for mdi_area in self.mdi_areas:
+            for sub_window in mdi_area.subWindowList():
+                total_windows += 1
+                
+                print(f"[SHARED_PARAMS] 檢查視窗 {total_windows}: {sub_window.windowTitle()}")
+                
+                # 步驟 3: 從 PopoutSubWindow 獲取 analysis_module
+                # ⚠️ 重要：不是從 widget 獲取，而是從 sub_window 獲取
+                if not hasattr(sub_window, 'analysis_module'):
+                    print(f"[SHARED_PARAMS]   ⚠️  sub_window 沒有 analysis_module 屬性")
+                    no_analysis_module += 1
+                    continue
+                
+                analysis_module = sub_window.analysis_module
+                print(f"[SHARED_PARAMS]   ✅ 有 analysis_module: {type(analysis_module).__name__}")
+                
+                # 檢查 sync_driver_lap_enabled 屬性（遙測模組的同步控制）
+                if not hasattr(analysis_module, 'sync_driver_lap_enabled'):
+                    print(f"[SHARED_PARAMS]   ⚠️  沒有 sync_driver_lap_enabled 屬性")
+                    no_sync_attribute += 1
+                    continue
+                
+                sync_status = analysis_module.sync_driver_lap_enabled
+                print(f"[SHARED_PARAMS]   📊 sync_driver_lap_enabled = {sync_status}")
+                
+                if analysis_module.sync_driver_lap_enabled:
+                    # 啟用同步的視窗，跳過
+                    print(f"[SHARED_PARAMS]   ⏭️  已啟用同步，跳過")
+                    skipped_count += 1
+                    continue
+                
+                print(f"[SHARED_PARAMS]   ✅ 已停用同步，準備同步！")
+                
+                # 步驟 4: 調用 update_from_shared_params() 同步參數（更新分析模組）
+                if hasattr(analysis_module, 'update_from_shared_params'):
+                    try:
+                        print(f"[SHARED_PARAMS] 🔄 同步視窗: {sub_window.windowTitle()}")
+                        analysis_module.update_from_shared_params(self.shared_independent_params)
+                        synchronized_count += 1
+                        print(f"[SHARED_PARAMS] ✅ 視窗同步成功")
+                    except Exception as e:
+                        print(f"[SHARED_PARAMS] ❌ 視窗同步失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                else:
+                    print(f"[SHARED_PARAMS] ⚠️  視窗 {sub_window.windowTitle()} 沒有 update_from_shared_params() 方法")
+                
+                # 步驟 5: 同步已打開的設定對話框（實時更新 UI）
+                # ⚠️ 設定對話框應該在 sub_window 上，因為 show_settings_dialog() 設置的是 self.settings_dialog
+                if hasattr(sub_window, 'settings_dialog') and sub_window.settings_dialog is not None:
+                    try:
+                        dialog = sub_window.settings_dialog
+                        
+                        # 檢查對話框是否可見且停用同步
+                        if dialog.isVisible() and hasattr(dialog, 'sync_driver_lap_checkbox'):
+                            if not dialog.sync_driver_lap_checkbox.isChecked():
+                                print(f"[SHARED_PARAMS] 🔄 同步已打開的設定對話框: {sub_window.windowTitle()}")
+                                dialog._load_shared_params_to_ui()
+                                dialog_sync_count += 1
+                                print(f"[SHARED_PARAMS] ✅ 設定對話框已同步")
+                    except Exception as e:
+                        print(f"[SHARED_PARAMS] ⚠️  設定對話框同步失敗: {e}")
+        
+        # 處理 UI 事件
+        QApplication.processEvents()
+        
+        print(f"\n{'='*100}")
+        print(f"[SHARED_PARAMS] ✅ 同步完成總結:")
+        print(f"   � 總共檢查視窗: {total_windows} 個")
+        print(f"   ⚠️  無 analysis_module: {no_analysis_module} 個")
+        print(f"   ⚠️  無 sync_driver_lap_enabled: {no_sync_attribute} 個")
+        print(f"   ⏭️  已啟用同步（跳過）: {skipped_count} 個")
+        print(f"   📊 分析模組已同步: {synchronized_count} 個")
+        print(f"   🔧 設定對話框已同步: {dialog_sync_count} 個")
+        print(f"{'='*100}\n")
 
     def on_race_parameters_changed(self):
         """
@@ -18637,6 +20077,30 @@ class StyleHMainWindow(QMainWindow):
             background-color: #BDBDBD;  /* 灰色懸停 */
         }
         
+        /* 車手與圈數同步按鈕 - 紫色主題（遙測模組專用） */
+        #DriverLapSyncButton {
+            background-color: #9C27B0;  /* 紫色 - 同步啟用 */
+            color: white;
+            border: 1px solid #7B1FA2;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: center;
+        }
+        #DriverLapSyncButton:hover {
+            background-color: #AB47BC;  /* 紫色懸停 */
+        }
+        #DriverLapSyncButton:pressed {
+            background-color: #6A1B9A;  /* 紫色按下 */
+        }
+        #DriverLapSyncButton:!checked {
+            background-color: #9E9E9E;  /* 灰色 - 同步停用 */
+            border: 1px solid #757575;
+        }
+        #DriverLapSyncButton:!checked:hover {
+            background-color: #BDBDBD;  /* 灰色懸停 */
+        }
+        
         /* 設定按鈕 */
         #SettingsButton {
             background-color: #F8F8F8;
@@ -19133,10 +20597,39 @@ class StyleHMainWindow(QMainWindow):
         4. 關閉所有 MDI 子視窗和分析模組
         5. 斷開所有信號連接
         6. 清理全局管理器
+        7. 等待所有 QThread 完全終止（修復 Python 3.13 執行緒清理錯誤）
         """
         print("[CLEANUP] 🛑 主視窗正在關閉，開始清理資源...")
         
         try:
+            # ========== 步驟 0: 收集所有活動的 QThread ==========
+            active_threads = []
+            
+            # 收集 API 監控執行緒
+            if hasattr(self, '_api_health_worker') and self._api_health_worker:
+                active_threads.append(('ApiHealthWorker', self._api_health_worker))
+            if hasattr(self, '_api_runtime_worker') and self._api_runtime_worker:
+                active_threads.append(('ApiRuntimeWorker', self._api_runtime_worker))
+            
+            # 收集所有子視窗中的 QThread
+            if hasattr(self, 'mdi_areas') and self.mdi_areas:
+                for mdi_area in self.mdi_areas:
+                    if mdi_area:
+                        for sub_window in mdi_area.subWindowList():
+                            widget = sub_window.widget()
+                            if widget and hasattr(widget, 'analysis_module'):
+                                module = widget.analysis_module
+                                # 搜索模組中的所有 QThread 屬性
+                                for attr_name in dir(module):
+                                    try:
+                                        attr = getattr(module, attr_name)
+                                        if isinstance(attr, QThread) and attr.isRunning():
+                                            active_threads.append((f'{type(module).__name__}.{attr_name}', attr))
+                                    except:
+                                        pass
+            
+            print(f"[CLEANUP] 🔍 找到 {len(active_threads)} 個活動執行緒")
+            
             # ========== 步驟 1: 停止 API 監控執行緒 ==========
             print("[CLEANUP] 📡 停止 API 監控執行緒...")
             
@@ -19146,10 +20639,10 @@ class StyleHMainWindow(QMainWindow):
                     print("[CLEANUP]   🔴 停止 ApiHealthWorker...")
                     self._api_health_worker_active = False
                     self._api_health_worker.quit()
-                    if not self._api_health_worker.wait(2000):  # 等待 2 秒
+                    if not self._api_health_worker.wait(3000):  # 等待 3 秒
                         print("[CLEANUP]   ⚠️ ApiHealthWorker 未正常退出，強制終止")
                         self._api_health_worker.terminate()
-                        self._api_health_worker.wait()
+                        self._api_health_worker.wait(1000)
                     print("[CLEANUP]   ✅ ApiHealthWorker 已停止")
                 except Exception as e:
                     print(f"[CLEANUP]   ⚠️ 停止 ApiHealthWorker 時出錯: {e}")
@@ -19162,10 +20655,10 @@ class StyleHMainWindow(QMainWindow):
                     print("[CLEANUP]   🔴 停止 ApiRuntimeWorker...")
                     self._api_runtime_worker_active = False
                     self._api_runtime_worker.quit()
-                    if not self._api_runtime_worker.wait(2000):  # 等待 2 秒
+                    if not self._api_runtime_worker.wait(3000):  # 等待 3 秒
                         print("[CLEANUP]   ⚠️ ApiRuntimeWorker 未正常退出，強制終止")
                         self._api_runtime_worker.terminate()
-                        self._api_runtime_worker.wait()
+                        self._api_runtime_worker.wait(1000)
                     print("[CLEANUP]   ✅ ApiRuntimeWorker 已停止")
                 except Exception as e:
                     print(f"[CLEANUP]   ⚠️ 停止 ApiRuntimeWorker 時出錯: {e}")
@@ -19199,7 +20692,23 @@ class StyleHMainWindow(QMainWindow):
                         except Exception as e:
                             print(f"[CLEANUP]   ⚠️ 關閉 MDI 子視窗時出錯: {e}")
             
-            # ========== 步驟 4: 清理追蹤列表 ==========
+            # ========== 步驟 4: 等待所有收集到的執行緒完全終止 ==========
+            print(f"[CLEANUP] ⏳ 等待 {len(active_threads)} 個執行緒完全終止...")
+            
+            for thread_name, thread in active_threads:
+                try:
+                    if thread and thread.isRunning():
+                        print(f"[CLEANUP]   🔴 等待執行緒終止: {thread_name}")
+                        thread.quit()
+                        if not thread.wait(3000):  # 等待 3 秒
+                            print(f"[CLEANUP]   ⚠️ {thread_name} 未正常退出，強制終止")
+                            thread.terminate()
+                            thread.wait(1000)
+                        print(f"[CLEANUP]   ✅ {thread_name} 已完全終止")
+                except Exception as e:
+                    print(f"[CLEANUP]   ⚠️ 終止執行緒 {thread_name} 時出錯: {e}")
+            
+            # ========== 步驟 5: 清理追蹤列表 ==========
             print("[CLEANUP] 📋 清理追蹤列表...")
             
             if hasattr(self, 'active_subwindows'):
@@ -19214,7 +20723,7 @@ class StyleHMainWindow(QMainWindow):
                 self.active_analysis_tabs.clear()
                 print("[CLEANUP]   ✅ active_analysis_tabs 已清空")
             
-            # ========== 步驟 5: 清理全局管理器 ==========
+            # ========== 步驟 6: 清理全局管理器 ==========
             print("[CLEANUP] 🌐 清理全局管理器...")
             
             try:
@@ -19225,7 +20734,7 @@ class StyleHMainWindow(QMainWindow):
             except Exception as e:
                 print(f"[CLEANUP]   ⚠️ 清理 linkage_manager 時出錯: {e}")
             
-            # ========== 步驟 6: 清理功能樹 Widget ==========
+            # ========== 步驟 7: 清理功能樹 Widget ==========
             print("[CLEANUP] 🌳 清理功能樹...")
             
             if hasattr(self, 'function_tree') and self.function_tree:
@@ -19235,6 +20744,10 @@ class StyleHMainWindow(QMainWindow):
                     print("[CLEANUP]   ✅ function_tree 已清理")
                 except Exception as e:
                     print(f"[CLEANUP]   ⚠️ 清理 function_tree 時出錯: {e}")
+            
+            # ========== 步驟 8: 強制處理所有待處理的事件 ==========
+            print("[CLEANUP] 🔄 處理待處理的 Qt 事件...")
+            QApplication.processEvents()
             
             print("[CLEANUP] ✅ 主視窗資源清理完成")
             
@@ -19251,6 +20764,29 @@ class StyleHMainWindow(QMainWindow):
 def main():
     """主函數"""
     print("[MAIN] 🚀 啟動 F1T 專業賽車分析工作站...")
+    
+    # ========== Python 3.13 執行緒警告抑制器 ==========
+    # 抑制 Python 3.13 在程式退出時的 Dummy Thread 清理警告
+    # 這是 Python 3.13 與 Qt C++ 擴展執行緒互動的已知問題
+    import warnings
+    import sys
+    
+    # 抑制特定的執行緒警告
+    warnings.filterwarnings("ignore", category=RuntimeWarning, module="threading")
+    
+    # 設定 sys.excepthook 來捕獲並忽略執行緒清理錯誤
+    original_excepthook = sys.excepthook
+    
+    def custom_excepthook(exc_type, exc_value, exc_traceback):
+        """自定義異常處理器，忽略執行緒清理時的 TypeError"""
+        # 忽略 threading.py 中 __del__ 方法的 NoneType 錯誤
+        if exc_type == TypeError and "_DeleteDummyThreadOnDel" in str(exc_traceback):
+            return  # 靜默忽略
+        # 其他異常正常處理
+        original_excepthook(exc_type, exc_value, exc_traceback)
+    
+    sys.excepthook = custom_excepthook
+    print("[MAIN] ✅ Python 3.13 執行緒警告抑制器已啟用")
     
     # ========== Windows 任務欄圖標設定 ==========
     # 在 Windows 上設定 App User Model ID，讓任務欄顯示自定義圖標
