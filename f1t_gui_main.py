@@ -6399,17 +6399,21 @@ class WindowSettingsDialog(QDialog):
             self.use_time_axis_checkbox = QCheckBox(tr("use_time_axis_checkbox", "使用時間軸 (Use Time Axis)"))
             self.use_time_axis_checkbox.setObjectName("UseTimeAxisCheckbox")
             
-            # 從主視窗或分析模組載入時間軸狀態
-            if hasattr(self.main_window, 'use_time_axis_checkbox'):
-                current_time_axis_state = self.main_window.use_time_axis_checkbox.isChecked()
-                self.use_time_axis_checkbox.setChecked(current_time_axis_state)
-                print(f"[WINDOW_SETTINGS] 從主視窗載入時間軸狀態: {current_time_axis_state}")
-            elif hasattr(self.parent_window, 'analysis_module'):
-                analysis_module = self.parent_window.analysis_module
-                current_time_axis_state = getattr(analysis_module, 'use_time_axis', False)
-                self.use_time_axis_checkbox.setChecked(current_time_axis_state)
-                print(f"[WINDOW_SETTINGS] 從分析模組載入時間軸狀態: {current_time_axis_state}")
-            else:
+            # 從主視窗或分析模組載入時間軸狀態（加入 try-except 保護）
+            try:
+                if hasattr(self.main_window, 'use_time_axis_checkbox') and self.main_window.use_time_axis_checkbox:
+                    current_time_axis_state = self.main_window.use_time_axis_checkbox.isChecked()
+                    self.use_time_axis_checkbox.setChecked(current_time_axis_state)
+                    print(f"[WINDOW_SETTINGS] 從主視窗載入時間軸狀態: {current_time_axis_state}")
+                elif hasattr(self.parent_window, 'analysis_module'):
+                    analysis_module = self.parent_window.analysis_module
+                    current_time_axis_state = getattr(analysis_module, 'use_time_axis', False)
+                    self.use_time_axis_checkbox.setChecked(current_time_axis_state)
+                    print(f"[WINDOW_SETTINGS] 從分析模組載入時間軸狀態: {current_time_axis_state}")
+                else:
+                    self.use_time_axis_checkbox.setChecked(False)  # 預設不使用時間軸
+            except (AttributeError, RuntimeError) as e:
+                print(f"[ERROR] [WINDOW_SETTINGS] 載入時間軸狀態失敗: {e}")
                 self.use_time_axis_checkbox.setChecked(False)  # 預設不使用時間軸
             
             self.use_time_axis_checkbox.setToolTip(tr("use_time_axis_tooltip", "切換橫軸為時間軸（秒）或距離軸（米）"))
@@ -6433,14 +6437,20 @@ class WindowSettingsDialog(QDialog):
     def _populate_driver_combo(self, combo: QComboBox):
         """填充車手下拉選單"""
         try:
-            # 從主視窗獲取車手列表
-            if hasattr(self.main_window, 'driver1_combo') and self.main_window.driver1_combo:
-                # 複製主視窗的車手列表
-                for i in range(self.main_window.driver1_combo.count()):
-                    driver_text = self.main_window.driver1_combo.itemText(i)
-                    driver_data = self.main_window.driver1_combo.itemData(i)
-                    combo.addItem(driver_text, driver_data)
-            else:
+            # 從主視窗獲取車手列表（加入 try-except 保護）
+            try:
+                if hasattr(self.main_window, 'driver1_combo') and self.main_window.driver1_combo:
+                    # 複製主視窗的車手列表
+                    for i in range(self.main_window.driver1_combo.count()):
+                        driver_text = self.main_window.driver1_combo.itemText(i)
+                        driver_data = self.main_window.driver1_combo.itemData(i)
+                        combo.addItem(driver_text, driver_data)
+                else:
+                    # 預設車手列表
+                    default_drivers = ["VER", "LEC", "HAM", "PER", "SAI", "RUS", "NOR", "PIA", "ALO", "STR"]
+                    combo.addItems(default_drivers)
+            except (AttributeError, RuntimeError) as e:
+                print(f"[ERROR] [WINDOW_SETTINGS] 從主視窗獲取車手列表失敗: {e}")
                 # 預設車手列表
                 default_drivers = ["VER", "LEC", "HAM", "PER", "SAI", "RUS", "NOR", "PIA", "ALO", "STR"]
                 combo.addItems(default_drivers)
@@ -6458,17 +6468,27 @@ class WindowSettingsDialog(QDialog):
             
             # 決定資料來源：同步時從主視窗，否則從分析模組
             if sync_enabled:
-                # 從主視窗載入
-                source_year = str(self.main_window.year_combo.currentText()) if hasattr(self.main_window, 'year_combo') else "2024"
-                source_race = self.main_window.race_combo.currentText() if hasattr(self.main_window, 'race_combo') else ""
-                source_session = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else "R"
-                source_driver1 = self.main_window.driver1_combo.currentText() if hasattr(self.main_window, 'driver1_combo') else "VER"
-                source_driver2 = self.main_window.driver2_combo.currentText() if hasattr(self.main_window, 'driver2_combo') else "NOR"
-                
-                # 同步模式：兩個車手使用相同的 Year/Race/Session
-                year1, race1, session1 = source_year, source_race, source_session
-                year2, race2, session2 = source_year, source_race, source_session
-                lap1, lap2 = 1, 1  # 預設值
+                try:
+                    # 從主視窗載入（加入 try-except 保護）
+                    source_year = str(self.main_window.year_combo.currentText()) if hasattr(self.main_window, 'year_combo') else "2024"
+                    source_race = self.main_window.race_combo.currentText() if hasattr(self.main_window, 'race_combo') else ""
+                    source_session = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else "R"
+                    source_driver1 = self.main_window.driver1_combo.currentText() if hasattr(self.main_window, 'driver1_combo') else "VER"
+                    source_driver2 = self.main_window.driver2_combo.currentText() if hasattr(self.main_window, 'driver2_combo') else "NOR"
+                    
+                    # 同步模式：兩個車手使用相同的 Year/Race/Session
+                    year1, race1, session1 = source_year, source_race, source_session
+                    year2, race2, session2 = source_year, source_race, source_session
+                    lap1, lap2 = 1, 1  # 預設值
+                    
+                except AttributeError as e:
+                    print(f"[ERROR] [WINDOW_SETTINGS] 無法從主視窗載入參數: {e}")
+                    # 使用預設值
+                    source_year, source_race, source_session = "2024", "", "R"
+                    source_driver1, source_driver2 = "VER", "NOR"
+                    year1, race1, session1 = source_year, source_race, source_session
+                    year2, race2, session2 = source_year, source_race, source_session
+                    lap1, lap2 = 1, 1
             else:
                 # 從分析模組載入（如果存在）
                 if not hasattr(self.parent_window, 'analysis_module'):
@@ -6711,12 +6731,23 @@ class WindowSettingsDialog(QDialog):
     def _load_shared_params_to_ui(self):
         """從全域參數池載入參數到 UI 控制項"""
         try:
-            # 獲取全域參數池
+            # ✅ 原則 0-1：驗證物件存在
             if not hasattr(self.main_window, 'shared_independent_params'):
                 print(f"[LOAD_SHARED] ⚠️  主視窗沒有 shared_independent_params")
                 return
             
-            shared_params = self.main_window.shared_independent_params
+            # ✅ 原則 0-1：在 try-except 內訪問物件（防止 EXE 中的 RuntimeError）
+            try:
+                shared_params = self.main_window.shared_independent_params
+            except (AttributeError, RuntimeError) as e:
+                print(f"[LOAD_SHARED] ❌ 無法訪問 shared_independent_params: {e}")
+                print(f"[LOAD_SHARED] 這通常發生在 EXE 中物件已被釋放")
+                return
+            
+            # ✅ 原則 0-1：驗證獲取的物件是字典
+            if not isinstance(shared_params, dict):
+                print(f"[LOAD_SHARED] ⚠️  shared_independent_params 不是字典類型: {type(shared_params)}")
+                return
             
             print(f"[LOAD_SHARED] 全域參數池內容:")
             for key, value in shared_params.items():
@@ -6957,26 +6988,42 @@ class WindowSettingsDialog(QDialog):
                 # 啟用同步：從主視窗讀取參數並應用
                 print(f"[SYNC_MODE] 車手與圈數同步已啟用，從主視窗讀取參數")
                 
-                # ✅ 從主視窗讀取所有參數
-                main_driver1 = self.main_window.driver1_combo.currentText()
-                main_driver2_data = self.main_window.driver2_combo.currentData()
-                main_driver2 = self.main_window.driver2_combo.currentText() if main_driver2_data is not None else None
-                main_lap1 = self.main_window.lap1_spinbox.value()
-                main_lap2 = self.main_window.lap2_spinbox.value()
-                main_is_fastest = self.main_window.fastest_lap_checkbox.isChecked()
-                
-                print(f"[SYNC_MODE] 主視窗參數:")
-                print(f"   車手 1: {main_driver1}")
-                print(f"   車手 2: {main_driver2}")
-                print(f"   圈數 1: {main_lap1}")
-                print(f"   圈數 2: {main_lap2}")
-                print(f"   最速圈: {main_is_fastest}")
-                
-                # ✅ 調用 _apply_driver_lap_settings 實際套用主視窗參數
-                print(f"[CALLING] _apply_driver_lap_settings() with main window params")
-                self._apply_driver_lap_settings(main_driver1, main_driver2, main_lap1, main_lap2, main_is_fastest)
-                print(f"[RETURNED] _apply_driver_lap_settings()")
-                print(f"[SYNC_MODE] ✅ 主視窗參數已套用到當前視窗")
+                try:
+                    # ✅ 從主視窗讀取所有參數（加入 try-except 保護）
+                    main_driver1 = self.main_window.driver1_combo.currentText() if hasattr(self.main_window, 'driver1_combo') else "VER"
+                    
+                    if hasattr(self.main_window, 'driver2_combo'):
+                        main_driver2_data = self.main_window.driver2_combo.currentData()
+                        main_driver2 = self.main_window.driver2_combo.currentText() if main_driver2_data is not None else None
+                    else:
+                        main_driver2 = None
+                    
+                    main_lap1 = self.main_window.lap1_spinbox.value() if hasattr(self.main_window, 'lap1_spinbox') else 1
+                    main_lap2 = self.main_window.lap2_spinbox.value() if hasattr(self.main_window, 'lap2_spinbox') else 1
+                    main_is_fastest = self.main_window.fastest_lap_checkbox.isChecked() if hasattr(self.main_window, 'fastest_lap_checkbox') else False
+                    
+                    print(f"[SYNC_MODE] 主視窗參數:")
+                    print(f"   車手 1: {main_driver1}")
+                    print(f"   車手 2: {main_driver2}")
+                    print(f"   圈數 1: {main_lap1}")
+                    print(f"   圈數 2: {main_lap2}")
+                    print(f"   最速圈: {main_is_fastest}")
+                    
+                    # ✅ 調用 _apply_driver_lap_settings 實際套用主視窗參數
+                    print(f"[CALLING] _apply_driver_lap_settings() with main window params")
+                    self._apply_driver_lap_settings(main_driver1, main_driver2, main_lap1, main_lap2, main_is_fastest)
+                    print(f"[RETURNED] _apply_driver_lap_settings()")
+                    print(f"[SYNC_MODE] ✅ 主視窗參數已套用到當前視窗")
+                    
+                except AttributeError as e:
+                    print(f"[ERROR] [SYNC_MODE] 無法從主視窗讀取參數: {e}")
+                    print(f"[ERROR] 這通常發生在 EXE 中物件引用失效")
+                    # 使用預設值繼續
+                    self._apply_driver_lap_settings("VER", None, 1, 1, False)
+                except Exception as e:
+                    print(f"[ERROR] [SYNC_MODE] 讀取主視窗參數時發生未預期錯誤: {e}")
+                    import traceback
+                    traceback.print_exc()
         
         # [TOOL] 修改邏輯：根據同步狀態決定行為
         # ⚠️ 關鍵修復：檢查 sync_driver_lap_enabled，如果停用則跳過主視窗同步
@@ -7049,28 +7096,46 @@ class WindowSettingsDialog(QDialog):
             # ⚠️ 關鍵修復：如果啟用同步，強制使用主視窗參數（單賽事模式）
             if sync_enabled:
                 print(f"[SYNC_FIX] 🔒 已啟用同步，強制使用主視窗參數（單賽事模式）")
-                # 從主視窗獲取當前參數（使用 combo box）
-                year1 = self.main_window.year_combo.currentText()
-                race1_display = self.main_window.race_combo.currentText()
-                race1 = self.main_window._get_race_key_from_display(race1_display)
-                session1 = self.main_window.session_combo.currentText()
-                year2 = year1  # 強制相同
-                race2 = race1  # 強制相同
-                session2 = session1  # 強制相同
-                
-                print(f"[SYNC_FIX] 主視窗參數: {year1} {race1} {session1}")
-                print(f"[SYNC_FIX] 強制設定: year2={year2}, session2={session2}")
-                
-                # 更新分析模組的跨賽事參數為主視窗值
-                analysis_module.driver1_year = year1
-                analysis_module.driver1_race = race1
-                analysis_module.driver1_session = session1
-                analysis_module.driver2_year = year2
-                analysis_module.driver2_race = race2
-                analysis_module.driver2_session = session2
-                
-                is_cross_event = False  # 強制設為 False
-                print(f"[SYNC_FIX] ✅ 已強制切換為單賽事模式（is_cross_event = False）")
+                try:
+                    # 從主視窗獲取當前參數（使用 combo box）- 加入 try-except 保護
+                    year1 = self.main_window.year_combo.currentText() if hasattr(self.main_window, 'year_combo') else year1
+                    
+                    if hasattr(self.main_window, 'race_combo'):
+                        race1_display = self.main_window.race_combo.currentText()
+                        # 檢查方法是否存在
+                        if hasattr(self.main_window, '_get_race_key_from_display'):
+                            race1 = self.main_window._get_race_key_from_display(race1_display)
+                        else:
+                            race1 = race1  # 保持原值
+                    
+                    session1 = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else session1
+                    year2 = year1  # 強制相同
+                    race2 = race1  # 強制相同
+                    session2 = session1  # 強制相同
+                    
+                    print(f"[SYNC_FIX] 主視窗參數: {year1} {race1} {session1}")
+                    print(f"[SYNC_FIX] 強制設定: year2={year2}, session2={session2}")
+                    
+                    # 更新分析模組的跨賽事參數為主視窗值
+                    analysis_module.driver1_year = year1
+                    analysis_module.driver1_race = race1
+                    analysis_module.driver1_session = session1
+                    analysis_module.driver2_year = year2
+                    analysis_module.driver2_race = race2
+                    analysis_module.driver2_session = session2
+                    
+                    is_cross_event = False  # 強制設為 False
+                    print(f"[SYNC_FIX] ✅ 已強制切換為單賽事模式（is_cross_event = False）")
+                    
+                except AttributeError as e:
+                    print(f"[ERROR] [SYNC_FIX] 無法從主視窗獲取參數: {e}")
+                    print(f"[ERROR] 使用對話框設定的參數作為備用")
+                    is_cross_event = (year1 != year2) or (session1 != session2)
+                except Exception as e:
+                    print(f"[ERROR] [SYNC_FIX] 獲取主視窗參數時發生錯誤: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    is_cross_event = (year1 != year2) or (session1 != session2)
             else:
                 is_cross_event = (year1 != year2) or (session1 != session2)
             
@@ -20357,12 +20422,16 @@ class StyleHMainWindow(QMainWindow):
     def closeEvent(self, event):
         """視窗關閉事件處理"""
         try:
+            # === 步驟 1: 停止所有定時器 ===
             if hasattr(self, 'api_health_timer') and self.api_health_timer:
                 self.api_health_timer.stop()
                 self.api_health_timer.deleteLater()
                 self.api_health_timer = None
+            
+            # === 步驟 2: 正確關閉 API Health Worker ===
             if hasattr(self, '_api_health_worker') and self._api_health_worker:
                 try:
+                    # 斷開所有信號連接
                     self._api_health_worker.result_ready.disconnect(self.on_api_health_result)
                 except Exception:
                     pass
@@ -20370,10 +20439,25 @@ class StyleHMainWindow(QMainWindow):
                     self._api_health_worker.finished.disconnect(self.on_api_health_finished)
                 except Exception:
                     pass
-                # ✅ 正確清理執行緒：等待完成並 deleteLater
+                
+                # ✅ 正確的執行緒停止順序
                 if self._api_health_worker.isRunning():
+                    # 1. 設置停止標誌（應用層）
+                    self._api_health_worker.stop_worker()
+                    # 2. 請求中斷（Qt 層）
                     self._api_health_worker.requestInterruption()
-                    self._api_health_worker.wait(300)  # 等待最多 300ms
+                    # 3. 等待執行緒完成
+                    self._api_health_worker.wait(500)  # 增加到 500ms
+                    # 4. 如果仍在運行，強制終止
+                    if self._api_health_worker.isRunning():
+                        print(f"[MAIN] ⚠️  API Health Worker 未在時限內結束，強制終止")
+                        self._api_health_worker.quit()
+                        self._api_health_worker.wait(200)
+                        if self._api_health_worker.isRunning():
+                            self._api_health_worker.terminate()
+                            self._api_health_worker.wait(100)
+                
+                # 5. 標記為待刪除
                 self._api_health_worker.deleteLater()
                 self._api_health_worker = None
             self._api_health_worker_active = False
@@ -20382,6 +20466,8 @@ class StyleHMainWindow(QMainWindow):
                 self.api_runtime_timer.stop()
                 self.api_runtime_timer.deleteLater()
                 self.api_runtime_timer = None
+            
+            # === 步驟 3: 正確關閉 API Runtime Worker ===
             if hasattr(self, '_api_runtime_worker') and self._api_runtime_worker:
                 try:
                     self._api_runtime_worker.result_ready.disconnect(self.on_api_runtime_result)
@@ -20391,9 +20477,25 @@ class StyleHMainWindow(QMainWindow):
                     self._api_runtime_worker.finished.disconnect(self.on_api_runtime_finished)
                 except Exception:
                     pass
+                
+                # ✅ 正確的執行緒停止順序
                 if self._api_runtime_worker.isRunning():
+                    # 1. 設置停止標誌（應用層）
+                    self._api_runtime_worker.stop_worker()
+                    # 2. 請求中斷（Qt 層）
                     self._api_runtime_worker.requestInterruption()
-                    self._api_runtime_worker.wait(300)
+                    # 3. 等待執行緒完成
+                    self._api_runtime_worker.wait(500)  # 增加到 500ms
+                    # 4. 如果仍在運行，強制終止
+                    if self._api_runtime_worker.isRunning():
+                        print(f"[MAIN] ⚠️  API Runtime Worker 未在時限內結束，強制終止")
+                        self._api_runtime_worker.quit()
+                        self._api_runtime_worker.wait(200)
+                        if self._api_runtime_worker.isRunning():
+                            self._api_runtime_worker.terminate()
+                            self._api_runtime_worker.wait(100)
+                
+                # 5. 標記為待刪除
                 self._api_runtime_worker.deleteLater()
                 self._api_runtime_worker = None
             self._api_runtime_worker_active = False
@@ -20891,10 +20993,10 @@ def main():
     
     print("[MAIN] 🧹 開始清理應用程式資源...")
     
-    # 強制處理所有待處理的事件
+    # ✅ 步驟 1: 強制處理所有待處理的事件
     app.processEvents()
     
-    # 智能執行緒清理（避免卡住）
+    # ✅ 步驟 2: 智能執行緒清理（避免卡住）
     import threading
     import time
     from PyQt5.QtCore import QThread
@@ -20922,6 +21024,10 @@ def main():
             # QThread 需要特殊處理
             if isinstance(thread, QThread):
                 qthreads.append(thread)
+                # ✅ 嘗試停止 QThread
+                if thread.isRunning():
+                    thread.requestInterruption()
+                    thread.quit()  # 退出事件循環
             else:
                 other_threads.append(thread)
         
@@ -20937,30 +21043,39 @@ def main():
         threads_to_wait = qthreads + other_threads
         
         if threads_to_wait:
-            print(f"[MAIN] ⏳ 等待 {len(threads_to_wait)} 個執行緒結束（最多 1 秒）...")
+            print(f"[MAIN] ⏳ 等待 {len(threads_to_wait)} 個執行緒結束（最多 1.5 秒）...")
             
             for thread in threads_to_wait:
                 # 計算剩餘時間
                 elapsed = time.time() - start_time
-                remaining = max(0, 1.0 - elapsed)  # 減少為 1 秒
+                remaining = max(0, 1.5 - elapsed)  # 增加到 1.5 秒
                 
                 if remaining <= 0:
                     print(f"[MAIN]   ⏱️  超時，跳過剩餘執行緒")
                     break
                 
                 if thread.is_alive():
+                    thread_id = f"'{thread.name}' ({thread.__class__.__name__})"
                     thread.join(timeout=remaining)
                     if thread.is_alive():
-                        print(f"[MAIN]   ⚠️  執行緒 '{thread.name}' 未在時限內結束")
+                        print(f"[MAIN]   ⚠️  執行緒 {thread_id} 未在時限內結束")
+                        # ✅ 對於 QThread，嘗試強制終止
+                        if isinstance(thread, QThread):
+                            print(f"[MAIN]   🔨 強制終止 QThread {thread_id}")
+                            thread.terminate()
+                            thread.wait(100)
         
         # 最終狀態
         final_threads = [t for t in threading.enumerate() if t != threading.main_thread()]
         if final_threads:
             print(f"[MAIN]   ℹ️  剩餘 {len(final_threads)} 個執行緒（將由 Python 自動清理）")
+            for t in final_threads:
+                print(f"[MAIN]      - {t.name} ({t.__class__.__name__})")
     
-    # 強制垃圾回收
+    # ✅ 步驟 3: 強制垃圾回收
     import gc
-    gc.collect()
+    collected = gc.collect()
+    print(f"[MAIN] 🗑️  垃圾回收完成，釋放 {collected} 個對象")
     
     print("[MAIN] 🛑 F1T 程序正常退出")
     sys.exit(result)

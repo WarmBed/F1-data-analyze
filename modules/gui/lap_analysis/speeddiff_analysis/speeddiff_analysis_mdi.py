@@ -52,12 +52,29 @@ class CrossEventComparisonWorker(QThread):
         
         self.force_refresh = force_refresh
         self.timeout = timeout
-        self.base_url = resolve_api_base_url().rstrip('/')
+        
+        # ✅ EXE 環境強化：安全解析 API URL，失敗時使用公開 URL
+        try:
+            self.base_url = resolve_api_base_url().rstrip('/')
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] API URL 解析成功: {self.base_url}")
+        except Exception as e:
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ⚠️ API URL 解析失敗，使用備用 URL: {e}")
+            from core.api_base_url import PUBLIC_API_BASE_URL
+            self.base_url = PUBLIC_API_BASE_URL.rstrip('/')
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 備用 URL: {self.base_url}")
 
     def run(self):
+        """執行 API 請求 - 強化 EXE 環境異常處理"""
         try:
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 開始執行 API 請求")
             self.progress.emit(20)
+            
+            # ✅ 防禦性檢查：確保 base_url 存在
+            if not hasattr(self, 'base_url') or not self.base_url:
+                raise RuntimeError("API base_url 未初始化")
+            
             endpoint = f"{self.base_url}/api/v2/analysis/cross-event-comparison"
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 目標端點: {endpoint}")
             
             # 構建請求參數
             query_params: Dict[str, Any] = {
@@ -76,10 +93,16 @@ class CrossEventComparisonWorker(QThread):
             if self.force_refresh:
                 query_params["force_refresh"] = True
 
-            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 請求 API: {endpoint}")
-            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 參數: {query_params}")
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 請求參數: {query_params}")
             
             start_ts = time.perf_counter()
+            self.progress.emit(30)
+            
+            # ✅ 防禦性檢查：確保 requests 模組可用
+            if not hasattr(requests, 'post'):
+                raise RuntimeError("requests 模組未正確載入")
+            
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 發送 POST 請求...")
             response = requests.post(
                 endpoint,
                 params=query_params,
@@ -87,9 +110,13 @@ class CrossEventComparisonWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] 收到回應，狀態碼: {response.status_code}")
             response.raise_for_status()
 
             payload = response.json()
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] JSON 解析成功")
+            
             if not isinstance(payload, dict):
                 raise ValueError("API response must be a JSON object")
             if not payload.get("success", False):
@@ -111,16 +138,40 @@ class CrossEventComparisonWorker(QThread):
             }
 
             self.progress.emit(90)
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ✅ 請求成功，發送 success 信號")
             self.success.emit({"data": data, "meta": meta})
             
+        except requests.exceptions.Timeout as e:
+            error_msg = f"API 請求超時 ({self.timeout}秒): {e}"
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f"無法連線到 API 伺服器: {e}"
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"HTTP 錯誤 ({e.response.status_code}): {e}"
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
         except Exception as exc:
-            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ❌ 請求失敗: {exc}")
-            import traceback
-            traceback.print_exc()
-            self.failure.emit(str(exc))
+            error_msg = f"未預期的錯誤: {type(exc).__name__}: {exc}"
+            print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            try:
+                import traceback
+                traceback.print_exc()
+            except:
+                pass
+            self.failure.emit(error_msg)
             
         finally:
-            self.progress.emit(100)
+            try:
+                self.progress.emit(100)
+                print(f"[SPEEDDIFF-CROSS-EVENT-WORKER] Worker 執行完成")
+            except:
+                pass  # 避免 finally 中的錯誤導致崩潰
 
 
 class speeddiffDataManager(QObject):
@@ -1334,7 +1385,6 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
 
         # ========== 實現抽象方法 ==========
 
-    @property
     def closeEvent(self, event):
         """
         ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
@@ -1589,21 +1639,55 @@ class SpeeddiffAnalysisModule(IAnalysisModule):
             # 更新資訊標籤
             self._update_info_label()
             
+            # 停止舊的 Worker（如果存在）
+            if hasattr(self, 'api_worker') and self.api_worker:
+                try:
+                    if self.api_worker.isRunning():
+                        print(f"[SPEEDDIFF-CROSS-EVENT] 停止舊的 Worker...")
+                        self.api_worker.requestInterruption()
+                        self.api_worker.wait(500)
+                except:
+                    pass
+            
             # 創建 API Worker
-            print(f"[SPEEDDIFF-CROSS-EVENT] 🚀 創建跨賽事比較 Worker...")
-            self.api_worker = CrossEventComparisonWorker(
-                driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
-                driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2
-            )
+            try:
+                print(f"[SPEEDDIFF-CROSS-EVENT] 🚀 創建跨賽事比較 Worker...")
+                self.api_worker = CrossEventComparisonWorker(
+                    driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
+                    driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2
+                )
+                print(f"[SPEEDDIFF-CROSS-EVENT] ✅ Worker 創建成功")
+            except Exception as e:
+                error_msg = f"創建 API Worker 失敗: {e}"
+                print(f"[ERROR] [SPEEDDIFF-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             # 連接信號
-            self.api_worker.success.connect(self._on_cross_event_data_loaded)
-            self.api_worker.failure.connect(self._on_cross_event_load_error)
-            self.api_worker.progress.connect(lambda value: print(f"[SPEEDDIFF-CROSS-EVENT] 進度: {value}%"))
+            try:
+                self.api_worker.success.connect(self._on_cross_event_data_loaded)
+                self.api_worker.failure.connect(self._on_cross_event_load_error)
+                self.api_worker.progress.connect(lambda value: print(f"[SPEEDDIFF-CROSS-EVENT] 進度: {value}%"))
+                print(f"[SPEEDDIFF-CROSS-EVENT] ✅ 信號連接成功")
+            except Exception as e:
+                error_msg = f"連接 Worker 信號失敗: {e}"
+                print(f"[ERROR] [SPEEDDIFF-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             # 啟動 Worker
-            print(f"[SPEEDDIFF-CROSS-EVENT] 🔄 啟動 API 請求...")
-            self.api_worker.start()
+            try:
+                print(f"[SPEEDDIFF-CROSS-EVENT] 🔄 啟動 API 請求...")
+                self.api_worker.start()
+                print(f"[SPEEDDIFF-CROSS-EVENT] ✅ API Worker 已啟動")
+            except Exception as e:
+                error_msg = f"啟動 API Worker 失敗: {e}"
+                print(f"[ERROR] [SPEEDDIFF-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             return True
         except Exception as e:

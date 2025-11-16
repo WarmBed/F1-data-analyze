@@ -38,27 +38,53 @@ class CrossEventComparisonWorker(QThread):
     def __init__(self, driver1: str, year1: int, race1: str, session1: str, lap1: int,
                  driver2: str, year2: int, race2: str, session2: str, lap2: int,
                  force_refresh: bool = False, timeout: float = 120.0, parent=None):
-        super().__init__(parent)
-        self.driver1 = driver1
-        self.year1 = year1
-        self.race1 = race1
-        self.session1 = session1
-        self.lap1 = lap1
-        
-        self.driver2 = driver2
-        self.year2 = year2
-        self.race2 = race2
-        self.session2 = session2
-        self.lap2 = lap2
-        
-        self.force_refresh = force_refresh
-        self.timeout = timeout
-        self.base_url = resolve_api_base_url().rstrip('/')
+        """初始化跨賽事比較 Worker - 強化 EXE 環境異常處理"""
+        try:
+            super().__init__(parent)
+            self.driver1 = driver1
+            self.year1 = year1
+            self.race1 = race1
+            self.session1 = session1
+            self.lap1 = lap1
+            
+            self.driver2 = driver2
+            self.year2 = year2
+            self.race2 = race2
+            self.session2 = session2
+            self.lap2 = lap2
+            
+            self.force_refresh = force_refresh
+            self.timeout = timeout
+            
+            # ✅ 安全調用 resolve_api_base_url（防止 EXE 環境崩潰）
+            try:
+                self.base_url = resolve_api_base_url().rstrip('/')
+                print(f"[CROSS-EVENT-WORKER] ✅ API base URL: {self.base_url}")
+            except Exception as e:
+                # 如果解析失敗，使用硬編碼的公開 API
+                from core.api_base_url import PUBLIC_API_BASE_URL
+                self.base_url = PUBLIC_API_BASE_URL.rstrip('/')
+                print(f"[CROSS-EVENT-WORKER] ⚠️ API URL 解析失敗，使用預設: {self.base_url}")
+                print(f"[CROSS-EVENT-WORKER] 錯誤: {e}")
+                
+        except Exception as e:
+            print(f"[ERROR] [CROSS-EVENT-WORKER] Worker 初始化失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            raise  # 重新拋出異常，讓調用者知道初始化失敗
 
     def run(self):
+        """執行 API 請求 - 強化 EXE 環境異常處理"""
         try:
+            print(f"[CROSS-EVENT-WORKER] 開始執行 API 請求")
             self.progress.emit(20)
+            
+            # ✅ 防禦性檢查：確保 base_url 存在
+            if not hasattr(self, 'base_url') or not self.base_url:
+                raise RuntimeError("API base_url 未初始化")
+            
             endpoint = f"{self.base_url}/api/v2/analysis/cross-event-comparison"
+            print(f"[CROSS-EVENT-WORKER] 目標端點: {endpoint}")
             
             # 構建請求參數
             query_params: Dict[str, Any] = {
@@ -77,10 +103,16 @@ class CrossEventComparisonWorker(QThread):
             if self.force_refresh:
                 query_params["force_refresh"] = True
 
-            print(f"[CROSS-EVENT-WORKER] 請求 API: {endpoint}")
-            print(f"[CROSS-EVENT-WORKER] 參數: {query_params}")
+            print(f"[CROSS-EVENT-WORKER] 請求參數: {query_params}")
             
             start_ts = time.perf_counter()
+            self.progress.emit(30)
+            
+            # ✅ 防禦性檢查：確保 requests 模組可用
+            if not hasattr(requests, 'post'):
+                raise RuntimeError("requests 模組未正確載入")
+            
+            print(f"[CROSS-EVENT-WORKER] 發送 POST 請求...")
             response = requests.post(
                 endpoint,
                 params=query_params,
@@ -88,9 +120,13 @@ class CrossEventComparisonWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            print(f"[CROSS-EVENT-WORKER] 收到回應，狀態碼: {response.status_code}")
             response.raise_for_status()
 
             payload = response.json()
+            print(f"[CROSS-EVENT-WORKER] JSON 解析成功")
+            
             if not isinstance(payload, dict):
                 raise ValueError("API response must be a JSON object")
             if not payload.get("success", False):
@@ -112,16 +148,40 @@ class CrossEventComparisonWorker(QThread):
             }
 
             self.progress.emit(90)
+            print(f"[CROSS-EVENT-WORKER] ✅ 請求成功，發送 success 信號")
             self.success.emit({"data": data, "meta": meta})
             
+        except requests.exceptions.Timeout as e:
+            error_msg = f"API 請求超時 ({self.timeout}秒): {e}"
+            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f"無法連線到 API 伺服器: {e}"
+            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"HTTP 錯誤 ({e.response.status_code}): {e}"
+            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
         except Exception as exc:
-            print(f"[CROSS-EVENT-WORKER] ❌ 請求失敗: {exc}")
-            import traceback
-            traceback.print_exc()
-            self.failure.emit(str(exc))
+            error_msg = f"未預期的錯誤: {type(exc).__name__}: {exc}"
+            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            try:
+                import traceback
+                traceback.print_exc()
+            except:
+                pass
+            self.failure.emit(error_msg)
             
         finally:
-            self.progress.emit(100)
+            try:
+                self.progress.emit(100)
+                print(f"[CROSS-EVENT-WORKER] Worker 執行完成")
+            except:
+                pass  # 避免 finally 中的錯誤導致崩潰
 
 
 class GearDataManager(QObject):
@@ -854,21 +914,58 @@ class GearAnalysisModule(IAnalysisModule):
             # 實作跨賽事比較邏輯：調用 API 端點
             print(f"[CROSS-EVENT] 開始調用 API 端點: /api/v2/analysis/cross-event-comparison")
             
+            # 停止舊的 Worker（如果存在）
+            if hasattr(self, '_cross_event_worker') and self._cross_event_worker:
+                try:
+                    if self._cross_event_worker.isRunning():
+                        print(f"[CROSS-EVENT] 停止舊的 Worker...")
+                        self._cross_event_worker.requestInterruption()
+                        self._cross_event_worker.wait(500)
+                except:
+                    pass
+            
             # 創建 API Worker
-            api_worker = CrossEventComparisonWorker(
-                driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
-                driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2,
-                force_refresh=False,
-                timeout=120
-            )
+            try:
+                api_worker = CrossEventComparisonWorker(
+                    driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
+                    driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2,
+                    force_refresh=False,
+                    timeout=120
+                )
+                print(f"[CROSS-EVENT] ✅ Worker 創建成功")
+            except Exception as e:
+                error_msg = f"創建 API Worker 失敗: {e}"
+                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             # 連接信號
-            api_worker.success.connect(self._on_cross_event_data_loaded)
-            api_worker.failure.connect(self._on_cross_event_load_error)
-            api_worker.progress.connect(self._on_api_progress)
+            try:
+                api_worker.success.connect(self._on_cross_event_data_loaded)
+                api_worker.failure.connect(self._on_cross_event_load_error)
+                api_worker.progress.connect(self._on_api_progress)
+                print(f"[CROSS-EVENT] ✅ 信號連接成功")
+            except Exception as e:
+                error_msg = f"連接 Worker 信號失敗: {e}"
+                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
+            
+            # 🔴 關鍵修復：保存 Worker 引用（防止被垃圾回收導致 EXE 崩潰）
+            self._cross_event_worker = api_worker
             
             # 啟動 Worker
-            api_worker.start()
+            try:
+                api_worker.start()
+                print(f"[CROSS-EVENT] ✅ API Worker 已啟動")
+            except Exception as e:
+                error_msg = f"啟動 API Worker 失敗: {e}"
+                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             print(f"[CROSS-EVENT] API 請求已啟動")
             return True
@@ -1580,7 +1677,6 @@ class GearAnalysisModule(IAnalysisModule):
 
         # ========== 實現抽象方法 ==========
 
-    @property
     def closeEvent(self, event):
         """
         ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源

@@ -170,8 +170,17 @@ class GuiTranslator:
             'params_locked_tooltip': {'zh': '已啟用同步接收，參數由主程式控制', 'en': 'Sync enabled, parameters controlled by main window', 'ja': '同期有効、パラメータはメインウィンドウで制御'},
             
             # 車手與圈數同步控制
+            'driver_lap_sync_control': {'zh': '車手與圈數同步控制', 'en': 'Driver and Lap Sync Control', 'ja': 'ドライバーとラップの同期制御'},
+            'sync_driver_lap_checkbox': {'zh': '[LINK] 與主視窗同步車手與圈數', 'en': '[LINK] Sync Driver and Lap with Main Window', 'ja': '[LINK] メインウィンドウとドライバーとラップを同期'},
+            'sync_driver_lap_tooltip': {'zh': '勾選時車手與圈數由主視窗控制，取消勾選可手動設定', 'en': 'When checked, driver and lap are controlled by main window. Uncheck to set manually', 'ja': 'チェックすると、ドライバーとラップはメインウィンドウで制御されます。手動設定するにはチェックを外してください'},
             'driver1_section': {'zh': '車手 1:', 'en': 'Driver 1:', 'ja': 'ドライバー 1:'},
             'driver2_section': {'zh': '車手 2:', 'en': 'Driver 2:', 'ja': 'ドライバー 2:'},
+            'year_label': {'zh': '年份:', 'en': 'Year:', 'ja': '年:'},
+            'race_label': {'zh': '賽事:', 'en': 'Race:', 'ja': 'レース:'},
+            'session_label': {'zh': '賽段:', 'en': 'Session:', 'ja': 'セッション:'},
+            'driver_label': {'zh': '車手:', 'en': 'Driver:', 'ja': 'ドライバー:'},
+            'lap_label': {'zh': '圈數:', 'en': 'Lap:', 'ja': 'ラップ:'},
+            'fastest_lap_label': {'zh': '最速圈', 'en': 'Fastest Lap', 'ja': '最速ラップ'},
             'use_time_axis_checkbox': {'zh': '使用時間軸 (Use Time Axis)', 'en': 'Use Time Axis', 'ja': '時間軸を使用'},
             'use_time_axis_tooltip': {'zh': '使用時間（秒）作為 X 軸，而非距離（米）', 'en': 'Use time (seconds) as X-axis instead of distance (meters)', 'ja': '距離（メートル）ではなく時間（秒）をX軸として使用'},
             

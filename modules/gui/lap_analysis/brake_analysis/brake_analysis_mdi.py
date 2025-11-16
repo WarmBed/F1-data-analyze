@@ -43,27 +43,53 @@ class CrossEventBrakeComparisonWorker(QThread):
     def __init__(self, driver1: str, year1: int, race1: str, session1: str, lap1: int,
                  driver2: str, year2: int, race2: str, session2: str, lap2: int,
                  force_refresh: bool = False, timeout: float = 120.0, parent=None):
-        super().__init__(parent)
-        self.driver1 = driver1
-        self.year1 = year1
-        self.race1 = race1
-        self.session1 = session1
-        self.lap1 = lap1
-        
-        self.driver2 = driver2
-        self.year2 = year2
-        self.race2 = race2
-        self.session2 = session2
-        self.lap2 = lap2
-        
-        self.force_refresh = force_refresh
-        self.timeout = timeout
-        self.base_url = resolve_api_base_url().rstrip('/')
+        """初始化跨賽事比較 Worker - 強化 EXE 環境異常處理"""
+        try:
+            super().__init__(parent)
+            self.driver1 = driver1
+            self.year1 = year1
+            self.race1 = race1
+            self.session1 = session1
+            self.lap1 = lap1
+            
+            self.driver2 = driver2
+            self.year2 = year2
+            self.race2 = race2
+            self.session2 = session2
+            self.lap2 = lap2
+            
+            self.force_refresh = force_refresh
+            self.timeout = timeout
+            
+            # ✅ 安全調用 resolve_api_base_url（防止 EXE 環境崩潰）
+            try:
+                self.base_url = resolve_api_base_url().rstrip('/')
+                print(f"[BRAKE-CROSS-EVENT-WORKER] ✅ API base URL: {self.base_url}")
+            except Exception as e:
+                # 如果解析失敗，使用硬編碼的公開 API
+                from core.api_base_url import PUBLIC_API_BASE_URL
+                self.base_url = PUBLIC_API_BASE_URL.rstrip('/')
+                print(f"[BRAKE-CROSS-EVENT-WORKER] ⚠️ API URL 解析失敗，使用預設: {self.base_url}")
+                print(f"[BRAKE-CROSS-EVENT-WORKER] 錯誤: {e}")
+                
+        except Exception as e:
+            print(f"[ERROR] [BRAKE-CROSS-EVENT-WORKER] Worker 初始化失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            raise  # 重新拋出異常，讓調用者知道初始化失敗
 
     def run(self):
+        """執行 API 請求 - 強化 EXE 環境異常處理"""
         try:
+            print(f"[BRAKE-CROSS-EVENT-WORKER] 開始執行 API 請求")
             self.progress.emit(20)
+            
+            # ✅ 防禦性檢查：確保 base_url 存在
+            if not hasattr(self, 'base_url') or not self.base_url:
+                raise RuntimeError("API base_url 未初始化")
+            
             endpoint = f"{self.base_url}/api/v2/analysis/cross-event-comparison"
+            print(f"[BRAKE-CROSS-EVENT-WORKER] 目標端點: {endpoint}")
             
             # 構建請求參數
             query_params: Dict[str, Any] = {
@@ -82,10 +108,16 @@ class CrossEventBrakeComparisonWorker(QThread):
             if self.force_refresh:
                 query_params["force_refresh"] = True
 
-            print(f"[BRAKE-CROSS-EVENT-WORKER] 請求 API: {endpoint}")
-            print(f"[BRAKE-CROSS-EVENT-WORKER] 參數: {query_params}")
+            print(f"[BRAKE-CROSS-EVENT-WORKER] 請求參數: {query_params}")
             
             start_ts = time.perf_counter()
+            self.progress.emit(30)
+            
+            # ✅ 防禦性檢查：確保 requests 模組可用
+            if not hasattr(requests, 'post'):
+                raise RuntimeError("requests 模組未正確載入")
+            
+            print(f"[BRAKE-CROSS-EVENT-WORKER] 發送 POST 請求...")
             response = requests.post(
                 endpoint,
                 params=query_params,
@@ -93,9 +125,13 @@ class CrossEventBrakeComparisonWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            print(f"[BRAKE-CROSS-EVENT-WORKER] 收到回應，狀態碼: {response.status_code}")
             response.raise_for_status()
 
             payload = response.json()
+            print(f"[BRAKE-CROSS-EVENT-WORKER] JSON 解析成功")
+            
             if not isinstance(payload, dict):
                 raise ValueError("API response must be a JSON object")
             if not payload.get("success", False):
@@ -117,16 +153,40 @@ class CrossEventBrakeComparisonWorker(QThread):
             }
 
             self.progress.emit(90)
+            print(f"[BRAKE-CROSS-EVENT-WORKER] ✅ 請求成功，發送 success 信號")
             self.success.emit({"data": data, "meta": meta})
             
+        except requests.exceptions.Timeout as e:
+            error_msg = f"API 請求超時 ({self.timeout}秒): {e}"
+            print(f"[BRAKE-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f"無法連線到 API 伺服器: {e}"
+            print(f"[BRAKE-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
+        except requests.exceptions.HTTPError as e:
+            error_msg = f"HTTP 錯誤 ({e.response.status_code}): {e}"
+            print(f"[BRAKE-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            self.failure.emit(error_msg)
+            
         except Exception as exc:
-            print(f"[BRAKE-CROSS-EVENT-WORKER] ❌ 請求失敗: {exc}")
-            import traceback
-            traceback.print_exc()
-            self.failure.emit(str(exc))
+            error_msg = f"未預期的錯誤: {type(exc).__name__}: {exc}"
+            print(f"[BRAKE-CROSS-EVENT-WORKER] ❌ {error_msg}")
+            try:
+                import traceback
+                traceback.print_exc()
+            except:
+                pass
+            self.failure.emit(error_msg)
             
         finally:
-            self.progress.emit(100)
+            try:
+                self.progress.emit(100)
+                print(f"[BRAKE-CROSS-EVENT-WORKER] Worker 執行完成")
+            except:
+                pass  # 避免 finally 中的錯誤導致崩潰
 
 class BrakeDataManager(QObject):
     """brake數據管理器 - 負責JSON緩存和CLI備援"""
@@ -698,21 +758,58 @@ class BrakeAnalysisModule(IAnalysisModule):
             # 實作跨賽事比較邏輯：調用 API 端點
             print(f"[BRAKE-CROSS-EVENT] 開始調用 API 端點: /api/v2/analysis/cross-event-comparison")
             
+            # 停止舊的 Worker（如果存在）
+            if hasattr(self, '_cross_event_worker') and self._cross_event_worker:
+                try:
+                    if self._cross_event_worker.isRunning():
+                        print(f"[BRAKE-CROSS-EVENT] 停止舊的 Worker...")
+                        self._cross_event_worker.requestInterruption()
+                        self._cross_event_worker.wait(500)
+                except:
+                    pass
+            
             # 創建 API Worker
-            api_worker = CrossEventBrakeComparisonWorker(
-                driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
-                driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2,
-                force_refresh=False,
-                timeout=120
-            )
+            try:
+                api_worker = CrossEventBrakeComparisonWorker(
+                    driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
+                    driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2,
+                    force_refresh=False,
+                    timeout=120
+                )
+                print(f"[BRAKE-CROSS-EVENT] ✅ Worker 創建成功")
+            except Exception as e:
+                error_msg = f"創建 API Worker 失敗: {e}"
+                print(f"[ERROR] [BRAKE-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             # 連接信號
-            api_worker.success.connect(self._on_cross_event_data_loaded)
-            api_worker.failure.connect(self._on_cross_event_load_error)
-            api_worker.progress.connect(self._on_api_progress)
+            try:
+                api_worker.success.connect(self._on_cross_event_data_loaded)
+                api_worker.failure.connect(self._on_cross_event_load_error)
+                api_worker.progress.connect(self._on_api_progress)
+                print(f"[BRAKE-CROSS-EVENT] ✅ 信號連接成功")
+            except Exception as e:
+                error_msg = f"連接 Worker 信號失敗: {e}"
+                print(f"[ERROR] [BRAKE-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
+            
+            # 🔴 關鍵修復：保存 Worker 引用（防止被垃圾回收導致 EXE 崩潰）
+            self._cross_event_worker = api_worker
             
             # 啟動 Worker
-            api_worker.start()
+            try:
+                api_worker.start()
+                print(f"[BRAKE-CROSS-EVENT] ✅ API Worker 已啟動")
+            except Exception as e:
+                error_msg = f"啟動 API Worker 失敗: {e}"
+                print(f"[ERROR] [BRAKE-CROSS-EVENT] {error_msg}")
+                import traceback
+                traceback.print_exc()
+                return False
             
             print(f"[BRAKE-CROSS-EVENT] API 請求已啟動")
             return True
@@ -986,7 +1083,13 @@ class BrakeAnalysisModule(IAnalysisModule):
             print(f"[brake_MDI] 車手: {driver1} vs {driver2}")
             print(f"[brake_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
             print(f"[brake_MDI] 最速圈: {is_fastest}")
-            print(f"[brake_MDI] 🕒 時間軸模式: {use_time_axis}")
+            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 4: MDI 收到 use_time_axis 參數")
+            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
+            print(f"[brake_MDI] ⏱️  使用時間軸: {use_time_axis}")
+            
+            # 儲存時間軸設定
+            self.use_time_axis = use_time_axis
+            print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
@@ -1030,63 +1133,91 @@ class BrakeAnalysisModule(IAnalysisModule):
                 self.brake_chart_widget.set_lap_numbers(lap1, lap2)
                 print(f"[brake_MDI] ✅ 已更新圖表組件的圈數顯示")
             
-            # ✅ 修復：無條件重載數據（與 Speed 模組一致）
-            # 原因：從跨賽事模式切換回一般模式時，參數可能相同但模式已變更
-            print(f"[brake_MDI] � 重新載入數據...")
-            
-            # 載入新數據
-            if self.data_manager:
-                print(f"[brake_MDI] 📡 調用數據管理器載入新數據...")
-                success = self.data_manager.load_brake_data(
-                    year=self.current_year,
-                    race=self.current_race,
-                    session=self.current_session,
-                    driver1=self.driver1,
-                    driver2=self.driver2,
-                    lap1=self.lap1,
-                    lap2=self.lap2
-                )
+            if params_changed:
+                print(f"[brake_MDI] 🔄 參數已變化，開始重載數據...")
                 
-                if success:
-                    print(f"[brake_MDI] ✅ 圈速參數更新後數據重載成功")
+                # 載入新數據
+                if self.data_manager:
+                    print(f"[brake_MDI] 📡 調用數據管理器載入新數據...")
+                    success = self.data_manager.load_brake_data(
+                        year=self.current_year,
+                        race=self.current_race,
+                        session=self.current_session,
+                        driver1=self.driver1,
+                        driver2=self.driver2,
+                        lap1=self.lap1,
+                        lap2=self.lap2
+                    )
                     
-                    # ✅ 修復：在數據載入後設置時間軸（與 Speed 模組一致）
-                    print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: BrakeAnalysisModule 準備設置圖表時間軸模式")
-                    print(f"🕒 [TIME_AXIS_DEBUG]   self.brake_chart_widget 存在: {self.brake_chart_widget is not None}")
-                    if self.brake_chart_widget:
-                        print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(brake_chart_widget, 'set_time_axis_mode'): {hasattr(self.brake_chart_widget, 'set_time_axis_mode')}")
-                    
-                    if self.brake_chart_widget and hasattr(self.brake_chart_widget, 'set_time_axis_mode'):
-                        print(f"🕒 [TIME_AXIS_DEBUG]   調用 brake_chart_widget.set_time_axis_mode({use_time_axis})")
-                        self.brake_chart_widget.set_time_axis_mode(use_time_axis)
-                        print(f"[brake_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
-                        print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                    if success:
+                        print(f"[brake_MDI] ✅ 圈速參數更新後數據重載成功")
+                        
+                        # 應用時間軸設定到圖表
+                        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: 準備設置圖表時間軸模式")
+                        print(f"🕒 [TIME_AXIS_DEBUG]   self.brake_chart_widget 存在: {self.brake_chart_widget is not None}")
+                        if self.brake_chart_widget:
+                            print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(brake_chart_widget, 'set_time_axis_mode'): {hasattr(self.brake_chart_widget, 'set_time_axis_mode')}")
+                        
+                        if self.brake_chart_widget and hasattr(self.brake_chart_widget, 'set_time_axis_mode'):
+                            print(f"🕒 [TIME_AXIS_DEBUG]   調用 brake_chart_widget.set_time_axis_mode({use_time_axis})")
+                            self.brake_chart_widget.set_time_axis_mode(use_time_axis)
+                            print(f"[brake_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
+                            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                        else:
+                            print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
+                        
+                        # 發送參數更新信號
+                        self.parameters_updated.emit({
+                            'year': self.current_year,
+                            'race': self.current_race,
+                            'session': self.current_session,
+                            'driver1': self.driver1,
+                            'driver2': self.driver2,
+                            'lap1': self.lap1,
+                            'lap2': self.lap2
+                        })
+                        
+                        # 更新資訊標籤
+                        self._update_info_label()
+                        
+                        # 更新視窗標題以反映新的參數 - 使用統一的 get_window_title
+                        parent = getattr(self, 'parent_window', None)
+                        if parent and hasattr(parent, 'setWindowTitle'):
+                            new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                            parent.setWindowTitle(new_title)
+                            print(f"[brake_MDI] 🏷️ 視窗標題已更新為: {new_title}")
+                        else:
+                            print(f"[brake_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                        
+                        return True
                     else:
-                        print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
-                    
-                    # 發送參數更新信號
-                    self.parameters_updated.emit({
-                        'year': self.current_year,
-                        'race': self.current_race,
-                        'session': self.current_session,
-                        'driver1': self.driver1,
-                        'driver2': self.driver2,
-                        'lap1': self.lap1,
-                        'lap2': self.lap2
-                    })
-                    # ⚠️ [參數資訊標籤] 更新資訊標籤顯示
-                    self._update_info_label()
-                    print(f"[brake_MDI] 📋 已更新資訊標籤")
-                    return True
+                        print(f"[brake_MDI] ❌ 圈速參數更新後數據重載失敗")
+                        return False
                 else:
-                    print(f"[brake_MDI] ❌ 圈速參數更新後數據重載失敗")
+                    print(f"[brake_MDI] ❌ 數據管理器未初始化")
                     return False
             else:
-                print(f"[brake_MDI] ❌ 數據管理器未初始化")
-                return False
+                print(f"[brake_MDI] ℹ️ 圈速參數未變化，保持現有數據")
+                
+                # 即使參數未變化，也確保視窗標題是正確的 - 使用統一的 get_window_title
+                parent = getattr(self, 'parent_window', None)
+                if parent and hasattr(parent, 'setWindowTitle'):
+                    current_title = parent.windowTitle()
+                    expected_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
+                    if current_title != expected_title:
+                        parent.setWindowTitle(expected_title)
+                        print(f"[brake_MDI] 🏷️ 同步視窗標題: {expected_title}")
+                else:
+                    print(f"[brake_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
+                
+                return True
                 
         except Exception as e:
-            print(f"[ERROR] [brake_MDI] update_lap_parameters 失敗: {str(e)}")
+            # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 bound method 和 self）
+            print(f"[ERROR] [brake_MDI] 圈速參數更新失敗: {e}")
+            # 調試時可以取消註解：
+            # import traceback
+            # traceback.print_exc()
             return False
     
     def _update_chart(self, data: dict):
@@ -1627,7 +1758,6 @@ class BrakeAnalysisModule(IAnalysisModule):
 
         # ========== 實現抽象方法 ==========
 
-    @property
     def closeEvent(self, event):
         """
         ⚠️ 關鍵修復：MDI 視窗關閉時清理執行緒資源
@@ -1662,6 +1792,7 @@ class BrakeAnalysisModule(IAnalysisModule):
         # 調用父類的 closeEvent
         super().closeEvent(event)
 
+    @property
     def module_name(self) -> str:
         """模組名稱"""
         return "brake_analysis"
