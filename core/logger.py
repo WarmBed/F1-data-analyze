@@ -21,6 +21,7 @@ __all__ = [
     "setup_logging",
     "get_logger",
     "restore_print",
+    "logged_print",
 ]
 
 _DEFAULT_COMPONENT = "app"
@@ -304,29 +305,34 @@ def _resolve_log_dir(log_dir: Optional[PathLike]) -> Path:
     return Path("logs")
 
 
+# 模組級別的 logged_print 函數（供外部模組訪問）
+def logged_print(*args: Any, **kwargs: Any) -> None:
+    """
+    將 print 輸出重定向到 logger。
+    
+    此函數在模組級別定義，以便外部模組（如 numba）可以訪問。
+    """
+    file_arg = kwargs.get("file", sys.stdout)
+    end_arg = kwargs.get("end", "\n")
+
+    if file_arg is not None and file_arg is not sys.stdout:
+        _ORIGINAL_PRINT(*args, **kwargs)
+        return
+    if end_arg != "\n":
+        _ORIGINAL_PRINT(*args, **kwargs)
+        return
+
+    sep = kwargs.get("sep", " ")
+    message = sep.join(str(arg) for arg in args)
+    level = _infer_log_level(message)
+    logger = logging.getLogger("f1.console")
+    logger.log(level, message)
 
 
 def _patch_print_adapter() -> None:
     global _PRINT_PATCHED
     if _PRINT_PATCHED:
         return
-
-    def logged_print(*args: Any, **kwargs: Any) -> None:
-        file_arg = kwargs.get("file", sys.stdout)
-        end_arg = kwargs.get("end", "\n")
-
-        if file_arg is not None and file_arg is not sys.stdout:
-            _ORIGINAL_PRINT(*args, **kwargs)
-            return
-        if end_arg != "\n":
-            _ORIGINAL_PRINT(*args, **kwargs)
-            return
-
-        sep = kwargs.get("sep", " ")
-        message = sep.join(str(arg) for arg in args)
-        level = _infer_log_level(message)
-        logger = logging.getLogger("f1.console")
-        logger.log(level, message)
 
     builtins.print = logged_print
     _PRINT_PATCHED = True

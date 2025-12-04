@@ -315,13 +315,19 @@ def _map_official_corners_to_telemetry(session, telemetry_data, telemetry_distan
             else:
                 mapped_distance = 0.0
             
+            # 獲取 FastF1 原始的單圈距離 (Distance 欄位)
+            fastf1_distance = 0.0
+            if 'Distance' in corner_row.index and pd.notna(corner_row['Distance']):
+                fastf1_distance = float(corner_row['Distance'])
+            
             # 構建彎道資料
             corner_data = {
                 "number": corner_num,
                 "x": corner_x,
                 "y": corner_y,
                 "angle": corner_angle,
-                "mapped_distance": mapped_distance,
+                "distance": fastf1_distance,  # FastF1 原始單圈距離
+                "mapped_distance": mapped_distance,  # 多圈累積距離 (保留向後相容)
                 "mapping_error": mapping_error
             }
             

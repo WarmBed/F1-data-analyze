@@ -1,0 +1,260 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "F1 賽道進站時間損失資料庫 (Pit Lane Time Loss)",
+    "last_updated": "2025-12-03",
+    "sources": [
+      "F1 Official Technical Documents",
+      "FastF1 2023-2024 Season Data Analysis",
+      "AWS F1 Insights"
+    ],
+    "notes": {
+      "green_flag": "正常比賽時的進站時間損失",
+      "safety_car": "安全車期間的進站時間損失 (約 50-55% of green)",
+      "virtual_safety_car": "VSC 期間的進站時間損失 (約 35-40% of green)"
+    }
+  },
+  
+  "circuits": {
+    "Bahrain": {
+      "official_name": "Bahrain International Circuit",
+      "pit_loss_times": {
+        "green_flag": 21.0,
+        "safety_car": 11.0,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Jeddah": {
+      "official_name": "Jeddah Corniche Circuit",
+      "pit_loss_times": {
+        "green_flag": 23.0,
+        "safety_car": 12.0,
+        "virtual_safety_car": 9.0
+      }
+    },
+    "Melbourne": {
+      "official_name": "Albert Park Circuit",
+      "pit_loss_times": {
+        "green_flag": 20.0,
+        "safety_car": 10.5,
+        "virtual_safety_car": 7.5
+      }
+    },
+    "Suzuka": {
+      "official_name": "Suzuka International Racing Course",
+      "pit_loss_times": {
+        "green_flag": 24.0,
+        "safety_car": 12.5,
+        "virtual_safety_car": 9.0
+      }
+    },
+    "Shanghai": {
+      "official_name": "Shanghai International Circuit",
+      "pit_loss_times": {
+        "green_flag": 22.5,
+        "safety_car": 12.0,
+        "virtual_safety_car": 8.5
+      }
+    },
+    "Miami": {
+      "official_name": "Miami International Autodrome",
+      "pit_loss_times": {
+        "green_flag": 23.0,
+        "safety_car": 12.0,
+        "virtual_safety_car": 8.5
+      }
+    },
+    "Imola": {
+      "official_name": "Autodromo Enzo e Dino Ferrari",
+      "pit_loss_times": {
+        "green_flag": 24.0,
+        "safety_car": 12.5,
+        "virtual_safety_car": 9.0
+      }
+    },
+    "Monaco": {
+      "official_name": "Circuit de Monaco",
+      "pit_loss_times": {
+        "green_flag": 21.5,
+        "safety_car": 11.0,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Montreal": {
+      "official_name": "Circuit Gilles Villeneuve",
+      "pit_loss_times": {
+        "green_flag": 20.5,
+        "safety_car": 10.5,
+        "virtual_safety_car": 7.5
+      }
+    },
+    "Barcelona": {
+      "official_name": "Circuit de Barcelona-Catalunya",
+      "pit_loss_times": {
+        "green_flag": 22.0,
+        "safety_car": 11.5,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Spielberg": {
+      "official_name": "Red Bull Ring",
+      "pit_loss_times": {
+        "green_flag": 19.0,
+        "safety_car": 10.0,
+        "virtual_safety_car": 7.0
+      }
+    },
+    "Silverstone": {
+      "official_name": "Silverstone Circuit",
+      "pit_loss_times": {
+        "green_flag": 21.0,
+        "safety_car": 11.0,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Hungaroring": {
+      "official_name": "Hungaroring",
+      "pit_loss_times": {
+        "green_flag": 22.5,
+        "safety_car": 12.0,
+        "virtual_safety_car": 8.5
+      }
+    },
+    "Spa": {
+      "official_name": "Circuit de Spa-Francorchamps",
+      "pit_loss_times": {
+        "green_flag": 23.5,
+        "safety_car": 12.5,
+        "virtual_safety_car": 9.0
+      }
+    },
+    "Zandvoort": {
+      "official_name": "Circuit Zandvoort",
+      "pit_loss_times": {
+        "green_flag": 18.5,
+        "safety_car": 9.5,
+        "virtual_safety_car": 7.0
+      }
+    },
+    "Monza": {
+      "official_name": "Autodromo Nazionale di Monza",
+      "pit_loss_times": {
+        "green_flag": 25.0,
+        "safety_car": 13.0,
+        "virtual_safety_car": 9.5
+      }
+    },
+    "Baku": {
+      "official_name": "Baku City Circuit",
+      "pit_loss_times": {
+        "green_flag": 22.0,
+        "safety_car": 11.5,
+        "virtual_safety_car": 8.5
+      }
+    },
+    "Singapore": {
+      "official_name": "Marina Bay Street Circuit",
+      "pit_loss_times": {
+        "green_flag": 28.0,
+        "safety_car": 14.5,
+        "virtual_safety_car": 10.5
+      }
+    },
+    "Austin": {
+      "official_name": "Circuit of the Americas",
+      "pit_loss_times": {
+        "green_flag": 22.0,
+        "safety_car": 11.5,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Mexico City": {
+      "official_name": "Autódromo Hermanos Rodríguez",
+      "pit_loss_times": {
+        "green_flag": 21.0,
+        "safety_car": 11.0,
+        "virtual_safety_car": 8.0
+      }
+    },
+    "Interlagos": {
+      "official_name": "Autódromo José Carlos Pace",
+      "pit_loss_times": {
+        "green_flag": 20.5,
+        "safety_car": 10.5,
+        "virtual_safety_car": 7.5
+      }
+    },
+    "Las Vegas": {
+      "official_name": "Las Vegas Strip Circuit",
+      "pit_loss_times": {
+        "green_flag": 24.0,
+        "safety_car": 12.5,
+        "virtual_safety_car": 9.0
+      }
+    },
+    "Lusail": {
+      "official_name": "Lusail International Circuit",
+      "pit_loss_times": {
+        "green_flag": 23.0,
+        "safety_car": 12.0,
+        "virtual_safety_car": 8.5
+      }
+    },
+    "Yas Marina": {
+      "official_name": "Yas Marina Circuit",
+      "pit_loss_times": {
+        "green_flag": 22.0,
+        "safety_car": 11.5,
+        "virtual_safety_car": 8.0
+      }
+    }
+  },
+  
+  "aliases": {
+    "Japan": "Suzuka",
+    "Japanese": "Suzuka",
+    "Saudi Arabia": "Jeddah",
+    "Saudi Arabian": "Jeddah",
+    "Australia": "Melbourne",
+    "Australian": "Melbourne",
+    "China": "Shanghai",
+    "Chinese": "Shanghai",
+    "Emilia Romagna": "Imola",
+    "Canada": "Montreal",
+    "Canadian": "Montreal",
+    "Spain": "Barcelona",
+    "Spanish": "Barcelona",
+    "Austria": "Spielberg",
+    "Austrian": "Spielberg",
+    "Great Britain": "Silverstone",
+    "British": "Silverstone",
+    "Hungary": "Hungaroring",
+    "Hungarian": "Hungaroring",
+    "Belgium": "Spa",
+    "Belgian": "Spa",
+    "Netherlands": "Zandvoort",
+    "Dutch": "Zandvoort",
+    "Italy": "Monza",
+    "Italian": "Monza",
+    "Azerbaijan": "Baku",
+    "United States": "Austin",
+    "USA": "Austin",
+    "COTA": "Austin",
+    "Mexico": "Mexico City",
+    "Mexican": "Mexico City",
+    "Brazil": "Interlagos",
+    "Brazilian": "Interlagos",
+    "Sao Paulo": "Interlagos",
+    "Qatar": "Lusail",
+    "Abu Dhabi": "Yas Marina"
+  },
+  
+  "default": {
+    "pit_loss_times": {
+      "green_flag": 22.0,
+      "safety_car": 11.5,
+      "virtual_safety_car": 8.0
+    },
+    "description": "Default values when circuit not found"
+  }
+}

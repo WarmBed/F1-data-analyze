@@ -163,7 +163,7 @@ def _determine_standings_refresh_interval(year: int) -> float:
         
         # 尋找最新的 season_calendar JSON
         calendar_files = sorted(
-            json_dir.glob("season_calendar_*.json"),
+            json_dir.glob("season_calendar_multi_year_*.json"),  # 🔧 FIX: 使用新的檔案命名格式
             key=lambda p: p.stat().st_mtime,
             reverse=True,
         )
@@ -176,14 +176,9 @@ def _determine_standings_refresh_interval(year: int) -> float:
         with open(calendar_path, "r", encoding="utf-8") as f:
             calendar_data = json.load(f)
         
-        # 提取賽事列表
-        events = calendar_data.get("data", {}).get("events", [])
-        if not events:
-            return STANDINGS_REFRESH_HOURS_NORMAL
-        
-        # 過濾指定年份的賽事
-        year_events = [e for e in events if e.get("season_year") == year]
-        if not year_events:
+        # 🔧 FIX: 新格式的 JSON 結構為 {success, data: {2024: [...], 2025: [...]}}
+        year_events = calendar_data.get("data", {}).get(str(year), [])
+        if not year_events or not isinstance(year_events, list):
             return STANDINGS_REFRESH_HOURS_NORMAL
         
         now = datetime.now(timezone.utc)
@@ -196,11 +191,12 @@ def _determine_standings_refresh_interval(year: int) -> float:
         if completed_events:
             # 獲取最近完成的賽事
             latest_completed = completed_events[-1]
-            race_date_str = latest_completed.get("race_date")
+            race_date_str = latest_completed.get("race_date_utc")  # 🔧 FIX: 使用 race_date_utc
             
             if race_date_str:
                 try:
-                    race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                    # 🔧 FIX: 解析 ISO 8601 格式（新格式: "2025-11-23T04:00:00+00:00"）
+                    race_date = datetime.fromisoformat(race_date_str.replace('Z', '+00:00'))
                     hours_since_race = (now - race_date).total_seconds() / 3600
                     
                     # 🏁 賽後 24 小時內，啟用賽後加速模式（6 小時刷新）
@@ -216,11 +212,11 @@ def _determine_standings_refresh_interval(year: int) -> float:
         # 🚨 次要檢查：賽前 2 天內的加速模式
         if upcoming_events:
             for event in upcoming_events[:3]:  # 只檢查最近 3 場賽事
-                race_date_str = event.get("race_date")
+                race_date_str = event.get("race_date_utc")  # 🔧 FIX: 使用 race_date_utc
                 if race_date_str:
                     try:
-                        # 解析賽事日期（格式: "2025-10-26"）
-                        race_date = datetime.strptime(race_date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+                        # 🔧 FIX: 解析 ISO 8601 格式
+                        race_date = datetime.fromisoformat(race_date_str.replace('Z', '+00:00'))
                         days_until_race = (race_date - now).days
                         
                         # 🏎️ 賽前 2 天內，啟用賽前加速模式

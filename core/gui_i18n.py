@@ -882,6 +882,11 @@ class GuiTranslator:
             'qualifying_prediction': {'zh': '排位賽預測', 'en': 'Qualifying Prediction', 'ja': '予選予測'},
             'qualifying_prediction_table': {'zh': 'FP3 → Q 預測表格', 'en': 'FP3 → Q Prediction Table', 'ja': 'FP3 → Q 予測テーブル'},
             
+            # Race Prediction 正賽預測分析 (F80)
+            'race_prediction': {'zh': '正賽預測', 'en': 'Race Prediction', 'ja': 'レース予測'},
+            'race_prediction_table': {'zh': 'Q → R 預測表格', 'en': 'Q → R Prediction Table', 'ja': 'Q → R 予測テーブル'},
+            'race_prediction_title': {'zh': '正賽預測', 'en': 'Race Prediction', 'ja': 'レース予測'},
+            
             # Driver Position Analysis Widget - Table Headers (F25)
             'table_header_position': {'zh': '排名', 'en': 'Position', 'ja': '順位'},
             'table_header_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
@@ -977,6 +982,74 @@ class GuiTranslator:
             'menu_driver_standings': {'zh': '車手積分榜', 'en': 'Driver Standings', 'ja': 'ドライバーランキング'},
             'menu_constructor_standings': {'zh': '車隊積分榜', 'en': 'Constructor Standings', 'ja': 'コンストラクターランキング'},
             'menu_season_progress': {'zh': '賽季進度總覽', 'en': 'Season Progress', 'ja': 'シーズン進行状況'},
+            
+            # Live Timing Module (即時計時模組)
+            'menu_live_timing': {'zh': 'Live Timing', 'en': 'Live Timing', 'ja': 'Live Timing'},
+            'menu_live_timing_control_panel': {'zh': '顯示控制面板', 'en': 'Show Control Panel', 'ja': 'コントロールパネルを表示'},
+            'menu_live_timing_track_map': {'zh': '賽道地圖', 'en': 'Track Map', 'ja': 'トラックマップ'},
+            'menu_live_timing_circle_map': {'zh': '圓形地圖', 'en': 'Circle Map', 'ja': 'サークルマップ'},
+            'menu_live_timing_ranking': {'zh': '即時排名', 'en': 'Live Ranking', 'ja': 'ライブランキング'},
+            'menu_live_timing_pit_window': {'zh': 'Pit Window', 'en': 'Pit Window', 'ja': 'ピットウィンドウ'},
+            'menu_live_timing_tyre_strategy': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
+            'menu_live_timing_driver_strategy': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'live_timing_driver_strategy_tip': {'zh': '開啟車手策略分析', 'en': 'Open Driver Strategy Analysis', 'ja': 'ドライバー戦略分析を開く'},
+            'menu_live_timing_race_control': {'zh': '比賽控制訊息', 'en': 'Race Control Messages', 'ja': 'レースコントロールメッセージ'},
+            'menu_live_timing_race_insights': {'zh': '賽況提示', 'en': 'Race Insights', 'ja': 'レースインサイト'},
+            'menu_live_timing_shap_analysis': {'zh': 'SHAP 分析', 'en': 'SHAP Analysis', 'ja': 'SHAP分析'},
+            'menu_live_timing_lap_distribution': {'zh': '圈速分佈', 'en': 'Lap Time Distribution', 'ja': 'ラップタイム分布'},
+            'menu_live_timing_pit_stop_table': {'zh': '進站統計', 'en': 'Pit Stop Statistics', 'ja': 'ピットストップ統計'},
+            'menu_live_timing_presets': {'zh': '預設佈局', 'en': 'Preset Layouts', 'ja': 'プリセットレイアウト'},
+            'menu_live_timing_preset_full': {'zh': '完整佈局', 'en': 'Full Layout', 'ja': 'フルレイアウト'},
+            'menu_live_timing_preset_compact': {'zh': '精簡佈局', 'en': 'Compact Layout', 'ja': 'コンパクトレイアウト'},
+            'menu_live_timing_preset_strategy': {'zh': '策略佈局', 'en': 'Strategy Layout', 'ja': '戦略レイアウト'},
+            'menu_live_timing_close_all': {'zh': '關閉所有 Live Timing 視窗', 'en': 'Close All Live Timing Windows', 'ja': 'すべてのLive Timingウィンドウを閉じる'},
+            'live_timing_coming_soon': {'zh': '開發中', 'en': 'Coming Soon', 'ja': '開発中'},
+            
+            # Live Timing 樹狀圖項目
+            'live_timing_tree': {'zh': 'Live Timing', 'en': 'Live Timing', 'ja': 'Live Timing'},
+            'live_timing_track_map': {'zh': '賽道地圖', 'en': 'Track Map', 'ja': 'トラックマップ'},
+            'live_timing_circle_map': {'zh': '圓形地圖', 'en': 'Circle Map', 'ja': 'サークルマップ'},
+            'live_timing_ranking': {'zh': '即時排名', 'en': 'Live Ranking', 'ja': 'ライブランキング'},
+            'live_timing_pit_window': {'zh': 'Pit Window', 'en': 'Pit Window', 'ja': 'ピットウィンドウ'},
+            'live_timing_tyre_strategy': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
+            'live_timing_driver_strategy': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'live_timing_race_control': {'zh': '比賽控制訊息', 'en': 'Race Control Messages', 'ja': 'レースコントロールメッセージ'},
+            'live_timing_race_insights': {'zh': '賽況提示', 'en': 'Race Insights', 'ja': 'レースインサイト'},
+            'live_timing_shap_analysis': {'zh': 'SHAP 分析', 'en': 'SHAP Analysis', 'ja': 'SHAP分析'},
+            'live_timing_lap_distribution': {'zh': '圈速分佈', 'en': 'Lap Time Distribution', 'ja': 'ラップタイム分布'},
+            'live_timing_pit_stop_table': {'zh': '進站統計', 'en': 'Pit Stop Statistics', 'ja': 'ピットストップ統計'},
+            
+            # Driver Strategy 翻譯
+            'driver_strategy_title': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'right_click_select_driver': {'zh': '右鍵點擊選擇車手', 'en': 'Right-click to select driver', 'ja': '右クリックでドライバーを選択'},
+            'Predicted': {'zh': '預測', 'en': 'Predicted', 'ja': '予測'},
+            'SC/VSC': {'zh': 'SC/VSC', 'en': 'SC/VSC', 'ja': 'SC/VSC'},
+            'PIT Est.': {'zh': 'PIT 預估', 'en': 'PIT Est.', 'ja': 'PIT 予測'},
+            
+            # Live Ranking 右鍵選單項目
+            'modify_pit_windows': {'zh': '修改 Pit Window 參數', 'en': 'Modify Pit Window Parameters', 'ja': 'ピットウィンドウパラメータを変更'},
+            'set_pit_window_reference': {'zh': '設定為 Pit Window 參考', 'en': 'Set as Pit Window Reference', 'ja': 'ピットウィンドウ参照に設定'},
+            'optimal_stint_soft': {'zh': 'SOFT 最佳 Stint: {0} 圈', 'en': 'SOFT Optimal Stint: {0} laps', 'ja': 'SOFT 最適スティント: {0} 周'},
+            'optimal_stint_medium': {'zh': 'MEDIUM 最佳 Stint: {0} 圈', 'en': 'MEDIUM Optimal Stint: {0} laps', 'ja': 'MEDIUM 最適スティント: {0} 周'},
+            'optimal_stint_hard': {'zh': 'HARD 最佳 Stint: {0} 圈', 'en': 'HARD Optimal Stint: {0} laps', 'ja': 'HARD 最適スティント: {0} 周'},
+            'modify_optimal_stint_title': {'zh': '修改 {0} 最佳 Stint', 'en': 'Modify {0} Optimal Stint', 'ja': '{0} 最適スティントを変更'},
+            'modify_optimal_stint_prompt': {'zh': '請輸入 {0} 胎的最佳 Stint 圈數:', 'en': 'Enter optimal stint laps for {0} compound:', 'ja': '{0} タイヤの最適スティント周回数を入力してください:'},
+            'optimal_stint_updated': {'zh': '{0} 最佳 Stint 已更新為 {1} 圈', 'en': '{0} optimal stint updated to {1} laps', 'ja': '{0} 最適スティントが {1} 周に更新されました'},
+            
+            # Pit Window 右鍵選單項目
+            'reset_to_p1': {'zh': '重設為 P1', 'en': 'Reset to P1', 'ja': 'P1にリセット'},
+            'select_driver_action': {'zh': '選擇 {0}', 'en': 'Select {0}', 'ja': '{0} を選択'},
+            'modify_pit_loss_time': {'zh': '修改 Pit Loss 時間', 'en': 'Modify Pit Loss Time', 'ja': 'ピットロスタイムを変更'},
+            'pit_loss_green': {'zh': 'GREEN: {0:.1f}s', 'en': 'GREEN: {0:.1f}s', 'ja': 'GREEN: {0:.1f}s'},
+            'pit_loss_sc': {'zh': 'SC: {0:.1f}s', 'en': 'SC: {0:.1f}s', 'ja': 'SC: {0:.1f}s'},
+            'pit_loss_vsc': {'zh': 'VSC: {0:.1f}s', 'en': 'VSC: {0:.1f}s', 'ja': 'VSC: {0:.1f}s'},
+            'modify_pit_loss_green_title': {'zh': '修改 GREEN Pit Loss', 'en': 'Modify GREEN Pit Loss', 'ja': 'GREEN ピットロスを変更'},
+            'modify_pit_loss_green_prompt': {'zh': '請輸入綠旗狀態的進站損失時間 (秒):', 'en': 'Enter pit loss time for GREEN flag (seconds):', 'ja': 'グリーンフラッグ時のピットロスタイム (秒) を入力:'},
+            'modify_pit_loss_sc_title': {'zh': '修改 SC Pit Loss', 'en': 'Modify SC Pit Loss', 'ja': 'SC ピットロスを変更'},
+            'modify_pit_loss_sc_prompt': {'zh': '請輸入安全車狀態的進站損失時間 (秒):', 'en': 'Enter pit loss time for Safety Car (seconds):', 'ja': 'セーフティカー時のピットロスタイム (秒) を入力:'},
+            'modify_pit_loss_vsc_title': {'zh': '修改 VSC Pit Loss', 'en': 'Modify VSC Pit Loss', 'ja': 'VSC ピットロスを変更'},
+            'modify_pit_loss_vsc_prompt': {'zh': '請輸入虛擬安全車狀態的進站損失時間 (秒):', 'en': 'Enter pit loss time for Virtual Safety Car (seconds):', 'ja': 'バーチャルセーフティカー時のピットロスタイム (秒) を入力:'},
+            'waiting_for_data': {'zh': '等待數據...', 'en': 'Waiting for data...', 'ja': 'データ待機中...'},
             
             # 歡迎頁面
             'main_title': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},

@@ -18,6 +18,8 @@ __all__ = ["generate_season_calendar", "SeasonCalendarResult", "check_calendar_f
 FASTF1_CACHE_DIR = os.getenv("F1_ANALYSIS_FASTF1_CACHE", "f1_analysis_cache")
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 CALENDAR_REFRESH_HOURS = 168  # 7 天 (平時維護模式) - 賽程固定除非有改期
+CALENDAR_POST_RACE_REFRESH_HOURS = 2  # 賽後 2 小時內強制刷新 (更新 is_completed 狀態)
+CALENDAR_POST_RACE_WINDOW_HOURS = 72  # 賽後監控窗口 72 小時
 
 SeasonCalendarResult = Dict[str, Any]
 
@@ -143,6 +145,34 @@ def check_calendar_freshness(*, all_years: bool = True) -> Dict[str, Any]:
     age = now - file_mtime
     age_hours = age.total_seconds() / 3600
     
+    # 🔥 優先檢查：賽後智慧刷新（最高優先級）
+    post_race_check = _check_post_race_refresh_needed(latest_file)
+    
+    if post_race_check['needs_refresh']:
+        print(f"[CALENDAR] 🏁 偵測到賽後更新需求！")
+        print(f"[CALENDAR]    └─ 原因: {post_race_check['reason']}")
+        
+        if post_race_check['events_to_update']:
+            print(f"[CALENDAR]    └─ 需要更新的賽事:")
+            for evt in post_race_check['events_to_update'][:5]:  # 最多顯示 5 個
+                print(f"[CALENDAR]       • {evt['year']} {evt['event_name']} (R{evt['round']}) - 賽後 {evt['hours_since_race']} 小時")
+        
+        return {
+            "exists": True,
+            "path": str(latest_file),
+            "file_time": file_mtime.isoformat(),
+            "current_time": now.isoformat(),
+            "age_hours": round(age_hours, 2),
+            "age_formatted": _format_age(age),
+            "is_fresh": False,  # 強制標記為過期
+            "should_regenerate": True,  # 強制刷新
+            "refresh_interval_hours": CALENDAR_POST_RACE_REFRESH_HOURS,
+            "reason": post_race_check['reason'],
+            "trigger_mode": post_race_check['trigger_mode'],
+            "events_to_update": post_race_check['events_to_update']
+        }
+    
+    # ✅ 正常模式：時間間隔檢查
     is_fresh = age_hours < CALENDAR_REFRESH_HOURS
     
     return {
@@ -155,7 +185,9 @@ def check_calendar_freshness(*, all_years: bool = True) -> Dict[str, Any]:
         "is_fresh": is_fresh,
         "should_regenerate": not is_fresh,
         "refresh_interval_hours": CALENDAR_REFRESH_HOURS,
-        "reason": f"檔案{'新鮮' if is_fresh else '過期'}（{round(age_hours, 1)}小時前生成）"
+        "reason": f"檔案{'新鮮' if is_fresh else '過期'}（{round(age_hours, 1)}小時前生成）",
+        "trigger_mode": None if is_fresh else 'age_expiry',
+        "events_to_update": []
     }
 
 
@@ -178,6 +210,106 @@ def _format_age(delta: timedelta) -> str:
     days = hours // 24
     remaining_hours = hours % 24
     return f"{days} 天 {remaining_hours} 小時前"
+
+
+def _check_post_race_refresh_needed(calendar_path: Path) -> Dict[str, Any]:
+    """
+    檢查是否有賽事剛結束但 is_completed 尚未更新
+    
+    這是賽後智慧刷新的核心邏輯：
+    - 載入現有 Season Calendar JSON
+    - 檢查所有賽事的 race_date_utc
+    - 如果發現 is_completed=false 但已過賽事時間 → 強制刷新
+    
+    Args:
+        calendar_path: Season Calendar JSON 檔案路徑
+        
+    Returns:
+        包含檢查結果的字典：
+        - needs_refresh: 是否需要刷新
+        - reason: 原因說明
+        - events_to_update: 需要更新的賽事列表
+    """
+    try:
+        # 讀取現有 JSON
+        with open(calendar_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        now = datetime.now(timezone.utc)
+        events_to_update = []
+        
+        # 檢查所有年份的賽事
+        for year, events in data.get('data', {}).items():
+            if not isinstance(events, list):
+                continue
+                
+            for event in events:
+                # 檢查是否為未標記完成但已過賽事時間的情況
+                if not event.get('is_completed', True):  # 預設為已完成，避免誤判
+                    race_date_str = event.get('race_date_utc')
+                    if race_date_str:
+                        try:
+                            # 解析賽事時間
+                            race_date = datetime.fromisoformat(race_date_str.replace('Z', '+00:00'))
+                            hours_since_race = (now - race_date).total_seconds() / 3600
+                            
+                            # 🔥 賽後 0-72 小時內，標記需要更新
+                            if 0 <= hours_since_race <= CALENDAR_POST_RACE_WINDOW_HOURS:
+                                events_to_update.append({
+                                    'year': year,
+                                    'round': event.get('round', 'N/A'),
+                                    'event_name': event.get('event_name', 'Unknown'),
+                                    'location': event.get('location', 'Unknown'),
+                                    'hours_since_race': round(hours_since_race, 1)
+                                })
+                        except (ValueError, TypeError) as e:
+                            print(f"[CALENDAR] ⚠️ 無法解析賽事時間: {race_date_str}, 錯誤: {e}")
+                            continue
+        
+        if events_to_update:
+            event_summary = ', '.join([f"{e['event_name']} (R{e['round']}, +{e['hours_since_race']}h)" 
+                                      for e in events_to_update[:3]])  # 只顯示前3個
+            if len(events_to_update) > 3:
+                event_summary += f" 等 {len(events_to_update)} 場賽事"
+                
+            return {
+                'needs_refresh': True,
+                'reason': f"賽後更新：{event_summary} 需要更新 is_completed 狀態",
+                'events_to_update': events_to_update,
+                'trigger_mode': 'post_race_completion'
+            }
+        
+        return {
+            'needs_refresh': False,
+            'reason': '所有賽事狀態已是最新',
+            'events_to_update': [],
+            'trigger_mode': None
+        }
+        
+    except FileNotFoundError:
+        return {
+            'needs_refresh': True,
+            'reason': 'Season Calendar 檔案不存在',
+            'events_to_update': [],
+            'trigger_mode': 'file_missing'
+        }
+    except json.JSONDecodeError as e:
+        return {
+            'needs_refresh': True,
+            'reason': f'Season Calendar JSON 格式錯誤: {e}',
+            'events_to_update': [],
+            'trigger_mode': 'json_corrupted'
+        }
+    except Exception as e:
+        print(f"[CALENDAR] ❌ 賽後檢查失敗: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'needs_refresh': False,
+            'reason': f'檢查失敗: {e}',
+            'events_to_update': [],
+            'trigger_mode': None
+        }
 
 
 def _build_session_block(row: pd.Series) -> Dict[str, Optional[str]]:

@@ -81,6 +81,8 @@ class F1AnalysisCacheService:
             "53": ["ideal_lap_ranking", "ideal_lap"],
             "54": ["throttle_ratio", "throttle_box_plot", "lap_throttle_ratio"],
             "74": ["qualifying_prediction"],  # ✅ 添加 Function 74 - 排位賽預測 (v3.8)
+            "79": ["qualifying_prediction"],  # ✅ Function 79 - FP3->Q 排位賽預測
+            "80": ["race_prediction", "dynamic_team_rating"],  # ✅ Function 80 - Q->R 正賽預測
             "96": ["race_weather_forecast"],  # ✅ 添加 Function 96 - 賽事天氣預報
             "97": ["championship_standings"],  # ✅ 添加 Function 97 - 賽季積分榜 (車手/車隊)
             "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
@@ -310,6 +312,31 @@ class F1AnalysisCacheService:
                         f"{self.json_dir}historical_flags_{race_str.lower()}_*-*.json",  # 小寫
                         f"{self.json_dir}historical_flags_{race_str.title()}_*-*.json",  # 首字母大寫
                     ])
+            elif function_id in {"79", "80"}:  # ✅ Function 79/80 - 預測分析
+                # Function 79: FP3->Q 排位賽預測 - qualifying_prediction_{year}_{race}.json
+                # Function 80: Q->R 正賽預測 - race_prediction_{year}_{race}.json
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                print(f"[CACHE] 🎯 Function {function_id}: 搜尋預測分析")
+                print(f"[CACHE]    賽道參數: {race_param}")
+                
+                # 確定檔案前綴
+                if function_id == "79":
+                    prefix = "qualifying_prediction"
+                else:  # function_id == "80"
+                    prefix = "race_prediction"
+                
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    # 搜尋 prediction/ 子目錄（CLI 輸出位置）
+                    search_patterns.extend([
+                        f"{self.json_dir}prediction/{prefix}_{year_token}_{race_str}.json",
+                        f"{self.json_dir}prediction/{prefix}_{year_token}_{race_str.replace(' ', '_')}.json",
+                        f"{self.json_dir}prediction/{prefix}_{year_token}_{race_str.replace('_', ' ')}.json",
+                        # 也搜尋根目錄（相容性）
+                        f"{self.json_dir}{prefix}_{year_token}_{race_str}.json",
+                        f"{self.json_dir}{prefix}_{year_token}_{race_str.replace(' ', '_')}.json",
+                    ])
             else:  # 一般分析
                 effective_tokens = race_tokens or ["*"]
                 search_patterns = []
@@ -360,19 +387,25 @@ class F1AnalysisCacheService:
                 print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
-                    # ✅ Function 96/97/98/99/100 跳過額外驗證（glob pattern 已足夠精確）
+                    # ✅ Function 79/80/96/97/98/99/100 跳過額外驗證（glob pattern 已足夠精確）
+                    # Function 79/80: 預測分析 - 檔案名已包含 year 和 race
                     # Function 96: 天氣預報 - 已通過 glob pattern 精確匹配
                     # Function 97/98/99: 賽季級別分析 - 不需要 race/session
                     # Function 100: 歷年旗幟統計 - 檔案名不包含 session
-                    if function_id not in {"96", "97", "98", "99", "100"}:
+                    if function_id not in {"79", "80", "96", "97", "98", "99", "100"}:
                         if not self._file_matches_race(file_path, race):
                             continue
                         if not self._file_matches_session(file_path, session):
                             continue
 
                     result = self._load_json_safely(file_path)
+                    # ✅ Function 79/80: 預測分析 - 直接返回
+                    if function_id in {"79", "80"}:
+                        if result:
+                            print(f"[CACHE] ✅ 找到預測結果: {os.path.basename(file_path)}")
+                            return result
                     # ✅ Function 96: 天氣預報 - 直接返回（glob pattern 已精確匹配）
-                    if function_id == "96":
+                    elif function_id == "96":
                         if result:
                             return result
                     # ✅ Function 97/98/99/100 使用特殊驗證邏輯

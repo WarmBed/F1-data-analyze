@@ -37,6 +37,10 @@ OPEN_METEO_ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 # Default refresh cadence (hours) – matches the season calendar behaviour
 WEATHER_REFRESH_HOURS = 24  # 1 天 (平時維護模式)
+WEATHER_PRE_RACE_REFRESH_HOURS = 2  # 賽前 24 小時內加速刷新 (天氣變化快)
+WEATHER_POST_RACE_REFRESH_HOURS = 0.5  # 賽後 6 小時內加速刷新 (完整數據)
+WEATHER_PRE_RACE_WINDOW_HOURS = 24  # 賽前 24 小時開始監控
+WEATHER_POST_RACE_WINDOW_HOURS = 6  # 賽後 6 小時持續監控
 
 # Variable selections
 FORECAST_HOURLY_VARS = (
@@ -684,7 +688,13 @@ def check_weather_forecast_freshness(
     now = datetime.now(timezone.utc)
     age = now - file_time
     age_hours = age.total_seconds() / 3600
-    is_fresh = age_hours < WEATHER_REFRESH_HOURS
+    
+    # 🔥 智慧刷新策略：根據賽事時間動態調整刷新間隔
+    refresh_interval = WEATHER_REFRESH_HOURS  # 預設
+    if year is not None and event_name:
+        refresh_interval = _determine_weather_refresh_interval(year, event_name)
+    
+    is_fresh = age_hours < refresh_interval
 
     return {
         "exists": True,
@@ -695,8 +705,8 @@ def check_weather_forecast_freshness(
         "age_formatted": _format_timedelta(age),
         "is_fresh": is_fresh,
         "should_regenerate": not is_fresh,
-        "refresh_interval_hours": WEATHER_REFRESH_HOURS,
-        "reason": "fresh file available" if is_fresh else "file older than refresh interval",
+        "refresh_interval_hours": refresh_interval,  # 動態刷新間隔
+        "reason": "fresh file available" if is_fresh else f"file older than refresh interval ({refresh_interval}h)",
     }
 
 

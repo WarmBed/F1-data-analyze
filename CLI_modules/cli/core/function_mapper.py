@@ -93,16 +93,26 @@ class F1AnalysisFunctionMapper:
             53: self._execute_ideal_lap_analysis,
             54: self._execute_driver_throttle_ratio,
             
-            # 70-79: 預測系統功能 (AI/ML)
-            70: self._execute_fp_q_data_collector,     # FP→Q 訓練數據收集器
-            71: self._execute_q_race_data_collector,   # Q→R 訓練數據收集器 (規劃中)
+            # 55-59: F1 官方 Live Timing 進階分析功能 (圈速預測系統)
+            55: self._execute_fuel_corrected_laptime,  # 燃油校正圈速分析 (F1 Live Timing) (2025-12-03)
+            56: self._execute_tire_degradation_analysis,  # 輪胎衰退分析 (時變線性模型) (2025-12-06)
+            57: self._execute_combined_laptime_prediction,  # 綜合圈速預測 (F55+F56) (2025-12-03)
+            58: self._execute_pit_stop_strategy_prediction,  # 進站策略預測 (58.1/58.2/58.3) (2025-12-04)
+            
+            # 70-79: 預測系統功能 (AI/ML) - FP->Q 系統
+            70: self._execute_fp_q_data_collector,     # FP->Q 訓練數據收集器
+            71: self._execute_q_race_data_collector,   # Q->R 訓練數據收集器 (規劃中)
             72: self._execute_xgboost_trainer,         # XGBoost 模型訓練器 (規劃中)
             73: self._execute_placeholder_73,          # v3.10 批次訓練器 (16 特徵 XGBoost - 移除 is_top_driver)
             74: self._execute_placeholder_74,          # [已刪除] 混合預測器
             75: self._execute_placeholder_75,          # [已刪除] 純 FP3 特徵優化訓練
             76: self._execute_ensemble_training,       # 集成學習訓練 (XGB+LGB+CTB) (2025-11-02)
             77: self._execute_track_specific_training, # 賽道特定模型訓練 (v2.0 + F78) (2025-11-03)
-            78: self._execute_driver_fp3_q_feature_extraction, # 車手 FP3→Q 特徵提取 (2025-11-03)
+            78: self._execute_driver_fp3_q_feature_extraction, # 車手 FP3->Q 特徵提取 (2025-11-03)
+            79: self._execute_dynamic_team_rating,     # 動態車隊評級報告 (2025-11-26)
+            
+            # 80-89: Q->R 預測系統功能
+            80: self._execute_dynamic_team_rating_cli, # 動態車隊評級分析 (JSON輸出) (2025-11-27)
             
             # 96-99: 特殊功能
             96: self._execute_race_weather_forecast,   # 賽事天氣預報
@@ -287,6 +297,9 @@ class F1AnalysisFunctionMapper:
         """檢查是否需要載入數據"""
         # 系統功能不需要檢查數據載入
         # 29: FIA 部件變更分析 (使用本地 JSON 檔案，不需要 FastF1 數據)
+        # 55: 燃油校正圈速分析 (使用 F1 官方 Live Timing 數據，不需要 FastF1)
+        # 56: 輪胎衰退分析 (使用 F1 官方 Live Timing 數據，時變線性模型)
+        # 57: 綜合圈速預測 (整合 F55+F56，不需要 FastF1)
         # 70: FP→Q 訓練數據收集器 (使用預收集的 JSON 檔案)
         # 74: 排位賽預測 (內部自動載入練習數據，不需要預先載入)
         # 75: 純 FP3 特徵優化訓練 (使用預收集的 JSON 檔案)
@@ -294,7 +307,8 @@ class F1AnalysisFunctionMapper:
         # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
         # 98: 車隊顏色分析, 99: 賽季賽程查詢
         # 100: 歷年旗幟統計分析 (掃描 2020-2025 年數據)
-        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "70", "74", "75", "76", "96", "98", "99", "100"}
+        # 58: 進站策略預測 (使用本地資料庫計算，不需要 FastF1 數據)
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "96", "98", "99", "100"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -3559,6 +3573,231 @@ class F1AnalysisFunctionMapper:
                 "data": None,
             }
 
+    def _execute_fuel_corrected_laptime(self, **kwargs):
+        """Function 55: 燃油校正圈速分析 (F1 官方 Live Timing)
+        
+        使用 F1 官方 Live Timing 數據進行燃油影響校正的圈速分析
+        數據來源: json/LiveF1/ (由 livef1_downloader.py 從 livetiming.formula1.com 下載)
+        公式: T_corrected = T_actual + fuel_effect_coef * fuel_consumed
+        """
+        try:
+            from CLI_modules.cli.prediction.fuel_corrected_laptime_analyzer import (
+                run_fuel_corrected_analysis,
+            )
+        except ImportError as exc:
+            message = f"無法載入燃油校正分析模組: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "55",
+                "data": None,
+            }
+        
+        # 從 data_loader 或 kwargs 獲取參數
+        year = kwargs.get("year")
+        race = kwargs.get("race")
+        session = kwargs.get("session", "R")
+        drivers = kwargs.get("drivers")
+        show_detailed_output = kwargs.get("show_detailed_output", True)
+        
+        if self.data_loader is not None:
+            year = year or getattr(self.data_loader, 'year', None)
+            race = race or getattr(self.data_loader, 'race_name', None)
+            session = session or getattr(self.data_loader, 'session_type', 'R')
+        
+        # 預設值
+        year = year or 2024
+        race = race or "Italian"
+        
+        try:
+            result = run_fuel_corrected_analysis(
+                data_loader=self.data_loader,
+                year=int(year),
+                race=str(race),
+                session=str(session),
+                drivers=drivers,
+                show_detailed_output=bool(show_detailed_output)
+            )
+            
+            return self._standardize_result(result, 55, "燃油校正圈速分析")
+        except Exception as exc:
+            message = f"燃油校正圈速分析失敗: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "55",
+                "data": None,
+            }
+
+    def _execute_tire_degradation_analysis(self, **kwargs):
+        """Function 56: 輪胎衰退分析 (時變線性模型, F1 Official Live Timing)
+        
+        基於 Cappello & Hoegh 2025 論文的時變線性衰退模型:
+        degradation(t) = base_rate + acceleration * tire_age
+        
+        功能:
+            - 分析各配方 (SOFT/MEDIUM/HARD) 的衰退率
+            - 計算最佳 stint 長度
+            - 生成賽道級統計
+            - 可選: 根據觀測數據更新資料庫
+        """
+        try:
+            from CLI_modules.cli.prediction.tire_degradation_analyzer import (
+                run_tire_degradation_analysis,
+            )
+
+            year = kwargs.get("year")
+            race = kwargs.get("race") or kwargs.get("race_name")
+            session = kwargs.get("session") or kwargs.get("session_type") or "R"
+            drivers = kwargs.get("drivers") or kwargs.get("driver")
+            update_database = kwargs.get("update_database", False)
+
+            if year is None and self.data_loader and getattr(self.data_loader, "year", None):
+                year = self.data_loader.year
+            if race is None and self.data_loader and getattr(self.data_loader, "race_name", None):
+                race = self.data_loader.race_name
+            if session == "R" and self.data_loader and getattr(self.data_loader, "session_type", None):
+                session = self.data_loader.session_type
+
+            if year is None:
+                year = datetime.now().year
+            if race is None:
+                race = "Austrian"
+
+            # 處理單一車手參數
+            if isinstance(drivers, str):
+                drivers = [drivers]
+
+            result = run_tire_degradation_analysis(
+                data_loader=self.data_loader,
+                year=int(year),
+                race=str(race),
+                session=str(session),
+                drivers=drivers,
+                show_detailed_output=kwargs.get("show_detailed_output", True),
+                update_database=bool(update_database),
+            )
+
+            return self._standardize_result(result, 56, "輪胎衰退分析")
+        except Exception as exc:
+            message = f"輪胎衰退分析失敗: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "56",
+                "data": None,
+            }
+
+    def _execute_combined_laptime_prediction(self, **kwargs):
+        """Function 57: 綜合圈速預測 (整合 F55 燃油校正 + F56 輪胎衰退)
+        
+        功能:
+            結合燃油效應和輪胎衰退進行圈速預測
+            predicted_time = base_time + fuel_effect + tire_degradation
+        """
+        try:
+            from CLI_modules.cli.prediction.combined_laptime_predictor import (
+                run_combined_laptime_prediction,
+            )
+
+            year = kwargs.get("year")
+            race = kwargs.get("race") or kwargs.get("race_name")
+            session = kwargs.get("session") or kwargs.get("session_type") or "R"
+            drivers = kwargs.get("drivers") or kwargs.get("driver")
+
+            if year is None and self.data_loader and getattr(self.data_loader, "year", None):
+                year = self.data_loader.year
+            if race is None and self.data_loader and getattr(self.data_loader, "race_name", None):
+                race = self.data_loader.race_name
+            if session == "R" and self.data_loader and getattr(self.data_loader, "session_type", None):
+                session = self.data_loader.session_type
+
+            if year is None:
+                year = datetime.now().year
+            if race is None:
+                race = "Austrian"
+
+            # 處理單一車手參數
+            if isinstance(drivers, str):
+                drivers = [drivers]
+
+            result = run_combined_laptime_prediction(
+                data_loader=self.data_loader,
+                year=int(year),
+                race=str(race),
+                session=str(session),
+                drivers=drivers,
+                show_detailed_output=kwargs.get("show_detailed_output", True),
+            )
+
+            return self._standardize_result(result, 57, "Combined Laptime Prediction")
+        except Exception as exc:
+            message = f"Combined laptime prediction failed: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "57",
+                "data": None,
+            }
+
+    def _execute_pit_stop_strategy_prediction(self, **kwargs):
+        """Function 58: 進站策略預測 (Pit Stop Strategy Predictor)
+        
+        功能:
+            58.1 進站時機預測 - 預測每位車手的最佳進站圈數
+            58.2 策略組合優化 - 比較 1-stop / 2-stop / 3-stop 策略
+            58.3 Undercut/Overcut 警告 - 實時偵測對手策略威脅
+        """
+        try:
+            from CLI_modules.cli.prediction.pit_stop_strategy_predictor import (
+                run_pit_stop_strategy_prediction,
+            )
+
+            year = kwargs.get("year")
+            race = kwargs.get("race") or kwargs.get("race_name")
+            session = kwargs.get("session") or kwargs.get("session_type") or "R"
+            drivers = kwargs.get("drivers") or kwargs.get("driver")
+
+            if year is None and self.data_loader and getattr(self.data_loader, "year", None):
+                year = self.data_loader.year
+            if race is None and self.data_loader and getattr(self.data_loader, "race_name", None):
+                race = self.data_loader.race_name
+            if session == "R" and self.data_loader and getattr(self.data_loader, "session_type", None):
+                session = self.data_loader.session_type
+
+            if year is None:
+                year = datetime.now().year
+            if race is None:
+                race = "Austrian"
+
+            # 處理單一車手參數
+            if isinstance(drivers, str):
+                drivers = [drivers]
+
+            result = run_pit_stop_strategy_prediction(
+                data_loader=self.data_loader,
+                year=int(year),
+                race=str(race),
+                session=str(session),
+                drivers=drivers,
+                show_detailed_output=kwargs.get("show_detailed_output", True),
+            )
+
+            return self._standardize_result(result, 58, "Pit Stop Strategy Prediction")
+        except Exception as exc:
+            message = f"Pit stop strategy prediction failed: {exc}"
+            print(f"[ERROR] {message}")
+            return {
+                "success": False,
+                "message": message,
+                "function_id": "58",
+                "data": None,
+            }
+
     def _execute_championship_standings_analysis(self, **kwargs):
         """Function 97: 賽季積分查詢 (車手/車隊)"""
 
@@ -5406,6 +5645,134 @@ class F1AnalysisFunctionMapper:
                 "message": f"特徵提取失敗: {str(e)}",
                 "error": str(e),
                 "function_id": "78"
+            }
+
+    def _execute_dynamic_team_rating(self, **kwargs):
+        """Function 79: 動態車隊評級報告 (Live_timing_test 版本)"""
+        try:
+            import sys
+            from pathlib import Path
+            
+            # 添加 Live_timing_test 到路徑
+            base_dir = Path(__file__).resolve().parent.parent.parent.parent
+            live_timing_path = base_dir / "Live_timing_test"
+            if str(live_timing_path) not in sys.path:
+                sys.path.insert(0, str(live_timing_path))
+            
+            print("="*70)
+            print("Function 79: 動態車隊評級報告")
+            print("="*70)
+            
+            # 導入並執行
+            from generate_dynamic_rating_report import generate_report
+            report = generate_report()
+            
+            # 保存報告
+            output_file = base_dir / "docs/DYNAMIC_TEAM_RATING_REPORT.md"
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(report)
+            
+            print(f"\n[OK] 報告已保存: {output_file}")
+            
+            return {
+                "success": True,
+                "message": "動態車隊評級報告生成完成",
+                "output_file": str(output_file),
+                "function_id": "79"
+            }
+            
+        except Exception as e:
+            print(f"[ERROR] 報告生成失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"報告生成失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "79"
+            }
+
+    def _execute_dynamic_team_rating_cli(self, **kwargs):
+        """Function 80: 動態車隊評級分析 / Q→R 正賽預測 (JSON 輸出)
+        
+        功能說明:
+        - 基於歷史數據（2023-2024）計算車隊基準評級
+        - 結合 2025 賽季數據動態更新評級
+        - 【新增】指定賽道時執行 Q→R 正賽預測
+        - 輸出 JSON 格式分析結果，適用於 API 和 GUI 整合
+        
+        評級公式:
+        rating = (win_rate * 4) + (pole_rate * 2) + (podium_rate * 2) + (normalized_points * 2)
+        
+        參數:
+        - year: 目標年份（預設 2025）
+        - race: 賽道名稱（如指定則執行 Q→R 預測）
+        - up_to_round: 只分析到第 N 輪（可選）
+        - show_detailed_output: 是否顯示詳細輸出（預設 True）
+        
+        輸出:
+        - JSON 檔案保存到 json/prediction/
+        - 若指定 race：race_prediction_{year}_{race}.json
+        - 若未指定 race：dynamic_team_rating_{timestamp}.json
+        """
+        try:
+            from CLI_modules.cli.analyzer.dynamic_team_rating_analysis import (
+                run_dynamic_team_rating_analysis
+            )
+            
+            # 參數處理
+            year = kwargs.pop('year', None)
+            if not year:
+                if self.data_loader and getattr(self.data_loader, "year", None):
+                    year = self.data_loader.year
+                else:
+                    year = 2025
+            
+            # 獲取賽道名稱（新增）
+            race = kwargs.pop('race', None)
+            if not race:
+                if self.data_loader and getattr(self.data_loader, "race", None):
+                    race = self.data_loader.race
+            
+            up_to_round = kwargs.pop('up_to_round', None)
+            show_detailed_output = kwargs.pop('show_detailed_output', True)
+            
+            print("="*70)
+            if race:
+                print(f"Function 80: Q->R 正賽預測 ({race} {year})")
+            else:
+                print("Function 80: 動態車隊評級分析 (JSON 輸出)")
+            print("="*70)
+            print(f"  年份: {year}")
+            if race:
+                print(f"  賽道: {race}")
+                print(f"  模式: Q->R 正賽預測")
+            if up_to_round:
+                print(f"  分析範圍: 第 1-{up_to_round} 輪")
+            print("="*70)
+            
+            # 執行分析
+            result = run_dynamic_team_rating_analysis(
+                data_loader=self.data_loader,
+                year=year,
+                race=race,
+                up_to_round=up_to_round,
+                show_detailed_output=show_detailed_output
+            )
+            
+            return self._standardize_result(result, 80, "Q->R 正賽預測" if race else "動態車隊評級分析")
+            
+        except Exception as e:
+            print(f"[ERROR] 動態車隊評級分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"動態車隊評級分析失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "80"
             }
 
 # ===== 支援函數和工具 =====
