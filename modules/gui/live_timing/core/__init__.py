@@ -23,6 +23,10 @@ from .f1_api_downloader import (
     is_race_cached,
     load_race_cache,
 )
+from .api_client import (
+    LiveTimingAPIClient,
+    get_api_client,
+)
 
 __all__ = [
     'LiveTimingDataManager',
@@ -33,9 +37,12 @@ __all__ = [
     'LiveTimingModuleFactory',
     'is_live_timing_module',
     'create_live_timing_module',
-    # 新增：F1 API 下載器
+    # F1 API 下載器
     'F1APIDownloader',
     'download_race_data',
     'is_race_cached',
     'load_race_cache',
+    # API 客戶端
+    'LiveTimingAPIClient',
+    'get_api_client',
 ]

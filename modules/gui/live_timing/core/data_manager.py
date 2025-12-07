@@ -21,6 +21,10 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 WIN_PROBABILITY_AVAILABLE = False
 LiveWinProbabilityPredictor = None
 
+# F83 超車預測器：延遲導入
+OVERTAKE_PREDICTION_AVAILABLE = False
+OvertakePredictor = None
+
 def _lazy_import_predictor():
     """延遲導入勝率預測器，避免與 numba 衝突"""
     global WIN_PROBABILITY_AVAILABLE, LiveWinProbabilityPredictor
@@ -34,6 +38,21 @@ def _lazy_import_predictor():
         return True
     except Exception as e:
         print(f"[DATA_MANAGER] 勝率預測不可用: {type(e).__name__}: {e}")
+        return False
+
+def _lazy_import_overtake_predictor():
+    """延遲導入 F83 超車預測器"""
+    global OVERTAKE_PREDICTION_AVAILABLE, OvertakePredictor
+    if OVERTAKE_PREDICTION_AVAILABLE:
+        return True
+    try:
+        from CLI_modules.cli.prediction.overtake_prediction.predictor import OvertakePredictor as _OvertakePredictor
+        OvertakePredictor = _OvertakePredictor
+        OVERTAKE_PREDICTION_AVAILABLE = True
+        print(f"[DATA_MANAGER] F83 超車預測器導入成功")
+        return True
+    except Exception as e:
+        print(f"[DATA_MANAGER] F83 超車預測不可用: {type(e).__name__}: {e}")
         return False
 
 
@@ -125,6 +144,24 @@ class LiveTimingDataManager(QObject):
         self._last_prediction_lap: int = -1
         self._init_win_predictor()
         
+        # F83 超車預測器（即時更新，不需要快取）
+        self._overtake_predictor: Optional['OvertakePredictor'] = None
+        self._init_overtake_predictor()
+        
+        # Gap 歷史追蹤（用於計算趨勢）
+        # 格式: {driver_num: [(timestamp, gap_seconds), ...]}
+        # 保留最近 10 秒的記錄
+        self._gap_history: Dict[str, list] = {}
+        self._gap_history_max_age: float = 10.0  # 保留 10 秒歷史
+        
+        # F87 省胎分數 (由 driver_strategy MDI 更新)
+        # 格式: {driver_num: {'score': float, 'level': str, 'adjustment': float}}
+        self._tire_saving_scores: Dict[str, Dict[str, Any]] = {}
+        
+        # F87 Throttle 樣本追蹤器 (用於計算 SF%)
+        # 格式: {driver_num: {'samples': list, 'current_lap': int}}
+        self._driver_throttle_samples: Dict[str, Dict[str, Any]] = {}
+        
         print("[DATA_MANAGER] LiveTimingDataManager 初始化完成")
     
     def _init_win_predictor(self):
@@ -153,6 +190,26 @@ class LiveTimingDataManager(QObject):
         except Exception as e:
             print(f"[DATA_MANAGER] 初始化勝率預測器失敗: {e}")
             self._win_predictor = None
+    
+    def _init_overtake_predictor(self):
+        """初始化 F83 超車預測器"""
+        # 延遲導入
+        if not _lazy_import_overtake_predictor():
+            print("[DATA_MANAGER] F83 超車預測不可用")
+            return
+            
+        try:
+            # OvertakePredictor 會自動尋找最新版本的模型
+            self._overtake_predictor = OvertakePredictor(verbose=False)
+            
+            if self._overtake_predictor.model is not None:
+                print(f"[DATA_MANAGER] F83 超車預測器載入成功 (v{self._overtake_predictor.model_version})")
+            else:
+                print(f"[DATA_MANAGER] F83 超車預測器模型載入失敗")
+                self._overtake_predictor = None
+        except Exception as e:
+            print(f"[DATA_MANAGER] 初始化 F83 超車預測器失敗: {e}")
+            self._overtake_predictor = None
     
     @classmethod
     def instance(cls) -> 'LiveTimingDataManager':
@@ -576,7 +633,69 @@ class LiveTimingDataManager(QObject):
         self._race_info = None
         self._track_data = None
         
+        # 清除 gap 歷史
+        self.clear_gap_history()
+        
         # 發送卸載信號
+        self.race_unloaded.emit()
+    
+    # ===========================================
+    # 即時模式支援 (Realtime Mode)
+    # ===========================================
+    def update_realtime_snapshot(self, snapshot: Dict[str, Any]):
+        """
+        更新即時模式快照
+        
+        從 RealTimeLiveF1DataSource 接收即時數據快照，
+        並發送給所有訂閱的 MDI 視窗。
+        
+        Args:
+            snapshot: 即時快照數據，格式與歷史快照相同
+        """
+        # 更新內部狀態
+        self._current_realtime_snapshot = snapshot
+        
+        # 從快照中提取賽事資訊
+        if not self._race_info:
+            self._race_info = {
+                'year': 'Live',
+                'race': 'Live Session',
+                'session': snapshot.get('session_info', {}).get('Type', 'Race'),
+                'circuit': snapshot.get('session_info', {}).get('Meeting', {}).get('Circuit', {}).get('ShortName', 'Unknown'),
+                'total_snapshots': 0,  # 即時模式不計數
+                'total_laps': snapshot.get('total_laps', 0),
+                'duration_seconds': 0,
+                'driver_info': {},
+            }
+            # 發送載入信號（首次連接時）
+            self.race_loaded.emit(self._race_info)
+        
+        # 更新賽事資訊中的圈數
+        if snapshot.get('total_laps', 0) > self._race_info.get('total_laps', 0):
+            self._race_info['total_laps'] = snapshot['total_laps']
+        
+        # 發送快照更新信號
+        self.snapshot_updated.emit(snapshot)
+        
+        # 發送時間更新
+        race_time = snapshot.get('race_time_seconds', 0.0)
+        self.time_changed.emit(race_time)
+    
+    def is_realtime_mode(self) -> bool:
+        """檢查是否為即時模式"""
+        return hasattr(self, '_current_realtime_snapshot') and self._current_realtime_snapshot is not None
+    
+    def get_realtime_snapshot(self) -> Optional[Dict[str, Any]]:
+        """獲取當前即時快照"""
+        if hasattr(self, '_current_realtime_snapshot'):
+            return self._current_realtime_snapshot
+        return None
+    
+    def clear_realtime_state(self):
+        """清除即時模式狀態"""
+        if hasattr(self, '_current_realtime_snapshot'):
+            self._current_realtime_snapshot = None
+        self._race_info = None
         self.race_unloaded.emit()
     
     # ===========================================
@@ -770,6 +889,47 @@ class LiveTimingDataManager(QObject):
                 return self.get_tyre_state_at_time(timestamp)
         return {}
     
+    # =========================================================================
+    # F87 省胎分數管理
+    # =========================================================================
+    
+    def update_tire_saving_score(self, driver_num: str, score: float, level: str, adjustment: float):
+        """
+        更新車手的省胎分數 (由 driver_strategy MDI 調用)
+        
+        Args:
+            driver_num: 車手編號
+            score: 省胎分數 (0-100)
+            level: 省胎等級 (NONE/LIGHT/MODERATE/HEAVY)
+            adjustment: 補償係數 (0-0.25)
+        """
+        self._tire_saving_scores[driver_num] = {
+            'score': score,
+            'level': level,
+            'adjustment': adjustment
+        }
+    
+    def get_tire_saving_score(self, driver_num: str) -> Dict[str, Any]:
+        """
+        獲取車手的省胎分數
+        
+        Args:
+            driver_num: 車手編號
+            
+        Returns:
+            {'score': float, 'level': str, 'adjustment': float} 或空字典
+        """
+        return self._tire_saving_scores.get(driver_num, {})
+    
+    def get_all_tire_saving_scores(self) -> Dict[str, Dict[str, Any]]:
+        """
+        獲取所有車手的省胎分數
+        
+        Returns:
+            {driver_num: {'score': float, 'level': str, 'adjustment': float}}
+        """
+        return self._tire_saving_scores.copy()
+    
     def get_track_status_at_time(self, timestamp: str) -> str:
         """獲取指定時間的賽道狀態"""
         # 優先使用 processor（完整載入模式）
@@ -920,7 +1080,336 @@ class LiveTimingDataManager(QObject):
                 
         except Exception as e:
             print(f"[DATA_MANAGER] 勝率預測失敗: {e}")
+        
+        # F87: 更新省胎分數
+        self._update_tire_saving_scores(snapshot)
     
+    def _update_tire_saving_scores(self, snapshot: Dict[str, Any]):
+        """
+        F87: 計算並更新 snapshot 中的省胎分數
+        
+        與 P1% 相同模式：直接計算並合併到 drivers 字典。
+        使用 snapshot 中的 throttle 數據計算 full_throttle_ratio。
+        """
+        drivers = snapshot.get('drivers', {})
+        if not drivers:
+            return
+        
+        # 獲取賽道名稱
+        circuit_name = self._race_info.get('circuit', '') if self._race_info else ''
+        
+        # 獲取 Throttle Baseline
+        from modules.gui.live_timing.live_timing_modules.driver_strategy import get_throttle_baseline_for_circuit
+        baseline_data = get_throttle_baseline_for_circuit(circuit_name)
+        baseline_ratio = baseline_data.get('full_throttle_ratio', {}).get('mean', 0.35)
+        baseline_std = baseline_data.get('full_throttle_ratio', {}).get('std', 0.05)
+        threshold = baseline_ratio - baseline_std
+        
+        for driver_num, driver_data in drivers.items():
+            # 從 snapshot 獲取 throttle 值
+            throttle = driver_data.get('throttle', 0)
+            
+            # 累積 throttle 樣本到內部追蹤器
+            if driver_num not in self._driver_throttle_samples:
+                self._driver_throttle_samples[driver_num] = {
+                    'samples': [],
+                    'last_lap': 0,
+                    'lap_ratios': {},
+                    'current_score': 0.0,  # 保持當前分數直到下一圈計算完成
+                    'current_level': 'NONE',
+                    'score_calculated_for_lap': 0  # 記錄分數是為哪一圈計算的
+                }
+            
+            tracker = self._driver_throttle_samples[driver_num]
+            current_lap = driver_data.get('lap', 0) or 0
+            
+            # 先累積 throttle 樣本 (在判斷圈數變化之前)
+            if throttle is not None:
+                try:
+                    tracker['samples'].append(int(throttle))
+                except (ValueError, TypeError):
+                    pass
+            
+            # 圈數變化時：計算上一圈的 ratio，然後更新分數
+            # 分數會保持顯示整圈，直到下次圈數變化時才更新
+            if current_lap > tracker['last_lap'] and current_lap > 1:
+                # 計算上一圈的 full_throttle_ratio
+                if tracker['samples']:
+                    full_throttle_count = sum(1 for s in tracker['samples'] if s >= 95)
+                    ratio = full_throttle_count / len(tracker['samples'])
+                    tracker['lap_ratios'][tracker['last_lap']] = ratio
+                
+                # 清空樣本，開始收集新一圈的數據
+                tracker['samples'] = []
+                
+                # 使用最近 5 圈的 ratio 計算 SF%
+                if len(tracker['lap_ratios']) >= 3:
+                    recent_laps = sorted(tracker['lap_ratios'].keys())[-5:]
+                    recent_ratios = [tracker['lap_ratios'][lap] for lap in recent_laps]
+                    avg_ratio = sum(recent_ratios) / len(recent_ratios)
+                    
+                    # SF% 計算: 低於基準值才有分數
+                    if avg_ratio >= threshold:
+                        score = 0.0
+                    else:
+                        if baseline_ratio > 0:
+                            score = max(0, (baseline_ratio - avg_ratio) / baseline_ratio * 100)
+                        else:
+                            score = 0.0
+                        score = min(50, score)  # 限制最大值
+                    
+                    score = min(100, max(0, score))
+                    
+                    # 判斷等級
+                    if score < 5:
+                        level = 'NONE'
+                    elif score < 15:
+                        level = 'LIGHT'
+                    elif score < 30:
+                        level = 'MODERATE'
+                    else:
+                        level = 'HEAVY'
+                    
+                    # 保存分數 (這個分數會持續顯示整個 current_lap)
+                    tracker['current_score'] = score
+                    tracker['current_level'] = level
+                    tracker['score_calculated_for_lap'] = current_lap
+                
+                # 更新 last_lap
+                tracker['last_lap'] = current_lap
+            elif tracker['last_lap'] == 0:
+                # 初始化 last_lap
+                tracker['last_lap'] = current_lap
+            
+            # 使用追蹤器中保存的分數（保持顯示整圈，直到下次圈數變化）
+            drivers[driver_num]['tire_saving_score'] = tracker['current_score']
+            drivers[driver_num]['tire_saving_level'] = tracker['current_level']
+    
+    def _update_overtake_predictions(self, snapshot: Dict[str, Any]):
+        """
+        F83: 即時計算並更新 snapshot 中的超車預測數據
+        
+        為每個車手計算對前車的超車機率。
+        與勝率預測不同，超車預測需要即時更新，因為間距隨時在變化。
+        超車機率會顯示在 Ranking Tower 的 OT% 欄位。
+        
+        同時計算 gap_trend（間距趨勢），用於顯示在 Trend 欄位。
+        """
+        if not self._overtake_predictor:
+            return
+        
+        drivers = snapshot.get('drivers', {})
+        if not drivers:
+            return
+        
+        # 獲取當前時間戳（用於 gap 歷史追蹤）
+        current_time = snapshot.get('race_time_seconds', 0.0)
+        
+        # 獲取當前圈數（用於計算比賽進度）
+        current_lap = 0
+        for driver_data in drivers.values():
+            lap = driver_data.get('lap', 0)
+            if lap and lap > current_lap:
+                current_lap = lap
+        
+        # Lap 1, 2 不計算超車機率（數據不穩定）
+        if current_lap <= 2:
+            for driver_num in drivers:
+                drivers[driver_num]['overtake_probability'] = 0
+                drivers[driver_num]['gap_trend'] = 0.0  # 無趨勢
+            return
+        
+        # 即時計算（不使用快取，因為間距隨時變化）
+        try:
+            # 獲取輪胎狀態
+            tyre_state = self.get_tyre_state()
+            
+            # 獲取總圈數
+            total_laps = self._race_info.get('total_laps', 60) if self._race_info else 60
+            race_progress = current_lap / total_laps if total_laps > 0 else 0.5
+            
+            # 獲取賽道狀態（是否綠旗）
+            track_status_green = True  # 預設綠旗
+            
+            # 按位置排序車手
+            sorted_drivers = []
+            for driver_num, driver_data in drivers.items():
+                pos = driver_data.get('position', 99)
+                sorted_drivers.append((driver_num, driver_data, pos))
+            sorted_drivers.sort(key=lambda x: x[2])
+            
+            # 計算每個車手對前車的超車機率
+            for i, (driver_num, driver_data, position) in enumerate(sorted_drivers):
+                # P1 沒有前車，超車機率為 0，趨勢也為 0
+                if position == 1 or i == 0:
+                    drivers[driver_num]['overtake_probability'] = 0
+                    drivers[driver_num]['gap_trend'] = 0.0
+                    continue
+                
+                # 獲取前車資訊
+                ahead_driver_num, ahead_driver_data, _ = sorted_drivers[i - 1]
+                
+                # 獲取間距
+                gap_str = driver_data.get('gap_to_ahead', '') or driver_data.get('gap_to_ahead_display', '')
+                gap_seconds = self._parse_gap_seconds(gap_str)
+                
+                # 更新 gap 歷史並計算趨勢
+                gap_trend = self._update_gap_history_and_calc_trend(
+                    driver_num, gap_seconds, current_time
+                )
+                drivers[driver_num]['gap_trend'] = gap_trend
+                
+                # 間距太大（>5秒）或無法解析，超車機率設為 0
+                if gap_seconds is None or gap_seconds > 5.0:
+                    drivers[driver_num]['overtake_probability'] = 0
+                    continue
+                
+                # 獲取輪胎資訊
+                attacker_tyre = 'MEDIUM'
+                defender_tyre = 'MEDIUM'
+                tyre_age_diff = 0
+                
+                if tyre_state:
+                    attacker_tyre_info = tyre_state.get(driver_num, {})
+                    defender_tyre_info = tyre_state.get(ahead_driver_num, {})
+                    
+                    attacker_tyre = attacker_tyre_info.get('compound', 'MEDIUM')
+                    defender_tyre = defender_tyre_info.get('compound', 'MEDIUM')
+                    
+                    attacker_age = attacker_tyre_info.get('age', 0)
+                    defender_age = defender_tyre_info.get('age', 0)
+                    tyre_age_diff = defender_age - attacker_age
+                
+                # 判斷 DRS 可用性
+                drs_available = gap_seconds < 1.0
+                
+                # 判斷是否正在追近（根據趨勢）
+                is_catching = gap_trend < -0.1  # 趨勢為負表示在追近
+                
+                # 呼叫 F83 預測
+                try:
+                    result = self._overtake_predictor.predict(
+                        gap_seconds=gap_seconds,
+                        gap_delta=gap_trend if gap_trend != 0 else -0.1,  # 使用實際趨勢
+                        is_catching=is_catching,
+                        drs_available=drs_available,
+                        attacker_tyre=attacker_tyre,
+                        defender_tyre=defender_tyre,
+                        tyre_age_diff=tyre_age_diff,
+                        track_status_green=track_status_green,
+                        attacker_position=position,
+                        race_progress=race_progress
+                    )
+                    
+                    # 轉換為百分比整數 (0-100)
+                    drivers[driver_num]['overtake_probability'] = int(round(result.probability * 100))
+                    
+                except Exception as e:
+                    drivers[driver_num]['overtake_probability'] = 0
+            
+        except Exception as e:
+            print(f"[DATA_MANAGER] F83 超車預測失敗: {e}")
+    
+    def _parse_gap_seconds(self, gap_str: str) -> Optional[float]:
+        """
+        解析間距字串，返回秒數
+        
+        支援格式：
+        - "+0.812s" → 0.812
+        - "0.812" → 0.812
+        - "1 LAP" → None (落後一圈，無法超車)
+        - "" → None
+        """
+        if not gap_str:
+            return None
+        
+        gap_str = str(gap_str).strip().upper()
+        
+        # 落後圈數
+        if 'LAP' in gap_str:
+            return None
+        
+        # 移除前綴和後綴
+        gap_str = gap_str.replace('+', '').replace('S', '').strip()
+        
+        try:
+            return float(gap_str)
+        except ValueError:
+            return None
+    
+    def _update_gap_history_and_calc_trend(
+        self, driver_num: str, gap_seconds: Optional[float], current_time: float
+    ) -> float:
+        """
+        更新 gap 歷史並計算趨勢
+        
+        趨勢計算邏輯：
+        - 比較當前 gap 與 5 秒前的 gap
+        - 負值 = 正在追近（綠色）
+        - 正值 = 正在拉開（紅色）
+        - 接近 0 = 維持（灰色）
+        
+        Args:
+            driver_num: 車手編號
+            gap_seconds: 當前間距（秒），None 表示無法解析
+            current_time: 當前賽事時間（秒）
+            
+        Returns:
+            gap_trend: 每秒變化量（秒/秒）
+        """
+        # 如果 gap 無法解析，返回 0
+        if gap_seconds is None:
+            return 0.0
+        
+        # 初始化該車手的歷史記錄
+        if driver_num not in self._gap_history:
+            self._gap_history[driver_num] = []
+        
+        history = self._gap_history[driver_num]
+        
+        # 添加當前記錄
+        history.append((current_time, gap_seconds))
+        
+        # 清理過期記錄（保留最近 10 秒）
+        cutoff_time = current_time - self._gap_history_max_age
+        history[:] = [(t, g) for t, g in history if t >= cutoff_time]
+        
+        # 計算趨勢（需要至少 2 秒的數據）
+        if len(history) < 2:
+            return 0.0
+        
+        # 尋找 5 秒前的記錄
+        target_time = current_time - 5.0
+        old_gap = None
+        old_time = None
+        
+        for t, g in history:
+            if t <= target_time:
+                old_time = t
+                old_gap = g
+        
+        # 如果沒有找到 5 秒前的數據，使用最舊的記錄
+        if old_gap is None and history:
+            old_time, old_gap = history[0]
+        
+        if old_gap is None or old_time is None:
+            return 0.0
+        
+        # 計算時間差
+        time_diff = current_time - old_time
+        if time_diff < 1.0:  # 至少需要 1 秒的時間差
+            return 0.0
+        
+        # 計算趨勢（每秒變化量）
+        gap_change = gap_seconds - old_gap
+        trend_per_second = gap_change / time_diff
+        
+        return trend_per_second
+    
+    def clear_gap_history(self):
+        """清除所有 gap 歷史記錄（賽事切換時調用）"""
+        self._gap_history.clear()
+
     # ===========================================
     # 內部方法
     # ===========================================
@@ -985,9 +1474,10 @@ class LiveTimingDataManager(QObject):
         if new_index != self._current_index:
             self._current_index = new_index
             
-            # 取得快照並計算勝率
+            # 取得快照並計算勝率和超車預測
             snapshot = self._snapshots[self._current_index]
             self._update_win_probabilities(snapshot)
+            self._update_overtake_predictions(snapshot)  # F83 超車預測
             
             # 發送快照
             self.snapshot_updated.emit(snapshot)

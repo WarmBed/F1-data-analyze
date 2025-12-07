@@ -7,7 +7,7 @@ F1 Analysis API - 系統相關路由
 作者: F1 Analysis Team
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from typing import Dict, Any
 import time
 import sys
@@ -210,3 +210,50 @@ async def get_version() -> Dict[str, Any]:
         "release_date": "2025-09-17",
         "timestamp": time.time()
     }
+
+
+@router.get("/monitor/status")
+async def get_monitor_status(request: Request) -> Dict[str, Any]:
+    """
+    獲取賽事事件監控器狀態
+    
+    返回監控器的運行狀態和最後刷新時間
+    """
+    try:
+        # 從 app.state 獲取監控器實例
+        race_monitor = getattr(request.app.state, 'race_monitor', None)
+        
+        if race_monitor is None:
+            return {
+                "success": False,
+                "message": "賽事事件監控器未啟用",
+                "status": {
+                    "running": False,
+                    "reason": "監控器未初始化"
+                },
+                "timestamp": time.time()
+            }
+        
+        # 獲取監控器狀態
+        status = race_monitor.get_status()
+        
+        return {
+            "success": True,
+            "message": "監控器狀態獲取成功",
+            "monitor": {
+                "running": status.get('running', False),
+                "calendar_loaded": status.get('calendar_loaded', False),
+                "monitored_years": status.get('monitored_years', []),
+                "last_refresh_times": status.get('last_refresh_times', {}),
+                "check_interval": "5 分鐘"
+            },
+            "timestamp": time.time()
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": "監控器狀態獲取失敗",
+            "error": str(e),
+            "timestamp": time.time()
+        }

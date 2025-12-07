@@ -73,6 +73,7 @@ def main():
         "f1t_gui_main.py",
         "f1_analysis_modular_main.py",
         "refactored_api.py",
+        "batch_generate_gui_data.py",
         "start_gui.bat",
         "start_api.bat",
         "requirements.txt",

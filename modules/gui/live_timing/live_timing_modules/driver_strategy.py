@@ -35,6 +35,96 @@ from PyQt5.QtWidgets import (
 
 from core.gui_i18n import tr
 
+
+# =============================================================================
+# Throttle Baseline Database Loader (API-ONLY Mode)
+# =============================================================================
+_THROTTLE_BASELINE_DATABASE: Optional[Dict] = None
+
+def set_throttle_baseline_database(db: Dict):
+    """
+    設定 Throttle Baseline Database (由 API 載入後調用)
+    
+    Args:
+        db: 從 API 獲取的 throttle_baseline 數據
+    """
+    global _THROTTLE_BASELINE_DATABASE
+    _THROTTLE_BASELINE_DATABASE = db
+
+
+def _load_throttle_baseline_database() -> Dict:
+    """
+    獲取 Throttle Baseline Database
+    
+    優先使用 API 設定的數據，若未設定則返回預設值。
+    注意：此函數不再直接讀取本地檔案，符合 API-ONLY 模式。
+    
+    Returns:
+        {
+            "global_baseline": {...},
+            "circuits": {...}
+        }
+    """
+    global _THROTTLE_BASELINE_DATABASE
+    
+    if _THROTTLE_BASELINE_DATABASE is not None:
+        return _THROTTLE_BASELINE_DATABASE
+    
+    # API 未設定時使用預設值
+    print("[driver_strategy] Throttle baseline not loaded from API, using defaults")
+    return {
+        "global_baseline": {
+            "full_throttle_ratio": {"mean": 0.35, "std": 0.05},
+            "avg_throttle": {"mean": 43.0, "std": 5.0}
+        },
+        "circuits": {}
+    }
+
+
+def get_throttle_baseline_for_circuit(circuit_name: str) -> Dict:
+    """
+    獲取特定賽道的 Throttle Baseline
+    
+    Args:
+        circuit_name: 賽道名稱 (例如 "Monza", "Suzuka")
+        
+    Returns:
+        {
+            "full_throttle_ratio": {"mean": float, "std": float, ...},
+            "avg_throttle": float,
+            "is_global": bool
+        }
+    """
+    db = _load_throttle_baseline_database()
+    circuits = db.get("circuits", {})
+    global_baseline = db.get("global_baseline", {})
+    
+    # 嘗試直接匹配
+    if circuit_name in circuits:
+        data = circuits[circuit_name].copy()
+        data["is_global"] = False
+        return data
+    
+    # 嘗試模糊匹配
+    for key in circuits:
+        if key.lower() == circuit_name.lower():
+            data = circuits[key].copy()
+            data["is_global"] = False
+            return data
+        # 部分匹配
+        if circuit_name.lower() in key.lower() or key.lower() in circuit_name.lower():
+            data = circuits[key].copy()
+            data["is_global"] = False
+            return data
+    
+    # 使用全局基準值
+    return {
+        "full_throttle_ratio": global_baseline.get("full_throttle_ratio", {"mean": 0.35, "std": 0.05}),
+        "avg_throttle": global_baseline.get("avg_throttle", {"mean": 43.0}),
+        "is_global": True
+    }
+
+
 # =============================================================================
 # Color Palette
 # =============================================================================
@@ -51,6 +141,7 @@ COLOR_PREDICTION_FILL = '#BB86FC'  # Light purple fill for prediction range
 COLOR_SC_ZONE = '#FFD700'     # Yellow - SC/VSC zones
 COLOR_PIT_MARKER = '#FFD700'  # Yellow - pit stop markers
 COLOR_CURRENT_LAP = '#4ECDC4' # Cyan - current lap indicator
+COLOR_FUEL_SAVING = '#00CC00' # Green - fuel saving zones
 
 # Tyre compound colors
 COLOR_TYRE_SOFT = '#FF3333'      # Red
@@ -93,6 +184,22 @@ class DriverLapData:
     # Current compound
     current_compound: str = ""
     
+    # =========================================================================
+    # F87 逐圈 Throttle 追蹤 (用於省胎評估)
+    # =========================================================================
+    # 當前圈的 throttle 樣本累積
+    current_lap_throttle_samples: List[int] = field(default_factory=list)
+    current_lap_being_tracked: int = 0
+    
+    # 每圈的 full throttle ratio: {lap_number: ratio (0.0-1.0)}
+    lap_throttle_ratios: Dict[int, float] = field(default_factory=dict)
+    
+    # F87 省胎評估結果 (每圈更新)
+    tire_saving_score: float = 0.0      # 0-100 (當前圈)
+    tire_saving_level: str = "NONE"     # NONE/LIGHT/MODERATE/HEAVY
+    tire_saving_adjustment: float = 0.0  # 補償係數 0-0.25
+    lap_tire_saving_scores: Dict[int, float] = field(default_factory=dict)  # {圈數: 分數}
+    
     def reset(self):
         """Reset all data for race restart."""
         self.actual_lap_times.clear()
@@ -101,6 +208,142 @@ class DriverLapData:
         self.pit_out_laps.clear()
         self.last_lap_recorded = 0
         self.current_compound = ""
+        self.current_lap_throttle_samples.clear()
+        self.current_lap_being_tracked = 0
+        self.lap_throttle_ratios.clear()
+        self.tire_saving_score = 0.0
+        self.tire_saving_level = "NONE"
+        self.tire_saving_adjustment = 0.0
+        self.lap_tire_saving_scores.clear()
+
+
+# =============================================================================
+# F87 省胎分數計算 (靜態函數，可供任何車手使用)
+# =============================================================================
+def calculate_tire_saving_for_driver_data(
+    driver_data: DriverLapData,
+    sc_laps: set = None,
+    pit_out_laps: set = None,
+    circuit_name: str = None
+) -> Tuple[float, str, float]:
+    """
+    F87: 計算單一車手的即時省胎分數 (使用 Throttle Baseline Database)
+    
+    省胎是**罕見行為**，正常比賽 SF% 應該接近 0%。
+    只有當 full_throttle_ratio 明顯低於該賽道的基準值時才開始計分。
+    
+    算法:
+    1. 從 database 獲取該賽道的 full_throttle_ratio 基準值
+    2. 計算當前車手的實際 full_throttle_ratio
+    3. SF% = max(0, (baseline - current) / baseline * 100)
+    
+    Args:
+        driver_data: 車手的圈速數據
+        sc_laps: SC 圈集合 (會排除)
+        pit_out_laps: PIT 出站圈集合 (會排除)
+        circuit_name: 賽道名稱 (用於獲取基準值)
+        
+    Returns:
+        (score, level, adjustment): 分數(0-100), 等級, 補償係數
+    """
+    sc_laps = sc_laps or set()
+    pit_out_laps = pit_out_laps or driver_data.pit_out_laps
+    
+    # 補償係數表
+    ADJUSTMENTS = {
+        "NONE": 0.0,
+        "LIGHT": 0.08,
+        "MODERATE": 0.15,
+        "HEAVY": 0.25,
+    }
+    
+    # 獲取賽道的 Throttle Baseline
+    if circuit_name:
+        baseline_data = get_throttle_baseline_for_circuit(circuit_name)
+    else:
+        baseline_data = get_throttle_baseline_for_circuit("")  # 使用全局基準
+    
+    baseline_ratio = baseline_data.get("full_throttle_ratio", {}).get("mean", 0.35)
+    baseline_std = baseline_data.get("full_throttle_ratio", {}).get("std", 0.05)
+    
+    # 找到當前 stint 的起始圈
+    stint_start_lap = 1
+    if driver_data.pit_laps:
+        stint_start_lap = max(driver_data.pit_laps) + 1
+    
+    # 獲取當前 stint 的有效圈數 (排除 SC 和 PIT OUT)
+    stint_laps = [lap for lap in sorted(driver_data.actual_lap_times.keys())
+                  if lap >= stint_start_lap
+                  and lap not in sc_laps
+                  and lap not in pit_out_laps]
+    
+    if len(stint_laps) < 3:
+        return 0.0, "NONE", 0.0
+    
+    # 使用最近 5 圈
+    window_size = 5
+    recent_laps = stint_laps[-window_size:]
+    
+    # =====================================================================
+    # 使用 Throttle Baseline Database 計算 SF%
+    # =====================================================================
+    if not driver_data.lap_throttle_ratios:
+        return 0.0, "NONE", 0.0
+    
+    recent_throttle = [driver_data.lap_throttle_ratios.get(lap, 0.0) 
+                       for lap in recent_laps 
+                       if lap in driver_data.lap_throttle_ratios]
+    
+    if len(recent_throttle) < 2:
+        return 0.0, "NONE", 0.0
+    
+    # 當前車手的 full_throttle_ratio
+    current_ratio = sum(recent_throttle) / len(recent_throttle)
+    
+    # =====================================================================
+    # SF% 計算公式:
+    # - 只有低於 (baseline - threshold) 才開始計分
+    # - threshold = baseline_std (通常 0.03-0.05)
+    # - SF% = max(0, (baseline - current) / baseline * 100)
+    # 
+    # 例如 Monza: baseline = 0.42, std = 0.03
+    # - current = 0.42 → SF = 0% (正常推進)
+    # - current = 0.38 → SF = (0.42-0.38)/0.42*100 = 9.5%
+    # - current = 0.30 → SF = (0.42-0.30)/0.42*100 = 28.6%
+    # =====================================================================
+    
+    # 閾值: 低於 baseline - std 才開始計分省胎
+    threshold = baseline_ratio - baseline_std
+    
+    if current_ratio >= threshold:
+        score = 0.0
+    else:
+        # SF% = (baseline - current) / baseline * 100
+        # 但要確保 baseline > 0 避免除以零
+        if baseline_ratio > 0:
+            score = max(0, (baseline_ratio - current_ratio) / baseline_ratio * 100)
+        else:
+            score = 0.0
+        
+        # 限制最大值為 50% (避免過度敏感)
+        score = min(50, score)
+    
+    score = min(100, max(0, score))
+    
+    # 判斷等級 (基於 database 的閾值調整)
+    # 正常比賽 SF% 應該是很小的數字
+    if score < 5:
+        level = "NONE"
+    elif score < 15:
+        level = "LIGHT"
+    elif score < 30:
+        level = "MODERATE"
+    else:
+        level = "HEAVY"
+    
+    adjustment = ADJUSTMENTS.get(level, 0.0)
+    
+    return score, level, adjustment
 
 
 # =============================================================================
@@ -174,6 +417,35 @@ class DriverStrategyWidget(QWidget):
         self._predicted_pit_laps: List[Tuple[int, int]] = []
         self._current_predicted_pit: int = 0  # 當前 stint 的預估換胎圈數
         
+        # =====================================================================
+        # F87 即時省胎評估系統 (逐圈計算)
+        # =====================================================================
+        # 用於動態調整 PIT Est：根據 throttle 使用率和 lap_time 趨勢判斷車手是否在省胎
+        self._tire_saving_adjustment: float = 0.0  # 當前省胎補償 (0-25%)
+        self._tire_saving_level: str = "NONE"  # NONE/LIGHT/MODERATE/HEAVY
+        self._tire_saving_score: float = 0.0  # 省胎分數 (0-100)
+        
+        # 逐圈數據追蹤 (用於省胎計算)
+        self._lap_throttle_samples: List[int] = []  # 當前圈的 throttle 樣本 (每次 snapshot 更新)
+        self._lap_throttle_ratios: Dict[int, float] = {}  # {lap: full_throttle_ratio}
+        self._lap_times_for_saving: Dict[int, float] = {}  # {lap: lap_time_seconds}
+        self._current_lap_for_throttle: int = 0  # 用於追蹤圈數變化
+        
+        # 補償係數表 (與 F87 realtime_pit_predictor 一致)
+        self._TIRE_SAVING_ADJUSTMENTS = {
+            "NONE": 0.0,
+            "LIGHT": 0.08,      # +8%
+            "MODERATE": 0.15,   # +15%
+            "HEAVY": 0.25,      # +25%
+        }
+        
+        # 省胎評估權重 (與 F87 一致)
+        self._SAVING_WEIGHTS = {
+            "throttle": 0.50,      # 油門使用率權重
+            "lap_time": 0.30,      # 圈速趨勢權重
+            "consistency": 0.20,   # 穩定性權重
+        }
+        
         # Prediction error correction
         self._correction_factor: float = 0.0
         self._correction_enabled: bool = True
@@ -201,7 +473,7 @@ class DriverStrategyWidget(QWidget):
         self._update_timer = QTimer(self)
         self._update_timer.timeout.connect(self.update)
         
-        self.setMinimumSize(400, 300)
+        self.setMinimumSize(200, 150)  # 允許更小的視窗尺寸
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
     def _setup_ui(self):
@@ -258,35 +530,52 @@ class DriverStrategyWidget(QWidget):
         layout.addLayout(info_layout)
         
     def _load_databases(self):
-        """Load strategy, tyre degradation, and fuel coefficient databases."""
-        config_dir = Path(__file__).parents[4] / "config"
+        """Load strategy, tyre degradation, and fuel coefficient databases.
         
-        # Strategy database
-        strategy_file = config_dir / "track_features_database.json"
-        if strategy_file.exists():
-            try:
-                with open(strategy_file, 'r', encoding='utf-8') as f:
-                    self._strategy_database = json.load(f)
-            except Exception:
-                pass
+        僅使用 API 獲取，禁止本地回退
+        """
+        # 僅通過 API 獲取
+        if self._load_databases_via_api():
+            return
+        
+        # API 失敗，顯示錯誤（禁止本地回退）
+        print("[DRIVER_STRATEGY] API 獲取配置失敗，請確認 API 服務器已啟動")
+    
+    def _load_databases_via_api(self) -> bool:
+        """通過 API 獲取所有配置數據庫"""
+        try:
+            from modules.gui.live_timing.core.api_client import get_api_client
+            
+            api_client = get_api_client()
+            
+            # 一次性獲取所有配置
+            all_configs = api_client.get_all_configs()
+            
+            if all_configs:
+                self._strategy_database = all_configs.get('track_features', {})
+                self._tyre_deg_database = all_configs.get('tire_degradation', {})
+                self._fuel_coeff_database = all_configs.get('fuel_coefficients', {})
                 
-        # Tyre degradation database
-        tyre_file = config_dir / "tire_degradation_database.json"
-        if tyre_file.exists():
-            try:
-                with open(tyre_file, 'r', encoding='utf-8') as f:
-                    self._tyre_deg_database = json.load(f)
-            except Exception:
-                pass
+                # 載入 Throttle Baseline Database (F87 省胎分析)
+                throttle_baseline = all_configs.get('throttle_baseline', {})
+                if throttle_baseline:
+                    set_throttle_baseline_database(throttle_baseline)
+                    circuits_count = len(throttle_baseline.get('circuits', {}))
+                else:
+                    circuits_count = 0
                 
-        # Fuel coefficient database
-        fuel_file = config_dir / "fuel_coefficients_database.json"
-        if fuel_file.exists():
-            try:
-                with open(fuel_file, 'r', encoding='utf-8') as f:
-                    self._fuel_coeff_database = json.load(f)
-            except Exception:
-                pass
+                print(f"[DRIVER_STRATEGY] 配置載入成功 (API): "
+                      f"track_features={len(self._strategy_database)}, "
+                      f"tire_deg={len(self._tyre_deg_database)}, "
+                      f"fuel_coeff={len(self._fuel_coeff_database)}, "
+                      f"throttle_baseline={circuits_count} circuits")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"[DRIVER_STRATEGY] API 獲取配置失敗: {e}")
+            return False
     
     # =========================================================================
     # Data Setters
@@ -367,7 +656,9 @@ class DriverStrategyWidget(QWidget):
                             sc_laps: set = None,
                             sc_restart_laps: set = None,
                             current_compound: str = "",
-                            current_lap: int = 0):
+                            current_lap: int = 0,
+                            lap_throttle_ratios: Dict[int, float] = None,
+                            lap_tire_saving_scores: Dict[int, float] = None):
         """
         Load complete driver history from MDI's multi-driver tracking.
         
@@ -383,6 +674,8 @@ class DriverStrategyWidget(QWidget):
             sc_restart_laps: Set of SC restart lap numbers (global)
             current_compound: Current tyre compound
             current_lap: Current/last lap number
+            lap_throttle_ratios: {lap_number: full_throttle_ratio} for F87 tire saving
+            lap_tire_saving_scores: {lap_number: score} 每圈省胎分數
         """
         # Reset first to clear old data
         self._reset_driver_data()
@@ -394,6 +687,17 @@ class DriverStrategyWidget(QWidget):
         self._pit_out_laps = pit_out_laps
         self._current_compound = current_compound
         self._current_lap = current_lap
+        
+        # F87: 載入 throttle 數據
+        if lap_throttle_ratios:
+            self._lap_throttle_ratios = lap_throttle_ratios
+            self._lap_times_for_saving = {k: v for k, v in actual_lap_times.items()}
+        
+        # F87: 載入每圈省胎分數
+        if lap_tire_saving_scores:
+            self._lap_tire_saving_scores = lap_tire_saving_scores
+        else:
+            self._lap_tire_saving_scores = {}
         
         # Calculate stint start lap from last pit stop
         if pit_laps:
@@ -414,20 +718,25 @@ class DriverStrategyWidget(QWidget):
             self.set_compound(current_compound)
         
         # Recalculate predictions based on loaded history
-        if self._actual_lap_times:
+        # Use lap-by-lap simulation to match Realtime correction behavior
+        if self._actual_lap_times and self._correction_enabled:
+            self._simulate_realtime_corrections(actual_lap_times, pit_laps)
+        elif self._actual_lap_times:
             self._calculate_all_predictions()
-            # Backfill historical stint predictions for each stint
-            self._backfill_historical_pit_predictions(pit_laps, lap_compounds)
-            # Calculate current stint prediction
-            self._update_predicted_pit_lap()
-            self._calculate_y_range()
+            
+        # Backfill historical stint predictions for each stint
+        self._backfill_historical_pit_predictions(pit_laps, lap_compounds)
+        
+        # F87: 更新進站預測 (SF% 由 DataManager 計算)
+        self._update_predicted_pit_lap()
+        self._calculate_y_range()
         
         # Update UI
         self._update_lap_counter()
         self.update()
         self.data_updated.emit()
         
-        print(f"[DRIVER_STRATEGY] load_driver_history: loaded {len(actual_lap_times)} laps, sc={len(sc_laps or set())} laps, current={current_lap}")
+        print(f"[DRIVER_STRATEGY] load_driver_history: loaded {len(actual_lap_times)} laps, sc={len(sc_laps or set())} laps, current={current_lap}, correction_factor={self._correction_factor:.4f}, tire_saving={self._tire_saving_level}")
         
     # =========================================================================
     # Lap Data Update
@@ -614,6 +923,14 @@ class DriverStrategyWidget(QWidget):
         # Get circuit data for optimal stint calculation
         circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
         circuits = self._tyre_deg_database.get('circuits', {})
+        
+        # 調試: 輸出可用的賽道列表
+        if not circuits:
+            print(f"[DRIVER_STRATEGY] Backfill: _tyre_deg_database is empty or has no 'circuits' key")
+            print(f"[DRIVER_STRATEGY] Backfill: _tyre_deg_database keys = {list(self._tyre_deg_database.keys())[:5]}")
+        else:
+            print(f"[DRIVER_STRATEGY] Backfill: Available circuits = {list(circuits.keys())}")
+        
         circuit_data = circuits.get(circuit_db_key, {})
         
         if not circuit_data:
@@ -683,6 +1000,8 @@ class DriverStrategyWidget(QWidget):
         
         Uses current compound and circuit to look up optimal stint length,
         then calculates when the driver should pit based on stint start lap.
+        
+        F87 Enhancement: Applies tire saving adjustment to extend predicted stint.
         """
         if not self._circuit_key or not self._current_compound:
             self._current_predicted_pit = 0
@@ -694,6 +1013,12 @@ class DriverStrategyWidget(QWidget):
             
         # Get circuit data from database
         circuits = self._tyre_deg_database.get('circuits', {})
+        
+        # 調試輸出
+        if not circuits:
+            print(f"[DRIVER_STRATEGY] PIT: _tyre_deg_database has no 'circuits' key")
+            print(f"[DRIVER_STRATEGY] PIT: _tyre_deg_database keys = {list(self._tyre_deg_database.keys())}")
+        
         circuit_data = circuits.get(circuit_db_key, {})
         
         if not circuit_data:
@@ -732,96 +1057,231 @@ class DriverStrategyWidget(QWidget):
             defaults = {'SOFT': 18, 'MEDIUM': 28, 'HARD': 40, 'INTERMEDIATE': 25, 'WET': 20}
             stint_length = defaults.get(compound_key, 25)
         
+        # =====================================================================
+        # F87: 應用省胎補償
+        # =====================================================================
+        base_stint = stint_length
+        adjusted_stint = int(stint_length * (1 + self._tire_saving_adjustment))
+        stint_length = adjusted_stint
+        
         # Calculate predicted pit lap
         predicted_lap = self._stint_start_lap + stint_length
         
         # Don't predict beyond total laps
         if predicted_lap >= self._total_laps:
             self._current_predicted_pit = 0  # No pit needed - can finish on current tyres
-            print(f"[DRIVER_STRATEGY] No PIT needed - predicted {predicted_lap} >= total {self._total_laps} (stint start: {self._stint_start_lap}, optimal: {stint_length} laps for {compound_key})")
+            print(f"[DRIVER_STRATEGY] No PIT needed - predicted {predicted_lap} >= total {self._total_laps} "
+                  f"(base: {base_stint}, F87 adj: +{self._tire_saving_adjustment:.0%} = {adjusted_stint} laps for {compound_key})")
         else:
             self._current_predicted_pit = predicted_lap
             # Add to history if not already there (0 means not yet pitted)
             existing = [p for p, a in self._predicted_pit_laps if p == predicted_lap]
             if not existing:
                 self._predicted_pit_laps.append((predicted_lap, 0))
-                print(f"[DRIVER_STRATEGY] Predicted PIT at lap {predicted_lap} (stint start: {self._stint_start_lap}, optimal: {stint_length} laps for {compound_key})")
+                print(f"[DRIVER_STRATEGY] Predicted PIT at lap {predicted_lap} "
+                      f"(base: {base_stint}, F87 adj: +{self._tire_saving_adjustment:.0%} = {adjusted_stint} laps, {self._tire_saving_level})")
         
     # =========================================================================
-    # Prediction Calculations
+    # Prediction Calculations - Stint-Based Model
     # =========================================================================
     
     def _calculate_all_predictions(self):
         """
-        Calculate predicted lap times for ALL laps (past and future).
-        Only starts predicting after having at least 3 valid laps of data.
-        Predictions persist and cover the entire race.
+        Calculate predicted lap times for ALL laps using stint-based model.
         
-        IMPORTANT: Excludes SC, VSC, PIT, and PIT out laps from calculation.
+        Each stint (between pit stops) has its own prediction curve based on:
+        1. Base lap time from actual data
+        2. Tyre degradation (compound-specific from database)
+        3. Fuel effect (lighter car = faster)
+        4. Self-correction factor
+        
+        This ensures prediction slopes change after each pit stop.
         """
         if self._total_laps <= 0:
             return
         
-        # 收集所有需要排除的圈數（SC、SC restart、PIT、PIT out）
+        # 收集所有需要排除的圈數
         excluded_laps = self._sc_laps | self._sc_restart_laps | set(self._pit_laps) | self._pit_out_laps
         
-        # 只使用有效圈數的資料進行計算（排除 SC/PIT 圈）
-        valid_lap_times = {
-            lap: time for lap, time in self._actual_lap_times.items()
-            if lap not in excluded_laps
-        }
+        # 建立 stint 邊界: [(stint_start, stint_end, compound), ...]
+        stints = self._build_stint_boundaries()
         
-        # 需要至少 3 圈有效資料才開始預測
-        if len(valid_lap_times) < 3:
+        if not stints:
             return
         
-        # 計算有效圈數的平均時間作為基準
-        actual_times = list(valid_lap_times.values())
-        base_time = sum(actual_times) / len(actual_times)
+        # 計算基準圈速（從實際數據中獲取）
+        base_lap_time = self._calculate_base_lap_time(excluded_laps)
+        if base_lap_time <= 0:
+            base_lap_time = 90.0  # 預設值
         
-        # 計算趨勢 (每圈變化量) - 使用線性回歸（只用有效圈數）
-        trend = 0.0
-        intercept = base_time
-        laps = sorted(valid_lap_times.keys())
-        n = len(laps)
+        # 獲取賽道數據
+        circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
+        circuits = self._tyre_deg_database.get('circuits', {})
+        circuit_data = circuits.get(circuit_db_key, {})
         
-        if n >= 2:
-            sum_x = sum(laps)
-            sum_y = sum(valid_lap_times[lap] for lap in laps)
-            sum_xy = sum(lap * valid_lap_times[lap] for lap in laps)
-            sum_x2 = sum(lap * lap for lap in laps)
-            
-            denominator = n * sum_x2 - sum_x * sum_x
-            if denominator != 0:
-                trend = (n * sum_xy - sum_x * sum_y) / denominator
-                intercept = (sum_y - trend * sum_x) / n
+        # 如果找不到賽道數據，嘗試模糊匹配
+        if not circuit_data:
+            for key, data in circuits.items():
+                if circuit_db_key.lower() in key.lower() or key.lower() in circuit_db_key.lower():
+                    circuit_data = data
+                    break
         
-        # 預測所有圈數（Lap 1 到 total_laps），除了排除的圈數
+        # 預測所有圈數
         self._predicted_lap_times.clear()
         self._prediction_range.clear()
         
         for lap in range(1, self._total_laps + 1):
-            # 跳過排除的圈數（SC、PIT 等）
             if lap in excluded_laps:
                 continue
             
-            # 預測 = intercept + trend * lap + 修正因子
-            predicted = intercept + (trend * lap) + self._correction_factor
+            # 找到這一圈所屬的 stint
+            stint_info = self._get_stint_for_lap(lap, stints)
+            if not stint_info:
+                continue
             
-            # 確保預測值在合理範圍
+            stint_start, stint_end, compound = stint_info
+            tyre_age = lap - stint_start + 1  # 輪胎圈數（從 1 開始）
+            
+            # 計算預測圈速
+            predicted = self._calculate_stint_prediction(
+                lap, tyre_age, compound, base_lap_time, circuit_data
+            )
+            
+            # 加入修正因子
+            predicted += self._correction_factor
+            
+            # 確保在合理範圍
             predicted = max(predicted, 60.0)
             predicted = min(predicted, 180.0)
             
             self._predicted_lap_times[lap] = predicted
             
-            # Calculate prediction range (+-3%)
+            # 預測範圍 (+-3%)
             margin = predicted * 0.03
             self._prediction_range[lap] = (predicted - margin, predicted + margin)
+    
+    def _build_stint_boundaries(self) -> List[Tuple[int, int, str]]:
+        """
+        Build stint boundaries from pit stops and compound data.
+        
+        Returns:
+            List of (stint_start, stint_end, compound) tuples
+        """
+        stints = []
+        sorted_pits = sorted(self._pit_laps) if self._pit_laps else []
+        
+        # 第一個 stint
+        stint_start = 1
+        
+        for pit_lap in sorted_pits:
+            stint_end = pit_lap
+            compound = self._get_compound_for_stint(stint_start, stint_end)
+            if compound:
+                stints.append((stint_start, stint_end, compound))
+            stint_start = pit_lap + 1
+        
+        # 最後一個 stint（從最後一個 PIT 到比賽結束）
+        compound = self._get_compound_for_stint(stint_start, self._total_laps)
+        if not compound:
+            compound = self._current_compound or 'MEDIUM'
+        stints.append((stint_start, self._total_laps, compound))
+        
+        print(f"[DRIVER_STRATEGY] Built {len(stints)} stints: {stints}")
+        return stints
+    
+    def _get_compound_for_stint(self, stint_start: int, stint_end: int) -> str:
+        """Get the compound used in a stint."""
+        # 從 stint 中找第一個有記錄的配方
+        for lap in range(stint_start, stint_end + 1):
+            compound = self._lap_compounds.get(lap, '')
+            if compound:
+                return compound.upper()
+        return ''
+    
+    def _get_stint_for_lap(self, lap: int, stints: List[Tuple[int, int, str]]) -> Optional[Tuple[int, int, str]]:
+        """Find which stint a lap belongs to."""
+        for stint_start, stint_end, compound in stints:
+            if stint_start <= lap <= stint_end:
+                return (stint_start, stint_end, compound)
+        return None
+    
+    def _calculate_base_lap_time(self, excluded_laps: set) -> float:
+        """Calculate base lap time from actual data."""
+        valid_times = [
+            time for lap, time in self._actual_lap_times.items()
+            if lap not in excluded_laps and time > 0
+        ]
+        if valid_times:
+            # 使用最快圈速作為基準（排除最快的 5% 以避免異常值）
+            sorted_times = sorted(valid_times)
+            n = len(sorted_times)
+            if n > 5:
+                # 取第 5-25 百分位的平均作為基準
+                start_idx = max(1, n // 20)
+                end_idx = max(2, n // 4)
+                return sum(sorted_times[start_idx:end_idx]) / (end_idx - start_idx)
+            return min(sorted_times)
+        return 0.0
+    
+    def _calculate_stint_prediction(self, lap: int, tyre_age: int, compound: str,
+                                     base_lap_time: float, circuit_data: Dict) -> float:
+        """
+        Calculate predicted lap time for a specific lap within a stint.
+        
+        Uses time-varying linear degradation model:
+        degradation(t) = base_rate + acceleration * tyre_age
+        
+        Args:
+            lap: The lap number
+            tyre_age: Laps on current tyres (1-based)
+            compound: Tyre compound (SOFT, MEDIUM, HARD, etc.)
+            base_lap_time: Base lap time (fastest clean lap)
+            circuit_data: Circuit-specific data from database
+        """
+        # 標準化配方名稱
+        compound_key = compound.upper()
+        if compound_key in ['S', 'SOFT']:
+            compound_key = 'SOFT'
+        elif compound_key in ['M', 'MEDIUM']:
+            compound_key = 'MEDIUM'
+        elif compound_key in ['H', 'HARD']:
+            compound_key = 'HARD'
+        elif compound_key in ['I', 'INTERMEDIATE']:
+            compound_key = 'INTERMEDIATE'
+        elif compound_key in ['W', 'WET']:
+            compound_key = 'WET'
+        
+        # 獲取衰退參數
+        base_deg = circuit_data.get('base_degradation', {})
+        deg_accel = circuit_data.get('degradation_acceleration', {})
+        
+        # 預設衰退值（如果資料庫沒有）
+        default_base_deg = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03, 'INTERMEDIATE': 0.06, 'WET': 0.04}
+        default_deg_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001, 'INTERMEDIATE': 0.002, 'WET': 0.0015}
+        
+        base_rate = base_deg.get(compound_key, default_base_deg.get(compound_key, 0.05))
+        acceleration = deg_accel.get(compound_key, default_deg_accel.get(compound_key, 0.002))
+        
+        # 計算輪胎衰退效果（時變線性模型）
+        # degradation(t) = base_rate * t + 0.5 * acceleration * t^2
+        tyre_degradation = base_rate * tyre_age + 0.5 * acceleration * (tyre_age ** 2)
+        
+        # 計算燃油效果（油量減少 = 車更輕 = 更快）
+        fuel_effect = self._get_fuel_effect(lap)
+        
+        # 配方抓地力優勢
+        grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0, 'INTERMEDIATE': -0.3, 'WET': -0.2}
+        compound_advantage = grip_advantage.get(compound_key, 0.0)
+        
+        # 最終預測 = 基準時間 + 輪胎衰退 + 燃油效果 + 配方優勢
+        predicted = base_lap_time + tyre_degradation + fuel_effect + compound_advantage
+        
+        return predicted
                 
     def _calculate_predicted_lap_time(self, lap_number: int) -> float:
         """
         Calculate predicted lap time for a specific lap.
-        Uses tyre degradation and fuel effect models.
+        Uses stint-based tyre degradation and fuel effect models.
         """
         # Get base lap time from actual data or estimate
         if self._actual_lap_times:
@@ -829,41 +1289,75 @@ class DriverStrategyWidget(QWidget):
         else:
             # Default base time
             base_time = 90.0
+        
+        # 找到這一圈所屬的 stint
+        stints = self._build_stint_boundaries()
+        stint_info = self._get_stint_for_lap(lap_number, stints)
+        
+        if stint_info:
+            stint_start, stint_end, compound = stint_info
+            tyre_age = lap_number - stint_start + 1
             
-        # Tyre degradation effect
-        tyre_deg = self._get_tyre_degradation(lap_number)
+            # 獲取賽道數據
+            circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
+            circuits = self._tyre_deg_database.get('circuits', {})
+            circuit_data = circuits.get(circuit_db_key, {})
+            
+            # 使用 stint-based 計算
+            predicted = self._calculate_stint_prediction(
+                lap_number, tyre_age, compound, base_time, circuit_data
+            )
+        else:
+            # Fallback to simple calculation
+            tyre_deg = self._get_tyre_degradation(lap_number)
+            fuel_effect = self._get_fuel_effect(lap_number)
+            predicted = base_time + tyre_deg + fuel_effect
         
-        # Fuel effect (lighter car = faster)
-        fuel_effect = self._get_fuel_effect(lap_number)
-        
-        # Combine effects
-        predicted = base_time + tyre_deg + fuel_effect + self._correction_factor
-        
-        return max(predicted, 60.0)  # Minimum realistic lap time
+        return max(predicted + self._correction_factor, 60.0)
         
     def _get_tyre_degradation(self, lap_number: int) -> float:
-        """Get tyre degradation effect for the lap."""
+        """Get tyre degradation effect for the lap (fallback method)."""
         if not self._current_compound or not self._circuit_key:
             return 0.0
+        
+        # 計算 tyre age（從最後一個 PIT 開始）
+        if self._pit_laps:
+            last_pit = max(self._pit_laps)
+            if lap_number > last_pit:
+                tyre_age = lap_number - last_pit
+            else:
+                tyre_age = lap_number
+        else:
+            tyre_age = lap_number
             
         # Look up in database
-        circuit_data = self._tyre_deg_database.get(self._circuit_key, {})
-        compound_deg = circuit_data.get(self._current_compound.upper(), 0.03)
+        circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
+        circuits = self._tyre_deg_database.get('circuits', {})
+        circuit_data = circuits.get(circuit_db_key, {})
         
-        # Degradation increases with lap number
-        return compound_deg * lap_number
+        base_deg = circuit_data.get('base_degradation', {})
+        compound_deg = base_deg.get(self._current_compound.upper(), 0.05)
+        
+        # Degradation increases with tyre age
+        return compound_deg * tyre_age
         
     def _get_fuel_effect(self, lap_number: int) -> float:
         """Get fuel effect for the lap (negative = faster)."""
         if self._total_laps <= 0:
             return 0.0
-            
-        # Fuel effect coefficient (seconds per lap of fuel burn)
-        fuel_coeff = self._fuel_coeff_database.get(self._circuit_key, 0.03)
         
-        # More fuel burned = lighter car = faster
-        laps_remaining = self._total_laps - lap_number
-        return -fuel_coeff * (self._total_laps - laps_remaining - 1)
+        # 獲取燃油係數
+        circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
+        fuel_data = self._fuel_coeff_database.get('circuits', {})
+        circuit_fuel = fuel_data.get(circuit_db_key, {})
+        
+        fuel_kg_per_lap = circuit_fuel.get('fuel_kg_per_lap', 1.8)
+        fuel_effect_coef = circuit_fuel.get('fuel_effect_coefficient', 0.03)
+        
+        # 每圈燃油減少 = 車更輕 = 更快
+        # 燃油效果 = -fuel_effect_coef * fuel_kg_consumed
+        fuel_consumed_kg = fuel_kg_per_lap * (lap_number - 1)
+        return -fuel_effect_coef * fuel_consumed_kg
         
     def _apply_self_correction(self):
         """Apply self-correction based on prediction errors."""
@@ -880,6 +1374,97 @@ class DriverStrategyWidget(QWidget):
         if errors:
             avg_error = sum(errors) / len(errors)
             # Smooth correction factor update
+            self._correction_factor = self._correction_factor * 0.7 + avg_error * 0.3
+    
+    def _simulate_realtime_corrections(self, full_lap_times: Dict[int, float], pit_laps: List[int]):
+        """
+        Simulate Realtime lap-by-lap correction process for Historical data.
+        
+        This ensures Historical replay produces the same prediction results
+        as Realtime viewing by processing laps sequentially and applying
+        corrections at each step.
+        
+        Args:
+            full_lap_times: Complete {lap_number: lap_time_seconds} from history
+            pit_laps: List of pit stop lap numbers
+        """
+        if not full_lap_times:
+            return
+        
+        # Reset correction factor to start fresh
+        self._correction_factor = 0.0
+        
+        # Get sorted lap numbers
+        sorted_laps = sorted(full_lap_times.keys())
+        
+        # Laps to exclude from prediction (SC, PIT, etc.)
+        excluded_laps = self._sc_laps | self._sc_restart_laps | set(pit_laps) | self._pit_out_laps
+        
+        # Temporary storage to simulate incremental data arrival
+        simulated_lap_times: Dict[int, float] = {}
+        
+        print(f"[DRIVER_STRATEGY] Simulating Realtime corrections for {len(sorted_laps)} laps...")
+        
+        # Process each lap sequentially, simulating Realtime behavior
+        for lap_num in sorted_laps:
+            # Skip excluded laps (they don't contribute to prediction)
+            if lap_num in excluded_laps:
+                continue
+            
+            # Add this lap's data (simulating Realtime data arrival)
+            simulated_lap_times[lap_num] = full_lap_times[lap_num]
+            
+            # Need at least 3 valid laps to start predictions
+            if len(simulated_lap_times) < 3:
+                continue
+            
+            # Calculate predictions with current data (simulating _calculate_all_predictions)
+            self._calculate_predictions_with_data(simulated_lap_times, excluded_laps)
+            
+            # Apply self-correction (simulating _apply_self_correction)
+            self._apply_correction_with_data(simulated_lap_times)
+        
+        # Final prediction calculation with full data and accumulated correction
+        self._calculate_all_predictions()
+        
+        print(f"[DRIVER_STRATEGY] Simulation complete: correction_factor={self._correction_factor:.4f}")
+    
+    def _calculate_predictions_with_data(self, lap_times: Dict[int, float], excluded_laps: set):
+        """
+        Calculate predictions using specific lap time data with stint-based model.
+        Used by _simulate_realtime_corrections to simulate incremental prediction.
+        """
+        if not lap_times or self._total_laps <= 0:
+            return
+        
+        # 使用主要的 stint-based 計算方法
+        # 臨時儲存實際圈速數據
+        original_lap_times = self._actual_lap_times.copy()
+        self._actual_lap_times = lap_times
+        
+        # 使用 stint-based 計算
+        self._calculate_all_predictions()
+        
+        # 恢復原始數據
+        self._actual_lap_times = original_lap_times
+    
+    def _apply_correction_with_data(self, lap_times: Dict[int, float]):
+        """
+        Apply self-correction using specific lap time data.
+        Used by _simulate_realtime_corrections to simulate incremental correction.
+        """
+        if len(lap_times) < 3:
+            return
+        
+        errors = []
+        for lap, actual in lap_times.items():
+            if lap in self._predicted_lap_times:
+                predicted = self._predicted_lap_times[lap]
+                errors.append(actual - predicted)
+        
+        if errors:
+            avg_error = sum(errors) / len(errors)
+            # Same smoothing as Realtime: 70% old + 30% new
             self._correction_factor = self._correction_factor * 0.7 + avg_error * 0.3
             
     # =========================================================================
@@ -1028,7 +1613,10 @@ class DriverStrategyWidget(QWidget):
         # Draw grid
         self._draw_grid(painter, chart_rect)
         
-        # Draw SC/VSC zones
+        # Draw fuel saving zones - 暫時隱藏
+        # self._draw_fuel_saving_zones(painter, chart_rect)
+        
+        # Draw SC/VSC zones (higher priority than fuel saving)
         self._draw_sc_zones(painter, chart_rect)
         
         # Draw prediction range fill
@@ -1093,6 +1681,41 @@ class DriverStrategyWidget(QWidget):
                     QPointF(px, chart_rect.top()),
                     QPointF(px, chart_rect.bottom())
                 )
+    
+    def _draw_fuel_saving_zones(self, painter: QPainter, chart_rect: QRectF):
+        """Draw fuel saving zones as green fills.
+        
+        When a lap has tire saving score >= 15%, draw a green semi-transparent zone.
+        SC zones have higher priority - don't draw fuel saving for SC laps.
+        Lap 1, 2 are excluded.
+        """
+        if not hasattr(self, '_lap_tire_saving_scores') or not self._lap_tire_saving_scores:
+            return
+        if self._total_laps <= 0:
+            return
+        
+        # Get SC laps set for exclusion
+        sc_laps = self._sc_laps | self._sc_restart_laps
+        
+        color = QColor(COLOR_FUEL_SAVING)
+        color.setAlpha(40)
+        painter.setBrush(QBrush(color))
+        painter.setPen(Qt.NoPen)
+        
+        for lap, saving_score in self._lap_tire_saving_scores.items():
+            # Skip lap 1, 2
+            if lap <= 2:
+                continue
+            
+            # Skip SC laps (SC has higher priority)
+            if lap in sc_laps:
+                continue
+            
+            # Only draw if saving score >= 15%
+            if saving_score >= 15:
+                x1 = self._lap_to_x(lap - 0.5, chart_rect)
+                x2 = self._lap_to_x(lap + 0.5, chart_rect)
+                painter.drawRect(QRectF(x1, chart_rect.top(), x2 - x1, chart_rect.height()))
                 
     def _draw_sc_zones(self, painter: QPainter, chart_rect: QRectF):
         """Draw SC/VSC zones as yellow fills with SC label."""
@@ -1352,10 +1975,15 @@ class DriverStrategyWidget(QWidget):
             )
             
             # Draw PIT label with translation
+            # F87: 若有省胎調整則顯示 *
+            pit_label = tr("PIT Est.")
+            if self._tire_saving_adjustment > 0:
+                pit_label += "*"
+            
             painter.save()
             painter.translate(x + 8, chart_rect.top() + 15)
             painter.rotate(-90)
-            painter.drawText(0, 0, tr("PIT Est."))
+            painter.drawText(0, 0, pit_label)
             painter.restore()
             
     def _draw_current_lap_indicator(self, painter: QPainter, chart_rect: QRectF):
@@ -1469,10 +2097,15 @@ class DriverStrategyWidget(QWidget):
         painter.setFont(self._font_legend)
         
         # Legend items: Predicted, SC/VSC, and Predicted PIT
+        # F87: 若有省胎調整則顯示 *
+        pit_legend = tr("PIT Est.")
+        if self._tire_saving_adjustment > 0:
+            pit_legend += "*"
+        
         legend_items = [
             (COLOR_PREDICTED, tr("Predicted")),
             (COLOR_SC_ZONE, tr("SC/VSC")),
-            ('#FF8C00', tr("PIT Est.")),  # Dark orange for predicted pit
+            ('#FF8C00', pit_legend),  # Dark orange for predicted pit
         ]
         
         x = chart_rect.right() - 100
@@ -1548,6 +2181,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         self._current_driver: str = ""
         self._drivers_data: Dict[str, Any] = {}
         self._current_race_time: str = ""  # 當前 snapshot 的 race_time
+        self._current_circuit: str = ""  # 當前賽道名稱 (用於 SF% 計算)
         
         # Multi-driver tracking: stores data for ALL drivers
         self._all_drivers_lap_data: Dict[str, DriverLapData] = {}
@@ -1587,6 +2221,35 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         print(f"[DRIVER_STRATEGY_MDI] Driver selected from external: {driver_num}")
         if hasattr(self, '_strategy_widget'):
             self.select_driver(driver_num)
+    
+    def _batch_update_all_drivers_tire_saving(self):
+        """
+        F87: 從 snapshot 批量更新所有車手的 SF%
+        
+        SF% 由 DataManager._update_tire_saving_scores() 計算並合併到 drivers 字典。
+        此函數從 _drivers_data (最新 snapshot) 讀取 SF% 並同步到 driver_data。
+        """
+        if not hasattr(self, '_drivers_data') or not self._drivers_data:
+            return
+        
+        for driver_num, driver_info in self._drivers_data.items():
+            if driver_num not in self._all_drivers_lap_data:
+                continue
+            
+            driver_data = self._all_drivers_lap_data[driver_num]
+            
+            # 從 snapshot 讀取 SF% (由 DataManager 計算)
+            score = driver_info.get('tire_saving_score', 0.0)
+            level = driver_info.get('tire_saving_level', 'NONE')
+            
+            # 更新 driver_data
+            driver_data.tire_saving_score = score
+            driver_data.tire_saving_level = level
+            
+            # 記錄到每圈歷史 (只有當分數 > 0 時)
+            lap_num = driver_data.last_lap_recorded
+            if score > 0 and lap_num > 0:
+                driver_data.lap_tire_saving_scores[lap_num] = score
         
     def _get_or_create_driver_data(self, driver_num: str, driver_info: Dict[str, Any]) -> DriverLapData:
         """
@@ -1672,6 +2335,15 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
                     pass
             self._update_single_driver_data(driver_num, driver_info, tyre_state, is_sc_lap, is_vsc_lap)
         
+        # =====================================================================
+        # F87: 批量計算所有車手的 SF% 並同步到 DataManager
+        # 
+        # 問題: _update_single_driver_data 只在「新圈速記錄」時計算 SF%
+        #       歷史回放時，如果圈速已經載入過，SF% 就不會被計算
+        # 解決: 在 snapshot 處理結束後，批量計算所有車手的 SF%
+        # =====================================================================
+        self._batch_update_all_drivers_tire_saving()
+        
         # 只更新當前顯示車手的 Widget
         if self._current_driver and self._current_driver in self._all_drivers_lap_data:
             self._refresh_widget_from_driver_data(self._current_driver)
@@ -1681,11 +2353,15 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         """
         更新單一車手的資料到 _all_drivers_lap_data。
         這會處理所有 20 位車手，不只當前選中的。
+        
+        此方法在每次 snapshot 更新時調用，用於：
+        1. 累積 throttle 樣本（每次 snapshot）
+        2. 在圈數變化時計算 full_throttle_ratio 並記錄圈速
         """
         # 獲取或創建車手資料
         driver_data = self._get_or_create_driver_data(driver_num, driver_info)
         
-        # 獲取圈數
+        # 獲取當前圈數
         lap_num = driver_info.get("lap")
         if lap_num is None:
             return
@@ -1695,6 +2371,40 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         except (ValueError, TypeError):
             return
         
+        # =====================================================================
+        # F87: 累積 throttle 樣本（每次 snapshot 都執行）
+        # =====================================================================
+        throttle = driver_info.get("throttle", 0)
+        if throttle is not None:
+            try:
+                throttle_val = int(throttle)
+                # 檢查是否圈數變化
+                if lap_num != driver_data.current_lap_being_tracked:
+                    # 圈數變化：計算上一圈的 throttle ratio
+                    if driver_data.current_lap_being_tracked > 0 and driver_data.current_lap_throttle_samples:
+                        samples = driver_data.current_lap_throttle_samples
+                        # Full throttle = throttle >= 95
+                        full_throttle_count = sum(1 for s in samples if s >= 95)
+                        ratio = full_throttle_count / len(samples) if samples else 0.0
+                        driver_data.lap_throttle_ratios[driver_data.current_lap_being_tracked] = ratio
+                        
+                        # 只在當前車手時輸出調試信息
+                        if driver_num == self._current_driver:
+                            print(f"[DRIVER_STRATEGY_MDI] Lap {driver_data.current_lap_being_tracked} throttle: "
+                                  f"{len(samples)} samples, full_throttle_ratio={ratio:.3f}")
+                    
+                    # 重置為新圈
+                    driver_data.current_lap_throttle_samples = [throttle_val]
+                    driver_data.current_lap_being_tracked = lap_num
+                else:
+                    # 同一圈：累積樣本
+                    driver_data.current_lap_throttle_samples.append(throttle_val)
+            except (ValueError, TypeError):
+                pass
+        
+        # =====================================================================
+        # 原有邏輯：圈速記錄（只在圈數變化時）
+        # =====================================================================
         # 檢查是否已記錄過這一圈
         if lap_num <= driver_data.last_lap_recorded:
             return
@@ -1735,6 +2445,21 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         # 更新最後記錄圈數
         driver_data.last_lap_recorded = lap_num
         
+        # =====================================================================
+        # F87: 從 snapshot 讀取省胎分數 (DataManager 計算)
+        # DataManager._update_tire_saving_scores() 已計算並合併到 drivers 字典
+        # =====================================================================
+        score = driver_info.get('tire_saving_score', 0.0)
+        level = driver_info.get('tire_saving_level', 'NONE')
+        adjustment = 0.0  # DataManager 不計算 adjustment
+        
+        # 存儲當前圈分數 (只有當分數 > 0 時才記錄)
+        driver_data.tire_saving_score = score
+        driver_data.tire_saving_level = level
+        driver_data.tire_saving_adjustment = adjustment
+        if score > 0:
+            driver_data.lap_tire_saving_scores[lap_num] = score
+        
     def _refresh_widget_from_driver_data(self, driver_num: str):
         """
         從 _all_drivers_lap_data 刷新 Widget 顯示。
@@ -1745,7 +2470,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             
         driver_data = self._all_drivers_lap_data[driver_num]
         
-        # 批量載入所有圈速資料到 Widget（包含全域 SC 資料）
+        # 批量載入所有圈速資料到 Widget（包含全域 SC 資料和 throttle 數據）
         self._strategy_widget.load_driver_history(
             actual_lap_times=driver_data.actual_lap_times.copy(),
             lap_compounds=driver_data.lap_compounds.copy(),
@@ -1754,8 +2479,16 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             sc_laps=self._sc_laps.copy(),
             sc_restart_laps=self._sc_restart_laps.copy(),
             current_compound=driver_data.current_compound,
-            current_lap=driver_data.last_lap_recorded
+            current_lap=driver_data.last_lap_recorded,
+            # F87: 傳遞 throttle 數據和省胎分數 (SF% 由 DataManager 計算)
+            lap_throttle_ratios=driver_data.lap_throttle_ratios.copy(),
+            lap_tire_saving_scores=driver_data.lap_tire_saving_scores.copy()
         )
+        
+        # F87: 同步 SF% 到 Widget (從 driver_data 讀取，由 DataManager 計算)
+        self._strategy_widget._tire_saving_score = driver_data.tire_saving_score
+        self._strategy_widget._tire_saving_level = driver_data.tire_saving_level
+        self._strategy_widget._tire_saving_adjustment = driver_data.tire_saving_adjustment
             
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """賽事載入完成"""
@@ -1763,6 +2496,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         
         # 設定賽道
         circuit = race_info.get('circuit', '')
+        self._current_circuit = circuit  # 存儲賽道名稱供 SF% 計算使用
         if circuit and hasattr(self, '_strategy_widget'):
             self._strategy_widget.set_circuit(circuit)
             

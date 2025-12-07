@@ -60,12 +60,49 @@ def create_app() -> FastAPI:
     setup_cors_middleware(app)
     app.add_middleware(RateLimitMiddleware, calls_per_minute=120)
 
+    # 🔄 初始化賽事事件監控器
+    race_monitor = None
+
     @app.on_event("startup")
     async def _on_startup() -> None:  # pragma: no cover - light side effect
+        nonlocal race_monitor
         logger = get_logger(component="api")
         logger.info("🚀 F1 Analysis API v%s 已啟動 | 日誌系統: core.logger (統一配置)", API_VERSION)
         logger.info("📂 日誌檔案: logs/f1_api_YYYY-MM-DD.log")
         logger.info("📊 API 端點: /docs (Swagger), /redoc (ReDoc)")
+        
+        # 🔄 啟動賽事事件監控器
+        try:
+            from api.services.race_event_monitor import RaceEventMonitor
+            from api.services.simple_analysis_service import SimpleF1AnalysisService
+            
+            analysis_service = SimpleF1AnalysisService()
+            race_monitor = RaceEventMonitor(analysis_service)
+            await race_monitor.start()
+            
+            # 將監控器存儲到 app.state 供其他路由使用
+            app.state.race_monitor = race_monitor
+            
+            logger.info("✅ 賽事事件監控器已啟動")
+        except Exception as e:
+            logger.error(f"❌ 無法啟動賽事事件監控器: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    @app.on_event("shutdown")
+    async def _on_shutdown() -> None:  # pragma: no cover - light side effect
+        logger = get_logger(component="api")
+        logger.info("🛑 F1 Analysis API 正在關閉...")
+        
+        # 停止賽事事件監控器
+        if race_monitor:
+            try:
+                await race_monitor.stop()
+                logger.info("✅ 賽事事件監控器已停止")
+            except Exception as e:
+                logger.error(f"❌ 停止監控器時發生錯誤: {e}")
+        
+        logger.info("👋 F1 Analysis API 已關閉")
 
     return app
 

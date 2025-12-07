@@ -17,6 +17,7 @@ Date: 2025-12-04
 """
 
 import os
+import sys
 import json
 import zlib
 import base64
@@ -73,11 +74,20 @@ class F1APIDownloader:
         初始化下載器
         
         Args:
-            cache_dir: PKL 快取目錄（預設為 data/live_timing_cache）
+            cache_dir: PKL 快取目錄
+                - EXE 模式：EXE 同目錄的 live_timing_cache/
+                - 開發模式：data/live_timing_cache/
         """
         if cache_dir is None:
-            project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-            cache_dir = project_root / "data" / "live_timing_cache"
+            # 檢查是否為 EXE 模式
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                # EXE 模式：使用 EXE 所在目錄
+                exe_dir = Path(sys.executable).parent
+                cache_dir = exe_dir / "live_timing_cache"
+            else:
+                # 開發模式：使用專案目錄
+                project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+                cache_dir = project_root / "data" / "live_timing_cache"
         
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -319,15 +329,21 @@ class F1APIDownloader:
         session_upper = session.upper()
         
         # 標準化會話名稱（支援多種格式）
+        # 同時支援 "Practice_1" 和 "Practice 1" 格式
         session_mapping = {
             "RACE": "R",
             "QUALIFYING": "Q",
             "PRACTICE_1": "FP1",
             "PRACTICE_2": "FP2",
             "PRACTICE_3": "FP3",
+            "PRACTICE 1": "FP1",  # 支援空格格式
+            "PRACTICE 2": "FP2",
+            "PRACTICE 3": "FP3",
             "SPRINT": "S",
             "SPRINT_QUALIFYING": "SQ",
+            "SPRINT QUALIFYING": "SQ",  # 支援空格格式
             "SPRINT_SHOOTOUT": "SS",
+            "SPRINT SHOOTOUT": "SS",  # 支援空格格式
         }
         
         # 如果是長名稱，轉換為短名稱
@@ -354,7 +370,82 @@ class F1APIDownloader:
             elif session_upper == "SQ" and "SPRINT" in sess_name and "QUALIFYING" in sess_name:
                 return sess_path
         
+        # ===== 新增：Index.json 中 Path 為 None 時，嘗試猜測路徑 =====
+        # 這通常發生在賽事剛結束、Index.json 尚未更新的情況
+        print(f"[F1API] Index.json 中找不到 {session}，嘗試猜測路徑...")
+        guessed_path = self._guess_session_path(target_meeting, session_upper, year)
+        if guessed_path:
+            return guessed_path
+        
         print(f"[F1API] 找不到會話: {session}")
+        return None
+    
+    def _guess_session_path(self, meeting: Dict, session_code: str, year: int) -> Optional[str]:
+        """
+        當 Index.json 中 Path 為 None 時，嘗試猜測並驗證路徑
+        
+        Args:
+            meeting: 賽事資訊字典
+            session_code: 會話代碼 (FP1, FP2, Q, R 等)
+            year: 年份
+            
+        Returns:
+            驗證成功的路徑，或 None
+        """
+        # 從已有的 session 中找到一個有效路徑作為參考
+        available_sessions = meeting.get("Sessions", [])
+        reference_path = None
+        
+        for sess in available_sessions:
+            path = sess.get("Path")
+            if path:
+                reference_path = path
+                break
+        
+        if not reference_path:
+            print("[F1API] 無參考路徑可用於猜測")
+            return None
+        
+        # 解析參考路徑以獲取賽事目錄
+        # 例如: "2025/2025-12-07_Abu_Dhabi_Grand_Prix/2025-12-05_Practice_1/"
+        parts = reference_path.split("/")
+        if len(parts) < 3:
+            return None
+        
+        meeting_dir = parts[1]  # "2025-12-07_Abu_Dhabi_Grand_Prix"
+        session_date_part = parts[2].split("_")[0]  # "2025-12-05"
+        
+        # 會話名稱映射
+        session_name_map = {
+            "FP1": "Practice_1",
+            "FP2": "Practice_2", 
+            "FP3": "Practice_3",
+            "Q": "Qualifying",
+            "R": "Race",
+            "S": "Sprint",
+            "SQ": "Sprint_Qualifying",
+            "SS": "Sprint_Shootout",
+        }
+        
+        session_name = session_name_map.get(session_code.upper())
+        if not session_name:
+            return None
+        
+        # 構建猜測路徑
+        guessed_path = f"{year}/{meeting_dir}/{session_date_part}_{session_name}/"
+        
+        # 驗證路徑是否可訪問
+        test_url = f"{self.BASE_URL}/{guessed_path}DriverList.jsonStream"
+        try:
+            resp = self.session.head(test_url, timeout=10)
+            if resp.status_code == 200:
+                print(f"[F1API] 猜測路徑成功: {guessed_path}")
+                return guessed_path
+            else:
+                print(f"[F1API] 猜測路徑 {guessed_path} 不可訪問 (HTTP {resp.status_code})")
+        except Exception as e:
+            print(f"[F1API] 驗證猜測路徑失敗: {e}")
+        
         return None
     
     # ===========================================

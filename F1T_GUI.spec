@@ -187,9 +187,8 @@ a = Analysis(
         'modules.gui.settings',
         'modules.gui.settings.system_settings_dialog',
         
-        # ⭐ Diagnostics 模組
+        # ⭐ Diagnostics 模組 (已移除 objgraph_window)
         'modules.gui.diagnostics',
-        'modules.gui.diagnostics.objgraph_window',
         
         # ⭐ Driver Analysis 模組
         'modules.gui.driver_analysis',
@@ -237,6 +236,56 @@ a = Analysis(
         'modules.gui.championship_standings_demo.standings_data_loader',
         'modules.gui.championship_standings_demo.standings_demo_widget',
         
+        # ⭐ Live Timing 模組（V0.9.0 完整新增）
+        'modules.gui.live_timing',
+        'modules.gui.live_timing.core',
+        'modules.gui.live_timing.core.api_client',
+        'modules.gui.live_timing.core.base_live_mdi',
+        'modules.gui.live_timing.core.data_manager',
+        'modules.gui.live_timing.core.f1_api_downloader',
+        'modules.gui.live_timing.core.local_source',
+        'modules.gui.live_timing.core.module_factory',
+        'modules.gui.live_timing.core.position_processor',
+        'modules.gui.live_timing.core.realtime_source',
+        'modules.gui.live_timing.core.signalr_client',
+        'modules.gui.live_timing.core.snapshot_cache',
+        'modules.gui.live_timing.live_timing_modules',
+        'modules.gui.live_timing.live_timing_modules.battle_insight',
+        'modules.gui.live_timing.live_timing_modules.circle_map',
+        'modules.gui.live_timing.live_timing_modules.control_dock',
+        'modules.gui.live_timing.live_timing_modules.control_panel',
+        'modules.gui.live_timing.live_timing_modules.driver_strategy',
+        'modules.gui.live_timing.live_timing_modules.lap_history',
+        'modules.gui.live_timing.live_timing_modules.lap_time_distribution',
+        'modules.gui.live_timing.live_timing_modules.pit_window',
+        'modules.gui.live_timing.live_timing_modules.race_control_messages',
+        'modules.gui.live_timing.live_timing_modules.ranking_tower',
+        'modules.gui.live_timing.live_timing_modules.sector_comparison',
+        'modules.gui.live_timing.live_timing_modules.speed_trace',
+        'modules.gui.live_timing.live_timing_modules.track_map',
+        'modules.gui.live_timing.live_timing_modules.tyre_strategy',
+        
+        # ⭐ Race Prediction 模組（V0.9.0 新增）
+        'modules.gui.race_prediction',
+        'modules.gui.race_prediction.race_prediction_mdi',
+        'modules.gui.race_prediction.race_prediction_widget',
+        'modules.gui.race_prediction.race_prediction_data_loader',
+        
+        # ⭐ Track Elevation 模組（V0.9.0 新增）
+        'modules.gui.track_elevation',
+        'modules.gui.track_elevation.elevation_chart_widget',
+        'modules.gui.track_elevation.elevation_chart_widget_pyqt5',
+        
+        # ⭐ Historical Track Map 模組（V0.9.0 新增）
+        'modules.gui.Historical_track_map',
+        'modules.gui.Historical_track_map.historical_track_map_mdi',
+        'modules.gui.Historical_track_map.historical_track_map_data_loader',
+        'modules.gui.Historical_track_map.speed_distribution_widget',
+        
+        # ⭐ Classification Analysis 模組（V0.9.0 新增）
+        'modules.gui.classification_analysis',
+        'modules.gui.classification_analysis.demo_launcher',
+        
         # Core 模組
         'core.dependency_guard',
         'core.logger',
@@ -270,7 +319,51 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=['pyinstaller_runtime_hook.py'],  # 啟動時自動設置 F1_LOG_LEVEL=DEBUG
-    excludes=[],
+    excludes=[
+        # 排除 PyTorch 相關模組（GUI 不需要，且會造成 PyInstaller 衝突）
+        'torch',
+        'torchvision',
+        'torchaudio',
+        'torch._C',
+        'torch.cuda',
+        'torch.backends',
+        # 排除 TensorFlow 相關
+        'tensorflow',
+        'tensorflow_core',
+        'keras',
+        # 排除 scikit-learn（GUI 不需要）
+        'sklearn',
+        'sklearn.ensemble',
+        'sklearn.tree',
+        # 排除 scipy（GUI 不需要，只有 CLI 分析用）
+        'scipy',
+        'scipy.stats',
+        'scipy.spatial',
+        'scipy.interpolate',
+        'scipy.linalg',
+        'scipy.optimize',
+        'scipy.signal',
+        'scipy.sparse',
+        'scipy.special',
+        'scipy.integrate',
+        # 排除 objgraph（Memory Diagnostics 已移除）
+        'objgraph',
+        # 排除測試模組
+        'pytest',
+        'unittest',
+        '_pytest',
+        # 排除其他不需要的大型套件
+        'IPython',
+        'jupyter',
+        'notebook',
+        'jupyterlab',
+        'sympy',
+        'numba',
+        'llvmlite',
+        'dask',
+        'bokeh',
+        'holoviews',
+    ],
     noarchive=False,
     optimize=0,
 )

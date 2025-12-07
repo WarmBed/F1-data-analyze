@@ -190,18 +190,35 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
         self._set_controls_enabled(False)
     
     def _populate_races(self):
-        """填充賽事列表"""
-        # 掃描本地 JSON 目錄
-        project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-        livef1_dir = project_root / "json" / "LiveF1"
-        
+        """填充賽事列表 - 優先使用 API (Function 99)，失敗時掃描本地目錄"""
         races = []
-        if livef1_dir.exists():
-            year_dirs = [d for d in livef1_dir.iterdir() if d.is_dir()]
-            for year_dir in year_dirs:
-                for race_dir in year_dir.iterdir():
-                    if race_dir.is_dir():
-                        races.append(race_dir.name)
+        
+        # 優先嘗試 API 獲取
+        try:
+            from ..core.api_client import get_api_client
+            
+            api_client = get_api_client()
+            calendar_data = api_client.get_season_calendar()
+            
+            if calendar_data:
+                # 從日曆數據中提取所有賽事名稱
+                for year_key, events in calendar_data.items():
+                    if isinstance(events, list):
+                        for event in events:
+                            # 將賽事名稱轉換為 LiveF1 格式
+                            event_name = event.get('event_name', '')
+                            if event_name:
+                                # 例如 "Japanese Grand Prix" -> "Japanese_Race"
+                                race_name = event_name.replace(' Grand Prix', '').replace(' ', '_') + '_Race'
+                                races.append(race_name)
+                
+                print(f"[CONTROL_PANEL] 從 API 獲取賽事列表成功: {len(races)} 場賽事")
+        except Exception as e:
+            print(f"[CONTROL_PANEL] API 獲取賽事列表失敗: {e}")
+        
+        # API 失敗時不回退，僅顯示錯誤
+        if not races:
+            print("[CONTROL_PANEL] API 獲取失敗，請確認 API 服務器已啟動")
         
         # 去重並排序
         races = sorted(set(races))
@@ -209,6 +226,7 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
         if races:
             self.cmb_race.addItems(races)
         else:
+            # 預設賽事列表
             self.cmb_race.addItems(["Japanese_Race", "Australian_Race", "Chinese_Race"])
     
     def _set_controls_enabled(self, enabled: bool):

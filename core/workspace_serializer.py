@@ -80,6 +80,28 @@ class WorkspaceSerializer:
         "SpeeddiffAnalysisModule": "Speeddiff",  # 注意：大寫S
         "distancediffAnalysisModule": "distancediff",
         "timediffAnalysisModule": "timediff",
+        
+        # ============================================================
+        # Live Timing 模組 (BaseLiveTimingMDI 子類)
+        # ============================================================
+        "LiveTimingTrackMap": "live_track_map",
+        "LiveTimingCircleMap": "live_circle_map",
+        "LiveTimingRankingTower": "live_ranking_tower",
+        "LiveTimingPitWindow": "live_pit_window",
+        "LiveTimingTyreStrategy": "live_tyre_strategy",
+        "LiveTimingDriverStrategy": "live_driver_strategy",
+        "LiveTimingLapDistribution": "live_lap_time_distribution",
+        "LiveTimingRaceControlMessages": "live_race_control_messages",
+        "LiveTimingSpeedTrace": "live_speed_trace",
+        "LiveTimingLapHistoryLapTime": "live_lap_history_lap_time",
+        "LiveTimingLapHistoryS1": "live_lap_history_s1",
+        "LiveTimingLapHistoryS2": "live_lap_history_s2",
+        "LiveTimingLapHistoryS3": "live_lap_history_s3",
+        "SectorComparisonS1MDI": "live_sector_comparison_s1",
+        "SectorComparisonS2MDI": "live_sector_comparison_s2",
+        "SectorComparisonS3MDI": "live_sector_comparison_s3",
+        "LiveTimingControlPanel": "live_control_panel",
+        "BattleInsightMDI": "live_battle_insight",
     }
     
     def __init__(self, main_window):
@@ -260,15 +282,37 @@ class WorkspaceSerializer:
                 else:
                     print(f"[WORKSPACE] ⚠️ 未找到 analysis_type 屬性")
             
-            # 如果仍然無法識別，使用類名映射作為備選
+            # ========== 策略 3: 檢查是否是 Live Timing 模組 ==========
+            # 注意：PopoutSubWindow.setWidget() 會包裝原始 widget：
+            #   - subwindow.widget() 返回的是 wrapper (QWidget)
+            #   - 原始模組保存在 subwindow.content_widget 中
             if window_type == "unknown":
-                widget_class_name = widget.__class__.__name__
-                window_type = self.WINDOW_TYPE_MAPPING.get(widget_class_name, "unknown")
-                print(f"[WORKSPACE] ⚠️ 使用類名映射: {widget_class_name} → {window_type}")
+                # 優先檢查 content_widget（這是原始模組）
+                content_widget = getattr(subwindow, 'content_widget', None)
+                if content_widget:
+                    widget_class_name = content_widget.__class__.__name__
+                    print(f"[WORKSPACE] 🔍 檢查 content_widget 類名映射: {widget_class_name}")
+                    window_type = self.WINDOW_TYPE_MAPPING.get(widget_class_name, "unknown")
+                    if window_type != "unknown":
+                        print(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
+                        target_widget = content_widget
+                    else:
+                        print(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
+                else:
+                    # 備選：檢查 widget()（向後兼容）
+                    widget = subwindow.widget()
+                    if widget:
+                        widget_class_name = widget.__class__.__name__
+                        print(f"[WORKSPACE] 🔍 檢查 widget() 類名映射: {widget_class_name}")
+                        window_type = self.WINDOW_TYPE_MAPPING.get(widget_class_name, "unknown")
+                        if window_type != "unknown":
+                            print(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
+                        else:
+                            print(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
             
             # 使用找到的 target_widget（有 data_manager）進行參數提取
             if target_widget is None:
-                target_widget = widget
+                target_widget = subwindow.widget()
             
             window_config = {
                 "window_type": window_type,
@@ -702,7 +746,53 @@ class WorkspaceSerializer:
             
             # 步驟 1: 獲取視窗類型（這是唯一從配置讀取的信息）
             window_type = window_config.get('window_type', 'unknown')
-            print(f"[WORKSPACE] 📋 視窗類型: {window_type}")
+            window_title = window_config.get('window_title', '')
+            print(f"[WORKSPACE] 📋 視窗類型: {window_type}, 標題: {window_title}")
+            
+            # ========================================================
+            # 步驟 1.2: 從 window_title 推斷 Live Timing 類型（處理舊數據）
+            # ========================================================
+            if window_type == 'unknown' and window_title:
+                # Live Timing 標題 → 類型映射
+                title_to_type_map = {
+                    "Track Map": "live_track_map",
+                    "Circle Map": "live_circle_map",
+                    "Live Ranking": "live_ranking_tower",
+                    "live_ranking_tower": "live_ranking_tower",  # 舊格式標題
+                    "Pit Window": "live_pit_window",
+                    "Tyre Strategy": "live_tyre_strategy",
+                    "Driver Strategy": "live_driver_strategy",
+                    "Lap Time Distribution": "live_lap_time_distribution",
+                    "Race Control Messages": "live_race_control_messages",
+                    "Speed Trace": "live_speed_trace",
+                    "Lap History - Lap Time": "live_lap_history_lap_time",
+                    "Lap History - S1": "live_lap_history_s1",
+                    "Lap History - S2": "live_lap_history_s2",
+                    "Lap History - S3": "live_lap_history_s3",
+                    "S1 Comparison": "live_sector_comparison_s1",
+                    "S2 Comparison": "live_sector_comparison_s2",
+                    "S3 Comparison": "live_sector_comparison_s3",
+                    "Sector Comparison - S1": "live_sector_comparison_s1",
+                    "Sector Comparison - S2": "live_sector_comparison_s2",
+                    "Sector Comparison - S3": "live_sector_comparison_s3",
+                    "Control Panel": "live_control_panel",
+                    "Battle Insight": "live_battle_insight",
+                }
+                
+                inferred_type = title_to_type_map.get(window_title)
+                if inferred_type:
+                    print(f"[WORKSPACE] 🔄 從標題推斷類型: '{window_title}' → '{inferred_type}'")
+                    window_type = inferred_type
+                    # 更新 window_config 以便傳遞給 _rebuild_live_timing_window
+                    window_config = dict(window_config)  # 創建副本避免修改原始數據
+                    window_config['window_type'] = window_type
+            
+            # ========================================================
+            # 步驟 1.5: 檢查是否為 Live Timing 模組
+            # ========================================================
+            if window_type.startswith('live_'):
+                print(f"[WORKSPACE] 🎬 檢測到 Live Timing 模組，使用專用工廠...")
+                return self._rebuild_live_timing_window(mdi_area, window_config)
             
             # 步驟 2: 使用與手動開啟完全相同的模組創建方法
             # ✅ 關鍵：調用主視窗的 _create_analysis_module() 方法
@@ -710,7 +800,7 @@ class WorkspaceSerializer:
             # - 使用 parameter_provider 從主視窗實時獲取參數
             # - 調用 API 而非讀取 JSON
             # - 與手動開啟完全相同的初始化流程
-            print(f"[WORKSPACE] � 調用主視窗的 _create_analysis_module() 方法...")
+            print(f"[WORKSPACE] 🔧 調用主視窗的 _create_analysis_module() 方法...")
             analysis_module = self.main_window._create_analysis_module(
                 window_type,  # 使用 window_type 作為 function_name
                 module_type_hint=window_type  # 提供類型提示
@@ -791,10 +881,19 @@ class WorkspaceSerializer:
                         core.set_parent_window(analysis_window)
                         print(f"[WORKSPACE] 🔗 已在 _rain_analysis_core 設置 parent_window")
             
-            # 步驟 6: 使用模組推薦的尺寸（與手動開啟一致）
-            width, height = analysis_module.get_default_size()
+            # 步驟 6: 恢復視窗尺寸（優先使用保存的尺寸，否則使用預設）
+            saved_size = window_config.get('size', {})
+            saved_width = saved_size.get('width')
+            saved_height = saved_size.get('height')
+            
+            if saved_width and saved_height:
+                width, height = saved_width, saved_height
+                print(f"[WORKSPACE] 📏 使用保存的尺寸: {width}x{height}")
+            else:
+                width, height = analysis_module.get_default_size()
+                print(f"[WORKSPACE] 📏 使用預設尺寸: {width}x{height}")
+            
             analysis_window.resize(width, height)
-            print(f"[WORKSPACE] 📏 尺寸已設置: {width}x{height}")
             
             # 步驟 7: 添加到 MDI（與手動開啟一致）
             mdi_area.addSubWindow(analysis_window)
@@ -816,9 +915,23 @@ class WorkspaceSerializer:
             analysis_window.show()
             print(f"[WORKSPACE] 👁️ 視窗已顯示")
             
-            # 步驟 11: 自動計算位置避免重疊（與手動開啟一致）
-            self.main_window._position_subwindow(mdi_area, analysis_window)
-            print(f"[WORKSPACE] 📍 位置已自動計算")
+            # 🔧 重要：show() 後再次設定尺寸，避免被 Qt 自動調整覆蓋
+            if saved_width and saved_height:
+                analysis_window.resize(saved_width, saved_height)
+            
+            # 步驟 11: 恢復視窗位置（優先使用保存的位置，否則自動計算）
+            saved_position = window_config.get('position', {})
+            saved_x = saved_position.get('x')
+            saved_y = saved_position.get('y')
+            
+            if saved_x is not None and saved_y is not None:
+                # 使用保存的位置
+                analysis_window.move(saved_x, saved_y)
+                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+            else:
+                # 自動計算位置避免重疊
+                self.main_window._position_subwindow(mdi_area, analysis_window)
+                print(f"[WORKSPACE] 📍 位置已自動計算")
             
             # 步驟 12: 為所有分析模組設置 analysis_type 屬性
             # ✅ 關鍵修復：確保所有模組都能被 _get_telemetry_analysis_windows() 檢測到
@@ -873,6 +986,140 @@ class WorkspaceSerializer:
             traceback.print_exc()
             return False
     
+    def _rebuild_live_timing_window(self, mdi_area, window_config: Dict) -> bool:
+        """
+        重建 Live Timing MDI 視窗
+        
+        Live Timing 模組使用專門的 LiveTimingModuleFactory 創建，
+        與一般分析模組的創建流程不同。
+        
+        Args:
+            mdi_area: MDI 區域
+            window_config: 視窗配置
+            
+        Returns:
+            是否成功
+        """
+        try:
+            from f1t_gui_main import PopoutSubWindow
+            from modules.gui.live_timing import LiveTimingModuleFactory
+            
+            window_type = window_config.get('window_type', 'unknown')
+            print(f"[WORKSPACE] 🎬 重建 Live Timing 視窗: {window_type}")
+            
+            # Live Timing 類型 → 模組名稱映射
+            live_timing_name_map = {
+                "live_track_map": "Track Map",
+                "live_circle_map": "Circle Map",
+                "live_ranking_tower": "Live Ranking",
+                "live_pit_window": "Pit Window",
+                "live_tyre_strategy": "Tyre Strategy",
+                "live_driver_strategy": "Driver Strategy",
+                "live_lap_time_distribution": "Lap Time Distribution",
+                "live_race_control_messages": "Race Control Messages",
+                "live_speed_trace": "Speed Trace",
+                "live_lap_history_lap_time": "Lap History - Lap Time",
+                "live_lap_history_s1": "Lap History - S1",
+                "live_lap_history_s2": "Lap History - S2",
+                "live_lap_history_s3": "Lap History - S3",
+                "live_sector_comparison_s1": "S1 Comparison",
+                "live_sector_comparison_s2": "S2 Comparison",
+                "live_sector_comparison_s3": "S3 Comparison",
+                "live_control_panel": "Control Panel",
+                "live_battle_insight": "Battle Insight",
+            }
+            
+            module_name = live_timing_name_map.get(window_type)
+            if not module_name:
+                print(f"[WORKSPACE] ❌ 未知的 Live Timing 類型: {window_type}")
+                return False
+            
+            print(f"[WORKSPACE] 📦 模組名稱: {module_name}")
+            
+            # 使用 Live Timing 工廠創建模組
+            factory = LiveTimingModuleFactory.get_instance()
+            
+            # 檢查模組是否已實現
+            if not factory.is_implemented(module_name):
+                print(f"[WORKSPACE] ⚠️ Live Timing 模組尚未實現: {module_name}")
+                return False
+            
+            # 創建模組實例
+            module_instance = factory.create_module(module_name, self.main_window)
+            if module_instance is None:
+                print(f"[WORKSPACE] ❌ 無法創建 Live Timing 模組: {module_name}")
+                return False
+            
+            print(f"[WORKSPACE] ✅ Live Timing 模組創建成功: {module_instance.__class__.__name__}")
+            
+            # 獲取視窗標題
+            window_title = module_instance.windowTitle() or module_name
+            
+            # 使用 PopoutSubWindow 包裝模組
+            sub_window = PopoutSubWindow(
+                window_title,
+                mdi_area,
+                analysis_module=None,  # Live Timing 不是標準分析模組
+                sync_enabled=False
+            )
+            
+            # 設置模組 widget 為內容
+            sub_window.setWidget(module_instance)
+            
+            # 恢復尺寸（優先使用保存的尺寸）
+            saved_size = window_config.get('size', {})
+            saved_width = saved_size.get('width')
+            saved_height = saved_size.get('height')
+            
+            if saved_width and saved_height:
+                sub_window.resize(saved_width, saved_height)
+                print(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
+            else:
+                # 使用模組的建議尺寸
+                if hasattr(module_instance, 'minimumSize'):
+                    min_size = module_instance.minimumSize()
+                    if min_size.width() > 0 and min_size.height() > 0:
+                        sub_window.resize(min_size.width() + 50, min_size.height() + 50)
+                    else:
+                        sub_window.resize(500, 500)
+                else:
+                    sub_window.resize(500, 500)
+                print(f"[WORKSPACE] 📏 使用預設尺寸")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            sub_window.show()
+            
+            # 🔧 重要：show() 後再次設定尺寸，避免被 Qt 自動調整覆蓋
+            if saved_width and saved_height:
+                sub_window.resize(saved_width, saved_height)
+            
+            # 恢復位置（優先使用保存的位置）
+            saved_position = window_config.get('position', {})
+            saved_x = saved_position.get('x')
+            saved_y = saved_position.get('y')
+            
+            if saved_x is not None and saved_y is not None:
+                sub_window.move(saved_x, saved_y)
+                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+            
+            # 自動顯示 Live Timing Control Dock
+            if hasattr(self.main_window, '_on_live_timing_module_opened'):
+                self.main_window._on_live_timing_module_opened()
+            
+            # 連接子視窗關閉信號
+            if hasattr(self.main_window, '_on_live_timing_module_closed'):
+                sub_window.destroyed.connect(self.main_window._on_live_timing_module_closed)
+            
+            print(f"[WORKSPACE] ✅ Live Timing 視窗重建完成: {window_title}")
+            return True
+            
+        except Exception as e:
+            print(f"[WORKSPACE] ❌ 重建 Live Timing 視窗失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
     def _create_module_instance(self, window_type: str, parameters: Dict):
         """
         根據視窗類型創建模組實例

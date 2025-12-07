@@ -4,7 +4,6 @@ F1T GUI 主程式 - 專業賽車分析工作站
 F1T GUI Main - Professional Racing Analysis Workstation
 集成的F1分析GUI系統，提供完整的賽車數據分析功能
 """
-import objgraph
 
 import sys
 import os
@@ -49,6 +48,7 @@ import traceback
 import subprocess
 import importlib
 from pathlib import Path
+from enum import Enum, auto
 
 # ✅ 導入集中管理的版本號
 from config.version import APP_VERSION, APP_FULL_TITLE
@@ -131,6 +131,123 @@ def select_preferred_event(
         return upcoming_events[0]
     return None
 
+
+# ========== Snap 功能定義 ==========
+
+class SnapZone(Enum):
+    """Snap 區域枚舉 - 定義 9 個 Snap 區域"""
+    NONE = auto()
+    # 角落 (25% 面積)
+    TOP_LEFT = auto()
+    TOP_RIGHT = auto()
+    BOTTOM_LEFT = auto()
+    BOTTOM_RIGHT = auto()
+    # 邊緣 (50% 面積)
+    TOP = auto()
+    BOTTOM = auto()
+    LEFT = auto()
+    RIGHT = auto()
+    # 中心 (100% 面積)
+    CENTER = auto()
+
+
+# 模組尺寸提示 - 用於 Smart Width 配置
+MODULE_SIZE_HINTS = {
+    'circle_map': {'preferred_ratio': 0.30, 'min_width': 280, 'aspect': 'square'},
+    'ranking_tower': {'preferred_ratio': 0.18, 'min_width': 160, 'aspect': 'tall'},
+    'lap_time_distribution': {'preferred_ratio': 0.25, 'min_width': 200, 'aspect': 'wide'},
+    'driver_strategy': {'preferred_ratio': 0.45, 'min_width': 380, 'aspect': 'wide'},
+    'speed_trace': {'preferred_ratio': 0.35, 'min_width': 300, 'aspect': 'wide'},
+    'telemetry_comparison': {'preferred_ratio': 0.40, 'min_width': 350, 'aspect': 'wide'},
+    'position_analysis': {'preferred_ratio': 0.35, 'min_width': 300, 'aspect': 'wide'},
+    'race_calendar': {'preferred_ratio': 0.25, 'min_width': 220, 'aspect': 'tall'},
+    'rain_analysis': {'preferred_ratio': 0.30, 'min_width': 280, 'aspect': 'wide'},
+    'default': {'preferred_ratio': 0.30, 'min_width': 250, 'aspect': 'wide'},
+}
+
+
+class SnapPreviewOverlay(QWidget):
+    """Snap 預覽覆蓋層 - 顯示藍色半透明預覽"""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(Qt.WA_NoSystemBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        self.hide()
+        
+        # 預覽顏色 (類似 Windows Aero Snap)
+        self._preview_color = QColor(0, 120, 215, 80)  # 藍色半透明
+        self._border_color = QColor(0, 120, 215, 200)  # 藍色邊框
+        self._current_zone = SnapZone.NONE
+    
+    def set_geometry_direct(self, rect: QRect):
+        """直接設置預覽區域幾何形狀（支援 Smart Width）"""
+        if rect.isNull():
+            self.hide()
+            return
+        
+        self._current_zone = SnapZone.CENTER  # 標記為有效區域
+        self.setGeometry(rect)
+        self.show()
+        self.update()
+        
+    def set_zone(self, zone: SnapZone, mdi_rect: QRect):
+        """設置預覽區域（舊版介面，保持相容）"""
+        self._current_zone = zone
+        
+        if zone == SnapZone.NONE:
+            self.hide()
+            return
+            
+        # 計算預覽區域的幾何形狀
+        preview_rect = self._calculate_zone_geometry(zone, mdi_rect)
+        self.setGeometry(preview_rect)
+        self.show()
+        self.update()
+        
+    def _calculate_zone_geometry(self, zone: SnapZone, mdi_rect: QRect) -> QRect:
+        """根據 Snap 區域計算預覽幾何形狀"""
+        x, y = mdi_rect.x(), mdi_rect.y()
+        w, h = mdi_rect.width(), mdi_rect.height()
+        half_w, half_h = w // 2, h // 2
+        
+        zone_map = {
+            SnapZone.TOP_LEFT: QRect(x, y, half_w, half_h),
+            SnapZone.TOP_RIGHT: QRect(x + half_w, y, half_w, half_h),
+            SnapZone.BOTTOM_LEFT: QRect(x, y + half_h, half_w, half_h),
+            SnapZone.BOTTOM_RIGHT: QRect(x + half_w, y + half_h, half_w, half_h),
+            SnapZone.TOP: QRect(x, y, w, half_h),
+            SnapZone.BOTTOM: QRect(x, y + half_h, w, half_h),
+            SnapZone.LEFT: QRect(x, y, half_w, h),
+            SnapZone.RIGHT: QRect(x + half_w, y, half_w, h),
+            SnapZone.CENTER: QRect(x, y, w, h),
+        }
+        
+        return zone_map.get(zone, QRect())
+        
+    def paintEvent(self, event):
+        """繪製預覽"""
+        if self._current_zone == SnapZone.NONE:
+            return
+            
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # 填充半透明藍色
+        painter.fillRect(self.rect(), self._preview_color)
+        
+        # 繪製邊框
+        pen = QPen(self._border_color, 2)
+        painter.setPen(pen)
+        painter.drawRect(self.rect().adjusted(1, 1, -1, -1))
+        
+    def hide_preview(self):
+        """隱藏預覽"""
+        self._current_zone = SnapZone.NONE
+        self.hide()
+
+
 # 自定義QMdiArea類 - 強制執行子視窗最小尺寸
 class CustomMdiArea(QMdiArea):
     """自定義MDI區域，強制執行子視窗最小尺寸限制"""
@@ -147,6 +264,151 @@ class CustomMdiArea(QMdiArea):
         
         # 允許拖拉視窗
         self.setOption(QMdiArea.DontMaximizeSubWindowOnActivation, True)  # 不自動最大化
+        
+        # ========== Snap 功能 ==========
+        self._snap_preview = SnapPreviewOverlay(self)
+        self._snap_enabled = True  # 是否啟用 Snap 功能
+        self._snap_threshold = 30  # 邊緣檢測閾值 (像素)
+        self._snapped_windows = {}  # 追蹤已 Snap 的視窗: {window_id: QRect}
+    
+    def _get_occupied_regions(self, exclude_window=None) -> list:
+        """獲取所有已佔用的區域（排除指定視窗）"""
+        regions = []
+        for sw in self.subWindowList():
+            if sw == exclude_window:
+                continue
+            if sw.property("is_welcome_fixed"):
+                continue  # 忽略歡迎頁面固定視窗
+            # 只追蹤可見且有有效尺寸的視窗
+            if sw.isVisible() and sw.width() > 50 and sw.height() > 50:
+                regions.append(sw.geometry())
+        return regions
+    
+    def _find_available_space_for_zone(self, zone: 'SnapZone', exclude_window=None) -> QRect:
+        """
+        根據 Snap 區域找到可用空間
+        這個方法會考慮已存在的視窗，計算出該區域的實際可用空間
+        """
+        w, h = self.width(), self.height()
+        occupied = self._get_occupied_regions(exclude_window)
+        
+        if not occupied:
+            # 沒有其他視窗，返回整個區域
+            return self._get_basic_zone_rect(zone, w, h)
+        
+        # 分析每個方向被佔用的邊界
+        # 左側被佔用到哪裡（從左邊開始）
+        left_boundary = 0
+        # 右側從哪裡開始被佔用（從右邊開始）
+        right_boundary = w
+        # 上方被佔用到哪裡
+        top_boundary = 0
+        # 下方從哪裡開始被佔用
+        bottom_boundary = h
+        
+        for region in occupied:
+            region_center_x = region.x() + region.width() // 2
+            region_center_y = region.y() + region.height() // 2
+            
+            # 判斷視窗在哪個區域
+            is_left_half = region_center_x < w // 2
+            is_top_half = region_center_y < h // 2
+            
+            # 更新邊界
+            if is_left_half:
+                # 視窗在左半邊
+                left_boundary = max(left_boundary, region.right())
+            else:
+                # 視窗在右半邊
+                right_boundary = min(right_boundary, region.x())
+            
+            if is_top_half:
+                # 視窗在上半邊
+                top_boundary = max(top_boundary, region.bottom())
+            else:
+                # 視窗在下半邊
+                bottom_boundary = min(bottom_boundary, region.y())
+        
+        # 根據區域類型計算可用空間
+        half_h = h // 2
+        
+        if zone == SnapZone.LEFT:
+            # 左側：從 0 到左邊界，或者如果左邊界是0則使用剩餘空間
+            if left_boundary > 0:
+                # 左側已被佔用，不能再放
+                return QRect()
+            return QRect(0, 0, right_boundary, h)
+            
+        elif zone == SnapZone.RIGHT:
+            # 右側：從右邊界到末端
+            if right_boundary < w:
+                # 右側已被佔用，返回剩餘右側空間
+                return QRect(left_boundary, 0, w - left_boundary, h)
+            return QRect(left_boundary, 0, w - left_boundary, h)
+            
+        elif zone == SnapZone.TOP:
+            # 上方：從頂部到上邊界，寬度是剩餘寬度
+            return QRect(left_boundary, 0, right_boundary - left_boundary, 
+                        bottom_boundary if bottom_boundary < h else half_h)
+            
+        elif zone == SnapZone.BOTTOM:
+            # 下方：從下邊界到底部
+            return QRect(left_boundary, top_boundary, right_boundary - left_boundary, 
+                        h - top_boundary)
+            
+        elif zone == SnapZone.TOP_LEFT:
+            # 左上：左側上半部
+            if left_boundary > 0:
+                return QRect()  # 左側已被佔用
+            return QRect(0, 0, right_boundary // 2, half_h)
+            
+        elif zone == SnapZone.TOP_RIGHT:
+            # 右上：右側上半部
+            start_x = max(left_boundary, w // 2)
+            return QRect(start_x, 0, w - start_x, half_h)
+            
+        elif zone == SnapZone.BOTTOM_LEFT:
+            # 左下：左側下半部
+            # 找到左側上方視窗的底部邊界
+            left_top_bottom = 0
+            for region in occupied:
+                if region.x() < w * 0.4 and region.y() < h * 0.5:
+                    left_top_bottom = max(left_top_bottom, region.bottom())
+            
+            if left_top_bottom > 0:
+                # 有左上視窗，填滿其下方空間
+                return QRect(0, left_top_bottom, right_boundary // 2, h - left_top_bottom)
+            return QRect(0, half_h, right_boundary // 2, half_h)
+            
+        elif zone == SnapZone.BOTTOM_RIGHT:
+            # 右下：右側下半部
+            start_x = max(left_boundary, w // 2)
+            return QRect(start_x, top_boundary if top_boundary > 0 else half_h, 
+                        w - start_x, h - (top_boundary if top_boundary > 0 else half_h))
+            
+        elif zone == SnapZone.CENTER:
+            # 中心：填滿剩餘空間
+            return QRect(left_boundary, top_boundary, 
+                        right_boundary - left_boundary, bottom_boundary - top_boundary)
+        
+        return QRect()
+    
+    def _get_basic_zone_rect(self, zone: 'SnapZone', w: int, h: int) -> QRect:
+        """獲取基本區域矩形（沒有其他視窗時）"""
+        half_w, half_h = w // 2, h // 2
+        
+        zone_map = {
+            SnapZone.TOP_LEFT: QRect(0, 0, half_w, half_h),
+            SnapZone.TOP_RIGHT: QRect(half_w, 0, half_w, half_h),
+            SnapZone.BOTTOM_LEFT: QRect(0, half_h, half_w, half_h),
+            SnapZone.BOTTOM_RIGHT: QRect(half_w, half_h, half_w, half_h),
+            SnapZone.TOP: QRect(0, 0, w, half_h),
+            SnapZone.BOTTOM: QRect(0, half_h, w, half_h),
+            SnapZone.LEFT: QRect(0, 0, half_w, h),
+            SnapZone.RIGHT: QRect(half_w, 0, half_w, h),
+            SnapZone.CENTER: QRect(0, 0, w, h),
+        }
+        return zone_map.get(zone, QRect())
     
     def resizeEvent(self, event):
         """MDI 區域調整大小時，重新排列固定視窗"""
@@ -243,12 +505,9 @@ class CustomMdiArea(QMdiArea):
             #print(f"[LOCK] CustomMdiArea: 子視窗無尺寸限制")
             pass
         
-        # [修改] 保留邊框，使用CSS隱藏標題列
+        # 使用樣式表隱藏標題列但保留邊框
+        # 注意：PopoutSubWindow 已經有自己的 DraggableTitleBar
         if subwindow:
-            # 不再設置 FramelessWindowHint，以保留邊框
-            # subwindow.setWindowFlags(subwindow.windowFlags() | Qt.FramelessWindowHint)
-            
-            # 使用樣式表隱藏標題列但保留邊框
             subwindow.setStyleSheet("""
                 QMdiSubWindow::title {
                     height: 0px;
@@ -266,6 +525,479 @@ class CustomMdiArea(QMdiArea):
             #print(f"[LOCK] CustomMdiArea: 已隱藏標題列但保留邊框")
         
         return subwindow
+
+    # ========== Snap 功能方法 ==========
+    
+    # 用於存儲「視窗邊緣 Snap」的精確目標區域
+    _window_edge_snap_rect = None
+    
+    def detect_snap_zone(self, global_pos: QPoint, dragging_window=None) -> SnapZone:
+        """
+        根據滑鼠全局位置檢測 Snap 區域
+        
+        檢測優先級：
+        1. MDI 區域邊緣（角落和邊緣）
+        2. 已存在視窗的邊緣（貼靠在其他視窗旁邊）
+        """
+        if not self._snap_enabled:
+            return SnapZone.NONE
+            
+        # 清除之前的視窗邊緣 Snap 記錄
+        self._window_edge_snap_rect = None
+            
+        # 將全局座標轉換為 MDI 區域的本地座標
+        local_pos = self.mapFromGlobal(global_pos)
+        x, y = local_pos.x(), local_pos.y()
+        w, h = self.width(), self.height()
+        
+        # 邊緣閾值 (用於邊緣 Snap)
+        edge_threshold = self._snap_threshold  # 30 像素
+        # 角落閾值 (更大的區域，更容易觸發角落 Snap)
+        corner_threshold = 80  # 80 像素
+        
+        # ===== 第一優先：MDI 區域邊緣 =====
+        
+        # 邊界檢查 - 角落使用較大閾值
+        at_left_corner = x < corner_threshold
+        at_right_corner = x > w - corner_threshold
+        at_top_corner = y < corner_threshold
+        at_bottom_corner = y > h - corner_threshold
+        
+        # 邊界檢查 - 邊緣使用較小閾值
+        at_left_edge = x < edge_threshold
+        at_right_edge = x > w - edge_threshold
+        at_top_edge = y < edge_threshold
+        at_bottom_edge = y > h - edge_threshold
+        
+        # 角落優先（25% 區域）- 使用較大的檢測區域
+        if at_top_corner and at_left_corner:
+            return SnapZone.TOP_LEFT
+        if at_top_corner and at_right_corner:
+            return SnapZone.TOP_RIGHT
+        if at_bottom_corner and at_left_corner:
+            return SnapZone.BOTTOM_LEFT
+        if at_bottom_corner and at_right_corner:
+            return SnapZone.BOTTOM_RIGHT
+            
+        # 邊緣（50% 區域）
+        if at_top_edge:
+            return SnapZone.TOP
+        if at_bottom_edge:
+            return SnapZone.BOTTOM
+        if at_left_edge:
+            return SnapZone.LEFT
+        if at_right_edge:
+            return SnapZone.RIGHT
+        
+        # ===== 第二優先：已存在視窗的邊緣 =====
+        snap_rect = self._detect_window_edge_snap(x, y, dragging_window)
+        if snap_rect and not snap_rect.isNull():
+            self._window_edge_snap_rect = snap_rect
+            return SnapZone.CENTER  # 使用 CENTER 作為標記，實際區域在 _window_edge_snap_rect
+            
+        return SnapZone.NONE
+    
+    def _detect_window_edge_snap(self, x: int, y: int, exclude_window=None) -> QRect:
+        """
+        檢測是否靠近其他視窗的邊緣，並計算精確的貼靠區域
+        會避開所有已存在的視窗
+        
+        返回：要貼靠的精確矩形區域，或 None
+        """
+        w, h = self.width(), self.height()
+        window_edge_threshold = 30  # 視窗邊緣檢測閾值
+        
+        occupied = self._get_occupied_regions(exclude_window)
+        if not occupied:
+            return None
+        
+        for region in occupied:
+            # 檢查是否靠近該視窗的右邊緣
+            if abs(x - region.right()) < window_edge_threshold:
+                if region.y() <= y <= region.bottom():
+                    # 計算右側可用空間（避開其他視窗）
+                    snap_x = region.right()
+                    snap_y = region.y()
+                    snap_h = region.height()
+                    
+                    # 找到右側最近的視窗邊界
+                    snap_w = w - snap_x  # 預設到 MDI 右邊界
+                    for other in occupied:
+                        if other == region:
+                            continue
+                        # 檢查是否在同一水平範圍內
+                        if self._ranges_overlap(snap_y, snap_y + snap_h, other.y(), other.bottom()):
+                            # 這個視窗可能會擋住
+                            if other.x() > snap_x:
+                                snap_w = min(snap_w, other.x() - snap_x)
+                    
+                    if snap_w > 100:
+                        return QRect(snap_x, snap_y, snap_w, snap_h)
+            
+            # 檢查是否靠近該視窗的下邊緣
+            if abs(y - region.bottom()) < window_edge_threshold:
+                if region.x() <= x <= region.right():
+                    # 計算下方可用空間（避開其他視窗）
+                    snap_x = region.x()
+                    snap_y = region.bottom()
+                    snap_w = region.width()
+                    
+                    # 找到下方最近的視窗邊界
+                    snap_h = h - snap_y  # 預設到 MDI 下邊界
+                    for other in occupied:
+                        if other == region:
+                            continue
+                        # 檢查是否在同一垂直範圍內
+                        if self._ranges_overlap(snap_x, snap_x + snap_w, other.x(), other.right()):
+                            if other.y() > snap_y:
+                                snap_h = min(snap_h, other.y() - snap_y)
+                    
+                    if snap_h > 100:
+                        return QRect(snap_x, snap_y, snap_w, snap_h)
+            
+            # 檢查是否靠近該視窗的左邊緣（從左側貼靠）
+            if abs(x - region.x()) < window_edge_threshold and x < region.x():
+                if region.y() <= y <= region.bottom():
+                    # 計算左側可用空間
+                    snap_y = region.y()
+                    snap_h = region.height()
+                    snap_w = region.x()  # 從 0 到視窗左邊
+                    
+                    # 找到左側最近的視窗邊界
+                    snap_x = 0
+                    for other in occupied:
+                        if other == region:
+                            continue
+                        if self._ranges_overlap(snap_y, snap_y + snap_h, other.y(), other.bottom()):
+                            if other.right() < region.x():
+                                snap_x = max(snap_x, other.right())
+                    
+                    snap_w = region.x() - snap_x
+                    if snap_w > 100:
+                        return QRect(snap_x, snap_y, snap_w, snap_h)
+            
+            # 檢查是否靠近該視窗的上邊緣（從上方貼靠）
+            if abs(y - region.y()) < window_edge_threshold and y < region.y():
+                if region.x() <= x <= region.right():
+                    # 計算上方可用空間
+                    snap_x = region.x()
+                    snap_w = region.width()
+                    snap_h = region.y()  # 從 0 到視窗上邊
+                    
+                    # 找到上方最近的視窗邊界
+                    snap_y = 0
+                    for other in occupied:
+                        if other == region:
+                            continue
+                        if self._ranges_overlap(snap_x, snap_x + snap_w, other.x(), other.right()):
+                            if other.bottom() < region.y():
+                                snap_y = max(snap_y, other.bottom())
+                    
+                    snap_h = region.y() - snap_y
+                    if snap_h > 100:
+                        return QRect(snap_x, snap_y, snap_w, snap_h)
+        
+        return None
+    
+    def _ranges_overlap(self, a_start: int, a_end: int, b_start: int, b_end: int) -> bool:
+        """檢查兩個範圍是否有重疊"""
+        return a_start < b_end and b_start < a_end
+    
+    def show_snap_preview(self, zone: SnapZone, module_name: str = None, dragging_window=None):
+        """顯示 Snap 預覽（支援 Smart Width 和動態剩餘空間，會檢查碰撞）"""
+        if zone == SnapZone.NONE:
+            self._snap_preview.hide_preview()
+        else:
+            # 檢查是否有視窗邊緣 Snap 的精確區域
+            if zone == SnapZone.CENTER and self._window_edge_snap_rect:
+                preview_rect = self._window_edge_snap_rect
+            else:
+                # 使用 get_snap_geometry 計算預覽區域
+                preview_rect = self.get_snap_geometry(zone, module_name, dragging_window)
+            
+            # 碰撞檢測：如果會覆蓋其他視窗，不顯示預覽
+            if self._would_overlap_other_windows(preview_rect, dragging_window):
+                self._snap_preview.hide_preview()
+                return
+            
+            self._snap_preview.set_geometry_direct(preview_rect)
+            self._snap_preview.raise_()  # 確保預覽在最上層
+    
+    def _would_overlap_other_windows(self, target_rect: QRect, exclude_window=None) -> bool:
+        """
+        檢查目標區域是否會與其他視窗重疊
+        
+        返回：True 如果會重疊，False 如果不會
+        """
+        if target_rect.isNull():
+            return True
+            
+        occupied = self._get_occupied_regions(exclude_window)
+        
+        for region in occupied:
+            # 檢查兩個矩形是否相交
+            if target_rect.intersects(region):
+                # 計算重疊面積
+                intersection = target_rect.intersected(region)
+                overlap_area = intersection.width() * intersection.height()
+                # 如果重疊面積超過 100 平方像素，視為覆蓋
+                if overlap_area > 100:
+                    return True
+        
+        return False
+            
+    def hide_snap_preview(self):
+        """隱藏 Snap 預覽"""
+        self._snap_preview.hide_preview()
+        
+    def get_snap_geometry(self, zone: SnapZone, module_name: str = None, exclude_window=None) -> QRect:
+        """
+        根據 Snap 區域獲取目標幾何形狀（支援動態剩餘空間計算，避免覆蓋任何視窗）
+        
+        規則：
+        - 所有 Snap 區域都會避開已存在的視窗
+        - LEFT/RIGHT: 靠邊對齊，寬度 = Smart Width (30%)
+        - TOP/BOTTOM: 靠邊對齊，高度 = 50%
+        - 角落區域: 固定位置 30%x50%
+        - CENTER: 填滿剩餘最大空間
+        """
+        w, h = self.width(), self.height()
+        half_h = h // 2
+        
+        # 獲取 Smart Width 參數
+        size_hints = MODULE_SIZE_HINTS.get(module_name, MODULE_SIZE_HINTS['default'])
+        preferred_ratio = size_hints.get('preferred_ratio', 0.30)
+        min_width = size_hints.get('min_width', 250)
+        
+        # 計算 Smart Width (基於總寬度)
+        smart_w = max(min_width, int(w * preferred_ratio))
+        smart_w = min(smart_w, w // 2)  # 不超過一半寬度
+        
+        # 獲取已佔用區域
+        occupied = self._get_occupied_regions(exclude_window)
+        
+        # 計算各方向的精確邊界（考慮所有視窗）
+        # 左側邊界：所有靠左視窗的最右邊界
+        left_boundary = 0
+        # 右側邊界：所有靠右視窗的最左邊界  
+        right_boundary = w
+        # 上方邊界：所有靠上視窗的最下邊界
+        top_boundary = 0
+        # 下方邊界：所有靠下視窗的最上邊界
+        bottom_boundary = h
+        
+        # 分析每個視窗的位置
+        for region in occupied:
+            # 判斷視窗相對位置
+            # 如果視窗左邊緣靠近左側（在 smart_w 範圍內）
+            if region.x() < smart_w:
+                left_boundary = max(left_boundary, region.right())
+            
+            # 如果視窗右邊緣靠近右側
+            if region.right() > w - smart_w:
+                right_boundary = min(right_boundary, region.x())
+            
+            # 如果視窗上邊緣靠近頂部（在 half_h 範圍內）
+            if region.y() < half_h:
+                # 只有當視窗確實在上半部時才更新
+                if region.bottom() < h * 0.6:  # 容差
+                    top_boundary = max(top_boundary, region.bottom())
+            
+            # 如果視窗下邊緣靠近底部
+            if region.bottom() > half_h:
+                # 只有當視窗確實在下半部時才更新
+                if region.y() > h * 0.4:  # 容差
+                    bottom_boundary = min(bottom_boundary, region.y())
+        
+        # 根據區域計算幾何形狀
+        if zone == SnapZone.LEFT:
+            # 靠左對齊，Smart Width，避開上下已佔用區域
+            # 檢查左側是否已被完全佔用
+            if left_boundary >= smart_w:
+                # 左側已被佔用，嘗試在現有左側視窗旁邊
+                pass  # 使用預設位置，但縮小高度
+            y_start = 0
+            y_height = h
+            # 尋找左側的垂直可用空間
+            for region in occupied:
+                if region.x() < smart_w:  # 左側有視窗
+                    if region.y() == 0:  # 視窗從頂部開始
+                        y_start = max(y_start, region.bottom())
+                    if region.bottom() >= h - 10:  # 視窗到底部
+                        y_height = min(y_height, region.y())
+            if y_start > 0:
+                y_height = h - y_start
+            return QRect(0, y_start, smart_w, y_height)
+            
+        elif zone == SnapZone.RIGHT:
+            # 靠右對齊，Smart Width，避開上下已佔用區域
+            y_start = 0
+            y_height = h
+            for region in occupied:
+                if region.right() > w - smart_w:  # 右側有視窗
+                    if region.y() == 0:
+                        y_start = max(y_start, region.bottom())
+                    if region.bottom() >= h - 10:
+                        y_height = min(y_height, region.y())
+            if y_start > 0:
+                y_height = h - y_start
+            return QRect(w - smart_w, y_start, smart_w, y_height)
+            
+        elif zone == SnapZone.TOP:
+            # 靠上對齊，避開左右已佔用區域
+            x_start = left_boundary if left_boundary > 0 else 0
+            x_end = right_boundary if right_boundary < w else w
+            # 避免寬度太小
+            if x_end - x_start < min_width:
+                x_start = 0
+                x_end = w
+            return QRect(x_start, 0, x_end - x_start, half_h)
+            
+        elif zone == SnapZone.BOTTOM:
+            # 靠下對齊，避開左右已佔用區域
+            x_start = left_boundary if left_boundary > 0 else 0
+            x_end = right_boundary if right_boundary < w else w
+            if x_end - x_start < min_width:
+                x_start = 0
+                x_end = w
+            return QRect(x_start, half_h, x_end - x_start, half_h)
+            
+        elif zone == SnapZone.TOP_LEFT:
+            # 檢查左上是否已被佔用
+            for region in occupied:
+                if region.x() < smart_w and region.y() < half_h:
+                    # 左上已有視窗，嘗試放在它下面
+                    if region.bottom() < h - 50:
+                        return QRect(0, region.bottom(), smart_w, half_h)
+            return QRect(0, 0, smart_w, half_h)
+            
+        elif zone == SnapZone.TOP_RIGHT:
+            # 檢查右上是否已被佔用
+            for region in occupied:
+                if region.right() > w - smart_w and region.y() < half_h:
+                    if region.bottom() < h - 50:
+                        return QRect(w - smart_w, region.bottom(), smart_w, half_h)
+            return QRect(w - smart_w, 0, smart_w, half_h)
+            
+        elif zone == SnapZone.BOTTOM_LEFT:
+            # 檢查左下是否已被佔用
+            for region in occupied:
+                if region.x() < smart_w and region.bottom() > half_h:
+                    if region.y() > 50:
+                        return QRect(0, region.y() - half_h, smart_w, half_h)
+            return QRect(0, half_h, smart_w, half_h)
+            
+        elif zone == SnapZone.BOTTOM_RIGHT:
+            # 檢查右下是否已被佔用
+            for region in occupied:
+                if region.right() > w - smart_w and region.bottom() > half_h:
+                    if region.y() > 50:
+                        return QRect(w - smart_w, region.y() - half_h, smart_w, half_h)
+            return QRect(w - smart_w, half_h, smart_w, half_h)
+            
+        elif zone == SnapZone.CENTER:
+            # 中心：填滿剩餘最大空間
+            return self._find_largest_empty_rect(occupied, w, h)
+        
+        return QRect()
+    
+    def _find_largest_empty_rect(self, occupied: list, w: int, h: int) -> QRect:
+        """找到最大的空白矩形區域（更精確的計算）"""
+        if not occupied:
+            return QRect(0, 0, w, h)
+        
+        # 計算所有視窗的邊界
+        all_left_edges = [0]  # 包含左邊界
+        all_right_edges = [w]  # 包含右邊界
+        all_top_edges = [0]  # 包含上邊界
+        all_bottom_edges = [h]  # 包含下邊界
+        
+        for region in occupied:
+            all_left_edges.append(region.right())  # 視窗右邊是空白開始
+            all_right_edges.append(region.x())  # 視窗左邊是空白結束
+            all_top_edges.append(region.bottom())  # 視窗下邊是空白開始
+            all_bottom_edges.append(region.y())  # 視窗上邊是空白結束
+        
+        # 找到最大的連續空白區域
+        # 策略：檢查左側視窗的右邊到 MDI 右邊界
+        left_boundary = max(r.right() for r in occupied if r.x() < w * 0.4)  if any(r.x() < w * 0.4 for r in occupied) else 0
+        right_boundary = min(r.x() for r in occupied if r.right() > w * 0.6) if any(r.right() > w * 0.6 for r in occupied) else w
+        top_boundary = max(r.bottom() for r in occupied if r.y() < h * 0.4) if any(r.y() < h * 0.4 for r in occupied) else 0
+        bottom_boundary = min(r.y() for r in occupied if r.bottom() > h * 0.6) if any(r.bottom() > h * 0.6 for r in occupied) else h
+        
+        # 計算結果
+        result_x = left_boundary
+        result_y = top_boundary  
+        result_w = right_boundary - left_boundary
+        result_h = bottom_boundary - top_boundary
+        
+        # 確保有最小尺寸，否則返回原始區域
+        if result_w < 100 or result_h < 100:
+            # 嘗試找到任何可用空間
+            return QRect(left_boundary, 0, w - left_boundary, h)
+        
+        return QRect(result_x, result_y, result_w, result_h)
+    
+    def snap_window_to_zone(self, subwindow, zone: SnapZone):
+        """將子視窗 Snap 到指定區域（支援動態剩餘空間計算和視窗邊緣貼靠）"""
+        if zone == SnapZone.NONE:
+            return
+        
+        # 檢查是否有視窗邊緣 Snap 的精確區域
+        if zone == SnapZone.CENTER and self._window_edge_snap_rect:
+            target_geometry = self._window_edge_snap_rect
+            self._window_edge_snap_rect = None  # 清除記錄
+            
+            # 碰撞檢測：確保不會覆蓋其他視窗
+            if self._would_overlap_other_windows(target_geometry, subwindow):
+                print(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
+                return
+            
+            print(f"[SNAP] 視窗邊緣貼靠 '{subwindow.windowTitle()}'")
+            print(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
+            subwindow.setGeometry(target_geometry)
+            return
+            
+        # 獲取模組名稱（用於 Smart Width）
+        module_name = None
+        if hasattr(subwindow, 'analysis_module') and subwindow.analysis_module:
+            if hasattr(subwindow.analysis_module, 'analysis_type'):
+                module_name = subwindow.analysis_module.analysis_type
+        
+        # 嘗試從標題推斷模組名稱
+        if not module_name:
+            title = subwindow.windowTitle().lower()
+            if 'lap time' in title or 'distribution' in title:
+                module_name = 'lap_time_distribution'
+            elif 'circle' in title:
+                module_name = 'circle_map'
+            elif 'ranking' in title or 'tower' in title:
+                module_name = 'ranking_tower'
+            elif 'strategy' in title:
+                module_name = 'driver_strategy'
+            elif 'track' in title:
+                module_name = 'circle_map'
+        
+        # 獲取目標幾何形狀（排除當前視窗以計算剩餘空間）
+        target_geometry = self.get_snap_geometry(zone, module_name, subwindow)
+        
+        if not target_geometry.isNull():
+            # 碰撞檢測：確保不會覆蓋其他視窗
+            if self._would_overlap_other_windows(target_geometry, subwindow):
+                print(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
+                return
+            
+            print(f"[SNAP] Snap 視窗 '{subwindow.windowTitle()}' 到 {zone.name}")
+            print(f"[SNAP] 模組類型: {module_name}")
+            print(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
+            subwindow.setGeometry(target_geometry)
+            
+    def set_snap_enabled(self, enabled: bool):
+        """啟用或禁用 Snap 功能"""
+        self._snap_enabled = enabled
+        if not enabled:
+            self.hide_snap_preview()
+
 
 # CLI 分析工作執行緒
 class CliAnalysisWorker(QThread):
@@ -1974,7 +2706,7 @@ class DraggableTitleBar(QWidget):
             event.accept()
             
     def mouseMoveEvent(self, event):
-        """滑鼠移動事件 - 執行拖拽，但不干擾調整大小"""
+        """滑鼠移動事件 - 執行拖拽，但不干擾調整大小，並支援 Snap 預覽"""
         # 檢查是否在調整模式
         if hasattr(self.parent_window, 'resizing') and self.parent_window.resizing:
             event.ignore()
@@ -1989,16 +2721,75 @@ class DraggableTitleBar(QWidget):
         if event.buttons() == Qt.LeftButton and self.dragging:
             new_pos = event.globalPos() - self.drag_position
             self.parent_window.move(new_pos)
+            
+            # ========== Snap 預覽（支援 Smart Width + 動態剩餘空間）==========
+            # 檢查是否有 MDI 區域並支援 Snap
+            mdi_area = self._get_mdi_area()
+            if mdi_area and hasattr(mdi_area, 'detect_snap_zone'):
+                # 傳遞正在拖動的視窗以支援視窗邊緣檢測
+                snap_zone = mdi_area.detect_snap_zone(event.globalPos(), self.parent_window)
+                # 獲取模組名稱用於 Smart Width
+                module_name = self._get_module_name()
+                # 傳遞正在拖動的視窗以排除計算
+                mdi_area.show_snap_preview(snap_zone, module_name, self.parent_window)
+            
             event.accept()
         else:
             # 沒有拖拽時，讓父視窗處理事件
             event.ignore()
             
     def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖拽"""
+        """滑鼠釋放事件 - 結束拖拽，並執行 Snap"""
         if event.button() == Qt.LeftButton:
+            # ========== 執行 Snap ==========
+            if self.dragging:
+                mdi_area = self._get_mdi_area()
+                if mdi_area and hasattr(mdi_area, 'detect_snap_zone'):
+                    snap_zone = mdi_area.detect_snap_zone(event.globalPos(), self.parent_window)
+                    mdi_area.hide_snap_preview()
+                    
+                    # 如果有有效的 Snap 區域，執行 Snap
+                    if snap_zone != SnapZone.NONE:
+                        mdi_area.snap_window_to_zone(self.parent_window, snap_zone)
+            
             self.dragging = False
             event.accept()
+    
+    def _get_mdi_area(self):
+        """獲取父層的 MDI 區域"""
+        if hasattr(self.parent_window, 'parent_mdi') and self.parent_window.parent_mdi:
+            return self.parent_window.parent_mdi
+        return None
+    
+    def _get_module_name(self) -> str:
+        """獲取模組名稱用於 Smart Width"""
+        if hasattr(self.parent_window, 'analysis_module') and self.parent_window.analysis_module:
+            if hasattr(self.parent_window.analysis_module, 'analysis_type'):
+                return self.parent_window.analysis_module.analysis_type
+        # 嘗試從視窗標題推斷模組類型
+        title = self.parent_window.windowTitle().lower()
+        # 注意：匹配順序很重要，更具體的要放前面
+        if 'lap time' in title or 'distribution' in title:
+            return 'lap_time_distribution'
+        elif 'circle' in title:
+            return 'circle_map'
+        elif 'ranking' in title or 'tower' in title:
+            return 'ranking_tower'
+        elif 'strategy' in title:
+            return 'driver_strategy'
+        elif 'speed' in title:
+            return 'speed_trace'
+        elif 'calendar' in title:
+            return 'race_calendar'
+        elif 'rain' in title:
+            return 'rain_analysis'
+        elif 'track' in title and 'map' in title:
+            return 'circle_map'  # Track Map 使用相同設定
+        elif 'telemetry' in title or 'comparison' in title:
+            return 'telemetry_comparison'
+        elif 'position' in title:
+            return 'position_analysis'
+        return 'default'
     
     def paintEvent(self, event):
         """繪製事件 - 手動繪製背景色以確保顯示"""
@@ -5178,9 +5969,16 @@ class ContextMenuTreeWidget(QTreeWidget):
             self.main_window.create_analysis_window(clean_name)
         
         else:
-            # 未知模組，使用原有邏輯
-            print(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
-            self.main_window.create_analysis_window(function_name)
+            # ========== 檢查是否為 Live Timing 模組 ==========
+            from modules.gui.live_timing import is_live_timing_module
+            
+            if is_live_timing_module(clean_name):
+                print(f"[TREE_CLICK] 開啟 Live Timing 模組（工廠模式）: {clean_name}")
+                self.main_window._open_live_timing_module(clean_name)
+            else:
+                # 未知模組，使用原有邏輯
+                print(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
+                self.main_window.create_analysis_window(function_name)
         
     def export_function(self, function_name):
         """匯出單個功能的數據"""
@@ -5561,9 +6359,9 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
             
             print(f"[TAB_STANDALONE] 準備排列 {len(subwindows)} 個視窗")
             
-            # 步驟 2: 計算可用空間（預留邊距）
-            available_width = self.mdi_area.width() - 20
-            available_height = self.mdi_area.height() - 20
+            # 步驟 2: 計算可用空間（無邊距，完全填滿）
+            available_width = self.mdi_area.width()
+            available_height = self.mdi_area.height()
             print(f"[TAB_STANDALONE] MDI 區域大小: {self.mdi_area.width()}x{self.mdi_area.height()}")
             print(f"[TAB_STANDALONE] 📏 可用空間: {available_width}x{available_height}")
             
@@ -5629,8 +6427,8 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 row = i // cols
                 col = i % cols
                 
-                x = col * window_width + 10
-                y = row * window_height + 10
+                x = col * window_width
+                y = row * window_height
                 
                 print(f"[TAB_STANDALONE] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
                 
@@ -7766,6 +8564,9 @@ class StyleHMainWindow(QMainWindow):
         analysis_splitter.setSizes([200, 1400])
         main_layout.addWidget(analysis_splitter)
         
+        # Live Timing Control Dock (預設隱藏，開啟任一 Live Timing 模組時自動顯示)
+        self._setup_live_timing_dock()
+        
         # 專業狀態列
         self.create_professional_status_bar()
         
@@ -7806,6 +8607,10 @@ class StyleHMainWindow(QMainWindow):
         parts_action.setStatusTip(tr('parts_analysis_disabled', 'This feature is under development'))
         analysis_menu.addSeparator()
         analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
+        
+        # Live Timing 菜單 (開發中 - 全部禁用)
+        live_timing_menu = menubar.addMenu(tr('menu_live_timing', 'Live Timing'))
+        self._setup_live_timing_menu(live_timing_menu)
         
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
@@ -7855,19 +8660,171 @@ class StyleHMainWindow(QMainWindow):
         self.linkage_action.setChecked(True)  # 預設啟用
         self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
         tools_menu.addAction(self.linkage_action)
-        
-        tools_menu.addSeparator()
-        
-        # Objgraph 診斷工具 (已禁用)
-        self.objgraph_action = QAction(tr('objgraph_diagnostic', 'Memory Diagnostics'), self)
-        self.objgraph_action.setStatusTip(tr('objgraph_diagnostic_tip', 'Open memory and object diagnostic tool'))
-        self.objgraph_action.triggered.connect(self.open_objgraph_diagnostic)
-        self.objgraph_action.setEnabled(False)  # 禁用診斷功能
-        tools_menu.addAction(self.objgraph_action)
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
         help_menu.addAction(tr('about_action', '關於 F1T'), self.show_about_dialog)
+
+    def _setup_live_timing_menu(self, live_timing_menu):
+        """
+        設置 Live Timing 選單項目
+        
+        已啟用項目：
+        - Control Panel (控制面板)
+        - Track Map (賽道地圖)
+        
+        其他項目暫時禁用，等待模組開發完成後啟用
+        """
+        # 控制面板 - 已啟用 (可勾選切換)
+        action_control_panel = live_timing_menu.addAction(tr('menu_live_timing_control_panel', 'Show Control Panel'))
+        action_control_panel.setCheckable(True)
+        action_control_panel.setChecked(False)
+        action_control_panel.setEnabled(True)
+        action_control_panel.setStatusTip(tr('live_timing_control_panel_tip', 'Toggle Live Timing Control Panel'))
+        action_control_panel.triggered.connect(self._toggle_live_timing_control_panel)
+        self._action_control_panel = action_control_panel  # 保存引用以更新勾選狀態
+        
+        live_timing_menu.addSeparator()
+        
+        # 視覺化模組
+        # Track Map - 已啟用
+        action_track_map = live_timing_menu.addAction(tr('menu_live_timing_track_map', 'Track Map'))
+        action_track_map.setEnabled(True)
+        action_track_map.setStatusTip(tr('live_timing_track_map_tip', 'Open Track Map'))
+        action_track_map.triggered.connect(self._open_live_timing_track_map)
+        
+        action_circle_map = live_timing_menu.addAction(tr('menu_live_timing_circle_map', 'Circle Map'))
+        action_circle_map.setEnabled(True)
+        action_circle_map.setStatusTip(tr('live_timing_circle_map_tip', 'Open Circle Map'))
+        action_circle_map.triggered.connect(self._open_live_timing_circle_map)
+        
+        action_ranking = live_timing_menu.addAction(tr('menu_live_timing_ranking', 'Live Ranking'))
+        action_ranking.setEnabled(True)
+        action_ranking.setStatusTip(tr('live_timing_ranking_tip', 'Open Live Ranking Tower'))
+        action_ranking.triggered.connect(self._open_live_timing_ranking_tower)
+        
+        action_pit_window = live_timing_menu.addAction(tr('menu_live_timing_pit_window', 'Pit Window'))
+        action_pit_window.setEnabled(True)
+        action_pit_window.setStatusTip(tr('live_timing_pit_window_tip', 'Open Pit Window'))
+        action_pit_window.triggered.connect(self._open_live_timing_pit_window)
+        
+        action_tyre_strategy = live_timing_menu.addAction(tr('menu_live_timing_tyre_strategy', 'Tyre Strategy'))
+        action_tyre_strategy.setEnabled(True)
+        action_tyre_strategy.setStatusTip(tr('live_timing_tyre_strategy_tip', 'Open Tyre Strategy'))
+        action_tyre_strategy.triggered.connect(self._open_live_timing_tyre_strategy)
+        
+        action_driver_strategy = live_timing_menu.addAction(tr('menu_live_timing_driver_strategy', 'Driver Strategy'))
+        action_driver_strategy.setEnabled(True)
+        action_driver_strategy.setStatusTip(tr('live_timing_driver_strategy_tip', 'Open Driver Strategy Analysis'))
+        action_driver_strategy.triggered.connect(self._open_live_timing_driver_strategy)
+        
+        action_race_control = live_timing_menu.addAction(tr('menu_live_timing_race_control', 'Race Control Messages'))
+        action_race_control.setEnabled(False)
+        action_race_control.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        action_race_insights = live_timing_menu.addAction(tr('menu_live_timing_race_insights', 'Race Insights'))
+        action_race_insights.setEnabled(False)
+        action_race_insights.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        action_shap = live_timing_menu.addAction(tr('menu_live_timing_shap_analysis', 'SHAP Analysis'))
+        action_shap.setEnabled(False)
+        action_shap.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        action_lap_distribution = live_timing_menu.addAction(tr('menu_live_timing_lap_distribution', 'Lap Time Distribution'))
+        action_lap_distribution.setEnabled(True)
+        action_lap_distribution.setStatusTip(tr('live_timing_lap_distribution_tip', 'Open Lap Time Distribution'))
+        action_lap_distribution.triggered.connect(self._open_live_timing_lap_distribution)
+        
+        # Lap History 子選單
+        lap_history_menu = live_timing_menu.addMenu(tr('menu_live_timing_lap_history', 'Lap History'))
+        
+        action_lap_history_lap_time = lap_history_menu.addAction(tr('menu_lap_history_lap_time', 'Lap Time'))
+        action_lap_history_lap_time.setStatusTip(tr('lap_history_lap_time_tip', 'Lap time history for all drivers'))
+        action_lap_history_lap_time.triggered.connect(self._open_live_timing_lap_history_lap_time)
+        
+        action_lap_history_s1 = lap_history_menu.addAction(tr('menu_lap_history_s1', 'Sector 1'))
+        action_lap_history_s1.setStatusTip(tr('lap_history_s1_tip', 'Sector 1 time history for all drivers'))
+        action_lap_history_s1.triggered.connect(self._open_live_timing_lap_history_s1)
+        
+        action_lap_history_s2 = lap_history_menu.addAction(tr('menu_lap_history_s2', 'Sector 2'))
+        action_lap_history_s2.setStatusTip(tr('lap_history_s2_tip', 'Sector 2 time history for all drivers'))
+        action_lap_history_s2.triggered.connect(self._open_live_timing_lap_history_s2)
+        
+        action_lap_history_s3 = lap_history_menu.addAction(tr('menu_lap_history_s3', 'Sector 3'))
+        action_lap_history_s3.setStatusTip(tr('lap_history_s3_tip', 'Sector 3 time history for all drivers'))
+        action_lap_history_s3.triggered.connect(self._open_live_timing_lap_history_s3)
+        
+        # Sector Comparison 子選單 (兩車手比較曲線圖)
+        sector_comparison_menu = live_timing_menu.addMenu(tr('menu_live_timing_sector_comparison', 'Sector Comparison'))
+        
+        action_sector_s1 = sector_comparison_menu.addAction(tr('menu_sector_comparison_s1', 'S1 Comparison'))
+        action_sector_s1.setStatusTip(tr('sector_comparison_s1_tip', 'Compare Sector 1 times between two drivers'))
+        action_sector_s1.triggered.connect(self._open_live_timing_sector_s1)
+        
+        action_sector_s2 = sector_comparison_menu.addAction(tr('menu_sector_comparison_s2', 'S2 Comparison'))
+        action_sector_s2.setStatusTip(tr('sector_comparison_s2_tip', 'Compare Sector 2 times between two drivers'))
+        action_sector_s2.triggered.connect(self._open_live_timing_sector_s2)
+        
+        action_sector_s3 = sector_comparison_menu.addAction(tr('menu_sector_comparison_s3', 'S3 Comparison'))
+        action_sector_s3.setStatusTip(tr('sector_comparison_s3_tip', 'Compare Sector 3 times between two drivers'))
+        action_sector_s3.triggered.connect(self._open_live_timing_sector_s3)
+        
+        # Speed Trace 速度追蹤
+        action_speed_trace = live_timing_menu.addAction(tr('menu_live_timing_speed_trace', 'Speed Trace'))
+        action_speed_trace.setStatusTip(tr('speed_trace_tip', 'Real-time speed vs distance trace with delta comparison'))
+        action_speed_trace.triggered.connect(self._open_live_timing_speed_trace)
+        
+        # Battle Insight 戰鬥分析
+        action_battle_insight = live_timing_menu.addAction(tr('menu_live_timing_battle_insight', 'Battle Insight'))
+        action_battle_insight.setStatusTip(tr('battle_insight_tip', 'Real-time battle analysis with overtake probability'))
+        action_battle_insight.triggered.connect(self._open_live_timing_battle_insight)
+        
+        action_pit_stop_table = live_timing_menu.addAction(tr('menu_live_timing_pit_stop_table', 'Pit Stop Statistics'))
+        action_pit_stop_table.setEnabled(False)
+        action_pit_stop_table.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        live_timing_menu.addSeparator()
+        
+        # 預設佈局子選單
+        presets_menu = live_timing_menu.addMenu(tr('menu_live_timing_presets', 'Preset Layouts'))
+        
+        action_preset_full = presets_menu.addAction(tr('menu_live_timing_preset_full', 'Full Layout'))
+        action_preset_full.setEnabled(False)
+        action_preset_full.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        action_preset_compact = presets_menu.addAction(tr('menu_live_timing_preset_compact', 'Compact Layout'))
+        action_preset_compact.setEnabled(False)
+        action_preset_compact.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        action_preset_strategy = presets_menu.addAction(tr('menu_live_timing_preset_strategy', 'Strategy Layout'))
+        action_preset_strategy.setEnabled(False)
+        action_preset_strategy.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        live_timing_menu.addSeparator()
+        
+        # 關閉所有視窗
+        action_close_all = live_timing_menu.addAction(tr('menu_live_timing_close_all', 'Close All Live Timing Windows'))
+        action_close_all.setEnabled(False)
+        action_close_all.setStatusTip(tr('live_timing_coming_soon', 'Coming Soon'))
+        
+        # 儲存 action 參考供未來啟用
+        self._live_timing_actions = {
+            'control_panel': action_control_panel,
+            'track_map': action_track_map,
+            'circle_map': action_circle_map,
+            'ranking': action_ranking,
+            'pit_window': action_pit_window,
+            'tyre_strategy': action_tyre_strategy,
+            'race_control': action_race_control,
+            'race_insights': action_race_insights,
+            'shap': action_shap,
+            'lap_distribution': action_lap_distribution,
+            'pit_stop_table': action_pit_stop_table,
+            'preset_full': action_preset_full,
+            'preset_compact': action_preset_compact,
+            'preset_strategy': action_preset_strategy,
+            'close_all': action_close_all,
+        }
 
     def get_drivers_for_year(self, year: int) -> list:
         """
@@ -8009,6 +8966,218 @@ class StyleHMainWindow(QMainWindow):
             ),
         )
         QMessageBox.information(self, tr('about_action', '關於 F1T'), about_message)
+    
+    # ===========================================
+    # Live Timing Dock Widget 設置
+    # ===========================================
+    def _setup_live_timing_dock(self):
+        """
+        設置 Live Timing 控制面板 Dock Widget
+        
+        - 預設隱藏
+        - 開啟任一 Live Timing 模組時自動顯示
+        - 放置在視窗頂部
+        """
+        from modules.gui.live_timing.live_timing_modules.control_dock import LiveTimingControlDock
+        
+        # 創建 Dock Widget
+        self.live_timing_dock = LiveTimingControlDock(self)
+        
+        # 添加到頂部
+        self.addDockWidget(Qt.TopDockWidgetArea, self.live_timing_dock)
+        
+        # 預設隱藏
+        self.live_timing_dock.hide()
+        
+        # 追蹤已開啟的 Live Timing 模組數量
+        self._live_timing_module_count = 0
+        
+        print("[INIT] Live Timing Control Dock initialized (hidden)")
+    
+    def _show_live_timing_dock(self):
+        """顯示 Live Timing Control Dock"""
+        if hasattr(self, 'live_timing_dock'):
+            self.live_timing_dock.show()
+            if hasattr(self, '_action_control_panel'):
+                self._action_control_panel.setChecked(True)
+            print("[LIVE_TIMING] Control Dock shown")
+    
+    def _hide_live_timing_dock(self):
+        """隱藏 Live Timing Control Dock"""
+        if hasattr(self, 'live_timing_dock'):
+            self.live_timing_dock.hide()
+            if hasattr(self, '_action_control_panel'):
+                self._action_control_panel.setChecked(False)
+            print("[LIVE_TIMING] Control Dock hidden")
+    
+    def _on_live_timing_module_opened(self):
+        """當 Live Timing 模組開啟時調用"""
+        self._live_timing_module_count = getattr(self, '_live_timing_module_count', 0) + 1
+        if self._live_timing_module_count == 1:
+            self._show_live_timing_dock()
+    
+    def _on_live_timing_module_closed(self):
+        """當 Live Timing 模組關閉時調用"""
+        self._live_timing_module_count = max(0, getattr(self, '_live_timing_module_count', 1) - 1)
+        if self._live_timing_module_count == 0:
+            self._hide_live_timing_dock()
+    
+    # ===========================================
+    # Live Timing 模組方法（使用 LiveTimingModuleFactory）
+    # ===========================================
+    def _open_live_timing_module(self, module_name: str):
+        """
+        統一的 Live Timing 模組開啟入口
+        
+        所有 Live Timing 模組都通過 LiveTimingModuleFactory 創建，
+        並使用 PopoutSubWindow 包裝，與標準分析模組 UI 風格一致。
+        
+        Args:
+            module_name: 模組名稱（支援多語言）
+        """
+        from modules.gui.live_timing import LiveTimingModuleFactory
+        
+        factory = LiveTimingModuleFactory.get_instance()
+        
+        # 檢查模組是否已實現
+        if not factory.is_implemented(module_name):
+            from PyQt5.QtWidgets import QMessageBox
+            QMessageBox.warning(
+                self,
+                "Module Not Implemented",
+                f"The module '{module_name}' is not yet implemented.\n"
+                "Please check back in a future update."
+            )
+            return
+        
+        # 創建模組實例
+        module_instance = factory.create_module(module_name, self)
+        if module_instance is None:
+            print(f"[LIVE_TIMING] Failed to create module: {module_name}")
+            return
+        
+        # 獲取當前 MDI 區域（使用正確的方法）
+        current_mdi_area = self.get_current_mdi_area(auto_create_tab=True)
+        if current_mdi_area is None:
+            print(f"[LIVE_TIMING] No MDI area available for module: {module_name}")
+            return
+        
+        # 獲取模組標題
+        window_title = module_instance.windowTitle() or module_name
+        print(f"[LIVE_TIMING] Creating PopoutSubWindow with title: {window_title}")
+        
+        # 使用 PopoutSubWindow 包裝模組（與標準分析模組一致）
+        # 注意：Live Timing 模組不需要同步功能（sync_enabled=False）
+        sub_window = PopoutSubWindow(
+            window_title, 
+            current_mdi_area, 
+            analysis_module=None,  # Live Timing 模組不是標準分析模組
+            sync_enabled=False
+        )
+        
+        # 設置模組 widget 為內容
+        sub_window.setWidget(module_instance)
+        
+        # 設置預設尺寸（使用模組的建議尺寸）
+        if hasattr(module_instance, 'minimumSize'):
+            min_size = module_instance.minimumSize()
+            if min_size.width() > 0 and min_size.height() > 0:
+                sub_window.resize(min_size.width() + 50, min_size.height() + 50)
+            else:
+                sub_window.resize(500, 500)  # 預設尺寸
+        else:
+            sub_window.resize(500, 500)
+        
+        # 添加到 MDI 區域
+        current_mdi_area.addSubWindow(sub_window)
+        sub_window.show()
+        
+        # 自動顯示 Live Timing Control Dock
+        self._on_live_timing_module_opened()
+        
+        # 連接子視窗關閉信號
+        sub_window.destroyed.connect(self._on_live_timing_module_closed)
+        
+        print(f"[LIVE_TIMING] Module opened via factory with PopoutSubWindow: {module_name}")
+    
+    def _toggle_live_timing_control_panel(self, checked: bool):
+        """切換 Live Timing 控制面板 Dock 的顯示狀態"""
+        if hasattr(self, 'live_timing_dock'):
+            if checked:
+                self.live_timing_dock.show()
+            else:
+                self.live_timing_dock.hide()
+    
+    def _open_live_timing_control_panel(self):
+        """顯示 Live Timing 控制面板 Dock"""
+        if hasattr(self, 'live_timing_dock'):
+            self.live_timing_dock.show()
+            if hasattr(self, '_action_control_panel'):
+                self._action_control_panel.setChecked(True)
+    
+    def _open_live_timing_track_map(self):
+        """開啟 Live Timing 賽道地圖"""
+        self._open_live_timing_module("Track Map")
+    
+    def _open_live_timing_circle_map(self):
+        """開啟 Live Timing 圓形地圖"""
+        self._open_live_timing_module("Circle Map")
+    
+    def _open_live_timing_ranking_tower(self):
+        """開啟 Live Timing 即時排名塔"""
+        self._open_live_timing_module("Live Ranking")
+    
+    def _open_live_timing_pit_window(self):
+        """開啟 Live Timing 進站視窗"""
+        self._open_live_timing_module("Pit Window")
+    
+    def _open_live_timing_tyre_strategy(self):
+        """開啟 Live Timing 輪胎策略"""
+        self._open_live_timing_module("Tyre Strategy")
+    
+    def _open_live_timing_driver_strategy(self):
+        """開啟 Live Timing 車手策略分析"""
+        self._open_live_timing_module("Driver Strategy")
+    
+    def _open_live_timing_lap_distribution(self):
+        """開啟 Live Timing 圈速分佈"""
+        self._open_live_timing_module("Lap Time Distribution")
+    
+    def _open_live_timing_lap_history_lap_time(self):
+        """開啟 Live Timing 圈速歷史"""
+        self._open_live_timing_module("Lap History - Lap Time")
+    
+    def _open_live_timing_lap_history_s1(self):
+        """開啟 Live Timing S1 歷史"""
+        self._open_live_timing_module("Lap History - S1")
+    
+    def _open_live_timing_lap_history_s2(self):
+        """開啟 Live Timing S2 歷史"""
+        self._open_live_timing_module("Lap History - S2")
+    
+    def _open_live_timing_lap_history_s3(self):
+        """開啟 Live Timing S3 歷史"""
+        self._open_live_timing_module("Lap History - S3")
+    
+    def _open_live_timing_sector_s1(self):
+        """開啟 Live Timing Sector 1 Comparison"""
+        self._open_live_timing_module("Sector Comparison - S1")
+    
+    def _open_live_timing_sector_s2(self):
+        """開啟 Live Timing Sector 2 Comparison"""
+        self._open_live_timing_module("Sector Comparison - S2")
+    
+    def _open_live_timing_sector_s3(self):
+        """開啟 Live Timing Sector 3 Comparison"""
+        self._open_live_timing_module("Sector Comparison - S3")
+    
+    def _open_live_timing_speed_trace(self):
+        """開啟 Live Timing Speed Trace"""
+        self._open_live_timing_module("Speed Trace")
+    
+    def _open_live_timing_battle_insight(self):
+        """開啟 Live Timing Battle Insight"""
+        self._open_live_timing_module("Battle Insight")
         
     def create_professional_toolbar(self):
         """創建專業工具欄"""
@@ -9209,6 +10378,7 @@ class StyleHMainWindow(QMainWindow):
             'track_analysis',  # 賽道分析
             'driver_position',  # 車手比賽排名分析 (F25)
             'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
+            'race_prediction',  # ✅ 正賽預測 (F80) Q → R - 修復參數更新問題
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -9313,7 +10483,10 @@ class StyleHMainWindow(QMainWindow):
         session_only_types = {
             'rain_weather', 'pitstop', 'accident', 'tire', 'ideal_lap',
             'ideal_lap_ranking', 'ideal_lap_sector_comparison', 'ideal_lap_sector_heatmap',
-            'qualifying_prediction_table',      # 排位賽預測表格 (F74 v3.8)
+            'qualifying_prediction',           # 排位賽預測 (F74 v3.8)
+            'qualifying_prediction_table',      # 排位賽預測表格 (F74 v3.8) - 別名
+            'race_prediction',                  # 正賽預測 (F80) Q → R
+            'race_prediction_table',            # 正賽預測表格 (F80) Q → R - 別名
             'laptime_boxplot', 'throttle_boxplot', 'track_analysis', 'driver_position',
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
@@ -9938,6 +11111,7 @@ class StyleHMainWindow(QMainWindow):
             'track_analysis',  # 賽道分析
             'driver_position',  # 車手比賽排名分析 (F25)
             'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
+            'race_prediction',  # ✅ 正賽預測 (F80) Q → R - 修復參數更新問題
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
@@ -10273,6 +11447,7 @@ class StyleHMainWindow(QMainWindow):
         qualifying_prediction_group = QTreeWidgetItem(tree, [tr("qualifying_prediction", "Qualifying Prediction")])
         qualifying_prediction_group.setExpanded(False)
         QTreeWidgetItem(qualifying_prediction_group, ["    " + tr("qualifying_prediction_table", "FP3 → Q Prediction Table")])  # ✅ F74 排位賽預測
+        QTreeWidgetItem(qualifying_prediction_group, ["    " + tr("race_prediction_table", "Q → R Prediction Table")])  # ✅ F80 正賽預測
         
         # Lap Analysis (Telemetry) - 8 個子模組
         lap_analysis = QTreeWidgetItem(driver_performance_group, [tr("lap_analysis", "Lap Analysis (Telemetry)")])
@@ -10323,6 +11498,47 @@ class StyleHMainWindow(QMainWindow):
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
         multi_season_group.setExpanded(False)
         QTreeWidgetItem(multi_season_group, [tr("historical_track_map", "Historical Track Map")])  # ✅ F100 歷年賽道旗幟統計
+        
+        # ========== Live Timing ==========
+        live_timing_group = QTreeWidgetItem(tree, [tr("live_timing_tree", "Live Timing")])
+        live_timing_group.setExpanded(True)
+        
+        # Live Timing 子項目 - 已啟用的模組
+        lt_enabled_items = [
+            ("live_timing_track_map", "Track Map"),
+            ("live_timing_circle_map", "Circle Map"),
+            ("live_timing_ranking", "Live Ranking"),
+            ("live_timing_pit_window", "Pit Window"),
+            ("live_timing_tyre_strategy", "Tyre Strategy"),
+            ("live_timing_driver_strategy", "Driver Strategy"),
+            ("live_timing_lap_distribution", "Lap Time Distribution"),
+            ("live_timing_race_control", "Race Control Messages"),
+            ("live_timing_speed_trace", "Speed Trace"),
+            ("live_timing_battle_insight", "Battle Insight"),
+        ]
+        for key, default in lt_enabled_items:
+            QTreeWidgetItem(live_timing_group, [tr(key, default)])
+        
+        # Lap History 子群組
+        lap_history_group = QTreeWidgetItem(live_timing_group, [tr("lap_history_group", "Lap History")])
+        lap_history_items = [
+            ("lap_history_lap_time", "Lap History - Lap Time"),
+            ("lap_history_s1", "Lap History - S1"),
+            ("lap_history_s2", "Lap History - S2"),
+            ("lap_history_s3", "Lap History - S3"),
+        ]
+        for key, default in lap_history_items:
+            QTreeWidgetItem(lap_history_group, [tr(key, default)])
+        
+        # Sector Comparison 子群組 (兩車手比較曲線圖)
+        sector_comparison_group = QTreeWidgetItem(live_timing_group, [tr("sector_comparison_group", "Sector Comparison")])
+        sector_comparison_items = [
+            ("sector_comparison_s1", "S1 Comparison"),
+            ("sector_comparison_s2", "S2 Comparison"),
+            ("sector_comparison_s3", "S3 Comparison"),
+        ]
+        for key, default in sector_comparison_items:
+            QTreeWidgetItem(sector_comparison_group, [tr(key, default)])
         
         layout.addWidget(tree)
         
@@ -11202,6 +12418,20 @@ class StyleHMainWindow(QMainWindow):
                 # 查找內部的viewport小部件
                 child_count = 0
                 for child in mdi_area.findChildren(QWidget):
+                    # 排除 Live Timing 模組及其子 widget (使用 property 識別)
+                    if child.property("is_live_timing_widget"):
+                        continue
+                    # 向上查找父層是否為 Live Timing widget
+                    parent = child.parent()
+                    is_live_timing_child = False
+                    while parent:
+                        if parent.property("is_live_timing_widget"):
+                            is_live_timing_child = True
+                            break
+                        parent = parent.parent()
+                    if is_live_timing_child:
+                        continue
+                        
                     if hasattr(child, 'setAutoFillBackground'):
                         child.setAutoFillBackground(True)
                         child_palette = child.palette()
@@ -11395,6 +12625,8 @@ class StyleHMainWindow(QMainWindow):
             season_progress_sub.setWindowTitle(tr("season_progress_title", "Season Progress - {year}").format(year=current_year))
             season_progress_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             season_progress_sub.setProperty("welcome_position", "left_top")  # 標記位置
+            # 隱藏 MDI 標題列（Home 頁面內部 Widget 已有標題）
+            season_progress_sub.setWindowFlags(Qt.FramelessWindowHint)
             mdi_area.addSubWindow(season_progress_sub)
             
             # 🔧 修復：追蹤 Season Progress 以便參數更新
@@ -11408,6 +12640,8 @@ class StyleHMainWindow(QMainWindow):
             weather_timeline_sub.setWindowTitle(tr("weather_timeline_title", "Race Weather Forecast"))
             weather_timeline_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             weather_timeline_sub.setProperty("welcome_position", "left_bottom")  # 標記位置
+            # 隱藏 MDI 標題列（Home 頁面內部 Widget 已有標題）
+            weather_timeline_sub.setWindowFlags(Qt.FramelessWindowHint)
             mdi_area.addSubWindow(weather_timeline_sub)
             
             # 🔧 修復：追蹤 Weather Timeline 以便參數更新
@@ -11421,6 +12655,8 @@ class StyleHMainWindow(QMainWindow):
             constructor_sub.setWindowTitle(tr("constructor_standings_window_title", "車隊積分榜"))
             constructor_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             constructor_sub.setProperty("welcome_position", "middle")  # 標記位置
+            # 隱藏 MDI 標題列（Home 頁面內部 Widget 已有標題）
+            constructor_sub.setWindowFlags(Qt.FramelessWindowHint)
             mdi_area.addSubWindow(constructor_sub)
             
             # 🔧 修復：追蹤 Constructor Standings 以便參數更新
@@ -11434,6 +12670,8 @@ class StyleHMainWindow(QMainWindow):
             driver_sub.setWindowTitle(tr("driver_standings_window_title", "車手積分榜"))
             driver_sub.setProperty("is_welcome_fixed", True)  # 標記為固定視窗
             driver_sub.setProperty("welcome_position", "right")  # 標記位置
+            # 隱藏 MDI 標題列（Home 頁面內部 Widget 已有標題）
+            driver_sub.setWindowFlags(Qt.FramelessWindowHint)
             mdi_area.addSubWindow(driver_sub)
             
             # 🔧 修復：追蹤 Driver Standings 以便參數更新
@@ -11957,36 +13195,23 @@ class StyleHMainWindow(QMainWindow):
         return widget
         
     def create_professional_status_bar(self):
-        """Create professional status bar."""
+        """Create professional status bar - 簡化版，只顯示 API 狀態"""
         status_bar = QStatusBar()
         status_bar.setFixedHeight(16)
         self.setStatusBar(status_bar)
 
-        # Status indicators
-        self.ready_label = QLabel('[READY] INITIALIZING')
-        self.ready_label.setObjectName('StatusReady')
-
+        # 只保留 API 狀態指示器
         self.api_status_label = QLabel('[API] Pending')
         self.api_status_label.setObjectName('StatusApi')
         self.api_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
-        # ⚠️ CLI 狀態監控已停用（2025-10-11）
-        self.cli_status_label = QLabel('[CLI] DISABLED')
-        self.cli_status_label.setObjectName('StatusCli')
-        self.cli_status_label.setStyleSheet('color: #95a5a6; font-weight: bold;')
-        self.cli_status_label.setToolTip('CLI 狀態監控已停用，不再透過 GUI 輪詢 CLI 執行狀態')
+        
+        # 保留變數引用以避免其他代碼報錯，但不顯示
+        self.ready_label = QLabel('')
+        self.cli_status_label = QLabel('')
+        self.time_label = QLabel('')
 
-        self.time_label = QLabel(f"[TIME] {datetime.datetime.now().strftime('%H:%M:%S')}")
-        self.time_label.setObjectName('StatusTime')
-
-        status_bar.addWidget(self.ready_label)
-        status_bar.addWidget(QLabel(' | '))
+        # 只添加 API 狀態
         status_bar.addWidget(self.api_status_label)
-        status_bar.addWidget(QLabel(' | '))
-        status_bar.addWidget(self.cli_status_label)
-        status_bar.addWidget(QLabel(' | '))
-        status_bar.addWidget(self.time_label)
-
-        # Version information segment - 已移除右下角版本顯示
 
         # Refresh status information
         self.update_status_bar()
@@ -13969,6 +15194,12 @@ class StyleHMainWindow(QMainWindow):
                     "排位賽預測",
                     "FP3 → Q Prediction Table",
                 ],
+                "race_prediction_table": [  # ✅ F80 正賽預測
+                    ("race_prediction", "Race Prediction"),
+                    ("race_prediction_table", "Q → R Prediction Table"),
+                    "正賽預測",
+                    "Q → R Prediction Table",
+                ],
                 "ideal_lap_sector_heatmap": [
                     ("ideal_lap_sector_heatmap", "Ideal Lap Sector Heatmap"),
                     ("sector_heatmap", "Sector Heat Map"),
@@ -14772,6 +16003,47 @@ class StyleHMainWindow(QMainWindow):
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
                         print(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理正賽預測表格模組 ⭐ F80 新增
+                elif module_type == "race_prediction_table":
+                    try:
+                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建正賽預測表格模組 (F80)...")
+                        from modules.gui.race_prediction.race_prediction_mdi import (
+                            RacePredictionMDI
+                        )
+                        print(f"[OK] [MODULE_FACTORY] 正賽預測 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = RacePredictionMDI(parent=self)
+                        print(f"✅ [MODULE_FACTORY] 正賽預測 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            print(f"[INIT] [MODULE_FACTORY] 正賽預測模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            print(f"[ERROR] [MODULE_FACTORY] 正賽預測模組初始化失敗")
+                            return None
+                        
+                        print(f"[OK] [MODULE_FACTORY] 正賽預測模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        print(f"[ERROR] [MODULE_FACTORY] 正賽預測模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16126,9 +17398,9 @@ class StyleHMainWindow(QMainWindow):
                 total_tabs = len(config.get('tabs', []))
                 total_windows = sum(len(tab.get('mdi_windows', [])) for tab in config.get('tabs', []))
                 
-                # ✅ 延遲執行自動平鋪，確保 MDI 區域尺寸已正確更新
-                print(f"[WORKSPACE] ⏱️ 延遲 500ms 後執行自動平鋪...")
-                QTimer.singleShot(500, self._tile_all_workspace_windows_delayed)
+                # ✅ 不再自動平鋪，保持保存時的視窗位置
+                # 原本：QTimer.singleShot(500, self._tile_all_workspace_windows_delayed)
+                print(f"[WORKSPACE] ✅ 保持保存時的視窗位置（不自動平鋪）")
                 
                 QMessageBox.information(
                     self,
@@ -18578,8 +19850,8 @@ class StyleHMainWindow(QMainWindow):
         print(f"[TILE DEBUG] 準備排列 {len(subwindows)} 個視窗")
         
         # 計算排列配置
-        available_width = mdi_area.width() - 20  # 預留邊距
-        available_height = mdi_area.height() - 20
+        available_width = mdi_area.width()  # 無邊距，完全貼合
+        available_height = mdi_area.height()
         print(f"[TILE DEBUG] MDI區域大小: {mdi_area.width()}x{mdi_area.height()}")
         print(f"[TILE DEBUG] 可用空間: {available_width}x{available_height}")
         
@@ -18642,8 +19914,8 @@ class StyleHMainWindow(QMainWindow):
             row = i // cols
             col = i % cols
             
-            x = col * window_width + 10
-            y = row * window_height + 10
+            x = col * window_width
+            y = row * window_height
             
             print(f"[TILE DEBUG] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
             
@@ -19059,46 +20331,6 @@ class StyleHMainWindow(QMainWindow):
             print(f"[MENU] Failed to open Season Progress: {e}")
             import traceback
             traceback.print_exc()
-    
-    def open_objgraph_diagnostic(self):
-        """Open Objgraph Memory Diagnostic window as a standalone popup"""
-        try:
-            from modules.gui.diagnostics import ObjgraphDiagnosticWindow
-            
-            # Create standalone window (not MDI)
-            diagnostic_window = ObjgraphDiagnosticWindow()
-            diagnostic_window.setWindowTitle(tr('objgraph_diagnostic_title', 'Memory Diagnostics'))
-            diagnostic_window.resize(1200, 800)
-            
-            # Set as independent window
-            diagnostic_window.setWindowFlags(diagnostic_window.windowFlags() | Qt.Window)
-            
-            # Show window
-            diagnostic_window.show()
-            diagnostic_window.raise_()  # 確保視窗在最上層
-            diagnostic_window.activateWindow()  # 啟動視窗
-            
-            # Store reference to prevent garbage collection
-            if not hasattr(self, '_diagnostic_windows'):
-                self._diagnostic_windows = []
-            self._diagnostic_windows.append(diagnostic_window)
-            
-            logger.info("[MENU] Opened Objgraph Memory Diagnostic window (standalone)")
-            print("[MENU] Opened Objgraph Memory Diagnostic window (standalone)")
-            
-        except Exception as e:
-            error_msg = f"Failed to open Objgraph diagnostic: {e}"
-            logger.error(f"[MENU] {error_msg}")
-            print(f"[MENU] {error_msg}")
-            import traceback
-            traceback.print_exc()
-            
-            # Show error dialog
-            QMessageBox.critical(
-                self,
-                tr('error', 'Error'),
-                tr('objgraph_open_error', f'Failed to open Memory Diagnostic tool:\n{str(e)}')
-            )
         
     def data_validation(self): 
         #print("[工具] 數據驗證")

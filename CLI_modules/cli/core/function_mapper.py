@@ -111,8 +111,15 @@ class F1AnalysisFunctionMapper:
             78: self._execute_driver_fp3_q_feature_extraction, # 車手 FP3->Q 特徵提取 (2025-11-03)
             79: self._execute_dynamic_team_rating,     # 動態車隊評級報告 (2025-11-26)
             
-            # 80-89: Q->R 預測系統功能
+            # 80-89: Q->R 預測系統功能 / 超車預測系統
             80: self._execute_dynamic_team_rating_cli, # 動態車隊評級分析 (JSON輸出) (2025-11-27)
+            81: self._execute_overtake_data_collector,  # 超車事件數據收集器 (F81) (2025-12-05)
+            82: self._execute_overtake_model_trainer,   # 超車預測模型訓練器 (F82) (預留)
+            83: self._execute_overtake_predictor,       # 超車預測推理器 (F83) (預留)
+            84: self._execute_overtake_llm_explainer,   # 超車預測 LLM 解說器 (F84) (預留)
+            85: self._execute_overtake_live_monitor,    # 即時超車監控 (F85) (預留)
+            86: self._execute_tire_saving_analysis,     # 省輪胎行為分析 (F86) (2025-12-05)
+            87: self._execute_driver_strategy_prediction, # 車手策略預測器 (F87) (2025-12-05)
             
             # 96-99: 特殊功能
             96: self._execute_race_weather_forecast,   # 賽事天氣預報
@@ -304,11 +311,16 @@ class F1AnalysisFunctionMapper:
         # 74: 排位賽預測 (內部自動載入練習數據，不需要預先載入)
         # 75: 純 FP3 特徵優化訓練 (使用預收集的 JSON 檔案)
         # 76: 集成學習訓練 (使用預收集的 JSON 檔案)
+        # 81: 超車數據收集 (使用 Live F1 數據，不需要 FastF1)
+        # 82: 超車模型訓練 (使用已收集的數據，不需要 FastF1)
+        # 83: 超車機率預測 (使用訓練好的模型，不需要 FastF1)
+        # 84: LLM 超車解釋器 (使用模型預測結果，不需要 FastF1)
+        # 85: 即時超車監控 (使用 Live API，不需要 FastF1)
         # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
         # 98: 車隊顏色分析, 99: 賽季賽程查詢
         # 100: 歷年旗幟統計分析 (掃描 2020-2025 年數據)
         # 58: 進站策略預測 (使用本地資料庫計算，不需要 FastF1 數據)
-        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "96", "98", "99", "100"}
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "98", "99", "100"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -5773,6 +5785,350 @@ class F1AnalysisFunctionMapper:
                 "message": f"動態車隊評級分析失敗: {str(e)}",
                 "error": str(e),
                 "function_id": "80"
+            }
+    
+    # ===== F81-85: 超車預測系統 =====
+    
+    def _execute_overtake_data_collector(self, year=None, race=None, session="R", **kwargs):
+        """Function 81: 超車事件數據收集器
+        
+        從 Live F1 JSON 數據收集超車事件，生成訓練數據。
+        
+        Args:
+            year: 年份，None 則收集所有可用年份
+            race: 賽事名稱（可選，指定則只收集該賽事）
+            session: 會話類型（預設 R = 正賽）
+            
+        Returns:
+            收集統計結果
+        """
+        try:
+            print("=" * 70)
+            print("F81: 超車事件數據收集器")
+            print("=" * 70)
+            
+            # 導入收集器
+            from CLI_modules.cli.prediction.overtake_prediction.data_collector import (
+                OvertakeDataCollector, run_f81_data_collection
+            )
+            
+            # 確定年份列表
+            years_to_collect = None
+            if year:
+                years_to_collect = [int(year)]
+            
+            # 執行收集
+            summary = run_f81_data_collection(
+                years=years_to_collect,
+                verbose=True
+            )
+            
+            return self._standardize_result(summary, 81, "超車事件數據收集")
+            
+        except Exception as e:
+            print(f"[ERROR] F81 超車數據收集失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"超車數據收集失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "81"
+            }
+    
+    def _execute_overtake_model_trainer(self, year=None, race=None, session="R", **kwargs):
+        """Function 82: 超車預測模型訓練器
+        
+        使用收集的數據訓練 XGBoost 超車預測模型。
+        
+        Args:
+            year: 年份 (暫未使用，預留未來版本化訓練)
+            race: 賽事 (暫未使用)
+            session: 會話類型 (暫未使用)
+            
+        Returns:
+            訓練報告
+        """
+        try:
+            print("=" * 70)
+            print("F82: 超車預測模型訓練器")
+            print("=" * 70)
+            
+            # 導入訓練器
+            from CLI_modules.cli.prediction.overtake_prediction.model_trainer import (
+                run_f82_model_training
+            )
+            
+            # 執行訓練
+            summary = run_f82_model_training(
+                version="v1",
+                verbose=True
+            )
+            
+            return self._standardize_result(summary, 82, "超車預測模型訓練")
+            
+        except Exception as e:
+            print(f"[ERROR] F82 模型訓練失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"模型訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "82"
+            }
+    
+    def _execute_overtake_predictor(self, year=None, race=None, session="R", **kwargs):
+        """Function 83: 超車預測推理器
+        
+        使用訓練好的模型進行超車預測。
+        
+        參數:
+            -d / --driver: 進攻者代碼 (如 VER)
+            -d2 / --driver2: 防守者代碼 (如 LEC)
+        """
+        print("=" * 70)
+        print("F83: 超車預測推理器")
+        print("=" * 70)
+        
+        try:
+            from CLI_modules.cli.prediction.overtake_prediction.predictor import run_f83_prediction
+            
+            # 從 kwargs 獲取參數 (driver 和 driver2)
+            attacker = kwargs.get('driver', 'VER')
+            defender = kwargs.get('driver2', 'LEC')
+            gap = float(kwargs.get('gap', 0.8))
+            tyre_diff = int(kwargs.get('tyre_diff', 0))
+            race_progress = float(kwargs.get('race_progress', 0.5))
+            
+            result = run_f83_prediction(
+                attacker=attacker,
+                defender=defender,
+                gap=gap,
+                tyre_diff=tyre_diff,
+                race_progress=race_progress,
+                verbose=True
+            )
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] 預測失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"預測失敗: {str(e)}",
+                "function_id": "83"
+            }
+    
+    def _execute_overtake_llm_explainer(self, year=None, race=None, session="R", **kwargs):
+        """Function 84: 超車預測 LLM 解說器
+        
+        使用 LLM 生成超車預測的自然語言解說。
+        預設使用本地 Ollama (qwen3:8b)，也支援 OpenAI/Anthropic。
+        
+        參數:
+            -d / --driver: 進攻者代碼 (如 VER)
+            -d2 / --driver2: 防守者代碼 (如 LEC)
+            --no-llm: 使用規則引擎而非 LLM
+        """
+        print("=" * 70)
+        print("F84: 超車預測 LLM 解說器")
+        print("=" * 70)
+        
+        try:
+            from CLI_modules.cli.prediction.overtake_prediction.explainer import run_f84_explanation
+            
+            # 從 kwargs 獲取參數
+            attacker = kwargs.get('driver', 'VER')
+            defender = kwargs.get('driver2', 'LEC')
+            gap = float(kwargs.get('gap', 0.8))
+            tyre_diff = int(kwargs.get('tyre_diff', 0))
+            race_progress = float(kwargs.get('race_progress', 0.5))
+            use_llm = not kwargs.get('no_llm', False)
+            
+            result = run_f84_explanation(
+                attacker=attacker,
+                defender=defender,
+                gap=gap,
+                tyre_diff=tyre_diff,
+                race_progress=race_progress,
+                use_llm=use_llm,
+                llm_provider="ollama",
+                llm_model="qwen3:8b",
+                verbose=True
+            )
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] 解說生成失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"解說生成失敗: {str(e)}",
+                "function_id": "84"
+            }
+    
+    def _execute_overtake_live_monitor(self, year=None, race=None, session="R", **kwargs):
+        """Function 85: 即時超車監控
+        
+        即時監控比賽中的超車機會。
+        
+        [預留功能 - 尚未實現]
+        """
+        print("=" * 70)
+        print("F85: 即時超車監控")
+        print("=" * 70)
+        print("[INFO] 此功能尚未實現，需整合 Live F1 Timing 系統")
+        
+        return {
+            "success": False,
+            "message": "F85 功能預留中，尚未實現",
+            "function_id": "85"
+        }
+    
+    def _execute_tire_saving_analysis(self, year=None, race=None, session="R", **kwargs):
+        """Function 86: 省輪胎行為分析
+        
+        分析車手在比賽中的省輪胎行為，識別主動省胎策略。
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽事階段
+            
+        Returns:
+            包含每位車手省輪胎分數和分類的 JSON
+        """
+        print("=" * 70)
+        print("F86: 省輪胎行為分析 (Tire Saving Behavior Analysis)")
+        print("=" * 70)
+        
+        # 取得參數
+        year = year or kwargs.get("year") or self.data_loader.year if self.data_loader else None
+        race = race or kwargs.get("race") or self.data_loader.race if self.data_loader else None
+        session = session or kwargs.get("session", "R")
+        
+        if not year or not race:
+            return {
+                "success": False,
+                "message": "缺少必要參數: year 和 race",
+                "function_id": "86"
+            }
+        
+        print(f"[INFO] 分析參數: {year} {race} {session}")
+        
+        try:
+            from CLI_modules.cli.prediction.tire_saving_analyzer import run_tire_saving_analysis
+            
+            result = run_tire_saving_analysis(
+                year=year,
+                race=race,
+                session=session,
+                save_json=True
+            )
+            
+            if result.get("success"):
+                # 標準化 JSON 導出
+                self._export_to_json(result, 86, "tire_saving_analysis")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] F86 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F86 執行失敗: {str(e)}",
+                "function_id": "86"
+            }
+
+    def _execute_driver_strategy_prediction(self, year=None, race=None, session="R", **kwargs):
+        """Function 87: 車手策略預測器
+        
+        根據 F86 省輪胎分析結果，計算個人化進站圈數預測。
+        
+        公式: 個人化進站圈數 = 大數據預估圈數 × (1 + Tire Saving Adjustment Factor)
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽事階段
+            
+        Returns:
+            包含每位車手個人化預測和驗證結果的 JSON
+        """
+        print("=" * 70)
+        print("F87: 車手策略預測器 (Driver Strategy Predictor)")
+        print("=" * 70)
+        
+        # 取得參數
+        year = year or kwargs.get("year") or self.data_loader.year if self.data_loader else None
+        race = race or kwargs.get("race") or self.data_loader.race if self.data_loader else None
+        session = session or kwargs.get("session", "R")
+        
+        if not year or not race:
+            return {
+                "success": False,
+                "message": "缺少必要參數: year 和 race",
+                "function_id": "87"
+            }
+        
+        print(f"[INFO] 分析參數: {year} {race} {session}")
+        
+        try:
+            from CLI_modules.cli.prediction.driver_strategy_predictor import run_driver_strategy_prediction
+            
+            result = run_driver_strategy_prediction(
+                year=year,
+                race=race,
+                session=session,
+                save_output=True,
+                print_report=True
+            )
+            
+            if result.get("success"):
+                # 標準化 JSON 導出
+                self._export_to_json(result, 87, "driver_strategy_prediction")
+            
+            return result
+            
+        except FileNotFoundError as e:
+            print(f"[WARNING] 找不到 F86 分析結果，嘗試先執行 F86...")
+            # 先執行 F86
+            f86_result = self._execute_tire_saving_analysis(year, race, session, **kwargs)
+            if f86_result.get("success"):
+                # 重新執行 F87
+                from CLI_modules.cli.prediction.driver_strategy_predictor import run_driver_strategy_prediction
+                result = run_driver_strategy_prediction(
+                    year=year,
+                    race=race,
+                    session=session,
+                    save_output=True,
+                    print_report=True
+                )
+                if result.get("success"):
+                    self._export_to_json(result, 87, "driver_strategy_prediction")
+                return result
+            else:
+                return {
+                    "success": False,
+                    "message": f"F86 執行失敗，無法進行 F87 預測: {f86_result.get('message')}",
+                    "function_id": "87"
+                }
+            
+        except Exception as e:
+            print(f"[ERROR] F87 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F87 執行失敗: {str(e)}",
+                "function_id": "87"
             }
 
 # ===== 支援函數和工具 =====

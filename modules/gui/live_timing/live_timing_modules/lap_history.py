@@ -411,8 +411,8 @@ class LiveTimingLapHistoryBase(BaseLiveTimingMDI):
         super().__init__(parent, data_manager)
         
         self.setWindowTitle(tr(self._window_title_key, self._default_title))
-        self.setMinimumSize(600, 400)
-        self.resize(800, 500)
+        self.setMinimumSize(600, 200)
+        self.resize(800, 250)
         
         print(f"[LAP_HISTORY_MDI] {self.__class__.__name__} initialized")
     

@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.8.0"
+APP_VERSION = "V0.9.0"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,16 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.9.0": {
+        "date": "2025-12-05",
+        "features": [
+            "Live Timing 排名塔 PIT 狀態顯示優化（儲存格合併）",
+            "Live Timing 排名高亮功能實作",
+            "MDI 視窗 Snap/Dock 功能增強",
+            "勝率預測模型診斷工具",
+            "AI 輔助分析工具整合（Ollama 本地模型支援）",
+        ]
+    },
     "V0.8.0": {
         "date": "2025-11-14",
         "features": [

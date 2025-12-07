@@ -32,6 +32,14 @@ from PyQt5.QtGui import QFont
 from ..core.data_manager import LiveTimingDataManager
 from core.gui_i18n import tr
 
+# 導入即時數據源
+try:
+    from ..core.realtime_source import RealTimeLiveF1DataSource, WEBSOCKETS_AVAILABLE
+    REALTIME_AVAILABLE = WEBSOCKETS_AVAILABLE
+except ImportError:
+    REALTIME_AVAILABLE = False
+    print("[CONTROL_DOCK] RealTimeLiveF1DataSource not available")
+
 # 導入賽季日曆相關
 try:
     from modules.gui.shared.season_calendar_provider import (
@@ -142,6 +150,14 @@ class LiveTimingControlDock(QDockWidget):
         
         # 獲取 DataManager
         self._data_manager = LiveTimingDataManager.instance()
+        
+        # 即時數據源
+        self._realtime_source: Optional[RealTimeLiveF1DataSource] = None
+        if REALTIME_AVAILABLE:
+            self._realtime_source = RealTimeLiveF1DataSource(self)
+            self._realtime_source.connection_changed.connect(self._on_realtime_connection_changed)
+            self._realtime_source.snapshot_updated.connect(self._on_realtime_snapshot_updated)
+            self._realtime_source.error_occurred.connect(self._on_realtime_error)
         
         # 創建 UI
         self._setup_ui()
@@ -397,16 +413,80 @@ class LiveTimingControlDock(QDockWidget):
     # ===========================================
     def _on_connect_clicked(self):
         """連接即時 Live Timing"""
-        print("[CONTROL_DOCK] Connect clicked - realtime mode not yet implemented")
+        print("[CONTROL_DOCK] Connect clicked - starting realtime connection")
+        
+        if not REALTIME_AVAILABLE:
+            self.lbl_connection_status.setText(tr("websockets not installed", "No websockets"))
+            self.lbl_connection_status.setStyleSheet("color: #F44336; font-weight: bold;")
+            print("[CONTROL_DOCK] websockets package not installed")
+            return
+        
+        if self._realtime_source is None:
+            self._realtime_source = RealTimeLiveF1DataSource(self)
+            self._realtime_source.connection_changed.connect(self._on_realtime_connection_changed)
+            self._realtime_source.snapshot_updated.connect(self._on_realtime_snapshot_updated)
+            self._realtime_source.error_occurred.connect(self._on_realtime_error)
+        
         self.lbl_connection_status.setText(tr("Connecting...", "Connecting..."))
         self.lbl_connection_status.setStyleSheet("color: #FF9800; font-weight: bold;")
-        # TODO: 實現即時連接
+        
+        # 禁用連接按鈕，啟用斷開按鈕
+        self.btn_connect.setEnabled(False)
+        self.btn_disconnect.setEnabled(True)
+        
+        # 開始連接
+        success = self._realtime_source.start_connection()
+        if not success:
+            self.lbl_connection_status.setText(tr("Connection failed", "Failed"))
+            self.lbl_connection_status.setStyleSheet("color: #F44336; font-weight: bold;")
+            self.btn_connect.setEnabled(True)
+            self.btn_disconnect.setEnabled(False)
     
     def _on_disconnect_clicked(self):
         """斷開連接"""
         print("[CONTROL_DOCK] Disconnect clicked")
+        
+        if self._realtime_source:
+            self._realtime_source.stop_connection()
+        
         self.lbl_connection_status.setText(tr("Disconnected", "Disconnected"))
         self.lbl_connection_status.setStyleSheet("color: #888888; font-weight: bold;")
+        
+        # 啟用連接按鈕，禁用斷開按鈕
+        self.btn_connect.setEnabled(True)
+        self.btn_disconnect.setEnabled(False)
+    
+    @pyqtSlot(str)
+    def _on_realtime_connection_changed(self, status: str):
+        """即時連接狀態變更"""
+        print(f"[CONTROL_DOCK] Realtime connection status: {status}")
+        
+        if "connected" in status.lower() or "established" in status.lower():
+            self.lbl_connection_status.setText(tr("Connected", "Connected"))
+            self.lbl_connection_status.setStyleSheet("color: #4CAF50; font-weight: bold;")
+            self.btn_connect.setEnabled(False)
+            self.btn_disconnect.setEnabled(True)
+        elif "closed" in status.lower() or "failed" in status.lower():
+            self.lbl_connection_status.setText(tr("Disconnected", "Disconnected"))
+            self.lbl_connection_status.setStyleSheet("color: #888888; font-weight: bold;")
+            self.btn_connect.setEnabled(True)
+            self.btn_disconnect.setEnabled(False)
+        else:
+            self.lbl_connection_status.setText(status)
+            self.lbl_connection_status.setStyleSheet("color: #FF9800; font-weight: bold;")
+    
+    @pyqtSlot(dict)
+    def _on_realtime_snapshot_updated(self, snapshot: dict):
+        """即時快照更新 - 轉發給 DataManager"""
+        # 將即時快照發送給 DataManager
+        self._data_manager.update_realtime_snapshot(snapshot)
+    
+    @pyqtSlot(str)
+    def _on_realtime_error(self, error: str):
+        """即時連接錯誤"""
+        print(f"[CONTROL_DOCK] Realtime error: {error}")
+        self.lbl_connection_status.setText(tr("Error", "Error"))
+        self.lbl_connection_status.setStyleSheet("color: #F44336; font-weight: bold;")
     
     # ===========================================
     # 歷史模式控制

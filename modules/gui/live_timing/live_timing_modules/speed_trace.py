@@ -1215,68 +1215,78 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         self._load_track_data(year, race_key)
     
     def _load_track_data(self, year: int, race_key: str):
-        """載入賽道資料 - 從 JSON 檔案"""
+        """載入賽道資料 - 僅使用 API，禁止本地回退"""
         # 標準化賽事名稱
         track_name = race_key.replace('_', ' ').replace(' Grand Prix', '').strip()
         
-        project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-        json_dir = project_root / "json"
+        # 僅通過 API 獲取
+        if self._load_track_via_api(year, track_name):
+            return True
         
-        # 定義搜索優先級：當年 > 其他年份
-        years_to_try = [str(year)]
-        for fallback_year in ["2025", "2024", "2023"]:
-            if fallback_year != str(year):
-                years_to_try.append(fallback_year)
-        
-        for try_year in years_to_try:
-            # 嘗試不同的命名模式
-            patterns = [
-                f"track_position_analysis_{try_year}_{track_name}_R.json",
-                f"track_position_analysis_{try_year}_{race_key}_R.json",
-                f"track_position_analysis_{try_year}_{race_key.replace('_', ' ')}_R.json",
-            ]
-            
-            for pattern in patterns:
-                json_file = json_dir / pattern
-                if json_file.exists():
-                    try:
-                        with open(json_file, 'r', encoding='utf-8') as f:
-                            api_response = json.load(f)
-                        
-                        data = api_response.get('data', {})
-                        
-                        # 獲取賽道長度
-                        bounds = data.get('track_bounds', {})
-                        track_length = bounds.get('track_length', 5000)
-                        
-                        # 獲取彎道資料 - 直接使用 JSON 中的 distance 欄位
-                        # (由 CLI -f 2 生成，包含 FastF1 原始單圈距離)
-                        corners_data = data.get('official_corners', {})
-                        corners_raw = corners_data.get('corners', [])
-                        
-                        # 處理彎道資料：優先使用 distance 欄位（FastF1 單圈距離）
-                        corners = self._process_corners_from_json(corners_raw)
-                        
-                        # 如果 track_length 無效，嘗試從 position_records 估算
-                        if track_length <= 0:
-                            position_records = data.get('position_records', [])
-                            if position_records:
-                                max_dist = max(r.get('distance_m', 0) for r in position_records)
-                                track_length = max_dist / 10 if max_dist > 0 else 5000
-                        
-                        if hasattr(self, 'speed_widget'):
-                            self.speed_widget.set_track_info(track_length, corners)
-                        
-                        if try_year != str(year):
-                            print(f"[SPEED_TRACE_MDI] Using {try_year} track data (original {year} not found)")
-                        print(f"[SPEED_TRACE_MDI] Track loaded: {track_name}, length={track_length:.0f}m, corners={len(corners)}")
-                        return True
-                        
-                    except Exception as e:
-                        print(f"[SPEED_TRACE_MDI] Failed to load {json_file}: {e}")
-        
-        print(f"[SPEED_TRACE_MDI] Track data not found for {year} {race_key}")
+        # API 失敗，返回錯誤（禁止本地回退）
+        print(f"[SPEED_TRACE_MDI] API 獲取失敗，請確認 API 服務器已啟動")
         return False
+    
+    def _load_track_via_api(self, year: int, track_name: str) -> bool:
+        """通過 API (Function 2) 獲取賽道數據"""
+        try:
+            from ..core.api_client import get_api_client
+            
+            api_client = get_api_client()
+            
+            # 嘗試當年和其他年份
+            years_to_try = [year, 2025, 2024, 2023]
+            seen = set()
+            
+            for try_year in years_to_try:
+                if try_year in seen:
+                    continue
+                seen.add(try_year)
+                
+                print(f"[SPEED_TRACE_MDI] 嘗試 API 獲取: {try_year} {track_name}")
+                data = api_client.get_track_analysis(try_year, track_name, "R")
+                
+                if data:
+                    return self._process_track_data(data, year, try_year, track_name, "API")
+            
+            return False
+            
+        except Exception as e:
+            print(f"[SPEED_TRACE_MDI] API 獲取賽道數據失敗: {e}")
+            return False
+    
+    def _process_track_data(self, data: dict, orig_year: int, loaded_year: int, track_name: str, source: str) -> bool:
+        """處理賽道數據並設置到 widget"""
+        try:
+            # 獲取賽道長度
+            bounds = data.get('track_bounds', {})
+            track_length = bounds.get('track_length', 5000)
+            
+            # 獲取彎道資料 - 直接使用 JSON 中的 distance 欄位
+            corners_data = data.get('official_corners', {})
+            corners_raw = corners_data.get('corners', [])
+            
+            # 處理彎道資料
+            corners = self._process_corners_from_json(corners_raw)
+            
+            # 如果 track_length 無效，嘗試從 position_records 估算
+            if track_length <= 0:
+                position_records = data.get('position_records', [])
+                if position_records:
+                    max_dist = max(r.get('distance_m', 0) for r in position_records)
+                    track_length = max_dist / 10 if max_dist > 0 else 5000
+            
+            if hasattr(self, 'speed_widget'):
+                self.speed_widget.set_track_info(track_length, corners)
+            
+            if loaded_year != orig_year:
+                print(f"[SPEED_TRACE_MDI] 使用 {loaded_year} 賽道數據 ({source}, 原始年份 {orig_year} 不可用)")
+            print(f"[SPEED_TRACE_MDI] 賽道載入成功 ({source}): {track_name}, length={track_length:.0f}m, corners={len(corners)}")
+            return True
+            
+        except Exception as e:
+            print(f"[SPEED_TRACE_MDI] 處理賽道數據失敗: {e}")
+            return False
     
     def _process_corners_from_json(self, corners: List[Dict]) -> List[Dict]:
         """

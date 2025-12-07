@@ -469,13 +469,27 @@ _make_spec(
         notes="CLI function -f 74 generates qualifying predictions JSON. Session is fixed to 'Q'. Requires pre-trained v3.8 model for the specified track (run -f 73 first). GUI module reads the generated JSON for display.",
     ),
     _make_spec(
+        "80",
+        name="Dynamic Team Rating Analysis",
+        description="Analyzes team performance using dynamic rating system based on 2023-2024 historical data with 2025 race updates. Generates JSON with team rankings, driver mappings, and rating changes for Q->R prediction.",
+        required_params=[],
+        optional_params=["year", "race"],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r"
+        },
+        cache_patterns=["dynamic_team_rating"],
+        notes="CLI function -f 80 generates dynamic team rating JSON to json/prediction/dynamic_team_rating_{timestamp}.json. Used by GUI Race Prediction module (Q->R) to predict race results based on qualifying positions and team ratings.",
+    ),
+    _make_spec(
         "99",
         name="Season Calendar Overview",
-        description="Returns completed and upcoming events for the selected season using FastF1 schedule data.",
-        required_params=["year"],
+        description="Returns completed and upcoming events for the selected season using FastF1 schedule data. Supports multi-year mode with --all-years flag.",
+        required_params=[],
+        optional_params=["year"],
         cli_flag_map={"year": "-y"},
         cache_patterns=["season_calendar"],
-        notes="CLI function -f 99 exposes this calendar for GUI/API consumption.",
+        notes="CLI function -f 99 exposes this calendar for GUI/API consumption. Use --all-years for 2020-2025 batch query with smart refresh.",
     ),
     _make_spec(
         "100",

@@ -802,6 +802,10 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
         self._sc_restart_laps: set = set()  # SC 重啟圈
         self._current_race_time: str = ""  # 當前賽事時間 (字串格式，如 "01:18:42")
         
+        # PIT 圈追蹤 (全域，所有車手共用)
+        self._pit_laps: Dict[str, set] = {}  # {driver_tla: {pit_lap1, pit_lap2, ...}}
+        self._pit_out_laps: Dict[str, set] = {}  # {driver_tla: {pit_out_lap1, ...}}
+        
         print(f"[SECTOR_COMPARISON_MDI] S{sector_number} Comparison initialized")
         
     def _setup_ui(self):
@@ -831,8 +835,10 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
                 info.get('team_color', '')
             )
             
-            # Load sector times (filter out SC and SC restart laps)
+            # Load sector times (filter out SC, SC restart, PIT, and PIT out laps)
             sector_key = f"sector{self._sector_number}_times"
+            pit_laps = self._pit_laps.get(driver_code, set())
+            pit_out_laps = self._pit_out_laps.get(driver_code, set())
             if sector_key in info:
                 for lap, time in info[sector_key].items():
                     lap_int = int(lap)
@@ -840,6 +846,11 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
                     if lap_int in self._sc_laps:
                         continue
                     if lap_int in self._sc_restart_laps:
+                        continue
+                    # Skip PIT laps and PIT out laps
+                    if lap_int in pit_laps:
+                        continue
+                    if lap_int in pit_out_laps:
                         continue
                     self._widget.add_driver1_sector_time(lap_int, float(time))
                     
@@ -859,8 +870,10 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
                 info.get('team_color', '')
             )
             
-            # Load sector times (filter out SC and SC restart laps)
+            # Load sector times (filter out SC, SC restart, PIT, and PIT out laps)
             sector_key = f"sector{self._sector_number}_times"
+            pit_laps = self._pit_laps.get(driver_code, set())
+            pit_out_laps = self._pit_out_laps.get(driver_code, set())
             if sector_key in info:
                 for lap, time in info[sector_key].items():
                     lap_int = int(lap)
@@ -868,6 +881,11 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
                     if lap_int in self._sc_laps:
                         continue
                     if lap_int in self._sc_restart_laps:
+                        continue
+                    # Skip PIT laps and PIT out laps
+                    if lap_int in pit_laps:
+                        continue
+                    if lap_int in pit_out_laps:
                         continue
                     self._widget.add_driver2_sector_time(lap_int, float(time))
                     
@@ -1055,6 +1073,33 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
                 print(f"[SECTOR_COMPARISON_MDI] S{self._sector_number} Skipping SC restart lap {driver_lap} for {driver_tla}")
                 continue
             
+            # 檢查進站狀態 - PIT 圈和 PIT out 圈不記錄
+            in_pit = driver_data.get('in_pit', False)
+            
+            # 初始化車手的 PIT 追蹤集合
+            if driver_tla not in self._pit_laps:
+                self._pit_laps[driver_tla] = set()
+            if driver_tla not in self._pit_out_laps:
+                self._pit_out_laps[driver_tla] = set()
+            
+            # 記錄 PIT 圈
+            if in_pit and driver_lap > 0:
+                if driver_lap not in self._pit_laps[driver_tla]:
+                    self._pit_laps[driver_tla].add(driver_lap)
+                    # PIT out 圈 = PIT 圈 + 1
+                    self._pit_out_laps[driver_tla].add(driver_lap + 1)
+                    print(f"[SECTOR_COMPARISON_MDI] S{self._sector_number} PIT lap {driver_lap} recorded for {driver_tla}")
+            
+            # 排除 PIT 圈
+            if driver_lap in self._pit_laps.get(driver_tla, set()):
+                print(f"[SECTOR_COMPARISON_MDI] S{self._sector_number} Skipping PIT lap {driver_lap} for {driver_tla}")
+                continue
+            
+            # 排除 PIT out 圈
+            if driver_lap in self._pit_out_laps.get(driver_tla, set()):
+                print(f"[SECTOR_COMPARISON_MDI] S{self._sector_number} Skipping PIT out lap {driver_lap} for {driver_tla}")
+                continue
+            
             # 更新車手資料快取 (使用 driver_tla 作為 key)
             # 只有非 SC 圈的數據才會存入 cache
             if driver_tla not in self._all_drivers_data:
@@ -1083,19 +1128,13 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
             elif driver_tla == self._driver2_code:
                 self._widget.add_driver2_sector_time(driver_lap, sector_time)
                 
-            # 檢查進站狀態
-            in_pit = driver_data.get('in_pit', False)
-            if in_pit and driver_lap > 0:
-                if 'pit_laps' not in self._all_drivers_data[driver_tla]:
-                    self._all_drivers_data[driver_tla]['pit_laps'] = []
-                if driver_lap not in self._all_drivers_data[driver_tla]['pit_laps']:
-                    self._all_drivers_data[driver_tla]['pit_laps'].append(driver_lap)
-                    
-                    # 更新 widget
-                    if driver_tla == self._driver1_code:
-                        self._widget.set_driver1_pit_laps(self._all_drivers_data[driver_tla]['pit_laps'])
-                    elif driver_tla == self._driver2_code:
-                        self._widget.set_driver2_pit_laps(self._all_drivers_data[driver_tla]['pit_laps'])
+            # 更新 widget 的 pit_laps (用於繪製 PIT 標記)
+            if driver_tla in self._pit_laps and self._pit_laps[driver_tla]:
+                pit_laps_list = list(self._pit_laps[driver_tla])
+                if driver_tla == self._driver1_code:
+                    self._widget.set_driver1_pit_laps(pit_laps_list)
+                elif driver_tla == self._driver2_code:
+                    self._widget.set_driver2_pit_laps(pit_laps_list)
         
         # 更新可選車手列表
         self._widget.set_available_drivers(self._all_drivers_data)
@@ -1194,6 +1233,8 @@ class SectorComparisonMDI(BaseLiveTimingMDI):
         self._total_laps = 0
         self._current_race_time = ""
         self._auto_selected = False
+        self._pit_laps.clear()
+        self._pit_out_laps.clear()
         print(f"[SECTOR_COMPARISON_MDI] Race unloaded, data cleared")
 
 

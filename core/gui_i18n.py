@@ -1026,6 +1026,9 @@ class GuiTranslator:
             'SC/VSC': {'zh': 'SC/VSC', 'en': 'SC/VSC', 'ja': 'SC/VSC'},
             'PIT Est.': {'zh': 'PIT 預估', 'en': 'PIT Est.', 'ja': 'PIT 予測'},
             
+            # Live Ranking Tower 翻譯
+            'fuel_save': {'zh': 'SF%', 'en': 'SF%', 'ja': 'SF%'},
+            
             # Live Ranking 右鍵選單項目
             'modify_pit_windows': {'zh': '修改 Pit Window 參數', 'en': 'Modify Pit Window Parameters', 'ja': 'ピットウィンドウパラメータを変更'},
             'set_pit_window_reference': {'zh': '設定為 Pit Window 參考', 'en': 'Set as Pit Window Reference', 'ja': 'ピットウィンドウ参照に設定'},

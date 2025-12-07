@@ -764,63 +764,69 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
         """
         Load track data for specified race
         
-        Search json/track_position_analysis_{year}_{track}_R.json
+        僅使用 API (Function 2) 獲取，禁止本地回退
         """
         track_name = self._normalize_race_name(race_key)
-        project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-        json_dir = project_root / "json"
         
-        # Define search priority: current year > other years
-        years_to_try = [str(year)]
-        for fallback_year in ["2025", "2024", "2023"]:
-            if fallback_year != str(year):
-                years_to_try.append(fallback_year)
+        # 僅通過 API 獲取
+        if self._load_track_via_api(year, track_name):
+            return True
         
-        for try_year in years_to_try:
-            # Try different naming patterns
-            patterns = [
-                f"track_position_analysis_{try_year}_{track_name}_R.json",
-                f"track_position_analysis_{try_year}_{race_key}_R.json",
-                f"track_position_analysis_{try_year}_{race_key.replace('_', ' ')}_R.json",
-            ]
-            
-            for pattern in patterns:
-                json_file = json_dir / pattern
-                if json_file.exists():
-                    try:
-                        with open(json_file, 'r', encoding='utf-8') as f:
-                            api_response = json.load(f)
-                        
-                        data = api_response.get('data', {})
-                        self._track_data = {
-                            'position_records': data.get('position_records', []),
-                            'track_bounds': data.get('track_bounds', {}),
-                        }
-                        
-                        # Load to widget
-                        self.circle_widget.load_track_data(self._track_data)
-                        
-                        # Load corner data if available
-                        official_corners = data.get('official_corners', {})
-                        if official_corners.get('available', False):
-                            corners = official_corners.get('corners', [])
-                            # Use mapped_distance as lap_distance for circle mapping
-                            for corner in corners:
-                                if 'mapped_distance' in corner:
-                                    corner['lap_distance'] = corner['mapped_distance']
-                            self.circle_widget.set_corners(corners)
-                            print(f"[CIRCLE_MAP_MDI] Corners loaded: {len(corners)} corners")
-                        
-                        if try_year != str(year):
-                            print(f"[CIRCLE_MAP_MDI] Using {try_year} track data (original {year} not found)")
-                        print(f"[CIRCLE_MAP_MDI] Track loaded: {track_name}, {len(self._track_data['position_records'])} points")
-                        return True
-                        
-                    except Exception as e:
-                        print(f"[CIRCLE_MAP_MDI] Failed to load {json_file}: {e}")
-        
-        print(f"[CIRCLE_MAP_MDI] Track data not found for {year} {race_key}")
+        # API 失敗，返回錯誤（禁止本地回退）
+        print(f"[CIRCLE_MAP_MDI] API 獲取失敗，請確認 API 服務器已啟動")
         return False
+    
+    def _load_track_via_api(self, year: int, track_name: str) -> bool:
+        """
+        通過 API (Function 2) 獲取賽道數據
+        """
+        try:
+            from ..core.api_client import get_api_client
+            
+            api_client = get_api_client()
+            
+            # 嘗試當年和其他年份
+            years_to_try = [year, 2025, 2024, 2023]
+            seen = set()
+            
+            for try_year in years_to_try:
+                if try_year in seen:
+                    continue
+                seen.add(try_year)
+                
+                print(f"[CIRCLE_MAP_MDI] 嘗試 API 獲取: {try_year} {track_name}")
+                data = api_client.get_track_analysis(try_year, track_name, "R")
+                
+                if data:
+                    self._track_data = {
+                        'position_records': data.get('position_records', []),
+                        'track_bounds': data.get('track_bounds', {}),
+                    }
+                    
+                    # Load to widget
+                    self.circle_widget.load_track_data(self._track_data)
+                    
+                    # Load corner data if available
+                    official_corners = data.get('official_corners', {})
+                    if official_corners.get('available', False):
+                        corners = official_corners.get('corners', [])
+                        # Use mapped_distance as lap_distance for circle mapping
+                        for corner in corners:
+                            if 'mapped_distance' in corner:
+                                corner['lap_distance'] = corner['mapped_distance']
+                        self.circle_widget.set_corners(corners)
+                        print(f"[CIRCLE_MAP_MDI] Corners loaded (API): {len(corners)} corners")
+                    
+                    if try_year != year:
+                        print(f"[CIRCLE_MAP_MDI] 使用 {try_year} 賽道數據 (API, 原始年份 {year} 不可用)")
+                    print(f"[CIRCLE_MAP_MDI] 賽道載入成功 (API): {track_name}, {len(self._track_data['position_records'])} 點")
+                    return True
+            
+            return False
+            
+        except Exception as e:
+            print(f"[CIRCLE_MAP_MDI] API 獲取賽道數據失敗: {e}")
+            return False
     
     # ===========================================
     # DataManager Signal Handlers

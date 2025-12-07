@@ -29,8 +29,13 @@ F1T GUI 批次數據生成器
     F48 - All Drivers Straight Line Speed (全車手直線速度)
     F53 - Ideal Lap Analysis (理想圈分析)
     F54 - Throttle Analysis (油門比例分析)
+    F55 - Fuel Corrected Laptime (燃油校正圈速)
+    F56 - Tire Degradation Analysis (輪胎衰退分析)
+    F57 - Combined Laptime Prediction (綜合圈速預測)
+    F58 - Pit Stop Strategy Prediction (進站策略預測)
     F74 - Qualifying Prediction FP3->Q (排位賽預測)
     F80 - Race Prediction Q->R (正賽預測)
+    F81 - Overtake Data Collection (超車數據收集)
     F100 - Historical Track Map (歷年旗幟統計)
 
 作者: F1T Team
@@ -85,9 +90,18 @@ FUNCTION_CONFIGS: Dict[int, FunctionConfig] = {
     53: FunctionConfig(53, "Ideal Lap Analysis", "ideal_lap_ranking", {"FP3", "Q", "R"}),
     54: FunctionConfig(54, "Throttle Analysis", "driver_throttle_ratio", {"FP1", "FP2", "FP3", "Q", "SQ", "R"}),
     
+    # Fuel & Tire Analysis (燃油/輪胎進階分析)
+    55: FunctionConfig(55, "Fuel Corrected Laptime", "fuel_corrected_laptime", {"R"}),
+    56: FunctionConfig(56, "Tire Degradation", "tire_degradation", {"R"}),
+    57: FunctionConfig(57, "Combined Laptime Prediction", "combined_laptime_prediction", {"R"}),
+    58: FunctionConfig(58, "Pit Stop Strategy", "pit_strategy_prediction", {"R"}),
+    
     # Prediction
     74: FunctionConfig(74, "FP3->Q Prediction", "qualifying_prediction", {"FP3"}),
     80: FunctionConfig(80, "Q->R Prediction", "race_prediction", {"Q"}),
+    
+    # Overtake Data Collection (超車數據收集 - 用於後續 F82 訓練)
+    81: FunctionConfig(81, "Overtake Data Collection", "overtake_events", {"R"}),
     
     # Multi-Season (不需要 session)
     100: FunctionConfig(100, "Historical Track Map", "historical_flags", set()),

@@ -13,6 +13,7 @@ Date: 2025-12-03
 """
 
 import os
+import sys
 import json
 import base64
 import zlib
@@ -82,9 +83,15 @@ class LocalLiveF1DataSource:
         self.race = self._normalize_race_name(race)
         
         if base_dir is None:
-            # 從 modules/gui/live_timing/core 回到專案根目錄
-            project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-            base_dir = os.path.join(project_root, "json", "LiveF1")
+            # 檢查是否為 EXE 模式
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                # EXE 模式：使用 EXE 所在目錄
+                exe_dir = Path(sys.executable).parent
+                base_dir = os.path.join(exe_dir, "json", "LiveF1")
+            else:
+                # 開發模式：從 modules/gui/live_timing/core 回到專案根目錄
+                project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+                base_dir = os.path.join(project_root, "json", "LiveF1")
         
         self.data_dir = os.path.join(base_dir, self.year, self.race)
         
@@ -313,8 +320,15 @@ class LiveF1DataSource:
         self.base_url = base_url.rstrip('/')
         
         if local_cache_dir is None:
-            project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
-            local_cache_dir = os.path.join(project_root, "data", "live_timing")
+            # 檢查是否為 EXE 模式
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                # EXE 模式：使用 EXE 所在目錄
+                exe_dir = Path(sys.executable).parent
+                local_cache_dir = os.path.join(exe_dir, "live_timing_cache")
+            else:
+                # 開發模式
+                project_root = Path(__file__).resolve().parent.parent.parent.parent.parent
+                local_cache_dir = os.path.join(project_root, "data", "live_timing")
         self.local_cache_dir = local_cache_dir
 
         self._position_data: List[Dict[str, Any]] = []

@@ -12,10 +12,11 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-# � EXE 模式檢測：檢查環境變數決定是否啟用日誌
-# 當 F1T_EXE_SILENT_MODE=1 時才禁用日誌，否則正常記錄
+# 🔒 EXE 模式檢測：EXE 模式下預設禁用日誌輸出
+# 可以透過設定環境變數 F1T_EXE_ENABLE_LOG=1 來開啟 EXE 日誌（除錯用）
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-FORCE_SILENT = os.getenv('F1T_EXE_SILENT_MODE') == '1'
+# EXE 模式下預設靜默，除非明確設定 F1T_EXE_ENABLE_LOG=1
+FORCE_SILENT = IS_EXE_MODE and os.getenv('F1T_EXE_ENABLE_LOG') != '1'
 
 __all__ = [
     "setup_logging",

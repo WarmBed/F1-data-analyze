@@ -54,6 +54,12 @@ class PitWindowWidget(QWidget):
         self._use_p1_as_reference = True
         self._track_status = "GREEN"
         
+        # 插值相關
+        self._interpolation_alpha: float = 0.0
+        self._current_snapshot: Dict[str, Any] = {}
+        self._next_snapshot: Dict[str, Any] = {}
+        self._interpolated_positions: Dict[str, Dict[str, Any]] = {}
+        
         # 進站時間設定
         self._time_range = 30.0
         self._pit_loss_green = 22.0
@@ -226,7 +232,7 @@ class PitWindowWidget(QWidget):
             self.update()
     
     def update_positions(self, drivers_data: Dict[str, Dict[str, Any]]):
-        """更新車手位置數據"""
+        """更新車手位置數據（非插值模式）"""
         self._driver_positions = drivers_data or {}
         
         if self._use_p1_as_reference:
@@ -236,6 +242,87 @@ class PitWindowWidget(QWidget):
                     break
         
         self.update()
+    
+    def update_interpolation(self, current_snap: Dict, next_snap: Dict, alpha: float, race_time_seconds: float):
+        """
+        更新插值數據 - 用於平滑動畫
+        
+        Args:
+            current_snap: 當前快照
+            next_snap: 下一個快照
+            alpha: 插值因子 (0.0 ~ 1.0)
+            race_time_seconds: 當前賽事時間（秒）
+        """
+        self._current_snapshot = current_snap
+        self._next_snapshot = next_snap
+        self._interpolation_alpha = alpha
+        
+        # 計算插值後的位置
+        self._interpolated_positions = self._compute_interpolated_positions(
+            current_snap.get('drivers', {}),
+            next_snap.get('drivers', {}),
+            alpha
+        )
+        
+        # 更新車手位置數據為插值後的數據
+        self._driver_positions = self._interpolated_positions
+        
+        # 更新參考車手
+        if self._use_p1_as_reference:
+            for driver_num, data in self._driver_positions.items():
+                if data.get('position') == 1:
+                    self._reference_driver = driver_num
+                    break
+        
+        # 觸發重繪
+        self.update()
+    
+    def _compute_interpolated_positions(self, current_drivers: Dict, next_drivers: Dict, alpha: float) -> Dict:
+        """
+        計算插值後的車手位置
+        
+        使用線性插值計算 gap_to_leader（相對時間差）
+        """
+        result = {}
+        
+        for driver_num, current_data in current_drivers.items():
+            # 跳過 DNF 車手
+            status = current_data.get('status', '')
+            if status and str(status).upper() in ('DNF', 'RETIRED', 'OUT', 'STOPPED'):
+                continue
+            
+            # 複製當前數據
+            interpolated = dict(current_data)
+            
+            # 如果下一個快照有這個車手，進行插值
+            if driver_num in next_drivers:
+                next_data = next_drivers[driver_num]
+                
+                # gap_to_leader 插值（這是 Pit Window 的主要顯示數據）
+                gap0 = current_data.get('gap_to_leader')
+                gap1 = next_data.get('gap_to_leader')
+                if gap0 is not None and gap1 is not None:
+                    try:
+                        gap0_float = float(gap0) if not isinstance(gap0, (int, float)) else gap0
+                        gap1_float = float(gap1) if not isinstance(gap1, (int, float)) else gap1
+                        interpolated['gap_to_leader'] = gap0_float + alpha * (gap1_float - gap0_float)
+                    except (ValueError, TypeError):
+                        pass  # 保持原值
+                
+                # interval 插值
+                interval0 = current_data.get('interval')
+                interval1 = next_data.get('interval')
+                if interval0 is not None and interval1 is not None:
+                    try:
+                        int0_float = float(interval0) if not isinstance(interval0, (int, float)) else interval0
+                        int1_float = float(interval1) if not isinstance(interval1, (int, float)) else interval1
+                        interpolated['interval'] = int0_float + alpha * (int1_float - int0_float)
+                    except (ValueError, TypeError):
+                        pass  # 保持原值
+            
+            result[driver_num] = interpolated
+        
+        return result
     
     def paintEvent(self, event):
         """繪製 Pit Window"""
@@ -597,9 +684,21 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
         self.pit_widget.update()
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """Snapshot updated"""
-        drivers = snapshot.get('drivers', {})
-        self.pit_widget.update_positions(drivers)
+        """Snapshot updated - 僅在沒有插值數據時使用"""
+        # 如果有插值數據，使用插值更新，否則使用快照更新
+        if not self.pit_widget._interpolated_positions:
+            drivers = snapshot.get('drivers', {})
+            self.pit_widget.update_positions(drivers)
+    
+    def _on_interpolation_updated(self, current_snap: Dict[str, Any], next_snap: Dict[str, Any],
+                                   alpha: float, race_time_seconds: float):
+        """
+        處理插值更新 - 用於平滑動畫
+        
+        使用插值數據更新 Pit Window，實現平滑的位置過渡。
+        """
+        if self.pit_widget:
+            self.pit_widget.update_interpolation(current_snap, next_snap, alpha, race_time_seconds)
     
     def _cleanup(self):
         """清理資源 - 斷開 driver_selected 信號"""

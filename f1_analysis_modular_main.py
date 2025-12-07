@@ -601,6 +601,11 @@ class F1AnalysisModularCLI:
             elif hasattr(self.args, 'no_detailed_output') and self.args.no_detailed_output:
                 show_detailed_output = False
             
+            # 圈速預測系統 (F55-F58) 預設開啟詳細輸出
+            laptime_prediction_functions = {"55", "56", "57", "58"}
+            if str(function_id) in laptime_prediction_functions:
+                show_detailed_output = True
+            
             colormap = getattr(self.args, 'colormap', None)
             save_json_flag = not getattr(self.args, 'no_save_json', False)
             include_driver_colors = not getattr(self.args, 'no_driver_colors', False)
@@ -1622,11 +1627,12 @@ class F1AnalysisModularCLI:
         function_id = str(self.args.function) if self.args.function else None
         # 系統功能和工具功能不需要載入賽事數據
         # 49: 數據匯出, 50: 快取優化, 51: 系統診斷, 52: 性能基準, 
+        # 55: 燃油校正圈速分析, 56: 輪胎衰退分析, 57: 綜合圈速預測, 58: 進站策略預測
         # 70: FP→Q 訓練數據收集器, 74: 排位賽預測 (內部自動載入), 75: 純 FP3 特徵優化訓練, 76: 集成學習訓練
         # 96: 賽事天氣預報, 98: API 健康檢查, 99: 賽季賽程查詢
         # 100: 歷年旗幟統計分析 (內部處理多年數據載入)
         # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
-        data_optional_functions = {"49", "50", "51", "52", "70", "74", "75", "76", "96", "98", "99", "100"}
+        data_optional_functions = {"49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "98", "99", "100"}
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 

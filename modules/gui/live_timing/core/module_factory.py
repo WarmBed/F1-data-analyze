@@ -150,6 +150,12 @@ class LiveTimingModuleFactory:
         "S3 Comparison": "sector_comparison_s3",
         "S3比較": "sector_comparison_s3",
         "sector_comparison_s3": "sector_comparison_s3",
+        
+        # Battle Insight 戰鬥分析
+        "Battle Insight": "battle_insight",
+        "戰鬥分析": "battle_insight",
+        "バトルインサイト": "battle_insight",
+        "battle_insight": "battle_insight",
     }
     
     # 模組鍵值 → 模組元數據
@@ -266,6 +272,12 @@ class LiveTimingModuleFactory:
             "display_name": "Sector Comparison - S3",
             "description": "Compare Sector 3 times between two drivers",
             "icon": "sector_comparison.png",
+            "implemented": True,
+        },
+        "battle_insight": {
+            "display_name": "Battle Insight",
+            "description": "Real-time battle analysis with overtake probability and insights",
+            "icon": "battle_insight.png",
             "implemented": True,
         },
     }
@@ -460,6 +472,10 @@ class LiveTimingModuleFactory:
             elif module_key == "sector_comparison_s3":
                 from ..live_timing_modules.sector_comparison import SectorComparisonS3MDI
                 module_class = SectorComparisonS3MDI
+                
+            elif module_key == "battle_insight":
+                from ..live_timing_modules.battle_insight import BattleInsightMDI
+                module_class = BattleInsightMDI
                 
             else:
                 print(f"[LIVE_TIMING_FACTORY] Unknown module key: {module_key}")
