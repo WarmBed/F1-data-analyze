@@ -9,6 +9,7 @@ Date: 2025-10-13
 Version: 1.0.0
 """
 
+import logging
 import sys
 import time
 import requests
@@ -20,6 +21,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("season_progress.mdi", component="gui")
 
 
 class SeasonProgressApiWorker(QThread):
@@ -67,8 +71,9 @@ class SeasonProgressApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] Calling API: {endpoint}")
-            print(f"[API_WORKER] Parameters: {query_params}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[API_WORKER] Calling API: %s", endpoint)
+                logger.debug("[API_WORKER] Parameters: %s", query_params)
             
             # Send POST request
             start_ts = time.perf_counter()
@@ -110,23 +115,24 @@ class SeasonProgressApiWorker(QThread):
                 }
             }
             
-            print(f"[API_WORKER] API call successful (latency: {latency_ms:.2f} ms)")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[API_WORKER] API call successful (latency: %.2f ms)", latency_ms)
             self.progress.emit(100)
             self.success.emit(result)
             
         except requests.exceptions.Timeout:
             error_msg = f"API request timeout ({self.timeout}s)"
-            print(f"[API_WORKER] {error_msg}")
+            logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)
             
         except requests.exceptions.HTTPError as e:
             error_msg = f"HTTP error: {e.response.status_code}"
-            print(f"[API_WORKER] {error_msg}")
+            logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)
             
         except Exception as e:
             error_msg = f"API request failed: {str(e)}"
-            print(f"[API_WORKER] {error_msg}")
+            logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)
 
 
@@ -188,13 +194,15 @@ class SeasonProgressMDI(QWidget):
     
     def _trigger_initial_load(self):
         """Trigger initial data load via API"""
-        print(f"[SEASON_PROGRESS_MDI] Triggering API load: year={self.year}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] Triggering API load: year=%s", self.year)
         self._start_load_analysis()
     
     def _start_load_analysis(self):
         """Start API-based data loading"""
         if self.api_worker and self.api_worker.isRunning():
-            print("[SEASON_PROGRESS_MDI] API worker already running")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[SEASON_PROGRESS_MDI] API worker already running")
             return
         
         # Prepare API parameters
@@ -218,7 +226,8 @@ class SeasonProgressMDI(QWidget):
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API request progress update"""
-        print(f"[SEASON_PROGRESS_MDI] API progress: {progress}%")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] API progress: %d%%", progress)
         self.progress_bar.setValue(progress)
         self.status_label.setText(f"API loading... {progress}%")
     
@@ -226,7 +235,8 @@ class SeasonProgressMDI(QWidget):
     def _on_api_success(self, result: Dict[str, Any]):
         """API request success"""
         try:
-            print("[SEASON_PROGRESS_MDI] API call successful")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[SEASON_PROGRESS_MDI] API call successful")
             
             # Extract API response
             api_response = result.get("data", {})
@@ -235,14 +245,16 @@ class SeasonProgressMDI(QWidget):
             # Detect nested structure (API cache may return double-nested JSON)
             if "data" in api_response and isinstance(api_response["data"], dict):
                 # Double-nested: data.data.drivers/constructors
-                print("[SEASON_PROGRESS_MDI] Detected double-nested structure")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[SEASON_PROGRESS_MDI] Detected double-nested structure")
                 metadata = api_response.get("metadata", {})
                 data_payload = api_response.get("data", {})
             else:
                 # Single-layer: data.drivers/constructors
                 metadata = api_response.get("metadata", {})
                 data_payload = api_response
-                print("[SEASON_PROGRESS_MDI] Detected single-layer structure")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[SEASON_PROGRESS_MDI] Detected single-layer structure")
             
             # Validate data
             drivers = data_payload.get("drivers", [])
@@ -251,8 +263,17 @@ class SeasonProgressMDI(QWidget):
             if not drivers and not constructors:
                 raise ValueError("API data missing both 'drivers' and 'constructors'")
             
-            print(f"[SEASON_PROGRESS_MDI] Loaded {len(drivers)} drivers, {len(constructors)} constructors")
-            print(f"[SEASON_PROGRESS_MDI] Metadata: season_year={metadata.get('season_year')}, round={metadata.get('resolved_round')}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "[SEASON_PROGRESS_MDI] Loaded %d drivers, %d constructors",
+                    len(drivers),
+                    len(constructors),
+                )
+                logger.debug(
+                    "[SEASON_PROGRESS_MDI] Metadata: season_year=%s, round=%s",
+                    metadata.get('season_year'),
+                    metadata.get('resolved_round'),
+                )
             
             # Transform for display (mimicking DataLoader transform)
             from .season_progress_data_loader import SeasonProgressDataLoader
@@ -269,10 +290,16 @@ class SeasonProgressMDI(QWidget):
                 }
             }
             
-            print(f"[SEASON_PROGRESS_MDI] Calendar in payload: {data_payload.get('calendar')}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[SEASON_PROGRESS_MDI] Calendar in payload: %s", data_payload.get('calendar'))
             display_data = loader._transform_data_for_display(raw_data_for_transform)
             
-            print(f"[SEASON_PROGRESS_MDI] Transformed data: year={display_data.get('season_year')}, round={display_data.get('round')}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "[SEASON_PROGRESS_MDI] Transformed data: year=%s, round=%s",
+                    display_data.get('season_year'),
+                    display_data.get('round'),
+                )
             
             # Populate widget
             self._on_data_loaded(display_data)
@@ -282,13 +309,13 @@ class SeasonProgressMDI(QWidget):
             self.status_label.setText(f"Loaded from {source_label}")
             
         except Exception as e:
-            print(f"[SEASON_PROGRESS_MDI] Error processing API data: {e}")
+            logger.error("[SEASON_PROGRESS_MDI] Error processing API data: %s", e)
             self._show_error("Data Processing Error", str(e))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API request failure"""
-        print(f"[SEASON_PROGRESS_MDI] API call failed: {error_msg}")
+        logger.error("[SEASON_PROGRESS_MDI] API call failed: %s", error_msg)
         self.status_label.setText(f"API load failed: {error_msg}")
         self.progress_bar.setValue(0)
         self.progress_bar.hide()
@@ -303,7 +330,8 @@ class SeasonProgressMDI(QWidget):
         Args:
             data: Transformed season progress data
         """
-        print(f"[SEASON_PROGRESS_MDI] Data loaded successfully")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] Data loaded successfully")
         
         # Populate widget
         self.progress_widget.populate_data(data)
@@ -324,7 +352,7 @@ class SeasonProgressMDI(QWidget):
         # ❌ 已禁用彈窗：僅保留方法以維持相容性
         # parent = self.progress_widget if hasattr(self, 'progress_widget') else None
         # QMessageBox.critical(parent, title, message)
-        print(f"[SEASON_PROGRESS_MDI] ⚠️ 錯誤: {title} - {message}")
+        logger.warning("[SEASON_PROGRESS_MDI] 錯誤: %s - %s", title, message)
     
     def update_year(self, year: str):
         """
@@ -333,18 +361,19 @@ class SeasonProgressMDI(QWidget):
         Args:
             year: 新的年份 (例如: "2025")
         """
-        print(f"🔍 [SEASON_PROGRESS_MDI] update_year 被調用: {self.year} → {year}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] update_year 被調用: %s → %s", self.year, year)
         
         if str(year) == str(self.year):
-            print(f"[SEASON_PROGRESS_MDI] 年份相同，跳過更新")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[SEASON_PROGRESS_MDI] 年份相同，跳過更新")
             return
         
         # 更新年份
         self.year = str(year)
-        print(f"🔍 [SEASON_PROGRESS_MDI] 年份已更新為: {self.year}")
-        
-        # 重新載入數據
-        print(f"🔍 [SEASON_PROGRESS_MDI] 開始重新載入數據...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] 年份已更新為: %s", self.year)
+            logger.debug("[SEASON_PROGRESS_MDI] 開始重新載入數據...")
         self._start_load_analysis()
     
     def update_parameters(self, year: str = None, **kwargs):
@@ -355,7 +384,8 @@ class SeasonProgressMDI(QWidget):
             year: 年份
             **kwargs: 其他參數（忽略）
         """
-        print(f"🔍 [SEASON_PROGRESS_MDI] update_parameters 被調用: year={year}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_MDI] update_parameters 被調用: year=%s", year)
         
         if year is not None:
             self.update_year(year)

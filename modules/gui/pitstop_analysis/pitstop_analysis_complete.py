@@ -21,6 +21,11 @@ import pickle
 from datetime import datetime, timedelta
 from prettytable import PrettyTable
 import json
+import logging
+
+from core.logger import get_logger
+
+logger = get_logger("pitstop_analysis_complete", component="gui")
 
 # 確保能夠導入基礎模組
 # 確保可導入基礎模組
@@ -31,14 +36,14 @@ if str(ROOT_DIR) not in sys.path:
 try:
     from CLI_modules.cli.core.base import F1AnalysisBase
 except ImportError:
-    print("[ERROR] 無法導入基礎模組 F1AnalysisBase")
+    logger.error("[ERROR] 無法導入基礎模組 F1AnalysisBase")
     F1AnalysisBase = object
 
 # 導入 OpenF1 分析器 - 優先使用 OpenF1 API
 try:
     from CLI_modules.cli.core.openf1_data_analyzer import F1OpenDataAnalyzer
 except ImportError:
-    print("[WARNING] 無法導入 OpenF1 數據分析器，將只使用 FastF1 分析")
+    logger.warning("[WARNING] 無法導入 OpenF1 數據分析器，將只使用 FastF1 分析")
     F1OpenDataAnalyzer = None
 
 
@@ -72,7 +77,7 @@ def check_cache(cache_key):
             with open(cache_path, 'rb') as f:
                 return pickle.load(f)
         except Exception as e:
-            print(f"[WARNING] 緩存載入失敗: {e}")
+            logger.warning("[WARNING] 緩存載入失敗: %s", e)
             return None
     return None
 
@@ -87,13 +92,13 @@ def save_cache(data, cache_key):
         with open(cache_path, 'wb') as f:
             pickle.dump(data, f)
     except Exception as e:
-        print(f"[WARNING] 緩存保存失敗: {e}")
+        logger.warning("[WARNING] 緩存保存失敗: %s", e)
 
 
 def report_analysis_results(data, analysis_type="analysis"):
     """報告分析結果狀態"""
     if not data:
-        print(f"❌ {analysis_type}失敗：無可用數據")
+        logger.error("❌ %s失敗：無可用數據", analysis_type)
         return False
     
     # 正確計算進站分析的數據數量
@@ -108,19 +113,19 @@ def report_analysis_results(data, analysis_type="analysis"):
     elif isinstance(data, list):
         data_count = len(data)
     
-    print(f"📊 {analysis_type}結果摘要：")
-    print(f"   • 數據項目數量: {data_count}")
-    print(f"   • 數據完整性: {'✅ 良好' if data_count > 0 else '❌ 不足'}")
+    logger.info("📊 %s結果摘要：", analysis_type)
+    logger.info("   • 數據項目數量: %s", data_count)
+    logger.info("   • 數據完整性: %s", '✅ 良好' if data_count > 0 else '❌ 不足')
     
     # 顯示進站分析特有信息
     if isinstance(data, dict) and 'pitstop_summary' in data:
         drivers_count = data['pitstop_summary'].get('drivers_with_pitstops', 0)
         avg_time = data['pitstop_summary'].get('average_pitstop_time', 0)
-        print(f"   • 參與進站車手數: {drivers_count}")
+        logger.info("   • 參與進站車手數: %s", drivers_count)
         if avg_time > 0:
-            print(f"   • 平均進站時間: {avg_time:.1f}秒")
+            logger.info("   • 平均進站時間: %.1f秒", avg_time)
     
-    print(f"✅ {analysis_type}分析完成！")
+    logger.info("✅ %s分析完成！", analysis_type)
     return True
 
 
@@ -139,10 +144,10 @@ class F1PitstopAnalyzer(F1AnalysisBase):
         
     def run_analysis(self, f1_analysis_instance=None):
         """執行進站策略分析"""
-        print(f"\n⏱️ 執行進站策略分析...")
+        logger.info("⏱️ 執行進站策略分析...")
         
         if not self.data_loader or not self.data_loader.session_loaded:
-            print("[ERROR] 數據載入器未初始化或未載入賽事數據")
+            logger.error("[ERROR] 數據載入器未初始化或未載入賽事數據")
             return False
             
         try:
@@ -150,24 +155,24 @@ class F1PitstopAnalyzer(F1AnalysisBase):
             data = self.data_loader.get_loaded_data()
             metadata = data.get('metadata', {})
             
-            print(f"[CONFIG] 分析 {metadata.get('year', 'Unknown')} {metadata.get('race_name', 'Unknown')} 進站資料...")
+            logger.info("[CONFIG] 分析 %s %s 進站資料...", metadata.get('year', 'Unknown'), metadata.get('race_name', 'Unknown'))
             
             # 嘗試使用 OpenF1 API 分析
             if self._try_openf1_analysis(metadata):
-                print("[SUCCESS] OpenF1 進站分析完成！")
+                logger.info("[SUCCESS] OpenF1 進站分析完成！")
                 return True
             else:
-                print("🔄 切換到 FastF1 資料分析...")
+                logger.info("🔄 切換到 FastF1 資料分析...")
                 return self._run_fastf1_analysis(data)
                 
         except Exception as e:
-            print(f"[ERROR] 進站分析執行失敗: {e}")
+            logger.exception("[ERROR] 進站分析執行失敗: %s", e)
             return False
     
     def _try_openf1_analysis(self, metadata):
         """嘗試使用 OpenF1 API 進行分析"""
         if F1OpenDataAnalyzer is None:
-            print("[ERROR] OpenF1 數據分析器未可用")
+            logger.error("[ERROR] OpenF1 數據分析器未可用")
             return False
             
         try:
@@ -180,20 +185,20 @@ class F1PitstopAnalyzer(F1AnalysisBase):
             )
             
             if not race_session:
-                print("[ERROR] 無法找到對應的比賽會話")
+                logger.error("[ERROR] 無法找到對應的比賽會話")
                 return False
             
             session_key = race_session.get('session_key')
             if not session_key:
-                print("[ERROR] 無法獲取會話金鑰")
+                logger.error("[ERROR] 無法獲取會話金鑰")
                 return False
             
             # 獲取 OpenF1 進站數據
-            print(f"📡 從 OpenF1 API 獲取進站數據 (session_key: {session_key})...")
+            logger.info("📡 從 OpenF1 API 獲取進站數據 (session_key: %s)...", session_key)
             enhanced_pitstops = openf1_analyzer.get_enhanced_pit_stops(session_key)
             
             if not enhanced_pitstops:
-                print("[ERROR] OpenF1 API 未返回進站數據")
+                logger.error("[ERROR] OpenF1 API 未返回進站數據")
                 return False
             
             # 分析 OpenF1 進站數據
@@ -204,21 +209,21 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 enhanced_pitstops, metadata.get('year'), metadata.get('race_name')
             )
             if cache_file:
-                print(f"[SUCCESS] 進站數據已快取到: {cache_file}")
+                logger.info("[SUCCESS] 進站數據已快取到: %s", cache_file)
             
             return True
             
         except Exception as e:
-            print(f"[ERROR] OpenF1 進站分析失敗: {e}")
+            logger.exception("[ERROR] OpenF1 進站分析失敗: %s", e)
             return False
     
     def _analyze_openf1_pitstops(self, enhanced_pitstops):
         """分析 OpenF1 進站數據"""
-        print(f"\n[INFO] OpenF1 進站數據分析結果")
-        print("=" * 80)
+        logger.info("[INFO] OpenF1 進站數據分析結果")
+        logger.info("=" * 80)
         
         if not enhanced_pitstops:
-            print("[ERROR] 沒有進站數據可供分析")
+            logger.error("[ERROR] 沒有進站數據可供分析")
             return
         
         # 處理進站時間數據
@@ -239,7 +244,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 continue
         
         if not valid_pitstops:
-            print("[ERROR] 沒有有效的進站時間數據")
+            logger.error("[ERROR] 沒有有效的進站時間數據")
             return
         
         self.pitstops_data = valid_pitstops
@@ -268,11 +273,11 @@ class F1PitstopAnalyzer(F1AnalysisBase):
         # 按最快時間排序
         sorted_drivers = sorted(driver_best_times.values(), key=lambda x: x['pit_duration'])
         
-        print(f"[STATS] 總計有進站記錄的車手: {len(sorted_drivers)}")
-        print(f"⚡ 全場最快進站: {sorted_drivers[0]['pit_duration']:.1f}秒 ({sorted_drivers[0]['driver_acronym']})")
-        print(f"🐌 全場最慢進站: {sorted_drivers[-1]['pit_duration']:.1f}秒 ({sorted_drivers[-1]['driver_acronym']})")
+        logger.info("[STATS] 總計有進站記錄的車手: %s", len(sorted_drivers))
+        logger.info("⚡ 全場最快進站: %.1f秒 (%s)", sorted_drivers[0]['pit_duration'], sorted_drivers[0]['driver_acronym'])
+        logger.info("🐌 全場最慢進站: %.1f秒 (%s)", sorted_drivers[-1]['pit_duration'], sorted_drivers[-1]['driver_acronym'])
         
-        print(f"\n🏆 車手最快進站時間排行榜:")
+        logger.info("🏆 車手最快進站時間排行榜:")
         time_table = PrettyTable()
         time_table.field_names = ["排名", "車手", "車隊", "最快進站時間", "圈數"]
         time_table.align = "l"
@@ -286,7 +291,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 driver_data['lap_number']
             ])
         
-        print(time_table)
+        logger.info("\n%s", time_table)
     
     def _display_team_pitstop_rankings(self, valid_pitstops):
         """顯示車隊進站時間排行榜"""
@@ -309,7 +314,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
         
         team_rankings.sort(key=lambda x: x['fastest_time'])
         
-        print(f"\n[FINISH] 車隊進站時間排行榜:")
+        logger.info("[FINISH] 車隊進站時間排行榜:")
         team_table = PrettyTable()
         team_table.field_names = ["排名", "車隊", "最快時間", "進站次數"]
         team_table.align = "l"
@@ -322,11 +327,11 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 team_data['total_stops']
             ])
         
-        print(team_table)
+        logger.info("\n%s", team_table)
     
     def _display_pitstop_strategy_analysis(self, valid_pitstops):
         """顯示進站策略分析"""
-        print(f"\n[INFO] 進站策略分析:")
+        logger.info("[INFO] 進站策略分析:")
         
         # 整理每位車手的所有進站記錄
         driver_pitstop_records = {}
@@ -383,17 +388,17 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 time_range
             ])
         
-        print(strategy_table)
+        logger.info("\n%s", strategy_table)
     
     def _display_pitstop_time_distribution(self, valid_pitstops):
         """顯示進站時間分佈分析"""
-        print(f"\n⏱️ 進站時間分佈分析:")
+        logger.info("⏱️ 進站時間分佈分析:")
         
         # 計算所有進站時間的中位數
         all_pit_times = [stop['pit_duration'] for stop in valid_pitstops]
         median_time = sorted(all_pit_times)[len(all_pit_times) // 2]
         
-        print(f"[INFO] 本場比賽進站時間中位數: {median_time:.2f}秒")
+        logger.info("[INFO] 本場比賽進站時間中位數: %.2f秒", median_time)
         
         # 基於中位數劃分時間範圍
         time_ranges = [
@@ -432,16 +437,16 @@ class F1PitstopAnalyzer(F1AnalysisBase):
             else:
                 distribution_table.add_row([range_name, 0, "0.0%", "無"])
         
-        print(distribution_table)
+        logger.info("\n%s", distribution_table)
     
     def _run_fastf1_analysis(self, data):
         """使用 FastF1 數據進行進站分析"""
-        print(f"🔄 執行 FastF1 進站分析...")
+        logger.info("🔄 執行 FastF1 進站分析...")
         
         try:
             laps = data.get('laps')
             if laps is None or laps.empty:
-                print("[ERROR] 沒有圈速數據")
+                logger.error("[ERROR] 沒有圈速數據")
                 return False
             
             # 分析進站資料
@@ -471,7 +476,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                     drivers_pitstops[driver].append(pitstop_info)
             
             if not pitstops:
-                print("[ERROR] 沒有找到有效的進站資料")
+                logger.error("[ERROR] 沒有找到有效的進站資料")
                 return False
             
             self.pitstops_data = pitstops
@@ -487,7 +492,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
             return True
             
         except Exception as e:
-            print(f"[ERROR] FastF1 進站分析失敗: {e}")
+            logger.exception("[ERROR] FastF1 進站分析失敗: %s", e)
             return False
     
     def _display_fastf1_pitstop_rankings(self, pitstops):
@@ -495,7 +500,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
         # 按進站時間排序
         pitstops.sort(key=lambda x: x['pit_time'])
         
-        print(f"\n🏆 所有車手進站時間排行榜:")
+        logger.info("🏆 所有車手進站時間排行榜:")
         time_table = PrettyTable()
         time_table.field_names = ["排名", "車手", "進站時間", "圈數", "輪胎"]
         time_table.align = "l"
@@ -509,17 +514,17 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 str(ps['compound_before'])[:8]
             ])
         
-        print(time_table)
+        logger.info("\n%s", time_table)
     
     def _display_fastf1_driver_details(self, drivers_pitstops):
         """顯示車手進站詳細統計"""
-        print(f"\n👤 車手進站詳細統計:")
+        logger.info("👤 車手進站詳細統計:")
         
         for driver in sorted(drivers_pitstops.keys()):
             stops = drivers_pitstops[driver]
             stops.sort(key=lambda x: x['pit_time'])  # 按時間排序
             
-            print(f"\n🏎️ {driver}:")
+            logger.info("🏎️ %s:", driver)
             driver_table = PrettyTable()
             driver_table.field_names = ["進站順序", "進站時間", "圈數", "輪胎", "胎齡"]
             driver_table.align = "l"
@@ -533,11 +538,11 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                     stop['tyre_life'] if stop['tyre_life'] else 'N/A'
                 ])
             
-            print(driver_table)
+            logger.info("\n%s", driver_table)
     
     def _display_fastf1_strategy_analysis(self, drivers_pitstops):
         """顯示 FastF1 進站策略分析"""
-        print(f"\n[INFO] 進站策略分析:")
+        logger.info("[INFO] 進站策略分析:")
         
         strategy_stats = {}
         for driver, stops in drivers_pitstops.items():
@@ -577,11 +582,11 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 time_range
             ])
         
-        print(strategy_table)
+        logger.info("\n%s", strategy_table)
     
     def _display_fastf1_time_distribution(self, pitstops):
         """顯示 FastF1 進站時間分佈分析"""
-        print(f"\n⏱️ 進站時間分佈分析:")
+        logger.info("⏱️ 進站時間分佈分析:")
         
         time_ranges = [
             (0, 3.0, "超快 (≤3.0s)"),
@@ -619,11 +624,11 @@ class F1PitstopAnalyzer(F1AnalysisBase):
                 fastest_info
             ])
         
-        print(distribution_table)
+        logger.info("\n%s", distribution_table)
     
     def _display_fastf1_summary(self, pitstops):
         """顯示 FastF1 分析總覽"""
-        print(f"\n[STATS] 進站分析總覽:")
+        logger.info("[STATS] 進站分析總覽:")
         summary_table = PrettyTable()
         summary_table.field_names = ["統計項目", "數值"]
         summary_table.align = "l"
@@ -637,7 +642,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
         summary_table.add_row(["最快進站時間", f"{min_time:.1f}s"])
         summary_table.add_row(["最慢進站時間", f"{max_time:.1f}s"])
         
-        print(summary_table)
+        logger.info("\n%s", summary_table)
     
     def get_analysis_summary(self):
         """獲取分析摘要 - 返回結構化數據"""
@@ -701,7 +706,7 @@ class F1PitstopAnalyzer(F1AnalysisBase):
 
 def run_pitstop_analysis(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None):
     """執行進站策略分析 - 模組入口函數"""
-    print(f"\n⏱️ 執行進站策略分析模組...")
+    logger.info("⏱️ 執行進站策略分析模組...")
     
     try:
         # 創建進站分析器
@@ -711,24 +716,22 @@ def run_pitstop_analysis(data_loader, dynamic_team_mapping=None, f1_analysis_ins
         success = analyzer.run_analysis(f1_analysis_instance)
         
         if success:
-            print(f"[SUCCESS] 進站策略分析完成")
+            logger.info("[SUCCESS] 進站策略分析完成")
             return True
         else:
-            print(f"[ERROR] 進站策略分析失敗")
+            logger.error("[ERROR] 進站策略分析失敗")
             return False
             
     except Exception as e:
-        print(f"[ERROR] 進站策略分析模組執行錯誤: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.exception("[ERROR] 進站策略分析模組執行錯誤: %s", e)
         return False
 
 
 def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False):
     """執行進站策略分析並返回JSON格式結果 - API專用，優先使用 OpenF1 API"""
-    print("🚀 開始執行進站策略分析...")
+    logger.info("🚀 開始執行進站策略分析...")
     if enable_debug:
-        print(f"⏱️ 執行進站策略分析模組 (JSON輸出版)...")
+        logger.info("⏱️ 執行進站策略分析模組 (JSON輸出版)...")
     
     try:
         # 獲取基本賽事資訊
@@ -748,10 +751,10 @@ def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysi
         cached_data = check_cache(cache_key) if cache_key else None
         
         if cached_data:
-            print("📦 使用緩存數據")
+            logger.info("📦 使用緩存數據")
             pitstop_data = cached_data
         else:
-            print("🔄 重新計算 - 開始數據分析...")
+            logger.info("🔄 重新計算 - 開始數據分析...")
             
             # 創建進站分析器
             analyzer = F1PitstopAnalyzer(data_loader)
@@ -763,7 +766,7 @@ def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysi
             if pitstop_data and cache_key:
                 # 保存緩存
                 save_cache(pitstop_data, cache_key)
-                print("💾 分析結果已緩存")
+                logger.info("💾 分析結果已緩存")
         
         # 結果驗證和反饋
         if not report_analysis_results(pitstop_data, "進站策略分析"):
@@ -799,7 +802,7 @@ def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysi
             }
             
             if enable_debug:
-                print(f"[SUCCESS] 進站策略分析完成 (JSON)")
+                logger.info("[SUCCESS] 進站策略分析完成 (JSON)")
             return result
         else:
             return {
@@ -811,9 +814,7 @@ def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysi
             
     except Exception as e:
         if enable_debug:
-            print(f"[ERROR] 進站策略分析模組執行錯誤: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[ERROR] 進站策略分析模組執行錯誤: %s", e)
         return {
             "success": False,
             "message": f"進站策略分析執行錯誤: {str(e)}",
@@ -825,8 +826,8 @@ def run_pitstop_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysi
 # 測試用主函數
 def main():
     """測試用主函數"""
-    print("F1 進站策略分析模組 - 獨立測試")
-    print("需要數據載入器才能運行完整測試")
+    logger.info("F1 進站策略分析模組 - 獨立測試")
+    logger.info("需要數據載入器才能運行完整測試")
 
 if __name__ == "__main__":
     main()

@@ -29,9 +29,14 @@ try:
     WEBENGINE_AVAILABLE = True
 except ImportError:
     WEBENGINE_AVAILABLE = False
-    print("[F1TV_WEB_AUTH] PyQtWebEngine not available")
+    from core.logger import get_logger
+    logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
+    logger.warning("PyQtWebEngine not available")
 
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
 
 
 # F1TV 登入相關 URL
@@ -157,7 +162,7 @@ class F1TVWebAuthDialog(QDialog):
         # 設置 cookie 過濾器來記錄所有 cookie 活動
         def cookie_filter(request):
             origin = request.origin.toString() if request.origin else "unknown"
-            print(f"[F1TV_WEB_AUTH] Cookie request from: {origin}")
+            logger.debug("Cookie request from: %s", origin)
             return True  # 允許所有 cookies
         cookie_store.setCookieFilter(cookie_filter)
     
@@ -172,8 +177,8 @@ class F1TVWebAuthDialog(QDialog):
         self.status_label.setText(tr('f1tv_loading', 'Loading...'))
         
         # Off-the-record profile 每次都是乾淨的，不需要清除 cookies
-        print("[F1TV_WEB_AUTH] Starting login flow...")
-        print(f"[F1TV_WEB_AUTH] Loading URL: {F1_LOGIN_URL}")
+        logger.info("Starting login flow...")
+        logger.debug("Loading URL: %s", F1_LOGIN_URL)
         
         # 載入 F1 登入頁面
         self.web_view.load(QUrl(F1_LOGIN_URL))
@@ -207,7 +212,7 @@ class F1TVWebAuthDialog(QDialog):
     def _on_url_changed(self, url: QUrl):
         """URL 變更"""
         url_str = url.toString()
-        print(f"[F1TV_WEB_AUTH] URL changed: {url_str}")
+        logger.debug("URL changed: %s", url_str)
         self.status_label.setText(self._get_url_display(url_str))
         
         # 檢測登入成功的跳轉
@@ -232,20 +237,20 @@ class F1TVWebAuthDialog(QDialog):
             domain = cookie.domain()  # 已經是 str
             
             # 記錄所有 cookie 活動 (幫助偵錯)
-            print(f"[F1TV_WEB_AUTH] Cookie added: {name} (domain: {domain})")
+            logger.debug("Cookie added: %s (domain: %s)", name, domain)
             
             # 檢查是否是 loginSession cookie
             if name == 'loginSession':
-                print(f"[F1TV_WEB_AUTH] >>> loginSession cookie detected! <<<")
+                logger.info("loginSession cookie detected")
                 value_raw = cookie.value()
                 if hasattr(value_raw, 'data'):
                     value = bytes(value_raw.data()).decode('utf-8', errors='ignore')
                 else:
                     value = str(value_raw)
-                print(f"[F1TV_WEB_AUTH] Cookie value length: {len(value)}")
+                logger.debug("Cookie value length: %s", len(value))
                 self._extract_token_from_cookie(value)
         except Exception as e:
-            print(f"[F1TV_WEB_AUTH] Error processing cookie: {e}")
+            logger.error("Error processing cookie: %s", e)
     
     def _check_login_cookie(self):
         """檢查登入 cookie"""
@@ -274,7 +279,7 @@ class F1TVWebAuthDialog(QDialog):
         self._checking_cookie = False
         
         if result and not self._token:
-            print(f"[F1TV_WEB_AUTH] Found loginSession via JS (length: {len(result)})")
+            logger.info("Found loginSession via JS (length: %s)", len(result))
             self._extract_token_from_cookie(result)
     
     def _extract_token_from_cookie(self, cookie_value: str):
@@ -293,19 +298,19 @@ class F1TVWebAuthDialog(QDialog):
             token = data.get('data', {}).get('subscriptionToken')
             
             if token:
-                print(f"[F1TV_WEB_AUTH] Token extracted successfully (length: {len(token)})")
+                logger.info("Token extracted successfully (length: %s)", len(token))
                 self._token = token
                 self._on_login_success()
             else:
-                print("[F1TV_WEB_AUTH] No subscriptionToken in cookie data")
-                print(f"[F1TV_WEB_AUTH] Cookie keys: {list(data.keys())}")
+                logger.warning("No subscriptionToken in cookie data")
+                logger.debug("Cookie keys: %s", list(data.keys()))
                 if 'data' in data:
-                    print(f"[F1TV_WEB_AUTH] Data keys: {list(data.get('data', {}).keys())}")
+                    logger.debug("Data keys: %s", list(data.get('data', {}).keys()))
                     
         except json.JSONDecodeError as e:
-            print(f"[F1TV_WEB_AUTH] Failed to parse cookie JSON: {e}")
+            logger.error("Failed to parse cookie JSON: %s", e)
         except Exception as e:
-            print(f"[F1TV_WEB_AUTH] Error extracting token: {e}")
+            logger.error("Error extracting token: %s", e)
     
     def _on_login_success(self):
         """登入成功"""
@@ -364,14 +369,14 @@ def test_f1tv_web_auth():
     dialog = F1TVWebAuthDialog()
     
     def on_success(token):
-        print(f"[TEST] Login success! Token length: {len(token)}")
-        print(f"[TEST] Token preview: {token[:50]}...")
+        logger.info("[TEST] Login success! Token length: %s", len(token))
+        logger.debug("[TEST] Token preview: %s...", token[:50])
     
     def on_failed(error):
-        print(f"[TEST] Login failed: {error}")
+        logger.error("[TEST] Login failed: %s", error)
     
     def on_cancelled():
-        print("[TEST] Login cancelled")
+        logger.info("[TEST] Login cancelled")
     
     dialog.auth_success.connect(on_success)
     dialog.auth_failed.connect(on_failed)

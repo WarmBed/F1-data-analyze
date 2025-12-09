@@ -18,6 +18,9 @@ from PyQt5.QtGui import QPainter, QColor, QPen, QFont
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("live_timing.tyre_strategy", component="gui")
 
 # 嘗試導入通用顏色系統
 try:
@@ -25,7 +28,7 @@ try:
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     COLOR_PALETTE_AVAILABLE = False
-    print("[TYRE_STRATEGY] color_palette_provider not available")
+    logger.warning("[TYRE_STRATEGY] color_palette_provider not available")
 
 
 # 輪胎顏色常量
@@ -83,7 +86,7 @@ class TyreStrategyChartWidget(QWidget):
         
         self.setMinimumSize(400, 300)
         
-        print("[TYRE_STRATEGY] TyreStrategyChartWidget initialized")
+        logger.info("[TYRE_STRATEGY] TyreStrategyChartWidget initialized")
     
     def set_data(self, driver_stints: Dict[str, List[Dict]], 
                  driver_info: Dict[str, Dict],
@@ -307,7 +310,7 @@ class LiveTimingTyreStrategy(BaseLiveTimingMDI):
         self._total_laps = 53
         self._driver_info: Dict[str, Dict] = {}  # 車手資訊
         
-        print("[TYRE_STRATEGY_MDI] LiveTimingTyreStrategy initialized")
+        logger.info("[TYRE_STRATEGY_MDI] LiveTimingTyreStrategy initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -325,11 +328,11 @@ class LiveTimingTyreStrategy(BaseLiveTimingMDI):
         
         self.strategy_widget.set_total_laps(self._total_laps)
         
-        print(f"[TYRE_STRATEGY_MDI] Race loaded: {year} {race_key}, total laps: {self._total_laps}")
+        logger.info("[TYRE_STRATEGY_MDI] Race loaded: %s %s, total laps: %s", year, race_key, self._total_laps)
     
     def _on_race_unloaded(self):
         """Race unloaded"""
-        print("[TYRE_STRATEGY_MDI] Race unloaded")
+        logger.info("[TYRE_STRATEGY_MDI] Race unloaded")
         self._driver_info = {}
         self.strategy_widget._driver_stints = {}
         self.strategy_widget._driver_positions = {}

@@ -19,12 +19,16 @@ from pathlib import Path
 from typing import Optional, Callable
 from datetime import datetime
 
+from core.logger import get_logger
+
 # F1TV 登入相關 URL
 F1_LOGIN_URL = "https://account.formula1.com/#/en/login?redirect=https%3A%2F%2Ff1tv.formula1.com%2F"
 F1TV_URL = "https://f1tv.formula1.com"
 
 # Token 存儲路徑
 AUTH_DATA_FILE = Path.home() / ".f1t" / "f1auth.json"
+
+logger = get_logger("live_timing.f1tv_webview_auth", component="gui")
 
 
 class F1TVWebViewAuth:
@@ -73,7 +77,7 @@ class F1TVWebViewAuth:
         try:
             import webview
             
-            print("[F1TV_WEBVIEW] Starting Edge WebView2 authentication...")
+            logger.info("Starting Edge WebView2 authentication...")
             
             # 創建 webview 視窗
             self._window = webview.create_window(
@@ -97,7 +101,7 @@ class F1TVWebViewAuth:
                 debug=False
             )
             
-            print("[F1TV_WEBVIEW] WebView window closed")
+            logger.info("WebView window closed")
             
             # 視窗關閉後，如果沒有獲取到 token，視為取消
             if not self._token:
@@ -106,12 +110,12 @@ class F1TVWebViewAuth:
                     
         except ImportError as e:
             error_msg = f"pywebview not installed: {e}"
-            print(f"[F1TV_WEBVIEW] Error: {error_msg}")
+            logger.error("Error: %s", error_msg)
             if self._failed_callback:
                 self._failed_callback(error_msg)
         except Exception as e:
             error_msg = f"WebView error: {e}"
-            print(f"[F1TV_WEBVIEW] Error: {error_msg}")
+            logger.error("Error: %s", error_msg)
             if self._failed_callback:
                 self._failed_callback(error_msg)
     
@@ -120,13 +124,13 @@ class F1TVWebViewAuth:
         import time
         
         self._checking = True
-        print("[F1TV_WEBVIEW] Starting cookie check loop...")
+        logger.debug("Starting cookie check loop...")
         
         while self._checking and self._window:
             try:
                 self._check_cookies()
                 if self._token:
-                    print("[F1TV_WEBVIEW] Token obtained, closing window...")
+                    logger.info("Token obtained, closing window...")
                     self._checking = False
                     # 延遲關閉以顯示成功訊息
                     time.sleep(1)
@@ -135,23 +139,23 @@ class F1TVWebViewAuth:
                     break
                 time.sleep(self._check_interval_ms / 1000)
             except Exception as e:
-                print(f"[F1TV_WEBVIEW] Cookie check error: {e}")
+                logger.error("Cookie check error: %s", e)
                 time.sleep(self._check_interval_ms / 1000)
     
     def _on_page_loaded(self):
         """頁面載入完成"""
         if self._window:
             url = self._window.get_current_url()
-            print(f"[F1TV_WEBVIEW] Page loaded: {url}")
+            logger.debug("Page loaded: %s", url)
             
             # 如果跳轉到 F1TV 首頁，表示登入成功
             if 'f1tv.formula1.com' in url and 'login' not in url.lower():
-                print("[F1TV_WEBVIEW] Redirected to F1TV, checking cookies...")
+                logger.debug("Redirected to F1TV, checking cookies...")
                 self._check_cookies()
     
     def _on_window_closing(self):
         """視窗正在關閉"""
-        print("[F1TV_WEBVIEW] Window closing...")
+        logger.debug("Window closing...")
         self._checking = False
     
     def _check_cookies(self):
@@ -188,11 +192,11 @@ class F1TVWebViewAuth:
                 login_session_key = 'login-session'
                 if login_session_key in cookies:
                     login_session = cookies[login_session_key]
-                    print(f"[F1TV_WEBVIEW] Found {login_session_key} cookie (length: {len(login_session)})")
+                    logger.info("Found %s cookie (length: %s)", login_session_key, len(login_session))
                     self._extract_token(login_session)
                     
         except Exception as e:
-            print(f"[F1TV_WEBVIEW] Error checking cookies: {e}")
+            logger.error("Error checking cookies: %s", e)
     
     def _extract_token(self, cookie_value: str):
         """從 loginSession cookie 中提取 subscriptionToken"""
@@ -207,7 +211,7 @@ class F1TVWebViewAuth:
             token = data.get('data', {}).get('subscriptionToken')
             
             if token:
-                print(f"[F1TV_WEBVIEW] Extracted subscriptionToken (length: {len(token)})")
+                logger.info("Extracted subscriptionToken (length: %s)", len(token))
                 self._token = token
                 
                 # 儲存 token
@@ -217,15 +221,15 @@ class F1TVWebViewAuth:
                 if self._success_callback:
                     self._success_callback(token)
             else:
-                print("[F1TV_WEBVIEW] No subscriptionToken in cookie data")
-                print(f"[F1TV_WEBVIEW] Cookie keys: {list(data.keys())}")
+                logger.warning("No subscriptionToken in cookie data")
+                logger.debug("Cookie keys: %s", list(data.keys()))
                 if 'data' in data:
-                    print(f"[F1TV_WEBVIEW] Data keys: {list(data.get('data', {}).keys())}")
+                    logger.debug("Data keys: %s", list(data.get('data', {}).keys()))
                     
         except json.JSONDecodeError as e:
-            print(f"[F1TV_WEBVIEW] Failed to parse cookie JSON: {e}")
+            logger.error("Failed to parse cookie JSON: %s", e)
         except Exception as e:
-            print(f"[F1TV_WEBVIEW] Error extracting token: {e}")
+            logger.error("Error extracting token: %s", e)
     
     def _save_token(self, token: str):
         """儲存 token 到檔案"""
@@ -241,10 +245,10 @@ class F1TVWebViewAuth:
             with open(AUTH_DATA_FILE, 'w', encoding='utf-8') as f:
                 json.dump(data, f, indent=2)
             
-            print(f"[F1TV_WEBVIEW] Token saved to {AUTH_DATA_FILE}")
+            logger.info("Token saved to %s", AUTH_DATA_FILE)
             
         except Exception as e:
-            print(f"[F1TV_WEBVIEW] Failed to save token: {e}")
+            logger.error("Failed to save token: %s", e)
     
     def get_token(self) -> Optional[str]:
         """獲取已存儲的 token"""
@@ -269,11 +273,11 @@ class F1TVWebViewAuth:
             if token and F1TVWebViewAuth.verify_token(token):
                 return token
             else:
-                print("[F1TV_WEBVIEW] Saved token is expired or invalid")
+                logger.warning("Saved token is expired or invalid")
                 return None
                 
         except Exception as e:
-            print(f"[F1TV_WEBVIEW] Failed to load saved token: {e}")
+            logger.error("Failed to load saved token: %s", e)
             return None
     
     @staticmethod
@@ -290,14 +294,14 @@ class F1TVWebViewAuth:
             
             if is_valid:
                 exp_time = datetime.fromtimestamp(exp)
-                print(f"[F1TV_WEBVIEW] Token valid until: {exp_time}")
+                logger.info("Token valid until: %s", exp_time)
             else:
-                print("[F1TV_WEBVIEW] Token has expired")
+                logger.warning("Token has expired")
             
             return is_valid
             
         except Exception as e:
-            print(f"[F1TV_WEBVIEW] Token verification error: {e}")
+            logger.error("Token verification error: %s", e)
             return False
     
     @staticmethod
@@ -305,7 +309,7 @@ class F1TVWebViewAuth:
         """清除已存儲的 token"""
         if AUTH_DATA_FILE.exists():
             AUTH_DATA_FILE.unlink()
-            print("[F1TV_WEBVIEW] Saved token cleared")
+            logger.info("Saved token cleared")
     
     @staticmethod
     def get_token_info(token: str) -> dict:
@@ -336,9 +340,9 @@ def test_webview_auth():
     """測試 WebView2 認證"""
     import webview
     
-    print("=" * 60)
-    print("F1TV WebView2 Authentication Test")
-    print("=" * 60)
+    logger.info("%s", "=" * 60)
+    logger.info("F1TV WebView2 Authentication Test")
+    logger.info("%s", "=" * 60)
     
     token_result = {'token': None}
     
@@ -346,12 +350,12 @@ def test_webview_auth():
         """定期檢查 cookies"""
         import time
         
-        print("[TEST] Starting cookie check loop...")
+        logger.info("[TEST] Starting cookie check loop...")
         
         while True:
             try:
                 url = window.get_current_url()
-                print(f"[TEST] Current URL: {url}")
+                logger.debug("[TEST] Current URL: %s", url)
                 
                 # 使用 JavaScript 獲取 cookies
                 js_code = """
@@ -375,13 +379,13 @@ def test_webview_auth():
                 
                 if result:
                     cookies = json.loads(result)
-                    print(f"[TEST] Cookies found: {list(cookies.keys())}")
+                    logger.debug("[TEST] Cookies found: %s", list(cookies.keys()))
                     
                     # 檢查 login-session (注意：有連字符，不是 loginSession)
                     login_session_key = 'login-session'
                     if login_session_key in cookies:
                         login_session = cookies[login_session_key]
-                        print(f"[TEST] Found {login_session_key}! Length: {len(login_session)}")
+                        logger.info("[TEST] Found %s! Length: %s", login_session_key, len(login_session))
                         
                         # 解析 token
                         try:
@@ -390,7 +394,7 @@ def test_webview_auth():
                             token = data.get('data', {}).get('subscriptionToken')
                             
                             if token:
-                                print(f"[TEST] SUCCESS! Token extracted (length: {len(token)})")
+                                logger.info("[TEST] SUCCESS! Token extracted (length: %s)", len(token))
                                 token_result['token'] = token
                                 
                                 # 儲存 token
@@ -401,27 +405,27 @@ def test_webview_auth():
                                 }
                                 with open(AUTH_DATA_FILE, 'w', encoding='utf-8') as f:
                                     json.dump(save_data, f, indent=2)
-                                print(f"[TEST] Token saved to {AUTH_DATA_FILE}")
+                                logger.info("[TEST] Token saved to %s", AUTH_DATA_FILE)
                                 
                                 # 關閉視窗
                                 time.sleep(1)
                                 window.destroy()
                                 return
                             else:
-                                print(f"[TEST] No subscriptionToken in data. Keys: {list(data.keys())}")
+                                logger.warning("[TEST] No subscriptionToken in data. Keys: %s", list(data.keys()))
                                 if 'data' in data:
-                                    print(f"[TEST] data.data keys: {list(data.get('data', {}).keys())}")
+                                    logger.debug("[TEST] data.data keys: %s", list(data.get('data', {}).keys()))
                         except Exception as e:
-                            print(f"[TEST] Error parsing token: {e}")
+                            logger.error("[TEST] Error parsing token: %s", e)
                 
                 time.sleep(2)
                 
             except Exception as e:
-                print(f"[TEST] Check error: {e}")
+                logger.error("[TEST] Check error: %s", e)
                 time.sleep(2)
     
-    print("\nStarting authentication...")
-    print("A browser window will open. Please login with your F1TV account.\n")
+    logger.info("Starting authentication...")
+    logger.info("A browser window will open. Please login with your F1TV account.")
     
     # 創建 webview 視窗
     window = webview.create_window(
@@ -436,13 +440,13 @@ def test_webview_auth():
     # 啟動 webview（在主執行緒）
     webview.start(check_cookies, window, private_mode=False, debug=False)
     
-    print("\n" + "=" * 60)
+    logger.info("%s", "=" * 60)
     if token_result['token']:
-        print("Authentication successful!")
-        print(f"Token: {token_result['token'][:50]}...")
+        logger.info("Authentication successful!")
+        logger.debug("Token: %s...", token_result['token'][:50])
     else:
-        print("Authentication cancelled or failed")
-    print("=" * 60)
+        logger.warning("Authentication cancelled or failed")
+    logger.info("%s", "=" * 60)
 
 
 if __name__ == '__main__':
