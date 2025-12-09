@@ -16,6 +16,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
+from core.logger import get_logger
+
+
+logger = get_logger(__name__)
+
 
 class ElevationChartWidget(QWidget):
     """
@@ -73,7 +78,7 @@ class ElevationChartWidget(QWidget):
             official_corners: 官方彎道數據（可選）
         """
         if not track_outline:
-            print("[ELEVATION_CHART] ⚠️ 無高程數據")
+            logger.warning("[ELEVATION_CHART] 無高程數據")
             self._init_empty_chart()
             return
         
@@ -94,7 +99,7 @@ class ElevationChartWidget(QWidget):
                 elevations.append(elev)
         
         if not distances or not elevations:
-            print("[ELEVATION_CHART] ⚠️ 無有效高程數據")
+            logger.warning("[ELEVATION_CHART] 無有效高程數據")
             self._init_empty_chart()
             return
         
@@ -103,11 +108,22 @@ class ElevationChartWidget(QWidget):
         elevations_relative = [e - min_elevation for e in elevations]
         max_relative = max(elevations_relative)
         
-        print(f"[ELEVATION_CHART] 繪製高程: {len(distances)} 個數據點")
-        print(f"[ELEVATION_CHART]   距離範圍: {min(distances):.2f} ~ {max(distances):.2f} km")
-        print(f"[ELEVATION_CHART]   絕對高度: {min_elevation:.2f} ~ {max(elevations):.2f} m")
-        print(f"[ELEVATION_CHART]   相對高度: 0.00 ~ {max_relative:.2f} m (以最低點為基準)")
-        print(f"[ELEVATION_CHART]   ✅ FastF1 Z 軸已在 data_loader 中除以 10")
+        logger.debug("[ELEVATION_CHART] 繪製高程: %s 個數據點", len(distances))
+        logger.debug(
+            "[ELEVATION_CHART]   距離範圍: %.2f ~ %.2f km",
+            min(distances),
+            max(distances),
+        )
+        logger.debug(
+            "[ELEVATION_CHART]   絕對高度: %.2f ~ %.2f m",
+            min_elevation,
+            max(elevations),
+        )
+        logger.debug(
+            "[ELEVATION_CHART]   相對高度: 0.00 ~ %.2f m (以最低點為基準)",
+            max_relative,
+        )
+        logger.debug("[ELEVATION_CHART]   FastF1 Z 軸已在 data_loader 中除以 10")
         
         # 清空並重新繪製
         self.ax.clear()
@@ -143,7 +159,7 @@ class ElevationChartWidget(QWidget):
         # 更新畫布
         self.canvas.draw()
         
-        print(f"[ELEVATION_CHART] ✅ 高程圖繪製完成")
+        logger.info("[ELEVATION_CHART] 高程圖繪製完成")
     
     def _mark_corners(self, distances: List[float], elevations: List[float], 
                      elevations_relative: List[float], min_elevation: float):
@@ -202,7 +218,7 @@ class ElevationChartWidget(QWidget):
             corner_count += 1
         
         if corner_count > 0:
-            print(f"[ELEVATION_CHART] 已標註 {corner_count} 個彎道位置")
+            logger.debug("[ELEVATION_CHART] 已標註 %s 個彎道位置", corner_count)
     
     def clear_chart(self):
         """清空圖表"""

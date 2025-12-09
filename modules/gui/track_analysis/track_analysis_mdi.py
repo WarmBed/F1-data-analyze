@@ -18,6 +18,7 @@ Date: 2025-10-02
 Version: 1.0.0
 """
 
+import logging
 import sys
 import os
 import json
@@ -35,6 +36,10 @@ from PyQt5.QtGui import QFont
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
+from core.logger import get_logger
+
+# 初始化模組日誌記錄器
+logger = get_logger("track_analysis.mdi", component="gui")
 
 # 導入翻譯函數
 try:
@@ -58,7 +63,7 @@ try:
 except ImportError:
     TrackUniversalDataLoader = None
     TrackMapWidget = None
-    print("[ERROR] 無法導入 TrackUniversalDataLoader 或 TrackMapWidget")
+    logger.error("[ERROR] 無法導入 TrackUniversalDataLoader 或 TrackMapWidget")
 
 
 class TrackAnalysisApiWorker(QThread):
@@ -131,10 +136,7 @@ class TrackAnalysisApiWorker(QThread):
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
-            # 在背景線程中打印異常，但不影響主線程
-            import traceback
-            print(f"[TRACK_API_WORKER] ❌ 錯誤: {exc}")
-            traceback.print_exc()
+            logger.exception("[TRACK_API_WORKER] Error during API call")
             self.failure.emit(str(exc))
         finally:
             self.progress.emit(100)
@@ -184,8 +186,8 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
         )
         
-        print(f"[TRACK_DATA_MANAGER] 初始化完成，搜索目錄: {self.config.search_directories}")
-        print(f"[TRACK_DATA_MANAGER] 文件模式: {self.config.file_patterns}")
+        logger.info("[TRACK_DATA_MANAGER] 初始化完成，搜索目錄: %s", self.config.search_directories)
+        logger.info("[TRACK_DATA_MANAGER] 文件模式: %s", self.config.file_patterns)
     
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
@@ -553,7 +555,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             try:
                 worker.finished.connect(on_worker_stopped)
             except Exception as exc:
-                print(f"[TRACK_API_WORKER] ⚠️  無法連接 finished 信號: {exc}")
+                logger.warning("[TRACK_API_WORKER] 無法連接 finished 信號: %s", exc)
                 # 如果無法連接，直接清理
                 worker.deleteLater()
                 return
@@ -564,7 +566,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             def force_terminate():
                 w = worker_ref()
                 if w is not None and w.isRunning():
-                    print(f"[TRACK_API_WORKER] ⚠️  Worker 未在 200ms 內停止，強制終止")
+                    logger.warning("[TRACK_API_WORKER] Worker 未在 200ms 內停止，強制終止")
                     # ✅ 先斷開 finished 信號，避免重複清理
                     try:
                         w.finished.disconnect()
@@ -679,11 +681,12 @@ class TrackAnalysisDataManager(UniversalDataLoader):
                 self._debug(f"   - available: {available}")
                 self._debug(f"   - count: {corner_count}")
                 self._debug(f"   - corners 陣列長度: {len(corners_list)}")
-                print(f"[TRACK_ANALYSIS_MDI] ✅ process_loaded_data: 提取到 {corner_count} 個彎道")
+                logger.info("[TRACK_ANALYSIS_MDI] process_loaded_data: 提取到 %d 個彎道", corner_count)
             else:
                 self._debug("❌ 未找到 official_corners 欄位")
-                print(f"[TRACK_ANALYSIS_MDI] ❌ process_loaded_data: 未找到 official_corners")
-                print(f"[TRACK_ANALYSIS_MDI]    payload keys: {list(payload.keys())}")
+                logger.warning("[TRACK_ANALYSIS_MDI] process_loaded_data: 未找到 official_corners")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[TRACK_ANALYSIS_MDI] payload keys: %s", list(payload.keys()))
 
             metadata = payload.get("metadata") or {}
             if not metadata:
@@ -724,16 +727,18 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             
             # ✅ 調試：確認 processed_data 包含 official_corners
             if 'official_corners' in processed_data and processed_data['official_corners']:
-                print(f"[TRACK_ANALYSIS_MDI] ✅ processed_data 包含 official_corners: {processed_data['official_corners'].get('count', 0)} 個彎道")
+                logger.info(
+                    "[TRACK_ANALYSIS_MDI] processed_data 包含 official_corners: %d 個彎道",
+                    processed_data['official_corners'].get('count', 0)
+                )
             else:
-                print(f"[TRACK_ANALYSIS_MDI] ❌ processed_data 缺少 official_corners")
+                logger.warning("[TRACK_ANALYSIS_MDI] processed_data 缺少 official_corners")
             
             return processed_data
             
         except Exception as e:
             self._error(f"數據處理失敗: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[TRACK_ANALYSIS_MDI] 數據處理失敗")
             raise
 
 
@@ -932,12 +937,12 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
 
         # 檢查組件是否可用
         if TrackUniversalDataLoader is None or TrackMapWidget is None:
-            print("[ERROR] TrackAnalysisUniversal: 缺少必要組件")
+            logger.error("[ERROR] TrackAnalysisUniversal: 缺少必要組件")
 
         # 初始化模組（創建數據管理器、圖表組件等）
         self.initialize_module()
 
-        print(f"[TRACK_ANALYSIS_MDI] 初始化完成")
+        logger.info("[TRACK_ANALYSIS_MDI] 初始化完成")
 
         # 儲存初始參數以供後續使用，避免即時載入資料
         if year is not None:
@@ -969,7 +974,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             track_map.set_fixed_marker_visibility(getattr(self, "_fixed_marker_visible", True))
         if hasattr(track_map, "set_linkage_enabled"):
             track_map.set_linkage_enabled(getattr(self, "_linkage_enabled", True))
-        print("[TRACK_ANALYSIS_MDI] 創建 TrackMapWidget")
+        logger.info("[TRACK_ANALYSIS_MDI] 創建 TrackMapWidget")
         return track_map
     
     def create_control_widget(self) -> Optional[QWidget]:
@@ -994,7 +999,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         self._on_fixed_marker_visibility_changed(getattr(self, "_fixed_marker_visible", True))
         
         self.control_panel = control_panel
-        print("[TRACK_ANALYSIS_MDI] 創建控制面板")
+        logger.info("[TRACK_ANALYSIS_MDI] 創建控制面板")
         return control_panel
     
     def _connect_data_manager_signals(self):
@@ -1004,7 +1009,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             self.data_manager.load_error.connect(self.on_data_error)
             self.data_manager.status_changed.connect(self.on_status_changed)
             self.data_manager.load_progress.connect(self.on_load_progress)
-            print("[TRACK_ANALYSIS_MDI] 數據管理器信號連接完成")
+            logger.info("[TRACK_ANALYSIS_MDI] 數據管理器信號連接完成")
     
     def _connect_chart_widget_signals(self):
         """連接圖表組件信號 - UniversalAnalysisMDI 需要此方法"""
@@ -1058,7 +1063,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     
     def _update_status(self, status: str):
         """更新狀態 - UniversalAnalysisMDI 需要此方法"""
-        print(f"[TRACK_ANALYSIS_MDI] 狀態: {status}")
+        logger.info("[TRACK_ANALYSIS_MDI] 狀態: %s", status)
     
     def _register_to_analysis_manager(self):
         """註冊到分析管理器 - UniversalAnalysisMDI 需要此方法"""
@@ -1068,18 +1073,22 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     def on_data_loaded(self, data: Dict[str, Any]):
         """數據載入完成處理"""
         try:
-            print(f"[TRACK_ANALYSIS_MDI] ==================== on_data_loaded 開始 ====================")
-            print(f"[TRACK_ANALYSIS_MDI] data keys: {list(data.keys())}")
+            logger.info("[TRACK_ANALYSIS_MDI] on_data_loaded 開始")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[TRACK_ANALYSIS_MDI] data keys: %s", list(data.keys()))
             
             # ✅ 調試：檢查輸入 data 是否包含 official_corners
             if 'official_corners' in data:
                 corners = data['official_corners']
                 if corners:
-                    print(f"[TRACK_ANALYSIS_MDI] ✅ 輸入 data 包含 official_corners: {corners.get('count', 0)} 個彎道")
+                    logger.info(
+                        "[TRACK_ANALYSIS_MDI] 輸入 data 包含 official_corners: %d 個彎道",
+                        corners.get('count', 0)
+                    )
                 else:
-                    print(f"[TRACK_ANALYSIS_MDI] ⚠️  輸入 data 的 official_corners 為空")
+                    logger.warning("[TRACK_ANALYSIS_MDI] 輸入 data 的 official_corners 為空")
             else:
-                print(f"[TRACK_ANALYSIS_MDI] ❌ 輸入 data 缺少 official_corners 欄位")
+                logger.warning("[TRACK_ANALYSIS_MDI] 輸入 data 缺少 official_corners 欄位")
             
             # 更新圖表組件
             if self.chart_widget and isinstance(self.chart_widget, TrackMapWidget):
@@ -1099,26 +1108,36 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
                 }
                 
                 # ✅ 調試輸出 - 詳細檢查
-                print(f"[TRACK_ANALYSIS_MDI] ==================== 構建 track_data ====================")
-                print(f"[TRACK_ANALYSIS_MDI] track_data keys: {list(track_data.keys())}")
+                logger.info("[TRACK_ANALYSIS_MDI] 構建 track_data")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[TRACK_ANALYSIS_MDI] track_data keys: %s", list(track_data.keys()))
                 if official_corners:
-                    print(f"[TRACK_ANALYSIS_MDI] ✅ track_data 包含 official_corners:")
-                    print(f"[TRACK_ANALYSIS_MDI]    - available: {official_corners.get('available')}")
-                    print(f"[TRACK_ANALYSIS_MDI]    - count: {official_corners.get('count')}")
-                    print(f"[TRACK_ANALYSIS_MDI]    - corners 陣列長度: {len(official_corners.get('corners', []))}")
+                    logger.info("[TRACK_ANALYSIS_MDI] track_data 包含 official_corners")
+                    if logger.isEnabledFor(logging.DEBUG):
+                        logger.debug("[TRACK_ANALYSIS_MDI]    - available: %s", official_corners.get('available'))
+                        logger.debug("[TRACK_ANALYSIS_MDI]    - count: %s", official_corners.get('count'))
+                        logger.debug(
+                            "[TRACK_ANALYSIS_MDI]    - corners 陣列長度: %d",
+                            len(official_corners.get('corners', []))
+                        )
                     if official_corners.get('corners'):
                         first_corner = official_corners['corners'][0]
-                        print(f"[TRACK_ANALYSIS_MDI]    - 第一個彎道: {first_corner.get('number')}, X={first_corner.get('x'):.2f}, Y={first_corner.get('y'):.2f}")
+                        logger.debug(
+                            "[TRACK_ANALYSIS_MDI]    - 第一個彎道: %s, X=%.2f, Y=%.2f",
+                            first_corner.get('number'),
+                            first_corner.get('x'),
+                            first_corner.get('y')
+                        )
                 else:
-                    print(f"[TRACK_ANALYSIS_MDI] ❌ track_data 的 official_corners 為空")
+                    logger.warning("[TRACK_ANALYSIS_MDI] track_data 的 official_corners 為空")
                 
-                print(f"[TRACK_ANALYSIS_MDI] ==================== 調用 load_track_data ====================")
+                logger.info("[TRACK_ANALYSIS_MDI] 調用 load_track_data")
                 success = self.chart_widget.load_track_data(track_data)
                 if success:
-                    print(f"[TRACK_ANALYSIS_MDI] 賽道數據已載入至地圖組件")
+                    logger.info("[TRACK_ANALYSIS_MDI] 賽道數據已載入至地圖組件")
                     self.chart_widget.update()  # 強制重繪
                 else:
-                    print(f"[TRACK_ANALYSIS_MDI] 地圖組件載入數據失敗")
+                    logger.error("[TRACK_ANALYSIS_MDI] 地圖組件載入數據失敗")
             
             # 更新控制面板資訊
             if hasattr(self, 'control_panel') and self.control_panel:
@@ -1129,14 +1148,12 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
             self.on_status_changed("賽道數據載入完成")
             
         except Exception as e:
-            print(f"[ERROR] 處理賽道數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[ERROR] 處理賽道數據失敗: %s", e)
             self.on_data_error(f"處理數據失敗: {str(e)}")
     
     def on_data_error(self, error_msg: str):
         """數據載入錯誤處理"""
-        print(f"[TRACK_ANALYSIS_MDI] 數據載入錯誤: {error_msg}")
+        logger.error("[TRACK_ANALYSIS_MDI] 數據載入錯誤: %s", error_msg)
         
         # 顯示錯誤信息
         if self.chart_widget and isinstance(self.chart_widget, QLabel):
@@ -1147,7 +1164,7 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     
     def on_status_changed(self, status: str):
         """狀態變更處理"""
-        print(f"[TRACK_ANALYSIS_MDI] 狀態: {status}")
+        logger.info("[TRACK_ANALYSIS_MDI] 狀態: %s", status)
         # 可以在這裡更新狀態欄或其他 UI 元素
     
     def on_load_progress(self, progress: int):
@@ -1159,13 +1176,13 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     
     def _on_display_mode_changed(self, mode: str):
         """顯示模式變更"""
-        print(f"[TRACK_ANALYSIS_MDI] 顯示模式變更: {mode}")
+        logger.info("[TRACK_ANALYSIS_MDI] 顯示模式變更: %s", mode)
         # 根據模式更新地圖顯示
         # 目前 TrackMapWidget 是佔位符，這裡僅記錄
     
     def _on_zoom_changed(self, zoom_factor: float):
         """縮放倍率變更"""
-        print(f"[TRACK_ANALYSIS_MDI] 縮放變更: {zoom_factor}x")
+        logger.info("[TRACK_ANALYSIS_MDI] 縮放變更: %sx", zoom_factor)
         # 更新地圖縮放
         if self.chart_widget and hasattr(self.chart_widget, 'set_zoom'):
             if zoom_factor == 0.0:
@@ -1176,19 +1193,19 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
     
     def _on_show_grid_changed(self, show: bool):
         """網格顯示切換"""
-        print(f"[TRACK_ANALYSIS_MDI] 網格顯示: {show}")
+        logger.info("[TRACK_ANALYSIS_MDI] 網格顯示: %s", show)
         if self.chart_widget and hasattr(self.chart_widget, 'set_show_grid'):
             self.chart_widget.set_show_grid(show)
     
     def _on_show_markers_changed(self, show: bool):
         """標記顯示切換"""
-        print(f"[TRACK_ANALYSIS_MDI] 標記顯示: {show}")
+        logger.info("[TRACK_ANALYSIS_MDI] 標記顯示: %s", show)
         if self.chart_widget and hasattr(self.chart_widget, 'set_show_markers'):
             self.chart_widget.set_show_markers(show)
     
     def _on_show_corners_changed(self, show: bool):
         """官方彎道顯示切換"""
-        print(f"[TRACK_ANALYSIS_MDI] 官方彎道顯示: {show}")
+        logger.info("[TRACK_ANALYSIS_MDI] 官方彎道顯示: %s", show)
         if self.chart_widget and hasattr(self.chart_widget, 'set_display_options'):
             self.chart_widget.set_display_options(show_corners=show)
 
@@ -1261,7 +1278,7 @@ try:
     if not ModuleFactory.module_exists(ModuleTypes.TRACK_ANALYSIS):
         ModuleFactory.register_module(ModuleTypes.TRACK_ANALYSIS, TrackAnalysisUniversal)
 except Exception as exc:
-    print(f"[TRACK_ANALYSIS_MDI] 無法註冊到 ModuleFactory: {exc}")
+    logger.warning("[TRACK_ANALYSIS_MDI] 無法註冊到 ModuleFactory: %s", exc)
 
 
 # ========== 測試代碼 ==========

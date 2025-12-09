@@ -9,6 +9,7 @@ Date: 2025-10-13
 Version: 1.0.0
 """
 
+import logging
 import sys
 import time
 import json
@@ -21,6 +22,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("weather_timeline.mdi", component="gui")
 
 
 class WeatherTimelineApiWorker(QThread):
@@ -70,8 +74,9 @@ class WeatherTimelineApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] Calling API: {endpoint}")
-            print(f"[API_WORKER] Parameters: {query_params}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[API_WORKER] Calling API: %s", endpoint)
+                logger.debug("[API_WORKER] Parameters: %s", query_params)
             
             # Send POST request
             start_ts = time.perf_counter()
@@ -103,31 +108,31 @@ class WeatherTimelineApiWorker(QThread):
             # CLI JSON 結構: {"success": true, "metadata": {...}, "data": {...}}
             # 如果 data 包含 'success' 和 'data'，則是雙層嵌套
             if 'success' in data and 'data' in data:
-                print(f"[API_WORKER] ⚠️ 檢測到雙層嵌套，提取內層 data")
+                logger.warning("[API_WORKER] Detected nested data payload; extracting inner data")
                 data = data['data']  # 提取內層的實際數據
             
             # Calculate latency
             latency_ms = (time.perf_counter() - start_ts) * 1000.0
             
             self.progress.emit(100)
-            print(f"[API_WORKER] ✅ Success in {latency_ms:.0f}ms")
+            logger.info("[API_WORKER] Success in %.0fms", latency_ms)
             
             # Emit success signal
             self.success.emit(data)
             
         except requests.Timeout:
             error_msg = tr("weather_api_timeout", "API 請求超時 ({timeout}s)").format(timeout=self.timeout)
-            print(f"[API_WORKER] ❌ Timeout: {error_msg}")
+            logger.error("[API_WORKER] Timeout: %s", error_msg)
             self.failure.emit(error_msg)
             
         except requests.RequestException as e:
             error_msg = tr("weather_api_network_error", "網路錯誤: {error}").format(error=str(e))
-            print(f"[API_WORKER] ❌ Network error: {e}")
+            logger.error("[API_WORKER] Network error: %s", e)
             self.failure.emit(error_msg)
             
         except Exception as e:
             error_msg = tr("weather_api_general_error", "API 錯誤: {error}").format(error=str(e))
-            print(f"[API_WORKER] ❌ General error: {e}")
+            logger.error("[API_WORKER] General error: %s", e)
             self.failure.emit(error_msg)
 
 
@@ -207,15 +212,15 @@ class WeatherTimelineMDI(QWidget):
     
     def _load_data(self):
         """Start loading data (API-ONLY mode)"""
-        print(f"[WEATHER_MDI] Loading data for {self.year} {self.event}")
+        logger.info("[WEATHER_MDI] Loading data for %s %s", self.year, self.event)
         
         # ✅ API-ONLY 模式：強制使用 API，不讀取本地 JSON
-        print("[WEATHER_MDI] API-ONLY mode: Calling API")
+        logger.info("[WEATHER_MDI] API-ONLY mode: Calling API")
         self._call_api()
     
     def _call_api(self):
         """Call API to fetch weather data"""
-        print("[WEATHER_MDI] Starting API request")
+        logger.info("[WEATHER_MDI] Starting API request")
         
         # Create API worker
         params = {
@@ -243,35 +248,37 @@ class WeatherTimelineMDI(QWidget):
     @pyqtSlot(int)
     def _on_api_progress(self, value: int):
         """API progress update (與 Season Progress 一致)"""
-        print(f"[WEATHER_MDI] API progress: {value}%")
+        logger.debug("[WEATHER_MDI] API progress: %d%%", value)
         self.progress_bar.setValue(value)
         self.status_label.setText(f"API loading... {value}%")  # 只設置文字，不顯示
     
     @pyqtSlot(dict)
     def _on_api_success(self, data: dict):
         """API request succeeded"""
-        print("[WEATHER_MDI] API request succeeded")
-        print(f"[WEATHER_MDI] 📦 Received data keys: {list(data.keys())}")
+        logger.info("[WEATHER_MDI] API request succeeded")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[WEATHER_MDI] Received data keys: %s", list(data.keys()))
         
         # Validate and transform data
         if self.data_loader._validate_data_format(data):
             transformed = self.data_loader._transform_data_for_display(data)
             self._on_load_completed(transformed)
         else:
-            print(f"[WEATHER_MDI] ❌ Data validation failed")
-            print(f"[WEATHER_MDI] 📋 Data structure: {json.dumps(data, indent=2)[:500]}")
+            logger.error("[WEATHER_MDI] Data validation failed")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[WEATHER_MDI] Data structure: %s", json.dumps(data, indent=2)[:500])
             self._on_load_error(tr("weather_invalid_data", "API 返回的數據格式無效"))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API request failed"""
-        print(f"[WEATHER_MDI] API request failed: {error_msg}")
+        logger.error("[WEATHER_MDI] API request failed: %s", error_msg)
         self._on_load_error(error_msg)
     
     @pyqtSlot(dict)
     def _on_load_completed(self, data: dict):
         """Data loading completed (與 Season Progress 一致：顯示成功訊息)"""
-        print("[WEATHER_MDI] Data loading completed")
+        logger.info("[WEATHER_MDI] Data loading completed")
         
         # Show widget
         self.widget.setVisible(True)
@@ -282,12 +289,12 @@ class WeatherTimelineMDI(QWidget):
         self.progress_bar.setValue(100)
         self.progress_bar.hide()
         
-        print(f"[WEATHER_MDI] ✅ Weather data displayed successfully")
+        logger.info("[WEATHER_MDI] Weather data displayed successfully")
     
     @pyqtSlot(str)
     def _on_load_error(self, error_msg: str):
         """Data loading failed (與 Season Progress 完全一致)"""
-        print(f"[WEATHER_MDI] Data loading failed: {error_msg}")
+        logger.error("[WEATHER_MDI] Data loading failed: %s", error_msg)
         
         # 🔧 與 Season Progress 完全一致：只設置文字，不顯示 status_label
         self.status_label.setText(f"Weather load failed: {error_msg}")
@@ -301,7 +308,7 @@ class WeatherTimelineMDI(QWidget):
         self.widget.setVisible(False)
         
         # ❌ 已禁用彈窗：改為僅在後台記錄錯誤（與 Season Progress 一致）
-        print(f"[WEATHER_TIMELINE_MDI] ⚠️ 載入錯誤: {error_msg}")
+        logger.warning("[WEATHER_TIMELINE_MDI] Load error: %s", error_msg)
 
 
 # Demo 測試

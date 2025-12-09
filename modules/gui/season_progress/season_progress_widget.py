@@ -9,6 +9,7 @@ Date: 2025-10-13
 Version: 1.0.0
 """
 
+import logging
 import sys
 from typing import Dict, Any, Optional
 from datetime import datetime
@@ -18,6 +19,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("season_progress.widget", component="gui")
 
 
 class SeasonProgressWidget(QWidget):
@@ -96,8 +100,9 @@ class SeasonProgressWidget(QWidget):
         Args:
             data: Transformed season progress data from DataLoader
         """
-        print(f"[SEASON_PROGRESS_WIDGET] populate_data called")
-        print(f"[SEASON_PROGRESS_WIDGET] Data keys: {list(data.keys())}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_WIDGET] populate_data called")
+            logger.debug("[SEASON_PROGRESS_WIDGET] Data keys: %s", list(data.keys()))
         
         self.progress_data = data
         self.season_year = data.get("season_year", 2024)
@@ -112,9 +117,13 @@ class SeasonProgressWidget(QWidget):
         remaining = calendar.get("remaining", 0)
         total = calendar.get("total", 0)
         
-        print(f"[SEASON_PROGRESS_WIDGET] Calendar data: completed={completed}, remaining={remaining}, total={total}")
-        
-        print(f"[SEASON_PROGRESS_WIDGET] Calendar data: completed={completed}, remaining={remaining}, total={total}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[SEASON_PROGRESS_WIDGET] Calendar data: completed=%s, remaining=%s, total=%s",
+                completed,
+                remaining,
+                total,
+            )
         
         self.completed_label.setText(
             tr("completed_races", "Completed Races: {count} / {total}").format(
@@ -125,7 +134,12 @@ class SeasonProgressWidget(QWidget):
             tr("remaining_races", "Remaining Races: {count}").format(count=remaining)
         )
         
-        print(f"[SEASON_PROGRESS_WIDGET] Labels updated: completed='{self.completed_label.text()}', remaining='{self.remaining_label.text()}'")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[SEASON_PROGRESS_WIDGET] Labels updated: completed='%s', remaining='%s'",
+                self.completed_label.text(),
+                self.remaining_label.text(),
+            )
         
         # Update next race
         next_race = calendar.get("next_race")
@@ -179,7 +193,8 @@ class SeasonProgressWidget(QWidget):
         else:
             self.constructor_leader_label.setText(tr("na", "N/A"))
         
-        print(f"[SEASON_PROGRESS_WIDGET] Data populated successfully")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[SEASON_PROGRESS_WIDGET] Data populated successfully")
     
     def resizeEvent(self, event):
         """響應視窗大小變化，自動調整字體大小"""

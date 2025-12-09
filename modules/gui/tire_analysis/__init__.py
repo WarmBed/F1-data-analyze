@@ -18,13 +18,17 @@ Date: 2025-09-10
 Version: 1.0.0
 """
 
+from core.logger import get_logger
+
+logger = get_logger("tire_analysis_init", component="gui")
+
 # 主要模組匯出
 try:
     from .tire_analysis_module import TireAnalysisModule
     from .tire_analysis_mdi import TireAnalysisUniversal, TireAnalysisDataManager
     from .tire_analysis_chart_widget import TireAnalysisChartWidget, TireChartTheme
 except ImportError as e:
-    print(f"[WARNING] 輪胎策略分析模組導入部分失敗: {str(e)}")
+    logger.warning("[WARNING] 輪胎策略分析模組導入部分失敗: %s", str(e))
     # 提供向後兼容性
     TireAnalysisModule = None
     TireAnalysisUniversal = None
@@ -69,7 +73,7 @@ def create_tire_data_loader_instance(parent=None):
     Returns:
         None: 此功能已整合到 TireAnalysisDataManager 中
     """
-    print("[WARNING] create_tire_data_loader_instance 已廢棄，請使用 TireAnalysisDataManager")
+    logger.warning("[WARNING] create_tire_data_loader_instance 已廢棄，請使用 TireAnalysisDataManager")
     return None
 
 def get_module_info():

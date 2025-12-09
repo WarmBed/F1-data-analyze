@@ -18,6 +18,10 @@ from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWhe
 
 # 導入多國語言支援
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger(__name__)
 
 # 導入連動管理器
 try:
@@ -30,7 +34,7 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] ElevationChart: 連動管理器導入失敗")
+    logger.warning("ElevationChart: 連動管理器導入失敗")
 
 
 class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
@@ -108,11 +112,14 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             try:
                 current_master_state = linkage_manager.is_master_linkage_enabled()
                 self.set_master_linkage_enabled(current_master_state)
-                print(f"[ELEVATION_CHART] 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+                logger.info(
+                    "[ELEVATION_CHART] 已註冊到連動管理器，主開關狀態: %s",
+                    "啟用" if current_master_state else "停用",
+                )
             except Exception as e:
-                print(f"[ERROR] [ELEVATION_CHART] 同步連動狀態失敗: {e}")
+                logger.error("[ELEVATION_CHART] 同步連動狀態失敗: %s", e)
         else:
-            print(f"[WARNING] [ELEVATION_CHART] 連動管理器不可用")
+            logger.warning("[ELEVATION_CHART] 連動管理器不可用")
     
     def set_circuit_name(self, name: str):
         """設置賽道名稱"""
@@ -129,23 +136,23 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             track_outline: 賽道輪廓數據，包含 distance_m 和 elevation (Z)
             official_corners: 官方彎道數據（可選）
         """
-        print(f"\n[DEBUG] === ElevationChartWidget.plot_elevation() 開始執行 ===")
-        print(f"[DEBUG] track_outline 數量: {len(track_outline)}")
-        print(f"[DEBUG] official_corners 類型: {type(official_corners)}")
-        print(f"[DEBUG] official_corners 數量: {len(official_corners) if official_corners else 0}")
+        logger.debug("[DEBUG] === ElevationChartWidget.plot_elevation() 開始執行 ===")
+        logger.debug("[DEBUG] track_outline 數量: %s", len(track_outline))
+        logger.debug("[DEBUG] official_corners 類型: %s", type(official_corners))
+        logger.debug("[DEBUG] official_corners 數量: %s", len(official_corners) if official_corners else 0)
         
         if official_corners:
-            print(f"[DEBUG] ✅ 收到 {len(official_corners)} 個彎道")
+            logger.debug("[DEBUG] 收到 %s 個彎道", len(official_corners))
             if len(official_corners) > 0:
                 first = official_corners[0]
                 last = official_corners[-1]
-                print(f"[DEBUG]    第 1 個彎道: {first}")
-                print(f"[DEBUG]    最後 1 個彎道: {last}")
+                logger.debug("[DEBUG]    第 1 個彎道: %s", first)
+                logger.debug("[DEBUG]    最後 1 個彎道: %s", last)
         else:
-            print(f"[DEBUG] ❌ official_corners 為 None 或空")
+            logger.debug("[DEBUG] official_corners 為 None 或空")
         
         if not track_outline:
-            print("[ELEVATION_CHART] 無高程數據")
+            logger.warning("[ELEVATION_CHART] 無高程數據")
             self.elevation_data = []
             self.corner_data = []
             self.distances_km = []
@@ -157,7 +164,7 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         self.elevation_data = track_outline
         self.corner_data = official_corners or []
         
-        print(f"[DEBUG] self.corner_data 最終狀態: 長度={len(self.corner_data)}")
+        logger.debug("[DEBUG] self.corner_data 最終狀態: 長度=%s", len(self.corner_data))
         
         # 提取距離和高度數據
         distances_m = []
@@ -173,7 +180,7 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
                 elevations_m.append(elev)
         
         if not distances_m or not elevations_m:
-            print("[ELEVATION_CHART] 無有效高程數據")
+            logger.warning("[ELEVATION_CHART] 無有效高程數據")
             self.distances_km = []
             self.elevations_relative = []
             self.elevations_absolute = []
@@ -206,11 +213,22 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         self.view_min_elevation = None
         self.view_max_elevation = None
         
-        print(f"[ELEVATION_CHART] 繪製高程: {len(self.distances_km)} 個數據點")
-        print(f"[ELEVATION_CHART]   距離範圍: {self.min_distance_km:.2f} ~ {self.max_distance_km:.2f} km")
-        print(f"[ELEVATION_CHART]   絕對高度: {self.min_absolute_elevation:.2f} ~ {max(self.elevations_absolute):.2f} m")
-        print(f"[ELEVATION_CHART]   相對高度: 0.00 ~ {self.max_elevation:.2f} m")
-        print(f"[ELEVATION_CHART]   ✅ FastF1 Z 軸已在 data_loader 中除以 10")
+        logger.debug("[ELEVATION_CHART] 繪製高程: %s 個數據點", len(self.distances_km))
+        logger.debug(
+            "[ELEVATION_CHART]   距離範圍: %.2f ~ %.2f km",
+            self.min_distance_km,
+            self.max_distance_km,
+        )
+        logger.debug(
+            "[ELEVATION_CHART]   絕對高度: %.2f ~ %.2f m",
+            self.min_absolute_elevation,
+            max(self.elevations_absolute),
+        )
+        logger.debug(
+            "[ELEVATION_CHART]   相對高度: 0.00 ~ %.2f m",
+            self.max_elevation,
+        )
+        logger.debug("[ELEVATION_CHART]   FastF1 Z 軸已在 data_loader 中除以 10")
         
         # 觸發重繪
         self.update()
@@ -268,7 +286,7 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
                 self._draw_linkage_indicators(painter, chart_rect)
                 
         except Exception as e:
-            print(f"[ELEVATION_CHART] ❌ paintEvent 錯誤: {e}")
+            logger.error("[ELEVATION_CHART] paintEvent 錯誤: %s", e)
             import traceback
             traceback.print_exc()
     
@@ -453,10 +471,10 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
     def _draw_corner_markers(self, painter: QPainter, chart_rect: QRect):
         """繪製彎道標記（垂直虛線 + 底部編號）"""
         if not self.corner_data or not self.distances_km:
-            print(f"[ELEVATION_CHART] 彎道數據: {len(self.corner_data) if self.corner_data else 0} 個")
+            logger.debug("[ELEVATION_CHART] 彎道數據: %s 個", len(self.corner_data) if self.corner_data else 0)
             return
         
-        print(f"[ELEVATION_CHART] 開始繪製彎道標記: {len(self.corner_data)} 個")
+        logger.debug("[ELEVATION_CHART] 開始繪製彎道標記: %s 個", len(self.corner_data))
         
         # 確定顯示範圍
         min_dist = self.view_min_distance if self.view_min_distance is not None else self.min_distance_km
@@ -468,7 +486,11 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         elev_range = max_elev - min_elev
         
         if dist_range <= 0 or elev_range <= 0:
-            print(f"[ELEVATION_CHART] 距離或高度範圍無效: dist={dist_range}, elev={elev_range}")
+            logger.warning(
+                "[ELEVATION_CHART] 距離或高度範圍無效: dist=%s, elev=%s",
+                dist_range,
+                elev_range,
+            )
             return
         
         # 建立距離到高度的插值
@@ -479,22 +501,30 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             corner_num = corner.get('number', 0)
             corner_dist_m = corner.get('distance', 0.0)
             
-            print(f"[ELEVATION_CHART] 彎道 {corner_num}: distance={corner_dist_m}m")
+            logger.debug("[ELEVATION_CHART] 彎道 %s: distance=%sm", corner_num, corner_dist_m)
             
             if corner_dist_m == 0.0:
-                print(f"[ELEVATION_CHART]   跳過: 距離為 0")
+                logger.debug("[ELEVATION_CHART]   跳過: 距離為 0")
                 continue
             
             corner_dist_km = corner_dist_m / 1000.0
             
             # 檢查彎道是否在顯示範圍內
             if corner_dist_km < min_dist or corner_dist_km > max_dist:
-                print(f"[ELEVATION_CHART]   跳過: 超出範圍 ({min_dist:.2f} - {max_dist:.2f} km)")
+                logger.debug(
+                    "[ELEVATION_CHART]   跳過: 超出範圍 (%.2f - %.2f km)",
+                    min_dist,
+                    max_dist,
+                )
                 continue
             
             # 使用線性插值找到對應的相對高度
             if corner_dist_m < distances_m[0] or corner_dist_m > distances_m[-1]:
-                print(f"[ELEVATION_CHART]   跳過: 超出數據範圍 ({distances_m[0]:.0f} - {distances_m[-1]:.0f} m)")
+                logger.debug(
+                    "[ELEVATION_CHART]   跳過: 超出數據範圍 (%.0f - %.0f m)",
+                    distances_m[0],
+                    distances_m[-1],
+                )
                 continue
             
             corner_elev_relative = np.interp(corner_dist_m, distances_m, self.elevations_relative)
@@ -505,7 +535,12 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             # 計算 Y 座標（彎道在曲線上的高度位置）
             y_curve = chart_rect.bottom() - int((corner_elev_relative - min_elev) / elev_range * chart_rect.height())
             
-            print(f"[ELEVATION_CHART]   繪製位置: x={x}, elev={corner_elev_relative:.1f}m, y={y_curve}")
+            logger.debug(
+                "[ELEVATION_CHART]   繪製位置: x=%s, elev=%.1fm, y=%s",
+                x,
+                corner_elev_relative,
+                y_curve,
+            )
             
             # === 繪製垂直虛線（從圖表頂部到底部）===
             painter.setPen(QPen(QColor(150, 150, 150), 1, Qt.DashLine))  # 灰色虛線
@@ -540,7 +575,7 @@ class ElevationChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             
             drawn_count += 1
         
-        print(f"[ELEVATION_CHART] 完成繪製: {drawn_count}/{len(self.corner_data)} 個彎道標記")
+        logger.debug("[ELEVATION_CHART] 完成繪製: %s/%s 個彎道標記", drawn_count, len(self.corner_data))
     
     def _draw_linkage_indicators(self, painter: QPainter, chart_rect: QRect):
         """繪製連動指示器（懸停線和固定線）"""

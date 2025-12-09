@@ -20,12 +20,16 @@ Version: 1.0.0
 """
 
 from typing import Optional
+from core.logger import get_logger
 
 # 導入 Module 類別
 try:
     from .throttle_box_plot_analysis_module import ThrottleBoxPlotAnalysisModule
 except ImportError:
     from modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_module import ThrottleBoxPlotAnalysisModule
+
+
+logger = get_logger("throttle_box_plot_adapter", component="gui")
 
 
 class ThrottleBoxPlotAnalysisAdapter(ThrottleBoxPlotAnalysisModule):
@@ -51,7 +55,7 @@ class ThrottleBoxPlotAnalysisAdapter(ThrottleBoxPlotAnalysisModule):
         race = kwargs.get('race')
         session = kwargs.get('session')
         
-        print(f"🚀 [THROTTLE_BOXPLOT_ADAPTER] 初始化 Adapter: year={year}, race={race}, session={session}")
+        logger.info("🚀 [THROTTLE_BOXPLOT_ADAPTER] 初始化 Adapter: year=%s, race=%s, session=%s", year, race, session)
         
         # 呼叫父類建構函數（ThrottleBoxPlotAnalysisModule）
         super().__init__(parent, year, race, session)
@@ -59,7 +63,7 @@ class ThrottleBoxPlotAnalysisAdapter(ThrottleBoxPlotAnalysisModule):
         # 適配器版本
         self.adapter_version = "1.0.0"
         
-        print(f"✅ [THROTTLE_BOXPLOT_ADAPTER] Adapter 初始化完成")
+        logger.info("✅ [THROTTLE_BOXPLOT_ADAPTER] Adapter 初始化完成")
 
 
 # 導出

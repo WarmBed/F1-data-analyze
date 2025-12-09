@@ -35,6 +35,7 @@ from PyQt5.QtGui import QFont
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
+from core.logger import get_logger
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -48,6 +49,9 @@ except ImportError:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
     from modules.gui.base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
+
+
+logger = get_logger("tire_analysis_mdi", component="gui")
 
 
 class TireAnalysisApiWorker(QThread):
@@ -157,8 +161,8 @@ class TireAnalysisDataManager(UniversalDataLoader):
             f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
         )
         
-        print(f"[TIRE_ANALYSIS] 初始化完成, 搜索目錄: {self.config.search_directories}")
-        print(f"[TIRE_ANALYSIS] 文件模式: {self.config.file_patterns}")
+        logger.info("[TIRE_ANALYSIS] 初始化完成, 搜索目錄: %s", self.config.search_directories)
+        logger.info("[TIRE_ANALYSIS] 文件模式: %s", self.config.file_patterns)
         
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
@@ -835,7 +839,7 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
         parent=None,
         **kwargs,
     ):
-        print(f"[TIRE_MDI] TireAnalysisUniversal 開始初始化...")
+        logger.info("[TIRE_MDI] TireAnalysisUniversal 開始初始化...")
         
         # 註冊輪胎策略分析模組類型
         if "tire_analysis" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
@@ -852,17 +856,17 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
             UniversalAnalysisMDI.register_mdi_module_type("tire_analysis", tire_config)
 
         super().__init__("tire_analysis", parent)
-        print(f"[TIRE_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
+        logger.info("[TIRE_MDI] 基類初始化完成, 數據管理器: %s", self.data_manager)
 
         # 初始化模組組件
-        print(f"[TIRE_MDI] 開始初始化模組組件...")
+        logger.info("[TIRE_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
-            print(f"[TIRE_MDI] ❌ 模組組件初始化失敗")
+            logger.error("[TIRE_MDI] ❌ 模組組件初始化失敗")
             return
 
-        print(f"[TIRE_MDI] ✅ 模組組件初始化完成")
-        print(f"[TIRE_MDI] 數據管理器: {self.data_manager}")
-        print(f"[TIRE_MDI] 圖表組件: {self.chart_widget}")
+        logger.info("[TIRE_MDI] ✅ 模組組件初始化完成")
+        logger.info("[TIRE_MDI] 數據管理器: %s", self.data_manager)
+        logger.info("[TIRE_MDI] 圖表組件: %s", self.chart_widget)
 
         # 參照遙測分析：設置響應式佈局
         self.set_responsive_layout()
@@ -898,8 +902,8 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         """更新輪胎策略分析參數"""
         try:
-            print(f"[TIRE_MDI] ========== 輪胎策略參數更新 ==========")
-            print(f"[TIRE_MDI] 收到參數: {year} {race} {session}")
+            logger.info("[TIRE_MDI] ========== 輪胎策略參數更新 ==========")
+            logger.info("[TIRE_MDI] 收到參數: %s %s %s", year, race, session)
             
             # 更新當前參數
             self.current_year = int(year) if isinstance(year, str) else year
@@ -908,34 +912,31 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
             
             # 更新數據管理器參數
             if hasattr(self, 'data_manager') and self.data_manager:
-                print(f"[TIRE_MDI] 更新數據管理器參數...")
+                logger.info("[TIRE_MDI] 更新數據管理器參數...")
                 self.data_manager.year = self.current_year
                 self.data_manager.race = self.current_race
                 self.data_manager.session = self.current_session
                 
                 # 載入數據 - 傳遞正確的參數
-                print(f"[TIRE_MDI] 開始載入數據...")
+                logger.info("[TIRE_MDI] 開始載入數據...")
                 result = self.data_manager.load_data(
                     year=self.current_year,
                     race=self.current_race,
                     session=self.current_session
                 )
-                print(f"[TIRE_MDI] 數據載入結果: {result}")
+                logger.info("[TIRE_MDI] 數據載入結果: %s", result)
                 
                 # 注意：此處不直接更新圖表，等待 data_manager 發送 data_loaded 信號
                 # 基類已綁定 data_loaded -> _update_chart -> chart_widget.update_data
                 # 這可以避免非同步載入尚未完成時傳遞空資料
                 if result:
-                    print("[TIRE_MDI] 等待 data_loaded 信號進行圖表更新 (非同步載入) ...")
+                    logger.info("[TIRE_MDI] 等待 data_loaded 信號進行圖表更新 (非同步載入) ...")
             
-            print(f"[TIRE_MDI] 參數更新完成")
+            logger.info("[TIRE_MDI] 參數更新完成")
             return True
             
         except Exception as e:
-            print(f"[TIRE_MDI] 參數更新失敗: {str(e)}")
-            import traceback
-            print(f"[TIRE_MDI] 錯誤詳情:")
-            traceback.print_exc()
+            logger.exception("[TIRE_MDI] 參數更新失敗: %s", str(e))
             return False
     
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
@@ -972,20 +973,23 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
             old_size = event.oldSize()
             new_size = event.size()
             
-            print(f"[tire_MDI] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+            logger.info(
+                "[tire_MDI] resizeEvent: MDI視窗縮放 %sx%s -> %sx%s",
+                old_size.width(), old_size.height(), new_size.width(), new_size.height()
+            )
             
             # 通知圖表組件更新佈局
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 if hasattr(self.chart_widget, 'update_chart_layout'):
-                    print("[tire_MDI] resizeEvent: 觸發圖表重新佈局")
+                    logger.info("[tire_MDI] resizeEvent: 觸發圖表重新佈局")
                     self.chart_widget.update_chart_layout()
                 else:
-                    print("[tire_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
+                    logger.warning("[tire_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
             else:
-                print("[tire_MDI] resizeEvent: 圖表組件尚未初始化")
+                logger.warning("[tire_MDI] resizeEvent: 圖表組件尚未初始化")
                 
         except Exception as e:
-            print(f"[ERROR] [tire_MDI] resizeEvent 處理失敗: {e}")
+            logger.exception("[ERROR] [tire_MDI] resizeEvent 處理失敗: %s", e)
     
     def set_responsive_layout(self):
         """參照遙測分析：設置響應式佈局"""
@@ -1004,16 +1008,16 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
             if target_widget:
                 target_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             else:
-                print("[tire_MDI] ⚠️ 無法取得主要 Widget，略過 sizePolicy 設定")
+                logger.warning("[tire_MDI] ⚠️ 無法取得主要 Widget，略過 sizePolicy 設定")
             
             # 確保圖表組件也有正確的大小策略
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 self.chart_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 
-            print("[tire_MDI] 響應式佈局已設置")
+            logger.info("[tire_MDI] 響應式佈局已設置")
             
         except Exception as e:
-            print(f"[ERROR] [tire_MDI] 設置響應式佈局失敗: {e}")
+            logger.exception("[ERROR] [tire_MDI] 設置響應式佈局失敗: %s", e)
 
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組信息"""
@@ -1099,7 +1103,7 @@ def register_tire_analysis_module():
         # 這裡可以添加到全局模組註冊表
         pass
     except Exception as e:
-        print(f"[WARNING] 下雨分析模組註冊失敗: {str(e)}")
+        logger.warning("[WARNING] 下雨分析模組註冊失敗: %s", str(e))
 
 
 # 自動註冊

@@ -16,6 +16,10 @@ from PyQt5.QtWidgets import (
 )
 
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger("throttle_analysis_options_dialog", component="gui")
 
 
 class ThrottleAnalysisOptionsDialog(QDialog):
@@ -36,7 +40,7 @@ class ThrottleAnalysisOptionsDialog(QDialog):
         self._apply_stylesheet()
         self.init_ui()
 
-        print("[THROTTLE_DIALOG] ThrottleAnalysisOptionsDialog 已初始化")
+        logger.info("[THROTTLE_DIALOG] ThrottleAnalysisOptionsDialog 已初始化")
 
     def _apply_stylesheet(self) -> None:
         """Apply the same stylesheet as LapAnalysisOptionsDialog."""
@@ -206,15 +210,15 @@ class ThrottleAnalysisOptionsDialog(QDialog):
                 selected_types.append(item.data(Qt.UserRole))
 
         if not selected_types:
-            print("[THROTTLE_DIALOG] 未選擇任何項目，返回預設值: [box_plot]")
+            logger.info("[THROTTLE_DIALOG] 未選擇任何項目，返回預設值: [box_plot]")
             return [self.TYPE_BOX_PLOT]
 
-        print(f"[THROTTLE_DIALOG] 使用者選擇的分析類型: {selected_types}")
+        logger.info("[THROTTLE_DIALOG] 使用者選擇的分析類型: %s", selected_types)
         return selected_types
 
     def select_all(self) -> None:
         """Select all enabled analysis types."""
-        print("[THROTTLE_DIALOG] 選擇所有分析類型")
+        logger.info("[THROTTLE_DIALOG] 選擇所有分析類型")
         for i in range(self.analysis_list.count()):
             item = self.analysis_list.item(i)
             if item.flags() & Qt.ItemIsEnabled:
@@ -222,7 +226,7 @@ class ThrottleAnalysisOptionsDialog(QDialog):
 
     def select_none(self) -> None:
         """Clear all selections."""
-        print("[THROTTLE_DIALOG] 取消選擇所有分析類型")
+        logger.info("[THROTTLE_DIALOG] 取消選擇所有分析類型")
         self.analysis_list.clearSelection()
 
     def accept(self) -> None:
@@ -234,10 +238,10 @@ class ThrottleAnalysisOptionsDialog(QDialog):
                 type_names.append("Throttle Box Plot")
             elif st == self.TYPE_LINE_CHART:
                 type_names.append("Throttle Line Chart")
-        print(f"[THROTTLE_DIALOG] 使用者確認選擇: {', '.join(type_names)}")
+        logger.info("[THROTTLE_DIALOG] 使用者確認選擇: %s", ", ".join(type_names))
         super().accept()
 
     def reject(self) -> None:
         """Handle Cancel button click."""
-        print("[THROTTLE_DIALOG] 使用者取消選擇")
+        logger.info("[THROTTLE_DIALOG] 使用者取消選擇")
         super().reject()

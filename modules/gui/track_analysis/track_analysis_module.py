@@ -25,6 +25,7 @@ from typing import Any, Dict, Optional, Tuple
 
 import requests
 from core.api_base_url import resolve_api_base_url
+from core.logger import get_logger
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
@@ -50,12 +51,14 @@ except ImportError:
         from track_map_widget import TrackMapWidget
         from track_data_processor import TrackDataProcessor
     except ImportError:
-        print("[WARNING] 賽道地圖元件尚未實現，使用佔位符")
+        logger.warning("[WARNING] 賽道地圖元件尚未實現，使用佔位符")
         TrackMapWidget = None
         TrackDataProcessor = None
 
 # 獲取專案根目錄
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+
+logger = get_logger("track_analysis_module", component="gui")
 
 class TrackAnalysisCacheManager:
     """賽道分析緩存管理器"""
@@ -154,11 +157,11 @@ class TrackAnalysisCacheManager:
         if found_files:
             # 按修改時間排序，返回最新的
             latest_file = max(found_files, key=os.path.getmtime)
-            print(f"[CACHE] 找到賽道分析檔案: {latest_file}")
+            logger.info("[CACHE] 找到賽道分析檔案: %s", latest_file)
             return latest_file
         
-        print(f"[CACHE] 未找到賽道分析檔案: {year} {race} {session}")
-        print(f"[CACHE] 搜尋的賽事名稱: {possible_race_names}")
+        logger.warning("[CACHE] 未找到賽道分析檔案: %s %s %s", year, race, session)
+        logger.info("[CACHE] 搜尋的賽事名稱: %s", possible_race_names)
         return None
     
     def is_cache_valid(self, file_path):
@@ -192,7 +195,7 @@ class TrackAnalysisWorkerThread(QThread):
         config_path = Path(project_root) / "config" / "api_config.json"
         return resolve_api_base_url(
             config_path=config_path,
-            event_logger=lambda message: print(f"[TRACK_ANALYSIS] {message}"),
+            event_logger=lambda message: logger.info("[TRACK_ANALYSIS] %s", message),
         )
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
@@ -350,10 +353,10 @@ class TrackAnalysisWorkerThread(QThread):
             return result.returncode == 0
             
         except subprocess.TimeoutExpired:
-            print("[ERROR] CLI分析執行超時")
+            logger.error("[ERROR] CLI分析執行超時")
             return False
         except Exception as e:
-            print(f"[ERROR] CLI分析執行錯誤: {e}")
+            logger.exception("[ERROR] CLI分析執行錯誤: %s", e)
             return False
     
     def load_json_data(self, file_path: str) -> Optional[Dict[str, Any]]:
@@ -366,11 +369,11 @@ class TrackAnalysisWorkerThread(QThread):
                     return self._prepare_track_data(data["data"], data)
                 return self._prepare_track_data(data, data)
 
-            print(f"[WARNING] JSON格式不符合預期: {file_path}")
+            logger.warning("[WARNING] JSON格式不符合預期: %s", file_path)
             return None
 
         except Exception as exc:
-            print(f"[ERROR] 載入JSON失敗: {exc}")
+            logger.exception("[ERROR] 載入JSON失敗: %s", exc)
             return None
 
     def _prepare_track_data(self, track_payload: Dict[str, Any], full_payload: Optional[Dict[str, Any]]) -> Dict[str, Any]:
@@ -478,8 +481,8 @@ class TrackMapWidget(QWidget):
         
     def set_track_data(self, position_data, track_bounds):
         """設置賽道數據"""
-        print(f"[TRACK_MAP] set_track_data: 接收 {len(position_data) if position_data else 0} 個位置點")
-        print(f"[TRACK_MAP] set_track_data: 賽道邊界 {track_bounds}")
+        logger.info("[TRACK_MAP] set_track_data: 接收 %s 個位置點", len(position_data) if position_data else 0)
+        logger.info("[TRACK_MAP] set_track_data: 賽道邊界 %s", track_bounds)
         
         self.position_data = position_data
         self.track_bounds = track_bounds
@@ -487,15 +490,23 @@ class TrackMapWidget(QWidget):
         # 立即計算縮放 (確保widget有正確尺寸)
         if track_bounds and self.width() > 0 and self.height() > 0:
             self.calculate_scale()
-            print(f"[TRACK_MAP] set_track_data: 計算完成，縮放因子 {self.scale_factor:.3f}")
-            print(f"[TRACK_MAP] set_track_data: 偏移 ({self.offset_x:.1f}, {self.offset_y:.1f})")
+            logger.info(
+                "[TRACK_MAP] set_track_data: 計算完成，縮放因子 %.3f, 偏移 (%.1f, %.1f)",
+                self.scale_factor,
+                self.offset_x,
+                self.offset_y,
+            )
         else:
             # 如果widget尺寸還未確定，使用QTimer延遲計算
-            print(f"[TRACK_MAP] set_track_data: Widget尺寸 {self.width()}x{self.height()}, 延遲計算縮放")
+            logger.info(
+                "[TRACK_MAP] set_track_data: Widget尺寸 %sx%s, 延遲計算縮放",
+                self.width(),
+                self.height(),
+            )
             QTimer.singleShot(50, self.calculate_scale)
         
         self.update()  # 觸發重繪
-        print("[TRACK_MAP] set_track_data: ✅ 觸發重繪完成")
+        logger.info("[TRACK_MAP] set_track_data: ✅ 觸發重繪完成")
         
     def set_display_options(self, show_start=True, show_finish=True, show_markers=True, show_labels=True):
         """設置顯示選項"""
@@ -504,12 +515,18 @@ class TrackMapWidget(QWidget):
         self.show_distance_markers = show_markers
         self.show_track_labels = show_labels
         self.update()  # 觸發重繪
-        print(f"[TRACK_MAP] 顯示選項更新: 起始點={show_start}, 結束點={show_finish}, 距離標記={show_markers}, 標籤={show_labels}")
+        logger.info(
+            "[TRACK_MAP] 顯示選項更新: 起始點=%s, 結束點=%s, 距離標記=%s, 標籤=%s",
+            show_start,
+            show_finish,
+            show_markers,
+            show_labels,
+        )
         
     def calculate_scale(self):
         """計算適當的縮放比例 - 響應式計算"""
         if not self.track_bounds:
-            print("[TRACK_MAP] calculate_scale: 沒有賽道邊界數據")
+            logger.warning("[TRACK_MAP] calculate_scale: 沒有賽道邊界數據")
             return
             
         # 獲取當前widget的實際尺寸
@@ -518,7 +535,7 @@ class TrackMapWidget(QWidget):
         
         # 確保widget有有效尺寸
         if widget_width <= 0 or widget_height <= 0:
-            print(f"[TRACK_MAP] calculate_scale: Widget尺寸無效 {widget_width}x{widget_height}")
+            logger.warning("[TRACK_MAP] calculate_scale: Widget尺寸無效 %sx%s", widget_width, widget_height)
             return
             
         # 計算保留邊距後的可用空間
@@ -544,10 +561,21 @@ class TrackMapWidget(QWidget):
             self.offset_x = (widget_width - scaled_track_width) / 2
             self.offset_y = (widget_height - scaled_track_height) / 2
             
-            print(f"[TRACK_MAP] calculate_scale: Widget={widget_width}x{widget_height}, 賽道={track_width:.0f}x{track_height:.0f}")
-            print(f"[TRACK_MAP] calculate_scale: 縮放={self.scale_factor:.3f}, 偏移=({self.offset_x:.1f}, {self.offset_y:.1f})")
+            logger.info(
+                "[TRACK_MAP] calculate_scale: Widget=%sx%s, 賽道=%.0fx%.0f",
+                widget_width,
+                widget_height,
+                track_width,
+                track_height,
+            )
+            logger.info(
+                "[TRACK_MAP] calculate_scale: 縮放=%.3f, 偏移=(%.1f, %.1f)",
+                self.scale_factor,
+                self.offset_x,
+                self.offset_y,
+            )
         else:
-            print(f"[TRACK_MAP] calculate_scale: 賽道尺寸無效 {track_width}x{track_height}")
+            logger.warning("[TRACK_MAP] calculate_scale: 賽道尺寸無效 %sx%s", track_width, track_height)
             self.scale_factor = 1.0
             self.offset_x = 0
             self.offset_y = 0
@@ -574,7 +602,7 @@ class TrackMapWidget(QWidget):
             # 調試輸出
             data_count = len(self.position_data) if self.position_data else 0
             has_bounds = bool(self.track_bounds)
-            print(f"[TRACK_MAP] paintEvent: 數據檢查 - 位置點數={data_count}, 有邊界={has_bounds}")
+            logger.info("[TRACK_MAP] paintEvent: 數據檢查 - 位置點數=%s, 有邊界=%s", data_count, has_bounds)
             
             if not self.position_data or not self.track_bounds:
                 # 顯示提示文字
@@ -584,11 +612,11 @@ class TrackMapWidget(QWidget):
                 if data_count > 0:
                     painter.drawText(self.rect(), Qt.AlignCenter, 
                                    f"賽道數據已載入\n{data_count} 個位置點\n等待邊界資訊...")
-                    print(f"[TRACK_MAP] paintEvent: 有 {data_count} 個位置點但沒有邊界資訊")
+                    logger.info("[TRACK_MAP] paintEvent: 有 %s 個位置點但沒有邊界資訊", data_count)
                 else:
                     painter.drawText(self.rect(), Qt.AlignCenter, 
                                    "等待賽道數據載入...")
-                    print("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
+                    logger.info("[TRACK_MAP] paintEvent: 沒有數據，顯示提示文字")
                 return
             
             try:
@@ -596,13 +624,18 @@ class TrackMapWidget(QWidget):
                 if (self.scale_factor <= 0 or 
                     self.width() != getattr(self, '_last_width', 0) or 
                     self.height() != getattr(self, '_last_height', 0)):
-                    print(f"[TRACK_MAP] paintEvent: 檢測到尺寸變化，重新計算縮放")
+                    logger.info("[TRACK_MAP] paintEvent: 檢測到尺寸變化，重新計算縮放")
                     self.calculate_scale()
                     self._last_width = self.width()
                     self._last_height = self.height()
                 
-                print(f"[TRACK_MAP] paintEvent: 開始繪製，包含 {len(self.position_data)} 個位置點")
-                print(f"[TRACK_MAP] paintEvent: 當前縮放因子 {self.scale_factor:.3f}, 偏移 ({self.offset_x:.1f}, {self.offset_y:.1f})")
+                logger.info(
+                    "[TRACK_MAP] paintEvent: 開始繪製，包含 %s 個位置點，縮放因子 %.3f，偏移 (%.1f, %.1f)",
+                    len(self.position_data),
+                    self.scale_factor,
+                    self.offset_x,
+                    self.offset_y,
+                )
                 
                 # 繪製賽道路線
                 if len(self.position_data) > 1:
@@ -613,9 +646,15 @@ class TrackMapWidget(QWidget):
                         screen_x, screen_y = self.world_to_screen(x, y)
                         points.append(QPointF(screen_x, screen_y))
                     
-                    print(f"[TRACK_MAP] paintEvent: 轉換得到 {len(points)} 個螢幕座標點")
+                    logger.info("[TRACK_MAP] paintEvent: 轉換得到 %s 個螢幕座標點", len(points))
                     if len(points) >= 2:
-                        print(f"[TRACK_MAP] paintEvent: 第一個點 ({points[0].x():.1f}, {points[0].y():.1f}), 最後一個點 ({points[-1].x():.1f}, {points[-1].y():.1f})")
+                        logger.info(
+                            "[TRACK_MAP] paintEvent: 第一個點 (%.1f, %.1f), 最後一個點 (%.1f, %.1f)",
+                            points[0].x(),
+                            points[0].y(),
+                            points[-1].x(),
+                            points[-1].y(),
+                        )
                     
                     # 創建平滑的賽道路徑
                     path = QPainterPath()
@@ -684,17 +723,15 @@ class TrackMapWidget(QWidget):
                                         painter.setFont(QFont("Arial", 7))
                                         painter.drawText(int(points[i].x()) + 5, int(points[i].y()) + 15, f"{distance_km:.1f}km")
                     
-                    print(f"[TRACK_MAP] paintEvent: ✅ 平滑賽道線條和標記繪製完成")
+                    logger.info("[TRACK_MAP] paintEvent: ✅ 平滑賽道線條和標記繪製完成")
                 
                 # 隱藏圖例繪製
                 # self.draw_legend(painter)
                 
-                print("[TRACK_MAP] paintEvent: ✅ 賽道地圖繪製完成")
+                logger.info("[TRACK_MAP] paintEvent: ✅ 賽道地圖繪製完成")
                 
             except Exception as e:
-                print(f"[ERROR] paintEvent: 繪製賽道地圖時發生錯誤: {e}")
-                import traceback
-                traceback.print_exc()
+                logger.exception("[ERROR] paintEvent: 繪製賽道地圖時發生錯誤: %s", e)
                 # 在異常時也繪製錯誤訊息（在 painter.end() 之前）
                 painter.setPen(QPen(QColor(200, 0, 0)))
                 painter.setFont(QFont("Arial", 10))
@@ -708,7 +745,12 @@ class TrackMapWidget(QWidget):
         if event.button() == Qt.LeftButton:
             x = event.x()
             y = event.y()
-            print(f"[TRACK_MAP] 點擊位置: {{'x': {x}, 'y': {y}, 'total_points': {len(self.position_data)}}}")
+            logger.info(
+                "[TRACK_MAP] 點擊位置: {'x': %s, 'y': %s, 'total_points': %s}",
+                x,
+                y,
+                len(self.position_data),
+            )
             
             # 可以在這裡添加更多點擊處理邏輯
             # 例如：找到最近的賽道點、顯示詳細資訊等
@@ -759,26 +801,30 @@ class TrackMapWidget(QWidget):
     
     def force_rescale(self):
         """強制重新計算縮放 - 用於外部觸發"""
-        print(f"[TRACK_MAP] force_rescale: 強制重新計算縮放")
+        logger.info("[TRACK_MAP] force_rescale: 強制重新計算縮放")
         if self.track_bounds:
             self.calculate_scale()
             self.update()
-            print(f"[TRACK_MAP] force_rescale: ✅ 縮放更新完成，縮放因子 {self.scale_factor:.3f}")
+            logger.info("[TRACK_MAP] force_rescale: ✅ 縮放更新完成，縮放因子 %.3f", self.scale_factor)
         else:
-            print("[TRACK_MAP] force_rescale: 沒有賽道邊界數據")
+            logger.warning("[TRACK_MAP] force_rescale: 沒有賽道邊界數據")
     
     def resizeEvent(self, event):
         """視窗大小改變時重新計算縮放"""
         super().resizeEvent(event)
-        print(f"[TRACK_MAP] resizeEvent: 新尺寸 {event.size().width()}x{event.size().height()}")
+        logger.info("[TRACK_MAP] resizeEvent: 新尺寸 %sx%s", event.size().width(), event.size().height())
         
         if self.track_bounds:
             old_scale = self.scale_factor
             self.calculate_scale()
-            print(f"[TRACK_MAP] resizeEvent: 縮放更新 {old_scale:.3f} -> {self.scale_factor:.3f}")
+            logger.info(
+                "[TRACK_MAP] resizeEvent: 縮放更新 %.3f -> %.3f",
+                old_scale,
+                self.scale_factor,
+            )
             self.update()  # 觸發重繪
         else:
-            print("[TRACK_MAP] resizeEvent: 等待賽道數據載入")
+            logger.info("[TRACK_MAP] resizeEvent: 等待賽道數據載入")
 
 class TrackAnalysisModule(QWidget):
     """賽道分析主模組"""
@@ -1051,7 +1097,7 @@ class TrackAnalysisModule(QWidget):
 
     def start_analysis_workflow(self):
         """開始賽道分析工作流程"""
-        print(f"[TRACK] 開始賽道分析工作流程: {self.year} {self.race} {self.session}")
+        logger.info("[TRACK] 開始賽道分析工作流程: %s %s %s", self.year, self.race, self.session)
         
         # 隱藏狀態和進度顯示
         # self.status_label.setText("狀態: 執行賽道分析中...")
@@ -1081,7 +1127,7 @@ class TrackAnalysisModule(QWidget):
         # 隱藏進度顯示
         # self.progress_bar.setValue(progress)
         # self.status_label.setText(f"狀態: {message}")
-        print(f"[TRACK] 進度: {progress}% - {message}")
+        logger.info("[TRACK] 進度: %s%% - %s", progress, message)
     
     def on_analysis_completed(self, track_data):
         """分析完成處理"""
@@ -1094,7 +1140,7 @@ class TrackAnalysisModule(QWidget):
         # self.update_track_info_display()  # 隱藏資訊顯示
         self.update_track_map_display()
         
-        print("[TRACK] 賽道分析完成，數據已載入")
+        logger.info("[TRACK] 賽道分析完成，數據已載入")
     
     def on_analysis_failed(self, error_message):
         """分析失敗處理"""
@@ -1102,7 +1148,7 @@ class TrackAnalysisModule(QWidget):
         # self.progress_bar.setVisible(False)
         # self.status_label.setText(f"狀態: 分析失敗 - {error_message}")
         
-        print(f"[TRACK] 分析失敗: {error_message}")
+        logger.error("[TRACK] 分析失敗: %s", error_message)
         # 發射模組錯誤信號
         self.module_error.emit(error_message)
         # QMessageBox.warning(self, "賽道分析失敗", f"分析執行失敗:\n{error_message}")
@@ -1153,7 +1199,7 @@ class TrackAnalysisModule(QWidget):
             self.update_data_preview()
             
         except Exception as e:
-            print(f"[ERROR] 更新賽道資訊顯示失敗: {e}")
+            logger.exception("[ERROR] 更新賽道資訊顯示失敗: %s", e)
     
     def update_data_preview(self):
         """更新數據預覽"""
@@ -1183,7 +1229,7 @@ class TrackAnalysisModule(QWidget):
     def update_track_map_display(self):
         """更新賽道地圖顯示"""
         if not self.track_data:
-            print("[WARNING] 沒有賽道數據可顯示")
+            logger.warning("[WARNING] 沒有賽道數據可顯示")
             return
         
         try:
@@ -1209,16 +1255,22 @@ class TrackAnalysisModule(QWidget):
                 track_bounds = position_analysis.get('track_bounds', {})
             
             if not records:
-                print("[WARNING] 沒有詳細位置記錄")
+                logger.warning("[WARNING] 沒有詳細位置記錄")
                 return
             
             if not track_bounds:
-                print("[WARNING] 沒有賽道邊界資訊")
+                logger.warning("[WARNING] 沒有賽道邊界資訊")
                 return
             
             # 使用新的 TrackMapWidget 顯示賽道地圖
-            print(f"[TRACK] 開始載入賽道地圖，包含 {len(records)} 個位置點")
-            print(f"[TRACK] 賽道邊界: X({track_bounds.get('x_min', 0):.0f} ~ {track_bounds.get('x_max', 0):.0f}), Y({track_bounds.get('y_min', 0):.0f} ~ {track_bounds.get('y_max', 0):.0f})")
+            logger.info("[TRACK] 開始載入賽道地圖，包含 %s 個位置點", len(records))
+            logger.info(
+                "[TRACK] 賽道邊界: X(%0.0f ~ %0.0f), Y(%0.0f ~ %0.0f)",
+                track_bounds.get('x_min', 0),
+                track_bounds.get('x_max', 0),
+                track_bounds.get('y_min', 0),
+                track_bounds.get('y_max', 0),
+            )
             
             # 設置賽道數據到地圖元件
             self.track_map.set_track_data(records, track_bounds)
@@ -1229,20 +1281,26 @@ class TrackAnalysisModule(QWidget):
             # 確保地圖能正確響應當前視窗大小
             QTimer.singleShot(100, lambda: self._ensure_map_scaling())
             
-            print("[TRACK] ✅ 賽道地圖載入完成")
+            logger.info("[TRACK] ✅ 賽道地圖載入完成")
             
         except Exception as e:
-            print(f"[ERROR] 更新賽道地圖顯示失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[ERROR] 更新賽道地圖顯示失敗: %s", e)
     
     def _ensure_map_scaling(self):
         """確保地圖縮放正確 - 內部方法"""
         if hasattr(self, 'track_map') and self.track_map:
-            print(f"[TRACK] _ensure_map_scaling: 檢查地圖縮放，模組尺寸 {self.width()}x{self.height()}")
-            print(f"[TRACK] _ensure_map_scaling: 地圖元件尺寸 {self.track_map.width()}x{self.track_map.height()}")
+            logger.info(
+                "[TRACK] _ensure_map_scaling: 檢查地圖縮放，模組尺寸 %sx%s",
+                self.width(),
+                self.height(),
+            )
+            logger.info(
+                "[TRACK] _ensure_map_scaling: 地圖元件尺寸 %sx%s",
+                self.track_map.width(),
+                self.track_map.height(),
+            )
             self.track_map.force_rescale()
-            print("[TRACK] _ensure_map_scaling: ✅ 地圖縮放檢查完成")
+            logger.info("[TRACK] _ensure_map_scaling: ✅ 地圖縮放檢查完成")
     def update_track_map_with_text(self):
         """更新地圖為文字顯示模式"""
         if not self.track_data or not hasattr(self, 'map_content'):
@@ -1283,7 +1341,7 @@ class TrackAnalysisModule(QWidget):
             self.track_map.setWidget(clickable_label)
             
         except Exception as e:
-            print(f"[ERROR] 更新文字地圖失敗: {e}")
+            logger.exception("[ERROR] 更新文字地圖失敗: %s", e)
     
     def show_coordinate_details(self):
         """顯示座標詳細資訊"""
@@ -1330,7 +1388,7 @@ class TrackAnalysisModule(QWidget):
             dialog.exec_()
             
         except Exception as e:
-            print(f"[ERROR] 顯示座標詳細資訊失敗: {e}")
+            logger.exception("[ERROR] 顯示座標詳細資訊失敗: %s", e)
     
     def set_analysis_parameters(self, parameters):
         """設定分析參數 - 用於參數同步"""
@@ -1344,7 +1402,7 @@ class TrackAnalysisModule(QWidget):
                 str(race) != str(self.race) or 
                 str(session) != str(self.session)):
                 
-                print(f"[TRACK] 更新分析參數: {year} {race} {session}")
+                logger.info("[TRACK] 更新分析參數: %s %s %s", year, race, session)
                 self.year = year
                 self.race = race
                 self.session = session
@@ -1354,11 +1412,11 @@ class TrackAnalysisModule(QWidget):
                 return True
             else:
                 # 參數沒有變化，不需要重新分析
-                print(f"[TRACK] 參數未變化，跳過分析: {year} {race} {session}")
+                logger.info("[TRACK] 參數未變化，跳過分析: %s %s %s", year, race, session)
                 return True
                 
         except Exception as e:
-            print(f"[ERROR] [TRACK] 設定分析參數失敗: {e}")
+            logger.exception("[ERROR] [TRACK] 設定分析參數失敗: %s", e)
             self.module_error.emit(f"設定分析參數失敗: {str(e)}")
             return False
     
@@ -1371,7 +1429,7 @@ class TrackAnalysisModule(QWidget):
                 'session': session
             })
         except Exception as e:
-            print(f"[ERROR] [TRACK] Parameter update failed: {e}")
+            logger.exception("[ERROR] [TRACK] Parameter update failed: %s", e)
             self.module_error.emit(f"Parameter update failed: {str(e)}")
             return False
     
@@ -1386,7 +1444,7 @@ class TrackAnalysisModule(QWidget):
     
     def reload_analysis(self):
         """Reload analysis"""
-        print(f"[TRACK] Reloading track analysis: {self.year} {self.race} {self.session}")
+        logger.info("[TRACK] Reloading track analysis: %s %s %s", self.year, self.race, self.session)
         self._force_refresh = True
         self.start_analysis_workflow()
     
@@ -1409,8 +1467,12 @@ class TrackAnalysisModule(QWidget):
 
             self.track_map.set_display_options(show_start, show_finish, show_markers, show_labels)
 
-            print(
-                f"[TRACK] 顯示選項更新: 起始點={show_start}, 結束點={show_finish}, 距離標記={show_markers}, 標籤={show_labels}"
+            logger.info(
+                "[TRACK] 顯示選項更新: 起始點=%s, 結束點=%s, 距離標記=%s, 標籤=%s",
+                show_start,
+                show_finish,
+                show_markers,
+                show_labels,
             )
 
     def update_marker_display_options(self):
@@ -1459,27 +1521,37 @@ class TrackAnalysisModule(QWidget):
         new_size = event.size()
         old_size = event.oldSize() if event.oldSize().isValid() else new_size
         
-        print(f"[TRACK] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+        logger.info(
+            "[TRACK] resizeEvent: MDI視窗縮放 %sx%s -> %sx%s",
+            old_size.width(),
+            old_size.height(),
+            new_size.width(),
+            new_size.height(),
+        )
         
         # 確保賽道地圖元件存在並且有數據
         if hasattr(self, 'track_map') and self.track_map:
             # 強制重新計算地圖縮放
             if hasattr(self.track_map, 'track_bounds') and self.track_map.track_bounds:
-                print("[TRACK] resizeEvent: 觸發賽道地圖重新縮放")
+                logger.info("[TRACK] resizeEvent: 觸發賽道地圖重新縮放")
                 # 使用QTimer確保widget尺寸已更新
                 QTimer.singleShot(10, lambda: self._update_track_map_scale())
             else:
-                print("[TRACK] resizeEvent: 賽道地圖尚未載入數據")
+                logger.info("[TRACK] resizeEvent: 賽道地圖尚未載入數據")
         else:
-            print("[TRACK] resizeEvent: 賽道地圖元件尚未初始化")
+            logger.info("[TRACK] resizeEvent: 賽道地圖元件尚未初始化")
     
     def _update_track_map_scale(self):
         """更新賽道地圖縮放 - 內部方法"""
         if hasattr(self, 'track_map') and self.track_map:
-            print(f"[TRACK] _update_track_map_scale: 地圖元件尺寸 {self.track_map.width()}x{self.track_map.height()}")
+            logger.info(
+                "[TRACK] _update_track_map_scale: 地圖元件尺寸 %sx%s",
+                self.track_map.width(),
+                self.track_map.height(),
+            )
             self.track_map.calculate_scale()
             self.track_map.update()
-            print("[TRACK] _update_track_map_scale: ✅ 賽道地圖縮放更新完成")
+            logger.info("[TRACK] _update_track_map_scale: ✅ 賽道地圖縮放更新完成")
 
 # 記憶體優化
 def optimize_memory():

@@ -20,6 +20,7 @@ import requests
 from PyQt5.QtGui import QColor
 
 from core.api_base_url import resolve_api_base_url
+from core.logger import get_logger
 
 # ✅ 手動覆寫配置檔路徑（與 CLI 模組共用）
 DRIVER_OVERRIDES_PATH = Path("config/driver_team_overrides.json")
@@ -85,6 +86,9 @@ DEFAULT_HEX = "#808080"
 DEFAULT_RGB = (128, 128, 128)
 
 
+logger = get_logger(__name__)
+
+
 class ColorPaletteError(RuntimeError):
     """Raised when the colour palette cannot be fetched from the API."""
 
@@ -136,7 +140,7 @@ class ColorPaletteProvider:
             self._last_error = None
         except Exception as exc:  # pragma: no cover - defensive path
             self._last_error = str(exc)
-            print(f"[COLOR] 顏色配置載入失敗: {exc}")
+            logger.exception("[COLOR] 顏色配置載入失敗: %s", exc)
             if not self._driver_palette or not self._team_palette:
                 if self._allow_defaults:
                     self._apply_defaults(season_year=target_year, colormap=colormap)
@@ -225,7 +229,7 @@ class ColorPaletteProvider:
         try:
             if self._base_url is None:
                 self._base_url = resolve_api_base_url(
-                    event_logger=lambda message: print(f"[COLOR] {message}")
+                    event_logger=lambda message: logger.info("[COLOR] %s", message)
                 )
 
             # ✅ 修復: 使用 URL 參數（與其他模組一致）
@@ -243,7 +247,7 @@ class ColorPaletteProvider:
                 raise ColorPaletteError(payload.get("message", "API returned success=False"))
             return payload
         except Exception as exc:
-            print(f"[COLOR] API 請求失敗: {exc}")
+            logger.exception("[COLOR] API 請求失敗: %s", exc)
             return None
 
     def _apply_payload(self, payload: Dict[str, Any], *, season_year: int, colormap: str) -> None:
@@ -254,11 +258,19 @@ class ColorPaletteProvider:
         drivers = inner_data.get("drivers") or {}
 
         # ✅ 調試日誌：顯示 API 回應摘要
-        print(f"[COLOR] 📋 API 回應摘要: teams={len(teams)}, drivers={len(drivers)}")
+        logger.info("[COLOR] 📋 API 回應摘要: teams=%s, drivers=%s", len(teams), len(drivers))
         if teams:
-            print(f"[COLOR] 📋 車隊列表: {list(teams.keys())[:5]}{'...' if len(teams) > 5 else ''}")
+            logger.info(
+                "[COLOR] 📋 車隊列表: %s%s",
+                list(teams.keys())[:5],
+                "..." if len(teams) > 5 else "",
+            )
         if drivers:
-            print(f"[COLOR] 📋 車手列表: {list(drivers.keys())[:10]}{'...' if len(drivers) > 10 else ''}")
+            logger.info(
+                "[COLOR] 📋 車手列表: %s%s",
+                list(drivers.keys())[:10],
+                "..." if len(drivers) > 10 else "",
+            )
 
         team_palette: Dict[str, Dict[str, Any]] = {}
         for slug, info in teams.items():
@@ -276,7 +288,7 @@ class ColorPaletteProvider:
                 "team_name": info.get("team_name") or info.get("team_title") or slug.title(),
             }
 
-        print(f"[COLOR] 📋 車隊處理完成: team_palette={len(team_palette)} 個車隊")
+        logger.info("[COLOR] 📋 車隊處理完成: team_palette=%s 個車隊", len(team_palette))
 
         driver_palette: Dict[str, Dict[str, Any]] = {}
         processed_count = 0
@@ -291,10 +303,10 @@ class ColorPaletteProvider:
                 team_entry = team_palette.get(team_slug)
                 if team_entry:
                     hex_value = team_entry["hex"]
-                    print(f"[COLOR] 💡 車手 {code} 使用車隊顏色: team_slug='{team_slug}' → {hex_value}")
+                    logger.info("[COLOR] 💡 車手 %s 使用車隊顏色: team_slug='%s' → %s", code, team_slug, hex_value)
                 else:
-                    print(f"[COLOR] ⚠️  車手 {code} 跳過: team_slug='{team_slug}' 在 team_palette 中找不到")
-                    print(f"[COLOR] 📋 可用車隊: {list(team_palette.keys())[:5]}")
+                    logger.warning("[COLOR] ⚠️  車手 %s 跳過: team_slug='%s' 在 team_palette 中找不到", code, team_slug)
+                    logger.info("[COLOR] 📋 可用車隊: %s", list(team_palette.keys())[:5])
                     skipped_count += 1
                     continue
             rgb = self._ensure_rgb(info.get("rgb"), hex_value)
@@ -316,14 +328,19 @@ class ColorPaletteProvider:
             processed_count += 1
 
         # ✅ 調試日誌：顯示處理結果
-        print(f"[COLOR] 📊 車手處理完成: 成功={processed_count}, 跳過={skipped_count}, driver_palette={len(driver_palette)}")
+        logger.info(
+            "[COLOR] 📊 車手處理完成: 成功=%s, 跳過=%s, driver_palette=%s",
+            processed_count,
+            skipped_count,
+            len(driver_palette),
+        )
 
         if not driver_palette:
             # ✅ 提供詳細的錯誤診斷資訊
-            print(f"[COLOR] ❌ driver_palette 為空！")
-            print(f"[COLOR] 📋 原始 teams 鍵: {list(teams.keys())}")
-            print(f"[COLOR] 📋 原始 drivers 鍵: {list(drivers.keys())}")
-            print(f"[COLOR] 📋 team_palette 鍵: {list(team_palette.keys())}")
+            logger.error("[COLOR] ❌ driver_palette 為空！")
+            logger.info("[COLOR] 📋 原始 teams 鍵: %s", list(teams.keys()))
+            logger.info("[COLOR] 📋 原始 drivers 鍵: %s", list(drivers.keys()))
+            logger.info("[COLOR] 📋 team_palette 鍵: %s", list(team_palette.keys()))
             raise ColorPaletteError("API payload did not contain driver colour information")
 
         self._team_palette = team_palette
@@ -376,7 +393,7 @@ class ColorPaletteProvider:
                     team_entry = self._team_palette.get(team_slug)
                     
                     if not team_entry:
-                        print(f"[GUI_OVERRIDE] ⚠️  跳過 {code_upper}: 車隊 '{team_slug}' 不存在")
+                        logger.warning("[GUI_OVERRIDE] ⚠️  跳過 %s: 車隊 '%s' 不存在", code_upper, team_slug)
                         continue
                     
                     self._driver_palette[code_upper] = {
@@ -388,7 +405,12 @@ class ColorPaletteProvider:
                         "driver_id": data.get("driver_id", code_upper.lower()),
                         "full_name": data.get("full_name", code_upper),
                     }
-                    print(f"[GUI_OVERRIDE] ➕ 新增車手: {code_upper} → {data.get('team_name')} ({data.get('reason', 'N/A')})")
+                    logger.info(
+                        "[GUI_OVERRIDE] ➕ 新增車手: %s → %s (%s)",
+                        code_upper,
+                        data.get('team_name'),
+                        data.get('reason', 'N/A'),
+                    )
                     override_count += 1
                 else:
                     # 更新現有車手的車隊資訊
@@ -397,7 +419,7 @@ class ColorPaletteProvider:
                     new_team_entry = self._team_palette.get(new_team_slug)
                     
                     if not new_team_entry:
-                        print(f"[GUI_OVERRIDE] ⚠️  跳過 {code_upper}: 車隊 '{new_team_slug}' 不存在")
+                        logger.warning("[GUI_OVERRIDE] ⚠️  跳過 %s: 車隊 '%s' 不存在", code_upper, new_team_slug)
                         continue
                     
                     self._driver_palette[code_upper].update({
@@ -407,16 +429,22 @@ class ColorPaletteProvider:
                         "team_slug": new_team_slug,
                         "team_name": data.get("team_name", new_team_entry["team_name"]),
                     })
-                    print(f"[GUI_OVERRIDE] 🔄 更新車手: {code_upper}: {original_team} → {data.get('team_name')} ({data.get('reason', 'N/A')})")
+                    logger.info(
+                        "[GUI_OVERRIDE] 🔄 更新車手: %s: %s → %s (%s)",
+                        code_upper,
+                        original_team,
+                        data.get('team_name'),
+                        data.get('reason', 'N/A'),
+                    )
                     override_count += 1
             
             if override_count > 0:
-                print(f"[GUI_OVERRIDE] ✅ 共套用 {override_count} 個車手覆寫（{season_year} 賽季）")
+                logger.info("[GUI_OVERRIDE] ✅ 共套用 %s 個車手覆寫（%s 賽季）", override_count, season_year)
                 self._metadata["overrides_applied"] = override_count
                 self._metadata["overrides_source"] = str(DRIVER_OVERRIDES_PATH)
             
         except Exception as e:
-            print(f"[GUI_OVERRIDE] ⚠️  載入覆寫配置失敗: {e}")
+            logger.exception("[GUI_OVERRIDE] ⚠️  載入覆寫配置失敗: %s", e)
     
     def _apply_defaults(self, *, season_year: int, colormap: str) -> None:
         if not self._allow_defaults:

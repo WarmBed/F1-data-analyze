@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Optional
+import logging
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
@@ -24,6 +25,9 @@ from PyQt5.QtWidgets import (
 
 from core.gui_i18n import tr
 from core.gui_settings_manager import GuiSettingsManager, gui_settings_manager
+from core.logger import get_logger
+
+logger = get_logger("settings.system_settings_dialog", component="gui")
 
 
 class SystemSettingsDialog(QDialog):
@@ -559,7 +563,7 @@ class SystemSettingsDialog(QDialog):
                 with open(config_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
         except Exception as e:
-            print(f"[SETTINGS] Failed to load logger config: {e}")
+            logger.warning("[SETTINGS] Failed to load logger config: %s", e)
         
         return {
             "enabled": True,
@@ -579,7 +583,7 @@ class SystemSettingsDialog(QDialog):
             with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2, ensure_ascii=False)
         except Exception as e:
-            print(f"[SETTINGS] Failed to save logger config: {e}")
+            logger.error("[SETTINGS] Failed to save logger config: %s", e)
 
     def _apply_logger_preset_disabled(self) -> None:
         """應用預設：禁用 Logger"""

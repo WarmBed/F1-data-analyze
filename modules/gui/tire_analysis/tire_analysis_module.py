@@ -21,6 +21,7 @@ Version: 1.0.0
 from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal
+from core.logger import get_logger
 
 # 導入介面和基類
 try:
@@ -33,6 +34,9 @@ try:
     from .tire_analysis_mdi import TireAnalysisUniversal
 except ImportError:
     from modules.gui.tire_analysis.tire_analysis_mdi import TireAnalysisUniversal
+
+
+logger = get_logger("tire_analysis_module", component="gui")
 
 
 class TireAnalysisModule(IAnalysisModule):
@@ -117,11 +121,11 @@ class TireAnalysisModule(IAnalysisModule):
                 self._main_widget = self._tire_analysis_core.get_widget()
             
             self._is_initialized = True
-            print(f"✅ [tire_MODULE] Module initialized")
+            logger.info("✅ [tire_MODULE] Module initialized")
             return True
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] Initialization failed: {e}")
+            logger.exception("❌ [tire_MODULE] Initialization failed: %s", e)
             return False
         
     def get_widget(self):
@@ -133,7 +137,7 @@ class TireAnalysisModule(IAnalysisModule):
     def update_parameters(self, year: int, race: str, session: str) -> bool:
         """Update analysis parameters"""
         try:
-            print(f"🔄 [tire_MODULE] update_parameters called: {year}, {race}, {session}")
+            logger.info("🔄 [tire_MODULE] update_parameters called: %s, %s, %s", year, race, session)
             
             self.current_year = str(year)
             self.current_race = race
@@ -145,14 +149,14 @@ class TireAnalysisModule(IAnalysisModule):
                     year=str(year), race=race, session=session
                 )
                 if success:
-                    print(f"✅ [tire_MODULE] Parameters updated successfully")
+                    logger.info("✅ [tire_MODULE] Parameters updated successfully")
                     return True
             
-            print(f"⚠️ [tire_MODULE] Parameter update failed")
+            logger.warning("⚠️ [tire_MODULE] Parameter update failed")
             return False
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] Parameter update error: {e}")
+            logger.exception("❌ [tire_MODULE] Parameter update error: %s", e)
             return False
             
     def validate_parameters(self, year: int, race: str, session: str) -> bool:
@@ -311,15 +315,15 @@ class TireAnalysisModule(IAnalysisModule):
                         year=str(year), race=race, session=session
                     )
                     if success:
-                        print(f"✅ [tire_MODULE] load_data 成功: {year} {race} {session}")
+                        logger.info("✅ [tire_MODULE] load_data 成功: %s %s %s", year, race, session)
                         self.data_loaded.emit({'year': year, 'race': race, 'session': session})
                         return True
             
-            print(f"⚠️ [tire_MODULE] load_data 失敗")
+            logger.warning("⚠️ [tire_MODULE] load_data 失敗")
             return False
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] load_data 錯誤: {e}")
+            logger.exception("❌ [tire_MODULE] load_data 錯誤: %s", e)
             return False
     
     def refresh_analysis(self) -> None:
@@ -327,7 +331,7 @@ class TireAnalysisModule(IAnalysisModule):
         try:
             if self._tire_analysis_core and hasattr(self._tire_analysis_core, 'refresh_data'):
                 self._tire_analysis_core.refresh_data()
-                print(f"✅ [tire_MODULE] refresh_analysis 完成")
+                logger.info("✅ [tire_MODULE] refresh_analysis 完成")
             elif self.current_year and self.current_race and self.current_session:
                 # 重新載入當前參數的數據
                 self.load_data(
@@ -335,12 +339,12 @@ class TireAnalysisModule(IAnalysisModule):
                     race=self.current_race,
                     session=self.current_session
                 )
-                print(f"✅ [tire_MODULE] refresh_analysis 通過重新載入完成")
+                logger.info("✅ [tire_MODULE] refresh_analysis 通過重新載入完成")
             else:
-                print(f"⚠️ [tire_MODULE] refresh_analysis 無法執行：缺少參數")
+                logger.warning("⚠️ [tire_MODULE] refresh_analysis 無法執行：缺少參數")
                 
         except Exception as e:
-            print(f"❌ [tire_MODULE] refresh_analysis 錯誤: {e}")
+            logger.exception("❌ [tire_MODULE] refresh_analysis 錯誤: %s", e)
     
     def clear_data(self) -> None:
         """清除所有數據"""
@@ -353,10 +357,10 @@ class TireAnalysisModule(IAnalysisModule):
             self.current_race = None
             self.current_session = None
             
-            print(f"✅ [tire_MODULE] clear_data 完成")
+            logger.info("✅ [tire_MODULE] clear_data 完成")
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] clear_data 錯誤: {e}")
+            logger.exception("❌ [tire_MODULE] clear_data 錯誤: %s", e)
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """
@@ -373,11 +377,11 @@ class TireAnalysisModule(IAnalysisModule):
             if export_format.lower() == "json":
                 return self.export_analysis_data(export_path)
             else:
-                print(f"⚠️ [tire_MODULE] 不支援的匯出格式: {export_format}")
+                logger.warning("⚠️ [tire_MODULE] 不支援的匯出格式: %s", export_format)
                 return False
                 
         except Exception as e:
-            print(f"❌ [tire_MODULE] export_data 錯誤: {e}")
+            logger.exception("❌ [tire_MODULE] export_data 錯誤: %s", e)
             return False
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -404,14 +408,14 @@ class TireAnalysisModule(IAnalysisModule):
             return None
             
         except Exception as e:
-            print(f"❌ [tire_MODULE] get_current_data 錯誤: {e}")
+            logger.exception("❌ [tire_MODULE] get_current_data 錯誤: %s", e)
             return None
 
     # ===== 輔助方法 =====
     
     def _debug(self, message: str):
         """調試訊息輸出"""
-        print(f"[tire_MODULE] {message}")
+        logger.info("[tire_MODULE] %s", message)
         
     def get_current_timestamp(self) -> str:
         """獲取當前時間戳"""
@@ -481,19 +485,19 @@ def test_tire_analysis_module():
         module = create_tire_analysis_module()
         
         # 測試基本屬性
-        print(f"模組名稱: {module.get_display_name()}")
-        print(f"模組類型: {module.get_module_type()}")
-        print(f"是否準備就緒: {module.is_ready()}")
+        logger.info("模組名稱: %s", module.get_display_name())
+        logger.info("模組類型: %s", module.get_module_type())
+        logger.info("是否準備就緒: %s", module.is_ready())
         
         # 測試模組信息
         info = module.get_module_info()
-        print(f"支援的圖表類型: {info.get('chart_types', [])}")
+        logger.info("支援的圖表類型: %s", info.get('chart_types', []))
         
-        print("下雨分析模組測試通過!")
+        logger.info("下雨分析模組測試通過!")
         return True
         
     except Exception as e:
-        print(f"下雨分析模組測試失敗: {str(e)}")
+        logger.exception("下雨分析模組測試失敗: %s", str(e))
         return False
 
 

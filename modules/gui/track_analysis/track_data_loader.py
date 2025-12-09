@@ -23,6 +23,7 @@ import subprocess
 import time
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
+from core.logger import get_logger
 
 # 導入通用基礎類別
 import sys
@@ -34,6 +35,9 @@ try:
 except ImportError:
     # 備用路徑（相對導入）
     from ..base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+
+
+logger = get_logger("track_data_loader", component="gui")
 
 
 class TrackUniversalDataLoader(UniversalDataLoader):
@@ -63,20 +67,20 @@ class TrackUniversalDataLoader(UniversalDataLoader):
             self.register_analysis_type(analysis_type, config)
         
         super().__init__(analysis_type, parent)
-        print(f"[TRACK_ANALYSIS] 初始化完成，使用專門的 TrackDataLoader")
+        logger.info("[TRACK_ANALYSIS] 初始化完成，使用專門的 TrackDataLoader")
     
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
         required_params = ["year", "race", "session"]
         for param in required_params:
             if param not in params:
-                print(f"[TRACK_ANALYSIS] 缺少必要參數: {param}")
+                logger.error("[TRACK_ANALYSIS] 缺少必要參數: %s", param)
                 return False
         
         # 驗證參數類型和範圍
         year = params.get("year")
         if not isinstance(year, int) or year < 2020 or year > 2030:
-            print(f"[TRACK_ANALYSIS] 年份參數無效: {year}")
+            logger.error("[TRACK_ANALYSIS] 年份參數無效: %s", year)
             return False
         
         return True
@@ -102,14 +106,14 @@ class TrackUniversalDataLoader(UniversalDataLoader):
         
         ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
         """
-        print(f"[TRACK_ANALYSIS] ⚠️  [API-ONLY] CLI 調用已禁用")
-        print(f"[TRACK_ANALYSIS] 💡 提示: 請使用 API 獲取賽道分析數據")
+        logger.warning("[TRACK_ANALYSIS] ⚠️  [API-ONLY] CLI 調用已禁用")
+        logger.info("[TRACK_ANALYSIS] 💡 提示: 請使用 API 獲取賽道分析數據")
         return False
     
     def _validate_data_format(self, raw_data: Any) -> bool:
         """驗證數據格式"""
         if not isinstance(raw_data, dict):
-            print(f"[TRACK_ANALYSIS] 數據不是字典格式")
+            logger.error("[TRACK_ANALYSIS] 數據不是字典格式")
             return False
         
         # 檢查必要的鍵 - 適應新的JSON格式
@@ -117,13 +121,13 @@ class TrackUniversalDataLoader(UniversalDataLoader):
         missing_keys = [key for key in required_keys if key not in raw_data]
         
         if missing_keys:
-            print(f"[TRACK_ANALYSIS] 缺少必要鍵: {missing_keys}")
+            logger.error("[TRACK_ANALYSIS] 缺少必要鍵: %s", missing_keys)
             return False
         
         # 檢查賽道數據結構
         position_analysis = raw_data.get("position_analysis", {})
         if not isinstance(position_analysis, dict):
-            print(f"[TRACK_ANALYSIS] position_analysis 格式錯誤")
+            logger.error("[TRACK_ANALYSIS] position_analysis 格式錯誤")
             return False
         
         return True
@@ -131,7 +135,7 @@ class TrackUniversalDataLoader(UniversalDataLoader):
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
         """處理數據為標準格式"""
         try:
-            print(f"[TRACK_ANALYSIS] 開始處理賽道分析數據...")
+            logger.info("[TRACK_ANALYSIS] 開始處理賽道分析數據...")
             
             # 提取基本信息
             race_info = raw_data.get("race_info", {})
@@ -159,11 +163,11 @@ class TrackUniversalDataLoader(UniversalDataLoader):
                 "raw_data": raw_data
             }
             
-            print(f"[TRACK_ANALYSIS] 數據處理完成")
+            logger.info("[TRACK_ANALYSIS] 數據處理完成")
             return processed_data
             
         except Exception as e:
-            print(f"[TRACK_ANALYSIS] 數據處理失敗: {e}")
+            logger.exception("[TRACK_ANALYSIS] 數據處理失敗: %s", e)
             return {}
     
     def generate_cli_command(self, year: int, race: str, session: str) -> List[str]:
@@ -242,11 +246,11 @@ class TrackDataLoader:
     
     def __init__(self, parent=None):
         self.universal_loader = TrackUniversalDataLoader(parent)
-        print(f"[TELEMETRY DEBUG] 初始化 賽道分析 載入器")
+        logger.info("[TELEMETRY DEBUG] 初始化 賽道分析 載入器")
     
     def load_data(self, year: int, race: str, session: str, **kwargs) -> Dict[str, Any]:
         """載入賽道分析數據"""
-        print(f"[TRACK_LOADER DEBUG] 接收參數: year={year} (類型: {type(year)}), race={race}, session={session}")
+        logger.info("[TRACK_LOADER DEBUG] 接收參數: year=%s (類型: %s), race=%s, session=%s", year, type(year), race, session)
         # 將位置參數轉換為關鍵字參數傳遞給 universal_loader
         result = self.universal_loader.load_data(
             year=year, 
@@ -254,7 +258,7 @@ class TrackDataLoader:
             session=session, 
             **kwargs
         )
-        print(f"[TRACK_LOADER DEBUG] universal_loader.load_data 返回: {type(result)}")
+        logger.info("[TRACK_LOADER DEBUG] universal_loader.load_data 返回: %s", type(result))
         return result
     
     def get_cache_status(self, year: int, race: str, session: str) -> Dict[str, Any]:
@@ -284,23 +288,21 @@ def create_track_data_loader(parent=None) -> TrackDataLoader:
 def test_track_data_loader():
     """測試賽道數據載入器"""
     try:
-        print("🧪 測試賽道數據載入器...")
+        logger.info("🧪 測試賽道數據載入器...")
         
         # 創建載入器
         loader = create_track_data_loader()
-        print("✅ 載入器創建成功")
+        logger.info("✅ 載入器創建成功")
         
         # 測試快取狀態
         cache_status = loader.get_cache_status(2025, "Japan", "R")
-        print(f"📊 快取狀態: {cache_status}")
+        logger.info("📊 快取狀態: %s", cache_status)
         
-        print("✅ 賽道數據載入器測試完成")
+        logger.info("✅ 賽道數據載入器測試完成")
         return True
         
     except Exception as e:
-        print(f"❌ 測試失敗: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.exception("❌ 測試失敗: %s", e)
         return False
 
 

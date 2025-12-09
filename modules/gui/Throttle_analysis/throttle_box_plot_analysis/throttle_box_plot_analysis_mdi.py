@@ -30,33 +30,37 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QLabel,
-    QGroupBox,
-    QDoubleSpinBox,
-    QCheckBox,
-    QPushButton,
-    QFileDialog,
-    QMessageBox,
-)
+        try:
+            logger.info("[THROTTLE_MDI] 🔄 收到 reset_chart_view 請求")
+            
+            # 檢查 chart_widget 是否存在
+            if not hasattr(self, 'chart_widget') or not self.chart_widget:
+                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 不存在")
+                return
+            
+            # 檢查 chart_widget 是否有 show_all_drivers 方法
+            if not hasattr(self.chart_widget, 'show_all_drivers'):
+                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                return
+            
+            # 調用 Widget 的 show_all_drivers() 方法
+            logger.info("[THROTTLE_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            self.chart_widget.show_all_drivers()
+            
+        except Exception as e:
+            logger.exception("[THROTTLE_MDI] ❌ reset_chart_view 失敗: %s", e)
+            import traceback
 
-from core.api_base_url import resolve_api_base_url
-from core.gui_i18n import tr
-from core.gui_settings_manager import gui_settings_manager
-
-from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
-    extract_caution_laps,
-    extract_red_flag_laps,
-    lap_is_under_caution,
-    lap_is_under_red_flag,
-    lap_is_pit_stop,
-)
-
+            traceback.print_exc()
 try:
     from ...base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from ...base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 except ImportError:  # pragma: no cover
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+
+
+logger = get_logger(__name__)
 
 
 class ThrottleBoxPlotApiWorker(QThread):
@@ -185,7 +189,7 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
     # 共用輔助
     # ------------------------------------------------------------------
     def _debug(self, message: str):
-        print(f"[THROTTLE_DATA] {message}")
+        logger.info("[THROTTLE_DATA] %s", message)
 
     def _determine_api_base_url(self) -> str:
         return resolve_api_base_url(event_logger=self._debug)
@@ -791,7 +795,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         parent=None,
         **kwargs,
     ):
-        print("[THROTTLE_MDI] ThrottleBoxPlotAnalysis 開始初始化...")
+        logger.info("[THROTTLE_MDI] ThrottleBoxPlotAnalysis 開始初始化...")
 
         if "throttle_boxplot" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
             throttle_config = AnalysisMDIConfig(
@@ -807,19 +811,19 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             UniversalAnalysisMDI.register_mdi_module_type("throttle_boxplot", throttle_config)
 
         super().__init__("throttle_boxplot", parent)
-        print(f"[THROTTLE_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
+        logger.info("[THROTTLE_MDI] 基類初始化完成, 數據管理器: %s", self.data_manager)
 
         self.control_widget: Optional[ThrottleBoxPlotControlWidget] = None
         self._pending_boxplot_settings: Optional[Dict[str, Any]] = None
 
-        print("[THROTTLE_MDI] 開始初始化模組組件...")
+        logger.info("[THROTTLE_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
-            print("[THROTTLE_MDI] ❌ 模組組件初始化失敗")
+            logger.error("[THROTTLE_MDI] ❌ 模組組件初始化失敗")
             return
 
-        print("[THROTTLE_MDI] ✅ 模組組件初始化完成")
-        print(f"[THROTTLE_MDI] 數據管理器: {self.data_manager}")
-        print(f"[THROTTLE_MDI] 圖表組件: {self.chart_widget}")
+        logger.info("[THROTTLE_MDI] ✅ 模組組件初始化完成")
+        logger.info("[THROTTLE_MDI] 數據管理器: %s", self.data_manager)
+        logger.info("[THROTTLE_MDI] 圖表組件: %s", self.chart_widget)
 
         self.set_responsive_layout()
 
@@ -827,7 +831,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         try:
             self.settings_manager.boxplot_settings_changed.connect(self._on_global_boxplot_settings_changed)
         except Exception as exc:
-            print(f"[THROTTLE_MDI] 無法連接全域設定信號: {exc}")
+            logger.exception("[THROTTLE_MDI] 無法連接全域設定信號: %s", exc)
         self._on_global_boxplot_settings_changed(self.settings_manager.get_boxplot_settings())
 
         if year is not None:
@@ -852,7 +856,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             control_widget = self.create_control_widget()
             self.control_widget = control_widget
         except Exception as exc:
-            print(f"[THROTTLE_MDI] 建立控制面板失敗: {exc}")
+            logger.exception("[THROTTLE_MDI] 建立控制面板失敗: %s", exc)
             import traceback
 
             traceback.print_exc()
@@ -875,8 +879,8 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
 
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         try:
-            print("[THROTTLE_MDI] ========== 油門箱型圖參數更新 ==========")
-            print(f"[THROTTLE_MDI] 收到參數: {year} {race} {session}")
+            logger.info("[THROTTLE_MDI] ========== 油門箱型圖參數更新 ==========")
+            logger.info("[THROTTLE_MDI] 收到參數: %s %s %s", year, race, session)
             self.current_year = str(year)
             self.current_race = str(race)
             self.current_session = str(session)
@@ -896,13 +900,13 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
                     session=self.current_session,
                     **kwargs,
                 )
-                print(f"[THROTTLE_MDI] 數據載入結果: {result}")
+                logger.info("[THROTTLE_MDI] 數據載入結果: %s", result)
                 if not result:
-                    print("[THROTTLE_MDI] ⚠️ 數據載入請求未成功提交")
-            print("[THROTTLE_MDI] 參數更新完成")
+                    logger.warning("[THROTTLE_MDI] ⚠️ 數據載入請求未成功提交")
+            logger.info("[THROTTLE_MDI] 參數更新完成")
             return True
         except Exception as exc:
-            print(f"[THROTTLE_MDI] 參數更新失敗: {exc}")
+            logger.exception("[THROTTLE_MDI] 參數更新失敗: %s", exc)
             import traceback
 
             traceback.print_exc()
@@ -912,7 +916,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         return self.update_lap_parameters(year=year, race=race, session=session)
 
     def _on_filter_settings_changed(self, settings: Dict[str, Any]):
-        print(f"[THROTTLE_MDI] 過濾設定變更: {settings}")
+        logger.info("[THROTTLE_MDI] 過濾設定變更: %s", settings)
         if not hasattr(self, "settings_manager") or self.settings_manager is None:
             return
 
@@ -955,13 +959,13 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
                     stats_text = f"✅ 車手: {total_drivers} | 取樣數: {total_laps}"
                     self.control_widget.update_statistics(stats_text)
         except Exception as exc:
-            print(f"[THROTTLE_MDI] 全域設定套用失敗: {exc}")
+            logger.exception("[THROTTLE_MDI] 全域設定套用失敗: %s", exc)
             import traceback
 
             traceback.print_exc()
 
     def _on_data_load_error(self, error_message: str):
-        print(f"[THROTTLE_MDI] ❌ 數據載入錯誤: {error_message}")
+        logger.error("[THROTTLE_MDI] ❌ 數據載入錯誤: %s", error_message)
         if hasattr(self, "control_widget") and self.control_widget:
             self.control_widget.update_statistics("❌ 數據載入失敗")
 
@@ -993,7 +997,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         )
 
     def _on_reload_requested(self):
-        print("[THROTTLE_MDI] 重新載入數據...")
+        logger.info("[THROTTLE_MDI] 重新載入數據...")
         if not self.data_manager:
             return
         success = self.data_manager.load_data(
@@ -1003,7 +1007,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             force_refresh=True,
         )
         if not success:
-            print("[THROTTLE_MDI] 重新載入請求無法提交")
+            logger.warning("[THROTTLE_MDI] 重新載入請求無法提交")
             if self.control_widget:
                 self.control_widget.update_statistics("❌ 重新載入失敗")
 
@@ -1056,35 +1060,35 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         用於恢復所有被隱藏的車手數據
         """
         try:
-            print("[THROTTLE_MDI] 🔄 收到 reset_chart_view 請求")
+            logger.info("[THROTTLE_MDI] 🔄 收到 reset_chart_view 請求")
             
             # 檢查 chart_widget 是否存在
             if not hasattr(self, 'chart_widget') or not self.chart_widget:
-                print("[THROTTLE_MDI] ⚠️  chart_widget 不存在")
+                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 不存在")
                 return
             
             # 檢查 chart_widget 是否有 show_all_drivers 方法
             if not hasattr(self.chart_widget, 'show_all_drivers'):
-                print("[THROTTLE_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
                 return
             
             # 調用 Widget 的 show_all_drivers() 方法
-            print("[THROTTLE_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            logger.info("[THROTTLE_MDI] ✅ 調用 chart_widget.show_all_drivers()")
             self.chart_widget.show_all_drivers()
             
         except Exception as e:
-            print("[THROTTLE_MDI] ❌ reset_chart_view 失敗: {e}")
+            logger.exception("[THROTTLE_MDI] ❌ reset_chart_view 失敗: %s", e)
             import traceback
             traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         if export_format.lower() != "json":
-            print(f"[THROTTLE_MDI] 不支援的匯出格式: {export_format}")
+            logger.warning("[THROTTLE_MDI] 不支援的匯出格式: %s", export_format)
             return False
         try:
             current_data = self.data_manager.get_processed_data() if self.data_manager else None
             if not current_data:
-                print("[THROTTLE_MDI] 沒有可匯出的數據")
+                logger.warning("[THROTTLE_MDI] 沒有可匯出的數據")
                 return False
             payload = {
                 "module": "throttle_box_plot",
@@ -1099,7 +1103,7 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
                 json.dump(payload, fp, ensure_ascii=False, indent=2)
             return True
         except Exception as exc:
-            print(f"[THROTTLE_MDI] 匯出數據失敗: {exc}")
+            logger.exception("[THROTTLE_MDI] 匯出數據失敗: %s", exc)
             return False
 
     def resizeEvent(self, event):
@@ -1118,22 +1122,25 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             new_size = event.size() if hasattr(event, "size") else None
 
             if old_size and new_size:
-                print(
-                    f"[THROTTLE_MDI] resizeEvent: MDI視窗縮放 "
-                    f"{old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}"
+                logger.info(
+                    "[THROTTLE_MDI] resizeEvent: MDI視窗縮放 %sx%s -> %sx%s",
+                    old_size.width(),
+                    old_size.height(),
+                    new_size.width(),
+                    new_size.height(),
                 )
 
             if hasattr(self, "chart_widget") and self.chart_widget:
                 if hasattr(self.chart_widget, "update_chart_layout"):
-                    print("[THROTTLE_MDI] resizeEvent: 觸發圖表重新佈局")
+                    logger.info("[THROTTLE_MDI] resizeEvent: 觸發圖表重新佈局")
                     self.chart_widget.update_chart_layout()
                 else:
-                    print("[THROTTLE_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
+                    logger.info("[THROTTLE_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
             else:
-                print("[THROTTLE_MDI] resizeEvent: 圖表組件尚未初始化")
+                logger.info("[THROTTLE_MDI] resizeEvent: 圖表組件尚未初始化")
 
         except Exception as exc:
-            print(f"[ERROR] [THROTTLE_MDI] resizeEvent 處理失敗: {exc}")
+            logger.exception("[ERROR] [THROTTLE_MDI] resizeEvent 處理失敗: %s", exc)
 
     def set_responsive_layout(self):
         """為主視圖與子元件套用響應式大小策略。"""
@@ -1149,9 +1156,9 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             if hasattr(self, "control_widget") and self.control_widget:
                 self.control_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
-            print("[THROTTLE_MDI] 響應式佈局已設置")
+            logger.info("[THROTTLE_MDI] 響應式佈局已設置")
 
         except Exception as exc:
-            print(f"[ERROR] [THROTTLE_MDI] 設置響應式佈局失敗: {exc}")
+            logger.exception("[ERROR] [THROTTLE_MDI] 設置響應式佈局失敗: %s", exc)
 
 

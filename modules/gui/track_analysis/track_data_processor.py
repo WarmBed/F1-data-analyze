@@ -18,6 +18,10 @@ import os
 from typing import Dict, List, Tuple, Optional
 from datetime import datetime
 
+from core.logger import get_logger
+
+logger = get_logger("track_data_processor", component="gui")
+
 class TrackDataProcessor:
     """賽道數據處理器"""
     
@@ -45,16 +49,16 @@ class TrackDataProcessor:
             解析後的數據字典，失敗時返回None
         """
         try:
-            print(f"[TRACK_PROCESSOR] 開始解析JSON檔案: {json_file_path}")
+            logger.info("[TRACK_PROCESSOR] 開始解析JSON檔案: %s", json_file_path)
             
             if not os.path.exists(json_file_path):
-                print(f"[ERROR] 檔案不存在: {json_file_path}")
+                logger.error("[ERROR] 檔案不存在: %s", json_file_path)
                 return None
             
             with open(json_file_path, 'r', encoding='utf-8') as f:
                 raw_data = json.load(f)
             
-            print(f"[TRACK_PROCESSOR] JSON解析成功，資料大小: {len(str(raw_data))} 字元")
+            logger.info("[TRACK_PROCESSOR] JSON解析成功，資料大小: %s 字元", len(str(raw_data)))
             
             # 驗證必要欄位
             required_fields = ['session_info', 'position_analysis']
@@ -64,16 +68,16 @@ class TrackDataProcessor:
                     missing_fields.append(field)
             
             if missing_fields:
-                print(f"[WARNING] 缺少必要欄位: {missing_fields}")
+                logger.warning("[WARNING] 缺少必要欄位: %s", missing_fields)
             
             self.last_processed_data = raw_data
             return raw_data
             
         except json.JSONDecodeError as e:
-            print(f"[ERROR] JSON解析錯誤: {e}")
+            logger.error("[ERROR] JSON解析錯誤: %s", e)
             return None
         except Exception as e:
-            print(f"[ERROR] 解析檔案失敗: {e}")
+            logger.exception("[ERROR] 解析檔案失敗: %s", e)
             return None
     
     def extract_position_records(self, raw_data: Dict) -> List[Dict]:
@@ -90,7 +94,7 @@ class TrackDataProcessor:
             position_records = raw_data.get('detailed_position_records', [])
             
             if not position_records:
-                print("[WARNING] 沒有找到詳細位置記錄")
+                logger.warning("[WARNING] 沒有找到詳細位置記錄")
                 return []
             
             # 驗證記錄格式
@@ -99,13 +103,13 @@ class TrackDataProcessor:
                 if self._validate_position_record(record):
                     valid_records.append(record)
                 else:
-                    print(f"[WARNING] 第{i}筆記錄格式不正確，已跳過")
+                    logger.warning("[WARNING] 第%s筆記錄格式不正確，已跳過", i)
             
-            print(f"[TRACK_PROCESSOR] 提取位置記錄: {len(valid_records)}/{len(position_records)} 筆有效")
+            logger.info("[TRACK_PROCESSOR] 提取位置記錄: %s/%s 筆有效", len(valid_records), len(position_records))
             return valid_records
             
         except Exception as e:
-            print(f"[ERROR] 提取位置記錄失敗: {e}")
+            logger.exception("[ERROR] 提取位置記錄失敗: %s", e)
             return []
     
     def _validate_position_record(self, record: Dict) -> bool:
@@ -128,20 +132,20 @@ class TrackDataProcessor:
             track_bounds = position_analysis.get('track_bounds', {})
             
             if not track_bounds:
-                print("[WARNING] 沒有找到賽道邊界資訊")
+                logger.warning("[WARNING] 沒有找到賽道邊界資訊")
                 return {}
             
             # 驗證邊界資訊
             required_bounds = ['min_x', 'max_x', 'min_y', 'max_y']
             for bound in required_bounds:
                 if bound not in track_bounds:
-                    print(f"[WARNING] 缺少邊界資訊: {bound}")
+                    logger.warning("[WARNING] 缺少邊界資訊: %s", bound)
             
-            print(f"[TRACK_PROCESSOR] 賽道邊界: {track_bounds}")
+            logger.info("[TRACK_PROCESSOR] 賽道邊界: %s", track_bounds)
             return track_bounds
             
         except Exception as e:
-            print(f"[ERROR] 提取賽道邊界失敗: {e}")
+            logger.exception("[ERROR] 提取賽道邊界失敗: %s", e)
             return {}
     
     def normalize_coordinates(self, position_records: List[Dict]) -> List[Dict]:
@@ -182,14 +186,14 @@ class TrackDataProcessor:
                 normalized_record['normalized_y'] = (record['position_y'] - y_min) / y_range
                 normalized_records.append(normalized_record)
             
-            print(f"[TRACK_PROCESSOR] 座標正規化完成: {len(normalized_records)} 筆記錄")
-            print(f"[TRACK_PROCESSOR] X範圍: {x_min:.2f} ~ {x_max:.2f} (範圍: {x_range:.2f})")
-            print(f"[TRACK_PROCESSOR] Y範圍: {y_min:.2f} ~ {y_max:.2f} (範圍: {y_range:.2f})")
+            logger.info("[TRACK_PROCESSOR] 座標正規化完成: %s 筆記錄", len(normalized_records))
+            logger.info("[TRACK_PROCESSOR] X範圍: %.2f ~ %.2f (範圍: %.2f)", x_min, x_max, x_range)
+            logger.info("[TRACK_PROCESSOR] Y範圍: %.2f ~ %.2f (範圍: %.2f)", y_min, y_max, y_range)
             
             return normalized_records
             
         except Exception as e:
-            print(f"[ERROR] 座標正規化失敗: {e}")
+            logger.exception("[ERROR] 座標正規化失敗: %s", e)
             return position_records
     
     def calculate_track_statistics(self, position_records: List[Dict]) -> Dict:
@@ -239,16 +243,16 @@ class TrackDataProcessor:
                     'y': (min(y_coords) + max(y_coords)) / 2
                 }
             
-            print(f"[TRACK_PROCESSOR] 統計計算完成:")
-            print(f"   總點數: {stats['total_points']}")
-            print(f"   賽道長度: {stats['track_length_m']:.2f}m")
-            print(f"   平均間距: {stats['avg_point_interval_m']:.2f}m")
+            logger.info(
+                "[TRACK_PROCESSOR] 統計計算完成 - 總點數: %s, 賽道長度: %.2fm, 平均間距: %.2fm",
+                stats['total_points'], stats['track_length_m'], stats['avg_point_interval_m']
+            )
             
             self.processing_stats = stats
             return stats
             
         except Exception as e:
-            print(f"[ERROR] 計算統計資訊失敗: {e}")
+            logger.exception("[ERROR] 計算統計資訊失敗: %s", e)
             return {}
     
     def calculate_track_segments(self, position_records: List[Dict], segment_count: int = 10) -> List[Dict]:
@@ -300,11 +304,11 @@ class TrackDataProcessor:
                 
                 segments.append(segment_info)
             
-            print(f"[TRACK_PROCESSOR] 賽道分段計算完成: {len(segments)} 個分段")
+            logger.info("[TRACK_PROCESSOR] 賽道分段計算完成: %s 個分段", len(segments))
             return segments
             
         except Exception as e:
-            print(f"[ERROR] 計算賽道分段失敗: {e}")
+            logger.exception("[ERROR] 計算賽道分段失敗: %s", e)
             return []
     
     def process_complete_dataset(self, json_file_path: str) -> Optional[Dict]:
@@ -318,7 +322,7 @@ class TrackDataProcessor:
             處理完成的數據集
         """
         try:
-            print(f"[TRACK_PROCESSOR] 開始處理完整數據集: {json_file_path}")
+            logger.info("[TRACK_PROCESSOR] 開始處理完整數據集: %s", json_file_path)
             
             # 1. 解析JSON
             raw_data = self.parse_cli_json_output(json_file_path)
@@ -328,7 +332,7 @@ class TrackDataProcessor:
             # 2. 提取位置記錄
             position_records = self.extract_position_records(raw_data)
             if not position_records:
-                print("[ERROR] 沒有有效的位置記錄")
+                logger.error("[ERROR] 沒有有效的位置記錄")
                 return None
             
             # 3. 提取賽道邊界
@@ -359,15 +363,15 @@ class TrackDataProcessor:
                 }
             }
             
-            print(f"[TRACK_PROCESSOR] 數據處理完成")
-            print(f"   原始位置點: {len(position_records)}")
-            print(f"   正規化位置點: {len(normalized_records)}")
-            print(f"   分段數: {len(segments)}")
+            logger.info(
+                "[TRACK_PROCESSOR] 數據處理完成 - 原始位置點: %s, 正規化位置點: %s, 分段數: %s",
+                len(position_records), len(normalized_records), len(segments)
+            )
             
             return processed_data
             
         except Exception as e:
-            print(f"[ERROR] 處理完整數據集失敗: {e}")
+            logger.exception("[ERROR] 處理完整數據集失敗: %s", e)
             return None
     
     def cache_processed_data(self, processed_data: Dict, cache_key: str) -> bool:
@@ -387,11 +391,11 @@ class TrackDataProcessor:
             with open(cache_file, 'w', encoding='utf-8') as f:
                 json.dump(processed_data, f, ensure_ascii=False, indent=2)
             
-            print(f"[TRACK_PROCESSOR] 數據已快取至: {cache_file}")
+            logger.info("[TRACK_PROCESSOR] 數據已快取至: %s", cache_file)
             return True
             
         except Exception as e:
-            print(f"[ERROR] 快取數據失敗: {e}")
+            logger.exception("[ERROR] 快取數據失敗: %s", e)
             return False
     
     def load_cached_data(self, cache_key: str) -> Optional[Dict]:
@@ -413,11 +417,11 @@ class TrackDataProcessor:
             with open(cache_file, 'r', encoding='utf-8') as f:
                 cached_data = json.load(f)
             
-            print(f"[TRACK_PROCESSOR] 從快取載入數據: {cache_file}")
+            logger.info("[TRACK_PROCESSOR] 從快取載入數據: %s", cache_file)
             return cached_data
             
         except Exception as e:
-            print(f"[ERROR] 載入快取數據失敗: {e}")
+            logger.exception("[ERROR] 載入快取數據失敗: %s", e)
             return None
     
     def get_processing_summary(self) -> Dict:
@@ -457,10 +461,10 @@ if __name__ == "__main__":
     if os.path.exists(test_json):
         result = processor.process_complete_dataset(test_json)
         if result:
-            print("測試成功！")
+            logger.info("測試成功！")
             summary = processor.get_processing_summary()
-            print(f"處理摘要: {summary}")
+            logger.info("處理摘要: %s", summary)
         else:
-            print("測試失敗！")
+            logger.error("測試失敗！")
     else:
-        print(f"測試檔案不存在: {test_json}")
+        logger.warning("測試檔案不存在: %s", test_json)
