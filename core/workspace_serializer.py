@@ -102,6 +102,11 @@ class WorkspaceSerializer:
         "SectorComparisonS3MDI": "live_sector_comparison_s3",
         "LiveTimingControlPanel": "live_control_panel",
         "BattleInsightMDI": "live_battle_insight",
+        "TrackWeatherMDI": "live_track_weather",
+        "ChaseStrategyMDI": "live_chase_strategy",
+        
+        # Gap Evolution Chart (從 Chase Strategy 創建的子視窗)
+        "GapEvolutionChartWidget": "gap_evolution_chart",
     }
     
     def __init__(self, main_window):
@@ -112,6 +117,8 @@ class WorkspaceSerializer:
             main_window: StyleHMainWindow 實例
         """
         self.main_window = main_window
+        # 延遲註冊：暫存 Gap Evolution widgets，等所有視窗載入完成後統一註冊
+        self._pending_gap_evolution_widgets = []
     
     # ============================================================================
     # 序列化：GUI → JSON
@@ -487,6 +494,32 @@ class WorkspaceSerializer:
             if hasattr(widget, 'lap2') and widget.lap2:
                 parameters['lap2'] = widget.lap2
             
+            # 策略 5: Gap Evolution Chart 特殊處理
+            # Gap Evolution 是從 Chase Strategy 動態創建的子視窗
+            if hasattr(widget, 'analysis_type') and widget.analysis_type == 'gap_evolution_chart':
+                # 提取 Gap Evolution 特有參數
+                if hasattr(widget, 'strategy_id') and widget.strategy_id:
+                    parameters['strategy_id'] = widget.strategy_id
+                if hasattr(widget, 'p1_tla') and widget.p1_tla:
+                    parameters['p1_tla'] = widget.p1_tla
+                if hasattr(widget, 'p2_tla') and widget.p2_tla:
+                    parameters['p2_tla'] = widget.p2_tla
+                if hasattr(widget, 'current_lap'):
+                    parameters['current_lap'] = widget.current_lap
+                if hasattr(widget, 'current_gap'):
+                    parameters['current_gap'] = widget.current_gap
+                if hasattr(widget, 'total_laps'):
+                    parameters['total_laps'] = widget.total_laps
+                if hasattr(widget, 'p1_color'):
+                    parameters['p1_color'] = widget.p1_color
+                if hasattr(widget, 'p2_color'):
+                    parameters['p2_color'] = widget.p2_color
+                if hasattr(widget, 'p1_compound'):
+                    parameters['p1_compound'] = widget.p1_compound
+                if hasattr(widget, 'p2_compound'):
+                    parameters['p2_compound'] = widget.p2_compound
+                print(f"[WORKSPACE] 📊 Gap Evolution 參數提取: strategy_id={parameters.get('strategy_id')}, p1={parameters.get('p1_tla')}, p2={parameters.get('p2_tla')}")
+            
             # 清理 None 值和空字符串
             parameters = {k: v for k, v in parameters.items() if v is not None and v != ""}
             
@@ -625,6 +658,9 @@ class WorkspaceSerializer:
                         traceback.print_exc()
                 else:
                     print(f"[WORKSPACE] ❌ 當前 widget 沒有 subWindowList 方法")
+            
+            # ✅ 所有視窗載入完成後，統一註冊 Gap Evolution widgets
+            self._register_pending_gap_evolution_widgets()
             
             print(f"[WORKSPACE] ✅ Workspace 反序列化完成！")
             return True
@@ -777,6 +813,8 @@ class WorkspaceSerializer:
                     "Sector Comparison - S3": "live_sector_comparison_s3",
                     "Control Panel": "live_control_panel",
                     "Battle Insight": "live_battle_insight",
+                    "Track & Weather": "live_track_weather",
+                    "Chase Strategy": "live_chase_strategy",
                 }
                 
                 inferred_type = title_to_type_map.get(window_title)
@@ -788,7 +826,16 @@ class WorkspaceSerializer:
                     window_config['window_type'] = window_type
             
             # ========================================================
-            # 步驟 1.5: 檢查是否為 Live Timing 模組
+            # 步驟 1.5: 檢查是否為 Gap Evolution Chart
+            # Gap Evolution 是 Chase Strategy 的動態子視窗
+            # 策略：先創建空視窗，等 Live Timing 播放時透過即時更新機制刷新
+            # ========================================================
+            if window_type == 'gap_evolution_chart':
+                print(f"[WORKSPACE] 🎬 重建 Gap Evolution Chart 視窗...")
+                return self._rebuild_gap_evolution_window(mdi_area, window_config)
+            
+            # ========================================================
+            # 步驟 1.6: 檢查是否為 Live Timing 模組
             # ========================================================
             if window_type.startswith('live_'):
                 print(f"[WORKSPACE] 🎬 檢測到 Live Timing 模組，使用專用工廠...")
@@ -986,6 +1033,210 @@ class WorkspaceSerializer:
             traceback.print_exc()
             return False
     
+    def _rebuild_gap_evolution_window(self, mdi_area, window_config: Dict) -> bool:
+        """
+        重建 Gap Evolution MDI 視窗
+        
+        Gap Evolution 是 Chase Strategy 的動態子視窗。
+        策略：使用保存的參數創建視窗，等 Live Timing 播放時透過即時更新機制刷新。
+        
+        Args:
+            mdi_area: MDI 區域
+            window_config: 視窗配置
+            
+        Returns:
+            是否成功
+        """
+        try:
+            from f1t_gui_main import PopoutSubWindow
+            from modules.gui.live_timing.live_timing_modules.chase_strategy import GapEvolutionChartWidget, StrategyResult
+            
+            params = window_config.get('parameters', {})
+            window_title = window_config.get('window_title', 'Gap Evolution')
+            
+            print(f"[WORKSPACE] 🎬 重建 Gap Evolution 視窗: {window_title}")
+            print(f"[WORKSPACE] 📊 參數: {params}")
+            
+            # 提取參數
+            strategy_id = params.get('strategy_id', 1)
+            p1_tla = params.get('p1_tla', 'P1')
+            p2_tla = params.get('p2_tla', 'P2')
+            current_lap = params.get('current_lap', 1)
+            current_gap = params.get('current_gap', 0.0)
+            total_laps = params.get('total_laps', 58)
+            p1_color = params.get('p1_color', '#3671C6').lstrip('#')
+            p2_color = params.get('p2_color', '#FF8800').lstrip('#')
+            p1_compound = params.get('p1_compound', '--')
+            p2_compound = params.get('p2_compound', '--')
+            
+            # 創建一個最小化的 StrategyResult（用於初始化）
+            # 實際數據會在 Live Timing 播放時透過即時更新機制刷新
+            class MinimalStrategy:
+                def __init__(self, strategy_id, name):
+                    self.strategy_id = strategy_id
+                    self.name = name
+                    self.feasible = True
+                    self.gap_evolution = []  # 空的演變數據，等待更新
+                    # GapEvolutionChartWidget 需要的屬性
+                    self.advantage_per_lap = 0.0  # 每圈優勢（秒）
+                    self.pit_stop_loss = 20.0  # 進站損失（秒）
+                    self.pit_loss = 20.0  # 進站損失（秒）- 別名
+                    self.sc_lap_offset = 5  # 安全車圈數偏移
+                    self.pit_lap = None  # 進站圈數
+                    self.catchup_lap = None  # 追上圈數
+                    self.final_gap = current_gap  # 最終 Gap
+                    self.total_laps = total_laps
+            
+            minimal_strategy = MinimalStrategy(strategy_id, window_title.replace(" - Gap Evolution", ""))
+            
+            # 創建 Gap Evolution Widget
+            chart_widget = GapEvolutionChartWidget(
+                strategy=minimal_strategy,
+                current_lap=current_lap,
+                current_gap=current_gap,
+                total_laps=total_laps,
+                p1_tla=p1_tla,
+                p2_tla=p2_tla,
+                p1_color=p1_color,
+                p2_color=p2_color,
+                active_pit_lap=None,
+                p1_compound=p1_compound,
+                p2_compound=p2_compound,
+                strategy_id=strategy_id
+            )
+            
+            print(f"[WORKSPACE] ✅ Gap Evolution Widget 創建成功")
+            
+            # 創建 PopoutSubWindow
+            sub_window = PopoutSubWindow(
+                window_title,
+                mdi_area,
+                analysis_module=None,
+                sync_enabled=False
+            )
+            sub_window.setWidget(chart_widget)
+            
+            # 恢復尺寸
+            saved_size = window_config.get('size', {})
+            saved_width = saved_size.get('width', 900)
+            saved_height = saved_size.get('height', 600)
+            sub_window.resize(saved_width, saved_height)
+            print(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
+            
+            # 添加到 MDI 區域
+            mdi_area.addSubWindow(sub_window)
+            sub_window.show()
+            
+            # 恢復位置
+            saved_position = window_config.get('position', {})
+            saved_x = saved_position.get('x')
+            saved_y = saved_position.get('y')
+            
+            if saved_x is not None and saved_y is not None:
+                sub_window.move(saved_x, saved_y)
+                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+            
+            # 🔍 延遲註冊：暫存到列表，等所有視窗載入完成後再統一註冊
+            # ⚠️ 原因：Gap Evolution 可能比 Chase Strategy 更早載入
+            self._pending_gap_evolution_widgets.append(chart_widget)
+            print(f"[WORKSPACE] 📋 Gap Evolution 已暫存，等待所有視窗載入完成後註冊")
+            
+            print(f"[WORKSPACE] ✅ Gap Evolution 視窗重建完成")
+            return True
+            
+        except Exception as e:
+            print(f"[WORKSPACE] ❌ 重建 Gap Evolution 視窗失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
+    def _register_pending_gap_evolution_widgets(self):
+        """
+        統一註冊所有暫存的 Gap Evolution widgets
+        
+        在所有視窗載入完成後調用，確保 Chase Strategy 已經存在
+        """
+        if not self._pending_gap_evolution_widgets:
+            return
+        
+        print(f"[WORKSPACE] 🔗 開始註冊 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution widgets...")
+        
+        # 搜索所有分頁中的 Chase Strategy MDI
+        chase_strategy_mdi = None
+        
+        if hasattr(self.main_window, 'tab_widget'):
+            print(f"[WORKSPACE] 🔍 搜索 Chase Strategy MDI，分頁數量: {self.main_window.tab_widget.count()}")
+            for tab_index in range(self.main_window.tab_widget.count()):
+                tab_widget = self.main_window.tab_widget.widget(tab_index)
+                tab_name = self.main_window.tab_widget.tabText(tab_index)
+                print(f"[WORKSPACE] 📂 檢查分頁 '{tab_name}' (index={tab_index})")
+                
+                if hasattr(tab_widget, 'subWindowList'):
+                    sub_windows = tab_widget.subWindowList()
+                    print(f"[WORKSPACE]   - 此分頁有 {len(sub_windows)} 個子視窗")
+                    
+                    for sub_win in sub_windows:
+                        # ✅ 修復：優先從 content_widget 獲取實際模組
+                        # PopoutSubWindow.widget() 返回包裝後的 QWidget
+                        # PopoutSubWindow.content_widget 才是實際的模組 (ChaseStrategyMDI)
+                        actual_widget = None
+                        if hasattr(sub_win, 'content_widget') and sub_win.content_widget:
+                            actual_widget = sub_win.content_widget
+                            print(f"[WORKSPACE]   - 使用 content_widget: {actual_widget.__class__.__name__}")
+                        else:
+                            actual_widget = sub_win.widget()
+                            if actual_widget:
+                                print(f"[WORKSPACE]   - 使用 widget(): {actual_widget.__class__.__name__}")
+                        
+                        if actual_widget and hasattr(actual_widget, '__class__'):
+                            class_name = actual_widget.__class__.__name__
+                            window_title = sub_win.windowTitle() if hasattr(sub_win, 'windowTitle') else 'Unknown'
+                            print(f"[WORKSPACE]   - 檢查視窗: {class_name} (標題: {window_title})")
+                            
+                            if class_name == 'ChaseStrategyMDI':
+                                chase_strategy_mdi = actual_widget
+                                print(f"[WORKSPACE] ✅ 在分頁 '{tab_name}' 找到 Chase Strategy MDI")
+                                break
+                        else:
+                            print(f"[WORKSPACE]   - 跳過無效的 widget")
+                    if chase_strategy_mdi:
+                        break
+                else:
+                    print(f"[WORKSPACE]   - 此分頁沒有 subWindowList 方法 (類型: {type(tab_widget).__name__})")
+        
+        if chase_strategy_mdi and hasattr(chase_strategy_mdi, '_widget'):
+            chase_widget = chase_strategy_mdi._widget
+            
+            # 確保追蹤列表存在
+            if not hasattr(chase_widget, '_gap_evolution_widgets'):
+                chase_widget._gap_evolution_widgets = []
+            
+            # 註冊所有暫存的 widgets
+            from functools import partial
+            for chart_widget in self._pending_gap_evolution_widgets:
+                chase_widget._gap_evolution_widgets.append(chart_widget)
+                
+                # ⚠️ 關鍵修正：設定 StrategyCalculator 以啟用預測曲線
+                if hasattr(chase_widget, '_calculator') and chase_widget._calculator:
+                    chart_widget.set_strategy_calculator(chase_widget._calculator)
+                    print(f"[WORKSPACE] ✅ 已為 Gap Evolution 設定 StrategyCalculator")
+                else:
+                    print(f"[WORKSPACE] ⚠️ Chase Strategy 的 _calculator 尚未初始化")
+                
+                # 連接 destroyed 信號
+                chart_widget.destroyed.connect(
+                    partial(chase_widget._on_gap_widget_closed, chart_widget)
+                )
+            
+            print(f"[WORKSPACE] ✅ 已將 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution 註冊到 Chase Strategy")
+            print(f"[WORKSPACE] 💡 當 Live Timing 播放時，這些視窗會自動更新")
+        else:
+            print(f"[WORKSPACE] ⚠️ 未找到 Chase Strategy MDI，Gap Evolution 無法自動更新")
+            print(f"[WORKSPACE] 💡 請確保 workspace 中包含 Chase Strategy 模組")
+        
+        # 清空暫存列表
+        self._pending_gap_evolution_widgets = []
+
     def _rebuild_live_timing_window(self, mdi_area, window_config: Dict) -> bool:
         """
         重建 Live Timing MDI 視窗
@@ -1027,6 +1278,8 @@ class WorkspaceSerializer:
                 "live_sector_comparison_s3": "S3 Comparison",
                 "live_control_panel": "Control Panel",
                 "live_battle_insight": "Battle Insight",
+                "live_track_weather": "Track & Weather",
+                "live_chase_strategy": "Chase Strategy",
             }
             
             module_name = live_timing_name_map.get(window_type)

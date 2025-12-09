@@ -707,6 +707,15 @@ class RankingTableWidget(QWidget):
         tyre_abbrev = TYRE_ABBREV.get(compound, '?')
         tyre_text_color = TYRE_TEXT_COLORS.get(compound, TYRE_TEXT_COLORS['UNKNOWN'])
         
+        # 調試：顯示讀取的 tyre_info
+        driver_data = None
+        if hasattr(self, '_current_snapshot'):
+            driver_data = self._current_snapshot.get('drivers', {}).get(driver_num, {})
+        driver_tla = driver_data.get('tla', '???') if driver_data else '???'
+        print(f"[RANKING_TOWER]  _set_tyre_info for Driver {driver_num} ({driver_tla}):")
+        print(f"   tyre_info dict: {tyre_info}")
+        print(f"   Reading 'tyre_age' key: {tyre_info.get('tyre_age', 'KEY_NOT_FOUND')}")
+        
         # 胎 (欄位 4) - 黑底 + 對應顏色字體
         tyre_item = QTableWidgetItem(tyre_abbrev)
         tyre_item.setTextAlignment(Qt.AlignCenter)
@@ -719,6 +728,7 @@ class RankingTableWidget(QWidget):
         
         # 齡 (欄位 5)
         tyre_age = tyre_info.get('tyre_age', tyre_info.get('stint_length', ''))
+        print(f"   Final tyre_age for display: {tyre_age}")
         age_item = QTableWidgetItem(str(tyre_age) if tyre_age else '')
         age_item.setTextAlignment(Qt.AlignCenter)
         age_item.setForeground(default_text_color)  # 預設顏色，_set_age_color 會覆蓋
@@ -1028,12 +1038,19 @@ class RankingTableWidget(QWidget):
     
     def _set_gap_trend(self, row: int, driver_data: Dict, default_text_color: QColor):
         """
-        設置間距趨勢欄位 (Trend)
+        設置間距趨勢欄位 (Trend) - 改進版：階段式顯示
         
-        顯示邏輯：
-        - >> : 正在追近（綠色，顏色深度反映速度）
-        - << : 正在拉開（紅色，顏色深度反映速度）
-        - -  : 維持（灰色，±0.2秒/5秒內）
+        新邏輯（單圈 gap 變化）：
+        - 追近（負值）：
+          * 0.0 ~ -0.3秒：  >   (淺綠 #66FF66)
+          * -0.3 ~ -0.5秒： >>  (綠色 #00FF00)
+          * -0.5秒以上：   >>> (深綠 #00CC00)
+          * ≥1.0秒：      >>> (黃色底 #FFFF00 - 劇烈追近警報)
+        - 拉開（正值）：
+          * 0.0 ~ +0.3秒：  <   (淺藍 #6699FF)
+          * +0.3 ~ +0.5秒： <<  (藍色 #0066FF)
+          * +0.5秒以上：   <<< (深藍 #0044CC)
+        - 維持：±0.1秒內：-   (灰色 #888888)
         
         Args:
             row: 表格行索引
@@ -1050,64 +1067,68 @@ class RankingTableWidget(QWidget):
             self.table.setItem(row, 16, item)
             return
         
-        # 獲取趨勢值（每秒變化量）
+        # 獲取單圈 gap 變化量（秒）
         gap_trend = driver_data.get('gap_trend', 0.0)
         
-        # 計算 5 秒的總變化量（用於閾值判斷）
-        trend_5s = gap_trend * 5.0 if isinstance(gap_trend, (int, float)) else 0.0
-        
-        # 閾值判斷
-        # ±0.2秒/5秒 = 維持
-        # 超過 ±0.2秒/5秒 = 追近或拉開
-        threshold = 0.2  # 5 秒內 ±0.2 秒
+        # 確保是數值
+        if not isinstance(gap_trend, (int, float)):
+            gap_trend = 0.0
         
         item = QTableWidgetItem()
         item.setTextAlignment(Qt.AlignCenter)
         
-        if abs(trend_5s) <= threshold:
-            # 維持 - 灰色
+        # 判斷是否劇烈變化（≥1.0秒）
+        is_extreme = abs(gap_trend) >= 1.0
+        
+        # 維持狀態（±0.1秒內）
+        if abs(gap_trend) <= 0.1:
             item.setText('-')
             item.setForeground(QColor('#888888'))
-        elif trend_5s < 0:
-            # 追近 - 綠色漸變
-            # trend_5s 從 -0.2 到 -2.0 (最大追近速度)
-            item.setText('>>')
+        
+        # 追近（負值）
+        elif gap_trend < 0:
+            abs_change = abs(gap_trend)
             
-            # 計算顏色強度 (0.2 ~ 2.0 秒/5秒)
-            intensity = min(abs(trend_5s), 2.0) / 2.0  # 0.0 ~ 1.0
-            
-            # 綠色漸變：從淺綠 (#66FF66) 到深綠 (#00FF00)
-            # 背景顏色深度根據強度
-            if intensity > 0.5:
-                # 強烈追近：亮綠背景
+            if abs_change >= 0.5:
+                # 強烈追近：>>>
+                item.setText('>>>')
+                if is_extreme:
+                    # 劇烈變化：黃底
+                    item.setBackground(QColor('#FFFF00'))
+                    item.setForeground(QColor('#000000'))
+                else:
+                    # 正常強烈：深綠背景
+                    item.setBackground(QColor('#00CC00'))
+                    item.setForeground(QColor('#000000'))
+            elif abs_change >= 0.3:
+                # 中等追近：>>
+                item.setText('>>')
                 item.setBackground(QColor('#00FF00'))
                 item.setForeground(QColor('#000000'))
-            elif intensity > 0.25:
-                # 中等追近：淺綠背景
-                item.setBackground(QColor('#66FF66'))
-                item.setForeground(QColor('#000000'))
             else:
-                # 輕微追近：暗綠文字
+                # 輕微追近：>
+                item.setText('>')
                 item.setForeground(QColor('#66FF66'))
+        
+        # 拉開（正值）
         else:
-            # 拉開 - 紅色漸變
-            item.setText('<<')
+            abs_change = abs(gap_trend)
             
-            # 計算顏色強度
-            intensity = min(abs(trend_5s), 2.0) / 2.0  # 0.0 ~ 1.0
-            
-            # 紅色漸變
-            if intensity > 0.5:
-                # 強烈拉開：亮紅背景
-                item.setBackground(QColor('#FF0000'))
+            if abs_change >= 0.5:
+                # 強烈拉開：<<<
+                item.setText('<<<')
+                # 拉開不使用黃色警報，統一使用深藍背景
+                item.setBackground(QColor('#0044CC'))
                 item.setForeground(QColor('#FFFFFF'))
-            elif intensity > 0.25:
-                # 中等拉開：淺紅背景
-                item.setBackground(QColor('#FF6666'))
-                item.setForeground(QColor('#000000'))
+            elif abs_change >= 0.3:
+                # 中等拉開：<<
+                item.setText('<<')
+                item.setBackground(QColor('#0066FF'))
+                item.setForeground(QColor('#FFFFFF'))
             else:
-                # 輕微拉開：暗紅文字
-                item.setForeground(QColor('#FF6666'))
+                # 輕微拉開：<
+                item.setText('<')
+                item.setForeground(QColor('#6699FF'))
         
         self.table.setItem(row, 16, item)
     
@@ -1343,28 +1364,64 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
         """處理快照更新"""
-        # 調試輸出
+        # 調試輸出 - 每個快照都輸出
         if not hasattr(self, '_snapshot_count'):
             self._snapshot_count = 0
         self._snapshot_count += 1
-        if self._snapshot_count % 10 == 0:
-            print(f"[RANKING_TOWER] 收到第 {self._snapshot_count} 個快照更新")
         
-        # 獲取輪胎狀態（使用當前時間戳）
+        drivers = snapshot.get('drivers', {})
+        current_lap = snapshot.get('current_lap', 0)
+        total_laps = snapshot.get('total_laps', 0)
+        
+        # 每個快照都輸出調試
+        if self._snapshot_count <= 5 or self._snapshot_count % 20 == 0:
+            print(f"[RANKING_TOWER] Snapshot #{self._snapshot_count}: {len(drivers)} drivers, lap {current_lap}/{total_laps}")
+            if drivers:
+                sample_num = next(iter(drivers.keys()))
+                sample = drivers[sample_num]
+                print(f"[RANKING_TOWER] Sample driver {sample_num}: pos={sample.get('position')}, tla={sample.get('tla')}")
+                print(f"[RANKING_TOWER] Sample has compound={sample.get('compound')}, tyre_age={sample.get('tyre_age')}")
+        
+        # 獲取輪胎狀態
+        # 1. 即時模式：直接從 snapshot drivers 中提取 tyre 數據
+        # 2. 歷史模式：從 DataManager 獲取
         tyre_state = {}
-        if hasattr(self._data_manager, 'get_tyre_state'):
-            tyre_state = self._data_manager.get_tyre_state()
-        elif hasattr(self._data_manager, 'get_tyre_state_at_time'):
-            timestamp = snapshot.get('race_time', '')
-            if timestamp:
-                tyre_state = self._data_manager.get_tyre_state_at_time(timestamp)
+        drivers = snapshot.get('drivers', {})
+        
+        # 優先從 snapshot 的 drivers 中提取（即時模式）
+        print(f"[RANKING_TOWER]  Extracting tyre data from snapshot.drivers: {len(drivers)} drivers")
+        for driver_num, driver_data in drivers.items():
+            compound = driver_data.get('compound')
+            tyre_age_raw = driver_data.get('tyre_age')
+            driver_tla = driver_data.get('tla', driver_data.get('driver_tla', '???'))
+            
+            if compound or tyre_age_raw is not None:
+                tyre_state[driver_num] = {
+                    'compound': compound or 'UNKNOWN',
+                    'tyre_age': tyre_age_raw if tyre_age_raw is not None else 0,
+                    'tyre_new': driver_data.get('tyre_new', False),
+                    'stint_count': driver_data.get('pit_count', 0) + 1,  # stint_count = pit_count + 1
+                    'stints': driver_data.get('stints', []),
+                }
+                print(f"[RANKING_TOWER]  Driver {driver_num} ({driver_tla}): compound={compound}, tyre_age={tyre_age_raw} → stored as 'tyre_age'={tyre_state[driver_num]['tyre_age']}")
+            else:
+                print(f"[RANKING_TOWER]  Driver {driver_num} ({driver_tla}): NO tyre data (compound={compound}, tyre_age={tyre_age_raw})")
+        
+        # 如果 snapshot 沒有輪胎數據，嘗試從 DataManager 獲取（歷史模式）
+        if not tyre_state:
+            if hasattr(self._data_manager, 'get_tyre_state'):
+                tyre_state = self._data_manager.get_tyre_state()
+            elif hasattr(self._data_manager, 'get_tyre_state_at_time'):
+                timestamp = snapshot.get('race_time', '')
+                if timestamp:
+                    tyre_state = self._data_manager.get_tyre_state_at_time(timestamp)
         
         # 調試：輪胎狀態
         if self._snapshot_count % 100 == 0:
-            print(f"[RANKING_TOWER] 輪胎狀態: {len(tyre_state)} 車手, 範例: {list(tyre_state.keys())[:3] if tyre_state else 'Empty'}")
+            print(f"[RANKING_TOWER] Tyre state: {len(tyre_state)} drivers")
             if tyre_state:
                 sample_driver = next(iter(tyre_state.keys()))
-                print(f"[RANKING_TOWER] 範例輪胎資料 ({sample_driver}): {tyre_state.get(sample_driver, {})}")
+                print(f"[RANKING_TOWER] Sample tyre ({sample_driver}): {tyre_state.get(sample_driver, {})}")
         
         # 從 drivers 中提取車輛遙測數據
         car_data = {}

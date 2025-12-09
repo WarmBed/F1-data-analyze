@@ -7,6 +7,7 @@ from typing import Optional
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QDoubleSpinBox,
@@ -333,6 +334,110 @@ class SystemSettingsDialog(QDialog):
         self.tab_widget.addTab(speed_analysis_tab, tr("speed_analysis_settings_tab", "Straight Speed Analysis"))
         # ========== Straight Speed Analysis 分頁結束 ==========
 
+        # ========== 新增：Logger 設定分頁 ==========
+        logger_tab = QWidget()
+        logger_layout = QVBoxLayout(logger_tab)
+        logger_layout.setContentsMargins(10, 10, 10, 10)
+        logger_layout.setSpacing(12)
+
+        # Logger 啟用/禁用群組
+        logger_group = QGroupBox(tr("logger_settings_group", "Logger Configuration"))
+        logger_group_layout = QFormLayout(logger_group)
+        logger_group_layout.setLabelAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        logger_group_layout.setHorizontalSpacing(18)
+        logger_group_layout.setVerticalSpacing(10)
+
+        self.logger_enabled_checkbox = QCheckBox(
+            tr("logger_enabled", "Enable Logging System")
+        )
+        self.logger_enabled_checkbox.setToolTip(
+            tr("logger_enabled_hint", "Disable logging to improve performance")
+        )
+        logger_group_layout.addRow(self.logger_enabled_checkbox)
+
+        # 日誌等級選擇
+        self.logger_level_combo = QComboBox()
+        self.logger_level_combo.addItems(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+        self.logger_level_combo.setToolTip(
+            tr("logger_level_hint", "Higher levels = less logging = better performance")
+        )
+        logger_group_layout.addRow(
+            QLabel(tr("logger_level", "Log Level")),
+            self.logger_level_combo,
+        )
+
+        # 控制台日誌等級
+        self.logger_console_level_combo = QComboBox()
+        self.logger_console_level_combo.addItems(["NONE", "DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+        self.logger_console_level_combo.setToolTip(
+            tr("logger_console_level_hint", "Console output level (NONE = no console output)")
+        )
+        logger_group_layout.addRow(
+            QLabel(tr("logger_console_level", "Console Level")),
+            self.logger_console_level_combo,
+        )
+
+        # Patch Print 選項
+        self.logger_patch_print_checkbox = QCheckBox(
+            tr("logger_patch_print", "Redirect print() to Logger")
+        )
+        self.logger_patch_print_checkbox.setToolTip(
+            tr("logger_patch_print_hint", "Route print() calls through the logging system")
+        )
+        logger_group_layout.addRow(self.logger_patch_print_checkbox)
+
+        logger_layout.addWidget(logger_group)
+
+        # 效能影響說明
+        performance_info = QLabel(
+            tr(
+                "logger_performance_info",
+                "<b>Performance Impact:</b><br>"
+                "<font color='#FF5555'>• Enabled (INFO/DEBUG): High CPU/Memory usage</font><br>"
+                "<font color='#FFAA00'>• Enabled (WARNING/ERROR): Medium usage</font><br>"
+                "<font color='#55FF55'>• Disabled: No logging overhead</font><br><br>"
+                "<b>Note:</b> Changes require restart to take effect.",
+            )
+        )
+        performance_info.setWordWrap(True)
+        performance_info.setStyleSheet("color: #CCCCCC; font-size: 11px; padding: 10px; background-color: #2b2b2b; border-radius: 5px;")
+        logger_layout.addWidget(performance_info)
+
+        # 快速操作按鈕
+        quick_actions_group = QGroupBox(tr("logger_quick_actions", "Quick Actions"))
+        quick_actions_layout = QVBoxLayout(quick_actions_group)
+
+        quick_actions_help = QLabel(
+            tr("logger_quick_actions_help", "Common configurations:")
+        )
+        quick_actions_help.setStyleSheet("color: #888888; font-size: 10px;")
+        quick_actions_layout.addWidget(quick_actions_help)
+
+        quick_buttons_layout = QHBoxLayout()
+
+        self.logger_preset_disabled_btn = QPushButton("⚡ Disabled (Best Performance)")
+        self.logger_preset_disabled_btn.clicked.connect(self._apply_logger_preset_disabled)
+        self.logger_preset_disabled_btn.setToolTip("Disable all logging")
+        quick_buttons_layout.addWidget(self.logger_preset_disabled_btn)
+
+        self.logger_preset_error_btn = QPushButton("⚠️ ERROR Only")
+        self.logger_preset_error_btn.clicked.connect(self._apply_logger_preset_error)
+        self.logger_preset_error_btn.setToolTip("Only log errors (good balance)")
+        quick_buttons_layout.addWidget(self.logger_preset_error_btn)
+
+        self.logger_preset_debug_btn = QPushButton("🔍 DEBUG (Full Logging)")
+        self.logger_preset_debug_btn.clicked.connect(self._apply_logger_preset_debug)
+        self.logger_preset_debug_btn.setToolTip("Enable all logging for debugging")
+        quick_buttons_layout.addWidget(self.logger_preset_debug_btn)
+
+        quick_actions_layout.addLayout(quick_buttons_layout)
+        logger_layout.addWidget(quick_actions_group)
+
+        logger_layout.addStretch(1)
+
+        self.tab_widget.addTab(logger_tab, tr("logger_settings_tab", "Logger"))
+        # ========== Logger 分頁結束 ==========
+
         # Button box
         button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         button_box.accepted.connect(self._on_accept)
@@ -396,6 +501,24 @@ class SystemSettingsDialog(QDialog):
             speed_analysis_settings.get("brake_show_performance_bar", True)
         )
 
+        # ✅ 載入 Logger 設定
+        logger_settings = self._load_logger_config()
+        self.logger_enabled_checkbox.setChecked(logger_settings.get("enabled", True))
+        
+        level = logger_settings.get("level", "INFO")
+        level_index = self.logger_level_combo.findText(level)
+        if level_index >= 0:
+            self.logger_level_combo.setCurrentIndex(level_index)
+        
+        console_level = logger_settings.get("console_level", None)
+        if console_level is None:
+            console_level = "NONE"
+        console_level_index = self.logger_console_level_combo.findText(console_level)
+        if console_level_index >= 0:
+            self.logger_console_level_combo.setCurrentIndex(console_level_index)
+        
+        self.logger_patch_print_checkbox.setChecked(logger_settings.get("patch_print", True))
+
     def _reset_defaults(self) -> None:
         self.filter_pit_checkbox.setChecked(True)
         self.filter_outliers_checkbox.setChecked(True)
@@ -424,6 +547,60 @@ class SystemSettingsDialog(QDialog):
         self.brake_show_max_decel_checkbox.setChecked(False)
         self.brake_show_start_speed_checkbox.setChecked(False)
         self.brake_show_performance_bar_checkbox.setChecked(True)
+
+    def _load_logger_config(self) -> dict:
+        """載入 Logger 設定檔"""
+        import json
+        from pathlib import Path
+        
+        try:
+            config_file = Path(__file__).parent.parent.parent.parent / "config" / "logging_config.json"
+            if config_file.exists():
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    return json.load(f)
+        except Exception as e:
+            print(f"[SETTINGS] Failed to load logger config: {e}")
+        
+        return {
+            "enabled": True,
+            "level": "INFO",
+            "console_level": None,
+            "patch_print": True
+        }
+
+    def _save_logger_config(self, config: dict) -> None:
+        """儲存 Logger 設定檔"""
+        import json
+        from pathlib import Path
+        
+        try:
+            config_file = Path(__file__).parent.parent.parent.parent / "config" / "logging_config.json"
+            config_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"[SETTINGS] Failed to save logger config: {e}")
+
+    def _apply_logger_preset_disabled(self) -> None:
+        """應用預設：禁用 Logger"""
+        self.logger_enabled_checkbox.setChecked(False)
+        self.logger_level_combo.setCurrentText("INFO")
+        self.logger_console_level_combo.setCurrentText("NONE")
+        self.logger_patch_print_checkbox.setChecked(False)
+
+    def _apply_logger_preset_error(self) -> None:
+        """應用預設：只記錄錯誤"""
+        self.logger_enabled_checkbox.setChecked(True)
+        self.logger_level_combo.setCurrentText("ERROR")
+        self.logger_console_level_combo.setCurrentText("ERROR")
+        self.logger_patch_print_checkbox.setChecked(True)
+
+    def _apply_logger_preset_debug(self) -> None:
+        """應用預設：完整除錯"""
+        self.logger_enabled_checkbox.setChecked(True)
+        self.logger_level_combo.setCurrentText("DEBUG")
+        self.logger_console_level_combo.setCurrentText("INFO")
+        self.logger_patch_print_checkbox.setChecked(True)
 
     def _on_accept(self) -> None:
         self._settings_manager.update_boxplot_settings(
@@ -457,5 +634,18 @@ class SystemSettingsDialog(QDialog):
             brake_show_start_speed=self.brake_show_start_speed_checkbox.isChecked(),
             brake_show_performance_bar=self.brake_show_performance_bar_checkbox.isChecked(),
         )
+        
+        # ✅ 儲存 Logger 設定
+        console_level_text = self.logger_console_level_combo.currentText()
+        console_level = None if console_level_text == "NONE" else console_level_text
+        
+        logger_config = {
+            "enabled": self.logger_enabled_checkbox.isChecked(),
+            "level": self.logger_level_combo.currentText(),
+            "console_level": console_level,
+            "patch_print": self.logger_patch_print_checkbox.isChecked(),
+            "comment": "Logger settings - Changes require restart"
+        }
+        self._save_logger_config(logger_config)
         
         self.accept()

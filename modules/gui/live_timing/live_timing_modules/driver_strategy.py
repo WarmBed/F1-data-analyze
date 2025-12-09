@@ -393,6 +393,15 @@ class DriverStrategyWidget(QWidget):
         # Prediction range: {lap_number: (min_time, max_time)}
         self._prediction_range: Dict[int, Tuple[float, float]] = {}
         
+        # Multi-compound prediction lines (三條配方預測線 S/M/H)
+        # 格式: {compound: {lap_number: predicted_time}}
+        self._multi_compound_predictions: Dict[str, Dict[int, float]] = {
+            'SOFT': {},
+            'MEDIUM': {},
+            'HARD': {}
+        }
+        self._show_multi_compound: bool = True  # 是否顯示三條配方線
+        
         # Pit stop laps: [lap1, lap2, ...]
         self._pit_laps: List[int] = []
         
@@ -508,7 +517,7 @@ class DriverStrategyWidget(QWidget):
     def _setup_info_bar(self, layout: QVBoxLayout):
         """Setup the information bar at the top using layout."""
         info_layout = QHBoxLayout()
-        info_layout.setSpacing(20)
+        info_layout.setSpacing(15)
         
         # Driver label
         self._driver_label = QLabel(tr("Driver") + ": --")
@@ -519,6 +528,21 @@ class DriverStrategyWidget(QWidget):
         self._tyre_label = QLabel(tr("Tyre") + ": --")
         self._tyre_label.setStyleSheet(f"color: {COLOR_TEXT}; font-size: 11px;")
         info_layout.addWidget(self._tyre_label)
+        
+        # Estimated lap time label
+        self._est_label = QLabel("Est: --")
+        self._est_label.setStyleSheet(f"color: {COLOR_PREDICTED}; font-size: 11px;")
+        info_layout.addWidget(self._est_label)
+        
+        # Last lap time label
+        self._last_label = QLabel("Last: --")
+        self._last_label.setStyleSheet(f"color: {COLOR_ACTUAL}; font-size: 11px;")
+        info_layout.addWidget(self._last_label)
+        
+        # Delta label (difference between Est and Last)
+        self._delta_label = QLabel("Δ: --")
+        self._delta_label.setStyleSheet(f"color: {COLOR_TEXT}; font-size: 11px;")
+        info_layout.addWidget(self._delta_label)
         
         info_layout.addStretch()
         
@@ -634,6 +658,9 @@ class DriverStrategyWidget(QWidget):
         self._actual_lap_times.clear()
         self._predicted_lap_times.clear()
         self._prediction_range.clear()
+        self._multi_compound_predictions['SOFT'].clear()
+        self._multi_compound_predictions['MEDIUM'].clear()
+        self._multi_compound_predictions['HARD'].clear()
         self._pit_laps.clear()
         self._sc_zones.clear()
         self._sc_laps.clear()
@@ -729,6 +756,11 @@ class DriverStrategyWidget(QWidget):
         
         # F87: 更新進站預測 (SF% 由 DataManager 計算)
         self._update_predicted_pit_lap()
+        
+        # 重新計算預測以包含多配方線（需要在 _update_predicted_pit_lap 之後）
+        if self._actual_lap_times:
+            self._calculate_all_predictions()
+        
         self._calculate_y_range()
         
         # Update UI
@@ -880,6 +912,67 @@ class DriverStrategyWidget(QWidget):
     def _update_lap_counter(self):
         """Update the lap counter label."""
         self._lap_counter_label.setText(f"{tr('Lap')}: {self._current_lap}/{self._total_laps}")
+        
+        # 更新 Est、Last、Δ 標籤
+        self._update_timing_labels()
+    
+    def _update_timing_labels(self):
+        """Update Est, Last, and Delta labels based on current lap data."""
+        # 獲取上一圈的實際圈速
+        last_lap = self._current_lap - 1 if self._current_lap > 1 else self._current_lap
+        last_time = self._actual_lap_times.get(last_lap)
+        
+        # 獲取當前圈的預測圈速
+        est_time = self._predicted_lap_times.get(self._current_lap)
+        
+        # 如果沒有當前圈預測，使用上一圈預測
+        if est_time is None and last_lap in self._predicted_lap_times:
+            est_time = self._predicted_lap_times.get(last_lap)
+        
+        # 更新 Est 標籤
+        if est_time is not None:
+            est_str = self._format_lap_time(est_time)
+            self._est_label.setText(f"Est: {est_str}")
+            self._est_label.setStyleSheet(f"color: {COLOR_PREDICTED}; font-size: 11px; font-weight: bold;")
+        else:
+            self._est_label.setText("Est: --")
+            self._est_label.setStyleSheet(f"color: {COLOR_PREDICTED}; font-size: 11px;")
+        
+        # 更新 Last 標籤
+        if last_time is not None:
+            last_str = self._format_lap_time(last_time)
+            self._last_label.setText(f"Last: {last_str}")
+            self._last_label.setStyleSheet(f"color: {COLOR_ACTUAL}; font-size: 11px; font-weight: bold;")
+        else:
+            self._last_label.setText("Last: --")
+            self._last_label.setStyleSheet(f"color: {COLOR_ACTUAL}; font-size: 11px;")
+        
+        # 更新 Δ 標籤 (Est - Last，負值表示比預測快)
+        if est_time is not None and last_time is not None:
+            delta = last_time - est_time  # 正值 = 比預測慢，負值 = 比預測快
+            delta_str = f"{delta:+.3f}" if abs(delta) < 10 else f"{delta:+.1f}"
+            
+            # 顏色：綠色 = 比預測快，紅色 = 比預測慢
+            if delta < -0.1:
+                delta_color = "#00FF00"  # 綠色 - 比預測快
+            elif delta > 0.1:
+                delta_color = "#FF4444"  # 紅色 - 比預測慢
+            else:
+                delta_color = COLOR_TEXT  # 接近預測
+            
+            self._delta_label.setText(f"Δ: {delta_str}")
+            self._delta_label.setStyleSheet(f"color: {delta_color}; font-size: 11px; font-weight: bold;")
+        else:
+            self._delta_label.setText("Δ: --")
+            self._delta_label.setStyleSheet(f"color: {COLOR_TEXT}; font-size: 11px;")
+    
+    def _format_lap_time(self, seconds: float) -> str:
+        """Format lap time in seconds to M:SS.mmm format."""
+        if seconds <= 0:
+            return "--"
+        minutes = int(seconds // 60)
+        secs = seconds % 60
+        return f"{minutes}:{secs:06.3f}"
     
     # 賽事名稱到賽道名稱的映射 (race name -> circuit key in database)
     RACE_TO_CIRCUIT_MAP = {
@@ -1129,6 +1222,9 @@ class DriverStrategyWidget(QWidget):
         # 預測所有圈數
         self._predicted_lap_times.clear()
         self._prediction_range.clear()
+        self._multi_compound_predictions['SOFT'].clear()
+        self._multi_compound_predictions['MEDIUM'].clear()
+        self._multi_compound_predictions['HARD'].clear()
         
         for lap in range(1, self._total_laps + 1):
             if lap in excluded_laps:
@@ -1142,7 +1238,7 @@ class DriverStrategyWidget(QWidget):
             stint_start, stint_end, compound = stint_info
             tyre_age = lap - stint_start + 1  # 輪胎圈數（從 1 開始）
             
-            # 計算預測圈速
+            # 計算當前配方的預測圈速
             predicted = self._calculate_stint_prediction(
                 lap, tyre_age, compound, base_lap_time, circuit_data
             )
@@ -1159,6 +1255,30 @@ class DriverStrategyWidget(QWidget):
             # 預測範圍 (+-3%)
             margin = predicted * 0.03
             self._prediction_range[lap] = (predicted - margin, predicted + margin)
+            
+            # =====================================================================
+            # 計算三種配方的預測曲線 (S/M/H)
+            # 
+            # ⚠️ 關鍵邏輯: 只在 PIT Est 之後顯示三條配方線
+            # - 目的: 比較換胎後選擇不同配方的策略效果
+            # - 起始圈: self._current_predicted_pit (預估進站圈數)
+            # - 三條線從進站後的第一圈開始 (tyre_age=1)
+            # =====================================================================
+            if self._show_multi_compound and self._current_predicted_pit > 0:
+                # 只在預估進站圈之後才繪製多配方線
+                if lap >= self._current_predicted_pit:
+                    # 計算換胎後的輪胎圈數 (從進站後重新計算)
+                    alt_tyre_age = lap - self._current_predicted_pit + 1
+                    
+                    for alt_compound in ['SOFT', 'MEDIUM', 'HARD']:
+                        # 假設在 PIT Est 進站後換成該配方
+                        alt_predicted = self._calculate_stint_prediction(
+                            lap, alt_tyre_age, alt_compound, base_lap_time, circuit_data
+                        )
+                        alt_predicted += self._correction_factor
+                        alt_predicted = max(alt_predicted, 60.0)
+                        alt_predicted = min(alt_predicted, 180.0)
+                        self._multi_compound_predictions[alt_compound][lap] = alt_predicted
     
     def _build_stint_boundaries(self) -> List[Tuple[int, int, str]]:
         """
@@ -1215,12 +1335,37 @@ class DriverStrategyWidget(QWidget):
             # 使用最快圈速作為基準（排除最快的 5% 以避免異常值）
             sorted_times = sorted(valid_times)
             n = len(sorted_times)
+            
+            # 🔍 調試輸出：Driver Strategy 基準計算
+            print(f"\n[BASE_TIME_DEBUG] Driver Strategy 基準計算:")
+            print(f"  總圈數: {n}")
+            print(f"  最快圈: {min(sorted_times):.3f}s")
+            print(f"  最慢圈: {max(sorted_times):.3f}s")
+            print(f"  圈速範圍: {sorted_times[:3]} ... {sorted_times[-3:]}")
+            
             if n > 5:
                 # 取第 5-25 百分位的平均作為基準
                 start_idx = max(1, n // 20)
                 end_idx = max(2, n // 4)
-                return sum(sorted_times[start_idx:end_idx]) / (end_idx - start_idx)
-            return min(sorted_times)
+                selected_times = sorted_times[start_idx:end_idx]
+                base_time = sum(selected_times) / len(selected_times)
+                
+                print(f"  使用百分位平均:")
+                print(f"    - 索引範圍: [{start_idx}:{end_idx}] ({len(selected_times)} 圈)")
+                print(f"    - 選中圈速: {selected_times}")
+                print(f"    - 平均值: {base_time:.3f}s")
+                return base_time
+            elif n == 5:
+                # ✅ 5 圈特殊處理：取中間 3 圈平均（排除極端值）
+                selected_times = sorted_times[1:4]  # 去除最快和最慢
+                base_time = sum(selected_times) / len(selected_times)
+                print(f"  5 圈數據，使用中間 3 圈平均: {base_time:.3f}s")
+                print(f"    - 選中圈速: {selected_times}")
+                return base_time
+            else:
+                base_time = min(sorted_times)
+                print(f"  圈數不足 ({n} 圈)，使用最快圈: {base_time:.3f}s")
+                return base_time
         return 0.0
     
     def _calculate_stint_prediction(self, lap: int, tyre_age: int, compound: str,
@@ -1622,6 +1767,9 @@ class DriverStrategyWidget(QWidget):
         # Draw prediction range fill
         self._draw_prediction_range(painter, chart_rect)
         
+        # Draw multi-compound prediction lines (S/M/H) - 在主預測線之前繪製
+        self._draw_multi_compound_lines(painter, chart_rect)
+        
         # Draw prediction line
         self._draw_prediction_line(painter, chart_rect)
         
@@ -1640,8 +1788,8 @@ class DriverStrategyWidget(QWidget):
         # Draw axes
         self._draw_axes(painter, chart_rect)
         
-        # Draw legend
-        self._draw_legend(painter, chart_rect)
+        # Draw legend - 隱藏圖例
+        # self._draw_legend(painter, chart_rect)
         
         painter.end()
         
@@ -1793,6 +1941,62 @@ class DriverStrategyWidget(QWidget):
                 path.lineTo(x, y)
                 
         painter.drawPath(path)
+        
+    def _draw_multi_compound_lines(self, painter: QPainter, chart_rect: QRectF):
+        """
+        繪製三條配方預測線 (SOFT/MEDIUM/HARD)
+        
+        顏色方案:
+        - SOFT: 紅色虛線 (#FF3333)
+        - MEDIUM: 黃色虛線 (#FFCC00)
+        - HARD: 白色虛線 (#FFFFFF)
+        
+        線條樣式: 半透明細虛線，避免干擾主要數據
+        """
+        if not self._show_multi_compound or self._total_laps <= 0:
+            return
+        
+        # 配方顏色與線條樣式
+        compound_styles = {
+            'SOFT': {'color': COLOR_TYRE_SOFT, 'width': 2, 'alpha': 120},
+            'MEDIUM': {'color': COLOR_TYRE_MEDIUM, 'width': 2, 'alpha': 120},
+            'HARD': {'color': COLOR_TYRE_HARD, 'width': 2, 'alpha': 120}
+        }
+        
+        painter.setBrush(Qt.NoBrush)
+        
+        for compound, predictions in self._multi_compound_predictions.items():
+            if not predictions:
+                continue
+            
+            style = compound_styles.get(compound, {})
+            if not style:
+                continue
+            
+            # 設置顏色與透明度
+            color = QColor(style['color'])
+            color.setAlpha(style['alpha'])
+            pen = QPen(color)
+            pen.setWidth(style['width'])
+            pen.setStyle(Qt.DashDotLine)  # 使用點劃線區分
+            painter.setPen(pen)
+            
+            # 繪製路徑
+            path = QPainterPath()
+            first = True
+            
+            for lap in sorted(predictions.keys()):
+                time = predictions[lap]
+                x = self._lap_to_x(lap, chart_rect)
+                y = self._value_to_y(time, chart_rect)
+                
+                if first:
+                    path.moveTo(x, y)
+                    first = False
+                else:
+                    path.lineTo(x, y)
+            
+            painter.drawPath(path)
         
     def _draw_actual_lap_times(self, painter: QPainter, chart_rect: QRectF):
         """Draw actual lap times with tyre compound colors and small markers.
@@ -2093,31 +2297,38 @@ class DriverStrategyWidget(QWidget):
         )
         
     def _draw_legend(self, painter: QPainter, chart_rect: QRectF):
-        """Draw legend at top right of chart."""
+        """Draw legend at top right of chart with multi-compound lines."""
         painter.setFont(self._font_legend)
         
-        # Legend items: Predicted, SC/VSC, and Predicted PIT
-        # F87: 若有省胎調整則顯示 *
-        pit_legend = tr("PIT Est.")
-        if self._tire_saving_adjustment > 0:
-            pit_legend += "*"
+        # Legend items: 三條配方預測線
+        legend_items = []
         
-        legend_items = [
-            (COLOR_PREDICTED, tr("Predicted")),
-            (COLOR_SC_ZONE, tr("SC/VSC")),
-            ('#FF8C00', pit_legend),  # Dark orange for predicted pit
-        ]
+        if self._show_multi_compound:
+            legend_items.extend([
+                (COLOR_TYRE_SOFT, tr("Soft Strategy")),
+                (COLOR_TYRE_MEDIUM, tr("Medium Strategy")),
+                (COLOR_TYRE_HARD, tr("Hard Strategy")),
+            ])
         
-        x = chart_rect.right() - 100
+        if not legend_items:
+            return
+        
+        x = chart_rect.right() - 150
         y = chart_rect.top() + 15
         
         for color, label in legend_items:
-            # Color box
-            painter.fillRect(int(x), int(y - 8), 12, 12, QColor(color))
+            # Color box with dash-dot pattern
+            color_obj = QColor(color)
+            color_obj.setAlpha(120)
+            pen = QPen(color_obj)
+            pen.setWidth(2)
+            pen.setStyle(Qt.DashDotLine)
+            painter.setPen(pen)
+            painter.drawLine(int(x), int(y), int(x + 20), int(y))
             
             # Label
             painter.setPen(QPen(QColor(COLOR_TEXT)))
-            painter.drawText(int(x + 16), int(y + 2), label)
+            painter.drawText(int(x + 25), int(y + 4), label)
             
             y += 18
             

@@ -138,6 +138,7 @@ class LiveTimingControlDock(QDockWidget):
         self._mode = self.MODE_HISTORICAL  # 預設歷史模式（因為即時需要額外設置）
         self._is_playing = False
         self._slider_dragging = False
+        self._f1tv_authenticated = False  # F1TV 認證狀態
         
         # 賽季日曆相關
         self._season_provider = None
@@ -153,6 +154,7 @@ class LiveTimingControlDock(QDockWidget):
         
         # 即時數據源
         self._realtime_source: Optional[RealTimeLiveF1DataSource] = None
+        self._realtime_snapshot_count = 0  # 追蹤收到的快照數量
         if REALTIME_AVAILABLE:
             self._realtime_source = RealTimeLiveF1DataSource(self)
             self._realtime_source.connection_changed.connect(self._on_realtime_connection_changed)
@@ -191,6 +193,11 @@ class LiveTimingControlDock(QDockWidget):
         self.btn_group_mode = QButtonGroup(self)
         
         self.radio_realtime = QRadioButton(tr("Realtime Live Timing", "Realtime"))
+        self.radio_realtime.setEnabled(False)  # 預設禁用，需要 F1TV 認證
+        self.radio_realtime.setToolTip(tr(
+            "realtime_requires_f1tv",
+            "Realtime mode requires F1TV account login"
+        ))
         self.radio_realtime.toggled.connect(self._on_mode_changed)
         self.btn_group_mode.addButton(self.radio_realtime)
         row1_layout.addWidget(self.radio_realtime)
@@ -308,6 +315,15 @@ class LiveTimingControlDock(QDockWidget):
         self.btn_stop.setEnabled(False)
         timeline_layout.addWidget(self.btn_stop)
         
+        # 倒退 -30 秒按鈕
+        self.btn_rewind = QPushButton("\u23ea")  # ⏪
+        self.btn_rewind.setToolTip(tr("Rewind 30s", "Rewind 30s"))
+        self.btn_rewind.setFixedSize(32, 28)
+        self.btn_rewind.setStyleSheet("font-size: 14px;")
+        self.btn_rewind.clicked.connect(self._on_rewind_clicked)
+        self.btn_rewind.setEnabled(False)
+        timeline_layout.addWidget(self.btn_rewind)
+        
         # 播放/暫停按鈕
         self.btn_play_pause = QPushButton("\u25b6")  # ▶
         self.btn_play_pause.setToolTip(tr("Play", "Play"))
@@ -316,6 +332,15 @@ class LiveTimingControlDock(QDockWidget):
         self.btn_play_pause.clicked.connect(self._on_play_pause_clicked)
         self.btn_play_pause.setEnabled(False)
         timeline_layout.addWidget(self.btn_play_pause)
+        
+        # 快進 +30 秒按鈕
+        self.btn_forward = QPushButton("\u23e9")  # ⏩
+        self.btn_forward.setToolTip(tr("Forward 30s", "Forward 30s"))
+        self.btn_forward.setFixedSize(32, 28)
+        self.btn_forward.setStyleSheet("font-size: 14px;")
+        self.btn_forward.clicked.connect(self._on_forward_clicked)
+        self.btn_forward.setEnabled(False)
+        timeline_layout.addWidget(self.btn_forward)
         
         # 速度選擇
         timeline_layout.addWidget(QLabel(tr("Speed", "Speed") + ":"))
@@ -385,6 +410,41 @@ class LiveTimingControlDock(QDockWidget):
         dm.playback_state_changed.connect(self._on_playback_state_changed)
         dm.time_changed.connect(self._on_time_changed)
         dm.progress_changed.connect(self._on_progress_changed)
+    
+    # ===========================================
+    # F1TV 認證狀態控制
+    # ===========================================
+    def set_f1tv_authenticated(self, authenticated: bool):
+        """
+        設定 F1TV 認證狀態，控制 Realtime 模式可用性
+        
+        Args:
+            authenticated: True 表示已登入且 token 有效
+        """
+        self._f1tv_authenticated = authenticated
+        self.radio_realtime.setEnabled(authenticated)
+        
+        if authenticated:
+            self.radio_realtime.setToolTip(tr(
+                "realtime_available",
+                "Realtime mode available - Connected to F1TV"
+            ))
+            print("[CONTROL_DOCK] F1TV authenticated - Realtime mode enabled")
+        else:
+            self.radio_realtime.setToolTip(tr(
+                "realtime_requires_f1tv",
+                "Realtime mode requires F1TV account login"
+            ))
+            print("[CONTROL_DOCK] F1TV not authenticated - Realtime mode disabled")
+            
+            # 如果當前在 Realtime 模式，強制切換到 Historical
+            if self._mode == self.MODE_REALTIME:
+                self.radio_historical.setChecked(True)
+                print("[CONTROL_DOCK] Forced switch to Historical mode")
+    
+    def is_f1tv_authenticated(self) -> bool:
+        """檢查 F1TV 是否已認證"""
+        return self._f1tv_authenticated
     
     # ===========================================
     # 模式切換
@@ -478,6 +538,25 @@ class LiveTimingControlDock(QDockWidget):
     @pyqtSlot(dict)
     def _on_realtime_snapshot_updated(self, snapshot: dict):
         """即時快照更新 - 轉發給 DataManager"""
+        self._realtime_snapshot_count += 1
+        
+        # 更新狀態標籤顯示接收數據中
+        driver_count = len(snapshot.get('drivers', {}))
+        current_lap = snapshot.get('current_lap', 0)
+        total_laps = snapshot.get('total_laps', 0)
+        
+        if driver_count > 0:
+            if current_lap > 0 and total_laps > 0:
+                status_text = f"Live - Lap {current_lap}/{total_laps} ({driver_count} drivers)"
+            else:
+                status_text = f"Live - Receiving data ({driver_count} drivers)"
+            self.lbl_connection_status.setText(status_text)
+            self.lbl_connection_status.setStyleSheet("color: #4CAF50; font-weight: bold;")
+        
+        # 調試輸出（每 10 個快照輸出一次）
+        if self._realtime_snapshot_count % 10 == 1:
+            print(f"[CONTROL_DOCK] Snapshot #{self._realtime_snapshot_count}: {driver_count} drivers, lap {current_lap}/{total_laps}")
+        
         # 將即時快照發送給 DataManager
         self._data_manager.update_realtime_snapshot(snapshot)
     
@@ -579,6 +658,16 @@ class LiveTimingControlDock(QDockWidget):
         """停止"""
         self._data_manager.stop()
     
+    def _on_rewind_clicked(self):
+        """倒退 30 秒"""
+        self._data_manager.seek_by_offset(-30.0)
+        print("[CONTROL_DOCK] Rewind 30 seconds")
+    
+    def _on_forward_clicked(self):
+        """快進 30 秒"""
+        self._data_manager.seek_by_offset(30.0)
+        print("[CONTROL_DOCK] Forward 30 seconds")
+    
     def _on_speed_changed(self, speed_text: str):
         """速度變更"""
         speed = float(speed_text.replace('x', ''))
@@ -663,6 +752,8 @@ class LiveTimingControlDock(QDockWidget):
         """設置播放控制可用狀態"""
         self.btn_play_pause.setEnabled(enabled)
         self.btn_stop.setEnabled(enabled)
+        self.btn_rewind.setEnabled(enabled)
+        self.btn_forward.setEnabled(enabled)
         self.slider_timeline.setEnabled(enabled)
         self.cmb_speed.setEnabled(enabled)
     

@@ -873,6 +873,19 @@ class LivePositionDataProcessor:
 
     @staticmethod
     def _parse_gap_value(raw_value: Any) -> Tuple[Optional[float], int]:
+        """
+        解析 GapToLeader 或 IntervalToPositionAhead 值
+        
+        F1 官方 API 格式:
+        - "+4.377" → (4.377, 0)  秒數差距
+        - "1L" → (None, 1)  落後 1 圈
+        - "2L" → (None, 2)  落後 2 圈
+        - {"Value": "1L"} → (None, 1)  dict 格式
+        - "LAP" 或 "1 LAP" → (None, 1)  舊格式相容
+        
+        Returns:
+            Tuple[Optional[float], int]: (秒數差距, 落後圈數)
+        """
         if raw_value is None:
             return None, 0
 
@@ -885,20 +898,32 @@ class LivePositionDataProcessor:
 
         if isinstance(value, str):
             cleaned = value.strip().upper()
-            match = re.match(r"([+-]?\d+[\.:]?\d*)", cleaned)
+            
+            # 檢查是否為落後圈數格式: "1L", "2L", "LAP", "1 LAP" 等
+            # 優先檢查 "L" 結尾的格式 (F1 官方 API 格式)
+            lap_match = re.match(r'^(\d+)\s*L(?:APS?)?$', cleaned)
+            if lap_match:
+                return None, int(lap_match.group(1))
+            
+            # 單純 "LAP" 表示落後 1 圈
+            if cleaned == 'LAP' or cleaned == 'L':
+                return None, 1
+            
+            # 檢查 units 是否包含 LAP
+            if units and 'LAP' in units.upper():
+                digits = re.findall(r"\d+", cleaned)
+                return None, int(digits[0]) if digits else 1
+            
+            # 解析秒數格式: "+4.377", "4.377", "-1.234"
+            match = re.match(r"^([+-]?\d+[\.:]?\d*)$", cleaned)
             if match:
                 try:
                     seconds = float(match.group(1).replace(':', '.'))
-                    if units and 'LAP' in units.upper():
-                        return None, int(seconds)
-                    if 'LAP' in cleaned:
-                        return None, int(seconds)
                     return seconds, 0
                 except ValueError:
                     return None, 0
-            if 'LAP' in cleaned:
-                digits = re.findall(r"\d+", cleaned)
-                return None, int(digits[0]) if digits else 0
+            
+            # 嘗試直接轉換為浮點數
             try:
                 return float(cleaned), 0
             except ValueError:

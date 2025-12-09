@@ -5,8 +5,52 @@ F1T GUI Main - Professional Racing Analysis Workstation
 集成的F1分析GUI系統，提供完整的賽車數據分析功能
 """
 
+# ========== 強制 UTF-8 編碼（最優先設定，必須在任何 print 之前）==========
+# 這段代碼必須在所有其他 import 之前執行
 import sys
+import io
 import os
+
+class _NullWriter:
+    """靜默輸出器，永不關閉，避免 I/O operation on closed file"""
+    def write(self, text):
+        pass
+    def flush(self):
+        pass
+    def close(self):
+        pass  # 永不真正關閉
+    def isatty(self):
+        return False
+    @property
+    def closed(self):
+        return False  # 永遠回報未關閉
+
+def _setup_safe_stdout():
+    """
+    設定安全的 stdout/stderr，處理以下情況：
+    1. PyInstaller GUI 模式 (console=False): sys.stdout 可能是 None
+    2. 被重定向的情況: 確保不會崩潰
+    
+    注意：UTF-8 編碼由環境變數 PYTHONIOENCODING=utf-8 設定（在 tasks.json 中）
+    不再使用 TextIOWrapper 包裝，避免 closed file 問題
+    """
+    # 情況 1: PyInstaller GUI 模式，stdout/stderr 是 None
+    if sys.stdout is None or sys.stderr is None:
+        sys.stdout = _NullWriter()
+        sys.stderr = _NullWriter()
+        return
+    
+    # 情況 2: 測試 stdout 是否正常運作
+    try:
+        sys.stdout.write('')
+        sys.stdout.flush()
+    except Exception:
+        sys.stdout = _NullWriter()
+        sys.stderr = _NullWriter()
+
+# 立即執行
+_setup_safe_stdout()
+
 import math
 import time
 import warnings
@@ -265,11 +309,26 @@ class CustomMdiArea(QMdiArea):
         # 允許拖拉視窗
         self.setOption(QMdiArea.DontMaximizeSubWindowOnActivation, True)  # 不自動最大化
         
+        # ========== 滾動條策略（支援超出範圍的視窗）==========
+        # ✅ 當視窗超出可視範圍時，自動顯示滾動條
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        print(f"[MDI_INIT] ✅ 已啟用滾動條策略：當視窗超出範圍時自動顯示")
+        
         # ========== Snap 功能 ==========
         self._snap_preview = SnapPreviewOverlay(self)
         self._snap_enabled = True  # 是否啟用 Snap 功能
         self._snap_threshold = 30  # 邊緣檢測閾值 (像素)
         self._snapped_windows = {}  # 追蹤已 Snap 的視窗: {window_id: QRect}
+        
+        # ========== 磁吸對齊功能 ==========
+        self._magnetic_snap_enabled = True  # 是否啟用磁吸對齊
+        self._magnetic_snap_distance = 15  # 磁吸距離閾值 (像素)
+        self._moving_window = None  # 當前正在移動的視窗
+        self._original_move_pos = None  # 原始移動位置
+        
+        # 安裝事件過濾器來監聽子視窗移動
+        self.subWindowActivated.connect(self._on_subwindow_activated)
     
     def _get_occupied_regions(self, exclude_window=None) -> list:
         """獲取所有已佔用的區域（排除指定視窗）"""
@@ -523,8 +582,59 @@ class CustomMdiArea(QMdiArea):
                 }
             """)
             #print(f"[LOCK] CustomMdiArea: 已隱藏標題列但保留邊框")
+            
+            # ✅ 添加視窗後更新滾動範圍
+            # 使用 QTimer 延遲執行，確保視窗已完全添加和佈局
+            from PyQt5.QtCore import QTimer
+            QTimer.singleShot(100, self._update_scroll_area)
         
         return subwindow
+
+    def _update_scroll_area(self):
+        """
+        更新 MDI 區域的滾動範圍，確保所有視窗都可訪問
+        
+        計算所有子視窗的實際佔用範圍，並更新 MDI 的虛擬大小
+        這樣當視窗超出可視範圍時，滾動條會自動出現
+        """
+        if not self.subWindowList():
+            return
+        
+        # 計算所有視窗的邊界矩形
+        max_right = 0
+        max_bottom = 0
+        
+        for subwindow in self.subWindowList():
+            if not subwindow.isVisible():
+                continue
+            
+            geometry = subwindow.geometry()
+            right = geometry.x() + geometry.width()
+            bottom = geometry.y() + geometry.height()
+            
+            max_right = max(max_right, right)
+            max_bottom = max(max_bottom, bottom)
+        
+        # 如果有視窗超出當前可視範圍，更新虛擬大小
+        current_width = self.width()
+        current_height = self.height()
+        
+        if max_right > current_width or max_bottom > current_height:
+            # 添加一些邊距（讓視窗不會緊貼邊緣）
+            padding = 50
+            required_width = max(current_width, max_right + padding)
+            required_height = max(current_height, max_bottom + padding)
+            
+            # ✅ 這個方法會讓 QMdiArea 知道實際內容大小
+            # 從而自動顯示滾動條
+            print(f"[MDI_SCROLL] 📏 檢測到視窗超出範圍")
+            print(f"[MDI_SCROLL]   可視範圍: {current_width}x{current_height}")
+            print(f"[MDI_SCROLL]   實際範圍: {max_right}x{max_bottom}")
+            print(f"[MDI_SCROLL]   ✅ 滾動條已自動啟用")
+            
+            # QMdiArea 會自動根據子視窗位置調整滾動範圍
+            # 但我們可以手動觸發更新
+            self.updateGeometry()
 
     # ========== Snap 功能方法 ==========
     
@@ -997,6 +1107,133 @@ class CustomMdiArea(QMdiArea):
         self._snap_enabled = enabled
         if not enabled:
             self.hide_snap_preview()
+    
+    # ========== 磁吸對齊功能 ==========
+    
+    def _on_subwindow_activated(self, window):
+        """子視窗激活時安裝事件過濾器"""
+        if window and getattr(self, '_magnetic_snap_enabled', False):
+            window.installEventFilter(self)
+    
+    def eventFilter(self, obj, event):
+        """事件過濾器 - 監聽子視窗移動並實現磁吸對齊"""
+        # 防禦性檢查：如果屬性還未初始化，直接返回
+        if not getattr(self, '_magnetic_snap_enabled', False):
+            return super().eventFilter(obj, event)
+        
+        # 只處理 QMdiSubWindow 的移動事件
+        if isinstance(obj, QMdiSubWindow) and event.type() == event.Move:
+            self._apply_magnetic_snap(obj)
+        
+        return super().eventFilter(obj, event)
+    
+    def _apply_magnetic_snap(self, moving_window):
+        """應用磁吸對齊到正在移動的視窗"""
+        if moving_window.property("is_welcome_fixed"):
+            return  # 不對固定視窗應用磁吸
+        
+        current_geo = moving_window.geometry()
+        snapped_geo = self._calculate_magnetic_snap_position(moving_window, current_geo)
+        
+        if snapped_geo != current_geo:
+            moving_window.setGeometry(snapped_geo)
+    
+    def _calculate_magnetic_snap_position(self, moving_window, current_geo):
+        """計算磁吸對齊後的位置"""
+        snap_distance = self._magnetic_snap_distance
+        
+        # 獲取所有其他視窗
+        other_windows = [w for w in self.subWindowList() 
+                        if w != moving_window and not w.property("is_welcome_fixed") 
+                        and w.isVisible()]
+        
+        if not other_windows:
+            return current_geo
+        
+        # 當前視窗的邊界
+        left = current_geo.left()
+        right = current_geo.right()
+        top = current_geo.top()
+        bottom = current_geo.bottom()
+        
+        # 用於記錄最近的對齊目標
+        snap_left = None
+        snap_right = None
+        snap_top = None
+        snap_bottom = None
+        
+        # 檢測與其他視窗的磁吸
+        for other in other_windows:
+            other_geo = other.geometry()
+            
+            # 垂直對齊檢測（上下邊緣是否在相似高度）
+            vertical_overlap = (
+                (top >= other_geo.top() - snap_distance * 3 and top <= other_geo.bottom() + snap_distance * 3) or
+                (bottom >= other_geo.top() - snap_distance * 3 and bottom <= other_geo.bottom() + snap_distance * 3)
+            )
+            
+            # 水平對齊檢測
+            horizontal_overlap = (
+                (left >= other_geo.left() - snap_distance * 3 and left <= other_geo.right() + snap_distance * 3) or
+                (right >= other_geo.left() - snap_distance * 3 and right <= other_geo.right() + snap_distance * 3)
+            )
+            
+            # 左邊緣對齊其他視窗的右邊緣
+            if vertical_overlap and abs(left - other_geo.right()) < snap_distance:
+                snap_left = other_geo.right()
+            
+            # 右邊緣對齊其他視窗的左邊緣
+            if vertical_overlap and abs(right - other_geo.left()) < snap_distance:
+                snap_right = other_geo.left()
+            
+            # 上邊緣對齊其他視窗的下邊緣
+            if horizontal_overlap and abs(top - other_geo.bottom()) < snap_distance:
+                snap_top = other_geo.bottom()
+            
+            # 下邊緣對齊其他視窗的上邊緣
+            if horizontal_overlap and abs(bottom - other_geo.top()) < snap_distance:
+                snap_bottom = other_geo.top()
+            
+            # 左邊緣對齊其他視窗的左邊緣
+            if vertical_overlap and abs(left - other_geo.left()) < snap_distance:
+                snap_left = other_geo.left()
+            
+            # 右邊緣對齊其他視窗的右邊緣
+            if vertical_overlap and abs(right - other_geo.right()) < snap_distance:
+                snap_right = other_geo.right()
+            
+            # 上邊緣對齊其他視窗的上邊緣
+            if horizontal_overlap and abs(top - other_geo.top()) < snap_distance:
+                snap_top = other_geo.top()
+            
+            # 下邊緣對齊其他視窗的下邊緣
+            if horizontal_overlap and abs(bottom - other_geo.bottom()) < snap_distance:
+                snap_bottom = other_geo.bottom()
+        
+        # 應用磁吸調整
+        new_geo = QRect(current_geo)
+        
+        if snap_left is not None:
+            new_geo.moveLeft(snap_left)
+        elif snap_right is not None:
+            new_geo.moveRight(snap_right)
+        
+        if snap_top is not None:
+            new_geo.moveTop(snap_top)
+        elif snap_bottom is not None:
+            new_geo.moveBottom(snap_bottom)
+        
+        return new_geo
+    
+    def set_magnetic_snap_enabled(self, enabled: bool):
+        """啟用或禁用磁吸對齊"""
+        self._magnetic_snap_enabled = enabled
+        print(f"[MDI] 磁吸對齊: {'啟用' if enabled else '禁用'}")
+    
+    def set_magnetic_snap_distance(self, distance: int):
+        """設置磁吸距離閾值"""
+        self._magnetic_snap_distance = max(5, min(50, distance))
+        print(f"[MDI] 磁吸距離: {self._magnetic_snap_distance}px")
 
 
 # CLI 分析工作執行緒
@@ -8414,6 +8651,15 @@ class StyleHMainWindow(QMainWindow):
             progress_callback(20, tr('splash_loading_state'))
         print("[INIT] ✅ 遙測分析狀態追蹤已初始化")
 
+        # F1TV 認證管理器
+        from core.f1tv_auth import F1TVAuthManager
+        self.f1tv_auth_manager = F1TVAuthManager(self)
+        self.f1tv_auth_manager.auth_success.connect(self._on_f1tv_auth_success)
+        self.f1tv_auth_manager.auth_failed.connect(self._on_f1tv_auth_failed)
+        self.f1tv_auth_manager.auth_state_changed.connect(self._on_f1tv_auth_state_changed)
+        self.f1tv_status_label = None  # 將在狀態列中初始化
+        print("[INIT] ✅ F1TV 認證管理器已初始化")
+        
         # 賽季日曆支援
         self._season_provider = SeasonCalendarProvider()
         self._season_events_cache: Dict[int, List[SeasonEvent]] = {}
@@ -8596,21 +8842,21 @@ class StyleHMainWindow(QMainWindow):
         # view_menu.addSeparator()
         # view_menu.addAction(tr('full_screen', 'Full Screen'), self.toggle_fullscreen)
         
-        # 分析菜單
-        analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
-        analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
-        analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
-        analysis_menu.addSeparator()
-        # Vehicle Parts Changes - 暫時禁用開發中
-        parts_action = analysis_menu.addAction(tr('menu_parts_analysis', 'Vehicle Parts Changes'), self.open_parts_analysis)
-        parts_action.setEnabled(False)  # 禁用
-        parts_action.setStatusTip(tr('parts_analysis_disabled', 'This feature is under development'))
-        analysis_menu.addSeparator()
-        analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
+        # 分析菜單 (已隱藏)
+        # analysis_menu = menubar.addMenu(tr('menu_analysis', 'Analysis'))
+        # analysis_menu.addAction(tr('menu_driver_standings', 'Driver Standings'), self.open_driver_standings)
+        # analysis_menu.addAction(tr('menu_constructor_standings', 'Constructor Standings'), self.open_constructor_standings)
+        # analysis_menu.addSeparator()
+        # # Vehicle Parts Changes - 暫時禁用開發中
+        # parts_action = analysis_menu.addAction(tr('menu_parts_analysis', 'Vehicle Parts Changes'), self.open_parts_analysis)
+        # parts_action.setEnabled(False)  # 禁用
+        # parts_action.setStatusTip(tr('parts_analysis_disabled', 'This feature is under development'))
+        # analysis_menu.addSeparator()
+        # analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
         
-        # Live Timing 菜單 (開發中 - 全部禁用)
-        live_timing_menu = menubar.addMenu(tr('menu_live_timing', 'Live Timing'))
-        self._setup_live_timing_menu(live_timing_menu)
+        # Live Timing 菜單 (已隱藏)
+        # live_timing_menu = menubar.addMenu(tr('menu_live_timing', 'Live Timing'))
+        # self._setup_live_timing_menu(live_timing_menu)
         
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
@@ -8660,6 +8906,16 @@ class StyleHMainWindow(QMainWindow):
         self.linkage_action.setChecked(True)  # 預設啟用
         self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
         tools_menu.addAction(self.linkage_action)
+
+        # F1TV Account 選單
+        f1tv_menu = menubar.addMenu(tr('f1tv_account_menu', 'F1TV Account'))
+        self.f1tv_login_action = QAction(tr('f1tv_login_action', 'Login / Manage Account'), self)
+        self.f1tv_login_action.triggered.connect(self._open_f1tv_auth_dialog)
+        f1tv_menu.addAction(self.f1tv_login_action)
+        f1tv_menu.addSeparator()
+        self.f1tv_logout_action = QAction(tr('f1tv_logout_action', 'Logout'), self)
+        self.f1tv_logout_action.triggered.connect(self._logout_f1tv)
+        f1tv_menu.addAction(self.f1tv_logout_action)
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
@@ -8778,6 +9034,16 @@ class StyleHMainWindow(QMainWindow):
         action_battle_insight = live_timing_menu.addAction(tr('menu_live_timing_battle_insight', 'Battle Insight'))
         action_battle_insight.setStatusTip(tr('battle_insight_tip', 'Real-time battle analysis with overtake probability'))
         action_battle_insight.triggered.connect(self._open_live_timing_battle_insight)
+        
+        # Chase Strategy 追趕策略
+        action_chase_strategy = live_timing_menu.addAction(tr('menu_live_timing_chase_strategy', 'Chase Strategy'))
+        action_chase_strategy.setStatusTip(tr('chase_strategy_tip', 'Analyze P2 to P1 chase strategy feasibility'))
+        action_chase_strategy.triggered.connect(self._open_live_timing_chase_strategy)
+        
+        # Track & Weather 賽道與天氣狀態
+        action_track_weather = live_timing_menu.addAction(tr('menu_live_timing_track_weather', 'Track & Weather'))
+        action_track_weather.setStatusTip(tr('track_weather_tip', 'Real-time track status and weather conditions'))
+        action_track_weather.triggered.connect(self._open_live_timing_track_weather)
         
         action_pit_stop_table = live_timing_menu.addAction(tr('menu_live_timing_pit_stop_table', 'Pit Stop Statistics'))
         action_pit_stop_table.setEnabled(False)
@@ -8968,6 +9234,133 @@ class StyleHMainWindow(QMainWindow):
         QMessageBox.information(self, tr('about_action', '關於 F1T'), about_message)
     
     # ===========================================
+    # F1TV Authentication Methods
+    # ===========================================
+    def _open_f1tv_auth_dialog(self):
+        """開啟 F1TV 登入對話框 (使用 Edge WebView2)"""
+        # 檢查是否已登入
+        if self.f1tv_auth_manager.is_authenticated():
+            token_info = self.f1tv_auth_manager.get_token_info()
+            product = token_info.get('product', 'F1TV') if token_info else 'F1TV'
+            exp_str = token_info.get('exp_str', 'Unknown') if token_info else 'Unknown'
+            
+            reply = QMessageBox.question(
+                self,
+                tr('f1tv_login_title', 'F1TV Account'),
+                tr('f1tv_already_logged_in', 
+                   'You are already logged in.\n\nProduct: {product}\nExpires: {exp_str}\n\nDo you want to re-login?'
+                ).format(product=product, exp_str=exp_str),
+                QMessageBox.Yes | QMessageBox.No
+            )
+            if reply != QMessageBox.Yes:
+                return
+        
+        # 顯示隱私通知對話框
+        privacy_notice = QMessageBox(self)
+        privacy_notice.setIcon(QMessageBox.Information)
+        privacy_notice.setWindowTitle(tr('f1tv_privacy_notice_title', 'Privacy Notice'))
+        privacy_notice.setText(
+            tr('f1tv_privacy_notice_text', 
+               'Your F1 TV account credentials will NOT be transmitted anywhere.\n\n'
+               'This authentication is only used for accessing Realtime Live Timing data.')
+        )
+        privacy_notice.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        privacy_notice.setDefaultButton(QMessageBox.Ok)
+        
+        if privacy_notice.exec_() != QMessageBox.Ok:
+            return
+        
+        # 啟動認證流程 (使用 pywebview Edge WebView2)
+        print("[F1TV] Starting authentication flow...")
+        self.f1tv_auth_manager.start_auth_flow(self)
+    
+    def _logout_f1tv(self):
+        """登出 F1TV"""
+        if not self.f1tv_auth_manager.is_authenticated():
+            QMessageBox.information(
+                self,
+                tr('f1tv_login_title', 'F1TV Account'),
+                tr('f1tv_not_logged_in', 'Not Logged In')
+            )
+            return
+        
+        reply = QMessageBox.question(
+            self,
+            tr('confirm', 'Confirm'),
+            tr('f1tv_logout_confirm', 'Are you sure you want to logout from F1TV?'),
+            QMessageBox.Yes | QMessageBox.No
+        )
+        if reply == QMessageBox.Yes:
+            self.f1tv_auth_manager.clear_token()
+    
+    def _on_f1tv_auth_success(self, token: str):
+        """F1TV 認證成功回調"""
+        print(f"[F1TV] Authentication successful (token length: {len(token)})")
+        self._update_f1tv_status_label()
+        QMessageBox.information(
+            self,
+            tr('success', 'Success'),
+            tr('f1tv_login_success', 'Successfully logged in to F1TV!')
+        )
+    
+    def _on_f1tv_auth_failed(self, error: str):
+        """F1TV 認證失敗回調"""
+        print(f"[F1TV] Authentication failed: {error}")
+        QMessageBox.warning(
+            self,
+            tr('error', 'Error'),
+            tr('f1tv_login_failed', 'Login failed: {error}').format(error=error)
+        )
+    
+    def _on_f1tv_auth_state_changed(self, authenticated: bool):
+        """F1TV 認證狀態變更回調"""
+        print(f"[F1TV] Auth state changed: authenticated={authenticated}")
+        self._update_f1tv_status_label()
+        self._broadcast_f1tv_auth_state(authenticated)
+    
+    def _update_f1tv_status_label(self):
+        """更新 F1TV 狀態標籤"""
+        if not hasattr(self, 'f1tv_status_label') or self.f1tv_status_label is None:
+            return
+        
+        token_info = self.f1tv_auth_manager.get_token_info()
+        
+        if token_info is None:
+            self.f1tv_status_label.setText('[F1TV] Not Logged In')
+            self.f1tv_status_label.setStyleSheet('color: #888888; font-weight: bold;')
+            self.f1tv_status_label.setToolTip(tr(
+                'f1tv_click_to_login',
+                'Click to login to F1TV account'
+            ))
+        elif token_info.get('expired'):
+            self.f1tv_status_label.setText('[F1TV] Expired')
+            self.f1tv_status_label.setStyleSheet('color: #f1c40f; font-weight: bold;')
+            self.f1tv_status_label.setToolTip(tr(
+                'f1tv_token_expired',
+                'Token expired. Click to re-login.'
+            ))
+        else:
+            self.f1tv_status_label.setText('[F1TV] Logged In')
+            self.f1tv_status_label.setStyleSheet('color: #2ecc71; font-weight: bold;')
+            product = token_info.get('product', 'F1TV')
+            exp_str = token_info.get('exp_str', 'Unknown')
+            self.f1tv_status_label.setToolTip(f"{product}\nExpires: {exp_str}")
+    
+    def _broadcast_f1tv_auth_state(self, authenticated: bool):
+        """廣播 F1TV 認證狀態到所有 Live Timing 模組"""
+        # 更新 Control Dock
+        if hasattr(self, '_live_timing_control_dock') and self._live_timing_control_dock:
+            if hasattr(self._live_timing_control_dock, 'set_f1tv_authenticated'):
+                self._live_timing_control_dock.set_f1tv_authenticated(authenticated)
+        
+        # 更新所有已開啟的 Live Timing 視窗
+        if hasattr(self, 'mdi_area') and self.mdi_area:
+            for sub_window in self.mdi_area.subWindowList():
+                widget = sub_window.widget()
+                if hasattr(widget, 'set_f1tv_authenticated'):
+                    widget.set_f1tv_authenticated(authenticated)
+    
+    # ===========================================
     # Live Timing Dock Widget 設置
     # ===========================================
     def _setup_live_timing_dock(self):
@@ -8988,6 +9381,12 @@ class StyleHMainWindow(QMainWindow):
         
         # 預設隱藏
         self.live_timing_dock.hide()
+        
+        # 初始化時傳遞 F1TV 認證狀態
+        if hasattr(self, 'f1tv_auth_manager') and self.f1tv_auth_manager:
+            is_authenticated = self.f1tv_auth_manager.is_authenticated()
+            self.live_timing_dock.set_f1tv_authenticated(is_authenticated)
+            print(f"[INIT] F1TV auth state passed to Control Dock: {is_authenticated}")
         
         # 追蹤已開啟的 Live Timing 模組數量
         self._live_timing_module_count = 0
@@ -9178,6 +9577,14 @@ class StyleHMainWindow(QMainWindow):
     def _open_live_timing_battle_insight(self):
         """開啟 Live Timing Battle Insight"""
         self._open_live_timing_module("Battle Insight")
+    
+    def _open_live_timing_chase_strategy(self):
+        """開啟 Live Timing Chase Strategy"""
+        self._open_live_timing_module("Chase Strategy")
+    
+    def _open_live_timing_track_weather(self):
+        """開啟 Live Timing Track & Weather"""
+        self._open_live_timing_module("Track & Weather")
         
     def create_professional_toolbar(self):
         """創建專業工具欄"""
@@ -11421,87 +11828,74 @@ class StyleHMainWindow(QMainWindow):
         tree.setIndentation(12)  # 增加縮排以容納三層結構
         tree.setRootIsDecorated(True)
         
-        # 🔧 修復洩漏: 存儲為實例屬性以便清理
+        # 存儲為實例屬性以便清理
         self.function_tree = tree
         
-        # ========== Race Overview Analysis ==========
-        race_overview_group = QTreeWidgetItem(tree, [tr("race_overview_analysis", "Race Overview Analysis")])
-        race_overview_group.setExpanded(True)
+        # ========== Historical Analysis (歷史靜態分析) ==========
+        historical_group = QTreeWidgetItem(tree, [tr("historical_analysis", "Historical Analysis")])
+        historical_group.setExpanded(False)  # 預設收合
+        
+        # Race Overview (賽事總覽)
+        race_overview_group = QTreeWidgetItem(historical_group, [tr("race_overview", "Race Overview")])
+        race_overview_group.setExpanded(False)
         QTreeWidgetItem(race_overview_group, [tr("rain_analysis", "Rain Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("track_analysis", "Track Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("pitstop_analysis", "Pitstop Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("accident_analysis", "Accident Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("tire_strategy_analysis", "Tire Strategy Analysis")])
         QTreeWidgetItem(race_overview_group, [tr("driver_position_analysis", "Driver Race Position")])
-        # Vehicle Parts Changes - 暫時禁用開發中
-        parts_item = QTreeWidgetItem(race_overview_group, [tr("parts_analysis", "Vehicle Parts Changes")])
-        parts_item.setDisabled(True)  # 設為灰色且禁用
-        parts_item.setForeground(0, QColor("#999999"))  # 灰色字體
-        parts_item.setToolTip(0, tr('parts_analysis_disabled', 'This feature is under development'))
         
-        # ========== Driver Performance Analysis ==========
-        driver_performance_group = QTreeWidgetItem(tree, [tr("driver_performance_analysis", "Driver Performance Analysis")])
-        driver_performance_group.setExpanded(True)
+        # Telemetry Analysis (遙測分析)
+        telemetry_group = QTreeWidgetItem(historical_group, [tr("telemetry_analysis", "Telemetry Analysis")])
+        telemetry_group.setExpanded(False)
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("speed_analysis", "Speed Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("brake_analysis", "Brake Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("throttle_analysis_sub", "Throttle Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("gear_analysis", "Gear Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("rpm_analysis", "RPM Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("acceleration_analysis", "Acceleration Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("speed_diff_analysis", "Speed Diff Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("distance_diff_analysis", "Distance Diff Analysis")])
+        QTreeWidgetItem(telemetry_group, ["    (L) " + tr("time_diff_analysis", "Time Diff Analysis")])
         
-        # ========== Qualifying Prediction (排位賽預測) ⭐ 頂層模組 ==========
-        qualifying_prediction_group = QTreeWidgetItem(tree, [tr("qualifying_prediction", "Qualifying Prediction")])
-        qualifying_prediction_group.setExpanded(False)
-        QTreeWidgetItem(qualifying_prediction_group, ["    " + tr("qualifying_prediction_table", "FP3 → Q Prediction Table")])  # ✅ F74 排位賽預測
-        QTreeWidgetItem(qualifying_prediction_group, ["    " + tr("race_prediction_table", "Q → R Prediction Table")])  # ✅ F80 正賽預測
+        # Lap Performance (圈速表現)
+        lap_performance_group = QTreeWidgetItem(historical_group, [tr("lap_performance", "Lap Performance")])
+        lap_performance_group.setExpanded(False)
+        QTreeWidgetItem(lap_performance_group, ["    (D) " + tr("detailed_lap_table", "Detailed Lap Table")])
+        QTreeWidgetItem(lap_performance_group, ["    (D) " + tr("lap_time_box_plot_sub", "Lap Time Box Plot")])
+        QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_box_plot", "Throttle Box Plot")])
+        QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_line_chart", "Throttle Line Chart")])
         
-        # Lap Analysis (Telemetry) - 8 個子模組
-        lap_analysis = QTreeWidgetItem(driver_performance_group, [tr("lap_analysis", "Lap Analysis (Telemetry)")])
-        lap_analysis.setExpanded(False)  # 預設收合
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("speed_analysis", "Speed Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("brake_analysis", "Brake Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("throttle_analysis_sub", "Throttle Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("gear_analysis", "Gear Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("rpm_analysis", "RPM Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("acceleration_analysis", "Acceleration Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("speed_diff_analysis", "Speed Diff Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("distance_diff_analysis", "Distance Diff Analysis")])
-        QTreeWidgetItem(lap_analysis, ["    (L) " + tr("time_diff_analysis", "Time Diff Analysis")])
+        # Ideal Lap & Sectors (理想圈速與分段)
+        ideal_lap_group = QTreeWidgetItem(historical_group, [tr("ideal_lap_sectors", "Ideal Lap & Sectors")])
+        ideal_lap_group.setExpanded(False)
+        QTreeWidgetItem(ideal_lap_group, ["    " + tr("ideal_lap_ranking_table", "Ideal Lap Ranking Table")])
+        QTreeWidgetItem(ideal_lap_group, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison")])
+        QTreeWidgetItem(ideal_lap_group, ["    " + tr("ideal_lap_sector_heatmap", "Sector Heat Map")])
         
-        # Detailed Lap Analysis - 2 個視圖
-        detailed_lap = QTreeWidgetItem(driver_performance_group, [tr("detailed_lap_analysis", "Detailed Lap Analysis")])
-        detailed_lap.setExpanded(False)
-        QTreeWidgetItem(detailed_lap, ["    (D) " + tr("detailed_lap_table", "Detailed Lap Table")])
-        QTreeWidgetItem(detailed_lap, ["    (D) " + tr("lap_time_box_plot_sub", "Lap Time Box Plot")])
+        # Speed & Corner Analysis (速度與彎道)
+        speed_corner_group = QTreeWidgetItem(historical_group, [tr("speed_corner_analysis", "Speed & Corner Analysis")])
+        speed_corner_group.setExpanded(False)
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_straight_speed", "Straight Speed & Acceleration")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_brake_performance", "Brake Performance")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("low_speed_corner_analysis", "Low-Speed Corners")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("mid_speed_corner_analysis", "Mid-Speed Corners")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("high_speed_corner_analysis", "High-Speed Corners")])
         
-        # Throttle Analysis - 2 個視圖
-        throttle_analysis = QTreeWidgetItem(driver_performance_group, [tr("throttle_analysis", "Throttle Analysis")])
-        throttle_analysis.setExpanded(False)
-        QTreeWidgetItem(throttle_analysis, ["    (T) " + tr("throttle_box_plot", "Throttle Box Plot")])
-        QTreeWidgetItem(throttle_analysis, ["    (T) " + tr("throttle_line_chart", "Throttle Line Chart")])
+        # Prediction Models (預測模型)
+        prediction_group = QTreeWidgetItem(historical_group, [tr("prediction_models", "Prediction Models")])
+        prediction_group.setExpanded(False)
+        QTreeWidgetItem(prediction_group, ["    " + tr("qualifying_prediction_table", "FP3 → Q Prediction")])
+        QTreeWidgetItem(prediction_group, ["    " + tr("race_prediction_table", "Q → R Prediction")])
         
-        # Ideal Lap Analysis - 3 個子模組
-        ideal_lap = QTreeWidgetItem(driver_performance_group, [tr("ideal_lap_analysis", "Ideal Lap Analysis")])
-        ideal_lap.setExpanded(False)
-        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_ranking_table", "Ideal Lap Ranking Table")])  # ✅ 更明確的名稱
-        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_comparison", "Sector Comparison")])  # ✅ 已啟用
-        QTreeWidgetItem(ideal_lap, ["    " + tr("ideal_lap_sector_heatmap", "Sector Heat Map")])
-        
-        # Straight Speed Analysis - 全車手直線速度與加速性能分析 ⭐ 新增
-        straight_speed = QTreeWidgetItem(driver_performance_group, [tr("straight_speed_analysis", "Straight Speed Analysis (Experimental)")])
-        straight_speed.setExpanded(False)
-        QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_straight_speed", "All Drivers Speed & Acceleration")])  # ✅ 已啟用
-        QTreeWidgetItem(straight_speed, ["    " + tr("all_drivers_brake_performance", "All Drivers Brake Performance")])  # ✅ F34 煞車性能分析
-        
-        # Corner Performance Analysis - 全車手彎道速度分析 ⭐ F47 新增
-        corner_performance = QTreeWidgetItem(driver_performance_group, [tr("corner_performance_analysis", "Corner Performance Analysis")])
-        corner_performance.setExpanded(False)
-        QTreeWidgetItem(corner_performance, ["    " + tr("low_speed_corner_analysis", "Low-Speed Corner Analysis")])  # ✅ F47 低速彎
-        QTreeWidgetItem(corner_performance, ["    " + tr("mid_speed_corner_analysis", "Mid-Speed Corner Analysis")])  # ✅ F47 中速彎
-        QTreeWidgetItem(corner_performance, ["    " + tr("high_speed_corner_analysis", "High-Speed Corner Analysis")])  # ✅ F47 高速彎
-        
-        # ========== Multi-Season Analysis ==========
+        # ========== Multi-Season Analysis (多賽季分析) ==========
         multi_season_group = QTreeWidgetItem(tree, [tr("multi_season_analysis", "Multi-Season Analysis")])
         multi_season_group.setExpanded(False)
-        QTreeWidgetItem(multi_season_group, [tr("historical_track_map", "Historical Track Map")])  # ✅ F100 歷年賽道旗幟統計
+        QTreeWidgetItem(multi_season_group, [tr("historical_track_map", "Historical Track Map")])
         
         # ========== Live Timing ==========
         live_timing_group = QTreeWidgetItem(tree, [tr("live_timing_tree", "Live Timing")])
-        live_timing_group.setExpanded(True)
+        live_timing_group.setExpanded(False)  # 預設收合
         
         # Live Timing 子項目 - 已啟用的模組
         lt_enabled_items = [
@@ -11515,6 +11909,8 @@ class StyleHMainWindow(QMainWindow):
             ("live_timing_race_control", "Race Control Messages"),
             ("live_timing_speed_trace", "Speed Trace"),
             ("live_timing_battle_insight", "Battle Insight"),
+            ("live_timing_chase_strategy", "Chase Strategy"),
+            ("live_timing_track_weather", "Track & Weather"),
         ]
         for key, default in lt_enabled_items:
             QTreeWidgetItem(live_timing_group, [tr(key, default)])
@@ -11972,6 +12368,22 @@ class StyleHMainWindow(QMainWindow):
         try:
             # 當切換分頁時，檢查並更新工具欄狀態
             self._check_and_update_toolbar_status()
+            
+            # 🔧 新增: 當切換到 Home 頁面時，重新排列視窗
+            if index == 0:  # Home 頁面是第一個分頁
+                tab_widget = self.tab_widget.widget(index)
+                if tab_widget:
+                    # 尋找 MDI 區域
+                    from PyQt5.QtCore import QTimer
+                    def find_and_arrange():
+                        mdi_areas = tab_widget.findChildren(CustomMdiArea)
+                        if mdi_areas:
+                            mdi_area = mdi_areas[0]
+                            if hasattr(mdi_area, 'arrange_welcome_windows'):
+                                print(f"[TAB_CHANGED] 🔧 切換到 Home 頁面，重新排列視窗")
+                                mdi_area.arrange_welcome_windows()
+                    # 延遲 200ms 以確保佈局完成
+                    QTimer.singleShot(200, find_and_arrange)
         except Exception as e:
             print(f"[ERROR] 分頁切換處理失敗: {e}")
     
@@ -12685,6 +13097,8 @@ class StyleHMainWindow(QMainWindow):
                 mdi_width = mdi_area.width()
                 mdi_height = mdi_area.height()
                 
+                print(f"[WELCOME] 🔧 自動排列視窗: MDI 區域大小 {mdi_width}x{mdi_height}")
+                
                 # 三欄寬度: 左 33%, 中 33%, 右 34%
                 left_width = mdi_width // 3
                 middle_width = mdi_width // 3
@@ -12715,8 +13129,31 @@ class StyleHMainWindow(QMainWindow):
                 
                 print(f"[WELCOME] 視窗排列完成 (三欄): 左上{left_width}x{left_top_height} + 左下{left_width}x{left_bottom_height} + 中{middle_width}x{mdi_height} + 右{right_width}x{mdi_height}")
             
-            # 延遲 100ms 執行排列
-            QTimer.singleShot(100, arrange_windows)
+            # 儲存 arrange_windows 函數以便 resize 時調用
+            mdi_area.arrange_welcome_windows = arrange_windows
+            
+            # 延遲 500ms 執行排列（增加延遲以確保 MDI 區域完全初始化）
+            QTimer.singleShot(500, arrange_windows)
+            
+            # 🔧 新增: 監聽 MDI 區域大小改變事件，自動重新排列視窗
+            from PyQt5.QtCore import QEvent, QObject as QObj
+            class ResizeEventFilter(QObj):
+                def __init__(self, arrange_func):
+                    super().__init__()
+                    self.arrange_func = arrange_func
+                    self.resize_timer = QTimer()
+                    self.resize_timer.setSingleShot(True)
+                    self.resize_timer.timeout.connect(self.arrange_func)
+                
+                def eventFilter(self, obj, event):
+                    if event.type() == QEvent.Resize:
+                        # 使用定時器防抖，避免頻繁觸發
+                        self.resize_timer.start(100)
+                    return False
+            
+            resize_filter = ResizeEventFilter(arrange_windows)
+            mdi_area.installEventFilter(resize_filter)
+            mdi_area._resize_filter = resize_filter  # 保持引用避免被垃圾回收
             
             print(f"[WELCOME] ✅ 賽季進度 + 天氣時間軸 + 積分榜模組已載入 (year={current_year}, race={current_race})")
         except Exception as e:
@@ -13212,6 +13649,18 @@ class StyleHMainWindow(QMainWindow):
 
         # 只添加 API 狀態
         status_bar.addWidget(self.api_status_label)
+        
+        # F1TV 狀態指示器
+        self.f1tv_status_label = QLabel('[F1TV] Not Logged In')
+        self.f1tv_status_label.setObjectName('StatusF1TV')
+        self.f1tv_status_label.setStyleSheet('color: #888888; font-weight: bold;')
+        self.f1tv_status_label.setCursor(Qt.PointingHandCursor)
+        self.f1tv_status_label.setToolTip(tr('f1tv_click_to_login', 'Click to login to F1TV account'))
+        self.f1tv_status_label.mousePressEvent = lambda e: self._open_f1tv_auth_dialog()
+        status_bar.addWidget(self.f1tv_status_label)
+        
+        # 初始化 F1TV 狀態顯示
+        self._update_f1tv_status_label()
 
         # Refresh status information
         self.update_status_bar()
@@ -17402,6 +17851,9 @@ class StyleHMainWindow(QMainWindow):
                 # 原本：QTimer.singleShot(500, self._tile_all_workspace_windows_delayed)
                 print(f"[WORKSPACE] ✅ 保持保存時的視窗位置（不自動平鋪）")
                 
+                # ✅ 更新所有分頁的滾動範圍（確保超出範圍的視窗可透過滾動條訪問）
+                QTimer.singleShot(300, self._update_all_mdi_scroll_areas)
+                
                 QMessageBox.information(
                     self,
                     tr('workspace_load_success_title'),
@@ -17424,6 +17876,27 @@ class StyleHMainWindow(QMainWindow):
                 tr('workspace_load_error_title'),
                 tr('workspace_load_error_message').format(error=str(e))
             )
+    
+    def _update_all_mdi_scroll_areas(self):
+        """
+        更新所有分頁的 MDI 滾動範圍
+        
+        用於 Workspace 載入後，確保所有超出範圍的視窗都能透過滾動條訪問
+        """
+        print(f"[WORKSPACE] 🔄 更新所有 MDI 區域的滾動範圍...")
+        
+        updated_tabs = 0
+        for tab_index in range(1, self.tab_widget.count()):  # 跳過 HOME
+            tab_widget = self.tab_widget.widget(tab_index)
+            
+            # 檢查是否為 CustomMdiArea
+            if hasattr(tab_widget, '_update_scroll_area'):
+                tab_name = self.tab_widget.tabText(tab_index)
+                print(f"[WORKSPACE] 📏 更新分頁 '{tab_name}' 的滾動範圍")
+                tab_widget._update_scroll_area()
+                updated_tabs += 1
+        
+        print(f"[WORKSPACE] ✅ 已更新 {updated_tabs} 個分頁的滾動範圍")
     
     def _tile_all_workspace_windows_delayed(self):
         """延遲執行的自動平鋪 - 確保 MDI 區域尺寸已更新"""
@@ -19849,11 +20322,13 @@ class StyleHMainWindow(QMainWindow):
         # 移除有問題的清理邏輯 - 直接使用現有的子視窗列表
         print(f"[TILE DEBUG] 準備排列 {len(subwindows)} 個視窗")
         
-        # 計算排列配置
-        available_width = mdi_area.width()  # 無邊距，完全貼合
-        available_height = mdi_area.height()
+        # 計算排列配置 - 右邊和下方保留 10px
+        margin_right = 10
+        margin_bottom = 10
+        available_width = mdi_area.width() - margin_right
+        available_height = mdi_area.height() - margin_bottom
         print(f"[TILE DEBUG] MDI區域大小: {mdi_area.width()}x{mdi_area.height()}")
-        print(f"[TILE DEBUG] 可用空間: {available_width}x{available_height}")
+        print(f"[TILE DEBUG] 可用空間（扣除右下邊距）: {available_width}x{available_height}")
         
         # 計算最佳的行列配置
         num_windows = len(subwindows)
@@ -19886,11 +20361,27 @@ class StyleHMainWindow(QMainWindow):
         window_height = available_height // rows if rows > 0 else available_height
         print(f"[TILE DEBUG] 每個視窗尺寸: {window_width}x{window_height}")
         
-        # 確保最小尺寸
+        # 檢查最小尺寸限制是否會導致超出範圍
         min_width, min_height = 250, 150
-        window_width = max(window_width, min_width)
-        window_height = max(window_height, min_height)
-        print(f"[TILE DEBUG] 調整後視窗尺寸: {window_width}x{window_height}")
+        
+        # 計算套用最小尺寸後的總尺寸
+        total_width_with_min = max(window_width, min_width) * cols
+        total_height_with_min = max(window_height, min_height) * rows
+        
+        # 只在不會超出範圍時才套用最小尺寸限制
+        if total_width_with_min <= available_width:
+            window_width = max(window_width, min_width)
+            print(f"[TILE DEBUG] ✅ 套用最小寬度限制: {window_width}")
+        else:
+            print(f"[TILE DEBUG] ⚠️ 跳過最小寬度限制（會超出範圍：{total_width_with_min} > {available_width}）")
+        
+        if total_height_with_min <= available_height:
+            window_height = max(window_height, min_height)
+            print(f"[TILE DEBUG] ✅ 套用最小高度限制: {window_height}")
+        else:
+            print(f"[TILE DEBUG] ⚠️ 跳過最小高度限制（會超出範圍：{total_height_with_min} > {available_height}）")
+        
+        print(f"[TILE DEBUG] 最終視窗尺寸: {window_width}x{window_height}")
         
         # 排列視窗
         print(f"[TILE DEBUG] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
@@ -22097,13 +22588,12 @@ class StyleHMainWindow(QMainWindow):
 
 def main():
     """主函數"""
-    print("[MAIN] 🚀 啟動 F1T 專業賽車分析工作站...")
+    print("[MAIN] 啟動 F1T 專業賽車分析工作站...")
     
     # ========== Python 3.13 執行緒警告抑制器 ==========
     # 抑制 Python 3.13 在程式退出時的 Dummy Thread 清理警告
     # 這是 Python 3.13 與 Qt C++ 擴展執行緒互動的已知問題
     import warnings
-    import sys
     
     # 抑制特定的執行緒警告
     warnings.filterwarnings("ignore", category=RuntimeWarning, module="threading")

@@ -673,6 +673,7 @@ class F1APIDownloader:
                 'tyre_timestamps': processor._tyre_timestamps,
                 'race_control_messages': raw_data.get('race_control', []),
                 'track_status': raw_data.get('track_status', []),
+                'weather_data': raw_data.get('weather', []),
             }
             
             return result

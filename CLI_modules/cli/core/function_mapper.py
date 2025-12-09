@@ -117,9 +117,10 @@ class F1AnalysisFunctionMapper:
             82: self._execute_overtake_model_trainer,   # 超車預測模型訓練器 (F82) (預留)
             83: self._execute_overtake_predictor,       # 超車預測推理器 (F83) (預留)
             84: self._execute_overtake_llm_explainer,   # 超車預測 LLM 解說器 (F84) (預留)
-            85: self._execute_overtake_live_monitor,    # 即時超車監控 (F85) (預留)
-            86: self._execute_tire_saving_analysis,     # 省輪胎行為分析 (F86) (2025-12-05)
+            85: self._execute_close_combat_trainer,     # 近距離接觸模型訓練器 (F85) (2025-12-09)
+            86: self._execute_close_combat_predictor,   # 近距離接觸預測器 (F86) (2025-12-09)
             87: self._execute_driver_strategy_prediction, # 車手策略預測器 (F87) (2025-12-05)
+            88: self._execute_tire_saving_analysis,     # 省輪胎行為分析 (F88) (2025-12-09)
             
             # 96-99: 特殊功能
             96: self._execute_race_weather_forecast,   # 賽事天氣預報
@@ -5798,13 +5799,24 @@ class F1AnalysisFunctionMapper:
             year: 年份，None 則收集所有可用年份
             race: 賽事名稱（可選，指定則只收集該賽事）
             session: 會話類型（預設 R = 正賽）
+            **kwargs: 其他參數
+                - split_by_year: bool，是否按年份分割訓練集/驗證集
+                - validation_year: int，驗證集的年份閾值（>= 此年份的數據進入驗證集）
             
         Returns:
             收集統計結果
         """
         try:
+            # 提取分割參數
+            split_by_year = kwargs.get('split_by_year', False)
+            validation_year = kwargs.get('validation_year', 2025)
+            
             print("=" * 70)
             print("F81: 超車事件數據收集器")
+            if split_by_year:
+                print(f"模式: 訓練集（< {validation_year}）/ 驗證集（>= {validation_year}）分割")
+            else:
+                print("模式: 統一收集")
             print("=" * 70)
             
             # 導入收集器
@@ -5820,6 +5832,8 @@ class F1AnalysisFunctionMapper:
             # 執行收集
             summary = run_f81_data_collection(
                 years=years_to_collect,
+                split_by_year=split_by_year,
+                validation_year=validation_year,
                 verbose=True
             )
             
@@ -5972,85 +5986,99 @@ class F1AnalysisFunctionMapper:
                 "function_id": "84"
             }
     
-    def _execute_overtake_live_monitor(self, year=None, race=None, session="R", **kwargs):
-        """Function 85: 即時超車監控
+    def _execute_close_combat_trainer(self, year=None, race=None, session="R", **kwargs):
+        """Function 85: 近距離接觸模型訓練器 (F85)
         
-        即時監控比賽中的超車機會。
-        
-        [預留功能 - 尚未實現]
-        """
-        print("=" * 70)
-        print("F85: 即時超車監控")
-        print("=" * 70)
-        print("[INFO] 此功能尚未實現，需整合 Live F1 Timing 系統")
-        
-        return {
-            "success": False,
-            "message": "F85 功能預留中，尚未實現",
-            "function_id": "85"
-        }
-    
-    def _execute_tire_saving_analysis(self, year=None, race=None, session="R", **kwargs):
-        """Function 86: 省輪胎行為分析
-        
-        分析車手在比賽中的省輪胎行為，識別主動省胎策略。
+        訓練 XGBoost 模型預測車手接近到 0.2-0.3 秒內的機率。
+        這是比 F83 更早期的戰鬥預警系統。
         
         Args:
-            year: 年份
-            race: 賽事名稱
-            session: 賽事階段
-            
+            --model-version: 模型版本號 (預設為 1)
+            --verbose: 詳細輸出 (預設為 True)
+        
         Returns:
-            包含每位車手省輪胎分數和分類的 JSON
+            模型檔案: close_combat_xgb_v{version}.json
         """
         print("=" * 70)
-        print("F86: 省輪胎行為分析 (Tire Saving Behavior Analysis)")
+        print("F85: 近距離接觸模型訓練器")
         print("=" * 70)
         
-        # 取得參數
-        year = year or kwargs.get("year") or self.data_loader.year if self.data_loader else None
-        race = race or kwargs.get("race") or self.data_loader.race if self.data_loader else None
-        session = session or kwargs.get("session", "R")
-        
-        if not year or not race:
-            return {
-                "success": False,
-                "message": "缺少必要參數: year 和 race",
-                "function_id": "86"
-            }
-        
-        print(f"[INFO] 分析參數: {year} {race} {session}")
-        
         try:
-            from CLI_modules.cli.prediction.tire_saving_analyzer import run_tire_saving_analysis
+            from CLI_modules.cli.prediction.overtake_prediction.close_combat_trainer import run_f85_model_training
             
-            result = run_tire_saving_analysis(
-                year=year,
-                race=race,
-                session=session,
-                save_json=True
+            # 從 kwargs 獲取參數
+            model_version = int(kwargs.get('model_version', 1))
+            verbose = kwargs.get('verbose', True)
+            
+            result = run_f85_model_training(
+                version=model_version,
+                verbose=verbose
             )
-            
-            if result.get("success"):
-                # 標準化 JSON 導出
-                self._export_to_json(result, 86, "tire_saving_analysis")
             
             return result
             
         except Exception as e:
-            print(f"[ERROR] F86 執行失敗: {e}")
+            print(f"[ERROR] F85 訓練失敗: {e}")
             import traceback
             traceback.print_exc()
             return {
                 "success": False,
-                "message": f"F86 執行失敗: {str(e)}",
+                "message": f"F85 訓練失敗: {str(e)}",
+                "function_id": "85"
+            }
+    
+    def _execute_close_combat_predictor(self, year=None, race=None, session="R", **kwargs):
+        """Function 86: 近距離接觸預測器 (F86)
+        
+        預測車手接近到 0.2-0.3 秒內的機率。
+        這是比 F83 更早期的戰鬥預警系統。
+        
+        Args:
+            -d / --driver: 進攻者代碼 (如 VER)
+            -d2 / --driver2: 防守者代碼 (如 LEC)
+            --gap: 當前差距 (秒)
+            --model-version: 模型版本號 (預設為 1)
+            
+        Returns:
+            近距離接觸機率和關鍵因素分析
+        """
+        print("=" * 70)
+        print("F86: 近距離接觸預測器")
+        print("=" * 70)
+        
+        try:
+            from CLI_modules.cli.prediction.overtake_prediction.close_combat_predictor import run_f86_prediction
+            
+            # 從 kwargs 獲取參數
+            attacker = kwargs.get('driver', 'VER')
+            defender = kwargs.get('driver2', 'LEC')
+            gap = float(kwargs.get('gap', 1.5))
+            model_version = int(kwargs.get('model_version', 1))
+            
+            result = run_f86_prediction(
+                attacker=attacker,
+                defender=defender,
+                gap=gap,
+                version=model_version,
+                verbose=True
+            )
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] F86 預測失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F86 預測失敗: {str(e)}",
                 "function_id": "86"
             }
 
     def _execute_driver_strategy_prediction(self, year=None, race=None, session="R", **kwargs):
         """Function 87: 車手策略預測器
         
-        根據 F86 省輪胎分析結果，計算個人化進站圈數預測。
+        根據 F88 省輪胎分析結果，計算個人化進站圈數預測。
         
         公式: 個人化進站圈數 = 大數據預估圈數 × (1 + Tire Saving Adjustment Factor)
         
@@ -6098,10 +6126,10 @@ class F1AnalysisFunctionMapper:
             return result
             
         except FileNotFoundError as e:
-            print(f"[WARNING] 找不到 F86 分析結果，嘗試先執行 F86...")
-            # 先執行 F86
-            f86_result = self._execute_tire_saving_analysis(year, race, session, **kwargs)
-            if f86_result.get("success"):
+            print(f"[WARNING] 找不到 F88 分析結果，嘗試先執行 F88...")
+            # 先執行 F88 (輪胎節省分析)
+            f88_result = self._execute_tire_saving_analysis(year, race, session, **kwargs)
+            if f88_result.get("success"):
                 # 重新執行 F87
                 from CLI_modules.cli.prediction.driver_strategy_predictor import run_driver_strategy_prediction
                 result = run_driver_strategy_prediction(
@@ -6117,7 +6145,7 @@ class F1AnalysisFunctionMapper:
             else:
                 return {
                     "success": False,
-                    "message": f"F86 執行失敗，無法進行 F87 預測: {f86_result.get('message')}",
+                    "message": f"F88 執行失敗，無法進行 F87 預測: {f88_result.get('message')}",
                     "function_id": "87"
                 }
             
@@ -6129,6 +6157,63 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": f"F87 執行失敗: {str(e)}",
                 "function_id": "87"
+            }
+    
+    def _execute_tire_saving_analysis(self, year=None, race=None, session="R", **kwargs):
+        """Function 88: 省輪胎行為分析 (F88)
+        
+        分析車手在比賽中的省輪胎行為，識別主動省胎策略。
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 賽事階段
+            
+        Returns:
+            包含每位車手省輪胎分數和分類的 JSON
+        """
+        print("=" * 70)
+        print("F88: 省輪胎行為分析 (Tire Saving Behavior Analysis)")
+        print("=" * 70)
+        
+        # 取得參數
+        year = year or kwargs.get("year") or self.data_loader.year if self.data_loader else None
+        race = race or kwargs.get("race") or self.data_loader.race if self.data_loader else None
+        session = session or kwargs.get("session", "R")
+        
+        if not year or not race:
+            return {
+                "success": False,
+                "message": "缺少必要參數: year 和 race",
+                "function_id": "88"
+            }
+        
+        print(f"[INFO] 分析參數: {year} {race} {session}")
+        
+        try:
+            from CLI_modules.cli.prediction.tire_saving_analyzer import run_tire_saving_analysis
+            
+            result = run_tire_saving_analysis(
+                year=year,
+                race=race,
+                session=session,
+                save_json=True
+            )
+            
+            if result.get("success"):
+                # 標準化 JSON 導出
+                self._export_to_json(result, 88, "tire_saving_analysis")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] F88 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F88 執行失敗: {str(e)}",
+                "function_id": "88"
             }
 
 # ===== 支援函數和工具 =====

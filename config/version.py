@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.9.0"
+APP_VERSION = "V0.10.0"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,16 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.10.0": {
+        "date": "2025-12-09",
+        "features": [
+            "Chase Strategy 自動追蹤 P1/P2 功能（基於賽事排名）",
+            "Gap Evolution 手動切換車手時自動更新顯示",
+            "Logger 性能管理系統（GUI System Settings 整合）",
+            "Logger 開關工具（tools/toggle_logger.py）",
+            "提升系統性能與穩定性",
+        ]
+    },
     "V0.9.0": {
         "date": "2025-12-05",
         "features": [

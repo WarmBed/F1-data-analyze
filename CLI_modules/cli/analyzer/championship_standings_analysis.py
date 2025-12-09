@@ -23,7 +23,7 @@ JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
 # 🔄 Standings 刷新策略：智能加速機制
 STANDINGS_REFRESH_HOURS_NORMAL = 120  # 5 天 (正常模式：賽程間期)
 STANDINGS_REFRESH_HOURS_RACE_APPROACHING = 12  # 12 小時 (臨近模式：賽前 2 天)
-STANDINGS_REFRESH_HOURS_POST_RACE = 6  # 6 小時 (賽後模式：賽後 72 小時內)
+STANDINGS_REFRESH_HOURS_POST_RACE = 2  # 2 小時 (賽後模式：賽後 72 小時內，確保及時獲取新 Round 數據)
 RACE_APPROACHING_THRESHOLD_DAYS = 2  # 賽前 2 天啟動加速刷新
 POST_RACE_MONITORING_HOURS = 72  # 賽後持續監控 72 小時 (3 天) - 留給官方確認積分
 
@@ -199,12 +199,12 @@ def _determine_standings_refresh_interval(year: int) -> float:
                     race_date = datetime.fromisoformat(race_date_str.replace('Z', '+00:00'))
                     hours_since_race = (now - race_date).total_seconds() / 3600
                     
-                    # 🏁 賽後 24 小時內，啟用賽後加速模式（6 小時刷新）
+                    # 🏁 賽後 72 小時內，啟用賽後加速模式（2 小時刷新）
                     if 0 <= hours_since_race <= POST_RACE_MONITORING_HOURS:
                         race_name = latest_completed.get("event_name", "Unknown")
                         remaining_hours = POST_RACE_MONITORING_HOURS - hours_since_race
                         print(f"[STANDINGS] 🏁 賽後監控期！{race_name} 結束後 {hours_since_race:.1f} 小時")
-                        print(f"[STANDINGS] 🔥 啟用賽後加速模式（6 小時刷新），剩餘監控時間 {remaining_hours:.1f} 小時")
+                        print(f"[STANDINGS] 🔥 啟用賽後加速模式（2 小時刷新），剩餘監控時間 {remaining_hours:.1f} 小時")
                         return STANDINGS_REFRESH_HOURS_POST_RACE
                 except ValueError:
                     pass

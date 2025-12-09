@@ -27,6 +27,14 @@ from .api_client import (
     LiveTimingAPIClient,
     get_api_client,
 )
+from .realtime_database import (
+    RealtimeDatabase,
+    get_realtime_db,
+)
+from .database_reader import (
+    DatabaseReader,
+    get_database_reader,
+)
 
 __all__ = [
     'LiveTimingDataManager',
@@ -45,4 +53,9 @@ __all__ = [
     # API 客戶端
     'LiveTimingAPIClient',
     'get_api_client',
+    # 即時資料庫
+    'RealtimeDatabase',
+    'get_realtime_db',
+    'DatabaseReader',
+    'get_database_reader',
 ]

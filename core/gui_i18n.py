@@ -76,6 +76,46 @@ class GuiTranslator:
             'help_menu': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
             'open_help_center': {'zh': '使用說明...', 'en': 'User Guide...', 'ja': '使用ガイド...'},
             'about_action': {'zh': '關於 F1T', 'en': 'About F1T', 'ja': 'F1T について'},
+            
+            # F1TV Account 相關
+            'f1tv_account_menu': {'zh': 'F1TV 帳號', 'en': 'F1TV Account', 'ja': 'F1TVアカウント'},
+            'f1tv_login_action': {'zh': '登入 / 管理帳號', 'en': 'Login / Manage Account', 'ja': 'ログイン / アカウント管理'},
+            'f1tv_logout_action': {'zh': '登出', 'en': 'Logout', 'ja': 'ログアウト'},
+            'f1tv_login_title': {'zh': 'F1TV 帳號', 'en': 'F1TV Account', 'ja': 'F1TVアカウント'},
+            'f1tv_info': {'zh': '資訊', 'en': 'Information', 'ja': '情報'},
+            'f1tv_privacy_notice_title': {'zh': '隱私通知', 'en': 'Privacy Notice', 'ja': 'プライバシー通知'},
+            'f1tv_privacy_notice_text': {
+                'zh': '此 F1 TV 帳號不會傳送至任何地方，僅使用於 Realtime。\n\n您的帳號資訊僅用於存取即時 Live Timing 數據。',
+                'en': 'Your F1 TV account credentials will NOT be transmitted anywhere.\n\nThis authentication is only used for accessing Realtime Live Timing data.',
+                'ja': 'F1 TVアカウントの認証情報は一切送信されません。\n\nこの認証はリアルタイムライブタイミングデータへのアクセスにのみ使用されます。'
+            },
+            'f1tv_realtime_info': {
+                'zh': '即時 Live Timing 需要有效的 F1TV Pro 訂閱。\n點擊「登入」以驗證您的 F1TV 帳號。',
+                'en': 'Realtime Live Timing requires an active F1TV Pro subscription.\nClick "Login" to authenticate with your F1TV account.',
+                'ja': 'リアルタイムライブタイミングには有効なF1TV Proサブスクリプションが必要です。\n「ログイン」をクリックしてF1TVアカウントを認証してください。'
+            },
+            'f1tv_status': {'zh': '狀態', 'en': 'Status', 'ja': 'ステータス'},
+            'f1tv_login': {'zh': '登入', 'en': 'Login', 'ja': 'ログイン'},
+            'f1tv_logout': {'zh': '登出', 'en': 'Logout', 'ja': 'ログアウト'},
+            'f1tv_not_logged_in': {'zh': '未登入', 'en': 'Not Logged In', 'ja': '未ログイン'},
+            'f1tv_logged_in': {'zh': '已登入', 'en': 'Logged In', 'ja': 'ログイン済み'},
+            'f1tv_expired': {'zh': '已過期', 'en': 'Expired', 'ja': '期限切れ'},
+            'f1tv_logging_in': {'zh': '登入中...', 'en': 'Logging in...', 'ja': 'ログイン中...'},
+            'f1tv_login_success': {'zh': '成功登入 F1TV!', 'en': 'Successfully logged in to F1TV!', 'ja': 'F1TVにログインしました!'},
+            'f1tv_login_failed': {'zh': '登入失敗: {error}', 'en': 'Login failed: {error}', 'ja': 'ログイン失敗: {error}'},
+            'f1tv_logout_confirm': {'zh': '確定要登出 F1TV 嗎?', 'en': 'Are you sure you want to logout from F1TV?', 'ja': 'F1TVからログアウトしますか?'},
+            'f1tv_click_to_login': {'zh': '點擊登入 F1TV 帳號', 'en': 'Click to login to F1TV account', 'ja': 'クリックしてF1TVアカウントにログイン'},
+            'f1tv_token_expired': {'zh': 'Token 已過期，點擊重新登入', 'en': 'Token expired. Click to re-login.', 'ja': 'トークンの有効期限が切れました。再ログインしてください。'},
+            'realtime_requires_f1tv': {'zh': '即時模式需要登入 F1TV 帳號', 'en': 'Realtime mode requires F1TV account login', 'ja': 'リアルタイムモードにはF1TVアカウントログインが必要です'},
+            'realtime_available': {'zh': '即時模式可用 - 已連接 F1TV', 'en': 'Realtime mode available - Connected to F1TV', 'ja': 'リアルタイムモード利用可能 - F1TV接続済み'},
+            'f1tv_subscription': {'zh': '訂閱方案', 'en': 'Subscription', 'ja': 'サブスクリプション'},
+            'f1tv_expires': {'zh': '到期時間', 'en': 'Expires', 'ja': '有効期限'},
+            'f1tv_how_to_subscribe': {'zh': '如何訂閱 F1TV?', 'en': 'How to subscribe to F1TV?', 'ja': 'F1TVの購読方法は?'},
+            'close': {'zh': '關閉', 'en': 'Close', 'ja': '閉じる'},
+            'confirm': {'zh': '確認', 'en': 'Confirm', 'ja': '確認'},
+            'success': {'zh': '成功', 'en': 'Success', 'ja': '成功'},
+            'error': {'zh': '錯誤', 'en': 'Error', 'ja': 'エラー'},
+            
             'about_message': {
                 'zh': (
                     "F1 TelemetryStation Pro\n\n"
@@ -140,6 +180,30 @@ class GuiTranslator:
             'year': {'zh': '年:', 'en': 'Year:', 'ja': '年:'},
             'race': {'zh': '賽事:', 'en': 'Race:', 'ja': 'レース:'},
             'session': {'zh': '賽段:', 'en': 'Session:', 'ja': 'セッション:'},
+            
+            # Live Timing 控制按鈕
+            'Mode': {'zh': '模式', 'en': 'Mode', 'ja': 'モード'},
+            'Year': {'zh': '年份', 'en': 'Year', 'ja': '年'},
+            'Race': {'zh': '賽事', 'en': 'Race', 'ja': 'レース'},
+            'Session': {'zh': '賽段', 'en': 'Session', 'ja': 'セッション'},
+            'Speed': {'zh': '速度', 'en': 'Speed', 'ja': '速度'},
+            'Realtime Live Timing': {'zh': '即時直播', 'en': 'Realtime', 'ja': 'リアルタイム'},
+            'Historical Playback': {'zh': '歷史回放', 'en': 'Historical', 'ja': '履歴再生'},
+            'Connect Live Timing': {'zh': '連接', 'en': 'Connect', 'ja': '接続'},
+            'Disconnect': {'zh': '斷開', 'en': 'Disconnect', 'ja': '切断'},
+            'Disconnected': {'zh': '未連接', 'en': 'Disconnected', 'ja': '未接続'},
+            'Connecting...': {'zh': '連接中...', 'en': 'Connecting...', 'ja': '接続中...'},
+            'Load Race': {'zh': '載入', 'en': 'Load', 'ja': '読込'},
+            'Select race': {'zh': '選擇賽事', 'en': 'Select race', 'ja': 'レースを選択'},
+            'Please select a race': {'zh': '請選擇賽事', 'en': 'Please select a race', 'ja': 'レースを選択してください'},
+            'Loaded': {'zh': '已載入', 'en': 'Loaded', 'ja': '読込完了'},
+            'Load Failed': {'zh': '載入失敗', 'en': 'Failed', 'ja': '読込失敗'},
+            'Stop': {'zh': '停止', 'en': 'Stop', 'ja': '停止'},
+            'Play': {'zh': '播放', 'en': 'Play', 'ja': '再生'},
+            'Pause': {'zh': '暫停', 'en': 'Pause', 'ja': '一時停止'},
+            'Rewind 30s': {'zh': '倒退 30 秒', 'en': 'Rewind 30s', 'ja': '30秒巻戻し'},
+            'Forward 30s': {'zh': '快進 30 秒', 'en': 'Forward 30s', 'ja': '30秒早送り'},
+            'websockets not installed': {'zh': '未安裝 websockets', 'en': 'websockets not installed', 'ja': 'websocketsがインストールされていません'},
 
             'year_label': {'zh': '年份:', 'en': 'Year:', 'ja': '年:'},
             'race_label': {'zh': '賽事:', 'en': 'Race:', 'ja': 'レース:'},
@@ -206,39 +270,39 @@ class GuiTranslator:
             'telemetry_steering': {'zh': '方向盤轉角 (Steering)', 'en': 'Steering Angle', 'ja': 'Steering Angle'},
             
             # brake 分析專用
-            'brake_chart_title': {'zh': '🔄 煞車分析圖表', 'en': '🔄 Brake Analysis Chart', 'ja': '🔄 ブレーキ分析チャート'},
+            'brake_chart_title': {'zh': ' 煞車分析圖表', 'en': ' Brake Analysis Chart', 'ja': ' ブレーキ分析チャート'},
             'brake_chart_loading': {'zh': '煞車圖表組件正在載入中...', 'en': 'Brake chart component loading...', 'ja': 'ブレーキチャートコンポーネント読み込み中...'},
             'brake_value': {'zh': '煞車', 'en': 'brake', 'ja': 'ブレーキ'},
             
             # throttle 分析專用
-            'throttle_chart_title': {'zh': '🔄 油門分析圖表', 'en': '🔄 Throttle Analysis Chart', 'ja': '🔄 スロットル分析チャート'},
+            'throttle_chart_title': {'zh': ' 油門分析圖表', 'en': ' Throttle Analysis Chart', 'ja': ' スロットル分析チャート'},
             'throttle_chart_loading': {'zh': '油門圖表組件正在載入中...', 'en': 'Throttle chart component loading...', 'ja': 'スロットルチャートコンポーネント読み込み中...'},
             'throttle_value': {'zh': '油門', 'en': 'throttle', 'ja': 'スロットル'},
             
             # RPM 分析專用
-            'rpm_chart_title': {'zh': '🔄 RPM分析圖表', 'en': '🔄 RPM Analysis Chart', 'ja': '🔄 RPM分析チャート'},
+            'rpm_chart_title': {'zh': ' RPM分析圖表', 'en': ' RPM Analysis Chart', 'ja': ' RPM分析チャート'},
             'rpm_chart_loading': {'zh': 'RPM圖表組件正在載入中...', 'en': 'RPM chart component loading...', 'ja': 'RPMチャートコンポーネント読み込み中...'},
             'rpm_value': {'zh': 'RPM', 'en': 'RPM', 'ja': 'RPM'},
             
             # gear 分析專用
-            'gear_chart_title': {'zh': '🔄 檔位分析圖表', 'en': '🔄 Gear Analysis Chart', 'ja': '🔄 ギア分析チャート'},
+            'gear_chart_title': {'zh': ' 檔位分析圖表', 'en': ' Gear Analysis Chart', 'ja': ' ギア分析チャート'},
             'gear_chart_loading': {'zh': '檔位圖表組件正在載入中...', 'en': 'Gear chart component loading...', 'ja': 'ギアチャートコンポーネント読み込み中...'},
             'gear_value': {'zh': '檔位', 'en': 'gear', 'ja': 'ギア'},
             
             # acceleration 分析專用
-            'acceleration_chart_title': {'zh': '🔄 加速度分析圖表', 'en': '🔄 Acceleration Analysis Chart', 'ja': '🔄 アクセラレーション分析チャート'},
+            'acceleration_chart_title': {'zh': ' 加速度分析圖表', 'en': ' Acceleration Analysis Chart', 'ja': ' アクセラレーション分析チャート'},
             'acceleration_chart_loading': {'zh': '加速度圖表組件正在載入中...', 'en': 'Acceleration chart component loading...', 'ja': 'アクセラレーションチャートコンポーネント読み込み中...'},
             'acceleration_value': {'zh': '加速度', 'en': 'acceleration', 'ja': 'アクセラレーション'},
             'telemetry_acceleration': {'zh': '加速度 (m/s²)', 'en': 'Acceleration (m/s²)', 'ja': 'アクセラレーション (m/s²)'},
             
             # speeddiff 分析專用
-            'speeddiff_chart_title': {'zh': '🔄 速度差分析圖表', 'en': '🔄 Speed Diff Analysis Chart', 'ja': '🔄 スピード差分析チャート'},
+            'speeddiff_chart_title': {'zh': ' 速度差分析圖表', 'en': ' Speed Diff Analysis Chart', 'ja': ' スピード差分析チャート'},
             'speeddiff_chart_loading': {'zh': '速度差圖表組件正在載入中...', 'en': 'Speed diff chart component loading...', 'ja': 'スピード差チャートコンポーネント読み込み中...'},
             'speeddiff_value': {'zh': '速度差', 'en': 'speed diff', 'ja': 'スピード差'},
             'loading_speeddiff_data': {'zh': '開始載入速度差數據...', 'en': 'Loading speed diff data...', 'ja': 'スピード差データを読み込み中...'},
             
             # distancediff 分析專用
-            'distancediff_chart_title': {'zh': '🔄 距離差分析圖表', 'en': '🔄 Distance Diff Analysis Chart', 'ja': '🔄 ディスタンス差分析チャート'},
+            'distancediff_chart_title': {'zh': ' 距離差分析圖表', 'en': ' Distance Diff Analysis Chart', 'ja': ' ディスタンス差分析チャート'},
             'distancediff_chart_loading': {'zh': '距離差圖表組件正在載入中...', 'en': 'Distance diff chart component loading...', 'ja': 'ディスタンス差チャートコンポーネント読み込み中...'},
             'distancediff_value': {'zh': '距離差', 'en': 'distance diff', 'ja': 'ディスタンス差'},
             'loading_distancediff_data': {'zh': '開始載入距離差數據...', 'en': 'Loading distance diff data...', 'ja': 'ディスタンス差データを読み込み中...'},
@@ -248,13 +312,13 @@ class GuiTranslator:
             # 用於單車手不同圈數比較時的圖例標籤
             'lap_label_format': {'zh': '{driver} - 第{lap}圈', 'en': '{driver} - Lap {lap}', 'ja': '{driver} - {lap}周目'},
             
-            # 🆕 單車手雙圈模式 - 僅顯示圈數（不含車手代碼）
+            #  單車手雙圈模式 - 僅顯示圈數（不含車手代碼）
             'lap_only_format': {'zh': '第{lap}圈', 'en': 'Lap {lap}', 'ja': '{lap}周目'},
             
-            # 🆕 SpeedDiff/DistanceDiff 專用 - vs 格式（單行標籤）
+            #  SpeedDiff/DistanceDiff 專用 - vs 格式（單行標籤）
             'lap_vs_lap_format': {'zh': '{driver} 第{lap1}圈 vs 第{lap2}圈', 'en': '{driver} Lap {lap1} vs Lap {lap2}', 'ja': '{driver} {lap1}周目 vs {lap2}周目'},
             
-            # 🆕 Tooltip 標籤
+            #  Tooltip 標籤
             'speed_diff_label': {'zh': '速度差', 'en': 'Speed Diff', 'ja': '速度差'},
             'distance_diff_label': {'zh': '距離差', 'en': 'Distance Diff', 'ja': '距離差'},
             
@@ -475,11 +539,11 @@ class GuiTranslator:
             'accident_module_description': {'zh': 'F1 事故統計分析與可視化', 'en': 'F1 Accident Statistics Analysis and Visualization', 'ja': 'F1 事故統計分析と可視化'},
             'invalid_load_parameters': {'zh': '載入參數不正確', 'en': 'Invalid load parameters', 'ja': 'ロードパラメータが無効'},
             'local_data_format_error': {'zh': '本地資料格式錯誤', 'en': 'Local data format error', 'ja': 'ローカルデータフォーマットエラー'},
-            'data_load_complete': {'zh': '✅ 數據載入完成', 'en': '✅ Data loaded successfully', 'ja': '✅ データ読み込み完了'},
+            'data_load_complete': {'zh': ' 數據載入完成', 'en': ' Data loaded successfully', 'ja': ' データ読み込み完了'},
             'data_cleared': {'zh': '數據已清除', 'en': 'Data cleared', 'ja': 'データがクリアされました'},
             'incident_type': {'zh': '事故類型', 'en': 'Incident Type', 'ja': '事故タイプ'},
             'count': {'zh': '次數', 'en': 'Count', 'ja': '回数'},
-            'accident_comprehensive_analysis': {'zh': '🔥 事故綜合分析', 'en': '🔥 Accident Comprehensive Analysis', 'ja': '🔥 事故総合分析'},
+            'accident_comprehensive_analysis': {'zh': ' 事故綜合分析', 'en': ' Accident Comprehensive Analysis', 'ja': ' 事故総合分析'},
             
             # Accident Analysis MDI 模組新增翻譯
             'flag_type': {'zh': '旗標類型', 'en': 'Flag Type', 'ja': 'フラグタイプ'},
@@ -531,11 +595,11 @@ class GuiTranslator:
             'other': {'zh': '其他', 'en': 'Other', 'ja': 'その他'},
             
             # 事故統計卡片
-            'track_limit_violations': {'zh': '⚠️ Track Limit', 'en': '⚠️ Track Limit', 'ja': '⚠️ トラックリミット'},
+            'track_limit_violations': {'zh': ' Track Limit', 'en': ' Track Limit', 'ja': ' トラックリミット'},
             'violations_count': {'zh': '(違規次數)', 'en': '(Violations)', 'ja': '(違反回数)'},
-            'double_yellow_flag': {'zh': '🟡🟡 雙黃旗', 'en': '🟡🟡 Double Yellow', 'ja': '🟡🟡 ダブルイエロー'},
-            'yellow_flag': {'zh': '🟡 黃旗', 'en': '🟡 Yellow Flag', 'ja': '🟡 イエローフラッグ'},
-            'red_flag': {'zh': '🔴 紅旗', 'en': '🔴 Red Flag', 'ja': '🔴 レッドフラッグ'},
+            'double_yellow_flag': {'zh': ' 雙黃旗', 'en': ' Double Yellow', 'ja': ' ダブルイエロー'},
+            'yellow_flag': {'zh': ' 黃旗', 'en': ' Yellow Flag', 'ja': ' イエローフラッグ'},
+            'red_flag': {'zh': ' 紅旗', 'en': ' Red Flag', 'ja': ' レッドフラッグ'},
             'display_count': {'zh': '(出示次數)', 'en': '(Times)', 'ja': '(回数)'},
             
             # 事故統計卡片
@@ -616,15 +680,15 @@ class GuiTranslator:
             'lap_time': {'zh': '圈時間', 'en': 'Lap Time', 'ja': 'ラップタイム'},
             'tire_compound': {'zh': '輪胎配方', 'en': 'Tire Compound', 'ja': 'タイヤコンパウンド'},
             'lap_number_short': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
-            'lap_number_label': {'zh': '🔄 圈數:', 'en': '🔄 Lap:', 'ja': '🔄 ラップ:'},
+            'lap_number_label': {'zh': ' 圈數:', 'en': ' Lap:', 'ja': ' ラップ:'},
             
             # 速度差分析專用標籤
             'speed_diff_kmh': {'zh': '速度差距 (km/h)', 'en': 'Speed Diff (km/h)', 'ja': 'スピード差 (km/h)'},
-            'speeddiff_window_title': {'zh': '⚡ 速度差分析', 'en': '⚡ Speed Diff Analysis', 'ja': '⚡ 速度差分析'},
+            'speeddiff_window_title': {'zh': ' 速度差分析', 'en': ' Speed Diff Analysis', 'ja': ' 速度差分析'},
             
             # 累積距離差分析專用標籤
             'distance_diff_m': {'zh': '距離差距 (m)', 'en': 'Distance Diff (m)', 'ja': 'ディスタンス差 (m)'},
-            'distancediff_window_title': {'zh': '📏 累積距離差分析', 'en': '📏 Distance Diff Analysis', 'ja': '📏 ディスタンス差分析'},
+            'distancediff_window_title': {'zh': ' 累積距離差分析', 'en': ' Distance Diff Analysis', 'ja': ' ディスタンス差分析'},
             
             # 表格標題
             'item': {'zh': '項目', 'en': 'Item', 'ja': '項目'},
@@ -643,8 +707,8 @@ class GuiTranslator:
             'linkage_time': {'zh': '連動時間', 'en': 'Linkage Time', 'ja': '連動時間'},
             
             # 連動系統專用翻譯
-            'linkage_button': {'zh': '🔗 連動', 'en': '🔗 Link', 'ja': '🔗 連動'},
-            'master_linkage_button': {'zh': '🔗 主連動', 'en': '🔗 Master Link', 'ja': '🔗 マスター連動'},
+            'linkage_button': {'zh': ' 連動', 'en': ' Link', 'ja': ' 連動'},
+            'master_linkage_button': {'zh': ' 主連動', 'en': ' Master Link', 'ja': ' マスター連動'},
             'linkage_enabled': {'zh': '連動已啟用', 'en': 'Linkage Enabled', 'ja': '連動有効'},
             'linkage_disabled': {'zh': '連動已停用', 'en': 'Linkage Disabled', 'ja': '連動無効'},
             'master_linkage_enabled': {'zh': '主連動已啟用', 'en': 'Master Linkage Enabled', 'ja': 'マスター連動有効'},
@@ -669,7 +733,7 @@ class GuiTranslator:
             
             # 視窗標題模板
             'window_title_track': {'zh': '賽道', 'en': 'Track', 'ja': 'Track'},
-            'window_title_rain_analysis': {'zh': '🌧️ 降雨分析', 'en': '🌧️ Rain Analysis', 'ja': '🌧️ Rain Analysis'},
+            'window_title_rain_analysis': {'zh': '️ 降雨分析', 'en': '️ Rain Analysis', 'ja': '️ Rain Analysis'},
             'window_title_pitstop_analysis': {'zh': '進站分析', 'en': 'Pitstop Analysis', 'ja': 'ピットストップ分析'},
             
             # 功能表和工具列
@@ -699,7 +763,7 @@ class GuiTranslator:
             # Analysis Menu 項目
             'rain_analysis': {'zh': '降雨分析', 'en': 'Rain Analysis', 'ja': '降雨分析'},
             'track_analysis': {'zh': '賽道分析', 'en': 'Track Analysis', 'ja': 'トラック分析'},
-            'race_overview': {'zh': '🏎️ 賽事概覽', 'en': '🏎️ Race Overview', 'ja': '🏎️ レース概要'},
+            'race_overview': {'zh': '賽事概覽', 'en': 'Race Overview', 'ja': 'レース概要'},
             'telemetry_analysis': {'zh': '遙測分析', 'en': 'Telemetry Analysis', 'ja': 'テレメトリー分析'},
             'telemetry_comparison': {'zh': '遙測對比', 'en': 'Telemetry Comparison', 'ja': 'テレメトリー比較'},
             'driver_comparison': {'zh': '車手對比', 'en': 'Driver Comparison', 'ja': 'ドライバー比較'},
@@ -813,7 +877,7 @@ class GuiTranslator:
             
             # DraggableTitleBar 右鍵選單
             'context_menu_restore': {'zh': '恢復正常大小', 'en': 'Restore Normal Size', 'ja': '通常サイズに戻す'},
-            'context_menu_maximize': {'zh': '🔳 最大化', 'en': '🔳 Maximize', 'ja': '🔳 最大化'},
+            'context_menu_maximize': {'zh': ' 最大化', 'en': ' Maximize', 'ja': ' 最大化'},
             
             # DraggableTitleBar 狀態訊息
             'sync_enabled_message': {'zh': '接收同步已啟動 - 將接收主程式參數', 'en': 'Sync Enabled - Will Receive Main Window Parameters', 'ja': '同期有効 - メインウィンドウのパラメータを受信'},
@@ -844,7 +908,7 @@ class GuiTranslator:
             
             # 功能樹項目 - 舊版（保留兼容性）
             'single_race_analysis': {'zh': '單場賽事分析', 'en': 'Single Race Analysis', 'ja': '単一レース分析'},
-            'single_race_driver_analysis': {'zh': '🚗 單場賽事車手分析', 'en': '🚗 Single Race Driver Analysis', 'ja': '🚗 単一レースドライバー分析'},
+            'single_race_driver_analysis': {'zh': ' 單場賽事車手分析', 'en': ' Single Race Driver Analysis', 'ja': ' 単一レースドライバー分析'},
             
             # Lap Analysis 子模組
             'speed_analysis': {'zh': '速度分析', 'en': 'Speed Analysis', 'ja': '速度分析'},
@@ -993,6 +1057,8 @@ class GuiTranslator:
             'menu_live_timing_tyre_strategy': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
             'menu_live_timing_driver_strategy': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
             'live_timing_driver_strategy_tip': {'zh': '開啟車手策略分析', 'en': 'Open Driver Strategy Analysis', 'ja': 'ドライバー戦略分析を開く'},
+            'menu_live_timing_chase_strategy': {'zh': '追趕策略', 'en': 'Chase Strategy', 'ja': '追撃戦略'},
+            'chase_strategy_tip': {'zh': '分析 P2 追趕 P1 的策略可行性', 'en': 'Analyze P2 to P1 chase strategy feasibility', 'ja': 'P2からP1への追撃戦略の実現可能性を分析'},
             'menu_live_timing_race_control': {'zh': '比賽控制訊息', 'en': 'Race Control Messages', 'ja': 'レースコントロールメッセージ'},
             'menu_live_timing_race_insights': {'zh': '賽況提示', 'en': 'Race Insights', 'ja': 'レースインサイト'},
             'menu_live_timing_shap_analysis': {'zh': 'SHAP 分析', 'en': 'SHAP Analysis', 'ja': 'SHAP分析'},
@@ -1013,6 +1079,7 @@ class GuiTranslator:
             'live_timing_pit_window': {'zh': 'Pit Window', 'en': 'Pit Window', 'ja': 'ピットウィンドウ'},
             'live_timing_tyre_strategy': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
             'live_timing_driver_strategy': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'live_timing_chase_strategy': {'zh': '追趕策略', 'en': 'Chase Strategy', 'ja': '追撃戦略'},
             'live_timing_race_control': {'zh': '比賽控制訊息', 'en': 'Race Control Messages', 'ja': 'レースコントロールメッセージ'},
             'live_timing_race_insights': {'zh': '賽況提示', 'en': 'Race Insights', 'ja': 'レースインサイト'},
             'live_timing_shap_analysis': {'zh': 'SHAP 分析', 'en': 'SHAP Analysis', 'ja': 'SHAP分析'},
@@ -1025,6 +1092,9 @@ class GuiTranslator:
             'Predicted': {'zh': '預測', 'en': 'Predicted', 'ja': '予測'},
             'SC/VSC': {'zh': 'SC/VSC', 'en': 'SC/VSC', 'ja': 'SC/VSC'},
             'PIT Est.': {'zh': 'PIT 預估', 'en': 'PIT Est.', 'ja': 'PIT 予測'},
+            'Soft Strategy': {'zh': '軟胎策略', 'en': 'Soft Strategy', 'ja': 'ソフト戦略'},
+            'Medium Strategy': {'zh': '中性胎策略', 'en': 'Medium Strategy', 'ja': 'ミディアム戦略'},
+            'Hard Strategy': {'zh': '硬胎策略', 'en': 'Hard Strategy', 'ja': 'ハード戦略'},
             
             # Live Ranking Tower 翻譯
             'fuel_save': {'zh': 'SF%', 'en': 'SF%', 'ja': 'SF%'},
@@ -1054,10 +1124,50 @@ class GuiTranslator:
             'modify_pit_loss_vsc_prompt': {'zh': '請輸入虛擬安全車狀態的進站損失時間 (秒):', 'en': 'Enter pit loss time for Virtual Safety Car (seconds):', 'ja': 'バーチャルセーフティカー時のピットロスタイム (秒) を入力:'},
             'waiting_for_data': {'zh': '等待數據...', 'en': 'Waiting for data...', 'ja': 'データ待機中...'},
             
+            # Chase Strategy 追趕策略模組
+            'chase_strategy': {'zh': '追趕策略', 'en': 'Chase Strategy', 'ja': '追撃戦略'},
+            'refresh_strategy': {'zh': '刷新策略', 'en': 'Refresh', 'ja': '更新'},
+            'active_simulation': {'zh': '主動模擬', 'en': 'Active Simulation', 'ja': 'シミュレーション'},
+            'active_simulation_title': {'zh': '主動進站模擬', 'en': 'Active Pit Simulation', 'ja': 'ピットシミュレーション'},
+            'pit_lap': {'zh': '進站圈數', 'en': 'Pit Lap', 'ja': 'ピット周'},
+            'target_compound': {'zh': '目標輪胎', 'en': 'Target Compound', 'ja': 'ターゲットタイヤ'},
+            'strategy_name': {'zh': '策略名稱', 'en': 'Strategy', 'ja': '戦略'},
+            'feasible': {'zh': '可行性', 'en': 'Feasible', 'ja': '実現可能'},
+            'catchup_lap': {'zh': '追上圈數', 'en': 'Catchup Lap', 'ja': '追い上げ周'},
+            'total_advantage': {'zh': '總優勢', 'en': 'Advantage', 'ja': 'アドバンテージ'},
+            'drs_required': {'zh': 'DRS 需求', 'en': 'DRS Needed', 'ja': 'DRS必要'},
+            'rating': {'zh': '推薦度', 'en': 'Rating', 'ja': '評価'},
+            'strategy_tire_age': {'zh': '繼續當前輪胎', 'en': 'Continue Current Tyres', 'ja': '現在のタイヤを継続'},
+            'strategy_undercut': {'zh': '立即進站 Undercut', 'en': 'Immediate Pit (Undercut)', 'ja': '即時ピット (アンダーカット)'},
+            'strategy_sc_opportunity': {'zh': '等待安全車機會', 'en': 'Wait for Safety Car', 'ja': 'セーフティカー待ち'},
+            'strategy_active_pit': {'zh': '主動進站模擬', 'en': 'Active Pit Simulation', 'ja': 'ピットシミュレーション'},
+            'strategy_both_pit': {'zh': '雙重進站分析', 'en': 'Both Pit Scenario', 'ja': '両者ピットシナリオ'},
+            'strategy_no_tire_advantage': {'zh': '無輪胎齡優勢', 'en': 'No tyre age advantage', 'ja': 'タイヤ年齢のアドバンテージなし'},
+            'strategy_not_enough_laps': {'zh': '剩餘圈數不足', 'en': 'Not enough laps remaining', 'ja': '残り周回数不足'},
+            'strategy_undercut_fail': {'zh': '進站損失過大', 'en': 'Pit loss too high', 'ja': 'ピットロスが大きすぎる'},
+            'strategy_not_configured': {'zh': '未設定 - 請使用主動模擬按鈕', 'en': 'Not configured - use Active Simulation button', 'ja': '未設定 - シミュレーションボタンを使用'},
+            'strategy_age_diff': {'zh': '輪胎齡差', 'en': 'Tyre age diff', 'ja': 'タイヤ年齢差'},
+            'strategy_pit_loss': {'zh': '進站損失', 'en': 'Pit loss', 'ja': 'ピットロス'},
+            'strategy_pit_saving': {'zh': 'SC 進站節省', 'en': 'SC pit saving', 'ja': 'SCピット節約'},
+            'strategy_pit_at': {'zh': '第 {0} 圈進站', 'en': 'Pit at lap', 'ja': '周目にピット'},
+            'both_pit_analysis': {'zh': '雙重進站情境分析', 'en': 'Both Pit Scenario Analysis', 'ja': '両者ピットシナリオ分析'},
+            'pits_first': {'zh': '先進站', 'en': 'pits first', 'ja': '先にピット'},
+            'leads': {'zh': '領先', 'en': 'leads', 'ja': 'リード'},
+            'same_lap_pit': {'zh': '同圈進站', 'en': 'Same lap pit', 'ja': '同周ピット'},
+            'gap_unchanged': {'zh': '差距維持', 'en': 'Gap unchanged', 'ja': 'ギャップ維持'},
+            'laps': {'zh': '圈', 'en': 'laps', 'ja': '周'},
+            'lap': {'zh': '圈', 'en': 'Lap', 'ja': '周'},
+            'gap': {'zh': '差距', 'en': 'Gap', 'ja': 'ギャップ'},
+            'no_data': {'zh': '無數據', 'en': 'No data available', 'ja': 'データなし'},
+            'select_drivers': {'zh': '請選擇 P1 和 P2', 'en': 'Please select P1 and P2', 'ja': 'P1とP2を選択してください'},
+            'driver_not_found': {'zh': '找不到選中的車手', 'en': 'Selected driver not found', 'ja': '選択したドライバーが見つかりません'},
+            'show_details': {'zh': '顯示詳情', 'en': 'Show Details', 'ja': '詳細を表示'},
+            'hide_details': {'zh': '隱藏詳情', 'en': 'Hide Details', 'ja': '詳細を非表示'},
+            
             # 歡迎頁面
             'main_title': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
             'subtitle': {'zh': '專業級 F1 數據分析平台', 'en': 'Professional F1 Data Analysis Platform', 'ja': 'Professional F1 Data Analysis Platform'},
-            'welcome_info': {'zh': '💡 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 0.0', 'en': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0', 'ja': '💡 Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0'},
+            'welcome_info': {'zh': ' 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 0.0', 'en': ' Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0', 'ja': ' Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0'},
             
             # 統計和數據
             'statistics_data': {'zh': '統計數據', 'en': 'Statistics Data', 'ja': 'Statistics Data'},
@@ -1069,10 +1179,10 @@ class GuiTranslator:
             'season_calendar_upcoming_suffix': {'zh': '[未開賽]', 'en': '[Upcoming]', 'ja': '[未開催]'},
             
             # 統計卡片
-            'track_limit_violations': {'zh': '⚠️ Track Limit', 'en': '⚠️ Track Limit', 'ja': '⚠️ Track Limit'},
-            'double_yellow_flag': {'zh': '🟡🟡 雙黃旗', 'en': '🟡🟡 Double Yellow', 'ja': '🟡🟡 Double Yellow'},
-            'yellow_flag': {'zh': '🟡 黃旗', 'en': '🟡 Yellow Flag', 'ja': '🟡 Yellow Flag'},
-            'red_flag': {'zh': '🔴 紅旗', 'en': '🔴 Red Flag', 'ja': '🔴 Red Flag'},
+            'track_limit_violations': {'zh': ' Track Limit', 'en': ' Track Limit', 'ja': ' Track Limit'},
+            'double_yellow_flag': {'zh': ' 雙黃旗', 'en': ' Double Yellow', 'ja': ' Double Yellow'},
+            'yellow_flag': {'zh': ' 黃旗', 'en': ' Yellow Flag', 'ja': ' Yellow Flag'},
+            'red_flag': {'zh': ' 紅旗', 'en': ' Red Flag', 'ja': ' Red Flag'},
             'fastest_driver': {'zh': '最快車手', 'en': 'Fastest Driver', 'ja': 'Fastest Driver'},
             'avg_laptime': {'zh': '平均圈速', 'en': 'Avg Lap Time', 'ja': 'Avg Lap Time'},
             'violations_count': {'zh': '(違規次數)', 'en': '(Violations)', 'ja': '(Violations)'},
@@ -1084,9 +1194,9 @@ class GuiTranslator:
             'air_track_temp_comparison': {'zh': '氣溫與賽道溫度對比', 'en': 'Air vs Track Temperature', 'ja': 'Air vs Track Temperature'},
             
             # 分頁標籤
-            'driver_fastest_pitstop_ranking': {'zh': '🏆 車手最快進站排行榜', 'en': '🏆 Driver Fastest Pitstop Ranking', 'ja': '🏆 Driver Fastest Pitstop Ranking'},
-            'team_pitstop_statistics': {'zh': '🏁 車隊進站統計', 'en': '🏁 Team Pitstop Statistics', 'ja': '🏁 Team Pitstop Statistics'},
-            'detailed_records': {'zh': '📋 詳細記錄', 'en': '📋 Detailed Records', 'ja': '📋 Detailed Records'},
+            'driver_fastest_pitstop_ranking': {'zh': ' 車手最快進站排行榜', 'en': ' Driver Fastest Pitstop Ranking', 'ja': ' Driver Fastest Pitstop Ranking'},
+            'team_pitstop_statistics': {'zh': ' 車隊進站統計', 'en': ' Team Pitstop Statistics', 'ja': ' Team Pitstop Statistics'},
+            'detailed_records': {'zh': ' 詳細記錄', 'en': ' Detailed Records', 'ja': ' Detailed Records'},
             
             # 圖表控制
             'select_chart': {'zh': '選擇圖表:', 'en': 'Select Chart:', 'ja': 'Select Chart:'},
@@ -1200,9 +1310,9 @@ class GuiTranslator:
             'preview_tab_details': {'zh': '分頁詳情:', 'en': 'Tab details:', 'ja': 'タブ詳細:'},
             'preview_tab_entry': {'zh': '  {index}. {name}{status} - {count} 個視窗', 'en': '  {index}. {name}{status} - {count} windows', 'ja': '  {index}. {name}{status} - {count} ウィンドウ'},
             'preview_popped_out': {'zh': ' [彈出]', 'en': ' [Popped out]', 'ja': ' [ポップアウト]'},
-            'confirm_load_workspace': {'zh': '確定要載入 Workspace \'{name}\' 嗎？\n\n這將會替換當前所有分頁和視窗。\n\n• 分頁數: {tabs}\n• 視窗數: {windows}\n\n⚠️ 當前未儲存的變更將會遺失！', 'en': 'Are you sure you want to load workspace \'{name}\'?\n\nThis will replace all current tabs and windows.\n\n• Tabs: {tabs}\n• Windows: {windows}\n\n⚠️ Unsaved changes will be lost!', 'ja': 'ワークスペース \'{name}\' を読み込みますか？\n\n現在のすべてのタブとウィンドウが置き換えられます。\n\n• タブ数: {tabs}\n• ウィンドウ数: {windows}\n\n⚠️ 未保存の変更は失われます！'},
-            'confirm_delete_workspace': {'zh': '確定要刪除 Workspace \'{name}\' 嗎？\n\n⚠️ 此操作無法復原！', 'en': 'Are you sure you want to delete workspace \'{name}\'?\n\n⚠️ This operation cannot be undone!', 'ja': 'ワークスペース \'{name}\' を削除しますか？\n\n⚠️ この操作は元に戻せません！'},
-            'confirm_delete_multiple_workspaces': {'zh': '確定要刪除 {count} 個 Workspace 嗎？\n\n將刪除以下項目：\n  • {names}\n\n⚠️ 此操作無法復原！', 'en': 'Are you sure you want to delete {count} workspaces?\n\nThe following items will be deleted:\n  • {names}\n\n⚠️ This operation cannot be undone!', 'ja': '{count} 個のワークスペースを削除しますか？\n\n次の項目が削除されます：\n  • {names}\n\n⚠️ この操作は元に戻せません！'},
+            'confirm_load_workspace': {'zh': '確定要載入 Workspace \'{name}\' 嗎？\n\n這將會替換當前所有分頁和視窗。\n\n• 分頁數: {tabs}\n• 視窗數: {windows}\n\n 當前未儲存的變更將會遺失！', 'en': 'Are you sure you want to load workspace \'{name}\'?\n\nThis will replace all current tabs and windows.\n\n• Tabs: {tabs}\n• Windows: {windows}\n\n Unsaved changes will be lost!', 'ja': 'ワークスペース \'{name}\' を読み込みますか？\n\n現在のすべてのタブとウィンドウが置き換えられます。\n\n• タブ数: {tabs}\n• ウィンドウ数: {windows}\n\n 未保存の変更は失われます！'},
+            'confirm_delete_workspace': {'zh': '確定要刪除 Workspace \'{name}\' 嗎？\n\n 此操作無法復原！', 'en': 'Are you sure you want to delete workspace \'{name}\'?\n\n This operation cannot be undone!', 'ja': 'ワークスペース \'{name}\' を削除しますか？\n\n この操作は元に戻せません！'},
+            'confirm_delete_multiple_workspaces': {'zh': '確定要刪除 {count} 個 Workspace 嗎？\n\n將刪除以下項目：\n  • {names}\n\n 此操作無法復原！', 'en': 'Are you sure you want to delete {count} workspaces?\n\nThe following items will be deleted:\n  • {names}\n\n This operation cannot be undone!', 'ja': '{count} 個のワークスペースを削除しますか？\n\n次の項目が削除されます：\n  • {names}\n\n この操作は元に戻せません！'},
             'delete_success': {'zh': '刪除成功', 'en': 'Delete Successful', 'ja': '削除成功'},
             'workspace_deleted': {'zh': 'Workspace \'{name}\' 已刪除', 'en': 'Workspace \'{name}\' has been deleted', 'ja': 'ワークスペース \'{name}\' を削除しました'},
             'workspaces_deleted_success': {'zh': '已成功刪除 {count} 個 Workspace', 'en': 'Successfully deleted {count} workspaces', 'ja': '{count} 個のワークスペースを削除しました'},
@@ -1310,16 +1420,16 @@ class GuiTranslator:
             'penalty_event': {'zh': '處罰事件', 'en': 'Penalty Event', 'ja': 'Penalty Event'},
             'safety_status': {'zh': '安全狀況', 'en': 'Safety Status', 'ja': 'Safety Status'},
             'no_accidents_found': {'zh': '本場比賽未發現任何事故記錄，安全狀況優良！', 'en': 'No accident records found, excellent safety status!', 'ja': 'No accident records found, excellent safety status!'},
-            'flag_statistics_details': {'zh': '🚩 旗標統計詳情', 'en': '🚩 Flag Statistics Details', 'ja': '🚩 フラッグ統計詳細'},
-            'penalty_list': {'zh': '⚖️ 處罰清單', 'en': '⚖️ Penalty List', 'ja': '⚖️ ペナルティリスト'},
-            'accident_time_distribution_chart': {'zh': '📈 事故時間分佈圖表', 'en': '📈 Accident Time Distribution Chart', 'ja': '📈 アクシデント時間分布チャート'},
+            'flag_statistics_details': {'zh': ' 旗標統計詳情', 'en': ' Flag Statistics Details', 'ja': ' フラッグ統計詳細'},
+            'penalty_list': {'zh': '️ 處罰清單', 'en': '️ Penalty List', 'ja': '️ ペナルティリスト'},
+            'accident_time_distribution_chart': {'zh': ' 事故時間分佈圖表', 'en': ' Accident Time Distribution Chart', 'ja': ' アクシデント時間分布チャート'},
             'lap_label': {'zh': '圈數', 'en': 'Lap', 'ja': 'ラップ'},
-            'status_total_accidents': {'zh': '📊 總計: {count}起事故', 'en': '📊 Total: {count} accidents', 'ja': '📊 合計: {count}件の事故'},
-            'status_data_source_json': {'zh': '📄 來源: JSON', 'en': '📄 Source: JSON', 'ja': '📄 ソース: JSON'},
-            'status_last_updated': {'zh': '⏱️ 更新: {timestamp}', 'en': '⏱️ Updated: {timestamp}', 'ja': '⏱️ 更新: {timestamp}'},
-            'status_most_dangerous_lap': {'zh': '🎯 最危險圈數: {lap}', 'en': '🎯 Most risky lap: {lap}', 'ja': '🎯 最も危険なラップ: {lap}'},
-            'status_most_involved_driver': {'zh': '🏁 最多涉入: {driver}', 'en': '🏁 Most involved: {driver}', 'ja': '🏁 最多関与: {driver}'},
-            'status_ai_generation_enabled': {'zh': '🤖 智能生成: 開啟', 'en': '🤖 Smart insights: enabled', 'ja': '🤖 スマートインサイト: 有効'},
+            'status_total_accidents': {'zh': ' 總計: {count}起事故', 'en': ' Total: {count} accidents', 'ja': ' 合計: {count}件の事故'},
+            'status_data_source_json': {'zh': ' 來源: JSON', 'en': ' Source: JSON', 'ja': ' ソース: JSON'},
+            'status_last_updated': {'zh': ' 更新: {timestamp}', 'en': ' Updated: {timestamp}', 'ja': ' 更新: {timestamp}'},
+            'status_most_dangerous_lap': {'zh': ' 最危險圈數: {lap}', 'en': ' Most risky lap: {lap}', 'ja': ' 最も危険なラップ: {lap}'},
+            'status_most_involved_driver': {'zh': ' 最多涉入: {driver}', 'en': ' Most involved: {driver}', 'ja': ' 最多関与: {driver}'},
+            'status_ai_generation_enabled': {'zh': ' 智能生成: 開啟', 'en': ' Smart insights: enabled', 'ja': ' スマートインサイト: 有効'},
             'most_involved_driver_format': {'zh': '{driver} ({count}次)', 'en': '{driver} ({count} incidents)', 'ja': '{driver} ({count}件)'},
             'main_risk_type': {'zh': '主要風險類型', 'en': 'Main Risk Type', 'ja': 'Main Risk Type'},
             'most_common_severity': {'zh': '最常見的事故嚴重程度', 'en': 'Most common accident severity', 'ja': 'Most common accident severity'},
@@ -1474,7 +1584,7 @@ class GuiTranslator:
             'sector_comparison_desc': {'zh': '分段比較：比較車手間的分段差異（開發中）', 'en': 'Sector Comparison: Compares sector differences between drivers (under development)', 'ja': 'セクター比較: ドライバー間のセクター差異を比較（開発中）'},
             
             # Ranking Table Widget - 統計摘要面板
-            'race_statistics_summary': {'zh': '📊 賽事統計摘要', 'en': '📊 Race Statistics Summary', 'ja': '📊 レース統計サマリー'},
+            'race_statistics_summary': {'zh': ' 賽事統計摘要', 'en': ' Race Statistics Summary', 'ja': ' レース統計サマリー'},
             'total_drivers': {'zh': '總車手數', 'en': 'Total Drivers', 'ja': '総ドライバー数'},
             'session_fastest_lap': {'zh': '全場最速實際圈', 'en': 'Session Fastest Lap', 'ja': 'セッション最速ラップ'},
             'fastest_ideal_lap': {'zh': '最快理想圈', 'en': 'Fastest Ideal Lap', 'ja': '最速理想ラップ'},
@@ -1493,7 +1603,7 @@ class GuiTranslator:
             'table_header_action': {'zh': '操作', 'en': 'Action', 'ja': 'アクション'},
             
             # Ranking Table Widget - 按鈕與工具列
-            'export_csv': {'zh': '📊 匯出 CSV', 'en': '📊 Export CSV', 'ja': '📊 CSV出力'},
+            'export_csv': {'zh': ' 匯出 CSV', 'en': ' Export CSV', 'ja': ' CSV出力'},
             'detail_button': {'zh': '詳情', 'en': 'Details', 'ja': '詳細'},
             'status_ready': {'zh': '就緒', 'en': 'Ready', 'ja': '準備完了'},
             'status_loaded_drivers': {'zh': '已載入 {count} 位車手', 'en': 'Loaded {count} drivers', 'ja': '{count}人のドライバーを読み込みました'},
@@ -1770,9 +1880,9 @@ Acceleration (100 → {max_speed_full} km/h):
             self.language = language
             # 保存語言設定
             self._save_language(language)
-            print(f"[GUI_I18N] ✅ 語言已切換至: {language}")
+            print(f"[GUI_I18N]  語言已切換至: {language}")
             return True
-        print(f"[GUI_I18N] ⚠️ 不支援的語言: {language}")
+        print(f"[GUI_I18N]  不支援的語言: {language}")
         return False
     
     def get_language(self):

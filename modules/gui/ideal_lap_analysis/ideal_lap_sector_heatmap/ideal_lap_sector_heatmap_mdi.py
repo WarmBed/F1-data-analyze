@@ -531,19 +531,19 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
             
             worker.finished.connect(on_worker_stopped)
             
-            # 4. 延遲強制終止（3 秒後，但不阻塞主線程）
+            # 4. 延遲強制終止（15 秒後，但不阻塞主線程）
             from PyQt5.QtCore import QTimer
             def force_terminate():
                 # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
                 try:
                     if worker and worker.isRunning():
-                        print("[WARNING] ideal_lap_heatmap API Worker 未在 3 秒內停止，強制終止")
+                        print("[WARNING] ideal_lap_heatmap API Worker 未在 15 秒內停止，強制終止")
                         worker.terminate()
                 except (RuntimeError, AttributeError):
                     # Worker 已被刪除，無需處理
                     pass
             
-            QTimer.singleShot(3000, force_terminate)
+            QTimer.singleShot(15000, force_terminate)
         else:
             # Worker 已停止，立即清理
             worker.deleteLater()

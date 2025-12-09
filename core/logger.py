@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import builtins
+import json
 import logging
 import logging.config
 import os
@@ -17,6 +18,35 @@ from typing import Any, Dict, Optional, Union
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 # EXE 模式下預設靜默，除非明確設定 F1T_EXE_ENABLE_LOG=1
 FORCE_SILENT = IS_EXE_MODE and os.getenv('F1T_EXE_ENABLE_LOG') != '1'
+
+
+def _load_logging_config() -> Dict[str, Any]:
+    """載入 logging 設定檔（如果存在）"""
+    try:
+        # 嘗試找到專案根目錄
+        if IS_EXE_MODE:
+            # EXE 模式：從執行檔目錄尋找
+            base_path = Path(sys.executable).parent
+        else:
+            # 開發模式：從此檔案往上兩層
+            base_path = Path(__file__).parent.parent
+        
+        config_file = base_path / "config" / "logging_config.json"
+        
+        if config_file.exists():
+            with open(config_file, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        # 如果讀取失敗，使用預設值（不影響程式運行）
+        print(f"[LOGGER] Warning: Could not load logging config: {e}")
+    
+    # 預設設定：啟用 logging
+    return {
+        "enabled": True,
+        "level": "INFO",
+        "console_level": None,
+        "patch_print": True
+    }
 
 __all__ = [
     "setup_logging",
@@ -117,7 +147,58 @@ def setup_logging(
     """
     global _CONFIGURED, _ACTIVE_COMPONENT
 
-    # � EXE 模式：只有當 FORCE_SILENT=True 時才完全禁用日誌
+    # 📁 載入設定檔（優先）
+    logging_config = _load_logging_config()
+    
+    # ⚠️ 如果設定檔明確禁用 logger，則配置為靜默模式
+    if not logging_config.get("enabled", True):
+        with _CONFIG_LOCK:
+            if not _CONFIGURED or force:
+                # 配置一個完全靜默的 NullHandler（但不關閉 stdout）
+                logging.config.dictConfig({
+                    "version": 1,
+                    "disable_existing_loggers": False,
+                    "handlers": {
+                        "null": {
+                            "class": "logging.NullHandler",
+                        },
+                    },
+                    "loggers": {
+                        "f1": {
+                            "handlers": ["null"],
+                            "level": "CRITICAL",
+                            "propagate": False,
+                        },
+                    },
+                    "root": {
+                        "handlers": ["null"],
+                        "level": "CRITICAL",
+                    },
+                })
+                _CONFIGURED = True
+                _ACTIVE_COMPONENT = _normalise_component(component)
+                
+                # ✅ 重要：即使 Logger 禁用，也要 patch print，讓它靜默處理
+                # 這樣可以避免 "I/O operation on closed file" 錯誤
+                if logging_config.get("patch_print", True):
+                    _patch_print_adapter()
+                
+                # 使用原始 print 輸出此訊息（因為 logger 已禁用）
+                try:
+                    _ORIGINAL_PRINT("[LOGGER] ⚠️  Logger is DISABLED via config/logging_config.json")
+                except:
+                    pass  # 如果連原始 print 都失敗，完全靜默
+        return
+    
+    # 從設定檔讀取參數（如果沒有明確指定）
+    if level is None:
+        level = logging_config.get("level", "INFO")
+    if console_level is None and "console_level" in logging_config:
+        console_level = logging_config["console_level"]
+    if "patch_print" in logging_config:
+        patch_print = logging_config["patch_print"]
+
+    # 🔒 EXE 模式：只有當 FORCE_SILENT=True 時才完全禁用日誌
     if IS_EXE_MODE and FORCE_SILENT:
         with _CONFIG_LOCK:
             if not _CONFIGURED or force:
@@ -312,22 +393,58 @@ def logged_print(*args: Any, **kwargs: Any) -> None:
     將 print 輸出重定向到 logger。
     
     此函數在模組級別定義，以便外部模組（如 numba）可以訪問。
+    
+    ⚠️ 安全機制：
+    - 檢查 sys.stdout 是否已關閉或不可用
+    - 在異常情況下靜默處理，避免程式崩潰
     """
-    file_arg = kwargs.get("file", sys.stdout)
+    # ✅ 安全檢查 1：確保 sys.stdout 存在且未關閉
+    try:
+        if not hasattr(sys, 'stdout') or sys.stdout is None:
+            # stdout 不存在，靜默返回
+            return
+        if hasattr(sys.stdout, 'closed') and sys.stdout.closed:
+            # stdout 已關閉，靜默返回
+            return
+    except (AttributeError, ValueError):
+        # 任何訪問 stdout 時的異常都靜默處理
+        return
+    
+    # ✅ 安全檢查 2：獲取 file 參數時捕獲異常
+    try:
+        file_arg = kwargs.get("file", sys.stdout)
+    except (ValueError, AttributeError):
+        # 如果連獲取預設值都失敗，使用 None
+        file_arg = None
+    
     end_arg = kwargs.get("end", "\n")
 
+    # 如果指定了其他輸出目標，嘗試使用原始 print
     if file_arg is not None and file_arg is not sys.stdout:
-        _ORIGINAL_PRINT(*args, **kwargs)
+        try:
+            _ORIGINAL_PRINT(*args, **kwargs)
+        except (ValueError, AttributeError, OSError):
+            # 即使原始 print 也失敗，也不要崩潰
+            pass
         return
+    
     if end_arg != "\n":
-        _ORIGINAL_PRINT(*args, **kwargs)
+        try:
+            _ORIGINAL_PRINT(*args, **kwargs)
+        except (ValueError, AttributeError, OSError):
+            pass
         return
 
-    sep = kwargs.get("sep", " ")
-    message = sep.join(str(arg) for arg in args)
-    level = _infer_log_level(message)
-    logger = logging.getLogger("f1.console")
-    logger.log(level, message)
+    # ✅ 安全檢查 3：記錄到 logger 時捕獲異常
+    try:
+        sep = kwargs.get("sep", " ")
+        message = sep.join(str(arg) for arg in args)
+        level = _infer_log_level(message)
+        logger = logging.getLogger("f1.console")
+        logger.log(level, message)
+    except Exception:
+        # 如果 logger 也失敗，完全靜默（避免無限遞迴或其他問題）
+        pass
 
 
 def _patch_print_adapter() -> None:

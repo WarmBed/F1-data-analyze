@@ -12,7 +12,7 @@ Date: 2025-12-04
 
 from typing import Dict, Any, Optional
 
-from PyQt5.QtCore import Qt, QPointF, QRectF
+from PyQt5.QtCore import Qt, QPointF, QRectF, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QMenu, QInputDialog
 from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QFont
 
@@ -38,6 +38,9 @@ class PitWindowWidget(QWidget):
     - 白色垂直線: 綠旗狀態下的預估掉落位置
     - 黃色區域: SC/VSC 狀態下的預估掉落位置
     """
+    
+    # 車手選擇請求信號
+    driver_change_requested = pyqtSignal(str)
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -140,6 +143,14 @@ class PitWindowWidget(QWidget):
         self._reference_driver = None
         self.update()
     
+    def _on_driver_selected_from_menu(self, driver_num: str):
+        """處理右鍵選單中選擇車手"""
+        self.set_reference_driver(driver_num)
+        # 發出信號通知其他模組
+        self.driver_change_requested.emit(driver_num)
+        tla = self._driver_positions.get(driver_num, {}).get('driver_tla', driver_num)
+        print(f"[PIT_WINDOW] Driver selected from menu: {tla} ({driver_num})")
+    
     def _show_context_menu(self, pos):
         """顯示右鍵選單"""
         menu = QMenu(self)
@@ -179,6 +190,37 @@ class PitWindowWidget(QWidget):
             current_action.setEnabled(False)
         
         menu.addSeparator()
+        
+        # 車手選擇子選單
+        if self._driver_positions:
+            driver_menu = menu.addMenu(tr("Select Driver"))
+            
+            # 按位置排序
+            sorted_drivers = sorted(
+                self._driver_positions.items(),
+                key=lambda x: x[1].get('position', 99) if isinstance(x[1], dict) else 99
+            )
+            
+            for driver_num, info in sorted_drivers:
+                if not isinstance(info, dict):
+                    continue
+                    
+                tla = info.get('driver_tla', driver_num)
+                position = info.get('position', '')
+                
+                # 顯示格式: P1 VER (位置 + 車手代碼)
+                display_text = f"P{position} {tla}" if position else tla
+                action = driver_menu.addAction(display_text)
+                action.setData(driver_num)
+                
+                # 標記當前選中
+                if driver_num == self._reference_driver:
+                    action.setCheckable(True)
+                    action.setChecked(True)
+                
+                action.triggered.connect(lambda checked, d=driver_num: self._on_driver_selected_from_menu(d))
+            
+            menu.addSeparator()
         
         # 修改 Pit Loss 時間子選單
         pit_loss_menu = menu.addMenu(tr("modify_pit_loss_time"))
@@ -479,8 +521,17 @@ class PitWindowWidget(QWidget):
             if gap_laps and gap_laps > 0:
                 continue
             
+            # 防禦性檢查：確保 gap_to_leader 是數字
             if gap_to_leader is None:
                 gap_to_leader = 0.0
+            elif isinstance(gap_to_leader, str):
+                # gap_to_leader 可能是字串如 "LAP" 或 "+1 LAP"，跳過這些車手
+                continue
+            else:
+                try:
+                    gap_to_leader = float(gap_to_leader)
+                except (ValueError, TypeError):
+                    continue
             
             relative_gap = gap_to_leader - ref_gap
             
@@ -659,8 +710,24 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
             print(f"[PIT_WINDOW_MDI] Failed to connect driver_selected signal: {e}")
     
     def _on_driver_selected(self, driver_num: str):
-        """處理車手選擇 - 設置為參考車手"""
+        """處理車手選擇 - 設置為參考車手 (從 DataManager snapshot 獲取車手資訊)"""
         if self.pit_widget:
+            # 先確保 widget 有車手資訊 (從 DataManager 獲取 snapshot)
+            if self._data_manager:
+                snapshot = self._data_manager.get_current_snapshot()
+                if snapshot:
+                    drivers = snapshot.get('drivers', {})
+                    driver_info = drivers.get(driver_num, {})
+                    if driver_info:
+                        # 確保 _driver_positions 已填充
+                        tla = driver_info.get('driver_tla', driver_num)
+                        team_color = driver_info.get('team_color', 'FFFFFF')
+                        if driver_num not in self.pit_widget._driver_positions:
+                            self.pit_widget._driver_positions[driver_num] = {}
+                        self.pit_widget._driver_positions[driver_num]['driver_tla'] = tla
+                        self.pit_widget._driver_positions[driver_num]['team_color'] = team_color
+                        print(f"[PIT_WINDOW_MDI] Driver info from snapshot: {tla} ({team_color})")
+            
             self.pit_widget.set_reference_driver(driver_num)
             driver_tla = self.pit_widget._driver_positions.get(driver_num, {}).get('driver_tla', driver_num)
             print(f"[PIT_WINDOW_MDI] Reference driver set to: {driver_tla} ({driver_num})")
@@ -669,6 +736,15 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
         """Setup UI components"""
         self.pit_widget = PitWindowWidget()
         self._main_layout.addWidget(self.pit_widget)
+        
+        # 連接車手選擇信號
+        self.pit_widget.driver_change_requested.connect(self._on_driver_change_requested)
+    
+    def _on_driver_change_requested(self, driver_num: str):
+        """處理車手切換請求 - 發送信號給其他模組"""
+        print(f"[PIT_WINDOW_MDI] Driver change requested: {driver_num}")
+        if self._data_manager:
+            self._data_manager.driver_selected.emit(driver_num)
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """Race loaded"""

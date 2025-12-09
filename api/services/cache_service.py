@@ -227,11 +227,35 @@ class F1AnalysisCacheService:
                         ])
                     print(f"[CACHE] 🎯 無圈數模式")
             elif function_id in {"3", "4", "5"}:  # 進站相關分析
+                # 🔧 FIX: Function 5 使用不同的檔案命名格式
+                # Function 3/4: pitstop_analysis_{year}_{race}_Grand_Prix.json
+                # Function 5: driver_detailed_pitstop_records_{year}_{race}_{session}.json
                 race_full = self._get_race_full_name(race, year)
-                search_patterns = [
-                    f"{self.json_dir}{pattern_base}*{year}*{race_full}*.json",
-                    f"{self.json_dir}{pattern_base}*{year}*{race}*.json"
-                ]
+                
+                if function_id == "5":
+                    # Function 5: 包含 session 和空格/底線變體
+                    race_with_space = race.replace("_", " ")
+                    race_with_underscore = race.replace(" ", "_")
+                    # 🔧 FIX: 小寫版本用於不區分大小寫匹配
+                    race_lower = race.lower()
+                    race_with_space_lower = race_with_space.lower()
+                    race_with_underscore_lower = race_with_underscore.lower()
+                    
+                    search_patterns = [
+                        f"{self.json_dir}{pattern_base}*{year}*{race_with_space}*{session}*.json",  # Abu Dhabi_R (精確)
+                        f"{self.json_dir}{pattern_base}*{year}*{race_with_underscore}*{session}*.json",  # Abu_Dhabi_R (精確)
+                        f"{self.json_dir}{pattern_base}*{year}*{race}*{session}*.json",  # 原始格式 (精確)
+                        f"{self.json_dir}{pattern_base}*{year}*{race_with_space_lower}*{session.lower()}*.json",  # abu dhabi_r (小寫)
+                        f"{self.json_dir}{pattern_base}*{year}*{race_with_underscore_lower}*{session.lower()}*.json",  # abu_dhabi_r (小寫)
+                        f"{self.json_dir}{pattern_base}*{year}*{race_lower}*{session.lower()}*.json",  # 小寫原始格式
+                        f"{self.json_dir}{pattern_base}*{year}*{race_full}*.json",  # 相容 Grand_Prix 格式
+                    ]
+                else:
+                    # Function 3/4: 使用 Grand_Prix 格式
+                    search_patterns = [
+                        f"{self.json_dir}{pattern_base}*{year}*{race_full}*.json",
+                        f"{self.json_dir}{pattern_base}*{year}*{race}*.json"
+                    ]
             elif function_id == "99":  # 🔧 FIX: 賽季日曆 - 特殊處理多年 JSON
                 search_patterns = [
                     f"{self.json_dir}season_calendar_multi_year_*.json",  # 優先多年格式
@@ -731,11 +755,32 @@ class F1AnalysisCacheService:
             if race_param:
                 circuit_name = metadata.get("circuit_name", "").lower()
                 country = metadata.get("country", "").lower()
-                race_lower = race_param.lower()
+                race_lower = race_param.lower().replace("_", " ")
                 
-                # 檢查是否匹配賽道名稱或國家
-                if race_lower not in circuit_name and race_lower not in country:
-                    return False
+                # 🔧 FIX: 使用更寬鬆的匹配邏輯
+                # 某些賽道名稱不一致，例如：
+                # - "Abu Dhabi" / "Abu_Dhabi" 對應 circuit_name="Yas Island", country="United Arab Emirates"
+                # - "Monaco" 對應 circuit_name="Circuit de Monaco", country="Monaco"
+                # 方法：檢查檔案名是否包含 race_param（glob pattern 已精確匹配）
+                # 如果 glob pattern 匹配成功，則信任該結果
+                
+                # 首先嘗試標準匹配
+                matches = (
+                    race_lower in circuit_name or 
+                    race_lower in country or
+                    circuit_name in race_lower or
+                    country.split()[0] in race_lower  # 例如 "united" in "abu dhabi" 失敗
+                )
+                
+                # 🔧 如果標準匹配失敗，使用寬鬆模式（信任 glob pattern 的匹配結果）
+                # Function 100 的 glob pattern 已經精確匹配了 race 名稱在檔案名中
+                # 例如: historical_flags_Abu_Dhabi_2022-2025.json
+                if not matches:
+                    print(f"[CACHE] ⚠️ Function 100: 賽道名稱標準匹配失敗")
+                    print(f"[CACHE]    race_param='{race_param}' → race_lower='{race_lower}'")
+                    print(f"[CACHE]    circuit_name='{circuit_name}', country='{country}'")
+                    print(f"[CACHE]    採用寬鬆模式: 信任 glob pattern 的檔案名匹配結果")
+                    # 不返回 False，繼續驗證其他條件
             
             # 驗證基本數據結構
             if not data.get("yearly_summary"):

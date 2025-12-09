@@ -173,7 +173,11 @@ class TyreStrategyChartWidget(QWidget):
         # 圖例已禁用以節省空間
     
     def _draw_x_axis(self, painter: QPainter, left: int, right: int, bottom: int, width: float):
-        """繪製 X 軸"""
+        """繪製 X 軸（圈數）"""
+        # 防禦性檢查：如果總圈數為 0 或負數，不繪製 X 軸
+        if self._total_laps <= 0:
+            return
+        
         painter.setPen(QColor('#666666'))
         painter.drawLine(left, bottom, right, bottom)
         
@@ -199,6 +203,10 @@ class TyreStrategyChartWidget(QWidget):
     def _draw_driver_row(self, painter: QPainter, driver_num: str, 
                          left: int, y: float, width: float, height: float):
         """繪製單個車手的輪胎策略行"""
+        # 防禦性檢查：如果總圈數為 0 或負數，不繪製
+        if self._total_laps <= 0:
+            return
+        
         driver_info = self._driver_info.get(driver_num, {})
         tla = driver_info.get('tla', driver_num)
         
@@ -235,6 +243,7 @@ class TyreStrategyChartWidget(QWidget):
             compound = stint.get('compound', 'UNKNOWN')
             start_lap = stint.get('start_lap', 0)
             end_lap = stint.get('end_lap', self._total_laps)
+            is_new = stint.get('new', True)  # 預設為新胎
             
             x1 = left + (start_lap / self._total_laps) * width
             x2 = left + (end_lap / self._total_laps) * width
@@ -248,13 +257,18 @@ class TyreStrategyChartWidget(QWidget):
                 painter.setPen(QPen(QColor('#FFFFFF'), 2))
                 painter.drawLine(int(x1), int(y), int(x1), int(y) + int(height))
             
-            # 輪胎縮寫
+            # 輪胎縮寫 - 舊胎顯示 (U)
             if bar_width > 25:
                 abbrev = TYRE_ABBREV.get(compound, '?')
+                # 如果是舊胎，加上 (U) 標記
+                if not is_new:
+                    abbrev = f"{abbrev}(U)"
                 text_color = '#000000' if compound in ['HARD', 'MEDIUM'] else '#FFFFFF'
                 painter.setPen(QColor(text_color))
                 painter.setFont(QFont('Arial', 8, QFont.Bold))
-                painter.drawText(int(x1 + bar_width / 2 - 4), int(y + height / 2 + 4), abbrev)
+                # 調整文字位置，讓較長的文字居中
+                text_offset = 4 if is_new else 10
+                painter.drawText(int(x1 + bar_width / 2 - text_offset), int(y + height / 2 + 4), abbrev)
     
     def _draw_legend(self, painter: QPainter, width: int, height: int):
         """繪製圖例 - 已禁用以節省空間"""

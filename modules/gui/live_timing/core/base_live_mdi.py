@@ -64,6 +64,17 @@ class BaseLiveTimingMDI(QWidget):
         # 設定 Live Timing 識別屬性 (供 force_white_background 排除使用)
         self.setProperty("is_live_timing_widget", True)
         
+        # ★★★ 設置 objectName 以便 CSS 排除 ★★★
+        # 格式: LiveTiming_{ClassName}
+        self.setObjectName(f"LiveTiming_{self.__class__.__name__}")
+        
+        # ★★★ 設置深色背景 (所有 Live Timing 模組統一黑色底) ★★★
+        self.setStyleSheet("""
+            QWidget {
+                background-color: #1a1a1a;
+            }
+        """)
+        
         # 設置 UI
         self._setup_ui()
         

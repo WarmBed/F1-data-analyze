@@ -1185,9 +1185,25 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         self._main_layout.addWidget(self.speed_widget)
     
     def _on_driver_selected(self, driver_num: str):
-        """處理車手選擇信號"""
+        """處理車手選擇信號 - 從 DataManager snapshot 獲取車手資訊"""
         print(f"[SPEED_TRACE_MDI] Driver selected from external: {driver_num}")
         if hasattr(self, 'speed_widget'):
+            # 先確保 widget 有車手資訊 (從 DataManager 獲取 snapshot)
+            if self._data_manager:
+                snapshot = self._data_manager.get_current_snapshot()
+                if snapshot:
+                    drivers = snapshot.get('drivers', {})
+                    driver_info = drivers.get(driver_num, {})
+                    if driver_info:
+                        # 確保 _driver_info 已填充
+                        tla = driver_info.get('driver_tla', driver_num)
+                        team_color = driver_info.get('team_color', 'FFFFFF')
+                        if driver_num not in self.speed_widget._driver_info:
+                            self.speed_widget._driver_info[driver_num] = {}
+                        self.speed_widget._driver_info[driver_num]['tla'] = tla
+                        self.speed_widget._driver_info[driver_num]['team_color'] = team_color
+                        print(f"[SPEED_TRACE_MDI] Driver info from snapshot: {tla} ({team_color})")
+            
             self.speed_widget.set_primary_driver(driver_num)
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
@@ -1260,21 +1276,37 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         try:
             # 獲取賽道長度
             bounds = data.get('track_bounds', {})
-            track_length = bounds.get('track_length', 5000)
-            
-            # 獲取彎道資料 - 直接使用 JSON 中的 distance 欄位
-            corners_data = data.get('official_corners', {})
-            corners_raw = corners_data.get('corners', [])
-            
-            # 處理彎道資料
-            corners = self._process_corners_from_json(corners_raw)
+            track_length = bounds.get('track_length', 0)
             
             # 如果 track_length 無效，嘗試從 position_records 估算
             if track_length <= 0:
                 position_records = data.get('position_records', [])
                 if position_records:
                     max_dist = max(r.get('distance_m', 0) for r in position_records)
-                    track_length = max_dist / 10 if max_dist > 0 else 5000
+                    # 通過分析連續點的距離差來估算單圈長度
+                    # 假設數據來自多圈遙測，找到距離重置的位置
+                    track_length = self._estimate_track_length_from_records(position_records, max_dist)
+            
+            # 如果仍無法估算，使用彎道數據來估算
+            if track_length <= 0:
+                corners_data = data.get('official_corners', {})
+                corners_raw = corners_data.get('corners', [])
+                if corners_raw:
+                    # 使用彎道的 mapped_distance 來估算
+                    # 通常最後一個彎道在單圈末段，加上一段直線到終點
+                    track_length = self._estimate_track_length_from_corners(corners_raw)
+            
+            # 確保 track_length 有效
+            if track_length <= 0:
+                track_length = 5000
+                print(f"[SPEED_TRACE_MDI] Warning: 無法估算賽道長度，使用默認值 {track_length}m")
+            
+            # 獲取彎道資料 - 直接使用 JSON 中的 distance 欄位
+            corners_data = data.get('official_corners', {})
+            corners_raw = corners_data.get('corners', [])
+            
+            # 處理彎道資料（傳入 track_length 用於 mapped_distance 轉換）
+            corners = self._process_corners_from_json(corners_raw, track_length)
             
             if hasattr(self, 'speed_widget'):
                 self.speed_widget.set_track_info(track_length, corners)
@@ -1288,20 +1320,90 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             print(f"[SPEED_TRACE_MDI] 處理賽道數據失敗: {e}")
             return False
     
-    def _process_corners_from_json(self, corners: List[Dict]) -> List[Dict]:
+    def _estimate_track_length_from_records(self, position_records: List[Dict], max_dist: float) -> float:
+        """從 position_records 估算賽道長度"""
+        if not position_records or max_dist <= 0:
+            return 0
+        
+        # 分析距離序列，找到距離重置的位置（圈數邊界）
+        distances = [r.get('distance_m', 0) for r in position_records]
+        lap_starts = [0]  # 第一圈開始於索引 0
+        
+        for i in range(1, len(distances)):
+            # 如果當前距離比前一個小很多，說明是新一圈開始
+            if distances[i] < distances[i-1] - 1000:
+                lap_starts.append(i)
+        
+        if len(lap_starts) >= 2:
+            # 使用第一圈的距離作為賽道長度
+            first_lap_end_idx = lap_starts[1] - 1
+            track_length = distances[first_lap_end_idx]
+            print(f"[SPEED_TRACE_MDI] 從 position_records 估算賽道長度: {track_length:.0f}m (detected {len(lap_starts)} laps)")
+            return track_length
+        else:
+            # 無法檢測圈數邊界，使用 max_dist / 假設圈數
+            # F1 賽道通常在 3-7km 之間
+            estimated_laps = max(1, round(max_dist / 5000))
+            track_length = max_dist / estimated_laps
+            print(f"[SPEED_TRACE_MDI] 無法檢測圈數邊界，估算 {estimated_laps} 圈，賽道長度: {track_length:.0f}m")
+            return track_length
+    
+    def _estimate_track_length_from_corners(self, corners: List[Dict]) -> float:
+        """從彎道數據估算賽道長度"""
+        if not corners:
+            return 0
+        
+        # 取所有彎道的 mapped_distance
+        mapped_distances = [c.get('mapped_distance', 0) for c in corners if c.get('mapped_distance', 0) > 0]
+        if not mapped_distances:
+            return 0
+        
+        # 找到最小和最大的 mapped_distance
+        min_dist = min(mapped_distances)
+        max_dist = max(mapped_distances)
+        
+        # 如果所有彎道在一個相近的範圍內（說明是單圈數據）
+        dist_range = max_dist - min_dist
+        if dist_range < 7000:  # F1 賽道最長約 7km
+            # 最後一個彎道通常在單圈末段，加 15% 作為到終點的估計
+            track_length = max_dist * 1.15
+            print(f"[SPEED_TRACE_MDI] 從彎道數據估算賽道長度: {track_length:.0f}m")
+            return track_length
+        
+        # 如果範圍很大，說明是多圈累積距離
+        # 使用最小距離作為第一個彎道位置的估計
+        # 假設第一個彎道在單圈 10%-20% 處
+        estimated_track_length = min_dist / 0.5  # 假設 T1 在單圈 50% 處（保守估計）
+        
+        # 驗證：如果估算的賽道長度不在合理範圍內，調整
+        if estimated_track_length < 3000 or estimated_track_length > 8000:
+            # 使用彎道間距來估算
+            # F1 賽道通常有 10-20 個彎道，平均每個彎道間隔 300-500m
+            estimated_track_length = len(corners) * 350
+        
+        print(f"[SPEED_TRACE_MDI] 從彎道分布估算賽道長度: {estimated_track_length:.0f}m")
+        return estimated_track_length
+    
+    def _process_corners_from_json(self, corners: List[Dict], track_length: float = 5000.0) -> List[Dict]:
         """
         處理 JSON 中的彎道資料
         優先使用 FastF1 原始的 'distance' 欄位（單圈距離）
         
         JSON 彎道資料由 CLI -f 2 (track_position_analysis) 生成
         包含欄位：
-        - distance: FastF1 原始單圈距離（正確值）
-        - mapped_distance: 多圈累積距離（向後相容，不建議使用）
+        - distance: FastF1 原始單圈距離（正確值，新版本）
+        - mapped_distance: 多圈累積距離（舊版本，需要轉換為單圈距離）
+        - lap_distance: 向後相容欄位
+        
+        Args:
+            corners: 彎道資料列表
+            track_length: 賽道長度（用於 mapped_distance 轉換）
         """
         if not corners:
             return corners
         
         result = []
+        
         for corner in corners:
             corner_num = corner.get('number', 0)
             
@@ -1311,6 +1413,14 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             # 如果沒有 distance，嘗試 lap_distance（向後相容）
             if lap_distance == 0:
                 lap_distance = corner.get('lap_distance', 0)
+            
+            # 如果還是沒有，使用 mapped_distance 並轉換為單圈距離
+            if lap_distance <= 0:
+                mapped_dist = corner.get('mapped_distance', 0)
+                if mapped_dist > 0 and track_length > 0:
+                    # mapped_distance 是多圈累積距離，需要取模得到單圈距離
+                    lap_distance = mapped_dist % track_length
+                    print(f"[SPEED_TRACE_MDI] T{corner_num}: mapped_distance={mapped_dist:.0f}m -> lap_distance={lap_distance:.0f}m")
             
             if lap_distance <= 0:
                 print(f"[SPEED_TRACE_MDI] Warning: T{corner_num} has no valid distance, skipping")

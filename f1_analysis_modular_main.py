@@ -647,7 +647,11 @@ class F1AnalysisModularCLI:
                 team=getattr(self.args, 'team', None),
                 change_type=getattr(self.args, 'change_type', None),
                 min_confidence=getattr(self.args, 'min_confidence', 0.0),
-                exclude_noise=not getattr(self.args, 'include_noise', False)
+                exclude_noise=not getattr(self.args, 'include_noise', False),
+                # 功能 85/86 ML 模型參數 (2025-12-09)
+                model_version=getattr(self.args, 'model_version', 1),
+                gap=getattr(self.args, 'gap', None),
+                verbose=getattr(self.args, 'verbose', True)
             )
             
             if result.get("success", False):
@@ -1828,6 +1832,10 @@ def create_argument_parser():
     parser.add_argument('--silent', action='store_true',
                        help='靜默模式：隱藏所有表格和統計輸出，僅執行分析並保存結果')
     parser.add_argument('--version', action='version', version='F1 Analysis CLI v5.3')
+    parser.add_argument('--model-version', type=int, default=1,
+                       help='ML 模型版本號 (用於 F85/F86 等機器學習功能)')
+    parser.add_argument('--gap', type=float,
+                       help='車手之間的時間差距 (秒) (用於 F86 預測)')
     parser.add_argument('--colormap', choices=['fastf1', 'official'],
                        help='顏色配置輸出時使用的色盤 (fastf1 或 official)')
     parser.add_argument('--no-save-json', action='store_true',

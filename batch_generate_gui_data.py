@@ -223,6 +223,9 @@ def run_cli_command(function_id: int, year: int, race: str, session: str) -> Dic
         "-s", session
     ]
     
+    # F47 彎道分析需要更長時間處理所有車手數據
+    timeout = 900 if function_id == 47 else 300  # F47: 15分鐘, 其他: 5分鐘
+    
     try:
         result = subprocess.run(
             cmd,
@@ -230,7 +233,7 @@ def run_cli_command(function_id: int, year: int, race: str, session: str) -> Dic
             text=True,
             encoding='utf-8',
             errors='replace',  # 遇到編碼錯誤時替換字符
-            timeout=300  # 5 分鐘超時
+            timeout=timeout
         )
         
         return {
@@ -240,10 +243,11 @@ def run_cli_command(function_id: int, year: int, race: str, session: str) -> Dic
             "returncode": result.returncode
         }
     except subprocess.TimeoutExpired:
+        timeout_minutes = 15 if function_id == 47 else 5
         return {
             "success": False,
             "stdout": "",
-            "stderr": "Command timed out after 5 minutes",
+            "stderr": f"Command timed out after {timeout_minutes} minutes",
             "returncode": -1
         }
     except Exception as e:

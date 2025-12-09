@@ -13,6 +13,7 @@ from .track_map import LiveTimingTrackMap, TrackMapWidget
 from .ranking_tower import LiveTimingRankingTower, RankingTableWidget
 from .race_control_messages import LiveTimingRaceControlMessages, RaceControlMessagesWidget
 from .battle_insight import BattleInsightMDI, BattleInsightWidget
+from .chase_strategy import ChaseStrategyMDI, ChaseStrategyWidget
 
 __all__ = [
     'LiveTimingControlPanel',
@@ -24,4 +25,6 @@ __all__ = [
     'RaceControlMessagesWidget',
     'BattleInsightMDI',
     'BattleInsightWidget',
+    'ChaseStrategyMDI',
+    'ChaseStrategyWidget',
 ]

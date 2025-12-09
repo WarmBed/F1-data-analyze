@@ -143,9 +143,6 @@ a = Analysis(
         'modules.gui.themes.color_palette_provider',
         'modules.gui.themes',
         
-        # ⭐ Linkage 模組
-        'modules.gui.lap_analysis.linkage',
-        
         # ⭐ All Drivers 分析模組（新增）
         'modules.gui.all_drivers_brake_performance_analysis',
         'modules.gui.all_drivers_brake_performance_analysis.all_drivers_brake_performance_module',
@@ -210,26 +207,20 @@ a = Analysis(
         'modules.gui.base.universal_chart_widget_base',
         'modules.gui.base.universal_analysis_mdi_base',
         
-        # ⭐ Telemetry Base 模組
-        'modules.gui.lap_analysis.base',
-        'modules.gui.lap_analysis.base.telemetry_data_loader',
-        'modules.gui.lap_analysis.base.telemetry_chart_widget_base',
+        # ⭐ Telemetry Base 模組（實際檔案）
+        'modules.gui.lap_analysis.telemetry_data_loader_base',
         
-        # ⭐ Lap Analysis Linkage 模組
-        'modules.gui.lap_analysis.linkage.lap_analysis_linkage_mixin',
-        'modules.gui.lap_analysis.linkage.lap_analysis_linkage_drawing_mixin',
-        
-        # ⭐ Workspace 序列化模組
-        'modules.gui.workspace',
-        'modules.gui.workspace.workspace_manager',
-        'modules.gui.workspace.workspace_serializer',
-        'modules.gui.workspace.analysis_module_adapters',
+        # ⭐ Lap Analysis Linkage 模組（實際檔案）
+        'modules.gui.lap_analysis.linkage',
+        'modules.gui.lap_analysis.linkage.linkage_manager',
+        'modules.gui.lap_analysis.linkage.linkage_mixin',
+        'modules.gui.lap_analysis.linkage.linkage_ui',
+        'modules.gui.lap_analysis.linkage.telemetry_generation_helper',
         
         # ⭐ FIA Parts Analysis 模組 (V0.7.0 新增)
         'modules.gui.partupdated_analysis',
         'modules.gui.partupdated_analysis.parts_analysis_mdi',
         'modules.gui.partupdated_analysis.parts_analysis_widget',
-        'modules.gui.partupdated_analysis.parts_analysis_data_loader',
         
         # ⭐ Championship Demo（如果存在）
         'modules.gui.championship_standings_demo',
@@ -264,6 +255,10 @@ a = Analysis(
         'modules.gui.live_timing.live_timing_modules.speed_trace',
         'modules.gui.live_timing.live_timing_modules.track_map',
         'modules.gui.live_timing.live_timing_modules.tyre_strategy',
+        
+        # ⭐ Live Timing Widgets（F1TV WebView2 認證）
+        'modules.gui.live_timing.widgets',
+        'modules.gui.live_timing.widgets.f1tv_webview_auth',
         
         # ⭐ Race Prediction 模組（V0.9.0 新增）
         'modules.gui.race_prediction',
@@ -315,6 +310,11 @@ a = Analysis(
         'requests.models',
         'requests.sessions',
         'requests.structures',
+        
+        # ⭐ pywebview（F1TV 登入認證）
+        'webview',
+        'webview.window',
+        'webview.guilib',
     ],
     hookspath=[],
     hooksconfig={},

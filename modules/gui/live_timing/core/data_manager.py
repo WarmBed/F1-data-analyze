@@ -149,10 +149,9 @@ class LiveTimingDataManager(QObject):
         self._init_overtake_predictor()
         
         # Gap 歷史追蹤（用於計算趨勢）
-        # 格式: {driver_num: [(timestamp, gap_seconds), ...]}
-        # 保留最近 10 秒的記錄
-        self._gap_history: Dict[str, list] = {}
-        self._gap_history_max_age: float = 10.0  # 保留 10 秒歷史
+        # 改進版：單圈 gap 變化追蹤
+        # 格式: {driver_num: {'last_lap': int, 'last_gap': float, 'current_lap': int, 'current_gap': float}}
+        self._gap_history: Dict[str, Dict[str, Any]] = {}
         
         # F87 省胎分數 (由 driver_strategy MDI 更新)
         # 格式: {driver_num: {'score': float, 'level': str, 'adjustment': float}}
@@ -336,6 +335,9 @@ class LiveTimingDataManager(QObject):
             
             # 恢復賽道狀態資料
             self._cached_track_status = cache_data.get('track_status', [])
+            
+            # 恢復天氣數據
+            self._cached_weather_data = cache_data.get('weather_data', [])
             
             # 重置狀態
             self._current_index = 0
@@ -567,6 +569,9 @@ class LiveTimingDataManager(QObject):
             # 恢復賽道狀態資料
             self._cached_track_status = cache_data.get('track_status', [])
             
+            # 恢復天氣數據
+            self._cached_weather_data = cache_data.get('weather_data', [])
+            
             # 重置狀態
             self._current_index = 0
             self._playback_state = 'stopped'
@@ -706,7 +711,10 @@ class LiveTimingDataManager(QObject):
         import time
         
         if not self._snapshots:
+            print("[DATA_MANAGER] ❌ 無法播放：沒有快照數據")
             return
+        
+        print(f"[DATA_MANAGER] 🎬 準備播放，當前狀態: {self._playback_state}")
         
         self._playback_state = 'playing'
         
@@ -716,13 +724,14 @@ class LiveTimingDataManager(QObject):
         else:
             self._playback_time = 0.0
         
-        # 記錄開始時的系統時間
+        # ✅ 重要：重置開始時間（修復暫停後無法播放的問題）
         self._last_tick_time = time.time()
         
         # 使用固定 50ms 間隔（與 Demo 一致）
         self._playback_timer.start(self._timer_interval_ms)
         self.playback_state_changed.emit('playing')
-        print(f"[DATA_MANAGER] 開始播放，初始賽事時間: {self._playback_time:.2f}s")
+        print(f"[DATA_MANAGER] ✅ 開始播放，初始賽事時間: {self._playback_time:.2f}s, 當前索引: {self._current_index}/{len(self._snapshots)}")
+
     
     def pause(self):
         """暫停播放"""
@@ -775,6 +784,11 @@ class LiveTimingDataManager(QObject):
         self._current_index = target_index
         
         snapshot = self._snapshots[self._current_index]
+        
+        # ✅ 修復：更新預測數據（與播放時一致）
+        self._update_win_probabilities(snapshot)
+        self._update_overtake_predictions(snapshot)
+        
         self.snapshot_updated.emit(snapshot)
         self.time_changed.emit(snapshot['race_time_seconds'])
         
@@ -797,9 +811,37 @@ class LiveTimingDataManager(QObject):
         self._current_index = target_index
         
         snapshot = self._snapshots[self._current_index]
+        
+        # ✅ 修復：更新預測數據（與播放時一致）
+        self._update_win_probabilities(snapshot)
+        self._update_overtake_predictions(snapshot)
+        
         self.snapshot_updated.emit(snapshot)
         self.time_changed.emit(snapshot['race_time_seconds'])
         self.progress_changed.emit(progress)
+    
+    def seek_by_offset(self, offset_seconds: float):
+        """
+        根據時間偏移量跳轉（支援正負值）
+        
+        Args:
+            offset_seconds: 時間偏移量（秒），正數向前，負數向後
+                           例如：-30 表示倒退 30 秒
+        """
+        if not self._snapshots:
+            return
+        
+        # 獲取當前時間
+        current_time = self._snapshots[self._current_index].get('race_time_seconds', 0.0)
+        
+        # 計算目標時間
+        target_time = current_time + offset_seconds
+        target_time = max(0.0, target_time)  # 不能小於 0
+        
+        # 使用 seek 方法跳轉
+        self.seek(target_time)
+        
+        print(f"[DATA_MANAGER] Seek offset: {offset_seconds:+.1f}s | Current: {current_time:.1f}s -> Target: {target_time:.1f}s")
     
     # ===========================================
     # 數據存取
@@ -973,6 +1015,55 @@ class LiveTimingDataManager(QObject):
         if self._data_source and hasattr(self._data_source, 'get_race_control_messages'):
             return self._data_source.get_race_control_messages()
         return []
+    
+    def get_weather_at_time(self, timestamp: str) -> Dict[str, Any]:
+        """
+        獲取指定時間的天氣數據
+        
+        Returns:
+            Dict with keys: AirTemp, TrackTemp, Humidity, Pressure, WindSpeed, WindDirection, Rainfall
+        """
+        # 使用快取的天氣數據
+        if hasattr(self, '_cached_weather_data') and self._cached_weather_data:
+            return self._get_weather_from_cache(timestamp)
+        return {}
+    
+    def _get_weather_from_cache(self, timestamp: str) -> Dict[str, Any]:
+        """從快取的天氣數據查詢"""
+        from .position_processor import LivePositionDataProcessor
+        
+        target_seconds = LivePositionDataProcessor._time_str_to_seconds(timestamp)
+        if target_seconds is None:
+            return {}
+        
+        current_weather = {}
+        for record in self._cached_weather_data:
+            ts = record.get('timestamp', '')
+            ts_seconds = LivePositionDataProcessor._time_str_to_seconds(ts)
+            if ts_seconds is not None and ts_seconds <= target_seconds:
+                data = record.get('data', {})
+                # 更新天氣數據（增量式）- 轉換字串為浮點數
+                try:
+                    if 'AirTemp' in data:
+                        current_weather['AirTemp'] = float(data['AirTemp'])
+                    if 'TrackTemp' in data:
+                        current_weather['TrackTemp'] = float(data['TrackTemp'])
+                    if 'Humidity' in data:
+                        current_weather['Humidity'] = float(data['Humidity'])
+                    if 'Pressure' in data:
+                        current_weather['Pressure'] = float(data['Pressure'])
+                    if 'WindSpeed' in data:
+                        current_weather['WindSpeed'] = float(data['WindSpeed'])
+                    if 'WindDirection' in data:
+                        current_weather['WindDirection'] = float(data['WindDirection'])
+                    if 'Rainfall' in data:
+                        current_weather['Rainfall'] = int(data['Rainfall']) if data['Rainfall'] else 0
+                except (ValueError, TypeError):
+                    pass  # 忽略無法轉換的數據
+            elif ts_seconds is not None and ts_seconds > target_seconds:
+                break
+        
+        return current_weather
     
     def is_race_loaded(self) -> bool:
         """檢查是否已載入賽事"""
@@ -1253,14 +1344,17 @@ class LiveTimingDataManager(QObject):
                 gap_str = driver_data.get('gap_to_ahead', '') or driver_data.get('gap_to_ahead_display', '')
                 gap_seconds = self._parse_gap_seconds(gap_str)
                 
-                # 更新 gap 歷史並計算趨勢
-                gap_trend = self._update_gap_history_and_calc_trend(
-                    driver_num, gap_seconds, current_time
+                # 更新 gap 歷史並計算趨勢（改進版：單圈變化）
+                # 獲取當前圈數
+                current_lap = driver_data.get('lap', 0)
+                gap_trend = self._update_gap_history_and_calc_lap_trend(
+                    driver_num, gap_seconds, current_lap
                 )
                 drivers[driver_num]['gap_trend'] = gap_trend
                 
-                # 間距太大（>5秒）或無法解析，超車機率設為 0
-                if gap_seconds is None or gap_seconds > 5.0:
+                # 間距太大（>8秒）或無法解析，超車機率設為 0
+                # 放寬限制以便更早發現潛在戰鬥（從 5s 提升到 8s）
+                if gap_seconds is None or gap_seconds > 8.0:
                     drivers[driver_num]['overtake_probability'] = 0
                     continue
                 
@@ -1337,74 +1431,83 @@ class LiveTimingDataManager(QObject):
         except ValueError:
             return None
     
-    def _update_gap_history_and_calc_trend(
-        self, driver_num: str, gap_seconds: Optional[float], current_time: float
+    def _update_gap_history_and_calc_lap_trend(
+        self, driver_num: str, gap_seconds: Optional[float], current_lap: int
     ) -> float:
         """
-        更新 gap 歷史並計算趨勢
+        更新 gap 歷史並計算單圈趨勢（改進版）
         
-        趨勢計算邏輯：
-        - 比較當前 gap 與 5 秒前的 gap
-        - 負值 = 正在追近（綠色）
-        - 正值 = 正在拉開（紅色）
-        - 接近 0 = 維持（灰色）
+        新邏輯：
+        - 比較「當前圈 gap」與「上一圈 gap」
+        - 返回單圈變化量（秒）
+        - 負值 = 追近（綠色 >）
+        - 正值 = 拉開（紅色 <）
+        
+        ⚠️ 名次變更偵測（2025-12-09 新增）：
+        - 當 gap_seconds 與上一圈差距過大（>3秒），判定為名次變更
+        - 重置 gap 歷史，避免錯誤的 Trend 顯示
         
         Args:
             driver_num: 車手編號
             gap_seconds: 當前間距（秒），None 表示無法解析
-            current_time: 當前賽事時間（秒）
+            current_lap: 當前圈數
             
         Returns:
-            gap_trend: 每秒變化量（秒/秒）
+            lap_gap_change: 單圈 gap 變化量（秒）
         """
         # 如果 gap 無法解析，返回 0
-        if gap_seconds is None:
+        if gap_seconds is None or current_lap <= 0:
             return 0.0
         
-        # 初始化該車手的歷史記錄
+        # 初始化該車手的記錄
         if driver_num not in self._gap_history:
-            self._gap_history[driver_num] = []
+            self._gap_history[driver_num] = {
+                'last_lap': 0,
+                'last_gap': None,
+                'current_lap': current_lap,
+                'current_gap': gap_seconds
+            }
+            return 0.0  # 第一次記錄，無法計算趨勢
         
-        history = self._gap_history[driver_num]
+        record = self._gap_history[driver_num]
         
-        # 添加當前記錄
-        history.append((current_time, gap_seconds))
+        # ✅ 名次變更偵測（2025-12-09 新增）
+        # 如果 gap 突然變化超過 3 秒，很可能是名次變更（前車換人）
+        # 此時應重置 gap 歷史，避免顯示錯誤的 Trend
+        if record['last_gap'] is not None:
+            gap_diff = abs(gap_seconds - record['last_gap'])
+            if gap_diff > 3.0:
+                # 名次變更！重置歷史
+                record['last_lap'] = current_lap
+                record['last_gap'] = None
+                record['current_lap'] = current_lap
+                record['current_gap'] = gap_seconds
+                return 0.0  # 重置後無趨勢
         
-        # 清理過期記錄（保留最近 10 秒）
-        cutoff_time = current_time - self._gap_history_max_age
-        history[:] = [(t, g) for t, g in history if t >= cutoff_time]
-        
-        # 計算趨勢（需要至少 2 秒的數據）
-        if len(history) < 2:
-            return 0.0
-        
-        # 尋找 5 秒前的記錄
-        target_time = current_time - 5.0
-        old_gap = None
-        old_time = None
-        
-        for t, g in history:
-            if t <= target_time:
-                old_time = t
-                old_gap = g
-        
-        # 如果沒有找到 5 秒前的數據，使用最舊的記錄
-        if old_gap is None and history:
-            old_time, old_gap = history[0]
-        
-        if old_gap is None or old_time is None:
-            return 0.0
-        
-        # 計算時間差
-        time_diff = current_time - old_time
-        if time_diff < 1.0:  # 至少需要 1 秒的時間差
-            return 0.0
-        
-        # 計算趨勢（每秒變化量）
-        gap_change = gap_seconds - old_gap
-        trend_per_second = gap_change / time_diff
-        
-        return trend_per_second
+        # 檢查是否進入新圈
+        if current_lap > record['current_lap']:
+            # 進入新圈：保存上一圈數據
+            record['last_lap'] = record['current_lap']
+            record['last_gap'] = record['current_gap']
+            record['current_lap'] = current_lap
+            record['current_gap'] = gap_seconds
+            
+            # 計算單圈變化量
+            if record['last_gap'] is not None:
+                lap_gap_change = gap_seconds - record['last_gap']
+                return lap_gap_change
+            else:
+                return 0.0
+        else:
+            # 同一圈：更新當前 gap（取最新值）
+            record['current_gap'] = gap_seconds
+            
+            # 如果有上一圈數據，計算當前趨勢（即時預覽）
+            if record['last_gap'] is not None:
+                lap_gap_change = gap_seconds - record['last_gap']
+                return lap_gap_change
+            else:
+                return 0.0
     
     def clear_gap_history(self):
         """清除所有 gap 歷史記錄（賽事切換時調用）"""
