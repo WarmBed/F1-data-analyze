@@ -21,6 +21,11 @@ from PyQt5.QtGui import QColor, QBrush
 from core.gui_i18n import tr
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+
 
 class DriverStandingsWidget(QWidget):
     """
@@ -77,15 +82,23 @@ class DriverStandingsWidget(QWidget):
             data: 轉換後的積分資料（來自 DataLoader）
         """
         # 🔍 調試：輸出接收到的數據結構
-        print(f"[DRIVER_WIDGET] 📥 接收到的數據 keys: {list(data.keys())}")
-        print(f"[DRIVER_WIDGET] 📥 season_year={data.get('season_year')}, round={data.get('round')}")
-        print(f"[DRIVER_WIDGET] 📥 standings 數量: {len(data.get('standings', []))}")
+        logger.debug(
+            "[DRIVER_WIDGET] 接收到的數據 keys: %s | season_year=%s | round=%s | standings=%s",
+            list(data.keys()),
+            data.get("season_year"),
+            data.get("round"),
+            len(data.get("standings", [])),
+        )
         
         self.standings_data = data.get("standings", [])
         self.season_year = data.get("season_year", 2024)
         round_num = data.get("round", 0)
         
-        print(f"[DRIVER_WIDGET] 📊 解析後: season_year={self.season_year}, round={round_num}")
+        logger.debug(
+            "[DRIVER_WIDGET] 解析後: season_year=%s, round=%s",
+            self.season_year,
+            round_num,
+        )
         
         # 更新標題
         title = tr("driver_standings_title_with_round", "車手積分榜 - {year} 第 {round} 站").format(
@@ -93,14 +106,14 @@ class DriverStandingsWidget(QWidget):
             round=round_num
         )
         self.title_label.setText(title)
-        print(f"[DRIVER_WIDGET] 📝 標題已設置: {title}")
+        logger.debug("[DRIVER_WIDGET] 標題已設置: %s", title)
         
         # 初始化顏色系統
         try:
             color_palette_provider.ensure_loaded(year=self.season_year)
-            print(f"[DRIVER_WIDGET] 顏色系統已載入 (year={self.season_year})")
+            logger.debug("[DRIVER_WIDGET] 顏色系統已載入 (year=%s)", self.season_year)
         except Exception as e:
-            print(f"[DRIVER_WIDGET] ⚠️  顏色載入失敗: {e}")
+            logger.warning("[DRIVER_WIDGET] 顏色載入失敗: %s", e)
         
         # 填充表格
         self.table.setRowCount(len(self.standings_data))
@@ -138,7 +151,7 @@ class DriverStandingsWidget(QWidget):
             self._set_item(row_idx, 6, delta_text)
         
         self.table.resizeColumnsToContents()
-        print(f"[DRIVER_WIDGET] Table populated ({len(self.standings_data)} drivers)")
+        logger.info("[DRIVER_WIDGET] Table populated (%s drivers)", len(self.standings_data))
     
     def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
         """

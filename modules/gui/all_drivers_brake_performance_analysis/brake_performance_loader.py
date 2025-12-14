@@ -13,6 +13,7 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
+from core.logger import get_logger
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
 
 
@@ -42,17 +43,25 @@ class BrakePerformanceApiWorker(QThread):
         self.params = dict(params)
         self.base_url = base_url.rstrip('/')
         self.timeout = timeout
+        self._logger = get_logger(component="brake_performance_api_worker")
     
     def run(self):
         """✅ 在背景執行緒執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             
-            print(f"[BRAKE_API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[BRAKE_API_WORKER] 📋 參數: {self.params}")
+            self._logger.info("[BRAKE_API_WORKER] 🌐 調用 API: %s", endpoint)
+            self._logger.debug("[BRAKE_API_WORKER] 📋 參數: %s", self.params)
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # ✅ 在背景執行緒發送 POST 請求（不阻塞主 GUI）
             start_ts = time.perf_counter()
@@ -63,6 +72,10 @@ class BrakePerformanceApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -89,23 +102,29 @@ class BrakePerformanceApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[BRAKE_API_WORKER] ✅ API 調用成功")
-            print(f"[BRAKE_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[BRAKE_API_WORKER] 📊 數據源: {meta['source']}")
+            self._logger.info("[BRAKE_API_WORKER] ✅ API 調用成功")
+            self._logger.info("[BRAKE_API_WORKER] ⏱️  延遲: %sms", meta['latency_ms'])
+            self._logger.debug("[BRAKE_API_WORKER] 📊 數據源: %s", meta['source'])
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             # ✅ 通過信號將結果返回主線程
             self.success.emit({"payload": payload, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[BRAKE_API_WORKER] ❌ {error_msg}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("[BRAKE_API_WORKER] ❌ %s", error_msg)
             # ✅ 通過信號發送錯誤訊息
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class BrakePerformanceDataLoader(UniversalDataLoader):

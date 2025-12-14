@@ -298,6 +298,8 @@ class LiveTimingTyreStrategy(BaseLiveTimingMDI):
     
     顯示所有車手的輪胎策略視覺化。
     動態根據當前時間點顯示輪胎策略變化。
+    
+    性能優化: 只在車手換胎時更新 (檢測 compound 變化)
     """
     
     def __init__(self, parent=None, data_manager=None):
@@ -309,6 +311,10 @@ class LiveTimingTyreStrategy(BaseLiveTimingMDI):
         
         self._total_laps = 53
         self._driver_info: Dict[str, Dict] = {}  # 車手資訊
+        
+        # 性能優化: 追蹤上次的輪胎狀態和圈數
+        self._last_tyre_state: Dict[str, str] = {}  # {driver_num: compound}
+        self._last_lap: int = 0  # 上次的最大圈數
         
         logger.info("[TYRE_STRATEGY_MDI] LiveTimingTyreStrategy initialized")
     
@@ -342,13 +348,56 @@ class LiveTimingTyreStrategy(BaseLiveTimingMDI):
         """
         Snapshot updated - 動態更新輪胎策略圖
         
+        性能優化: 在圈數變化或換胎時更新顯示
+        
         關鍵邏輯：
         1. 從 DataManager 的 get_tyre_state_at_time() 獲取當前時間點的輪胎狀態
-        2. 輪胎狀態包含截止到該時間點的 stints 資料
-        3. 根據當前圈數截斷顯示
+        2. 檢查是否有圈數變化或 compound 變化
+        3. 有變化時才重繪
         """
         drivers = snapshot.get('drivers', {})
         current_timestamp = snapshot.get('race_time', '')
+        
+        # 從 DataManager 獲取當前時間點的輪胎狀態
+        tyre_state = {}
+        if self._data_manager and current_timestamp:
+            tyre_state = self._data_manager.get_tyre_state_at_time(current_timestamp)
+        
+        # 獲取當前最大圈數
+        current_max_lap = 0
+        for driver_data in drivers.values():
+            lap = driver_data.get('lap', 0)
+            if lap and lap > current_max_lap:
+                current_max_lap = lap
+        
+        # 性能優化: 檢查是否有圈數變化或 compound 變化
+        current_compounds = {}
+        for driver_num, state in tyre_state.items():
+            stints = state.get('stints', [])
+            if stints:
+                current_compounds[driver_num] = stints[-1].get('compound', 'UNKNOWN')
+        
+        # 比較與上次的差異 - 圈數或配方變化
+        has_change = False
+        
+        # 檢查圈數變化
+        if current_max_lap != self._last_lap:
+            has_change = True
+            self._last_lap = current_max_lap
+        
+        # 檢查配方變化
+        if not has_change:
+            for driver_num, compound in current_compounds.items():
+                if self._last_tyre_state.get(driver_num) != compound:
+                    has_change = True
+                    break
+        
+        # 如果沒有變化且已經有數據，跳過更新
+        if not has_change and self._last_tyre_state:
+            return
+        
+        # 更新狀態追蹤
+        self._last_tyre_state = current_compounds
         
         # 從 drivers 數據獲取排名和當前圈數
         driver_positions = {}

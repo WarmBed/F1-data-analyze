@@ -56,8 +56,11 @@ class ClassificationApiWorker(QThread):
         self.params = params or {}
     
     def run(self):
-        """執行 API 請求並從 JSON 檔案獲取完整數據"""
+        ""執行 API 請求並從 JSON 檔案獲取完整數據"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             print(f"[WORKER] Starting API request for year {self.year}")
             
             # 步驟 1: 先呼叫 API 獲取統計資訊
@@ -68,7 +71,13 @@ class ClassificationApiWorker(QThread):
                 **self.params
             }
             
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             response = requests.post(endpoint, params=payload, timeout=30.0)
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             response.raise_for_status()
             api_result = response.json()
             
@@ -113,10 +122,16 @@ class ClassificationApiWorker(QThread):
             api_data["records"] = filtered_records
             api_data["statistics"]["total_records"] = len(filtered_records)
             
+            # ✅ 中斷檢查：被中斷時不發送信號
+            if self.isInterruptionRequested():
+                return
             self.success.emit(api_data)
                 
         except Exception as e:
             print(f"[WORKER] API request error: {str(e)}")
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             self.failure.emit(str(e))
 
 

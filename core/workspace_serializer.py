@@ -10,6 +10,10 @@ from typing import Dict, List, Optional, Tuple, Any
 from PyQt5.QtWidgets import QMdiSubWindow, QWidget
 from PyQt5.QtCore import Qt
 
+from core.logger import get_logger
+
+logger = get_logger(__name__)
+
 # ✅ 不再需要導入 CustomMdiArea
 # 改用主視窗的 create_tab_for_workspace() 方法創建 MDI 區域
 # 這樣可以確保使用相同的 CustomMdiArea 類別物件
@@ -150,11 +154,11 @@ class WorkspaceSerializer:
                 if tab_config:
                     config["tabs"].append(tab_config)
             
-            print(f"[WORKSPACE] ✅ 序列化完成: {len(config['tabs'])} 個分頁")
+            logger.debug(f"[WORKSPACE] ✅ 序列化完成: {len(config['tabs'])} 個分頁")
             return config
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 序列化失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 序列化失敗: {e}")
             import traceback
             traceback.print_exc()
             return {}
@@ -207,7 +211,7 @@ class WorkspaceSerializer:
                     mdi_area = tab_widget
             
             if not mdi_area:
-                print(f"[WORKSPACE] ⚠️ 分頁 {tab_index} 沒有 MDI 區域")
+                logger.debug(f"[WORKSPACE] ⚠️ 分頁 {tab_index} 沒有 MDI 區域")
                 return tab_config
             
             # 序列化 MDI 視窗
@@ -217,11 +221,11 @@ class WorkspaceSerializer:
                 if window_config:
                     tab_config["mdi_windows"].append(window_config)
             
-            print(f"[WORKSPACE] 📊 序列化分頁 '{tab_name}': {len(tab_config['mdi_windows'])} 個視窗")
+            logger.debug(f"[WORKSPACE] 📊 序列化分頁 '{tab_name}': {len(tab_config['mdi_windows'])} 個視窗")
             return tab_config
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 序列化分頁失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 序列化分頁失敗: {e}")
             return None
     
     def _serialize_mdi_window(self, subwindow: QMdiSubWindow, display_order: int) -> Optional[Dict]:
@@ -236,9 +240,9 @@ class WorkspaceSerializer:
             視窗配置字典
         """
         try:
-            print(f"[WORKSPACE] 🔍 開始序列化 MDI 視窗")
-            print(f"[WORKSPACE]    SubWindow: {subwindow.windowTitle()}")
-            print(f"[WORKSPACE]    SubWindow 類型: {subwindow.__class__.__name__}")
+            logger.debug(f"[WORKSPACE] 🔍 開始序列化 MDI 視窗")
+            logger.debug(f"[WORKSPACE]    SubWindow: {subwindow.windowTitle()}")
+            logger.debug(f"[WORKSPACE]    SubWindow 類型: {subwindow.__class__.__name__}")
             
             # ========== 關鍵修復：從 PopoutSubWindow.analysis_module 獲取模組 ==========
             # 原則 1: 禁止幻覺編碼 - 已驗證 PopoutSubWindow 有 analysis_module 屬性
@@ -252,42 +256,42 @@ class WorkspaceSerializer:
             # 策略 1: 檢查是否是 PopoutSubWindow 且有 analysis_module
             if hasattr(subwindow, 'analysis_module') and subwindow.analysis_module:
                 analysis_module = subwindow.analysis_module
-                print(f"[WORKSPACE] ✅ 找到 analysis_module: {analysis_module.__class__.__name__}")
-                print(f"[WORKSPACE]    analysis_module 類型: {type(analysis_module)}")
-                print(f"[WORKSPACE]    analysis_module 屬性: {[a for a in dir(analysis_module) if not a.startswith('_')][:20]}")
+                logger.debug(f"[WORKSPACE] ✅ 找到 analysis_module: {analysis_module.__class__.__name__}")
+                logger.debug(f"[WORKSPACE]    analysis_module 類型: {type(analysis_module)}")
+                logger.debug(f"[WORKSPACE]    analysis_module 屬性: {[a for a in dir(analysis_module) if not a.startswith('_')][:20]}")
                 
                 # 從 analysis_module 獲取類型
                 if hasattr(analysis_module, 'analysis_type'):
                     window_type = analysis_module.analysis_type
-                    print(f"[WORKSPACE] ✅ 直接識別模組類型: '{window_type}' (來自 analysis_module.analysis_type)")
+                    logger.debug(f"[WORKSPACE] ✅ 直接識別模組類型: '{window_type}' (來自 analysis_module.analysis_type)")
                     target_widget = analysis_module
                 else:
                     # 深入搜索
-                    print(f"[WORKSPACE] 🔍 analysis_module 沒有 analysis_type，深入搜索")
+                    logger.debug(f"[WORKSPACE] 🔍 analysis_module 沒有 analysis_type，深入搜索")
                     target_widget = self._find_analysis_widget(analysis_module)
                     if target_widget and hasattr(target_widget, 'analysis_type'):
                         window_type = target_widget.analysis_type
-                        print(f"[WORKSPACE] ✅ 在子層找到模組類型: {window_type}")
+                        logger.debug(f"[WORKSPACE] ✅ 在子層找到模組類型: {window_type}")
             
             # 策略 2: 備選方案 - 從 widget() 獲取（向後兼容舊代碼）
             else:
                 widget = subwindow.widget()
-                print(f"[WORKSPACE] ⚠️ SubWindow 沒有 analysis_module，使用 widget() 備選方案")
-                print(f"[WORKSPACE]    Widget: {widget.__class__.__name__ if widget else 'None'}")
+                logger.debug(f"[WORKSPACE] ⚠️ SubWindow 沒有 analysis_module，使用 widget() 備選方案")
+                logger.debug(f"[WORKSPACE]    Widget: {widget.__class__.__name__ if widget else 'None'}")
                 
                 if not widget:
-                    print(f"[WORKSPACE] ⚠️ Widget 為 None，跳過")
+                    logger.debug(f"[WORKSPACE] ⚠️ Widget 為 None，跳過")
                     return None
                 
                 # 從 widget 搜索
-                print(f"[WORKSPACE] 🔍 搜索模組類型 (頂層: {widget.__class__.__name__})")
+                logger.debug(f"[WORKSPACE] 🔍 搜索模組類型 (頂層: {widget.__class__.__name__})")
                 target_widget = self._find_analysis_widget(widget)
                 
                 if target_widget and hasattr(target_widget, 'analysis_type'):
                     window_type = target_widget.analysis_type
-                    print(f"[WORKSPACE] ✅ 在子層找到模組類型: {window_type}")
+                    logger.debug(f"[WORKSPACE] ✅ 在子層找到模組類型: {window_type}")
                 else:
-                    print(f"[WORKSPACE] ⚠️ 未找到 analysis_type 屬性")
+                    logger.debug(f"[WORKSPACE] ⚠️ 未找到 analysis_type 屬性")
             
             # ========== 策略 3: 檢查是否是 Live Timing 模組 ==========
             # 注意：PopoutSubWindow.setWidget() 會包裝原始 widget：
@@ -298,24 +302,24 @@ class WorkspaceSerializer:
                 content_widget = getattr(subwindow, 'content_widget', None)
                 if content_widget:
                     widget_class_name = content_widget.__class__.__name__
-                    print(f"[WORKSPACE] 🔍 檢查 content_widget 類名映射: {widget_class_name}")
+                    logger.debug(f"[WORKSPACE] 🔍 檢查 content_widget 類名映射: {widget_class_name}")
                     window_type = self.WINDOW_TYPE_MAPPING.get(widget_class_name, "unknown")
                     if window_type != "unknown":
-                        print(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
+                        logger.debug(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
                         target_widget = content_widget
                     else:
-                        print(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
+                        logger.debug(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
                 else:
                     # 備選：檢查 widget()（向後兼容）
                     widget = subwindow.widget()
                     if widget:
                         widget_class_name = widget.__class__.__name__
-                        print(f"[WORKSPACE] 🔍 檢查 widget() 類名映射: {widget_class_name}")
+                        logger.debug(f"[WORKSPACE] 🔍 檢查 widget() 類名映射: {widget_class_name}")
                         window_type = self.WINDOW_TYPE_MAPPING.get(widget_class_name, "unknown")
                         if window_type != "unknown":
-                            print(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
+                            logger.debug(f"[WORKSPACE] ✅ 使用類名映射: {widget_class_name} → {window_type}")
                         else:
-                            print(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
+                            logger.debug(f"[WORKSPACE] ⚠️ 類名 '{widget_class_name}' 無映射")
             
             # 使用找到的 target_widget（有 data_manager）進行參數提取
             if target_widget is None:
@@ -338,29 +342,29 @@ class WorkspaceSerializer:
                 "data_file": self._extract_data_file(target_widget)
             }
             
-            print(f"[WORKSPACE] 📦 序列化視窗: {window_type} | 參數: {window_config['parameters']}")
-            print(f"[WORKSPACE] 🔍 調試信息: 視窗標題='{subwindow.windowTitle()}', 目標widget='{target_widget.__class__.__name__ if target_widget else 'None'}'")
+            logger.debug(f"[WORKSPACE] 📦 序列化視窗: {window_type} | 參數: {window_config['parameters']}")
+            logger.debug(f"[WORKSPACE] 🔍 調試信息: 視窗標題='{subwindow.windowTitle()}', 目標widget='{target_widget.__class__.__name__ if target_widget else 'None'}'")
             
             # 🔧 特別調試 Ideal Lap 相關模組
             if "ideal_lap" in window_type:
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 找到 ideal lap 模組")
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: window_type={window_type}")
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: target_widget 類型={target_widget.__class__.__name__ if target_widget else 'None'}")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 找到 ideal lap 模組")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: window_type={window_type}")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: target_widget 類型={target_widget.__class__.__name__ if target_widget else 'None'}")
                 if target_widget and hasattr(target_widget, 'analysis_type'):
-                    print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_type={target_widget.analysis_type}")
+                    logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_type={target_widget.analysis_type}")
                 else:
-                    print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 沒有 analysis_type 屬性")
+                    logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 沒有 analysis_type 屬性")
                 if hasattr(subwindow, 'analysis_module') and subwindow.analysis_module:
                     analysis_module = subwindow.analysis_module
-                    print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_module 類型={analysis_module.__class__.__name__}")
+                    logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_module 類型={analysis_module.__class__.__name__}")
                     if hasattr(analysis_module, 'analysis_type'):
-                        print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_module.analysis_type={analysis_module.analysis_type}")
+                        logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: analysis_module.analysis_type={analysis_module.analysis_type}")
                 else:
-                    print(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 沒有 analysis_module")
+                    logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_DEBUG: 沒有 analysis_module")
             return window_config
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 序列化 MDI 視窗失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 序列化 MDI 視窗失敗: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -378,28 +382,28 @@ class WorkspaceSerializer:
         Returns:
             找到的分析 widget（有參數的），或 None
         """
-        print(f"[WORKSPACE] 🔍 開始搜索分析 widget（根: {root_widget.__class__.__name__}）")
+        logger.debug(f"[WORKSPACE] 🔍 開始搜索分析 widget（根: {root_widget.__class__.__name__}）")
         
         def search(widget, depth):
             if depth > max_depth:
-                print(f"[WORKSPACE]    ⚠️ 達到最大深度 {max_depth}")
+                logger.debug(f"[WORKSPACE]    ⚠️ 達到最大深度 {max_depth}")
                 return None
             
-            print(f"[WORKSPACE]    檢查深度 {depth}: {widget.__class__.__name__}")
+            logger.debug(f"[WORKSPACE]    檢查深度 {depth}: {widget.__class__.__name__}")
             
             # 優先級 1: 檢查是否有 analysis_type + 參數屬性（最理想）
             if hasattr(widget, 'analysis_type'):
-                print(f"[WORKSPACE]    ✅ 找到 analysis_type: {widget.analysis_type}")
+                logger.debug(f"[WORKSPACE]    ✅ 找到 analysis_type: {widget.analysis_type}")
                 # 檢查是否有參數屬性
                 if hasattr(widget, 'current_year') or hasattr(widget, 'current_race'):
-                    print(f"[WORKSPACE]    ✅ 有參數屬性，返回此 widget")
+                    logger.debug(f"[WORKSPACE]    ✅ 有參數屬性，返回此 widget")
                     return widget
                 else:
-                    print(f"[WORKSPACE]    ⚠️ 沒有參數屬性，繼續搜索")
+                    logger.debug(f"[WORKSPACE]    ⚠️ 沒有參數屬性，繼續搜索")
             
             # 優先級 2: 檢查是否有 _rain_analysis_core（RainAnalysisModule 特有）
             if hasattr(widget, '_rain_analysis_core'):
-                print(f"[WORKSPACE]    🔍 發現 _rain_analysis_core，深入檢查")
+                logger.debug(f"[WORKSPACE]    🔍 發現 _rain_analysis_core，深入檢查")
                 core = widget._rain_analysis_core
                 # 遞歸檢查 core
                 result = search(core, depth + 1)
@@ -408,41 +412,41 @@ class WorkspaceSerializer:
             
             # 優先級 3: 檢查是否有 _main_widget（某些 Adapter 特有）
             if hasattr(widget, '_main_widget') and widget._main_widget:
-                print(f"[WORKSPACE]    🔍 發現 _main_widget，深入檢查")
+                logger.debug(f"[WORKSPACE]    🔍 發現 _main_widget，深入檢查")
                 result = search(widget._main_widget, depth + 1)
                 if result:
                     return result
             
             # 優先級 4: 檢查是否有 main_widget（UniversalAnalysisMDI 特有）
             if hasattr(widget, 'main_widget') and widget.main_widget:
-                print(f"[WORKSPACE]    ⚠️ 發現 main_widget（UI 容器），跳過")
+                logger.debug(f"[WORKSPACE]    ⚠️ 發現 main_widget（UI 容器），跳過")
                 # main_widget 是 UI 容器，不是我們要的，跳過
                 pass
             
             # 優先級 5: 只有 data_manager 也行（最低優先級）
             if hasattr(widget, 'data_manager'):
-                print(f"[WORKSPACE]    ✅ 找到 data_manager，返回此 widget")
+                logger.debug(f"[WORKSPACE]    ✅ 找到 data_manager，返回此 widget")
                 return widget
             
             # 優先級 6: 遍歷所有子 widget（使用 findChildren）
-            print(f"[WORKSPACE]    🔍 使用 findChildren 搜索子 widget")
+            logger.debug(f"[WORKSPACE]    🔍 使用 findChildren 搜索子 widget")
             children = widget.findChildren(QWidget)
-            print(f"[WORKSPACE]    找到 {len(children)} 個子 widget")
+            logger.debug(f"[WORKSPACE]    找到 {len(children)} 個子 widget")
             
             for i, child in enumerate(children[:10]):  # 只顯示前 10 個
-                print(f"[WORKSPACE]       子[{i}]: {child.__class__.__name__}")
+                logger.debug(f"[WORKSPACE]       子[{i}]: {child.__class__.__name__}")
                 if hasattr(child, 'analysis_type') and (hasattr(child, 'current_year') or hasattr(child, 'current_race')):
-                    print(f"[WORKSPACE]    ✅ 在子 widget 中找到符合條件的")
+                    logger.debug(f"[WORKSPACE]    ✅ 在子 widget 中找到符合條件的")
                     return child
             
-            print(f"[WORKSPACE]    ❌ 深度 {depth} 未找到符合條件的 widget")
+            logger.debug(f"[WORKSPACE]    ❌ 深度 {depth} 未找到符合條件的 widget")
             return None
         
         result = search(root_widget, 0)
         if result:
-            print(f"[WORKSPACE] ✅ 搜索完成，找到: {result.__class__.__name__}")
+            logger.debug(f"[WORKSPACE] ✅ 搜索完成，找到: {result.__class__.__name__}")
         else:
-            print(f"[WORKSPACE] ❌ 搜索完成，未找到符合條件的 widget")
+            logger.debug(f"[WORKSPACE] ❌ 搜索完成，未找到符合條件的 widget")
         return result
     
     def _extract_parameters(self, widget) -> Dict:
@@ -518,15 +522,15 @@ class WorkspaceSerializer:
                     parameters['p1_compound'] = widget.p1_compound
                 if hasattr(widget, 'p2_compound'):
                     parameters['p2_compound'] = widget.p2_compound
-                print(f"[WORKSPACE] 📊 Gap Evolution 參數提取: strategy_id={parameters.get('strategy_id')}, p1={parameters.get('p1_tla')}, p2={parameters.get('p2_tla')}")
+                logger.debug(f"[WORKSPACE] 📊 Gap Evolution 參數提取: strategy_id={parameters.get('strategy_id')}, p1={parameters.get('p1_tla')}, p2={parameters.get('p2_tla')}")
             
             # 清理 None 值和空字符串
             parameters = {k: v for k, v in parameters.items() if v is not None and v != ""}
             
-            print(f"[WORKSPACE] 📊 提取參數成功: {parameters}")
+            logger.debug(f"[WORKSPACE] 📊 提取參數成功: {parameters}")
             
         except Exception as e:
-            print(f"[WORKSPACE] ⚠️ 提取參數失敗: {e}")
+            logger.error(f"[WORKSPACE] ⚠️ 提取參數失敗: {e}")
             import traceback
             traceback.print_exc()
         
@@ -609,64 +613,64 @@ class WorkspaceSerializer:
             是否恢復成功
         """
         try:
-            print(f"[WORKSPACE] 🔄 開始反序列化 Workspace...")
+            logger.debug(f"[WORKSPACE] 🔄 開始反序列化 Workspace...")
             
             # 步驟 1: 清除當前分頁（除 HOME）
             self._clear_existing_tabs()
             
             # 步驟 2: 遍歷配置中的分頁
             tabs_config = config.get('tabs', [])
-            print(f"[WORKSPACE] 📊 需要重建 {len(tabs_config)} 個分頁")
+            logger.debug(f"[WORKSPACE] 📊 需要重建 {len(tabs_config)} 個分頁")
             
             for tab_config in tabs_config:
                 success = self._rebuild_tab(tab_config)
                 if not success:
-                    print(f"[WORKSPACE] ⚠️ 分頁 '{tab_config.get('tab_name')}' 重建失敗")
+                    logger.error(f"[WORKSPACE] ⚠️ 分頁 '{tab_config.get('tab_name')}' 重建失敗")
             
             # 步驟 3: 恢復活動分頁
             active_tab_index = config.get('active_tab_index', 0)
-            print(f"[WORKSPACE] [DEBUG] 準備設定活動分頁: index={active_tab_index}, 總分頁數={self.main_window.tab_widget.count()}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 準備設定活動分頁: index={active_tab_index}, 總分頁數={self.main_window.tab_widget.count()}")
             
             if active_tab_index < self.main_window.tab_widget.count():
                 self.main_window.tab_widget.setCurrentIndex(active_tab_index)
-                print(f"[WORKSPACE] ✅ 已設定活動分頁: index={active_tab_index}")
+                logger.debug(f"[WORKSPACE] ✅ 已設定活動分頁: index={active_tab_index}")
                 
                 # ✅ 關鍵修正：分頁切換後，確保所有 MDI 視窗可見
                 current_widget = self.main_window.tab_widget.widget(active_tab_index)
-                print(f"[WORKSPACE] [DEBUG] 當前 widget 類型: {type(current_widget).__name__}")
-                print(f"[WORKSPACE] [DEBUG] 是否有 subWindowList: {hasattr(current_widget, 'subWindowList')}")
+                logger.debug(f"[WORKSPACE] [DEBUG] 當前 widget 類型: {type(current_widget).__name__}")
+                logger.debug(f"[WORKSPACE] [DEBUG] 是否有 subWindowList: {hasattr(current_widget, 'subWindowList')}")
                 
                 if hasattr(current_widget, 'subWindowList'):
                     try:
                         subwindows = current_widget.subWindowList()
-                        print(f"[WORKSPACE] 🔍 檢查活動分頁的 {len(subwindows)} 個子視窗可見性")
+                        logger.debug(f"[WORKSPACE] 🔍 檢查活動分頁的 {len(subwindows)} 個子視窗可見性")
                         for subwindow in subwindows:
                             window_title = subwindow.windowTitle()
                             is_visible = subwindow.isVisible()
-                            print(f"[WORKSPACE] [DEBUG] 視窗 '{window_title}' 可見性: {is_visible}")
+                            logger.debug(f"[WORKSPACE] [DEBUG] 視窗 '{window_title}' 可見性: {is_visible}")
                             
                             if not is_visible:
-                                print(f"[WORKSPACE] 👁️ 調用 show() 顯示隱藏的視窗: {window_title}")
+                                logger.debug(f"[WORKSPACE] 👁️ 調用 show() 顯示隱藏的視窗: {window_title}")
                                 subwindow.show()
                                 # 再次檢查
-                                print(f"[WORKSPACE] [DEBUG] show() 後可見性: {subwindow.isVisible()}")
+                                logger.debug(f"[WORKSPACE] [DEBUG] show() 後可見性: {subwindow.isVisible()}")
                             else:
-                                print(f"[WORKSPACE] ✅ 視窗已可見: {window_title}")
+                                logger.debug(f"[WORKSPACE] ✅ 視窗已可見: {window_title}")
                     except Exception as ex:
-                        print(f"[WORKSPACE] ❌ 檢查/顯示視窗時出錯: {ex}")
+                        logger.debug(f"[WORKSPACE] ❌ 檢查/顯示視窗時出錯: {ex}")
                         import traceback
                         traceback.print_exc()
                 else:
-                    print(f"[WORKSPACE] ❌ 當前 widget 沒有 subWindowList 方法")
+                    logger.debug(f"[WORKSPACE] ❌ 當前 widget 沒有 subWindowList 方法")
             
             # ✅ 所有視窗載入完成後，統一註冊 Gap Evolution widgets
             self._register_pending_gap_evolution_widgets()
             
-            print(f"[WORKSPACE] ✅ Workspace 反序列化完成！")
+            logger.debug(f"[WORKSPACE] ✅ Workspace 反序列化完成！")
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 反序列化失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 反序列化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -678,13 +682,13 @@ class WorkspaceSerializer:
             # 從後往前刪除（避免索引變化）
             for i in range(tab_count - 1, 0, -1):  # 跳過 index 0 (HOME)
                 tab_name = self.main_window.tab_widget.tabText(i)
-                print(f"[WORKSPACE] 🗑️ 移除分頁: {tab_name} (index={i})")
+                logger.debug(f"[WORKSPACE] 🗑️ 移除分頁: {tab_name} (index={i})")
                 self.main_window.tab_widget.removeTab(i)
             
-            print(f"[WORKSPACE] ✅ 已清除所有分頁（保留 HOME）")
+            logger.debug(f"[WORKSPACE] ✅ 已清除所有分頁（保留 HOME）")
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 清除分頁失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 清除分頁失敗: {e}")
     
     def _rebuild_tab(self, tab_config: Dict) -> bool:
         """
@@ -700,7 +704,7 @@ class WorkspaceSerializer:
             tab_name = tab_config.get('tab_name', 'Analysis')
             mdi_windows_config = tab_config.get('mdi_windows', [])
             
-            print(f"[WORKSPACE] 🔨 重建分頁: '{tab_name}' ({len(mdi_windows_config)} 個視窗)")
+            logger.debug(f"[WORKSPACE] 🔨 重建分頁: '{tab_name}' ({len(mdi_windows_config)} 個視窗)")
             
             # ✅ 使用主視窗的方法創建分頁，確保 CustomMdiArea 類別物件一致
             # 這樣創建的 MDI 區域與使用者手動創建的完全相同
@@ -710,49 +714,49 @@ class WorkspaceSerializer:
             tab_index = self.main_window.tab_widget.count() - 1
             
             # [深度調試] 驗證分頁和 MDI 創建
-            print(f"[WORKSPACE] [DEBUG] ===== 分頁創建驗證 =====")
-            print(f"[WORKSPACE] [DEBUG] 分頁名稱: {tab_name}")
-            print(f"[WORKSPACE] [DEBUG] 分頁索引: {tab_index}")
-            print(f"[WORKSPACE] [DEBUG] MDI ObjectName: {mdi_area.objectName()}")
-            print(f"[WORKSPACE] [DEBUG] MDI 類型: {type(mdi_area).__name__}")
+            logger.debug(f"[WORKSPACE] [DEBUG] ===== 分頁創建驗證 =====")
+            logger.debug(f"[WORKSPACE] [DEBUG] 分頁名稱: {tab_name}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 分頁索引: {tab_index}")
+            logger.debug(f"[WORKSPACE] [DEBUG] MDI ObjectName: {mdi_area.objectName()}")
+            logger.debug(f"[WORKSPACE] [DEBUG] MDI 類型: {type(mdi_area).__name__}")
             
             # ✅ 不再需要檢查類別 ID，因為現在使用主視窗的方法創建
             # 保證是同一個 CustomMdiArea 類別物件
             
             # 驗證 tab_widget 能否取得該分頁
             retrieved_tab = self.main_window.tab_widget.widget(tab_index)
-            print(f"[WORKSPACE] [DEBUG] 取回的分頁 ObjectName: {retrieved_tab.objectName()}")
-            print(f"[WORKSPACE] [DEBUG] 取回的分頁類型: {type(retrieved_tab).__name__}")
-            print(f"[WORKSPACE] [DEBUG] 取回的分頁 == mdi_area: {retrieved_tab is mdi_area}")
-            print(f"[WORKSPACE] [DEBUG] ================================")
+            logger.debug(f"[WORKSPACE] [DEBUG] 取回的分頁 ObjectName: {retrieved_tab.objectName()}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 取回的分頁類型: {type(retrieved_tab).__name__}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 取回的分頁 == mdi_area: {retrieved_tab is mdi_area}")
+            logger.debug(f"[WORKSPACE] [DEBUG] ================================")
             
             # ✅ 不需要追蹤 MDI 區域，因為 create_tab_for_workspace() 已經追蹤了
-            print(f"[WORKSPACE] 📌 MDI 區域已由 create_tab_for_workspace() 追蹤")
+            logger.debug(f"[WORKSPACE] 📌 MDI 區域已由 create_tab_for_workspace() 追蹤")
             
             # 重建每個 MDI 視窗
             # ✅ 加入延遲避免 API 429 錯誤
             import time
             for window_index, window_config in enumerate(mdi_windows_config):
-                print(f"[WORKSPACE] 🔨 重建視窗 {window_index + 1}/{len(mdi_windows_config)}")
+                logger.debug(f"[WORKSPACE] 🔨 重建視窗 {window_index + 1}/{len(mdi_windows_config)}")
                 
                 # ✅ 在每個視窗之間加入延遲（避免 API 限流）
                 if window_index > 0:
                     delay_ms = 500  # 500ms 延遲
-                    print(f"[WORKSPACE] ⏱️ 延遲 {delay_ms}ms 避免 API 限流...")
+                    logger.debug(f"[WORKSPACE] ⏱️ 延遲 {delay_ms}ms 避免 API 限流...")
                     time.sleep(delay_ms / 1000.0)
                 
                 try:
                     self._rebuild_mdi_window(mdi_area, window_config)
                 except Exception as e:
                     # ✅ 單個視窗失敗不影響其他視窗
-                    print(f"[WORKSPACE] ⚠️ 視窗重建失敗，繼續處理下一個: {e}")
+                    logger.error(f"[WORKSPACE] ⚠️ 視窗重建失敗，繼續處理下一個: {e}")
                     import traceback
                     traceback.print_exc()
             
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 重建分頁失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 重建分頁失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -778,12 +782,12 @@ class WorkspaceSerializer:
             是否成功
         """
         try:
-            print(f"[WORKSPACE] ========== 開始重建 MDI 視窗（與手動開啟一致） ==========")
+            logger.debug(f"[WORKSPACE] ========== 開始重建 MDI 視窗（與手動開啟一致） ==========")
             
             # 步驟 1: 獲取視窗類型（這是唯一從配置讀取的信息）
             window_type = window_config.get('window_type', 'unknown')
             window_title = window_config.get('window_title', '')
-            print(f"[WORKSPACE] 📋 視窗類型: {window_type}, 標題: {window_title}")
+            logger.debug(f"[WORKSPACE] 📋 視窗類型: {window_type}, 標題: {window_title}")
             
             # ========================================================
             # 步驟 1.2: 從 window_title 推斷 Live Timing 類型（處理舊數據）
@@ -819,7 +823,7 @@ class WorkspaceSerializer:
                 
                 inferred_type = title_to_type_map.get(window_title)
                 if inferred_type:
-                    print(f"[WORKSPACE] 🔄 從標題推斷類型: '{window_title}' → '{inferred_type}'")
+                    logger.debug(f"[WORKSPACE] 🔄 從標題推斷類型: '{window_title}' → '{inferred_type}'")
                     window_type = inferred_type
                     # 更新 window_config 以便傳遞給 _rebuild_live_timing_window
                     window_config = dict(window_config)  # 創建副本避免修改原始數據
@@ -831,14 +835,14 @@ class WorkspaceSerializer:
             # 策略：先創建空視窗，等 Live Timing 播放時透過即時更新機制刷新
             # ========================================================
             if window_type == 'gap_evolution_chart':
-                print(f"[WORKSPACE] 🎬 重建 Gap Evolution Chart 視窗...")
+                logger.debug(f"[WORKSPACE] 🎬 重建 Gap Evolution Chart 視窗...")
                 return self._rebuild_gap_evolution_window(mdi_area, window_config)
             
             # ========================================================
             # 步驟 1.6: 檢查是否為 Live Timing 模組
             # ========================================================
             if window_type.startswith('live_'):
-                print(f"[WORKSPACE] 🎬 檢測到 Live Timing 模組，使用專用工廠...")
+                logger.debug(f"[WORKSPACE] 🎬 檢測到 Live Timing 模組，使用專用工廠...")
                 return self._rebuild_live_timing_window(mdi_area, window_config)
             
             # 步驟 2: 使用與手動開啟完全相同的模組創建方法
@@ -847,17 +851,17 @@ class WorkspaceSerializer:
             # - 使用 parameter_provider 從主視窗實時獲取參數
             # - 調用 API 而非讀取 JSON
             # - 與手動開啟完全相同的初始化流程
-            print(f"[WORKSPACE] 🔧 調用主視窗的 _create_analysis_module() 方法...")
+            logger.debug(f"[WORKSPACE] 🔧 調用主視窗的 _create_analysis_module() 方法...")
             analysis_module = self.main_window._create_analysis_module(
                 window_type,  # 使用 window_type 作為 function_name
                 module_type_hint=window_type  # 提供類型提示
             )
             
             if not analysis_module:
-                print(f"[WORKSPACE] ❌ 無法創建模組: type={window_type}")
+                logger.debug(f"[WORKSPACE] ❌ 無法創建模組: type={window_type}")
                 return False
             
-            print(f"[WORKSPACE] ✅ 模組創建成功: {analysis_module.__class__.__name__}")
+            logger.debug(f"[WORKSPACE] ✅ 模組創建成功: {analysis_module.__class__.__name__}")
             
             # 步驟 3: 動態生成視窗標題（與手動開啟一致）
             # ✅ 從主視窗 GUI 實時獲取當前參數
@@ -867,7 +871,7 @@ class WorkspaceSerializer:
             
             # 清理 race 名稱（移除日期後綴）
             clean_race = self.main_window._get_race_key_from_display(current_race)
-            print(f"[WORKSPACE] 📊 當前參數: {current_year} {clean_race} {current_session}")
+            logger.debug(f"[WORKSPACE] 📊 當前參數: {current_year} {clean_race} {current_session}")
             
             # 動態生成標題
             if hasattr(analysis_module, 'get_window_title'):
@@ -876,57 +880,57 @@ class WorkspaceSerializer:
                     clean_race,
                     current_session
                 )
-                print(f"[WORKSPACE] 🏷️ 動態生成標題: '{window_title}'")
+                logger.debug(f"[WORKSPACE] 🏷️ 動態生成標題: '{window_title}'")
             else:
                 window_title = analysis_module.get_title()
-                print(f"[WORKSPACE] 🏷️ 使用預設標題: '{window_title}'")
+                logger.debug(f"[WORKSPACE] 🏷️ 使用預設標題: '{window_title}'")
             
             # 步驟 4: 創建 PopoutSubWindow（與手動開啟一致）
             from f1t_gui_main import PopoutSubWindow
             
             # [DEBUG] 方案A調試：驗證傳入參數
-            print(f"[WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow:")
-            print(f"[WORKSPACE] [DEBUG]   - window_title: '{window_title}'")
-            print(f"[WORKSPACE] [DEBUG]   - mdi_area: {type(mdi_area).__name__}")
-            print(f"[WORKSPACE] [DEBUG]   - analysis_module: {type(analysis_module).__name__}")
-            print(f"[WORKSPACE] [DEBUG]   - analysis_module.id: {id(analysis_module)}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow:")
+            logger.debug(f"[WORKSPACE] [DEBUG]   - window_title: '{window_title}'")
+            logger.debug(f"[WORKSPACE] [DEBUG]   - mdi_area: {type(mdi_area).__name__}")
+            logger.debug(f"[WORKSPACE] [DEBUG]   - analysis_module: {type(analysis_module).__name__}")
+            logger.debug(f"[WORKSPACE] [DEBUG]   - analysis_module.id: {id(analysis_module)}")
             if hasattr(analysis_module, 'analysis_type'):
-                print(f"[WORKSPACE] [DEBUG]   - analysis_module.analysis_type: {analysis_module.analysis_type}")
+                logger.debug(f"[WORKSPACE] [DEBUG]   - analysis_module.analysis_type: {analysis_module.analysis_type}")
             
             analysis_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
-            print(f"[WORKSPACE] 📦 PopoutSubWindow 已創建")
+            logger.debug(f"[WORKSPACE] 📦 PopoutSubWindow 已創建")
             
             # [DEBUG] 方案A調試：驗證創建後的屬性
-            print(f"[WORKSPACE] [DEBUG] PopoutSubWindow 創建後驗證:")
-            print(f"[WORKSPACE] [DEBUG]   - analysis_window.analysis_module: {type(analysis_window.analysis_module).__name__ if analysis_window.analysis_module else 'None'}")
+            logger.debug(f"[WORKSPACE] [DEBUG] PopoutSubWindow 創建後驗證:")
+            logger.debug(f"[WORKSPACE] [DEBUG]   - analysis_window.analysis_module: {type(analysis_window.analysis_module).__name__ if analysis_window.analysis_module else 'None'}")
             if analysis_window.analysis_module:
-                print(f"[WORKSPACE] [DEBUG]   - stored module id: {id(analysis_window.analysis_module)}")
+                logger.debug(f"[WORKSPACE] [DEBUG]   - stored module id: {id(analysis_window.analysis_module)}")
                 if hasattr(analysis_window.analysis_module, 'analysis_type'):
-                    print(f"[WORKSPACE] [DEBUG]   - stored module type: {analysis_window.analysis_module.analysis_type}")
+                    logger.debug(f"[WORKSPACE] [DEBUG]   - stored module type: {analysis_window.analysis_module.analysis_type}")
 
             
             # 步驟 5: 設置模組 widget（與手動開啟一致）
             content_widget = analysis_module.get_widget()
             analysis_window.setWidget(content_widget)
-            print(f"[WORKSPACE] 🎨 Widget 已設置")
+            logger.debug(f"[WORKSPACE] 🎨 Widget 已設置")
             
             # ✅ 步驟 5.5: 設置 parent_window 引用（讓模組能更新標題）
-            print(f"[WORKSPACE] 🔍 檢查 set_parent_window 方法...")
-            print(f"[WORKSPACE]    - 模組類型: {type(analysis_module).__name__}")
-            print(f"[WORKSPACE]    - hasattr(analysis_module, 'set_parent_window'): {hasattr(analysis_module, 'set_parent_window')}")
+            logger.debug(f"[WORKSPACE] 🔍 檢查 set_parent_window 方法...")
+            logger.debug(f"[WORKSPACE]    - 模組類型: {type(analysis_module).__name__}")
+            logger.debug(f"[WORKSPACE]    - hasattr(analysis_module, 'set_parent_window'): {hasattr(analysis_module, 'set_parent_window')}")
             
             if hasattr(analysis_module, 'set_parent_window'):
                 analysis_module.set_parent_window(analysis_window)
-                print(f"[WORKSPACE] 🔗 已設置 parent_window 引用")
+                logger.debug(f"[WORKSPACE] 🔗 已設置 parent_window 引用")
             else:
-                print(f"[WORKSPACE] ⚠️  模組沒有 set_parent_window 方法")
+                logger.debug(f"[WORKSPACE] ⚠️  模組沒有 set_parent_window 方法")
                 # 檢查是否有內部的 MDI 實例
                 if hasattr(analysis_module, '_rain_analysis_core'):
-                    print(f"[WORKSPACE] 🔍 發現 _rain_analysis_core 屬性")
+                    logger.debug(f"[WORKSPACE] 🔍 發現 _rain_analysis_core 屬性")
                     core = analysis_module._rain_analysis_core
                     if core and hasattr(core, 'set_parent_window'):
                         core.set_parent_window(analysis_window)
-                        print(f"[WORKSPACE] 🔗 已在 _rain_analysis_core 設置 parent_window")
+                        logger.debug(f"[WORKSPACE] 🔗 已在 _rain_analysis_core 設置 parent_window")
             
             # 步驟 6: 恢復視窗尺寸（優先使用保存的尺寸，否則使用預設）
             saved_size = window_config.get('size', {})
@@ -935,32 +939,32 @@ class WorkspaceSerializer:
             
             if saved_width and saved_height:
                 width, height = saved_width, saved_height
-                print(f"[WORKSPACE] 📏 使用保存的尺寸: {width}x{height}")
+                logger.debug(f"[WORKSPACE] 📏 使用保存的尺寸: {width}x{height}")
             else:
                 width, height = analysis_module.get_default_size()
-                print(f"[WORKSPACE] 📏 使用預設尺寸: {width}x{height}")
+                logger.debug(f"[WORKSPACE] 📏 使用預設尺寸: {width}x{height}")
             
             analysis_window.resize(width, height)
             
             # 步驟 7: 添加到 MDI（與手動開啟一致）
             mdi_area.addSubWindow(analysis_window)
-            print(f"[WORKSPACE] ✅ 已添加到 MDI 區域")
+            logger.debug(f"[WORKSPACE] ✅ 已添加到 MDI 區域")
             
             # 步驟 8: 連接關閉信號（與手動開啟一致）
             if hasattr(analysis_window, 'window_closed'):
                 analysis_window.window_closed.connect(
                     lambda: self.main_window.on_subwindow_closed(analysis_window)
                 )
-                print(f"[WORKSPACE] 🔗 已連接 window_closed 信號")
+                logger.debug(f"[WORKSPACE] 🔗 已連接 window_closed 信號")
             
             # 步驟 9: 添加到追蹤列表（與手動開啟一致）
             if hasattr(self.main_window, 'active_subwindows'):
                 self.main_window.active_subwindows.append(analysis_window)
-                print(f"[WORKSPACE] 📋 已添加到 active_subwindows 追蹤列表")
+                logger.debug(f"[WORKSPACE] 📋 已添加到 active_subwindows 追蹤列表")
             
             # 步驟 10: 顯示視窗（與手動開啟一致）
             analysis_window.show()
-            print(f"[WORKSPACE] 👁️ 視窗已顯示")
+            logger.debug(f"[WORKSPACE] 👁️ 視窗已顯示")
             
             # 🔧 重要：show() 後再次設定尺寸，避免被 Qt 自動調整覆蓋
             if saved_width and saved_height:
@@ -974,28 +978,28 @@ class WorkspaceSerializer:
             if saved_x is not None and saved_y is not None:
                 # 使用保存的位置
                 analysis_window.move(saved_x, saved_y)
-                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+                logger.debug(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
             else:
                 # 自動計算位置避免重疊
                 self.main_window._position_subwindow(mdi_area, analysis_window)
-                print(f"[WORKSPACE] 📍 位置已自動計算")
+                logger.debug(f"[WORKSPACE] 📍 位置已自動計算")
             
             # 步驟 12: 為所有分析模組設置 analysis_type 屬性
             # ✅ 關鍵修復：確保所有模組都能被 _get_telemetry_analysis_windows() 檢測到
-            print(f"[WORKSPACE] 🏷️ 為模組設置 analysis_type 屬性: {window_type}")
-            print(f"[WORKSPACE] [DEBUG] 模組類型: {type(analysis_module).__name__}")
-            print(f"[WORKSPACE] [DEBUG] 模組 ID: {id(analysis_module)}")
+            logger.debug(f"[WORKSPACE] 🏷️ 為模組設置 analysis_type 屬性: {window_type}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 模組類型: {type(analysis_module).__name__}")
+            logger.debug(f"[WORKSPACE] [DEBUG] 模組 ID: {id(analysis_module)}")
             
             # 設置 analysis_type 到模組
             if not hasattr(analysis_module, 'analysis_type'):
                 analysis_module.analysis_type = window_type
-                print(f"[WORKSPACE] ✅ 已設置 analysis_module.analysis_type = '{window_type}'")
+                logger.debug(f"[WORKSPACE] ✅ 已設置 analysis_module.analysis_type = '{window_type}'")
             else:
-                print(f"[WORKSPACE] ℹ️  模組已有 analysis_type = '{analysis_module.analysis_type}'")
+                logger.debug(f"[WORKSPACE] ℹ️  模組已有 analysis_type = '{analysis_module.analysis_type}'")
             
             # 驗證設置是否成功
             verify_type = getattr(analysis_module, 'analysis_type', None)
-            print(f"[WORKSPACE] [VERIFY] 驗證 analysis_type = '{verify_type}'")
+            logger.debug(f"[WORKSPACE] [VERIFY] 驗證 analysis_type = '{verify_type}'")
             
             # 步驟 13: 註冊遙測分析視窗（如果是遙測模組）
             # ✅ 關鍵修復：確保工具欄控制項顯示
@@ -1012,23 +1016,23 @@ class WorkspaceSerializer:
             ]
             
             if window_type in lap_analysis_types:
-                print(f"[WORKSPACE] 🎯 檢測到遙測分析模組，註冊到主視窗...")
+                logger.debug(f"[WORKSPACE] 🎯 檢測到遙測分析模組，註冊到主視窗...")
                 # 調用 on_lap_analysis_window_opened 以顯示工具欄控制項
                 if hasattr(self.main_window, 'on_lap_analysis_window_opened'):
                     self.main_window.on_lap_analysis_window_opened(analysis_module, window_type)
-                    print(f"[WORKSPACE] ✅ 遙測分析視窗已註冊: {window_type}")
+                    logger.debug(f"[WORKSPACE] ✅ 遙測分析視窗已註冊: {window_type}")
                 else:
-                    print(f"[WORKSPACE] ⚠️ 主視窗沒有 on_lap_analysis_window_opened 方法")
+                    logger.debug(f"[WORKSPACE] ⚠️ 主視窗沒有 on_lap_analysis_window_opened 方法")
             
-            print(f"[WORKSPACE] ========== MDI 視窗重建完成 ==========")
-            print(f"[WORKSPACE] ✅ 視窗已重建: '{window_title}'")
-            print(f"[WORKSPACE] 📊 使用當前主視窗參數: {current_year} {clean_race} {current_session}")
-            print(f"[WORKSPACE] 🔄 此視窗將調用 API 載入數據（不使用 JSON 緩存）")
+            logger.debug(f"[WORKSPACE] ========== MDI 視窗重建完成 ==========")
+            logger.debug(f"[WORKSPACE] ✅ 視窗已重建: '{window_title}'")
+            logger.debug(f"[WORKSPACE] 📊 使用當前主視窗參數: {current_year} {clean_race} {current_session}")
+            logger.debug(f"[WORKSPACE] 🔄 此視窗將調用 API 載入數據（不使用 JSON 緩存）")
             
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 重建視窗失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 重建視窗失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1054,8 +1058,8 @@ class WorkspaceSerializer:
             params = window_config.get('parameters', {})
             window_title = window_config.get('window_title', 'Gap Evolution')
             
-            print(f"[WORKSPACE] 🎬 重建 Gap Evolution 視窗: {window_title}")
-            print(f"[WORKSPACE] 📊 參數: {params}")
+            logger.debug(f"[WORKSPACE] 🎬 重建 Gap Evolution 視窗: {window_title}")
+            logger.debug(f"[WORKSPACE] 📊 參數: {params}")
             
             # 提取參數
             strategy_id = params.get('strategy_id', 1)
@@ -1105,7 +1109,7 @@ class WorkspaceSerializer:
                 strategy_id=strategy_id
             )
             
-            print(f"[WORKSPACE] ✅ Gap Evolution Widget 創建成功")
+            logger.debug(f"[WORKSPACE] ✅ Gap Evolution Widget 創建成功")
             
             # 創建 PopoutSubWindow
             sub_window = PopoutSubWindow(
@@ -1121,7 +1125,7 @@ class WorkspaceSerializer:
             saved_width = saved_size.get('width', 900)
             saved_height = saved_size.get('height', 600)
             sub_window.resize(saved_width, saved_height)
-            print(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
+            logger.debug(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
             
             # 添加到 MDI 區域
             mdi_area.addSubWindow(sub_window)
@@ -1134,18 +1138,18 @@ class WorkspaceSerializer:
             
             if saved_x is not None and saved_y is not None:
                 sub_window.move(saved_x, saved_y)
-                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+                logger.debug(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
             
             # 🔍 延遲註冊：暫存到列表，等所有視窗載入完成後再統一註冊
             # ⚠️ 原因：Gap Evolution 可能比 Chase Strategy 更早載入
             self._pending_gap_evolution_widgets.append(chart_widget)
-            print(f"[WORKSPACE] 📋 Gap Evolution 已暫存，等待所有視窗載入完成後註冊")
+            logger.debug(f"[WORKSPACE] 📋 Gap Evolution 已暫存，等待所有視窗載入完成後註冊")
             
-            print(f"[WORKSPACE] ✅ Gap Evolution 視窗重建完成")
+            logger.debug(f"[WORKSPACE] ✅ Gap Evolution 視窗重建完成")
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 重建 Gap Evolution 視窗失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 重建 Gap Evolution 視窗失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1159,21 +1163,21 @@ class WorkspaceSerializer:
         if not self._pending_gap_evolution_widgets:
             return
         
-        print(f"[WORKSPACE] 🔗 開始註冊 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution widgets...")
+        logger.debug(f"[WORKSPACE] 🔗 開始註冊 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution widgets...")
         
         # 搜索所有分頁中的 Chase Strategy MDI
         chase_strategy_mdi = None
         
         if hasattr(self.main_window, 'tab_widget'):
-            print(f"[WORKSPACE] 🔍 搜索 Chase Strategy MDI，分頁數量: {self.main_window.tab_widget.count()}")
+            logger.debug(f"[WORKSPACE] 🔍 搜索 Chase Strategy MDI，分頁數量: {self.main_window.tab_widget.count()}")
             for tab_index in range(self.main_window.tab_widget.count()):
                 tab_widget = self.main_window.tab_widget.widget(tab_index)
                 tab_name = self.main_window.tab_widget.tabText(tab_index)
-                print(f"[WORKSPACE] 📂 檢查分頁 '{tab_name}' (index={tab_index})")
+                logger.debug(f"[WORKSPACE] 📂 檢查分頁 '{tab_name}' (index={tab_index})")
                 
                 if hasattr(tab_widget, 'subWindowList'):
                     sub_windows = tab_widget.subWindowList()
-                    print(f"[WORKSPACE]   - 此分頁有 {len(sub_windows)} 個子視窗")
+                    logger.debug(f"[WORKSPACE]   - 此分頁有 {len(sub_windows)} 個子視窗")
                     
                     for sub_win in sub_windows:
                         # ✅ 修復：優先從 content_widget 獲取實際模組
@@ -1182,27 +1186,27 @@ class WorkspaceSerializer:
                         actual_widget = None
                         if hasattr(sub_win, 'content_widget') and sub_win.content_widget:
                             actual_widget = sub_win.content_widget
-                            print(f"[WORKSPACE]   - 使用 content_widget: {actual_widget.__class__.__name__}")
+                            logger.debug(f"[WORKSPACE]   - 使用 content_widget: {actual_widget.__class__.__name__}")
                         else:
                             actual_widget = sub_win.widget()
                             if actual_widget:
-                                print(f"[WORKSPACE]   - 使用 widget(): {actual_widget.__class__.__name__}")
+                                logger.debug(f"[WORKSPACE]   - 使用 widget(): {actual_widget.__class__.__name__}")
                         
                         if actual_widget and hasattr(actual_widget, '__class__'):
                             class_name = actual_widget.__class__.__name__
                             window_title = sub_win.windowTitle() if hasattr(sub_win, 'windowTitle') else 'Unknown'
-                            print(f"[WORKSPACE]   - 檢查視窗: {class_name} (標題: {window_title})")
+                            logger.debug(f"[WORKSPACE]   - 檢查視窗: {class_name} (標題: {window_title})")
                             
                             if class_name == 'ChaseStrategyMDI':
                                 chase_strategy_mdi = actual_widget
-                                print(f"[WORKSPACE] ✅ 在分頁 '{tab_name}' 找到 Chase Strategy MDI")
+                                logger.debug(f"[WORKSPACE] ✅ 在分頁 '{tab_name}' 找到 Chase Strategy MDI")
                                 break
                         else:
-                            print(f"[WORKSPACE]   - 跳過無效的 widget")
+                            logger.debug(f"[WORKSPACE]   - 跳過無效的 widget")
                     if chase_strategy_mdi:
                         break
                 else:
-                    print(f"[WORKSPACE]   - 此分頁沒有 subWindowList 方法 (類型: {type(tab_widget).__name__})")
+                    logger.debug(f"[WORKSPACE]   - 此分頁沒有 subWindowList 方法 (類型: {type(tab_widget).__name__})")
         
         if chase_strategy_mdi and hasattr(chase_strategy_mdi, '_widget'):
             chase_widget = chase_strategy_mdi._widget
@@ -1219,20 +1223,20 @@ class WorkspaceSerializer:
                 # ⚠️ 關鍵修正：設定 StrategyCalculator 以啟用預測曲線
                 if hasattr(chase_widget, '_calculator') and chase_widget._calculator:
                     chart_widget.set_strategy_calculator(chase_widget._calculator)
-                    print(f"[WORKSPACE] ✅ 已為 Gap Evolution 設定 StrategyCalculator")
+                    logger.debug(f"[WORKSPACE] ✅ 已為 Gap Evolution 設定 StrategyCalculator")
                 else:
-                    print(f"[WORKSPACE] ⚠️ Chase Strategy 的 _calculator 尚未初始化")
+                    logger.debug(f"[WORKSPACE] ⚠️ Chase Strategy 的 _calculator 尚未初始化")
                 
                 # 連接 destroyed 信號
                 chart_widget.destroyed.connect(
                     partial(chase_widget._on_gap_widget_closed, chart_widget)
                 )
             
-            print(f"[WORKSPACE] ✅ 已將 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution 註冊到 Chase Strategy")
-            print(f"[WORKSPACE] 💡 當 Live Timing 播放時，這些視窗會自動更新")
+            logger.debug(f"[WORKSPACE] ✅ 已將 {len(self._pending_gap_evolution_widgets)} 個 Gap Evolution 註冊到 Chase Strategy")
+            logger.debug(f"[WORKSPACE] 💡 當 Live Timing 播放時，這些視窗會自動更新")
         else:
-            print(f"[WORKSPACE] ⚠️ 未找到 Chase Strategy MDI，Gap Evolution 無法自動更新")
-            print(f"[WORKSPACE] 💡 請確保 workspace 中包含 Chase Strategy 模組")
+            logger.debug(f"[WORKSPACE] ⚠️ 未找到 Chase Strategy MDI，Gap Evolution 無法自動更新")
+            logger.debug(f"[WORKSPACE] 💡 請確保 workspace 中包含 Chase Strategy 模組")
         
         # 清空暫存列表
         self._pending_gap_evolution_widgets = []
@@ -1256,7 +1260,7 @@ class WorkspaceSerializer:
             from modules.gui.live_timing import LiveTimingModuleFactory
             
             window_type = window_config.get('window_type', 'unknown')
-            print(f"[WORKSPACE] 🎬 重建 Live Timing 視窗: {window_type}")
+            logger.debug(f"[WORKSPACE] 🎬 重建 Live Timing 視窗: {window_type}")
             
             # Live Timing 類型 → 模組名稱映射
             live_timing_name_map = {
@@ -1284,26 +1288,26 @@ class WorkspaceSerializer:
             
             module_name = live_timing_name_map.get(window_type)
             if not module_name:
-                print(f"[WORKSPACE] ❌ 未知的 Live Timing 類型: {window_type}")
+                logger.debug(f"[WORKSPACE] ❌ 未知的 Live Timing 類型: {window_type}")
                 return False
             
-            print(f"[WORKSPACE] 📦 模組名稱: {module_name}")
+            logger.debug(f"[WORKSPACE] 📦 模組名稱: {module_name}")
             
             # 使用 Live Timing 工廠創建模組
             factory = LiveTimingModuleFactory.get_instance()
             
             # 檢查模組是否已實現
             if not factory.is_implemented(module_name):
-                print(f"[WORKSPACE] ⚠️ Live Timing 模組尚未實現: {module_name}")
+                logger.debug(f"[WORKSPACE] ⚠️ Live Timing 模組尚未實現: {module_name}")
                 return False
             
             # 創建模組實例
             module_instance = factory.create_module(module_name, self.main_window)
             if module_instance is None:
-                print(f"[WORKSPACE] ❌ 無法創建 Live Timing 模組: {module_name}")
+                logger.debug(f"[WORKSPACE] ❌ 無法創建 Live Timing 模組: {module_name}")
                 return False
             
-            print(f"[WORKSPACE] ✅ Live Timing 模組創建成功: {module_instance.__class__.__name__}")
+            logger.debug(f"[WORKSPACE] ✅ Live Timing 模組創建成功: {module_instance.__class__.__name__}")
             
             # 獲取視窗標題
             window_title = module_instance.windowTitle() or module_name
@@ -1326,7 +1330,7 @@ class WorkspaceSerializer:
             
             if saved_width and saved_height:
                 sub_window.resize(saved_width, saved_height)
-                print(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
+                logger.debug(f"[WORKSPACE] 📏 使用保存的尺寸: {saved_width}x{saved_height}")
             else:
                 # 使用模組的建議尺寸
                 if hasattr(module_instance, 'minimumSize'):
@@ -1337,7 +1341,7 @@ class WorkspaceSerializer:
                         sub_window.resize(500, 500)
                 else:
                     sub_window.resize(500, 500)
-                print(f"[WORKSPACE] 📏 使用預設尺寸")
+                logger.debug(f"[WORKSPACE] 📏 使用預設尺寸")
             
             # 添加到 MDI 區域
             mdi_area.addSubWindow(sub_window)
@@ -1354,7 +1358,7 @@ class WorkspaceSerializer:
             
             if saved_x is not None and saved_y is not None:
                 sub_window.move(saved_x, saved_y)
-                print(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
+                logger.debug(f"[WORKSPACE] 📍 使用保存的位置: ({saved_x}, {saved_y})")
             
             # 自動顯示 Live Timing Control Dock
             if hasattr(self.main_window, '_on_live_timing_module_opened'):
@@ -1364,11 +1368,11 @@ class WorkspaceSerializer:
             if hasattr(self.main_window, '_on_live_timing_module_closed'):
                 sub_window.destroyed.connect(self.main_window._on_live_timing_module_closed)
             
-            print(f"[WORKSPACE] ✅ Live Timing 視窗重建完成: {window_title}")
+            logger.debug(f"[WORKSPACE] ✅ Live Timing 視窗重建完成: {window_title}")
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 重建 Live Timing 視窗失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 重建 Live Timing 視窗失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1389,13 +1393,13 @@ class WorkspaceSerializer:
             race = parameters.get('race')
             session = parameters.get('session')
             
-            print(f"[WORKSPACE] 🔧 創建模組: type={window_type}, params={parameters}")
+            logger.debug(f"[WORKSPACE] 🔧 創建模組: type={window_type}, params={parameters}")
             
             # 🔧 特別調試 Ideal Lap 相關模組
             if "ideal_lap" in window_type:
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: 準備載入 ideal lap 模組")
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: window_type={window_type}")
-                print(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: parameters={parameters}")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: 準備載入 ideal lap 模組")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: window_type={window_type}")
+                logger.debug(f"[WORKSPACE] 🎯 IDEAL_LAP_LOAD_DEBUG: parameters={parameters}")
             
             # Rain Analysis (支援兩種類型名稱)
             if window_type in ("rain_analysis", "rain_weather"):
@@ -1405,7 +1409,7 @@ class WorkspaceSerializer:
                     race=race,
                     session=session
                 )
-                print(f"[WORKSPACE] ✅ Rain Analysis 模組已創建 (type={window_type})")
+                logger.debug(f"[WORKSPACE] ✅ Rain Analysis 模組已創建 (type={window_type})")
                 return module
             
             # Tire Strategy (支援兩種類型名稱)
@@ -1416,7 +1420,7 @@ class WorkspaceSerializer:
                     race=race,
                     session=session
                 )
-                print(f"[WORKSPACE] ✅ Tire Strategy 模組已創建 (type={window_type})")
+                logger.debug(f"[WORKSPACE] ✅ Tire Strategy 模組已創建 (type={window_type})")
                 return module
             
             # Track Analysis
@@ -1427,7 +1431,7 @@ class WorkspaceSerializer:
                     race=race,
                     session=session
                 )
-                print(f"[WORKSPACE] ✅ Track Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Track Analysis 模組已創建")
                 return module
             
             # Pitstop Analysis
@@ -1441,20 +1445,20 @@ class WorkspaceSerializer:
                 # 這樣 update_parameters() 才能檢測到參數從 None 變化為實際值
                 if hasattr(module, 'update_parameters') and callable(module.update_parameters):
                     try:
-                        print(f"[WORKSPACE] [DEBUG] Pitstop 當前參數狀態: year={module.current_year}, race={module.current_race}, session={module.current_session}")
-                        print(f"[WORKSPACE] [DEBUG] 準備調用 update_parameters({year}, {race}, {session})")
+                        logger.debug(f"[WORKSPACE] [DEBUG] Pitstop 當前參數狀態: year={module.current_year}, race={module.current_race}, session={module.current_session}")
+                        logger.debug(f"[WORKSPACE] [DEBUG] 準備調用 update_parameters({year}, {race}, {session})")
                         
                         year_int = int(year)
                         success = module.update_parameters(year_int, race, session)
                         
-                        print(f"[WORKSPACE] [DEBUG] update_parameters 返回: {success}")
+                        logger.debug(f"[WORKSPACE] [DEBUG] update_parameters 返回: {success}")
                         
                         if success:
-                            print(f"[WORKSPACE] ✅ Pitstop 參數更新成功，已觸發數據載入")
+                            logger.debug(f"[WORKSPACE] ✅ Pitstop 參數更新成功，已觸發數據載入")
                         else:
-                            print(f"[WORKSPACE] ⚠️  Pitstop 參數更新返回 False")
+                            logger.debug(f"[WORKSPACE] ⚠️  Pitstop 參數更新返回 False")
                     except Exception as e:
-                        print(f"[WORKSPACE] ❌ Pitstop 參數更新失敗: {e}")
+                        logger.error(f"[WORKSPACE] ❌ Pitstop 參數更新失敗: {e}")
                         import traceback
                         traceback.print_exc()
                 else:
@@ -1464,7 +1468,7 @@ class WorkspaceSerializer:
                         module.current_race = race
                         module.current_session = session
                 
-                print(f"[WORKSPACE] ✅ Pitstop Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Pitstop Analysis 模組已創建")
                 return module
             
             # Accident Analysis
@@ -1480,11 +1484,11 @@ class WorkspaceSerializer:
                         year_int = int(year)
                         success = module.update_parameters(year_int, race, session)
                         if success:
-                            print(f"[WORKSPACE] ✅ Accident 參數更新成功，已觸發數據載入")
+                            logger.debug(f"[WORKSPACE] ✅ Accident 參數更新成功，已觸發數據載入")
                         else:
-                            print(f"[WORKSPACE] ⚠️  Accident 參數更新返回 False")
+                            logger.debug(f"[WORKSPACE] ⚠️  Accident 參數更新返回 False")
                     except Exception as e:
-                        print(f"[WORKSPACE] ❌ Accident 參數更新失敗: {e}")
+                        logger.error(f"[WORKSPACE] ❌ Accident 參數更新失敗: {e}")
                         import traceback
                         traceback.print_exc()
                 else:
@@ -1494,7 +1498,7 @@ class WorkspaceSerializer:
                         module.current_race = race
                         module.current_session = session
                 
-                print(f"[WORKSPACE] ✅ Accident Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Accident Analysis 模組已創建")
                 return module
             
             # Telemetry Analysis
@@ -1510,11 +1514,11 @@ class WorkspaceSerializer:
                         year_int = int(year)
                         success = module.update_parameters(year_int, race, session)
                         if success:
-                            print(f"[WORKSPACE] ✅ Telemetry 參數更新成功，已觸發數據載入")
+                            logger.debug(f"[WORKSPACE] ✅ Telemetry 參數更新成功，已觸發數據載入")
                         else:
-                            print(f"[WORKSPACE] ⚠️  Telemetry 參數更新返回 False")
+                            logger.debug(f"[WORKSPACE] ⚠️  Telemetry 參數更新返回 False")
                     except Exception as e:
-                        print(f"[WORKSPACE] ❌ Telemetry 參數更新失敗: {e}")
+                        logger.error(f"[WORKSPACE] ❌ Telemetry 參數更新失敗: {e}")
                         import traceback
                         traceback.print_exc()
                 else:
@@ -1524,7 +1528,7 @@ class WorkspaceSerializer:
                         module.current_race = race
                         module.current_session = session
                 
-                print(f"[WORKSPACE] ✅ Telemetry Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Telemetry Analysis 模組已創建")
                 return module
             
             # Ideal Lap Ranking Table
@@ -1539,11 +1543,11 @@ class WorkspaceSerializer:
                 )
                 # 初始化模組（不傳 parent_widget，因為我們是在 workspace 環境）
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Ideal Lap Ranking 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Ideal Lap Ranking 初始化失敗")
                     return None
                 
                 # 🔧 修復：返回 Module 而不是 Widget，保持與 Rain Analysis 一致
-                print(f"[WORKSPACE] ✅ Ideal Lap Ranking Table 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Ideal Lap Ranking Table 模組已創建")
                 return module
             
             # Ideal Lap Sector Comparison
@@ -1556,11 +1560,11 @@ class WorkspaceSerializer:
                     session=session
                 )
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Ideal Lap Sector Comparison 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Ideal Lap Sector Comparison 初始化失敗")
                     return None
                 
                 # 🔧 修復：返回 Module 而不是 Widget，保持與 Rain Analysis 一致
-                print(f"[WORKSPACE] ✅ Ideal Lap Sector Comparison 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Ideal Lap Sector Comparison 模組已創建")
                 return module
             
             # Ideal Lap Sector Heatmap
@@ -1573,11 +1577,11 @@ class WorkspaceSerializer:
                     session=session
                 )
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Ideal Lap Sector Heatmap 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Ideal Lap Sector Heatmap 初始化失敗")
                     return None
                 
                 # 🔧 修復：返回 Module 而不是 Widget，保持與 Rain Analysis 一致
-                print(f"[WORKSPACE] ✅ Ideal Lap Sector Heatmap 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Ideal Lap Sector Heatmap 模組已創建")
                 return module
             
             # All Drivers Straight Line Speed
@@ -1592,9 +1596,9 @@ class WorkspaceSerializer:
                 module.parameter_provider = None  # Workspace 模式不需要 parameter_provider
                 # 初始化模組
                 if not module.initialize_module():
-                    print(f"[WORKSPACE] ❌ All Drivers Straight Line Speed 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ All Drivers Straight Line Speed 初始化失敗")
                     return None
-                print(f"[WORKSPACE] ✅ All Drivers Straight Line Speed 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ All Drivers Straight Line Speed 模組已創建")
                 return module
             
             # All Drivers Brake Performance
@@ -1606,9 +1610,23 @@ class WorkspaceSerializer:
                 module.current_session = session
                 module.parameter_provider = None
                 if not module.initialize_module():
-                    print(f"[WORKSPACE] ❌ All Drivers Brake Performance 初始化失敗")
+                    logger.error(f"[WORKSPACE] All Drivers Brake Performance 初始化失敗")
                     return None
-                print(f"[WORKSPACE] ✅ All Drivers Brake Performance 模組已創建")
+                logger.debug(f"[WORKSPACE] All Drivers Brake Performance 模組已創建")
+                return module
+            
+            # All Drivers Max Speed (F121)
+            elif window_type == "all_drivers_max_speed":
+                from modules.gui.all_drivers_max_speed_analysis.all_drivers_max_speed_mdi import AllDriversMaxSpeedMDI
+                module = AllDriversMaxSpeedMDI(parent=None)
+                module.current_year = str(year)
+                module.current_race = race
+                module.current_session = session
+                module.parameter_provider = None
+                if not module.initialize_module():
+                    logger.error(f"[WORKSPACE] All Drivers Max Speed 初始化失敗")
+                    return None
+                logger.debug(f"[WORKSPACE] All Drivers Max Speed 模組已創建")
                 return module
             
             # Detailed Lap Analysis (Lap Time Table)
@@ -1633,42 +1651,42 @@ class WorkspaceSerializer:
                 try:
                     # 步驟 1：重新創建 data_manager
                     if not module.data_manager:
-                        print(f"[WORKSPACE] 🔧 重新創建 Detailed Lap Analysis data_manager")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Detailed Lap Analysis data_manager")
                         module.data_manager = module.create_data_manager()
                         if module.data_manager:
                             module._connect_data_manager_signals()
-                            print(f"[WORKSPACE] ✅ Detailed Lap Analysis data_manager 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Detailed Lap Analysis data_manager 創建成功")
                         else:
-                            print(f"[WORKSPACE] ❌ Detailed Lap Analysis data_manager 創建失敗")
+                            logger.error(f"[WORKSPACE] ❌ Detailed Lap Analysis data_manager 創建失敗")
                     
                     # 步驟 2：重新創建 chart_widget（環境保護模式下被跳過）
                     if not module.chart_widget:
-                        print(f"[WORKSPACE] 🔧 重新創建 Detailed Lap Analysis chart_widget")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Detailed Lap Analysis chart_widget")
                         module.chart_widget = module.create_chart_widget()
                         if module.chart_widget:
                             module._connect_chart_widget_signals()
-                            print(f"[WORKSPACE] ✅ Detailed Lap Analysis chart_widget 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Detailed Lap Analysis chart_widget 創建成功")
                         else:
-                            print(f"[WORKSPACE] ❌ Detailed Lap Analysis chart_widget 創建失敗")
+                            logger.error(f"[WORKSPACE] ❌ Detailed Lap Analysis chart_widget 創建失敗")
                     
                     # 步驟 3：🔧 關鍵修復：重建完整的 UI 結構（包含 layout 和組件）
-                    print(f"[WORKSPACE] 🎨 重建 Detailed Lap Analysis 完整 UI 結構")
+                    logger.debug(f"[WORKSPACE] 🎨 重建 Detailed Lap Analysis 完整 UI 結構")
                     module._setup_ui()
-                    print(f"[WORKSPACE] ✅ Detailed Lap Analysis UI 結構重建完成")
+                    logger.debug(f"[WORKSPACE] ✅ Detailed Lap Analysis UI 結構重建完成")
                             
                     # 步驟 4：調用 update_parameters() 觸發數據載入
                     year_int = int(year)
                     success = module.update_parameters(year_int, race, session)
                     if success:
-                        print(f"[WORKSPACE] ✅ Detailed Lap Analysis 參數更新成功，已觸發數據載入")
+                        logger.debug(f"[WORKSPACE] ✅ Detailed Lap Analysis 參數更新成功，已觸發數據載入")
                     else:
-                        print(f"[WORKSPACE] ⚠️  Detailed Lap Analysis 參數更新返回 False")
+                        logger.debug(f"[WORKSPACE] ⚠️  Detailed Lap Analysis 參數更新返回 False")
                 except Exception as e:
-                    print(f"[WORKSPACE] ❌ Detailed Lap Analysis 參數更新失敗: {e}")
+                    logger.error(f"[WORKSPACE] ❌ Detailed Lap Analysis 參數更新失敗: {e}")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[WORKSPACE] ✅ Detailed Lap Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Detailed Lap Analysis 模組已創建")
                 # ✅ 修復：返回 MDI 實例本身，不是 Widget
                 return module
             
@@ -1693,37 +1711,37 @@ class WorkspaceSerializer:
                 try:
                     # 重新創建 data_manager
                     if not module.data_manager:
-                        print(f"[WORKSPACE] 🔧 重新創建 Lap Time Box Plot data_manager")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Lap Time Box Plot data_manager")
                         module.data_manager = module.create_data_manager()
                         if module.data_manager:
                             module._connect_data_manager_signals()
-                            print(f"[WORKSPACE] ✅ Lap Time Box Plot data_manager 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Lap Time Box Plot data_manager 創建成功")
                     
                     # 重新創建 chart_widget
                     if not module.chart_widget:
-                        print(f"[WORKSPACE] 🔧 重新創建 Lap Time Box Plot chart_widget")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Lap Time Box Plot chart_widget")
                         module.chart_widget = module.create_chart_widget()
                         if module.chart_widget:
                             module._connect_chart_widget_signals()
-                            print(f"[WORKSPACE] ✅ Lap Time Box Plot chart_widget 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Lap Time Box Plot chart_widget 創建成功")
                     
                     # 🔧 關鍵修復：重建完整的 UI 結構
-                    print(f"[WORKSPACE] 🎨 重建 Lap Time Box Plot 完整 UI 結構")
+                    logger.debug(f"[WORKSPACE] 🎨 重建 Lap Time Box Plot 完整 UI 結構")
                     module._setup_ui()
-                    print(f"[WORKSPACE] ✅ Lap Time Box Plot UI 結構重建完成")
+                    logger.debug(f"[WORKSPACE] ✅ Lap Time Box Plot UI 結構重建完成")
                             
                     year_int = int(year)
                     success = module.update_parameters(year_int, race, session)
                     if success:
-                        print(f"[WORKSPACE] ✅ Lap Time Box Plot 參數更新成功，已觸發數據載入")
+                        logger.debug(f"[WORKSPACE] ✅ Lap Time Box Plot 參數更新成功，已觸發數據載入")
                     else:
-                        print(f"[WORKSPACE] ⚠️  Lap Time Box Plot 參數更新返回 False")
+                        logger.debug(f"[WORKSPACE] ⚠️  Lap Time Box Plot 參數更新返回 False")
                 except Exception as e:
-                    print(f"[WORKSPACE] ❌ Lap Time Box Plot 參數更新失敗: {e}")
+                    logger.error(f"[WORKSPACE] ❌ Lap Time Box Plot 參數更新失敗: {e}")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[WORKSPACE] ✅ Lap Time Box Plot 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Lap Time Box Plot 模組已創建")
                 # ✅ 修復：返回 MDI 實例本身，不是 Widget
                 return module
             
@@ -1748,37 +1766,37 @@ class WorkspaceSerializer:
                 try:
                     # 重新創建 data_manager
                     if not module.data_manager:
-                        print(f"[WORKSPACE] 🔧 重新創建 Throttle Box Plot data_manager")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Throttle Box Plot data_manager")
                         module.data_manager = module.create_data_manager()
                         if module.data_manager:
                             module._connect_data_manager_signals()
-                            print(f"[WORKSPACE] ✅ Throttle Box Plot data_manager 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Throttle Box Plot data_manager 創建成功")
                     
                     # 重新創建 chart_widget
                     if not module.chart_widget:
-                        print(f"[WORKSPACE] 🔧 重新創建 Throttle Box Plot chart_widget")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Throttle Box Plot chart_widget")
                         module.chart_widget = module.create_chart_widget()
                         if module.chart_widget:
                             module._connect_chart_widget_signals()
-                            print(f"[WORKSPACE] ✅ Throttle Box Plot chart_widget 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Throttle Box Plot chart_widget 創建成功")
                     
                     # 🔧 關鍵修復：重建完整的 UI 結構
-                    print(f"[WORKSPACE] 🎨 重建 Throttle Box Plot 完整 UI 結構")
+                    logger.debug(f"[WORKSPACE] 🎨 重建 Throttle Box Plot 完整 UI 結構")
                     module._setup_ui()
-                    print(f"[WORKSPACE] ✅ Throttle Box Plot UI 結構重建完成")
+                    logger.debug(f"[WORKSPACE] ✅ Throttle Box Plot UI 結構重建完成")
                             
                     year_int = int(year)
                     success = module.update_parameters(year_int, race, session)
                     if success:
-                        print(f"[WORKSPACE] ✅ Throttle Box Plot 參數更新成功，已觸發數據載入")
+                        logger.debug(f"[WORKSPACE] ✅ Throttle Box Plot 參數更新成功，已觸發數據載入")
                     else:
-                        print(f"[WORKSPACE] ⚠️  Throttle Box Plot 參數更新返回 False")
+                        logger.debug(f"[WORKSPACE] ⚠️  Throttle Box Plot 參數更新返回 False")
                 except Exception as e:
-                    print(f"[WORKSPACE] ❌ Throttle Box Plot 參數更新失敗: {e}")
+                    logger.error(f"[WORKSPACE] ❌ Throttle Box Plot 參數更新失敗: {e}")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[WORKSPACE] ✅ Throttle Box Plot 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Throttle Box Plot 模組已創建")
                 # ✅ 修復：返回 MDI 實例本身，不是 Widget
                 return module
             
@@ -1803,24 +1821,24 @@ class WorkspaceSerializer:
                 try:
                     # 重新創建 data_manager
                     if not module.data_manager:
-                        print(f"[WORKSPACE] 🔧 重新創建 Throttle Line Chart data_manager")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Throttle Line Chart data_manager")
                         module.data_manager = module.create_data_manager()
                         if module.data_manager:
                             module._connect_data_manager_signals()
-                            print(f"[WORKSPACE] ✅ Throttle Line Chart data_manager 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Throttle Line Chart data_manager 創建成功")
                     
                     # 重新創建 chart_widget
                     if not module.chart_widget:
-                        print(f"[WORKSPACE] 🔧 重新創建 Throttle Line Chart chart_widget")
+                        logger.debug(f"[WORKSPACE] 🔧 重新創建 Throttle Line Chart chart_widget")
                         module.chart_widget = module.create_chart_widget()
                         if module.chart_widget:
                             module._connect_chart_widget_signals()
-                            print(f"[WORKSPACE] ✅ Throttle Line Chart chart_widget 創建成功")
+                            logger.debug(f"[WORKSPACE] ✅ Throttle Line Chart chart_widget 創建成功")
                     
                     # 🔧 關鍵修復：重建完整的 UI 結構
-                    print(f"[WORKSPACE] 🎨 重建 Throttle Line Chart 完整 UI 結構")
+                    logger.debug(f"[WORKSPACE] 🎨 重建 Throttle Line Chart 完整 UI 結構")
                     module._setup_ui()
-                    print(f"[WORKSPACE] ✅ Throttle Line Chart UI 結構重建完成")
+                    logger.debug(f"[WORKSPACE] ✅ Throttle Line Chart UI 結構重建完成")
                             
                     # 注意：Throttle Line Chart 需要 driver 參數
                     year_int = int(year)
@@ -1828,15 +1846,15 @@ class WorkspaceSerializer:
                     driver2 = parameters.get('driver2', 'VER')
                     success = module.update_parameters(year_int, race, session, driver1=driver1, driver2=driver2)
                     if success:
-                        print(f"[WORKSPACE] ✅ Throttle Line Chart 參數更新成功，已觸發數據載入")
+                        logger.debug(f"[WORKSPACE] ✅ Throttle Line Chart 參數更新成功，已觸發數據載入")
                     else:
-                        print(f"[WORKSPACE] ⚠️  Throttle Line Chart 參數更新返回 False")
+                        logger.debug(f"[WORKSPACE] ⚠️  Throttle Line Chart 參數更新返回 False")
                 except Exception as e:
-                    print(f"[WORKSPACE] ❌ Throttle Line Chart 參數更新失敗: {e}")
+                    logger.error(f"[WORKSPACE] ❌ Throttle Line Chart 參數更新失敗: {e}")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[WORKSPACE] ✅ Throttle Line Chart 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Throttle Line Chart 模組已創建")
                 # ✅ 修復：返回 MDI 實例本身，不是 Widget
                 return module
             
@@ -1862,10 +1880,10 @@ class WorkspaceSerializer:
                 
                 # 初始化模組
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Speed Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Speed Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Speed Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Speed Analysis 模組已創建")
                 return module
             
             # Brake Analysis
@@ -1883,10 +1901,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Brake Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Brake Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Brake Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Brake Analysis 模組已創建")
                 return module
             
             # Throttle Analysis
@@ -1904,10 +1922,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Throttle Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Throttle Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Throttle Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Throttle Analysis 模組已創建")
                 return module
             
             # RPM Analysis
@@ -1925,10 +1943,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ RPM Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ RPM Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ RPM Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ RPM Analysis 模組已創建")
                 return module
             
             # Acceleration Analysis
@@ -1946,10 +1964,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Acceleration Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Acceleration Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Acceleration Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Acceleration Analysis 模組已創建")
                 return module
             
             # Gear Analysis
@@ -1967,10 +1985,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Gear Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Gear Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Gear Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Gear Analysis 模組已創建")
                 return module
             
             # Speed Diff Analysis
@@ -1989,10 +2007,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Speed Diff Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Speed Diff Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Speed Diff Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Speed Diff Analysis 模組已創建")
                 return module
             
             # Distance Diff Analysis
@@ -2010,10 +2028,10 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Distance Diff Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Distance Diff Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Distance Diff Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Distance Diff Analysis 模組已創建")
                 return module
             
             # Time Diff Analysis
@@ -2031,19 +2049,19 @@ class WorkspaceSerializer:
                 module.parameter_provider = None
                 
                 if not module.initialize_module(parent_widget=None):
-                    print(f"[WORKSPACE] ❌ Time Diff Analysis 初始化失敗")
+                    logger.error(f"[WORKSPACE] ❌ Time Diff Analysis 初始化失敗")
                     return None
                 
-                print(f"[WORKSPACE] ✅ Time Diff Analysis 模組已創建")
+                logger.debug(f"[WORKSPACE] ✅ Time Diff Analysis 模組已創建")
                 return module
             
             # 未知類型
             else:
-                print(f"[WORKSPACE] ⚠️ 不支援的視窗類型: {window_type}")
+                logger.debug(f"[WORKSPACE] ⚠️ 不支援的視窗類型: {window_type}")
                 return None
                 
         except Exception as e:
-            print(f"[WORKSPACE] ❌ 創建模組失敗: {e}")
+            logger.error(f"[WORKSPACE] ❌ 創建模組失敗: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -2053,20 +2071,20 @@ class WorkspaceSerializer:
 # 測試代碼
 # ============================================================================
 if __name__ == "__main__":
-    print("=" * 60)
-    print("WorkspaceSerializer 基本測試")
-    print("=" * 60)
-    print("\n⚠️ 注意：完整測試需要在 GUI 環境中執行")
-    print("此測試僅驗證類別結構和方法簽名")
+    logger.debug("=" * 60)
+    logger.debug("WorkspaceSerializer 基本測試")
+    logger.debug("=" * 60)
+    logger.debug("\n⚠️ 注意：完整測試需要在 GUI 環境中執行")
+    logger.debug("此測試僅驗證類別結構和方法簽名")
     
     # 測試視窗類型映射
-    print("\n[測試] 視窗類型映射:")
+    logger.debug("\n[測試] 視窗類型映射:")
     for class_name, type_id in list(WorkspaceSerializer.WINDOW_TYPE_MAPPING.items())[:5]:
-        print(f"  {class_name} → {type_id}")
-    print(f"  ... 共 {len(WorkspaceSerializer.WINDOW_TYPE_MAPPING)} 種類型")
+        logger.debug(f"  {class_name} → {type_id}")
+    logger.debug(f"  ... 共 {len(WorkspaceSerializer.WINDOW_TYPE_MAPPING)} 種類型")
     
     # 測試統計資訊提取
-    print("\n[測試] 統計資訊提取:")
+    logger.debug("\n[測試] 統計資訊提取:")
     test_config = {
         "tabs": [
             {
@@ -2087,11 +2105,11 @@ if __name__ == "__main__":
     
     serializer = WorkspaceSerializer(main_window=None)  # None for testing
     stats = serializer.extract_statistics(test_config)
-    print(f"  總分頁: {stats['total_tabs']}")
-    print(f"  總視窗: {stats['total_windows']}")
-    print(f"  視窗類型: {stats['window_types']}")
-    print(f"  參數: {stats['parameters']}")
+    logger.debug(f"  總分頁: {stats['total_tabs']}")
+    logger.debug(f"  總視窗: {stats['total_windows']}")
+    logger.debug(f"  視窗類型: {stats['window_types']}")
+    logger.debug(f"  參數: {stats['parameters']}")
     
-    print("\n" + "=" * 60)
-    print("基本測試完成！")
-    print("=" * 60)
+    logger.debug("\n" + "=" * 60)
+    logger.debug("基本測試完成！")
+    logger.debug("=" * 60)

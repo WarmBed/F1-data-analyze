@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-功能 70: FP→Q 預測訓練數據收集器
+功能 70: FP->Q 預測訓練數據收集器
 目的: 提取 FP1/FP2/FP3 和 Q 的數據用於機器學習訓練
 
 根據開發原則:
@@ -17,6 +18,13 @@
 
 import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import pandas as pd
 import numpy as np

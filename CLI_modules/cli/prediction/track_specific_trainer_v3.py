@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
-F1 賽道特定模型訓練器 v3.0 - 基於物理特徵的 FP3→Q 預測
+F1 賽道特定模型訓練器 v3.0 - 基於物理特徵的 FP3->Q 預測
 
 設計原則：
 1. 使用當前週末的客觀物理數據（不依賴歷史車手特徵）
@@ -19,6 +20,14 @@ F1 賽道特定模型訓練器 v3.0 - 基於物理特徵的 FP3→Q 預測
 - 原則 3：所有字串使用 tr()（未來）
 - 原則 4：print 輸出會導向 logger
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

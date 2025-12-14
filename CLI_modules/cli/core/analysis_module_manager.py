@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 分析模組管理器
 統一管理所有分析功能的模組化接口
@@ -5,6 +7,13 @@ F1 分析模組管理器
 
 import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import importlib
 from typing import Dict, List, Any, Optional
 from abc import ABC, abstractmethod

@@ -22,6 +22,11 @@ from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+
 
 class ChampionshipStandingsApiWorker(QThread):
     """
@@ -53,6 +58,9 @@ class ChampionshipStandingsApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -68,8 +76,12 @@ class ChampionshipStandingsApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[API_WORKER] 📋 參數: {query_params}")
+            logger.info("[API_WORKER] 調用 API: %s", endpoint)
+            logger.debug("[API_WORKER] 參數: %s", query_params)
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -80,6 +92,10 @@ class ChampionshipStandingsApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -110,21 +126,25 @@ class ChampionshipStandingsApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[API_WORKER] ✅ API 調用成功")
-            print(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info("[API_WORKER] API 調用成功 (延遲: %sms, 數據源: %s)", meta["latency_ms"], meta["source"])
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[API_WORKER] ❌ {error_msg}")
-            import traceback
-            traceback.print_exc()
+            logger.error("[API_WORKER] %s", error_msg, exc_info=True)
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 try:
@@ -204,7 +224,7 @@ class DriverStandingsMDI(QWidget):
         1. API 調用 (https://api.f1telemetrystationpro.org)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
-        print(f"[DRIVER_MDI] 🚀 觸發初始載入: year={self.year}")
+        logger.info("[DRIVER_MDI] 觸發初始載入: year=%s", self.year)
         self.status_label.setText(tr("loading_status", "正在從 API 載入車手積分資料..."))
         self.progress_bar.setValue(10)
         self.progress_bar.show()
@@ -215,7 +235,7 @@ class DriverStandingsMDI(QWidget):
             "force_refresh": False  # 可選：強制刷新
         }
         
-        print("[DRIVER_MDI] 🌐 創建 API Worker...")
+        logger.debug("[DRIVER_MDI] 創建 API Worker")
         self.api_worker = ChampionshipStandingsApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -228,13 +248,13 @@ class DriverStandingsMDI(QWidget):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[DRIVER_MDI] ▶️  啟動 API 請求...")
+        logger.debug("[DRIVER_MDI] 啟動 API 請求")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[DRIVER_MDI] 📊 API 進度: {progress}%")
+        logger.debug("[DRIVER_MDI] API 進度: %s%%", progress)
         self.progress_bar.setValue(progress)
         self.status_label.setText(f"API 載入中... {progress}%")
     
@@ -242,14 +262,17 @@ class DriverStandingsMDI(QWidget):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[DRIVER_MDI] ✅ API 調用成功")
+            logger.info("[DRIVER_MDI] API 調用成功")
             
             # API 返回的 data 是完整的 JSON 內容（可能有雙層嵌套）
             api_response = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[DRIVER_MDI] 📦 數據源: {meta.get('source')}")
-            print(f"[DRIVER_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
+            logger.debug(
+                "[DRIVER_MDI] 數據源: %s | 延遲: %sms",
+                meta.get("source"),
+                meta.get("latency_ms"),
+            )
             
             # 處理雙層嵌套：API 返回的 data 可能包含完整的 CLI JSON 輸出
             if "data" in api_response and isinstance(api_response.get("data"), dict):
@@ -257,19 +280,23 @@ class DriverStandingsMDI(QWidget):
                 metadata = api_response.get("metadata", {})
                 inner_data = api_response.get("data", {})
                 drivers = inner_data.get("drivers", [])
-                print("[DRIVER_MDI] 📋 檢測到雙層嵌套結構 (CLI JSON)")
+                logger.debug("[DRIVER_MDI] 檢測到雙層嵌套結構 (CLI JSON)")
             else:
                 # 單層：data.drivers
                 metadata = api_response.get("metadata", {})
                 drivers = api_response.get("drivers", [])
-                print("[DRIVER_MDI] 📋 檢測到單層結構")
+                logger.debug("[DRIVER_MDI] 檢測到單層結構")
             
             # 驗證數據
             if not isinstance(drivers, list):
                 raise ValueError(f"API 數據缺少 'drivers' 列表，實際類型: {type(drivers)}")
             
-            print(f"[DRIVER_MDI] 📋 載入 {len(drivers)} 位車手")
-            print(f"[DRIVER_MDI] 📋 Metadata: season_year={metadata.get('season_year')}, round={metadata.get('resolved_round')}")
+            logger.debug(
+                "[DRIVER_MDI] 載入 %s 位車手 | Metadata: season_year=%s, round=%s",
+                len(drivers),
+                metadata.get("season_year"),
+                metadata.get("resolved_round"),
+            )
             
             # 轉換為顯示格式 (Widget 期望的格式)
             display_data = {
@@ -290,7 +317,12 @@ class DriverStandingsMDI(QWidget):
                     "points_delta": entry.get("points_delta")
                 })
             
-            print(f"[DRIVER_MDI] 📊 轉換後數據: {len(display_data['standings'])} 位車手, 年份={display_data.get('season_year')}, 輪次={display_data.get('round')}")
+            logger.info(
+                "[DRIVER_MDI] 轉換後數據: %s 位車手, 年份=%s, 輪次=%s",
+                len(display_data["standings"]),
+                display_data.get("season_year"),
+                display_data.get("round"),
+            )
             
             # 觸發載入完成處理
             self._on_data_loaded(display_data)
@@ -300,19 +332,17 @@ class DriverStandingsMDI(QWidget):
             self.status_label.setText(f"✅ 已從 {source_label} 載入資料")
             
         except Exception as e:
-            print(f"❌ [DRIVER_MDI] API 數據處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error("[DRIVER_MDI] API 數據處理失敗: %s", e, exc_info=True)
             self._on_api_failure(str(e))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - 嘗試本地 JSON 備援"""
-        print(f"❌ [DRIVER_MDI] API 調用失敗: {error_msg}")
+        logger.error("[DRIVER_MDI] API 調用失敗: %s", error_msg)
         self.status_label.setText(tr("api_failure_status", "API 失敗，嘗試本地檔案..."))
         
         # 備援：嘗試本地 JSON
-        print("[DRIVER_MDI] 🔄 嘗試本地 JSON 備援...")
+        logger.warning("[DRIVER_MDI] 嘗試本地 JSON 備援")
         self.data_loader.load_data(force_refresh=False)
     
     @pyqtSlot(str)
@@ -338,7 +368,7 @@ class DriverStandingsMDI(QWidget):
         Args:
             data: 轉換後的積分資料
         """
-        print(f"[DRIVER_MDI] 數據載入完成")
+        logger.info("[DRIVER_MDI] 數據載入完成")
         
         # 填充表格
         self.standings_widget.populate_table(data)
@@ -357,7 +387,7 @@ class DriverStandingsMDI(QWidget):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"[DRIVER_MDI] ❌ 載入錯誤: {error_msg}")
+        logger.error("[DRIVER_MDI] 載入錯誤: %s", error_msg)
         self.status_label.setText(tr("load_error_status", "載入失敗: {error}").format(error=error_msg))
         self.progress_bar.setValue(0)
         self.progress_bar.hide()

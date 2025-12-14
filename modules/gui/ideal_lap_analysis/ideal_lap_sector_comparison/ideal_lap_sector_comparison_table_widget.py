@@ -24,6 +24,10 @@ from typing import Dict, List, Any, Optional
 from core.gui_i18n import tr
 # ✅ 導入共用顏色配置和通用顏色系統
 from modules.gui.themes.color_palette_provider import color_palette_provider
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 try:
     from ..shared_colors import get_gap_color, get_cumulative_bar_color
 except ImportError:
@@ -193,7 +197,7 @@ class IdealLapSectorComparisonTableWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [SECTOR_COMPARISON_TABLE] 無效的數據格式")
+                logger.warning("[SECTOR_COMPARISON_TABLE] 無效的數據格式")
                 return
             
             # 提取排名數據
@@ -212,7 +216,7 @@ class IdealLapSectorComparisonTableWidget(QWidget):
             self._populate_table()
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON_TABLE] 更新數據失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_TABLE] 更新數據失敗: {e}")
     
     def _calculate_max_cumulative(self):
         """計算最大累積差異"""

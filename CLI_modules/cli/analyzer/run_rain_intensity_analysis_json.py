@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 降雨強度分析系統 - JSON輸出版本
 Rain Intensity Analysis System - JSON Output Version
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import pandas as pd
 import numpy as np
@@ -775,6 +784,14 @@ def save_rain_raw_data(session_info, rain_data):
     
     # 確保json資料夾存在
     import os
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     json_dir = "json"
     os.makedirs(json_dir, exist_ok=True)
     

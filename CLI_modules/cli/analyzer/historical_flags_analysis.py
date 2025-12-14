@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 歷年旗幟統計分析模組 - Function 100
 Historical Flags Analysis Module - Following Core Development Standards
@@ -10,6 +11,7 @@ Historical Flags Analysis Module - Following Core Development Standards
 """
 
 import os
+import sys
 import json
 import re
 from datetime import datetime, timezone
@@ -19,6 +21,12 @@ from typing import Dict, List, Any, Optional
 import fastf1
 import pandas as pd
 import numpy as np
+
+# 強制 UTF-8 輸出
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # 全域設定
 JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")

@@ -29,6 +29,22 @@ from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import QWidget, QSizePolicy
 from PyQt5.QtCore import Qt, pyqtSignal, QPoint, QRect
 from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWheelEvent
+from core.logger import get_logger
+
+logger = get_logger(component="gui")
+
+
+def _log_to_logger(*args, sep=" ", end=""):
+    message = sep.join(str(arg) for arg in args)
+    if message.startswith("[ERROR]") or "❌" in message:
+        logger.error(message)
+    elif message.startswith("[WARNING]") or "⚠️" in message:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
+print = _log_to_logger
 
 # 導入連動管理器
 try:
@@ -37,7 +53,7 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+    logger.warning("連動管理器導入失敗，將使用舊版連動功能")
 
 
 class ChartTheme:
@@ -521,12 +537,12 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         if x_position in valid_x_positions:
             self.x_title_position = x_position
         else:
-            print(f"⚠️ 無效的X軸標題位置: {x_position}. 可用選項: {valid_x_positions}")
+            logger.warning(f"無效的X軸標題位置: {x_position}. 可用選項: {valid_x_positions}")
             
         if y_position in valid_y_positions:
             self.y_title_position = y_position
         else:
-            print(f"⚠️ 無效的Y軸標題位置: {y_position}. 可用選項: {valid_y_positions}")
+            logger.warning(f"無效的Y軸標題位置: {y_position}. 可用選項: {valid_y_positions}")
             
         self.update()
     
@@ -564,8 +580,8 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             series_colors: 系列顏色 {'series1': QColor, 'series2': QColor}
         """
         # 基類的 set_data 方法不應該被直接調用
-        print(f"⚠️ [BASE_CHART] TelemetryChartWidgetBase.set_data 被調用 - 這通常表示子類沒有正確覆寫方法")
-        print(f"   - 調用者類型: {type(self)}")
+        logger.warning(f"[BASE_CHART] TelemetryChartWidgetBase.set_data 被調用 - 這通常表示子類沒有正確覆寫方法")
+        logger.debug(f"   - 調用者類型: {type(self)}")
         
         self.series_list.clear()
         
@@ -867,17 +883,17 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
     
     def _draw_axis_titles(self, painter: QPainter, rect: QRect):
         """繪製座標軸標題 - 統一配置位置"""
-        print(f"[BASE_CHART] 🎨 _draw_axis_titles 開始繪製")
-        print(f"  rect: {rect}")
-        print(f"  X軸標題: '{self.x_axis_title}' 位置: {self.x_title_position}")
-        print(f"  Y軸標題: '{self.y_axis_title}' 位置: {self.y_title_position}")
+        logger.debug(f"[BASE_CHART] 🎨 _draw_axis_titles 開始繪製")
+        logger.debug(f"  rect: {rect}")
+        logger.debug(f"  X軸標題: '{self.x_axis_title}' 位置: {self.x_title_position}")
+        logger.debug(f"  Y軸標題: '{self.y_axis_title}' 位置: {self.y_title_position}")
         
         painter.setFont(self.theme.AXIS_TITLE_FONT)
         painter.setPen(QPen(self.theme.TEXT_COLOR))
         
         # X軸標題
         if self.x_axis_title:
-            print(f"[BASE_CHART] 繪製X軸標題: '{self.x_axis_title}'")
+            logger.debug(f"[BASE_CHART] 繪製X軸標題: '{self.x_axis_title}'")
             if self.x_title_position == "bottom-left":
                 # 🎯 位置在X軸0點左邊（水平顯示）- 確保在可見區域內
                 x_title_rect = QRect(
@@ -886,7 +902,7 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                     80, 20                      # 寬度足夠顯示標題
                 )
                 painter.drawText(x_title_rect, Qt.AlignLeft | Qt.AlignVCenter, self.x_axis_title)
-                print(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
+                logger.info(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
             else:  # "bottom-center" (預設)
                 # 位置在圖表底部中央
                 x_title_rect = QRect(
@@ -895,11 +911,11 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                     100, 20
                 )
                 painter.drawText(x_title_rect, Qt.AlignCenter, self.x_axis_title)
-                print(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
+                logger.info(f"[BASE_CHART] ✅ X軸標題繪製完成: rect={x_title_rect}")
         
         # Y軸標題
         if self.y_axis_title:
-            print(f"[BASE_CHART] 繪製Y軸標題: '{self.y_axis_title}'")
+            logger.debug(f"[BASE_CHART] 繪製Y軸標題: '{self.y_axis_title}'")
             painter.save()
             # 🎯 Y軸標題始終在Y軸中間（垂直顯示）
             y_center = rect.center().y()
@@ -908,7 +924,7 @@ class TelemetryChartWidgetBase(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             y_title_rect = QRect(-40, -10, 80, 20)    # 更寬的矩形容納標題
             painter.drawText(y_title_rect, Qt.AlignCenter, self.y_axis_title)
             painter.restore()
-            print(f"[BASE_CHART] ✅ Y軸標題繪製完成: center_y={y_center}, x=30")
+            logger.info(f"[BASE_CHART] ✅ Y軸標題繪製完成: center_y={y_center}, x=30")
     
     def mouseMoveEvent(self, event: QMouseEvent):
         """滑鼠移動事件 - 增強版本"""

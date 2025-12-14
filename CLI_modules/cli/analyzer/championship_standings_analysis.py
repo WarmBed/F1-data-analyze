@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Championship standings utilities backed by FastF1/Ergast."""
 
 from __future__ import annotations
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import os
@@ -239,6 +248,14 @@ def _determine_standings_refresh_interval(year: int) -> float:
     except Exception as e:
         print(f"[STANDINGS] ❌ 判斷刷新間隔時出錯: {e}，降級使用正常模式")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return STANDINGS_REFRESH_HOURS_NORMAL
 

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 輪胎性能自動訓練系統
 
@@ -23,6 +25,15 @@
     # 訓練整季
     python train_tyre_model.py --year 2025 --all
     
+"""
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
     # 比較年度差異
     python train_tyre_model.py --compare 2024 2025
 """

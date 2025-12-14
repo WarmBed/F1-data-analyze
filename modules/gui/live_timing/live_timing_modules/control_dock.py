@@ -38,7 +38,6 @@ try:
     REALTIME_AVAILABLE = WEBSOCKETS_AVAILABLE
 except ImportError:
     REALTIME_AVAILABLE = False
-    print("[CONTROL_DOCK] RealTimeLiveF1DataSource not available")
 
 # 導入賽季日曆相關
 try:
@@ -50,7 +49,6 @@ try:
     SEASON_CALENDAR_AVAILABLE = True
 except ImportError:
     SEASON_CALENDAR_AVAILABLE = False
-    print("[CONTROL_DOCK] SeasonCalendarProvider not available, using fallback")
 
 
 class RaceLoaderThread(QThread):
@@ -74,15 +72,18 @@ class RaceLoaderThread(QThread):
         self._session_name = session_name
     
     def run(self):
-        """執行背景載入"""
+        """Execute background loading"""
         try:
+            # Interruption check 1: at start
+            if self.isInterruptionRequested():
+                return
             self.load_started.emit()
             
-            # 進度回調 - 從 DataManager 接收真實進度
+            # Progress callback - receive real progress from DataManager
             def progress_callback(percent, message):
                 self.load_progress.emit(percent, message)
             
-            # 調用 DataManager 載入（帶進度回調）
+            # Call DataManager load (with progress callback)
             success = self._data_manager.load_race(
                 self._year, 
                 self._race_key, 
@@ -90,6 +91,10 @@ class RaceLoaderThread(QThread):
                 source_type="local",
                 progress_callback=progress_callback
             )
+            
+            # Interruption check 2: after loading
+            if self.isInterruptionRequested():
+                return
             
             if success:
                 self.load_finished.emit(True, tr("Race data loaded successfully", "Race data loaded successfully"))
@@ -100,6 +105,9 @@ class RaceLoaderThread(QThread):
             print(f"[RACE_LOADER] Error: {e}")
             import traceback
             traceback.print_exc()
+            # Interruption check: do not emit error signal when interrupted
+            if self.isInterruptionRequested():
+                return
             self.load_finished.emit(False, str(e))
 
 class LiveTimingControlDock(QDockWidget):
@@ -172,8 +180,6 @@ class LiveTimingControlDock(QDockWidget):
         
         # 初始化賽事列表（與主視窗同步）
         self._initialize_race_combo()
-        
-        print("[CONTROL_DOCK] LiveTimingControlDock initialized")
     
     def _setup_ui(self):
         """設置 UI"""
@@ -429,18 +435,15 @@ class LiveTimingControlDock(QDockWidget):
                 "realtime_available",
                 "Realtime mode available - Connected to F1TV"
             ))
-            print("[CONTROL_DOCK] F1TV authenticated - Realtime mode enabled")
         else:
             self.radio_realtime.setToolTip(tr(
                 "realtime_requires_f1tv",
                 "Realtime mode requires F1TV account login"
             ))
-            print("[CONTROL_DOCK] F1TV not authenticated - Realtime mode disabled")
             
             # 如果當前在 Realtime 模式，強制切換到 Historical
             if self._mode == self.MODE_REALTIME:
                 self.radio_historical.setChecked(True)
-                print("[CONTROL_DOCK] Forced switch to Historical mode")
     
     def is_f1tv_authenticated(self) -> bool:
         """檢查 F1TV 是否已認證"""
@@ -458,7 +461,6 @@ class LiveTimingControlDock(QDockWidget):
         
         self._update_mode_ui()
         self.mode_changed.emit(self._mode)
-        print(f"[CONTROL_DOCK] Mode changed to: {self._mode}")
     
     def _update_mode_ui(self):
         """更新模式 UI"""
@@ -473,12 +475,9 @@ class LiveTimingControlDock(QDockWidget):
     # ===========================================
     def _on_connect_clicked(self):
         """連接即時 Live Timing"""
-        print("[CONTROL_DOCK] Connect clicked - starting realtime connection")
-        
         if not REALTIME_AVAILABLE:
             self.lbl_connection_status.setText(tr("websockets not installed", "No websockets"))
             self.lbl_connection_status.setStyleSheet("color: #F44336; font-weight: bold;")
-            print("[CONTROL_DOCK] websockets package not installed")
             return
         
         if self._realtime_source is None:
@@ -504,8 +503,6 @@ class LiveTimingControlDock(QDockWidget):
     
     def _on_disconnect_clicked(self):
         """斷開連接"""
-        print("[CONTROL_DOCK] Disconnect clicked")
-        
         if self._realtime_source:
             self._realtime_source.stop_connection()
         
@@ -519,8 +516,6 @@ class LiveTimingControlDock(QDockWidget):
     @pyqtSlot(str)
     def _on_realtime_connection_changed(self, status: str):
         """即時連接狀態變更"""
-        print(f"[CONTROL_DOCK] Realtime connection status: {status}")
-        
         if "connected" in status.lower() or "established" in status.lower():
             self.lbl_connection_status.setText(tr("Connected", "Connected"))
             self.lbl_connection_status.setStyleSheet("color: #4CAF50; font-weight: bold;")
@@ -553,17 +548,12 @@ class LiveTimingControlDock(QDockWidget):
             self.lbl_connection_status.setText(status_text)
             self.lbl_connection_status.setStyleSheet("color: #4CAF50; font-weight: bold;")
         
-        # 調試輸出（每 10 個快照輸出一次）
-        if self._realtime_snapshot_count % 10 == 1:
-            print(f"[CONTROL_DOCK] Snapshot #{self._realtime_snapshot_count}: {driver_count} drivers, lap {current_lap}/{total_laps}")
-        
         # 將即時快照發送給 DataManager
         self._data_manager.update_realtime_snapshot(snapshot)
     
     @pyqtSlot(str)
     def _on_realtime_error(self, error: str):
         """即時連接錯誤"""
-        print(f"[CONTROL_DOCK] Realtime error: {error}")
         self.lbl_connection_status.setText(tr("Error", "Error"))
         self.lbl_connection_status.setStyleSheet("color: #F44336; font-weight: bold;")
     
@@ -601,8 +591,6 @@ class LiveTimingControlDock(QDockWidget):
             "FP3": "Practice 3",
         }
         session_name = session_map.get(session_code, session_code)
-        
-        print(f"[CONTROL_DOCK] Loading: {year} / {race_key} / {session_name}")
         
         # 禁用載入按鈕，顯示進度條
         self.btn_load.setEnabled(False)
@@ -661,12 +649,10 @@ class LiveTimingControlDock(QDockWidget):
     def _on_rewind_clicked(self):
         """倒退 30 秒"""
         self._data_manager.seek_by_offset(-30.0)
-        print("[CONTROL_DOCK] Rewind 30 seconds")
     
     def _on_forward_clicked(self):
         """快進 30 秒"""
         self._data_manager.seek_by_offset(30.0)
-        print("[CONTROL_DOCK] Forward 30 seconds")
     
     def _on_speed_changed(self, speed_text: str):
         """速度變更"""
@@ -698,8 +684,6 @@ class LiveTimingControlDock(QDockWidget):
     # ===========================================
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """賽事載入完成"""
-        print(f"[CONTROL_DOCK] Race loaded: {race_info.get('race_name', 'Unknown')}")
-        
         total_snapshots = race_info.get('total_snapshots', 0)
         duration = race_info.get('duration_seconds', 0)
         
@@ -716,8 +700,6 @@ class LiveTimingControlDock(QDockWidget):
     
     def _on_race_unloaded(self):
         """賽事卸載"""
-        print("[CONTROL_DOCK] Race unloaded")
-        
         self.lbl_time.setText("00:00:00")
         self.lbl_total_time.setText("/ 00:00:00")
         self.lbl_progress.setText("0 / 0")
@@ -728,7 +710,6 @@ class LiveTimingControlDock(QDockWidget):
     
     def _on_playback_state_changed(self, state: str):
         """播放狀態變更"""
-        print(f"[CONTROL_DOCK] Playback state: {state}")
         self._update_play_button(state)
     
     def _on_time_changed(self, time_seconds: float):
@@ -811,8 +792,6 @@ class LiveTimingControlDock(QDockWidget):
         
         # 載入賽事列表
         self._refresh_race_combo_for_year(initial_year)
-        
-        print(f"[CONTROL_DOCK] Initialized race combo for year {initial_year}")
     
     def _get_calendar_events(self, year: int) -> List[Any]:
         """獲取指定年份的賽事列表（優先使用主視窗快取）"""
@@ -833,7 +812,6 @@ class LiveTimingControlDock(QDockWidget):
                 self._season_events_cache[year] = events
             return events
         except Exception as e:
-            print(f"[CONTROL_DOCK] Failed to get calendar events: {e}")
             return self._season_events_cache.get(year, [])
     
     def _refresh_race_combo_for_year(self, year: int):

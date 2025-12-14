@@ -3,6 +3,9 @@
 """
 import sys
 import fastf1
+from core.logger import get_logger
+
+logger = get_logger("live_timing_test.compare_data_frequency", component="gui")
 
 # 設置 UTF-8 編碼
 if sys.platform == 'win32':
@@ -14,9 +17,9 @@ from Live_timing_test.demo_histroy_live_position_tracking import LiveF1DataSourc
 
 def analyze_livef1_frequency():
     """分析 Live F1 數據更新頻率"""
-    print("=" * 70)
-    print("Live F1 數據更新頻率分析")
-    print("=" * 70)
+    logger.info("%s", "=" * 70)
+    logger.info("Live F1 數據更新頻率分析")
+    logger.info("%s", "=" * 70)
     
     data_source = LiveF1DataSource(
         year=2025,
@@ -24,7 +27,7 @@ def analyze_livef1_frequency():
         session="2025-04-06_Race"
     )
     
-    print("\n載入資料...")
+    logger.info("載入資料...")
     data_source.load_all_data()
     
     position_data = data_source.get_position_data()
@@ -54,11 +57,11 @@ def analyze_livef1_frequency():
             min_interval = min(intervals)
             max_interval = max(intervals)
             
-            print(f"\n{name}:")
-            print(f"  總記錄數: {len(data)}")
-            print(f"  平均間隔: {avg_interval:.3f} 秒 ({1/avg_interval:.1f} Hz)")
-            print(f"  最小間隔: {min_interval:.3f} 秒")
-            print(f"  最大間隔: {max_interval:.3f} 秒")
+            logger.info("%s:", name)
+            logger.info("  總記錄數: %s", len(data))
+            logger.info("  平均間隔: %.3f 秒 (%.1f Hz)", avg_interval, 1 / avg_interval)
+            logger.info("  最小間隔: %.3f 秒", min_interval)
+            logger.info("  最大間隔: %.3f 秒", max_interval)
     
     calc_intervals(position_data, "Position 資料")
     calc_intervals(timing_data, "Timing 資料")
@@ -66,14 +69,14 @@ def analyze_livef1_frequency():
 
 def analyze_fastf1_frequency():
     """分析 FastF1 數據更新頻率"""
-    print("\n" + "=" * 70)
-    print("FastF1 數據更新頻率分析")
-    print("=" * 70)
+    logger.info("%s", "=" * 70)
+    logger.info("FastF1 數據更新頻率分析")
+    logger.info("%s", "=" * 70)
     
     try:
         # 使用 2024 年的資料（因為 2025 可能還沒有）
         session = fastf1.get_session(2024, 'Japan', 'R')
-        print("\n載入 FastF1 資料...")
+        logger.info("載入 FastF1 資料...")
         session.load(telemetry=True)
         
         # 取得某位車手的遙測資料
@@ -91,11 +94,11 @@ def analyze_fastf1_frequency():
                     min_interval = valid_diffs.min()
                     max_interval = valid_diffs.max()
                     
-                    print(f"\nFastF1 遙測資料 (VER Lap 1):")
-                    print(f"  總資料點數: {len(telemetry)}")
-                    print(f"  平均間隔: {avg_interval:.3f} 秒 ({1/avg_interval:.1f} Hz)")
-                    print(f"  最小間隔: {min_interval:.3f} 秒")
-                    print(f"  最大間隔: {max_interval:.3f} 秒")
+                    logger.info("FastF1 遙測資料 (VER Lap 1):")
+                    logger.info("  總資料點數: %s", len(telemetry))
+                    logger.info("  平均間隔: %.3f 秒 (%.1f Hz)", avg_interval, 1 / avg_interval)
+                    logger.info("  最小間隔: %.3f 秒", min_interval)
+                    logger.info("  最大間隔: %.3f 秒", max_interval)
         
         # 車手位置資料
         position_data = session.laps.pick_driver('VER').get_pos_data()
@@ -105,12 +108,12 @@ def analyze_fastf1_frequency():
             
             if len(valid_diffs) > 0:
                 avg_interval = valid_diffs.mean()
-                print(f"\nFastF1 位置資料 (VER):")
-                print(f"  總資料點數: {len(position_data)}")
-                print(f"  平均間隔: {avg_interval:.3f} 秒 ({1/avg_interval:.1f} Hz)")
+                logger.info("FastF1 位置資料 (VER):")
+                logger.info("  總資料點數: %s", len(position_data))
+                logger.info("  平均間隔: %.3f 秒 (%.1f Hz)", avg_interval, 1 / avg_interval)
                 
     except Exception as e:
-        print(f"\n無法載入 FastF1 資料: {e}")
+            logger.exception("無法載入 FastF1 資料: %s", e)
 
 def time_to_seconds(time_str):
     """轉換時間戳為秒數"""
@@ -121,14 +124,14 @@ def time_to_seconds(time_str):
         return 0.0
 
 def main():
-    print("F1 數據更新頻率比較分析\n")
+    logger.info("F1 數據更新頻率比較分析")
     
     analyze_livef1_frequency()
     analyze_fastf1_frequency()
     
-    print("\n" + "=" * 70)
-    print("分析完成")
-    print("=" * 70)
+    logger.info("%s", "=" * 70)
+    logger.info("分析完成")
+    logger.info("%s", "=" * 70)
 
 if __name__ == "__main__":
     main()

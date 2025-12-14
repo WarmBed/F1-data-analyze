@@ -13,6 +13,10 @@ import numpy as np
 from datetime import datetime
 from prettytable import PrettyTable
 import traceback
+from core.logger import get_logger
+
+
+logger = get_logger("accident_analysis", component="gui")
 
 def generate_cache_key(session_info):
     """生成快取鍵值"""
@@ -56,20 +60,22 @@ def format_time(time_obj):
 def report_analysis_results(data, analysis_type="事故分析"):
     """報告分析結果狀態 - 符合核心開發要求"""
     if not data:
-        print(f"❌ {analysis_type}失敗：無可用數據")
+        logger.error("❌ %s失敗：無可用數據", analysis_type)
         return False
     
     total_incidents = data.get('total_incidents', 0)
     incident_details = data.get('incident_details', [])
     affected_drivers = data.get('affected_drivers', 0)
     
-    print(f"📊 {analysis_type}結果摘要：")
-    print(f"   • 總事故數量: {total_incidents}")
-    print(f"   • 詳細記錄數量: {len(incident_details)}")
-    print(f"   • 涉及車手數量: {affected_drivers}")
-    print(f"   • 數據完整性: {'✅ 良好' if total_incidents > 0 else '⚠️ 無事故記錄'}")
-    
-    print(f"✅ {analysis_type}分析完成！")
+    logger.info(
+        "📊 %s結果摘要： 總事故數量: %s, 詳細記錄數量: %s, 涉及車手數量: %s, 數據完整性: %s",
+        analysis_type,
+        total_incidents,
+        len(incident_details),
+        affected_drivers,
+        "✅ 良好" if total_incidents > 0 else "⚠️ 無事故記錄"
+    )
+    logger.info("✅ %s分析完成！", analysis_type)
     return True
 
 def analyze_accidents_from_session(session):
@@ -148,7 +154,7 @@ def analyze_accidents_from_session(session):
         }
         
     except Exception as e:
-        print(f"[ERROR] 分析事故數據時發生錯誤: {e}")
+        logger.exception("[ERROR] 分析事故數據時發生錯誤: %s", e)
         return None
 
 def categorize_incident(message):
@@ -180,11 +186,11 @@ def assess_severity(message):
 def display_accident_analysis(data):
     """顯示事故分析結果表格"""
     if not data or data['total_incidents'] == 0:
-        print("\n📋 事故分析結果:")
-        print("✅ 本場比賽未發現任何事故記錄，比賽進行順利！")
+        logger.info("\n📋 事故分析結果:")
+        logger.info("✅ 本場比賽未發現任何事故記錄，比賽進行順利！")
         return
     
-    print(f"\n📋 事故分析結果:")
+    logger.info("\n📋 事故分析結果:")
     
     # 1. 事故摘要表格
     summary_table = PrettyTable()
@@ -199,8 +205,8 @@ def display_accident_analysis(data):
             percentage = f"{(count/total)*100:.1f}%" if total > 0 else "0%"
             summary_table.add_row([category.title(), count, percentage])
     
-    print("\n📊 事故統計摘要:")
-    print(summary_table)
+    logger.info("\n📊 事故統計摘要:")
+    logger.info("%s", summary_table)
     
     # 2. 嚴重程度分佈表格
     severity_table = PrettyTable()
@@ -211,8 +217,8 @@ def display_accident_analysis(data):
             percentage = f"{(count/total)*100:.1f}%" if total > 0 else "0%"
             severity_table.add_row([severity, count, percentage])
     
-    print("\n⚠️ 嚴重程度分佈:")
-    print(severity_table)
+    logger.info("\n⚠️ 嚴重程度分佈:")
+    logger.info("%s", severity_table)
     
     # 3. 詳細事故記錄表格
     detail_table = PrettyTable()
@@ -229,11 +235,11 @@ def display_accident_analysis(data):
             incident['message'][:50] + "..." if len(incident['message']) > 50 else incident['message']
         ])
     
-    print(f"\n📋 詳細事故記錄 (顯示前10筆，共{len(data['incident_details'])}筆):")
-    print(detail_table)
+    logger.info("\n📋 詳細事故記錄 (顯示前10筆，共%s筆):", len(data['incident_details']))
+    logger.info("%s", detail_table)
     
     if len(data['incident_details']) > 10:
-        print(f"   💡 完整記錄已保存至 JSON 檔案")
+        logger.info("   💡 完整記錄已保存至 JSON 檔案")
 
 def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
@@ -258,15 +264,15 @@ def save_json_results(data, session_info):
             json.dump(json_result, f, ensure_ascii=False, indent=2)
         
         abs_filepath = os.path.abspath(filepath)
-        print(f"💾 JSON結果已保存到: file:///{abs_filepath}")
+        logger.info("💾 JSON結果已保存到: file:///%s", abs_filepath)
         return True
     except Exception as e:
-        print(f"❌ JSON保存失敗: {e}")
+        logger.exception("❌ JSON保存失敗: %s", e)
         return False
 
 def run_accident_analysis(data_loader, year=None, race=None, session='R'):
     """執行事故分析 - 符合核心開發原則的主要函數"""
-    print("🚀 開始執行事故分析...")
+    logger.info("🚀 開始執行事故分析...")
     
     # 1. 獲取賽事資訊
     session_info = {
@@ -289,22 +295,22 @@ def run_accident_analysis(data_loader, year=None, race=None, session='R'):
     cached_data = check_cache(cache_key)
     
     if cached_data:
-        print("📦 使用緩存數據")
+        logger.info("📦 使用緩存數據")
         analysis_data = cached_data
     else:
-        print("🔄 重新計算 - 開始數據分析...")
+        logger.info("🔄 重新計算 - 開始數據分析...")
         
         # 3. 執行分析
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             analysis_data = analyze_accidents_from_session(data_loader.session)
         else:
-            print("❌ 無法獲取賽事數據")
+            logger.error("❌ 無法獲取賽事數據")
             return None
         
         if analysis_data:
             # 4. 保存快取
             if save_cache(analysis_data, cache_key):
-                print("💾 分析結果已緩存")
+                logger.info("💾 分析結果已緩存")
     
     # 5. 結果驗證和反饋
     if not report_analysis_results(analysis_data, "事故分析"):
@@ -316,13 +322,13 @@ def run_accident_analysis(data_loader, year=None, race=None, session='R'):
     # 7. 保存 JSON 結果
     save_json_results(analysis_data, session_info)
     
-    print("\n✅ 事故分析完成！")
+    logger.info("\n✅ 事故分析完成！")
     return analysis_data
 
 def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False):
     """執行事故分析並返回JSON格式結果 - API專用版本"""
     if enable_debug:
-        print(f"\n[NEW_MODULE] 執行新版事故分析模組 (JSON輸出版)...")
+        logger.info("\n[NEW_MODULE] 執行新版事故分析模組 (JSON輸出版)...")
     
     try:
         # 獲取賽事資訊
@@ -366,8 +372,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
             
     except Exception as e:
         if enable_debug:
-            print(f"[ERROR] 事故分析模組執行錯誤: {e}")
-            traceback.print_exc()
+            logger.exception("[ERROR] 事故分析模組執行錯誤: %s", e)
         return {
             "success": False,
             "message": f"事故分析執行錯誤: {str(e)}",
@@ -376,5 +381,5 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
         }
 
 if __name__ == "__main__":
-    print("F1 事故分析模組 - 獨立測試模式")
-    print("此模組需要配合 F1 數據載入器使用")
+    logger.info("F1 事故分析模組 - 獨立測試模式")
+    logger.info("此模組需要配合 F1 數據載入器使用")

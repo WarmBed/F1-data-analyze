@@ -36,6 +36,9 @@ from typing import Dict, List, Any, Optional, Tuple
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class LapTimeBoxPlotChartWidget(QWidget):
     """圈速箱型圖圖表組件 (純 PyQt5 QPainter 實現)"""
@@ -84,7 +87,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         # 設置最小尺寸（與其他通用模組一致：Rain, Tire, Driver Lap 都是 200x100）
         self.setMinimumSize(200, 100)  # 統一為 200x100，提供更高的佈局靈活性
         
-        print("[BOXPLOT_CHART] 圖表組件初始化完成 (QPainter 版本)")
+        logger.debug("[BOXPLOT_CHART] 圖表組件初始化完成 (QPainter 版本)")
         
     def update_data(self, data: Dict[str, Any]):
         """
@@ -98,7 +101,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [BOXPLOT_CHART] 無效的數據格式")
+                logger.warning("[BOXPLOT_CHART] 無效的數據格式")
                 return
                 
             self.current_data = data
@@ -107,18 +110,18 @@ class LapTimeBoxPlotChartWidget(QWidget):
             self._ensure_palette_for_data(data)
             
             if not self.driver_laptimes:
-                print("[WARNING] [BOXPLOT_CHART] 沒有圈速數據")
+                logger.warning("[BOXPLOT_CHART] 沒有圈速數據")
                 self.update()
                 return
                 
             # 計算 Y 軸範圍
             self._calculate_y_range()
             
-            print(f"[BOXPLOT_CHART] 更新數據: {len(self.driver_laptimes)} 位車手")
+            logger.debug(f"[BOXPLOT_CHART] 更新數據: {len(self.driver_laptimes)} 位車手")
             self.update()  # 觸發重繪
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 更新數據失敗: {e}")
+            logger.error(f"[BOXPLOT_CHART] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
             
@@ -324,7 +327,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
         
         if not visible_drivers:
-            print("[BOXPLOT_CHART] 所有車手都被隱藏")
+            logger.debug("[BOXPLOT_CHART] 所有車手都被隱藏")
             return
         
         n_drivers = len(visible_drivers)
@@ -477,7 +480,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
             )
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 繪製箱型圖失敗 ({driver}): {e}")
+            logger.error(f"[BOXPLOT_CHART] 繪製箱型圖失敗 ({driver}): {e}")
             
     def _draw_title(self, painter: QPainter):
         """繪製標題"""
@@ -673,26 +676,26 @@ class LapTimeBoxPlotChartWidget(QWidget):
     
     def mousePressEvent(self, event: QMouseEvent):
         """滑鼠點擊事件處理（左鍵和右鍵）"""
-        print(f"[BOXPLOT_CHART] 🖱️ mousePressEvent 被觸發！")
-        print(f"[BOXPLOT_CHART]    - 滑鼠位置: {event.pos()}")
-        print(f"[BOXPLOT_CHART]    - 按鍵類型: {event.button()} (Left=1, Right=2)")
+        logger.debug(f"[BOXPLOT_CHART] 🖱️ mousePressEvent 被觸發！")
+        logger.debug(f"[BOXPLOT_CHART] - 滑鼠位置: {event.pos()}")
+        logger.debug(f"[BOXPLOT_CHART] - 按鍵類型: {event.button()} (Left=1, Right=2)")
         
         # 實時檢測點擊位置的車手（不依賴 hover_driver）
         driver = self._detect_hovered_driver(event.pos())
-        print(f"[BOXPLOT_CHART]    - 檢測到車手: {driver}")
+        logger.debug(f"[BOXPLOT_CHART] - 檢測到車手: {driver}")
         
         if not driver:
-            print(f"[BOXPLOT_CHART]    ❌ 沒有檢測到車手，退出")
+            logger.error(f"[BOXPLOT_CHART] ❌ 沒有檢測到車手，退出")
             return
         
         # 左鍵：發射點擊信號
         if event.button() == Qt.LeftButton:
-            print(f"[BOXPLOT_CHART]    ✅ 左鍵點擊 {driver}")
+            logger.info(f"[BOXPLOT_CHART] ✅ 左鍵點擊 {driver}")
             self.chart_clicked.emit(driver)
         
         # 右鍵：顯示選單
         elif event.button() == Qt.RightButton:
-            print(f"[BOXPLOT_CHART]    ✅ 右鍵點擊 {driver}，準備顯示選單")
+            logger.info(f"[BOXPLOT_CHART] ✅ 右鍵點擊 {driver}，準備顯示選單")
             self._show_context_menu(driver, event)
             
     def export_chart(self, filepath: str) -> bool:
@@ -707,7 +710,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         """
         try:
             if not self.current_data or not self.driver_laptimes:
-                print("[WARNING] [BOXPLOT_CHART] 無數據可匯出")
+                logger.warning("[BOXPLOT_CHART] 無數據可匯出")
                 return False
                 
             # 創建高解析度圖像
@@ -727,15 +730,16 @@ class LapTimeBoxPlotChartWidget(QWidget):
             success = image.save(filepath)
             
             if success:
-                print(f"[BOXPLOT_CHART] 圖表已匯出: {filepath}")
+                logger.debug(f"[BOXPLOT_CHART] 圖表已匯出: {filepath}")
             else:
-                print(f"[ERROR] [BOXPLOT_CHART] 圖表匯出失敗")
+                logger.error(f"[BOXPLOT_CHART] 圖表匯出失敗")
                 
             return success
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 匯出圖表失敗: {e}")
+            logger.error(f"[BOXPLOT_CHART] 匯出圖表失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False
             
@@ -747,7 +751,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         self.hover_driver = None
         self.hover_position = None
         self.update()
-        print("[BOXPLOT_CHART] 圖表已清空")
+        logger.debug("[BOXPLOT_CHART] 圖表已清空")
         
     def get_current_data(self) -> Optional[Dict]:
         """獲取當前數據"""
@@ -777,9 +781,9 @@ class LapTimeBoxPlotChartWidget(QWidget):
         try:
             menu.exec_(QCursor.pos())
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 顯示選單失敗: {e}")
+            logger.error(f"[BOXPLOT_CHART] 顯示選單失敗: {e}")
         
-        print(f"[BOXPLOT_CHART] 顯示右鍵選單: {driver}")
+        logger.debug(f"[BOXPLOT_CHART] 顯示右鍵選單: {driver}")
     
     def _hide_driver(self, driver: str):
         """
@@ -789,13 +793,13 @@ class LapTimeBoxPlotChartWidget(QWidget):
             driver: 車手代碼
         """
         if driver in self.hidden_drivers:
-            print(f"[BOXPLOT_CHART] 車手 {driver} 已經被隱藏")
+            logger.debug(f"[BOXPLOT_CHART] 車手 {driver} 已經被隱藏")
             return
         
         # 添加到隱藏集合
         self.hidden_drivers.add(driver)
-        print(f"[BOXPLOT_CHART] 隱藏車手: {driver}")
-        print(f"[BOXPLOT_CHART] 當前隱藏車手: {self.hidden_drivers}")
+        logger.debug(f"[BOXPLOT_CHART] 隱藏車手: {driver}")
+        logger.debug(f"[BOXPLOT_CHART] 當前隱藏車手: {self.hidden_drivers}")
         
         # 重新計算 Y 軸範圍（只考慮可見車手）
         self._calculate_y_range()
@@ -810,13 +814,13 @@ class LapTimeBoxPlotChartWidget(QWidget):
         這是一個公開方法，供 MDI 視窗的 "Show All Data" 按鈕調用
         """
         if not self.hidden_drivers:
-            print("[BOXPLOT_CHART] 沒有隱藏的車手需要恢復")
+            logger.debug("[BOXPLOT_CHART] 沒有隱藏的車手需要恢復")
             return
         
         # 清空隱藏集合
         hidden_count = len(self.hidden_drivers)
         self.hidden_drivers.clear()
-        print(f"[BOXPLOT_CHART] 已恢復 {hidden_count} 個隱藏車手")
+        logger.debug(f"[BOXPLOT_CHART] 已恢復 {hidden_count} 個隱藏車手")
         
         # 重新計算 Y 軸範圍（包含所有車手）
         self._calculate_y_range()

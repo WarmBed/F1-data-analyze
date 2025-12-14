@@ -50,6 +50,9 @@ except ImportError:
     from modules.gui.base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
 
 
+    logger = get_logger(component="rain_analysis_mdi")
+
+
 class RainAnalysisApiWorker(QThread):
     """Background worker that fetches rain analysis data from the REST API."""
 
@@ -65,6 +68,11 @@ class RainAnalysisApiWorker(QThread):
 
     def run(self):
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RAIN_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -76,6 +84,11 @@ class RainAnalysisApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[RAIN_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -83,6 +96,12 @@ class RainAnalysisApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RAIN_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             response.raise_for_status()
 
@@ -107,12 +126,21 @@ class RainAnalysisApiWorker(QThread):
                 "base_url": self.base_url,
             }
 
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RAIN_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class RainAnalysisDataManager(UniversalDataLoader):
@@ -157,8 +185,8 @@ class RainAnalysisDataManager(UniversalDataLoader):
             f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
         )
         
-        print(f"[RAIN_DATA_MANAGER] 初始化完成, 搜索目錄: {self.config.search_directories}")
-        print(f"[RAIN_DATA_MANAGER] 文件模式: {self.config.file_patterns}")
+        logger.debug("[RAIN_DATA_MANAGER] 初始化完成, 搜索目錄: %s", self.config.search_directories)
+        logger.debug("[RAIN_DATA_MANAGER] 文件模式: %s", self.config.file_patterns)
         
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """驗證載入參數"""
@@ -590,6 +618,9 @@ class RainAnalysisDataManager(UniversalDataLoader):
 # 導入專用圖表組件
 from .rain_analysis_chart_widget import RainAnalysisChartWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class RainAnalysisControlWidget(QWidget):
     """下雨分析控制面板"""
@@ -674,7 +705,7 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
         parent=None,
         **kwargs,
     ):
-        print(f"[RAIN_MDI] RainAnalysisUniversal 開始初始化...")
+        logger.info("[RAIN_MDI] RainAnalysisUniversal 開始初始化...")
         
         # 註冊下雨分析模組類型
         if "rain_weather" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
@@ -691,17 +722,17 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
             UniversalAnalysisMDI.register_mdi_module_type("rain_weather", rain_config)
             
         super().__init__("rain_weather", parent)
-        print(f"[RAIN_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
+        logger.info("[RAIN_MDI] 基類初始化完成, 數據管理器: %s", self.data_manager)
         
         # 初始化模組組件
-        print(f"[RAIN_MDI] 開始初始化模組組件...")
+        logger.info("[RAIN_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
-            print(f"[RAIN_MDI] ❌ 模組組件初始化失敗")
+            logger.error("[RAIN_MDI] ❌ 模組組件初始化失敗")
             return
         
-        print(f"[RAIN_MDI] ✅ 模組組件初始化完成")
-        print(f"[RAIN_MDI] 數據管理器: {self.data_manager}")
-        print(f"[RAIN_MDI] 圖表組件: {self.chart_widget}")
+        logger.info("[RAIN_MDI] ✅ 模組組件初始化完成")
+        logger.debug("[RAIN_MDI] 數據管理器: %s", self.data_manager)
+        logger.debug("[RAIN_MDI] 圖表組件: %s", self.chart_widget)
         
         # 參照遙測分析：設置響應式佈局
         self.set_responsive_layout()
@@ -739,8 +770,8 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         """更新降雨分析參數"""
         try:
-            print(f"[RAIN_MDI] ========== 降雨參數更新 ==========")
-            print(f"[RAIN_MDI] 收到參數: {year} {race} {session}")
+            logger.info("[RAIN_MDI] ========== 降雨參數更新 ==========")
+            logger.info("[RAIN_MDI] 收到參數: %s %s %s", year, race, session)
             
             # 更新當前參數
             self.current_year = int(year) if isinstance(year, str) else year
@@ -748,24 +779,24 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
             self.current_session = session
             
             # ✅ 更新視窗標題（響應賽事切換）
-            print(f"[RAIN_MDI] 更新視窗標題...")
+            logger.debug("[RAIN_MDI] 更新視窗標題...")
             self.update_window_title()
             
             # 更新數據管理器參數
             if hasattr(self, 'data_manager') and self.data_manager:
-                print(f"[RAIN_MDI] 更新數據管理器參數...")
+                logger.debug("[RAIN_MDI] 更新數據管理器參數...")
                 self.data_manager.year = self.current_year
                 self.data_manager.race = self.current_race
                 self.data_manager.session = self.current_session
                 
                 # 載入數據 - 傳遞正確的參數
-                print(f"[RAIN_MDI] 開始載入數據...")
+                logger.info("[RAIN_MDI] 開始載入數據...")
                 result = self.data_manager.load_data(
                     year=self.current_year,
                     race=self.current_race,
                     session=self.current_session
                 )
-                print(f"[RAIN_MDI] 數據載入結果: {result}")
+                logger.info("[RAIN_MDI] 數據載入結果: %s", result)
                 
                 # 如果有數據，更新圖表
                 if result and hasattr(self, 'chart_widget') and self.chart_widget:
@@ -776,18 +807,15 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
                     if charts_payload is None:
                         charts_payload = self.data_manager._prepare_chart_data()
                     if charts_payload:
-                        print(f"[RAIN_MDI] 更新圖表數據...")
+                        logger.info("[RAIN_MDI] 更新圖表數據...")
                         chart_data = {"charts_data": charts_payload}
                         self.chart_widget.update_data(chart_data)
             
-            print(f"[RAIN_MDI] 參數更新完成")
+            logger.info("[RAIN_MDI] 參數更新完成")
             return True
             
         except Exception as e:
-            print(f"[RAIN_MDI] 參數更新失敗: {str(e)}")
-            import traceback
-            print(f"[RAIN_MDI] 錯誤詳情:")
-            traceback.print_exc()
+            logger.exception("[RAIN_MDI] 參數更新失敗", exc_info=e)
             return False
     
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
@@ -824,20 +852,26 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
             old_size = event.oldSize()
             new_size = event.size()
             
-            print(f"[RAIN_MDI] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+            logger.debug(
+                "[RAIN_MDI] resizeEvent: MDI視窗縮放 %sx%s -> %sx%s",
+                old_size.width(),
+                old_size.height(),
+                new_size.width(),
+                new_size.height(),
+            )
             
             # 通知圖表組件更新佈局
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 if hasattr(self.chart_widget, 'update_chart_layout'):
-                    print("[RAIN_MDI] resizeEvent: 觸發圖表重新佈局")
+                    logger.debug("[RAIN_MDI] resizeEvent: 觸發圖表重新佈局")
                     self.chart_widget.update_chart_layout()
                 else:
-                    print("[RAIN_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
+                    logger.debug("[RAIN_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
             else:
-                print("[RAIN_MDI] resizeEvent: 圖表組件尚未初始化")
+                logger.debug("[RAIN_MDI] resizeEvent: 圖表組件尚未初始化")
                 
         except Exception as e:
-            print(f"[ERROR] [RAIN_MDI] resizeEvent 處理失敗: {e}")
+            logger.exception("[ERROR] [RAIN_MDI] resizeEvent 處理失敗", exc_info=e)
     
     def set_responsive_layout(self):
         """參照遙測分析：設置響應式佈局"""
@@ -862,10 +896,10 @@ class RainAnalysisUniversal(UniversalAnalysisMDI):
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 self.chart_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 
-            print("[RAIN_MDI] 響應式佈局已設置")
+            logger.info("[RAIN_MDI] 響應式佈局已設置")
             
         except Exception as e:
-            print(f"[ERROR] [RAIN_MDI] 設置響應式佈局失敗: {e}")
+            logger.exception("[ERROR] [RAIN_MDI] 設置響應式佈局失敗", exc_info=e)
 
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組信息"""
@@ -958,7 +992,7 @@ def register_rain_analysis_module():
         # 這裡可以添加到全局模組註冊表
         pass
     except Exception as e:
-        print(f"[WARNING] 下雨分析模組註冊失敗: {str(e)}")
+        logger.warning("[WARNING] 下雨分析模組註冊失敗: %s", str(e))
 
 
 # 自動註冊

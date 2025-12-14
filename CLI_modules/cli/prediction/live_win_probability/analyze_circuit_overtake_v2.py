@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 賽道超車難度分析器 v2
 
@@ -12,8 +14,15 @@
     python analyze_circuit_overtake_v2.py
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import json
 from pathlib import Path
 from typing import Dict

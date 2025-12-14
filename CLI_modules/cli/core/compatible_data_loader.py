@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 Compatible Data Loader - 完全復刻版數據載入器
 Complete replica of F1DataLoader from f1_analysis_cli_new.py for modular system
 完全兼容 f1_analysis_cli_new.py 中的 F1DataLoader 類別
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import pickle
 import requests
 import traceback

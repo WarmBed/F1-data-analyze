@@ -73,6 +73,9 @@ class LapTimeBoxPlotApiWorker(QThread):
 
     def run(self):
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -84,6 +87,10 @@ class LapTimeBoxPlotApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
+            
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -92,6 +99,11 @@ class LapTimeBoxPlotApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
+            
             response.raise_for_status()
 
             payload = response.json()
@@ -116,11 +128,19 @@ class LapTimeBoxPlotApiWorker(QThread):
             }
 
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class LapTimeBoxPlotDataManager(UniversalDataLoader):
@@ -179,8 +199,8 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
         )
         
-        print(f"[BOXPLOT_DATA] 初始化完成, 搜索目錄: {self.config.search_directories}")
-        print(f"[BOXPLOT_DATA] 文件模式: {self.config.file_patterns}")
+        logger.debug(f"[BOXPLOT_DATA] 初始化完成, 搜索目錄: {self.config.search_directories}")
+        logger.debug(f"[BOXPLOT_DATA] 文件模式: {self.config.file_patterns}")
 
         # 套用全域系統設定
         try:
@@ -712,7 +732,7 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
         if not updates:
             return
 
-        print(f"[BOXPLOT_DATA] 過濾設定已更新: {updates}")
+        logger.debug(f"[BOXPLOT_DATA] 過濾設定已更新: {updates}")
 
         if self._raw_data_cache:
             processed = self.process_loaded_data(self._raw_data_cache)
@@ -737,6 +757,9 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
 
 # 導入專用圖表組件
 from .lap_box_plot_chart_widget import LapTimeBoxPlotChartWidget
+
+from core.logger import get_logger
+logger = get_logger(__name__)
 
 
 class LapTimeBoxPlotControlWidget(QWidget):
@@ -874,7 +897,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         parent=None,
         **kwargs,
     ):
-        print(f"[BOXPLOT_MDI] LapTimeBoxPlotAnalysis 開始初始化...")
+        logger.debug(f"[BOXPLOT_MDI] LapTimeBoxPlotAnalysis 開始初始化...")
         
         # 註冊圈速箱型圖模組類型
         if "laptime_boxplot" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
@@ -891,21 +914,21 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             UniversalAnalysisMDI.register_mdi_module_type("laptime_boxplot", boxplot_config)
 
         super().__init__("laptime_boxplot", parent)
-        print(f"[BOXPLOT_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
+        logger.debug(f"[BOXPLOT_MDI] 基類初始化完成, 數據管理器: {self.data_manager}")
 
         # 控制面板與全域設定暫存
         self.control_widget: Optional[QWidget] = None
         self._pending_boxplot_settings: Optional[Dict[str, Any]] = None
 
         # 初始化模組組件
-        print(f"[BOXPLOT_MDI] 開始初始化模組組件...")
+        logger.debug(f"[BOXPLOT_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
-            print(f"[BOXPLOT_MDI] ❌ 模組組件初始化失敗")
+            logger.error(f"[BOXPLOT_MDI] ❌ 模組組件初始化失敗")
             return
 
-        print(f"[BOXPLOT_MDI] ✅ 模組組件初始化完成")
-        print(f"[BOXPLOT_MDI] 數據管理器: {self.data_manager}")
-        print(f"[BOXPLOT_MDI] 圖表組件: {self.chart_widget}")
+        logger.info(f"[BOXPLOT_MDI] ✅ 模組組件初始化完成")
+        logger.debug(f"[BOXPLOT_MDI] 數據管理器: {self.data_manager}")
+        logger.debug(f"[BOXPLOT_MDI] 圖表組件: {self.chart_widget}")
 
         # 設置響應式佈局
         self.set_responsive_layout()
@@ -915,7 +938,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         try:
             self.settings_manager.boxplot_settings_changed.connect(self._on_global_boxplot_settings_changed)
         except Exception as exc:
-            print(f"[BOXPLOT_MDI] 無法連接全域設定信號: {exc}")
+            logger.debug(f"[BOXPLOT_MDI] 無法連接全域設定信號: {exc}")
         self._on_global_boxplot_settings_changed(self.settings_manager.get_boxplot_settings())
 
         if year is not None:
@@ -945,7 +968,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             control_widget = self.create_control_widget()
             self.control_widget = control_widget
         except Exception as exc:
-            print(f"[BOXPLOT_MDI] 建立控制面板失敗: {exc}")
+            logger.debug(f"[BOXPLOT_MDI] 建立控制面板失敗: {exc}")
             import traceback
             traceback.print_exc()
             self.control_widget = None
@@ -973,8 +996,8 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         """更新圈速箱型圖分析參數"""
         try:
-            print(f"[BOXPLOT_MDI] ========== 圈速箱型圖參數更新 ==========")
-            print(f"[BOXPLOT_MDI] 收到參數: {year} {race} {session}")
+            logger.debug(f"[BOXPLOT_MDI] ========== 圈速箱型圖參數更新 ==========")
+            logger.debug(f"[BOXPLOT_MDI] 收到參數: {year} {race} {session}")
             
             # 更新當前參數
             self.current_year = int(year) if isinstance(year, str) else year
@@ -989,32 +1012,32 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             
             # 更新數據管理器參數
             if hasattr(self, 'data_manager') and self.data_manager:
-                print(f"[BOXPLOT_MDI] 更新數據管理器參數...")
+                logger.debug(f"[BOXPLOT_MDI] 更新數據管理器參數...")
                 self.data_manager.year = self.current_year
                 self.data_manager.race = self.current_race
                 self.data_manager.session = self.current_session
                 
                 # 載入數據
-                print(f"[BOXPLOT_MDI] 開始載入數據...")
+                logger.debug(f"[BOXPLOT_MDI] 開始載入數據...")
                 result = self.data_manager.load_data(
                     year=self.current_year,
                     race=self.current_race,
                     session=self.current_session
                 )
-                print(f"[BOXPLOT_MDI] 數據載入結果: {result}")
+                logger.debug(f"[BOXPLOT_MDI] 數據載入結果: {result}")
                 
                 if not result:
-                    print(f"[BOXPLOT_MDI] ⚠️ 數據載入請求未成功提交")
+                    logger.warning(f"[BOXPLOT_MDI] ⚠️ 數據載入請求未成功提交")
                 
                 # 注意: 數據載入是異步的,實際數據會通過 data_loaded 信號傳遞
             
-            print(f"[BOXPLOT_MDI] 參數更新完成")
+            logger.debug(f"[BOXPLOT_MDI] 參數更新完成")
             return True
             
         except Exception as e:
-            print(f"[BOXPLOT_MDI] 參數更新失敗: {str(e)}")
+            logger.debug(f"[BOXPLOT_MDI] 參數更新失敗: {str(e)}")
             import traceback
-            print(f"[BOXPLOT_MDI] 錯誤詳情:")
+            logger.debug(f"[BOXPLOT_MDI] 錯誤詳情:")
             traceback.print_exc()
             return False
     
@@ -1044,7 +1067,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     
     def _on_filter_settings_changed(self, settings: Dict[str, Any]):
         """過濾設定變更處理"""
-        print(f"[BOXPLOT_MDI] 過濾設定變更: {settings}")
+        logger.debug(f"[BOXPLOT_MDI] 過濾設定變更: {settings}")
 
         if not hasattr(self, 'settings_manager') or self.settings_manager is None:
             return
@@ -1092,13 +1115,13 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                     self.control_widget.update_statistics(stats_text)
 
         except Exception as exc:
-            print(f"[BOXPLOT_MDI] 全域設定套用失敗: {exc}")
+            logger.debug(f"[BOXPLOT_MDI] 全域設定套用失敗: {exc}")
             import traceback
             traceback.print_exc()
     
     def _on_data_load_error(self, error_message: str):
         """處理數據載入錯誤 - 向用戶顯示友好的錯誤提示"""
-        print(f"[BOXPLOT_MDI] ❌ 數據載入錯誤: {error_message}")
+        logger.error(f"[BOXPLOT_MDI] ❌ 數據載入錯誤: {error_message}")
         
         # 更新控制面板統計信息
         if hasattr(self, 'control_widget') and self.control_widget:
@@ -1133,7 +1156,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     
     def _on_reload_requested(self):
         """重新載入數據"""
-        print("[BOXPLOT_MDI] 重新載入數據...")
+        logger.debug("[BOXPLOT_MDI] 重新載入數據...")
         
         if not self.data_manager:
             return
@@ -1147,13 +1170,13 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         )
         
         if not success:
-            print("[BOXPLOT_MDI] 重新載入失敗")
+            logger.debug("[BOXPLOT_MDI] 重新載入失敗")
             if self.control_widget:
                 self.control_widget.update_statistics("❌ 重新載入失敗")
     
     def _on_export_requested(self):
         """匯出圖表"""
-        print("[BOXPLOT_MDI] 匯出圖表...")
+        logger.debug("[BOXPLOT_MDI] 匯出圖表...")
         
         if not self.chart_widget:
             return
@@ -1184,7 +1207,7 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                     f"{tr('chart_exported_to', '圖表已匯出至')}:\n{filepath}"
                 )
             except Exception as e:
-                print(f"[BOXPLOT_MDI] 匯出失敗: {e}")
+                logger.debug(f"[BOXPLOT_MDI] 匯出失敗: {e}")
                 QMessageBox.warning(
                     self,
                     tr("export_failed", "匯出失敗"),
@@ -1201,20 +1224,20 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             old_size = event.oldSize()
             new_size = event.size()
             
-            print(f"[BOXPLOT_MDI] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
+            logger.debug(f"[BOXPLOT_MDI] resizeEvent: MDI視窗縮放 {old_size.width()}x{old_size.height()} -> {new_size.width()}x{new_size.height()}")
             
             # 通知圖表組件更新佈局
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 if hasattr(self.chart_widget, 'update_chart_layout'):
-                    print("[BOXPLOT_MDI] resizeEvent: 觸發圖表重新佈局")
+                    logger.debug("[BOXPLOT_MDI] resizeEvent: 觸發圖表重新佈局")
                     self.chart_widget.update_chart_layout()
                 else:
-                    print("[BOXPLOT_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
+                    logger.debug("[BOXPLOT_MDI] resizeEvent: 圖表組件不支援動態佈局更新")
             else:
-                print("[BOXPLOT_MDI] resizeEvent: 圖表組件尚未初始化")
+                logger.debug("[BOXPLOT_MDI] resizeEvent: 圖表組件尚未初始化")
                 
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_MDI] resizeEvent 處理失敗: {e}")
+            logger.error(f"[BOXPLOT_MDI] resizeEvent 處理失敗: {e}")
     
     def set_responsive_layout(self):
         """設置響應式佈局"""
@@ -1228,10 +1251,10 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 self.chart_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
                 
-            print("[BOXPLOT_MDI] 響應式佈局已設置")
+            logger.debug("[BOXPLOT_MDI] 響應式佈局已設置")
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_MDI] 設置響應式佈局失敗: {e}")
+            logger.error(f"[BOXPLOT_MDI] 設置響應式佈局失敗: {e}")
 
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組信息"""
@@ -1345,25 +1368,26 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         用於恢復所有被隱藏的車手數據
         """
         try:
-            print("[BOXPLOT_MDI] 🔄 收到 reset_chart_view 請求")
+            logger.debug("[BOXPLOT_MDI] 🔄 收到 reset_chart_view 請求")
             
             # 檢查 chart_widget 是否存在
             if not hasattr(self, 'chart_widget') or not self.chart_widget:
-                print("[BOXPLOT_MDI] ⚠️  chart_widget 不存在")
+                logger.warning("[BOXPLOT_MDI] ⚠️  chart_widget 不存在")
                 return
             
             # 檢查 chart_widget 是否有 show_all_drivers 方法
             if not hasattr(self.chart_widget, 'show_all_drivers'):
-                print("[BOXPLOT_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                logger.warning("[BOXPLOT_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
                 return
             
             # 調用 Widget 的 show_all_drivers() 方法
-            print("[BOXPLOT_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            logger.info("[BOXPLOT_MDI] ✅ 調用 chart_widget.show_all_drivers()")
             self.chart_widget.show_all_drivers()
             
         except Exception as e:
-            print(f"[BOXPLOT_MDI] ❌ reset_chart_view 失敗: {e}")
+            logger.error(f"[BOXPLOT_MDI] ❌ reset_chart_view 失敗: {e}")
             import traceback
+
             traceback.print_exc()
 
 
@@ -1372,9 +1396,9 @@ def register_boxplot_analysis_module():
     """註冊圈速箱型圖分析模組"""
     try:
         # 這裡可以添加到全局模組註冊表
-        print("[BOXPLOT_MDI] 圈速箱型圖分析模組已註冊")
+        logger.debug("[BOXPLOT_MDI] 圈速箱型圖分析模組已註冊")
     except Exception as e:
-        print(f"[WARNING] 圈速箱型圖分析模組註冊失敗: {str(e)}")
+        logger.warning(f"圈速箱型圖分析模組註冊失敗: {str(e)}")
 
 
 # 自動註冊

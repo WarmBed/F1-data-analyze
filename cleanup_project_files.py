@@ -74,6 +74,9 @@ def main():
         "f1_analysis_modular_main.py",
         "refactored_api.py",
         "batch_generate_gui_data.py",
+        "batch_generator_gui.py",  # 批次生成器 GUI
+        "build_exe_gui.py",  # EXE 建構工具 GUI
+        "launch_batch_generator_gui.py",  # 批次生成器啟動器
         "start_gui.bat",
         "start_api.bat",
         "requirements.txt",

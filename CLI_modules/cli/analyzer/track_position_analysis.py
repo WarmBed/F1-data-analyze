@@ -4,6 +4,14 @@ F1 Analysis API - 賽道位置分析模組 (功能2)
 符合 copilot-instructions 開發核心要求
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import pandas as pd
 import numpy as np
@@ -770,6 +778,14 @@ def save_position_raw_data(session_info, position_data):
     
     # 確保json資料夾存在
     import os
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     json_dir = "json"
     os.makedirs(json_dir, exist_ok=True)
     

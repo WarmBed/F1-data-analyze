@@ -12,6 +12,7 @@ Driver Position Analysis Module
 
 from typing import Optional
 from PyQt5.QtWidgets import QWidget
+from core.logger import get_logger
 
 # 導入介面
 try:
@@ -24,6 +25,9 @@ try:
     from .driver_position_analysis_mdi import DriverPositionAnalysisMDI
 except ImportError:
     from modules.gui.driver_position_analysis.driver_position_analysis_mdi import DriverPositionAnalysisMDI
+
+
+logger = get_logger("gui.driver_position_analysis_module", component="gui")
 
 
 class DriverPositionAnalysisModule(IAnalysisModule):
@@ -68,7 +72,12 @@ class DriverPositionAnalysisModule(IAnalysisModule):
         # 狀態
         self._is_initialized = False
         
-        print(f"[POSITION_MODULE] 模組已創建: {year} {race} {session}")
+        logger.info(
+            "[POSITION_MODULE] 模組已創建: %s %s %s",
+            year,
+            race,
+            session,
+        )
     
     # ========== IAnalysisModule 屬性實作 ==========
     
@@ -106,20 +115,25 @@ class DriverPositionAnalysisModule(IAnalysisModule):
             bool: 初始化是否成功
         """
         try:
-            print("[POSITION_MODULE] 開始初始化模組...")
+            logger.info("[POSITION_MODULE] 開始初始化模組...")
             
             if self._is_initialized:
-                print("[POSITION_MODULE] 模組已初始化，跳過")
+                logger.info("[POSITION_MODULE] 模組已初始化，跳過")
                 return True
             
             # 檢查參數
             if not self.current_year or not self.current_race or not self.current_session:
-                print("❌ [POSITION_MODULE] 缺少必要參數 (year/race/session)")
+                logger.error("❌ [POSITION_MODULE] 缺少必要參數 (year/race/session)")
                 return False
             
             # 創建 MDI 核心實例
             if not self._position_core:
-                print(f"[POSITION_MODULE] 創建 MDI 核心: {self.current_year} {self.current_race} {self.current_session}")
+                logger.info(
+                    "[POSITION_MODULE] 創建 MDI 核心: %s %s %s",
+                    self.current_year,
+                    self.current_race,
+                    self.current_session,
+                )
                 # MDI 構造函數只接受 parent 參數
                 self._position_core = DriverPositionAnalysisMDI(parent=parent_widget)
                 
@@ -129,27 +143,25 @@ class DriverPositionAnalysisModule(IAnalysisModule):
                 self._position_core.current_session = self.current_session
                 
                 # 初始化 MDI 核心
-                print("[POSITION_MODULE] 初始化 MDI 核心...")
+                logger.info("[POSITION_MODULE] 初始化 MDI 核心...")
                 if not self._position_core.initialize_module():
-                    print("❌ [POSITION_MODULE] MDI 核心初始化失敗")
+                    logger.error("❌ [POSITION_MODULE] MDI 核心初始化失敗")
                     return False
-                print("✅ [POSITION_MODULE] MDI 核心初始化成功")
+                logger.info("✅ [POSITION_MODULE] MDI 核心初始化成功")
             
             # 獲取主要元件
             self._main_widget = self._position_core.get_widget()
             
             if not self._main_widget:
-                print("❌ [POSITION_MODULE] 無法獲取主要元件")
+                logger.error("❌ [POSITION_MODULE] 無法獲取主要元件")
                 return False
             
             self._is_initialized = True
-            print("✅ [POSITION_MODULE] 模組初始化成功")
+            logger.info("✅ [POSITION_MODULE] 模組初始化成功")
             return True
             
         except Exception as e:
-            print(f"❌ [POSITION_MODULE] 初始化失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ [POSITION_MODULE] 初始化失敗")
             return False
     
     def load_data(self, **kwargs) -> bool:
@@ -163,26 +175,24 @@ class DriverPositionAnalysisModule(IAnalysisModule):
             bool: 載入是否成功
         """
         try:
-            print("[POSITION_MODULE] 載入資料...")
+            logger.info("[POSITION_MODULE] 載入資料...")
             
             if not self._is_initialized:
-                print("❌ [POSITION_MODULE] 模組未初始化")
+                logger.error("❌ [POSITION_MODULE] 模組未初始化")
                 return False
             
             if not self._position_core:
-                print("❌ [POSITION_MODULE] MDI 核心未創建")
+                logger.error("❌ [POSITION_MODULE] MDI 核心未創建")
                 return False
             
             # 觸發 MDI 載入資料
             self._position_core.load_initial_data()
             
-            print("✅ [POSITION_MODULE] 資料載入已觸發")
+            logger.info("✅ [POSITION_MODULE] 資料載入已觸發")
             return True
             
         except Exception as e:
-            print(f"❌ [POSITION_MODULE] 載入資料失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("❌ [POSITION_MODULE] 載入資料失敗")
             return False
     
     def update_parameters(self, year: int, race: str, session: str, **kwargs) -> bool:
@@ -199,7 +209,7 @@ class DriverPositionAnalysisModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
-            print(f"[POSITION_MODULE] 更新參數: {year} {race} {session}")
+            logger.info("[POSITION_MODULE] 更新參數: %s %s %s", year, race, session)
             
             # 更新模組參數
             self.current_year = str(year)
@@ -210,13 +220,11 @@ class DriverPositionAnalysisModule(IAnalysisModule):
             if self._position_core:
                 return self._position_core.update_analysis_parameters(str(year), race, session)
             
-            print("⚠️  [POSITION_MODULE] MDI 核心未初始化，只更新模組參數")
+            logger.warning("⚠️  [POSITION_MODULE] MDI 核心未初始化，只更新模組參數")
             return True
             
-        except Exception as e:
-            print(f"❌ [POSITION_MODULE] 參數更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            logger.exception("❌ [POSITION_MODULE] 參數更新失敗")
             return False
     
     def get_widget(self) -> Optional[QWidget]:
@@ -231,7 +239,7 @@ class DriverPositionAnalysisModule(IAnalysisModule):
     def cleanup(self):
         """清理資源"""
         try:
-            print("[POSITION_MODULE] 清理資源...")
+            logger.info("[POSITION_MODULE] 清理資源...")
             
             if self._position_core:
                 if hasattr(self._position_core, 'cleanup'):
@@ -241,12 +249,10 @@ class DriverPositionAnalysisModule(IAnalysisModule):
             self._main_widget = None
             self._is_initialized = False
             
-            print("✅ [POSITION_MODULE] 資源已清理")
+            logger.info("✅ [POSITION_MODULE] 資源已清理")
             
-        except Exception as e:
-            print(f"❌ [POSITION_MODULE] 清理失敗: {e}")
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            logger.exception("❌ [POSITION_MODULE] 清理失敗")
     
     def get_current_state(self) -> dict:
         """

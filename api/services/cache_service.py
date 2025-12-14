@@ -88,6 +88,10 @@ class F1AnalysisCacheService:
             "98": ["team_colors"],  # ✅ 添加 Function 98 - 團隊顏色配置
             "99": ["season_calendar"],
             "100": ["historical_flags"],  # ✅ 添加 Function 100 - 歷年旗幟統計分析
+            "120": ["F120_corner_all_laps_analysis", "corner_all_laps_analysis"],  # ✅ 添加 Function 120 - 彎角全圈數分析 (取代 F47)
+            "121": ["fp2_straight_line_all_laps_analysis"],  # ✅ 添加 Function 121 - FP2 直線速度全圈數分析
+            "122": ["brake_all_laps_analysis"],  # ✅ 添加 Function 122 - 煞車全圈數分析
+            "125": ["vehicle_performance_analysis"],  # ✅ 添加 Function 125 - 車輛性能綜合分析 (F120+F121+F122+F100)
         }
         
         # 賽事名稱標準化映射
@@ -361,6 +365,69 @@ class F1AnalysisCacheService:
                         f"{self.json_dir}{prefix}_{year_token}_{race_str}.json",
                         f"{self.json_dir}{prefix}_{year_token}_{race_str.replace(' ', '_')}.json",
                     ])
+            elif function_id == "120":  # ✅ Function 120 - 彎角全圈數分析
+                # 檔案格式: F120_corner_all_laps_analysis_{year}_{race}_{session}.json
+                # 🔧 處理空格/底線不一致問題（CLI 可能輸出 Abu_Dhabi 或 Abu Dhabi）
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                print(f"[CACHE] 🏎️  Function 120: 搜尋彎角全圈數分析")
+                print(f"[CACHE]    賽道參數: {race_param}")
+                print(f"[CACHE]    標準化賽道: {normalized_race}")
+                
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    # 生成多種格式變體
+                    race_with_space = race_str.replace("_", " ")
+                    race_with_underscore = race_str.replace(" ", "_")
+                    
+                    search_patterns.extend([
+                        # 主要檔名模式（含 F120 前綴）
+                        f"{self.json_dir}F120_corner_all_laps_analysis_{year_token}_{race_with_underscore}_{session_token}.json",
+                        f"{self.json_dir}F120_corner_all_laps_analysis_{year_token}_{race_with_space}_{session_token}.json",
+                        f"{self.json_dir}F120_corner_all_laps_analysis_{year_token}_{race_str}_{session_token}.json",
+                        # 備用模式（不含前綴）
+                        f"{self.json_dir}corner_all_laps_analysis_{year_token}_{race_with_underscore}_{session_token}.json",
+                        f"{self.json_dir}corner_all_laps_analysis_{year_token}_{race_with_space}_{session_token}.json",
+                    ])
+            elif function_id == "121":  # ✅ Function 121 - 直線全圈數分析
+                # 檔案格式: fp2_straight_line_all_laps_analysis_{year}_{race}_{session}.json
+                # 🔧 處理空格/底線不一致問題
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                print(f"[CACHE] 🚀 Function 121: 搜尋直線全圈數分析")
+                print(f"[CACHE]    賽道參數: {race_param}")
+                
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    race_with_space = race_str.replace("_", " ")
+                    race_with_underscore = race_str.replace(" ", "_")
+                    
+                    search_patterns.extend([
+                        f"{self.json_dir}fp2_straight_line_all_laps_analysis_{year_token}_{race_with_underscore}_{session_token}.json",
+                        f"{self.json_dir}fp2_straight_line_all_laps_analysis_{year_token}_{race_with_space}_{session_token}.json",
+                        f"{self.json_dir}fp2_straight_line_all_laps_analysis_{year_token}_{race_str}_{session_token}.json",
+                    ])
+            elif function_id == "122":  # ✅ Function 122 - 煞車全圈數分析
+                # 檔案格式: brake_all_laps_analysis_{year}_{race}_{session}.json
+                # 🔧 處理空格/底線不一致問題（CLI 可能輸出 Abu_Dhabi 或 Abu Dhabi）
+                effective_tokens = race_tokens or ["*"]
+                search_patterns = []
+                print(f"[CACHE] 🛑 Function 122: 搜尋煞車全圈數分析")
+                print(f"[CACHE]    賽道參數: {race_param}")
+                print(f"[CACHE]    標準化賽道: {normalized_race}")
+                
+                for race_token in effective_tokens:
+                    race_str = str(race_token)
+                    # 生成多種格式變體
+                    race_with_space = race_str.replace("_", " ")
+                    race_with_underscore = race_str.replace(" ", "_")
+                    
+                    search_patterns.extend([
+                        # 主要檔名模式
+                        f"{self.json_dir}brake_all_laps_analysis_{year_token}_{race_with_underscore}_{session_token}.json",
+                        f"{self.json_dir}brake_all_laps_analysis_{year_token}_{race_with_space}_{session_token}.json",
+                        f"{self.json_dir}brake_all_laps_analysis_{year_token}_{race_str}_{session_token}.json",
+                    ])
             else:  # 一般分析
                 effective_tokens = race_tokens or ["*"]
                 search_patterns = []
@@ -392,17 +459,27 @@ class F1AnalysisCacheService:
                 except Exception as e:
                     print(f"[CACHE] ⚠️ glob 錯誤: {e}")
                 
-                # 🔧 FIX: 如果沒找到，嘗試不區分大小寫的搜尋
+                # 🔧 FIX: 如果沒找到，嘗試不區分大小寫且支援空格/底線互換的搜尋
                 if not files:
                     print(f"[CACHE] ⚠️ 精確匹配失敗，嘗試不區分大小寫搜尋...")
                     json_dir_path = Path(self.json_dir)
                     if json_dir_path.exists():
-                        all_json_files = list(json_dir_path.glob("*.json"))
+                        # 🔧 搜尋根目錄及所有子目錄
+                        all_json_files = list(json_dir_path.rglob("*.json"))
                         pattern_lower = os.path.basename(pattern).lower()
+                        # 🔧 支援空格/底線互換：abu_dhabi 應該匹配 Abu Dhabi
+                        pattern_variants = [
+                            pattern_lower,
+                            pattern_lower.replace("_", " "),  # abu_dhabi → abu dhabi
+                            pattern_lower.replace("_", ""),   # abu_dhabi → abudhabi
+                        ]
                         
                         for json_file in all_json_files:
-                            if self._pattern_matches_case_insensitive(json_file.name, pattern_lower):
-                                files.append(str(json_file))
+                            filename_lower = json_file.name.lower()
+                            for variant in pattern_variants:
+                                if self._pattern_matches_case_insensitive(filename_lower, variant):
+                                    files.append(str(json_file))
+                                    break
                 
                 if not files:
                     print(f"[CACHE] ❌ 無匹配檔案")

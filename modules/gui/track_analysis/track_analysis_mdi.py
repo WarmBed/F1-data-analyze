@@ -36,7 +36,9 @@ from PyQt5.QtGui import QFont
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
+
 from core.logger import get_logger
+logger = get_logger(__name__)
 
 # 初始化模組日誌記錄器
 logger = get_logger("track_analysis.mdi", component="gui")
@@ -87,6 +89,11 @@ class TrackAnalysisApiWorker(QThread):
         ✅ 使用信號發送結果
         """
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TRACK_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -98,6 +105,11 @@ class TrackAnalysisApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[TRACK_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             
             # 執行 HTTP 請求（會阻塞此背景線程，但不影響主 GUI 線程）
@@ -107,6 +119,11 @@ class TrackAnalysisApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TRACK_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
             
             elapsed = time.perf_counter() - start_ts
             self.progress.emit(70)
@@ -133,13 +150,22 @@ class TrackAnalysisApiWorker(QThread):
                 "base_url": self.base_url,
             }
 
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TRACK_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
             logger.exception("[TRACK_API_WORKER] Error during API call")
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class TrackAnalysisDataManager(UniversalDataLoader):

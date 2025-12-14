@@ -23,6 +23,11 @@ from typing import Dict, List, Any, Optional
 from core.gui_i18n import tr, get_team_name_text
 from modules.gui.themes.color_palette_provider import color_palette_provider  # ✅ 使用通用顏色系統
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+
 
 class QualifyingPredictionWidget(QWidget):
     """
@@ -186,7 +191,7 @@ class QualifyingPredictionWidget(QWidget):
             predictions = data.get("predictions", [])
             
             if not predictions:
-                print("[QUALIFYING_WIDGET] ⚠️ 沒有預測數據")
+                logger.warning("[QUALIFYING_WIDGET] ⚠️ 沒有預測數據")
                 return
             
             # 更新表格
@@ -195,12 +200,10 @@ class QualifyingPredictionWidget(QWidget):
             # 更新統計摘要
             self._update_statistics_panel(metadata, predictions)
             
-            print(f"[QUALIFYING_WIDGET] ✅ 已更新顯示 ({len(predictions)} 位車手)")
+            logger.info("[QUALIFYING_WIDGET] ✅ 已更新顯示 (%s 位車手)", len(predictions))
             
         except Exception as e:
-            print(f"[QUALIFYING_WIDGET] ❌ 更新顯示失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[QUALIFYING_WIDGET] ❌ 更新顯示失敗: %s", e)
     
     def _populate_table(self, predictions: List[Dict[str, Any]]):
         """填充表格資料"""
@@ -213,7 +216,7 @@ class QualifyingPredictionWidget(QWidget):
             self._set_row_data(row, pred)
         
         self.table.setSortingEnabled(True)  # 重新啟用排序
-        print(f"[TABLE] ✅ 已載入 {row_count} 位車手")
+        logger.info("[TABLE] ✅ 已載入 %s 位車手", row_count)
     
     def _set_row_data(self, row: int, pred: Dict[str, Any]):
         """設置單行資料"""
@@ -393,7 +396,7 @@ class QualifyingPredictionWidget(QWidget):
             self.table.setItem(row, 9, change_item)
             
         except Exception as e:
-            print(f"❌ 設置行資料失敗 (row {row}): {e}")
+            logger.exception("❌ 設置行資料失敗 (row %s): %s", row, e)
     
     def _update_statistics_panel(self, metadata: Dict[str, Any], predictions: List[Dict[str, Any]]):
         """更新統計摘要面板"""
@@ -437,7 +440,7 @@ class QualifyingPredictionWidget(QWidget):
                 self.lbl_r2_explanation.setStyleSheet(f"color: {reliability_color}; font-weight: bold;")
             
         except Exception as e:
-            print(f"❌ 更新統計面板失敗: {e}")
+            logger.exception("❌ 更新統計面板失敗: %s", e)
     
     def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
         """創建帶背景色的表格項目，自動選擇文字顏色"""

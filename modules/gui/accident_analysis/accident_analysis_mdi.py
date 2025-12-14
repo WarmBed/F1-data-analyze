@@ -41,6 +41,12 @@ except ImportError:
 # API 化後的數據管理器
 from .accident_data_manager import AccidentDataManager
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="accident_analysis_mdi")
+
 
 class AccidentStatisticsWidget(QWidget):
     """事故統計總覽Widget - Function 6數據展示 (完全按照規格實現)"""
@@ -520,7 +526,7 @@ class AccidentStatisticsWidget(QWidget):
     def update_statistics_data(self, json_data):
         """更新統計數據 - 簡化設計版本：統計表格 + 車手圖表 + Safety Periods"""
         try:
-            print(f"[AccidentStatisticsWidget] 開始更新數據 (簡化設計)")
+            logger.info("[AccidentStatisticsWidget] 開始更新數據 (簡化設計)")
             
             # 更新統計表格 (替代卡片)
             self.update_statistics_table_from_json(json_data)
@@ -531,11 +537,10 @@ class AccidentStatisticsWidget(QWidget):
             # 更新 Safety Periods
             self.update_safety_periods_data(json_data)
             
-            print(f"[AccidentStatisticsWidget] 數據更新完成 (簡化設計)")
+            logger.info("[AccidentStatisticsWidget] 數據更新完成 (簡化設計)")
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 數據更新失敗: {e}")
-            traceback.print_exc()
+            logger.exception("[AccidentStatisticsWidget] 數據更新失敗: %s", e)
             
     def update_statistics_table_from_json(self, json_data):
         """從JSON數據更新統計表格 - 替代卡片更新"""
@@ -577,10 +582,13 @@ class AccidentStatisticsWidget(QWidget):
                     item.setTextAlignment(Qt.AlignCenter)  # ⚠️ 關鍵修復：確保數字置中
                     self.stats_table.setItem(0, col, item)
             
-            print(f"[AccidentStatisticsWidget] 統計表格更新: Track Limit={track_limit_count}, 雙黃旗={double_yellow_count}, 黃旗={yellow_count}, 紅旗={red_count}")
+            logger.info(
+                "[AccidentStatisticsWidget] 統計表格更新: Track Limit=%s, 雙黃旗=%s, 黃旗=%s, 紅旗=%s",
+                track_limit_count, double_yellow_count, yellow_count, red_count
+            )
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 統計表格更新失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] 統計表格更新失敗: %s", e)
             
     def update_driver_incident_chart(self, json_data):
         """更新車手事故頻率圖表"""
@@ -601,7 +609,7 @@ class AccidentStatisticsWidget(QWidget):
             self.driver_chart.update_chart_data(driver_incidents)
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 車手事故圖表更新失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] 車手事故圖表更新失敗: %s", e)
             
     def update_safety_periods_data(self, json_data):
         """更新安全車時段數據"""
@@ -612,7 +620,7 @@ class AccidentStatisticsWidget(QWidget):
             self.safety_periods_widget.update_safety_periods_data(safety_periods)
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] Safety Periods 更新失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] Safety Periods 更新失敗: %s", e)
             
     def update_statistics_cards_from_json(self, json_data):
         """從JSON數據更新統計卡片"""
@@ -664,11 +672,14 @@ class AccidentStatisticsWidget(QWidget):
             self.yellow_flag_card.value_label.setText(str(yellow_count))
             self.red_flag_card.value_label.setText(str(red_count))
             
-            print(f"[AccidentStatisticsWidget] 統計更新 - Track Limit: {track_limit_count}, 雙黃旗: {double_yellow_count}, 黃旗: {yellow_count}, 紅旗: {red_count}")
-            print(f"[AccidentStatisticsWidget] 檢查了 {len(all_incidents)} 個事件")
+            logger.info(
+                "[AccidentStatisticsWidget] 統計更新 - Track Limit: %s, 雙黃旗: %s, 黃旗: %s, 紅旗: %s",
+                track_limit_count, double_yellow_count, yellow_count, red_count
+            )
+            logger.info("[AccidentStatisticsWidget] 檢查了 %s 個事件", len(all_incidents))
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 更新統計卡片失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] 更新統計卡片失敗: %s", e)
     
     def update_flag_table_from_json(self, json_data):
         """從JSON數據更新旗標表格"""
@@ -695,10 +706,10 @@ class AccidentStatisticsWidget(QWidget):
                 self.flag_table.setItem(row, 2, QTableWidgetItem(message))
                 self.flag_table.setItem(row, 3, QTableWidgetItem(str(sector)))
             
-            print(f"[AccidentStatisticsWidget] 旗標表格更新完成，共 {len(flag_incidents)} 項")
+            logger.info("[AccidentStatisticsWidget] 旗標表格更新完成，共 %s 項", len(flag_incidents))
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 更新旗標表格失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] 更新旗標表格失敗: %s", e)
     
     def update_penalty_table_from_json(self, json_data):
         """從JSON數據更新處罰表格"""
@@ -722,10 +733,10 @@ class AccidentStatisticsWidget(QWidget):
                 self.penalty_table.setItem(row, 2, QTableWidgetItem(penalty_desc))
                 self.penalty_table.setItem(row, 3, QTableWidgetItem(str(lap)))
             
-            print(f"[AccidentStatisticsWidget] 處罰表格更新完成，共 {len(penalty_incidents)} 項")
+            logger.info("[AccidentStatisticsWidget] 處罰表格更新完成，共 %s 項", len(penalty_incidents))
             
         except Exception as e:
-            print(f"[AccidentStatisticsWidget] 更新處罰表格失敗: {e}")
+            logger.exception("[AccidentStatisticsWidget] 更新處罰表格失敗: %s", e)
             
     def clear_table(self):
         """清除表格數據"""
@@ -733,7 +744,7 @@ class AccidentStatisticsWidget(QWidget):
             self.flag_table.setRowCount(0)
         if hasattr(self, 'penalty_table'):
             self.penalty_table.setRowCount(0)
-        print(f"[AccidentStatisticsWidget] 表格數據已清除")
+        logger.info("[AccidentStatisticsWidget] 表格數據已清除")
         
     def show_loading_state(self):
         """顯示載入狀態"""
@@ -749,7 +760,7 @@ class AccidentStatisticsWidget(QWidget):
             
         # 清空表格
         self.clear_table()
-        print(f"[AccidentStatisticsWidget] 顯示載入狀態")
+        logger.info("[AccidentStatisticsWidget] 顯示載入狀態")
             
     def update_driver_involvement_table(self, driver_involvement):
         """更新車手涉入統計表格 (適應新的數據格式)"""
@@ -991,7 +1002,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         self.data_manager.statistics_reload_requested.connect(self.reload_statistics_data)
         
         # 連接所有事件數據信號
-        print(f"[DEBUG] 連接 all_incidents_loaded 信號到 {self.detailed_list_widget}")
+        logger.debug("[DEBUG] 連接 all_incidents_loaded 信號到 %s", self.detailed_list_widget)
         self.data_manager.all_incidents_loaded.connect(self.detailed_list_widget.update_data)
         self.data_manager.all_incidents_reload_requested.connect(self.reload_all_incidents_data)
         
@@ -1016,13 +1027,13 @@ class AccidentAnalysisModule(IAnalysisModule):
         # 載入當前分頁數據
         current_index = self.tab_widget.currentIndex()
         
-        print(f"[SYNC_DATA] 參數變更，當前分頁: {current_index}")
+        logger.info("[SYNC_DATA] 參數變更，當前分頁: %s", current_index)
         
         if current_index == 0:  # 統計總覽分頁
-            print(f"[SYNC_DATA] 載入統計數據: {year} {race} {session}")
+            logger.info("[SYNC_DATA] 載入統計數據: %s %s %s", year, race, session)
             self.load_data()
         elif current_index == 1:  # 詳細記錄分頁
-            print(f"[SYNC_DATA] 載入詳細記錄數據: {year} {race} {session}")
+            logger.info("[SYNC_DATA] 載入詳細記錄數據: %s %s %s", year, race, session)
             if hasattr(self.detailed_list_widget, "show_loading_state"):
                 self.detailed_list_widget.show_loading_state()
             self.data_manager.load_all_incidents_data(year, race, session)
@@ -1033,14 +1044,14 @@ class AccidentAnalysisModule(IAnalysisModule):
         if not all([self.current_year, self.current_race, self.current_session]):
             return
             
-        print(f"[TAB_SWITCH] 切換到分頁 {index}")
+        logger.info("[TAB_SWITCH] 切換到分頁 %s", index)
         
         if index == 0:  # 統計總覽分頁
-            print(f"[TAB_SWITCH] 載入統計數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.info("[TAB_SWITCH] 載入統計數據: %s %s %s", self.current_year, self.current_race, self.current_session)
             # 直接調用新的數據載入方法
             self.load_data()
         elif index == 1:  # 詳細記錄分頁
-            print(f"[TAB_SWITCH] 載入詳細記錄數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.info("[TAB_SWITCH] 載入詳細記錄數據: %s %s %s", self.current_year, self.current_race, self.current_session)
             # 載入詳細記錄數據
             if hasattr(self.detailed_list_widget, "show_loading_state"):
                 self.detailed_list_widget.show_loading_state()
@@ -1049,7 +1060,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def reload_statistics_data(self):
         """重新載入統計數據 (CLI完成後調用，參考進站分析)"""
-        print(f"[AccidentAnalysisModule] 重新載入統計數據")
+        logger.info("[AccidentAnalysisModule] 重新載入統計數據")
         if not all([self.current_year, self.current_race, self.current_session]):
             return
         self.data_manager.loadAccidentStatistics(
@@ -1061,7 +1072,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def reload_all_incidents_data(self):
         """重新載入所有事件數據 (CLI完成後調用)"""
-        print(f"[AccidentAnalysisModule] 重新載入所有事件數據")
+        logger.info("[AccidentAnalysisModule] 重新載入所有事件數據")
         if not all([self.current_year, self.current_race, self.current_session]):
             return
         self.data_manager.load_all_incidents_data(
@@ -1073,7 +1084,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def on_error_occurred(self, error_message):
         """錯誤處理"""
-        print(f"[AccidentAnalysisModule] 錯誤: {error_message}")
+        logger.error("[AccidentAnalysisModule] 錯誤: %s", error_message)
         # 使用None作為parent，避免類型錯誤
         QMessageBox.warning(None, tr('accident_analysis_error', 'Accident Analysis Error'), error_message)
     
@@ -1122,18 +1133,18 @@ class AccidentAnalysisModule(IAnalysisModule):
             # 設置初始化狀態
             self.set_initialized(True)
             
-            print(f"✅ [ACCIDENT_MODULE] 模組已初始化")
+            logger.info("✅ [ACCIDENT_MODULE] 模組已初始化")
             
             # 參照進站分析流程：如果已有參數，立即載入數據
             if self.current_year and self.current_race and self.current_session:
-                print(f"🚀 [ACCIDENT_MODULE] 預先載入事故分析數據: {self.current_year} {self.current_race} {self.current_session}")
+                logger.info("🚀 [ACCIDENT_MODULE] 預先載入事故分析數據: %s %s %s", self.current_year, self.current_race, self.current_session)
                 self.load_data()
             else:
-                print(f"📋 [ACCIDENT_MODULE] 等待參數同步後載入數據...")
+                logger.info("📋 [ACCIDENT_MODULE] 等待參數同步後載入數據...")
             
             return True
         except Exception as e:
-            print(f"[ERROR] [ACCIDENT_MODULE] 模組初始化失敗: {str(e)}")
+            logger.exception("[ERROR] [ACCIDENT_MODULE] 模組初始化失敗: %s", str(e))
             return False
     
     def get_widget(self):
@@ -1183,27 +1194,31 @@ class AccidentAnalysisModule(IAnalysisModule):
             
             # 如果參數有變化，重新載入數據
             if params_changed:
-                print(f"🔄 [ACCIDENT_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
+                logger.info("🔄 [ACCIDENT_MODULE] 參數變更觸發數據重載: %s %s %s", year, race, session)
                 self.load_data()
                 
         except Exception as e:
-            print(f"[ERROR] [ACCIDENT_MODULE] 更新參數失敗: {str(e)}")
+            logger.exception("[ERROR] [ACCIDENT_MODULE] 更新參數失敗: %s", str(e))
             self.emit_error(f"更新參數失敗: {str(e)}")
     
     def load_data(self, force_refresh: bool = False, **kwargs) -> bool:
         """透過資料管理器載入事故統計資料（API 優先）。"""
         if not all([self.current_year, self.current_race, self.current_session]):
-            print("[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
-            print(
-                f"[WARNING] [ACCIDENT_MODULE] 當前參數: year={self.current_year}, "
-                f"race={self.current_race}, session={self.current_session}"
+            logger.warning("[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
+            logger.warning(
+                "[WARNING] [ACCIDENT_MODULE] 當前參數: year=%s, race=%s, session=%s",
+                self.current_year,
+                self.current_race,
+                self.current_session
             )
             return False
 
-        print("🔄 [ACCIDENT_MODULE] ========== 載入事故分析數據 ==========")
-        print(
-            f"🔄 [ACCIDENT_MODULE] 載入參數: "
-            f"{self.current_year} {self.current_race} {self.current_session}"
+        logger.info("🔄 [ACCIDENT_MODULE] ========== 載入事故分析數據 ==========")
+        logger.info(
+            "🔄 [ACCIDENT_MODULE] 載入參數: %s %s %s",
+            self.current_year,
+            self.current_race,
+            self.current_session
         )
 
         if hasattr(self.statistics_widget, "show_loading_state"):
@@ -1245,11 +1260,11 @@ class AccidentAnalysisModule(IAnalysisModule):
                 self._start_generation_monitoring(year, race, session)
                 return True
             else:
-                print(f"❌ [ACCIDENT_MODULE] 啟動CLI生成失敗: {year} {race} {session}")
+                logger.error("❌ [ACCIDENT_MODULE] 啟動CLI生成失敗: %s %s %s", year, race, session)
                 return False
                 
         except Exception as e:
-            print(f"❌ [ACCIDENT_MODULE] 啟動生成時發生錯誤: {e}")
+            logger.exception("❌ [ACCIDENT_MODULE] 啟動生成時發生錯誤: %s", e)
             return False
 
     def _generate_accident_data_via_cli(self, year: str, race: str, session: str) -> bool:
@@ -1271,9 +1286,9 @@ class AccidentAnalysisModule(IAnalysisModule):
             bool: 始終返回 False（已禁用）
         """
         try:
-            print(f"[ACCIDENT_MODULE] ========== [API-ONLY] 數據生成請求 ==========")
-            print(f"[ACCIDENT_MODULE] ⚠️  [API-ONLY] CLI 調用已禁用")
-            print(f"[ACCIDENT_MODULE] 請求: 事故分析 | {year} {race} {session}")
+            logger.info("[ACCIDENT_MODULE] ========== [API-ONLY] 數據生成請求 ==========")
+            logger.warning("[ACCIDENT_MODULE] ⚠️ [API-ONLY] CLI 調用已禁用")
+            logger.info("[ACCIDENT_MODULE] 請求: 事故分析 | %s %s %s", year, race, session)
             
             # 生成建議的 CLI 命令（供用戶手動執行）
             command = [
@@ -1286,16 +1301,16 @@ class AccidentAnalysisModule(IAnalysisModule):
             
             manual_command = ' '.join(command)
             
-            print(f"[ACCIDENT_MODULE] 💡 提示：請使用以下方式獲取數據：")
-            print(f"[ACCIDENT_MODULE] 💡 方案1 [推薦]: 通過 REST API 調用 Function 8")
-            print(f"[ACCIDENT_MODULE] 💡   API 端點: POST /api/v2/analysis/execute?function_id=8")
-            print(f"[ACCIDENT_MODULE] 💡 方案2: 手動執行 CLI 命令：")
-            print(f"[ACCIDENT_MODULE] 💡   {manual_command}")
+            logger.info("[ACCIDENT_MODULE] 💡 提示：請使用以下方式獲取數據：")
+            logger.info("[ACCIDENT_MODULE] 💡 方案1 [推薦]: 通過 REST API 調用 Function 8")
+            logger.info("[ACCIDENT_MODULE] 💡   API 端點: POST /api/v2/analysis/execute?function_id=8")
+            logger.info("[ACCIDENT_MODULE] 💡 方案2: 手動執行 CLI 命令：")
+            logger.info("[ACCIDENT_MODULE] 💡   %s", manual_command)
             
             return False
             
         except Exception as e:
-            print(f"❌ [ACCIDENT_MODULE] 處理生成請求時發生錯誤: {e}")
+            logger.exception("❌ [ACCIDENT_MODULE] 處理生成請求時發生錯誤: %s", e)
             return False
 
     def _start_generation_monitoring(self, year: str, race: str, session: str):
@@ -1317,7 +1332,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
         
         # 啟動監控 (每5秒檢查一次，最多等待180秒)
-        print(f"⏰ [ACCIDENT_MODULE] 啟動檔案生成監控，每5秒檢查一次...")
+        logger.info("⏰ [ACCIDENT_MODULE] 啟動檔案生成監控，每5秒檢查一次...")
         self._generation_timer.start(5000)
         self._generation_timeout_timer.start(180000)
 
@@ -1332,7 +1347,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         json_file_path = self.get_json_file_path()
         
         if json_file_path and os.path.exists(json_file_path):
-            print(f"✅ [ACCIDENT_MODULE] 檔案生成完成: {json_file_path}")
+            logger.info("✅ [ACCIDENT_MODULE] 檔案生成完成: %s", json_file_path)
             
             # 停止監控
             if hasattr(self, '_generation_timer'):
@@ -1342,13 +1357,13 @@ class AccidentAnalysisModule(IAnalysisModule):
             
             # 載入生成的數據
             try:
-                print(f"📊 [ACCIDENT_MODULE] 開始載入新生成的數據...")
+                logger.info("📊 [ACCIDENT_MODULE] 開始載入新生成的數據...")
                 with open(json_file_path, 'r', encoding='utf-8') as f:
                     json_data = json.load(f)
                 
                 # 處理並更新統計數據
                 self.process_json_data(json_data)
-                print(f"✅ [ACCIDENT_MODULE] 新生成的事故分析數據載入完成")
+                logger.info("✅ [ACCIDENT_MODULE] 新生成的事故分析數據載入完成")
                 
                 # 更新UI提示
                 if hasattr(self, 'error_label'):
@@ -1358,16 +1373,16 @@ class AccidentAnalysisModule(IAnalysisModule):
                     QTimer.singleShot(5000, lambda: self.error_label.hide())
                 
             except Exception as e:
-                print(f"❌ [ACCIDENT_MODULE] 載入新生成數據失敗: {e}")
+                logger.exception("❌ [ACCIDENT_MODULE] 載入新生成數據失敗: %s", e)
                 if hasattr(self, 'error_label'):
                     self.error_label.setText(f"{tr('load_failed', 'Load failed')}: {str(e)}")
                     self.error_label.show()
         else:
-            print(f"⏳ [ACCIDENT_MODULE] 檔案尚未生成，繼續等待...")
+            logger.info("⏳ [ACCIDENT_MODULE] 檔案尚未生成，繼續等待...")
 
     def _on_generation_timeout(self):
         """生成超時處理（參照進站分析模組）"""
-        print(f"⏰ [ACCIDENT_MODULE] 檔案生成超時，停止監控")
+        logger.warning("⏰ [ACCIDENT_MODULE] 檔案生成超時，停止監控")
         
         # 停止所有定時器
         if hasattr(self, '_generation_timer'):
@@ -1380,16 +1395,16 @@ class AccidentAnalysisModule(IAnalysisModule):
             self.error_label.setText(f"❌ 數據生成超時，請檢查網路連線或稍後再試")
             self.error_label.show()
             
-        print(f"❌ [ACCIDENT_MODULE] 數據生成流程已超時")
+        logger.error("❌ [ACCIDENT_MODULE] 數據生成流程已超時")
 
     def search_and_suggest_files(self):
         """搜尋並建議可能的檔案（參照進站分析流程）"""
-        print(f"🔍 [ACCIDENT_MODULE] ========== 搜尋可用的事故分析檔案 ==========")
+        logger.info("🔍 [ACCIDENT_MODULE] ========== 搜尋可用的事故分析檔案 ==========")
         
         # 搜尋 json_exports 目錄下的相關檔案
         json_exports_dir = os.path.join(os.getcwd(), 'json_exports')
         if os.path.exists(json_exports_dir):
-            print(f"📂 [ACCIDENT_MODULE] 搜尋目錄: {json_exports_dir}")
+            logger.info("📂 [ACCIDENT_MODULE] 搜尋目錄: %s", json_exports_dir)
             
             # 搜尋包含當前年份和比賽的檔案
             pattern = f"*{self.current_year}*{self.current_race}*all_incidents_summary*"
@@ -1400,25 +1415,24 @@ class AccidentAnalysisModule(IAnalysisModule):
                 matching_files = glob.glob(search_pattern)
                 
                 if matching_files:
-                    print(f"🎯 [ACCIDENT_MODULE] 找到 {len(matching_files)} 個相關檔案:")
+                    logger.info("🎯 [ACCIDENT_MODULE] 找到 %s 個相關檔案:", len(matching_files))
                     for i, file_path in enumerate(matching_files, 1):
                         filename = os.path.basename(file_path)
-                        print(f"   {i}. {filename}")
+                        logger.info("   %s. %s", i, filename)
                         
-                    # 建議使用第一個找到的檔案
                     suggested_file = matching_files[0]
-                    print(f"💡 [ACCIDENT_MODULE] 建議使用: {os.path.basename(suggested_file)}")
+                    logger.info("💡 [ACCIDENT_MODULE] 建議使用: %s", os.path.basename(suggested_file))
                     
                 else:
-                    print(f"❌ [ACCIDENT_MODULE] 未找到符合的檔案")
-                    print(f"❌ [ACCIDENT_MODULE] 搜尋模式: {pattern}")
+                    logger.warning("❌ [ACCIDENT_MODULE] 未找到符合的檔案")
+                    logger.warning("❌ [ACCIDENT_MODULE] 搜尋模式: %s", pattern)
                     
             except Exception as e:
-                print(f"❌ [ACCIDENT_MODULE] 搜尋檔案時發生錯誤: {e}")
+                logger.exception("❌ [ACCIDENT_MODULE] 搜尋檔案時發生錯誤: %s", e)
         else:
-            print(f"❌ [ACCIDENT_MODULE] json_exports 目錄不存在: {json_exports_dir}")
+            logger.error("❌ [ACCIDENT_MODULE] json_exports 目錄不存在: %s", json_exports_dir)
             
-        print(f"🔍 [ACCIDENT_MODULE] =============================================")
+        logger.info("🔍 [ACCIDENT_MODULE] =============================================")
     
     def get_json_file_path(self):
         """獲取JSON檔案路徑"""
@@ -1438,7 +1452,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             for alt_name in possible_names:
                 alt_path = os.path.join("json", alt_name)
                 if os.path.exists(alt_path):
-                    print(f"🔍 [ACCIDENT_MODULE] 找到替代檔案: {alt_name}")
+                    logger.info("🔍 [ACCIDENT_MODULE] 找到替代檔案: %s", alt_name)
                     return alt_path
         
         return json_path
@@ -1450,38 +1464,38 @@ class AccidentAnalysisModule(IAnalysisModule):
             self.statistics_widget.update_statistics_data(json_data)
             
         except Exception as e:
-            print(f"❌ [ACCIDENT_MODULE] 處理JSON數據失敗: {e}")
+            logger.exception("❌ [ACCIDENT_MODULE] 處理JSON數據失敗: %s", e)
     
     def update_statistics_cards(self, json_data):
         """更新統計卡片 - 這個方法現在移動到 AccidentStatisticsWidget"""
         # 這個方法的功能已經移動到 AccidentStatisticsWidget.update_statistics_cards_from_json
-        print(f"[ACCIDENT_MODULE] 統計卡片更新功能已移動到 AccidentStatisticsWidget")
+        logger.info("[ACCIDENT_MODULE] 統計卡片更新功能已移動到 AccidentStatisticsWidget")
     
     def update_flag_table(self, json_data):
         """更新旗標表格 - 這個方法現在移動到 AccidentStatisticsWidget"""
         # 這個方法的功能已經移動到 AccidentStatisticsWidget.update_flag_table_from_json
-        print(f"[ACCIDENT_MODULE] 旗標表格更新功能已移動到 AccidentStatisticsWidget")
+        logger.info("[ACCIDENT_MODULE] 旗標表格更新功能已移動到 AccidentStatisticsWidget")
     
     def update_penalty_table(self, json_data):
         """更新處罰表格 - 這個方法現在移動到 AccidentStatisticsWidget"""
         # 這個方法的功能已經移動到 AccidentStatisticsWidget.update_penalty_table_from_json
-        print(f"[ACCIDENT_MODULE] 處罰表格更新功能已移動到 AccidentStatisticsWidget")
+        logger.info("[ACCIDENT_MODULE] 處罰表格更新功能已移動到 AccidentStatisticsWidget")
     
     def refresh_analysis(self) -> None:
         """刷新分析"""
-        print(f"🔄 [ACCIDENT_MODULE] 刷新分析")
+        logger.info("🔄 [ACCIDENT_MODULE] 刷新分析")
         self.load_data()
     
     def clear_data(self) -> None:
         """清除數據"""
         if hasattr(self, 'statistics_widget'):
             self.statistics_widget.clear_table()
-        print(f"🧹 [ACCIDENT_MODULE] 數據已清除")
+        logger.info("🧹 [ACCIDENT_MODULE] 數據已清除")
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據"""
         # 暫未實現，返回成功狀態
-        print(f"📤 [ACCIDENT_MODULE] 匯出數據到 {export_path} (格式: {export_format}) - 功能開發中")
+        logger.info("📤 [ACCIDENT_MODULE] 匯出數據到 %s (格式: %s) - 功能開發中", export_path, export_format)
         return True
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -1502,6 +1516,24 @@ class AccidentAnalysisModule(IAnalysisModule):
             'version': '1.0.0',
             'author': 'F1T Development Team'
         }
+    
+    def cleanup(self):
+        """
+        清理模組資源 - IAnalysisModule 必需方法
+        
+        當 MDI 子視窗關閉時，PopoutSubWindow 會調用此方法。
+        負責停止背景執行緒、清理數據管理器等資源。
+        """
+        logger.info("[ACCIDENT_MODULE] 開始清理資源...")
+        try:
+            # 清理數據管理器（包含背景執行緒）
+            if hasattr(self, 'data_manager') and self.data_manager:
+                self.data_manager.cleanup()
+                logger.debug("[ACCIDENT_MODULE] data_manager 已清理")
+            
+            logger.info("[ACCIDENT_MODULE] 資源清理完成")
+        except Exception as e:
+            logger.error(f"[ACCIDENT_MODULE] 清理時發生錯誤: {e}")
 
 
 # ================================================================================================
@@ -1664,20 +1696,21 @@ class AccidentDetailedListWidget(QWidget):
     def update_data(self, data: Dict[str, Any]):
         """更新事件數據"""
         try:
-            print(f"[DEBUG] AccidentDetailedListWidget.update_data 被呼叫")
-            print(f"[DEBUG] 數據類型: {type(data)}")
-            print(f"[DEBUG] 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            logger.debug("[DEBUG] AccidentDetailedListWidget.update_data 被呼叫")
+            logger.debug("[DEBUG] 數據類型: %s", type(data))
+            logger.debug("[DEBUG] 數據鍵: %s", list(data.keys()) if isinstance(data, dict) else 'Not a dict')
             
             incidents_list = self._validate_incidents_data(data)
             if incidents_list is None:
-                print(f"[ERROR] 數據驗證失敗")
+                logger.error("[ERROR] 數據驗證失敗")
                 self.show_error_message("無效的事件數據格式")
                 return
 
             self.incidents_data = incidents_list
-            print(
-                f"[DEBUG] 成功取得事件列表，數量: {len(self.incidents_data)}，來源路徑: "
-                f"{self._last_incident_path or 'unknown'}"
+            logger.debug(
+                "[DEBUG] 成功取得事件列表，數量: %s，來源路徑: %s",
+                len(self.incidents_data),
+                self._last_incident_path or 'unknown'
             )
 
             # 重置狀態樣式
@@ -1693,7 +1726,7 @@ class AccidentDetailedListWidget(QWidget):
             self.update_statistics()
             
         except Exception as e:
-            print(f"[ERROR] 更新事件數據失敗: {str(e)}")
+            logger.exception("[ERROR] 更新事件數據失敗: %s", str(e))
             self.show_error_message(f"更新事件數據失敗: {str(e)}")
             
     def _validate_incidents_data(self, data: Dict[str, Any]) -> bool:
@@ -1702,24 +1735,21 @@ class AccidentDetailedListWidget(QWidget):
             incidents, path = self._extract_incidents_list(data)
 
             if incidents is None:
-                print(
-                    "[ERROR] [VALIDATE] AccidentDetailedListWidget: 無法在資料中找到事故列表"
-                )
+                logger.error("[ERROR] [VALIDATE] AccidentDetailedListWidget: 無法在資料中找到事故列表")
                 return None
 
             if not isinstance(incidents, list):
-                print(
-                    "[ERROR] [VALIDATE] AccidentDetailedListWidget: 事故列表不是 list 類型"
-                )
+                logger.error("[ERROR] [VALIDATE] AccidentDetailedListWidget: 事故列表不是 list 類型")
                 return None
 
             self._last_incident_path = " -> ".join(path) if path else "data.all_incidents"
-            print(
-                f"[OK] [VALIDATE] AccidentDetailedListWidget: 數據格式驗證通過，匹配路徑: {self._last_incident_path}"
+            logger.info(
+                "[OK] [VALIDATE] AccidentDetailedListWidget: 數據格式驗證通過，匹配路徑: %s",
+                self._last_incident_path
             )
             return incidents
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] AccidentDetailedListWidget: 數據驗證異常: {e}")
+            logger.exception("[ERROR] [VALIDATE] AccidentDetailedListWidget: 數據驗證異常: %s", e)
             return None
 
     def _extract_incidents_list(
@@ -1820,7 +1850,11 @@ class AccidentDetailedListWidget(QWidget):
             if self._matches_filters(incident, filters):
                 self.filtered_data.append(incident)
         
-        print(f"[DEBUG] 篩選結果: {len(self.filtered_data)}/{len(self.incidents_data)} 個事件")
+        logger.debug(
+            "[DEBUG] 篩選結果: %s/%s 個事件",
+            len(self.filtered_data),
+            len(self.incidents_data)
+        )
         
         # 更新表格
         self.populate_table()
@@ -2067,7 +2101,7 @@ class AccidentDetailedListWidget(QWidget):
                 
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
-        print(f"[ERROR] [ALL_INCIDENTS_WIDGET] {message}")
+        logger.error("[ERROR] [ALL_INCIDENTS_WIDGET] %s", message)
         # 在UI上顯示錯誤狀態
         self.stats_label.setText(f"錯誤: {message}")
         self.stats_label.setStyleSheet("color: #dc3545; font-weight: bold;")
@@ -2671,11 +2705,11 @@ class DriverIncidentBarChart(QFrame):
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.ACCIDENT_ANALYSIS, AccidentAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] 事故分析模組已註冊")
+    logger.info("[OK] [MODULE_FACTORY] 事故分析模組已註冊")
 except ImportError as e:
-    print(f"[WARNING] [MODULE_FACTORY] 事故分析模組註冊失敗: {e}")
+    logger.warning("[WARNING] [MODULE_FACTORY] 事故分析模組註冊失敗: %s", e)
 
 
 if __name__ == "__main__":
-    print("F1T 事故綜合分析模組 - 獨立測試模式")
-    print("此模組需要在F1T GUI主程式中使用")
+    logger.info("F1T 事故綜合分析模組 - 獨立測試模式")
+    logger.info("此模組需要在F1T GUI主程式中使用")

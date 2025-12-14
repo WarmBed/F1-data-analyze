@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 Analysis Function Mapper - 統一功能映射器
 根據核心開發原則，提供統一的功能編號到模組執行的映射
@@ -8,8 +9,15 @@ F1 Analysis Function Mapper - 統一功能映射器
 支援: 1-52 整數化功能映射系統
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 from datetime import datetime
 from typing import Union, Dict, Any, Optional
 
@@ -104,9 +112,9 @@ class F1AnalysisFunctionMapper:
             71: self._execute_q_race_data_collector,   # Q->R 訓練數據收集器 (規劃中)
             72: self._execute_xgboost_trainer,         # XGBoost 模型訓練器 (規劃中)
             73: self._execute_placeholder_73,          # v3.10 批次訓練器 (16 特徵 XGBoost - 移除 is_top_driver)
-            74: self._execute_placeholder_74,          # [已刪除] 混合預測器
-            75: self._execute_placeholder_75,          # [已刪除] 純 FP3 特徵優化訓練
-            76: self._execute_ensemble_training,       # 集成學習訓練 (XGB+LGB+CTB) (2025-11-02)
+            74: self._execute_placeholder_74,          # FP3→Q 排位賽預測生成器 (v3.10 模型)
+            75: self._execute_fp2_q_batch_trainer,     # FP2→Q 批次訓練器 (XGBoost v3.10 架構) (2025-12-13)
+            76: self._execute_fp2_q_prediction_generator, # FP2→Q 排位賽預測生成器 (2025-12-13)
             77: self._execute_track_specific_training, # 賽道特定模型訓練 (v2.0 + F78) (2025-11-03)
             78: self._execute_driver_fp3_q_feature_extraction, # 車手 FP3->Q 特徵提取 (2025-11-03)
             79: self._execute_dynamic_team_rating,     # 動態車隊評級報告 (2025-11-26)
@@ -122,12 +130,20 @@ class F1AnalysisFunctionMapper:
             87: self._execute_driver_strategy_prediction, # 車手策略預測器 (F87) (2025-12-05)
             88: self._execute_tire_saving_analysis,     # 省輪胎行為分析 (F88) (2025-12-09)
             
+            # 90-95: FP2->R 圈速預測系統 (機器學習)
+            90: self._execute_fp2_race_ml_trainer,      # FP2→R 機器學習訓練器 (2022-2024 數據) (2025-12-13)
+            91: self._execute_fp2_race_ml_predictor,    # FP2→R 機器學習預測器 (逐圈圈速預測) (2025-12-13)
+            
             # 96-99: 特殊功能
             96: self._execute_race_weather_forecast,   # 賽事天氣預報
             97: self._execute_championship_standings_analysis,
             98: self._execute_team_color_analysis,
             99: self._execute_season_calendar_analysis,
             100: self._execute_historical_flags_analysis,  # 歷年旗幟統計分析 (2020-2025)
+            120: self._execute_fp2_corner_all_laps_analysis,  # FP2 彎道全圈數分析（雙模式：統一+分組）(2025-12-13)
+            121: self._execute_fp2_straight_line_all_laps_analysis,  # FP2 直線速度全圈數分析（官方API版本）(2025-12-13)
+            122: self._execute_brake_all_laps_analysis,  # 煞車性能全圈數分析（官方API版本+多數決統一煞車點）(2025-12-14)
+            125: self._execute_vehicle_performance_analysis,  # 車輛性能綜合分析（整合F120+F121+F122+F100）(2025-12-14)
         }
         
         # 子功能映射表
@@ -3348,8 +3364,18 @@ class F1AnalysisFunctionMapper:
         return {"success": True, "message": "全部車手分段分析功能開發中", "function_id": "40"}
     
     def _execute_all_drivers_cornering_analysis(self, **kwargs):
-        """Function 47: 全車手彎道速度分析（多彎道模式）"""
+        """Function 47: 全車手彎道速度分析（多彎道模式）
+        
+        ⚠️ 棄用警告 (2025-12-14): 
+        此功能已被 Function 120 (F120_corner_all_laps_analysis) 取代。
+        F120 提供更完整的數據結構，包括過濾旗標和統計指標。
+        建議使用 function_id=120 獲取彎道分析數據。
+        """
         try:
+            # ⚠️ 輸出棄用警告
+            print("[⚠️ DEPRECATED] Function 47 已棄用，建議改用 Function 120 (F120_corner_all_laps_analysis)")
+            print("[⚠️ DEPRECATED] F120 提供過濾旗標 (entry_filtered, exit_filtered) 和更完整的統計數據")
+            
             from CLI_modules.cli.analyzer.all_drivers_cornering_analysis import (
                 run_all_drivers_cornering_analysis
             )
@@ -3389,6 +3415,198 @@ class F1AnalysisFunctionMapper:
                 "function_id": "47"
             }
     
+    def _execute_fp2_corner_all_laps_analysis(self, **kwargs):
+        """Function 120: FP2 彎道全圈數分析（雙模式：統一+分組）"""
+        try:
+            from CLI_modules.cli.analyzer.fp2_corner_all_laps_analysis import (
+                run_fp2_corner_all_laps_analysis
+            )
+            
+            print("[F120 START] 開始執行彎道全圈數分析 (Function 120)")
+            
+            # 檢查數據是否已載入
+            if not self._check_data_loaded(120):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料",
+                    "function_id": "120"
+                }
+            
+            # 🆕 方案 A：智慧會話選擇
+            session_type = getattr(self.data_loader, 'session_type', None)
+            race_name = getattr(self.data_loader, 'race_name', None)
+            sprint_races = ["China", "Miami", "Belgium", "USA", "Brazil", "Qatar"]
+            
+            is_sprint = race_name in sprint_races
+            recommended_session = "SQ" if is_sprint else "FP2"
+            
+            if session_type != recommended_session:
+                if is_sprint:
+                    print(f"[F120 INFO] {race_name} 是衝刺賽週末，建議使用 SQ (當前: {session_type})")
+                else:
+                    print(f"[F120 INFO] {race_name} 是一般賽事，建議使用 FP2 (當前: {session_type})")
+            
+            # 執行分析
+            result = run_fp2_corner_all_laps_analysis(
+                data_loader=self.data_loader,
+                year=getattr(self.data_loader, 'year', None),
+                race=getattr(self.data_loader, 'race_name', None),
+                session=session_type,
+                show_detailed_output=kwargs.get('show_detailed_output', True)
+            )
+            
+            # 導出 JSON
+            if result and result.get("success"):
+                self._export_to_json(result, 120, "F120_corner_all_laps_analysis")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[F120 ERROR] FP2 彎道全圈數分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"執行失敗: {str(e)}",
+                "function_id": "120"
+            }
+    
+    def _execute_fp2_straight_line_all_laps_analysis(self, **kwargs):
+        """Function 121: FP2 直線速度全圈數分析（官方API版本）"""
+        try:
+            from CLI_modules.cli.analyzer.fp2_straight_line_all_laps_analysis import (
+                FP2StraightLineAllLapsAnalysis
+            )
+            
+            print("[F121 START] 開始執行直線速度全圈數分析 (Function 121)")
+            
+            # 檢查數據是否已載入
+            if not self._check_data_loaded(121):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料",
+                    "function_id": "121"
+                }
+            
+            # 🆕 方案 A：智慧會話選擇
+            session_type = getattr(self.data_loader, 'session_type', None)
+            race_name = getattr(self.data_loader, 'race_name', None)
+            sprint_races = ["China", "Miami", "Belgium", "USA", "Brazil", "Qatar"]
+            
+            is_sprint = race_name in sprint_races
+            recommended_session = "SQ" if is_sprint else "FP2"
+            
+            if session_type != recommended_session:
+                if is_sprint:
+                    print(f"[F121 INFO] {race_name} 是衝刺賽週末，建議使用 SQ (當前: {session_type})")
+                else:
+                    print(f"[F121 INFO] {race_name} 是一般賽事，建議使用 FP2 (當前: {session_type})")
+            
+            # 執行分析
+            analyzer = FP2StraightLineAllLapsAnalysis(self.data_loader)
+            result = analyzer.analyze(show_detailed_output=kwargs.get('show_detailed_output', True))
+            
+            # 導出 JSON
+            if result and result.get("success"):
+                self._export_to_json(result, 121, "fp2_straight_line_all_laps_analysis")
+            
+            return result
+            
+        except Exception as e:
+            print(f"[F121 ERROR] FP2 直線速度全圈數分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"執行失敗: {str(e)}",
+                "function_id": "121"
+            }
+    
+    def _execute_brake_all_laps_analysis(self, **kwargs):
+        """Function 122: 煞車性能全圈數分析（官方API版本+多數決統一煞車點）"""
+        try:
+            from CLI_modules.cli.analyzer.brake_all_laps_analysis import (
+                BrakeAllLapsAnalysis
+            )
+
+            print("[F122 START] 開始執行煞車性能全圈數分析 (Function 122)")
+
+            # 檢查數據是否已載入
+            if not self._check_data_loaded(122):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料",
+                    "function_id": "122"
+                }
+
+            # 執行分析（支援所有會話類型：FP1/FP2/FP3/Q/R）
+            analyzer = BrakeAllLapsAnalysis(self.data_loader)
+            result = analyzer.analyze(show_detailed_output=kwargs.get('show_detailed_output', True))
+
+            # 導出 JSON
+            if result and result.get("success"):
+                self._export_to_json(result, 122, "brake_all_laps_analysis")
+
+            return result
+
+        except Exception as e:
+            print(f"[F122 ERROR] 煞車性能全圈數分析失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"執行失敗: {str(e)}",
+                "function_id": "122"
+            }
+
+    def _execute_vehicle_performance_analysis(self, **kwargs):
+        """Function 125: 車輛性能綜合分析（整合F120+F121+F122+F100）"""
+        try:
+            from CLI_modules.cli.analyzer.f125_vehicle_performance import (
+                run_vehicle_performance_analysis
+            )
+
+            print("[F125 START] 開始執行車輛性能綜合分析 (Function 125)")
+
+            # 檢查數據是否已載入
+            if not self._check_data_loaded(125):
+                return {
+                    "success": False,
+                    "message": "尚未載入賽事資料",
+                    "function_id": "125"
+                }
+
+            # 獲取年份、賽事、會話類型
+            year = self.data_loader.year
+            race = self.data_loader.race_name
+            session = self.data_loader.session_type
+
+            print(f"[F125 INFO] 分析參數: {year} {race} {session}")
+
+            # 執行分析
+            result = run_vehicle_performance_analysis(
+                year=year,
+                race=race,
+                session=session
+            )
+
+            # 導出 JSON
+            if result and result.get("success"):
+                self._export_to_json(result, 125, "vehicle_performance_analysis")
+
+            return result
+
+        except Exception as e:
+            error_msg = f"F125 execution failed: {str(e)}"
+            print(f"[F125 ERROR] {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": error_msg,
+                "function_id": "125"
+            }
+
     def _execute_all_drivers_straight_line_speed(self, **kwargs):
         """全部車手直線速度分析"""
         try:
@@ -5130,16 +5348,582 @@ class F1AnalysisFunctionMapper:
                 "function_id": "74"
             }
     
-    def _execute_placeholder_75(self, **kwargs):
-        """功能 75: [已刪除] 純 FP3 特徵優化訓練"""
-        print("\n[已刪除] 功能 75 已刪除")
-        print("   狀態: 已移除")
-        print("   原功能: 純 FP3 特徵優化訓練")
-        return {
-            "success": False,
-            "message": "功能 75 已刪除",
-            "function_id": "75"
-        }
+    def _execute_fp2_q_batch_trainer(self, **kwargs):
+        """功能 75: FP2→Q 批次訓練器 (XGBoost 模型訓練)
+        
+        使用 FP2 數據預測排位賽 (Q) 成績，架構與 Function 73 (FP3→Q) 相同。
+        
+        v3.10 FP2 特徵架構 (16 特徵):
+        - v3.0 基礎特徵 (8): ideal_s1/s2/s3/lap (from FP2), apex speeds, max_speed
+        - v3.3 交互特徵 (3): s1_s2_ratio, sector_cv, s2_lap_ratio
+        - v3.4 速度特徵 (3): max_speed_lap_ratio, max_speed_s2_ratio, speed_consistency
+        - v3.5 排位特徵 (2): fp2_relative_position, fp2_gap_to_fastest
+        
+        參數:
+            --trials: Optuna 試驗次數 (預設: 500)
+            --cv-folds: 交叉驗證 folds (預設: 3)
+            --workers: 並行 workers (預設: 1)
+            --track: 指定單一賽道訓練 (預設: 訓練所有 24 個賽道)
+        
+        輸出:
+            - models/fp2_q_specific_v3.10/{track}.pkl
+            - fp2_q_v3.10_training_results.json
+        
+        與 Function 73 差異:
+            - 數據源: FP2 (而非 FP3)
+            - 模型目錄: fp2_q_specific_v3.10 (而非 track_specific_v3.10)
+            - 預期準確度: 比 FP3 稍低 5-10%（因距離排位賽更遠）
+        """
+        try:
+            import pickle
+            import json
+            import pandas as pd
+            import numpy as np
+            from pathlib import Path
+            from datetime import datetime
+            
+            print("\n" + "="*70)
+            print("功能 75: FP2→Q 批次訓練器")
+            print("="*70)
+            print("版本: v3.10 (16 特徵 FP2→Q 預測)")
+            print("數據源: FP2 (週五下午練習賽)")
+            print("預測目標: Q (週六排位賽)")
+            
+            # 導入必要模組
+            try:
+                import xgboost as xgb
+                from sklearn.model_selection import cross_val_score, KFold
+                from sklearn.metrics import mean_absolute_error, r2_score
+            except ImportError as e:
+                return {
+                    "success": False,
+                    "message": f"缺少必要套件: {str(e)}",
+                    "hint": "請執行: pip install xgboost scikit-learn",
+                    "function_id": "75"
+                }
+            
+            # 參數處理
+            trials = kwargs.get('trials', 500)
+            cv_folds = kwargs.get('cv_folds', 3)
+            workers = kwargs.get('workers', 1)
+            specific_track = kwargs.get('track', None)
+            start_year = kwargs.get('start_year', 2018)
+            end_year = kwargs.get('end_year', 2024)
+            
+            print(f"\n訓練參數:")
+            print(f"  數據年份: {start_year}-{end_year}")
+            print(f"  Optuna trials: {trials}")
+            print(f"  CV folds: {cv_folds}")
+            print(f"  Workers: {workers}")
+            if specific_track:
+                print(f"  指定賽道: {specific_track}")
+            else:
+                print(f"  模式: 訓練所有賽道")
+            
+            # 創建模型保存目錄
+            model_dir = Path(__file__).parent.parent.parent.parent / "models" / "fp2_q_specific_v3.10"
+            model_dir.mkdir(parents=True, exist_ok=True)
+            print(f"\n模型保存目錄: {model_dir}")
+            
+            # 載入訓練數據
+            print(f"\n正在載入 FP2→Q 訓練數據...")
+            training_data_dir = Path(__file__).parent.parent.parent.parent / "training_data"
+            
+            # 檢查是否有 FP2→Q 專用的訓練數據
+            fp2_data_file = training_data_dir / "fp2_q_training_data.json"
+            if not fp2_data_file.exists():
+                return {
+                    "success": False,
+                    "message": "找不到 FP2→Q 訓練數據",
+                    "hint": "請先執行: python f1_analysis_modular_main.py -f 70 --start-year 2018 --end-year 2024 (收集 FP2 數據)",
+                    "expected_file": str(fp2_data_file),
+                    "function_id": "75"
+                }
+            
+            with open(fp2_data_file, 'r', encoding='utf-8') as f:
+                all_data = json.load(f)
+            
+            print(f"✅ 載入訓練數據: {len(all_data)} 筆賽事記錄")
+            
+            # 組織數據（按賽道分組）
+            track_data = {}
+            for record in all_data:
+                track = record.get('track')
+                if not track:
+                    continue
+                
+                if track not in track_data:
+                    track_data[track] = []
+                track_data[track].append(record)
+            
+            print(f"✅ 數據已按賽道分組: {len(track_data)} 個賽道")
+            
+            # 定義特徵名稱 (v3.10 FP2 版本)
+            feature_names = [
+                # v3.0 基礎特徵 (8)
+                'ideal_s1', 'ideal_s2', 'ideal_s3', 'ideal_lap',
+                'low_speed_apex', 'mid_speed_apex', 'high_speed_apex', 'max_speed',
+                
+                # v3.3 交互特徵 (3)
+                's1_s2_ratio', 'sector_cv', 's2_lap_ratio',
+                
+                # v3.4 速度特徵 (3)
+                'max_speed_lap_ratio', 'max_speed_s2_ratio', 'speed_consistency',
+                
+                # v3.5 FP2 排位特徵 (2)
+                'fp2_relative_position', 'fp2_gap_to_fastest'
+            ]
+            
+            # 訓練結果
+            training_results = {}
+            
+            # 決定訓練哪些賽道
+            tracks_to_train = [specific_track] if specific_track else list(track_data.keys())
+            
+            print(f"\n開始訓練 {len(tracks_to_train)} 個賽道...")
+            
+            for idx, track in enumerate(tracks_to_train, 1):
+                print(f"\n{'='*70}")
+                print(f"[{idx}/{len(tracks_to_train)}] 訓練賽道: {track}")
+                print(f"{'='*70}")
+                
+                if track not in track_data:
+                    print(f"⚠️  {track} 無訓練數據，跳過")
+                    continue
+                
+                records = track_data[track]
+                print(f"  數據量: {len(records)} 筆賽事記錄")
+                
+                # 構建訓練集
+                X_train = []
+                y_train = []
+                
+                for record in records:
+                    fp2_data = record.get('fp2_best_lap')
+                    q_data = record.get('q_best_lap')
+                    
+                    if not fp2_data or not q_data:
+                        continue
+                    
+                    # 提取特徵向量
+                    feature_vector = [fp2_data.get(fname, 0.0) for fname in feature_names]
+                    X_train.append(feature_vector)
+                    
+                    # 目標值: FP2 → Q 的改進值
+                    fp2_time = fp2_data.get('ideal_lap', 0.0)
+                    q_time = q_data.get('ideal_lap', 0.0)
+                    improvement = q_time - fp2_time
+                    y_train.append(improvement)
+                
+                if len(X_train) < 10:
+                    print(f"⚠️  {track} 樣本數不足 ({len(X_train)} < 10)，跳過")
+                    continue
+                
+                X_train = np.array(X_train)
+                y_train = np.array(y_train)
+                
+                print(f"  訓練樣本: {len(X_train)} 筆")
+                
+                # 訓練 XGBoost 模型 (簡化版，不使用 Optuna)
+                model = xgb.XGBRegressor(
+                    n_estimators=300,
+                    learning_rate=0.05,
+                    max_depth=6,
+                    min_child_weight=3,
+                    subsample=0.8,
+                    colsample_bytree=0.8,
+                    gamma=0.1,
+                    random_state=42,
+                    n_jobs=workers
+                )
+                
+                # 訓練模型
+                model.fit(X_train, y_train)
+                
+                # 評估模型
+                y_pred = model.predict(X_train)
+                train_mae = mean_absolute_error(y_train, y_pred)
+                train_r2 = r2_score(y_train, y_pred)
+                
+                # 交叉驗證
+                kf = KFold(n_splits=cv_folds, shuffle=True, random_state=42)
+                cv_scores = -cross_val_score(model, X_train, y_train, cv=kf, scoring='neg_mean_absolute_error', n_jobs=workers)
+                cv_mae = cv_scores.mean()
+                
+                print(f"\n  訓練結果:")
+                print(f"    Train MAE: {train_mae:.3f}s")
+                print(f"    Train R²: {train_r2:.4f}")
+                print(f"    CV MAE: {cv_mae:.3f}s")
+                
+                # 保存模型
+                model_file = model_dir / f"{track}.pkl"
+                model_data = {
+                    'model': model,
+                    'feature_names': feature_names,
+                    'cv_mae': float(cv_mae),
+                    'train_mae': float(train_mae),
+                    'train_r2': float(train_r2),
+                    'sample_count': len(X_train),
+                    'version': 'v3.10_FP2',
+                    'data_source': 'FP2',
+                    'prediction_target': 'Q'
+                }
+                
+                with open(model_file, 'wb') as f:
+                    pickle.dump(model_data, f)
+                
+                print(f"  ✅ 模型已保存: {model_file}")
+                
+                # 記錄結果
+                training_results[track] = {
+                    'cv_mae': float(cv_mae),
+                    'train_mae': float(train_mae),
+                    'train_r2': float(train_r2),
+                    'sample_count': len(X_train)
+                }
+            
+            # 保存訓練結果摘要
+            results_file = Path(__file__).parent.parent.parent.parent / "fp2_q_v3.10_training_results.json"
+            with open(results_file, 'w', encoding='utf-8') as f:
+                json.dump(training_results, f, indent=2, ensure_ascii=False)
+            
+            print(f"\n{'='*70}")
+            print("FP2→Q 訓練完成！")
+            print(f"{'='*70}")
+            print(f"\n訓練結果保存: {results_file}")
+            
+            if training_results:
+                all_cv_mae = [r['cv_mae'] for r in training_results.values()]
+                all_r2 = [r['train_r2'] for r in training_results.values()]
+                avg_cv_mae = sum(all_cv_mae) / len(all_cv_mae)
+                avg_r2 = sum(all_r2) / len(all_r2)
+                
+                print(f"\n整體性能:")
+                print(f"  平均 CV MAE: {avg_cv_mae:.3f}s")
+                print(f"  平均 R²: {avg_r2:.4f}")
+                print(f"  訓練賽道數: {len(training_results)}")
+                
+                return {
+                    "success": True,
+                    "message": f"FP2→Q 訓練完成 ({len(training_results)} 個賽道)",
+                    "avg_cv_mae": avg_cv_mae,
+                    "avg_r2": avg_r2,
+                    "tracks_trained": len(training_results),
+                    "results": training_results,
+                    "function_id": "75"
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "沒有成功訓練任何賽道",
+                    "function_id": "75"
+                }
+        
+        except Exception as e:
+            print(f"[ERROR] FP2→Q 訓練失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"FP2→Q 訓練失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "75"
+            }
+    
+    def _execute_fp2_q_prediction_generator(self, **kwargs):
+        """功能 76: FP2→Q 排位賽預測生成器
+        
+        使用已訓練的 FP2→Q 模型生成排位賽預測結果並輸出 JSON 檔案。
+        
+        工作流程:
+        1. 載入 models/fp2_q_specific_v3.10/{track}.pkl
+        2. 提取 FP2 數據作為預測特徵
+        3. 生成排位賽時間預測
+        4. 輸出 JSON: json/fp2_qualifying_prediction_{year}_{race}.json
+        
+        參數:
+            year: 賽季年份 (必填)
+            race: 賽事名稱 (必填)
+        
+        輸出結構: 與 Function 74 相同，但數據源為 FP2
+        
+        返回:
+            Dict: 執行結果
+        """
+        try:
+            import pickle
+            import json
+            import pandas as pd
+            import numpy as np
+            from pathlib import Path
+            from datetime import datetime
+            
+            print("\n" + "="*70)
+            print("功能 76: FP2→Q 排位賽預測生成器")
+            print("="*70)
+            
+            # 參數驗證
+            year = kwargs.get('year')
+            race = kwargs.get('race')
+            
+            if not year or not race:
+                return {
+                    "success": False,
+                    "message": "缺少必要參數: year 和 race",
+                    "function_id": "76"
+                }
+            
+            print(f"\n目標賽事: {year} {race} (FP2→Q 預測)")
+            
+            # 載入 FP2→Q 模型
+            model_dir = Path(__file__).parent.parent.parent.parent / "models" / "fp2_q_specific_v3.10"
+            model_file = model_dir / f"{race}.pkl"
+            
+            if not model_file.exists():
+                return {
+                    "success": False,
+                    "message": f"找不到 {race} 的 FP2→Q 模型檔案",
+                    "hint": f"請先執行: python f1_analysis_modular_main.py -f 75 --track {race}",
+                    "expected_file": str(model_file),
+                    "function_id": "76"
+                }
+            
+            print(f"✅ 載入模型: {model_file}")
+            with open(model_file, 'rb') as f:
+                model_data = pickle.load(f)
+            
+            model = model_data['model']
+            feature_names = model_data['feature_names']
+            model_r2 = model_data.get('train_r2', 0.0)
+            model_mae = model_data.get('train_mae', 0.0)
+            cv_mae = model_data.get('cv_mae', 0.0)
+            sample_count = model_data.get('sample_count', 0)
+            
+            print(f"   模型版本: {model_data.get('version', 'v3.10_FP2')}")
+            print(f"   模型 R²: {model_r2:.4f}")
+            print(f"   模型 MAE: {model_mae:.3f}s")
+            print(f"   交叉驗證 MAE: {cv_mae:.3f}s")
+            print(f"   樣本數: {sample_count}")
+            
+            # 載入 FP2 數據
+            print(f"\n正在載入 {year} {race} FP2 數據...")
+            
+            if not self.data_loader:
+                print("   初始化數據載入器...")
+                from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
+                self.data_loader = CompatibleF1DataLoader()
+            
+            # 嘗試載入 FP2
+            try:
+                print(f"   嘗試載入 FP2...")
+                loaded = self.data_loader.load_race_data(year, race, 'FP2')
+                if not loaded:
+                    return {
+                        "success": False,
+                        "message": f"無法載入 {year} {race} FP2 數據",
+                        "function_id": "76"
+                    }
+                
+                session = self.data_loader.session
+                if not session:
+                    return {
+                        "success": False,
+                        "message": "FP2 會話數據未載入",
+                        "function_id": "76"
+                    }
+                
+                laps = session.laps
+                laps = laps[laps['LapTime'].notna()]
+                laps = laps[laps['IsAccurate'] == True]
+                
+                if laps.empty:
+                    return {
+                        "success": False,
+                        "message": f"{year} {race} FP2 無有效圈速數據",
+                        "function_id": "76"
+                    }
+                
+                print(f"✅ FP2 數據載入成功 ({len(laps)} 個有效圈速)")
+                
+            except Exception as e:
+                return {
+                    "success": False,
+                    "message": f"載入 FP2 數據失敗: {str(e)}",
+                    "function_id": "76"
+                }
+            
+            # 計算每位車手的 FP2 特徵 (與 Function 74 邏輯相同)
+            print("\n計算車手特徵...")
+            predictions = []
+            drivers = laps['Driver'].unique()
+            
+            for driver_code in drivers:
+                driver_laps = laps[laps['Driver'] == driver_code]
+                fastest_lap = driver_laps.loc[driver_laps['LapTime'].idxmin()]
+                
+                lap_time = fastest_lap['LapTime'].total_seconds()
+                
+                try:
+                    s1 = fastest_lap['Sector1Time'].total_seconds() if pd.notna(fastest_lap['Sector1Time']) else lap_time / 3
+                    s2 = fastest_lap['Sector2Time'].total_seconds() if pd.notna(fastest_lap['Sector2Time']) else lap_time / 3
+                    s3 = fastest_lap['Sector3Time'].total_seconds() if pd.notna(fastest_lap['Sector3Time']) else lap_time / 3
+                except:
+                    s1, s2, s3 = lap_time / 3, lap_time / 3, lap_time / 3
+                
+                try:
+                    telemetry = fastest_lap.get_telemetry()
+                    speeds = telemetry['Speed'].values if 'Speed' in telemetry.columns else np.array([250.0])
+                    max_speed = float(speeds.max())
+                    avg_speed = float(speeds.mean())
+                    speed_std = float(speeds.std())
+                    low_speed_apex = float(np.percentile(speeds, 25))
+                    mid_speed_apex = float(np.percentile(speeds, 50))
+                    high_speed_apex = float(np.percentile(speeds, 75))
+                except:
+                    max_speed = 300.0
+                    avg_speed = 250.0
+                    speed_std = 10.0
+                    low_speed_apex = 200.0
+                    mid_speed_apex = 250.0
+                    high_speed_apex = 280.0
+                
+                features = {
+                    'ideal_s1': s1,
+                    'ideal_s2': s2,
+                    'ideal_s3': s3,
+                    'ideal_lap': lap_time,
+                    'low_speed_apex': low_speed_apex,
+                    'mid_speed_apex': mid_speed_apex,
+                    'high_speed_apex': high_speed_apex,
+                    'max_speed': max_speed,
+                    's1_s2_ratio': s1 / s2 if s2 > 0 else 1.0,
+                    'sector_cv': speed_std / avg_speed if avg_speed > 0 else 0.1,
+                    's2_lap_ratio': s2 / lap_time if lap_time > 0 else 0.33,
+                    'max_speed_lap_ratio': max_speed * lap_time / 1000 if lap_time > 0 else 20.0,
+                    'max_speed_s2_ratio': max_speed / s2 if s2 > 0 else 10.0,
+                    'speed_consistency': 1.0 - (speed_std / avg_speed) if avg_speed > 0 else 0.9,
+                    'fp2_relative_position': 0.5,
+                    'fp2_gap_to_fastest': 0.0
+                }
+                
+                predictions.append({
+                    'driver': driver_code,
+                    'fp2_time': lap_time,
+                    'features': features,
+                    'team': fastest_lap.get('Team', 'Unknown')
+                })
+            
+            # 計算 FP2 排位相關特徵
+            predictions.sort(key=lambda x: x['fp2_time'])
+            fastest_fp2 = predictions[0]['fp2_time']
+            
+            for i, pred in enumerate(predictions):
+                pred['features']['fp2_relative_position'] = (i + 1) / len(predictions)
+                pred['features']['fp2_gap_to_fastest'] = pred['fp2_time'] - fastest_fp2
+            
+            print(f"✅ 提取 {len(predictions)} 位車手的特徵")
+            
+            # 生成預測
+            print("\n生成排位賽預測...")
+            
+            for pred in predictions:
+                feature_vector = [pred['features'][fname] for fname in feature_names]
+                predicted_improvement = model.predict([feature_vector])[0]
+                pred['predicted_time'] = float(pred['fp2_time'] + predicted_improvement)
+                pred['improvement'] = float(predicted_improvement)
+            
+            predictions.sort(key=lambda x: x['predicted_time'])
+            
+            # 嘗試獲取實際排位賽結果
+            actual_q_times = {}
+            try:
+                print(f"\n嘗試載入 {year} {race} Q 會話數據...")
+                q_loaded = self.data_loader.load_race_data(year, race, 'Q')
+                
+                if q_loaded and self.data_loader.session:
+                    q_session = self.data_loader.session
+                    q_laps = q_session.laps[q_session.laps['LapTime'].notna()]
+                    
+                    if not q_laps.empty:
+                        print(f"✅ Q 會話數據載入成功")
+                        for driver_code in q_laps['Driver'].unique():
+                            driver_q_laps = q_laps[q_laps['Driver'] == driver_code]
+                            fastest_q_lap = driver_q_laps.loc[driver_q_laps['LapTime'].idxmin()]
+                            actual_q_times[driver_code] = float(fastest_q_lap['LapTime'].total_seconds())
+            except:
+                print("⚠️  Q 會話數據不可用")
+            
+            # 構建 JSON 輸出
+            output_data = {
+                "metadata": {
+                    "track": race,
+                    "year": year,
+                    "session": "Q",
+                    "data_source": "FP2",
+                    "model_r2": float(model_r2),
+                    "model_mae": float(model_mae),
+                    "sample_count": int(sample_count),
+                    "prediction_time": datetime.now().isoformat(),
+                    "model_version": "v3.10_FP2",
+                    "feature_count": len(feature_names),
+                    "has_actual_results": len(actual_q_times) > 0
+                },
+                "predictions": []
+            }
+            
+            for rank, pred in enumerate(predictions, 1):
+                output_data["predictions"].append({
+                    "rank": rank,
+                    "driver": pred['driver'],
+                    "team": pred['team'],
+                    "fp2_time": float(pred['fp2_time']),
+                    "predicted_time": float(pred['predicted_time']),
+                    "actual_q_time": actual_q_times.get(pred['driver']),
+                    "improvement": float(pred['improvement'])
+                })
+            
+            # 保存 JSON
+            json_dir = Path(__file__).parent.parent.parent.parent / "json"
+            json_dir.mkdir(exist_ok=True)
+            json_file = json_dir / f"fp2_qualifying_prediction_{year}_{race}.json"
+            
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(output_data, f, indent=2, ensure_ascii=False)
+            
+            print(f"\n✅ JSON 檔案已保存: {json_file}")
+            
+            # 輸出預測摘要
+            print(f"\n預測摘要 (基於 FP2 數據):")
+            print(f"  前 5 名預測:")
+            for i, pred in enumerate(output_data['predictions'][:5], 1):
+                print(f"    P{i}: {pred['driver']} - {pred['predicted_time']:.3f}s (FP2: {pred['fp2_time']:.3f}s, △{pred['improvement']:.3f}s)")
+            
+            return {
+                "success": True,
+                "message": f"{year} {race} FP2→Q 預測生成成功",
+                "data": {
+                    "json_data": [str(json_file)],
+                    "metadata": output_data["metadata"],
+                    "predictions": output_data["predictions"],
+                    "predictions_count": len(predictions)
+                },
+                "json_file": str(json_file),
+                "predictions_count": len(predictions),
+                "model_r2": float(model_r2),
+                "model_mae": float(model_mae),
+                "function_id": "76"
+            }
+        
+        except Exception as e:
+            print(f"[ERROR] FP2→Q 預測生成失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"FP2→Q 預測生成失敗: {str(e)}",
+                "error": str(e),
+                "function_id": "76"
+            }
 
     def _execute_ensemble_training(self, **kwargs) -> Dict[str, Any]:
         """
@@ -6214,6 +6998,122 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": f"F88 執行失敗: {str(e)}",
                 "function_id": "88"
+            }
+    
+    def _execute_fp2_race_ml_trainer(self, **kwargs):
+        """功能 90: FP2→R 機器學習訓練器 V2.0 (FastF1)
+        
+        使用 FastF1 獲取 2023-2024 FP2 + Race 數據訓練模型。
+        每個賽道獨立訓練 XGBoost 模型。
+        
+        參數:
+            train: 是否為訓練模式 (默認 False)
+            start_year: 起始年份 (默認 2023)
+            end_year: 結束年份 (默認 2024)
+            
+        輸出:
+            - models/fp2_race_ml_v2.0/{track_name}.pkl
+            - reports/fp2_race_ml_training_report_v2.json
+        """
+        print("\n" + "="*70)
+        print("功能 90: FP2→R 機器學習訓練器 V2.0")
+        print("="*70)
+        print("版本: v2.0.0 (FastF1)")
+        print("訓練數據: 2023-2024 FP2 + Race")
+        print("模型類型: XGBoost (每個賽道獨立)")
+        print("預測目標: 正賽逐圈圈速 (lap 3+)")
+        
+        # 檢查是否為訓練模式
+        train_mode = kwargs.get("train", False)
+        
+        if not train_mode:
+            return {
+                "success": False,
+                "message": "F90 需要 --train 參數才能執行訓練",
+                "hint": "使用範例: python f1_analysis_modular_main.py -f 90 --train",
+                "function_id": "90"
+            }
+        
+        # 訓練年份範圍（可自訂）
+        start_year = kwargs.get("start_year") or 2023
+        end_year = kwargs.get("end_year") or 2024
+        
+        try:
+            from CLI_modules.cli.prediction.fp2_race_ml_trainer_v2 import run_fp2_race_ml_training_v2
+            
+            result = run_fp2_race_ml_training_v2(
+                start_year=start_year,
+                end_year=end_year,
+                verbose=True
+            )
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] F90 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F90 執行失敗: {str(e)}",
+                "function_id": "90"
+            }
+    
+    def _execute_fp2_race_ml_predictor(self, **kwargs):
+        """功能 91: FP2→R 機器學習預測器 V2.0
+        
+        使用 F90 V2 訓練的模型 + LiveF1 FP2 數據預測正賽圈速。
+        
+        參數:
+            year: 年份
+            race: 比賽名稱
+            session: 會話 (默認 FP2)
+            
+        輸出:
+            - json/fp2_race_ml_prediction_v2_{year}_{race}_{timestamp}.json
+        """
+        print("\n" + "="*70)
+        print("功能 91: FP2→R 機器學習預測器 V2.0")
+        print("="*70)
+        print("版本: v2.0.0")
+        print("模型: FastF1 訓練 (F90 V2)")
+        print("輸入: LiveF1 FP2 數據")
+        print("輸出: 正賽逐圈圈速預測")
+        
+        year = kwargs.get("year") or self.data_loader.year if self.data_loader else None
+        race = kwargs.get("race") or self.data_loader.race if self.data_loader else None
+        session = kwargs.get("session", "FP2")
+        
+        if not year or not race:
+            return {
+                "success": False,
+                "message": "缺少必要參數: year 和 race",
+                "hint": "使用範例: python f1_analysis_modular_main.py -f 91 -y 2025 -r Abu_Dhabi",
+                "function_id": "91"
+            }
+        
+        print(f"[INFO] 預測參數: {year} {race} {session}")
+        
+        try:
+            from CLI_modules.cli.prediction.fp2_race_ml_predictor_v2 import run_fp2_race_ml_prediction_v2
+            
+            result = run_fp2_race_ml_prediction_v2(
+                year=year,
+                race=race,
+                session=session,
+                verbose=True
+            )
+            
+            return result
+            
+        except Exception as e:
+            print(f"[ERROR] F91 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F91 執行失敗: {str(e)}",
+                "function_id": "91"
             }
 
 # ===== 支援函數和工具 =====

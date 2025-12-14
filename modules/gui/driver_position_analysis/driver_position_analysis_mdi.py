@@ -23,6 +23,9 @@ from core.gui_i18n import tr
 # 導入基類
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class DriverPositionApiWorker(QThread):
     """
@@ -54,6 +57,9 @@ class DriverPositionApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -71,8 +77,12 @@ class DriverPositionApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[POSITION_API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[POSITION_API_WORKER] 📋 參數: {query_params}")
+            logger.debug(f"[POSITION_API_WORKER] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[POSITION_API_WORKER] 📋 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -83,6 +93,10 @@ class DriverPositionApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -114,21 +128,29 @@ class DriverPositionApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[POSITION_API_WORKER] ✅ API 調用成功")
-            print(f"[POSITION_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[POSITION_API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info(f"[POSITION_API_WORKER] ✅ API 調用成功")
+            logger.debug(f"[POSITION_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[POSITION_API_WORKER] 📊 數據源: {meta['source']}")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[POSITION_API_WORKER] ❌ {error_msg}")
+            logger.error(f"[POSITION_API_WORKER] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 # 導入 Widget
@@ -164,7 +186,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("driver_position", config)
             cls._REGISTERED = True
-            print("[POSITION_MDI] ✅ 模組類型已註冊")
+            logger.info("[POSITION_MDI] ✅ 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -173,7 +195,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[POSITION_MDI] DriverPositionAnalysisMDI 開始初始化...")
+        logger.debug(f"[POSITION_MDI] DriverPositionAnalysisMDI 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -186,11 +208,14 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         self.race = None
         self.session = None
         
+        # 初始化組件引用
+        self.chart_widget = None
+        
         # 狀態變數
         self._current_data = None
         self._is_data_loaded = False
         
-        print(f"[POSITION_MDI] 基類初始化完成, 等待參數設置...")
+        logger.debug(f"[POSITION_MDI] 基類初始化完成, 等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -206,19 +231,19 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print(f"[POSITION_MDI] 開始初始化模組...")
+            logger.debug(f"[POSITION_MDI] 開始初始化模組...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[POSITION_MDI] ❌ 缺少 current_year 屬性")
+                logger.error(f"[POSITION_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[POSITION_MDI] ❌ 缺少 current_race 屬性")
+                logger.error(f"[POSITION_MDI] ❌ 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print(f"[POSITION_MDI] ❌ 缺少 current_session 屬性")
+                logger.error(f"[POSITION_MDI] ❌ 缺少 current_session 屬性")
                 return False
             
             # 設置參數
@@ -226,7 +251,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[POSITION_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
+            logger.info(f"[POSITION_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
             
             # ⚠️ 跳過基類的 initialize_module（它會檢查 data_manager）
             # 直接創建必要組件
@@ -234,10 +259,10 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             # 1. 創建圖表組件
             self.chart_widget = self.create_chart_widget()
             if not self.chart_widget:
-                print(f"[POSITION_MDI] ❌ chart_widget 未創建")
+                logger.error(f"[POSITION_MDI] ❌ chart_widget 未創建")
                 return False
             
-            print(f"[POSITION_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__})")
+            logger.info(f"[POSITION_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__})")
             
             # 2. 設置主界面
             self._setup_ui()
@@ -251,11 +276,11 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             # 5. 載入初始數據
             self.load_initial_data()
             
-            print(f"[POSITION_MDI] ✅ 模組初始化完成")
+            logger.info(f"[POSITION_MDI] ✅ 模組初始化完成")
             return True
             
         except Exception as e:
-            print(f"[POSITION_MDI] ❌ 初始化失敗: {e}")
+            logger.error(f"[POSITION_MDI] ❌ 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -268,7 +293,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         
         注意: 此模組直接使用 API Worker，不需要傳統 DataLoader
         """
-        print("[POSITION_MDI] ⚠️  此模組使用 API Worker，不需要 DataManager")
+        logger.warning("[POSITION_MDI] ⚠️  此模組使用 API Worker，不需要 DataManager")
         return None
     
     def create_chart_widget(self) -> DriverPositionAnalysisWidget:
@@ -278,16 +303,16 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         Returns:
             DriverPositionAnalysisWidget: 表格元件實例
         """
-        print("[POSITION_MDI] 創建表格元件...")
+        logger.debug("[POSITION_MDI] 創建表格元件...")
         widget = DriverPositionAnalysisWidget(parent=None)
-        print("[POSITION_MDI] ✅ 表格元件已創建")
+        logger.info("[POSITION_MDI] ✅ 表格元件已創建")
         return widget
     
     def _setup_control_panel(self):
         """
         設置控制面板（由基類調用）
         """
-        print("[POSITION_MDI] 設置控制面板...")
+        logger.debug("[POSITION_MDI] 設置控制面板...")
         
         # 創建控制面板容器
         control_panel = QGroupBox(tr("control_panel", "控制面板"))
@@ -310,7 +335,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         if hasattr(self, 'main_layout'):
             self.main_layout.addWidget(control_panel)
         
-        print("[POSITION_MDI] ✅ 控制面板已設置")
+        logger.info("[POSITION_MDI] ✅ 控制面板已設置")
     
     # ========== 數據流處理 ==========
     
@@ -318,8 +343,8 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         """
         載入初始資料 - 強制使用 API
         """
-        print("[POSITION_MDI] 🚀 開始載入初始資料...")
-        print(f"[POSITION_MDI] 📋 參數: {self.year} {self.race} {self.session}")
+        logger.debug("[POSITION_MDI] 🚀 開始載入初始資料...")
+        logger.debug(f"[POSITION_MDI] 📋 參數: {self.year} {self.race} {self.session}")
         
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
@@ -333,7 +358,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             "force_refresh": False
         }
         
-        print("[POSITION_MDI] 🌐 創建 API Worker...")
+        logger.debug("[POSITION_MDI] 🌐 創建 API Worker...")
         self.api_worker = DriverPositionApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -346,13 +371,13 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[POSITION_MDI] ▶️  啟動 API 請求...")
+        logger.debug("[POSITION_MDI] ▶️  啟動 API 請求...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[POSITION_MDI] 📊 API 進度: {progress}%")
+        logger.debug(f"[POSITION_MDI] 📊 API 進度: {progress}%")
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('api_loading', 'API 載入中')}... {progress}%")
     
@@ -360,14 +385,14 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[POSITION_MDI] ✅ API 調用成功")
+            logger.info("[POSITION_MDI] ✅ API 調用成功")
             
             # 提取數據和元數據
             data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[POSITION_MDI] 📦 數據源: {meta.get('source')}")
-            print(f"[POSITION_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
+            logger.debug(f"[POSITION_MDI] 📦 數據源: {meta.get('source')}")
+            logger.debug(f"[POSITION_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
             
             # 處理數據
             self._process_position_data(data)
@@ -378,7 +403,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
                 self.lbl_control_status.setText(f"✅ {tr('loaded_from', '已從')} {source_label} {tr('load_data', '載入資料')}")
             
         except Exception as e:
-            print(f"❌ [POSITION_MDI] API 數據處理失敗: {e}")
+            logger.error(f"[POSITION_MDI] API 數據處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_api_failure(str(e))
@@ -386,7 +411,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗"""
-        print(f"❌ [POSITION_MDI] API 調用失敗: {error_msg}")
+        logger.error(f"[POSITION_MDI] API 調用失敗: {error_msg}")
         
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("api_request_failed", "API 請求失敗，請稍後再試"))
@@ -407,7 +432,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             data: API 返回的數據
         """
         try:
-            print("[POSITION_MDI] 開始處理排名數據...")
+            logger.debug("[POSITION_MDI] 開始處理排名數據...")
             
             # 驗證數據結構
             if "all_drivers_position_analysis" not in data:
@@ -439,17 +464,23 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             
             position_list.sort(key=get_sort_key)
             
-            print(f"[POSITION_MDI] 填充表格（{len(position_list)} 位車手）...")
+            logger.debug(f"[POSITION_MDI] 填充表格（{len(position_list)} 位車手）...")
+            
+            # 檢查 chart_widget 是否存在
+            if not hasattr(self, 'chart_widget') or self.chart_widget is None:
+                logger.error("[POSITION_MDI] chart_widget 不存在，可能初始化未完成")
+                return
+            
             self.chart_widget.populate_table(position_list)
             
             # 儲存資料
             self._current_data = data
             self._is_data_loaded = True
             
-            print("[POSITION_MDI] ✅ 資料處理完成")
+            logger.info("[POSITION_MDI] ✅ 資料處理完成")
             
         except Exception as e:
-            print(f"❌ [POSITION_MDI] 資料處理失敗: {e}")
+            logger.error(f"[POSITION_MDI] 資料處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._show_error(tr("data_processing_failed", "資料處理失敗"), str(e))
@@ -458,12 +489,13 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
     
     def _on_reload_clicked(self):
         """處理重新載入按鈕點擊"""
-        print("[POSITION_MDI] 重新載入資料...")
+        logger.debug("[POSITION_MDI] 重新載入資料...")
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("reloading", "重新載入中..."))
         
         # 清空表格
-        self.chart_widget.clear_table()
+        if hasattr(self, 'chart_widget') and self.chart_widget is not None:
+            self.chart_widget.clear_table()
         
         # 重新載入
         self.load_initial_data()
@@ -481,7 +513,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[POSITION_MDI] 🔄 更新參數: {year} {race} {session}")
+            logger.debug(f"[POSITION_MDI] 🔄 更新參數: {year} {race} {session}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -496,23 +528,23 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
                 self.data_manager.session = session
-                print(f"[POSITION_MDI] ✅ DataManager 參數已同步")
+                logger.info(f"[POSITION_MDI] ✅ DataManager 參數已同步")
             elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
                 self.data_loader.session = session
-                print(f"[POSITION_MDI] ✅ DataLoader 參數已同步")
+                logger.info(f"[POSITION_MDI] ✅ DataLoader 參數已同步")
             
             # 🔑 重點：調用 load_initial_data() 觸發 API 請求
             # 這個方法會啟動 API Worker 並更新 UI
-            print(f"[POSITION_MDI] 🌐 觸發資料重新載入...")
+            logger.debug(f"[POSITION_MDI] 🌐 觸發資料重新載入...")
             self.load_initial_data()
             
             # 異步載入，返回 True 表示啟動成功
             return True
             
         except Exception as e:
-            print(f"❌ [POSITION_MDI] 參數更新失敗: {e}")
+            logger.error(f"[POSITION_MDI] 參數更新失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -536,7 +568,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             target_session = session if session is not None else (self.session or getattr(self, 'current_session', None))
 
             if not all([target_year, target_race, target_session]):
-                print("❌ [POSITION_MDI] 參數更新失敗：缺少必要參數")
+                logger.error("[POSITION_MDI] 參數更新失敗：缺少必要參數")
                 return False
 
             normalized_year = str(target_year)
@@ -562,8 +594,9 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
             )
 
         except Exception as exc:
-            print(f"❌ [POSITION_MDI] update_parameters 失敗: {exc}")
+            logger.error(f"[POSITION_MDI] update_parameters 失敗: {exc}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -578,4 +611,4 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         # ❌ 已禁用彈窗：僅保留方法以維持相容性
         # parent = self.chart_widget if hasattr(self, 'chart_widget') else None
         # QMessageBox.critical(parent, title, message)
-        print(f"[POSITION_MDI] ⚠️ 錯誤: {title} - {message}")
+        logger.warning(f"[POSITION_MDI] ⚠️ 錯誤: {title} - {message}")

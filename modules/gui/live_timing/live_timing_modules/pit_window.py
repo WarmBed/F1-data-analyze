@@ -18,6 +18,10 @@ from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QFont
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.pit_window", component="gui")
 
 # 嘗試導入通用顏色系統
 try:
@@ -25,7 +29,7 @@ try:
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     COLOR_PALETTE_AVAILABLE = False
-    print("[PIT_WINDOW] color_palette_provider not available")
+    logger.warning("[PIT_WINDOW] color_palette_provider not available")
 
 
 class PitWindowWidget(QWidget):
@@ -108,7 +112,7 @@ class PitWindowWidget(QWidget):
             '20': '#B6BABD', '27': '#B6BABD',
         }
         
-        print("[PIT_WINDOW] PitWindowWidget initialized")
+        logger.info("[PIT_WINDOW] PitWindowWidget initialized")
     
     def set_driver_info(self, driver_info: Dict):
         """設置車手資訊"""
@@ -149,7 +153,7 @@ class PitWindowWidget(QWidget):
         # 發出信號通知其他模組
         self.driver_change_requested.emit(driver_num)
         tla = self._driver_positions.get(driver_num, {}).get('driver_tla', driver_num)
-        print(f"[PIT_WINDOW] Driver selected from menu: {tla} ({driver_num})")
+        logger.info("[PIT_WINDOW] Driver selected from menu: %s (%s)", tla, driver_num)
     
     def _show_context_menu(self, pos):
         """顯示右鍵選單"""
@@ -270,7 +274,7 @@ class PitWindowWidget(QWidget):
             else:
                 self._pit_loss_vsc = new_value
             
-            print(f"[PIT_WINDOW] Updated {mode} pit loss to {new_value:.1f}s")
+            logger.info("[PIT_WINDOW] Updated %s pit loss to %.1fs", mode, new_value)
             self.update()
     
     def update_positions(self, drivers_data: Dict[str, Dict[str, Any]]):
@@ -698,16 +702,16 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
         # 連接 driver_selected 信號
         self._connect_driver_selection_signal()
         
-        print("[PIT_WINDOW_MDI] LiveTimingPitWindow initialized")
+        logger.info("[PIT_WINDOW_MDI] LiveTimingPitWindow initialized")
     
     def _connect_driver_selection_signal(self):
         """連接 DataManager 的 driver_selected 信號"""
         try:
             if self._data_manager:
                 self._data_manager.driver_selected.connect(self._on_driver_selected)
-                print("[PIT_WINDOW_MDI] Connected to driver_selected signal")
-        except Exception as e:
-            print(f"[PIT_WINDOW_MDI] Failed to connect driver_selected signal: {e}")
+                logger.info("[PIT_WINDOW_MDI] Connected to driver_selected signal")
+        except Exception:
+            logger.exception("[PIT_WINDOW_MDI] Failed to connect driver_selected signal")
     
     def _on_driver_selected(self, driver_num: str):
         """處理車手選擇 - 設置為參考車手 (從 DataManager snapshot 獲取車手資訊)"""
@@ -726,11 +730,19 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
                             self.pit_widget._driver_positions[driver_num] = {}
                         self.pit_widget._driver_positions[driver_num]['driver_tla'] = tla
                         self.pit_widget._driver_positions[driver_num]['team_color'] = team_color
-                        print(f"[PIT_WINDOW_MDI] Driver info from snapshot: {tla} ({team_color})")
+                        logger.debug(
+                            "[PIT_WINDOW_MDI] Driver info from snapshot: %s (%s)",
+                            tla,
+                            team_color,
+                        )
             
             self.pit_widget.set_reference_driver(driver_num)
             driver_tla = self.pit_widget._driver_positions.get(driver_num, {}).get('driver_tla', driver_num)
-            print(f"[PIT_WINDOW_MDI] Reference driver set to: {driver_tla} ({driver_num})")
+            logger.info(
+                "[PIT_WINDOW_MDI] Reference driver set to: %s (%s)",
+                driver_tla,
+                driver_num,
+            )
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -742,7 +754,7 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
     
     def _on_driver_change_requested(self, driver_num: str):
         """處理車手切換請求 - 發送信號給其他模組"""
-        print(f"[PIT_WINDOW_MDI] Driver change requested: {driver_num}")
+        logger.info("[PIT_WINDOW_MDI] Driver change requested: %s", driver_num)
         if self._data_manager:
             self._data_manager.driver_selected.emit(driver_num)
     
@@ -751,11 +763,15 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
         driver_info = race_info.get('driver_info', {})
         self.pit_widget.set_driver_info(driver_info)
         
-        print(f"[PIT_WINDOW_MDI] Race loaded: {race_info.get('year')} {race_info.get('race')}")
+        logger.info(
+            "[PIT_WINDOW_MDI] Race loaded: %s %s",
+            race_info.get('year'),
+            race_info.get('race'),
+        )
     
     def _on_race_unloaded(self):
         """Race unloaded"""
-        print("[PIT_WINDOW_MDI] Race unloaded")
+        logger.info("[PIT_WINDOW_MDI] Race unloaded")
         self.pit_widget._driver_positions = {}
         self.pit_widget.update()
     
@@ -781,6 +797,6 @@ class LiveTimingPitWindow(BaseLiveTimingMDI):
         try:
             if self._data_manager:
                 self._data_manager.driver_selected.disconnect(self._on_driver_selected)
-                print("[PIT_WINDOW_MDI] Disconnected from driver_selected signal")
+                logger.debug("[PIT_WINDOW_MDI] Disconnected from driver_selected signal")
         except Exception:
             pass  # 信號可能已經斷開

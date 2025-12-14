@@ -24,13 +24,22 @@ import os
 from core.gui_i18n import tr
 from ..core.base_live_mdi import BaseLiveTimingMDI
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 嘗試導入通用顏色系統
 try:
     from modules.gui.themes.color_palette_provider import color_palette_provider
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     COLOR_PALETTE_AVAILABLE = False
-    print("[RANKING_TOWER] color_palette_provider not available")
+    # fallback to default colors; log once
+    get_logger("live_timing.ranking_tower", component="gui").warning(
+        "[RANKING_TOWER] color_palette_provider not available"
+    )
+
+
+logger = get_logger("live_timing.ranking_tower", component="gui")
 
 
 # ===========================================
@@ -99,6 +108,27 @@ class RankingTableWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
+        # ✅ 優化：預先創建常用顏色對象緩存，避免重複創建
+        self._color_cache = {
+            'default_text': QColor('#E0E0E0'),
+            'white': QColor('#FFFFFF'),
+            'black': QColor('#000000'),
+            'green': QColor('#00FF00'),
+            'dark_green': QColor('#00DD00'),
+            'purple': QColor('#FF00FF'),
+            'yellow': QColor('#FFFF00'),
+            'orange': QColor('#FFA500'),
+            'light_blue': QColor('#4A90E2'),
+            'pit_yellow': QColor('#FFD700'),
+            'red': QColor('#FF0000'),
+            'grey': QColor('#888888'),
+            'light_green': QColor('#66FF66'),
+            'deep_green': QColor('#00CC00'),
+            'light_blue': QColor('#6699FF'),
+            'blue': QColor('#0066FF'),
+            'deep_blue': QColor('#0044CC'),
+        }
+        
         # 進站策略資料庫（輪胎建議圈數）
         self._pit_strategy_db: Dict[str, Any] = {}
         self._current_circuit: str = ""
@@ -129,6 +159,9 @@ class RankingTableWidget(QWidget):
         self._drivers_in_pit: Dict[str, float] = {}  # {driver_num: pit_start_race_time}
         self._previous_pit_states: Dict[str, bool] = {}  # {driver_num: was_in_pit}
         
+        # 最快圈速追蹤 (用於深紫色背景顯示)
+        self._fastest_best_lap: Optional[str] = None  # 全場最快的 best_lap 時間字串
+        
         # 紅框更新計時器
         self._highlight_timer = QTimer(self)
         self._highlight_timer.timeout.connect(self._check_highlight_expiry)
@@ -150,7 +183,7 @@ class RankingTableWidget(QWidget):
             return
         
         # API 失敗，顯示錯誤（禁止本地回退）
-        print("[RANKING_TOWER] API 獲取配置失敗，請確認 API 服務器已啟動")
+        logger.warning("[RANKING_TOWER] API 獲取配置失敗，請確認 API 服務器已啟動")
     
     def _load_pit_strategy_via_api(self) -> bool:
         """通過 API 獲取輪胎衰退數據庫"""
@@ -162,13 +195,16 @@ class RankingTableWidget(QWidget):
             
             if tire_data:
                 self._pit_strategy_db = tire_data
-                print(f"[RANKING_TOWER] 載入輪胎衰退數據庫 (API): {len(tire_data.get('circuits', {}))} circuits")
+                logger.info(
+                    "[RANKING_TOWER] 載入輪胎衰退數據庫 (API): %s circuits",
+                    len(tire_data.get('circuits', {})),
+                )
                 return True
             
             return False
             
         except Exception as e:
-            print(f"[RANKING_TOWER] API 獲取輪胎衰退數據庫失敗: {e}")
+            logger.exception("[RANKING_TOWER] API 獲取輪胎衰退數據庫失敗: %s", e)
             return False
     
     def set_circuit(self, circuit_name: str):
@@ -221,7 +257,11 @@ class RankingTableWidget(QWidget):
             self._current_circuit = db_key
             # 使用 optimal_stint_length 作為建議圈數
             self._circuit_pit_windows = circuit_data.get('optimal_stint_length', {})
-            print(f"[RANKING_TOWER] Circuit set: {db_key}, optimal stint: {self._circuit_pit_windows}")
+            logger.info(
+                "[RANKING_TOWER] Circuit set: %s, optimal stint: %s",
+                db_key,
+                self._circuit_pit_windows,
+            )
         else:
             # 嘗試模糊匹配
             for key in circuits.keys():
@@ -229,10 +269,18 @@ class RankingTableWidget(QWidget):
                     circuit_data = circuits[key]
                     self._current_circuit = key
                     self._circuit_pit_windows = circuit_data.get('optimal_stint_length', {})
-                    print(f"[RANKING_TOWER] Circuit fuzzy match: {key}, optimal stint: {self._circuit_pit_windows}")
+                    logger.info(
+                        "[RANKING_TOWER] Circuit fuzzy match: %s, optimal stint: %s",
+                        key,
+                        self._circuit_pit_windows,
+                    )
                     return
             
-            print(f"[RANKING_TOWER] Circuit not found in database: {circuit_key} (tried: {db_key})")
+            logger.warning(
+                "[RANKING_TOWER] Circuit not found in database: %s (tried: %s)",
+                circuit_key,
+                db_key,
+            )
             self._circuit_pit_windows = {}
 
     def _init_ui(self):
@@ -243,12 +291,12 @@ class RankingTableWidget(QWidget):
         # 表格設置
         self.table = QTableWidget()
         self.table.setProperty("is_live_timing_widget", True)  # 標記為 Live Timing widget
-        self.table.setColumnCount(23)  # 將 SPD 替換為 Trend
+        self.table.setColumnCount(24)  # 增加 CC% 欄位
         self.table.setHorizontalHeaderLabels([
             "P", tr("driver"), "+/-", "No", tr("tyre"), tr("age"), "Pit", tr("tyre_hist"),
             "S1", "S2", "S3",
             tr("last_lap"), tr("best_lap"), tr("delta"), tr("gap_leader"), tr("gap_ahead"), "Trend", tr("fuel_save"),
-            "P1%", "P2%", "P3%", "OT%",  # OT% = 超車機率
+            "P1%", "P2%", "P3%", "OT%", "CC%",  # ❌ OT% 和 CC% 已禁用（性能優化）
             "DRS"
         ])
         
@@ -311,6 +359,7 @@ class RankingTableWidget(QWidget):
             41,   # P2%
             41,   # P3%
             41,   # OT% (超車機率)
+            41,   # CC% (近距離接觸機率)
             32    # DRS
         ]
         
@@ -321,6 +370,8 @@ class RankingTableWidget(QWidget):
         self.table.hideColumn(3)   # No
         self.table.hideColumn(7)   # 換胎
         self.table.hideColumn(17)  # SF% (暫時隱藏)
+        self.table.hideColumn(21)  # ❌ OT% (超車機率 - 已禁用以提升性能)
+        self.table.hideColumn(22)  # ❌ CC% (近距離接觸 - 已禁用以提升性能)
     
     def _show_context_menu(self, pos):
         """顯示右鍵選單"""
@@ -410,7 +461,11 @@ class RankingTableWidget(QWidget):
         
         if ok:
             self._circuit_pit_windows[compound] = new_value
-            print(f"[RANKING_TOWER] Updated {compound} optimal stint to {new_value} laps")
+            logger.info(
+                "[RANKING_TOWER] Updated %s optimal stint to %s laps",
+                compound,
+                new_value,
+            )
             
             # 強制刷新顯示（重新計算輪胎老化顏色）
             if self._current_snapshot and self._current_tyre_state:
@@ -426,12 +481,20 @@ class RankingTableWidget(QWidget):
     
     def update_display(self, snapshot: Dict, tyre_state: Dict[str, Dict[str, Any]] = None):
         """
-        更新顯示
+        更新顯示（✅ 高頻優化版本）
+        
+        優化策略：
+        1. 使用 blockSignals 減少信號觸發
+        2. 批次更新所有行後才重新啟用信號
+        3. 只在必要時才 setRowCount（車手數量變化）
         
         Args:
             snapshot: 當前時間快照
             tyre_state: 即時輪胎狀態
         """
+        # ✅ 優化 1: 阻止所有信號觸發，批次更新完成後再恢復
+        self.table.blockSignals(True)
+        
         self._current_snapshot = snapshot
         if tyre_state:
             self._current_tyre_state = tyre_state
@@ -479,7 +542,6 @@ class RankingTableWidget(QWidget):
             if previous_pos is not None and previous_pos != current_pos:
                 # 名次變更！記錄這個車手 (使用播放時間)
                 self._position_changed_drivers[driver_num] = current_race_time
-                print(f"[RANKING_TOWER] Position change: {driver_data.get('driver_tla', driver_num)} P{previous_pos} -> P{current_pos} at race_time={current_race_time:.1f}s")
             
             # 更新上一次排名記錄
             self._previous_positions[driver_num] = current_pos
@@ -491,36 +553,139 @@ class RankingTableWidget(QWidget):
             if is_in_pit and not was_in_pit:
                 # 剛進站，記錄進站開始時間
                 self._drivers_in_pit[driver_num] = current_race_time
-                print(f"[RANKING_TOWER] PIT IN: {driver_data.get('driver_tla', driver_num)} at race_time={current_race_time:.1f}s")
             elif not is_in_pit and was_in_pit:
                 # 出站，移除進站記錄
                 if driver_num in self._drivers_in_pit:
-                    pit_duration = current_race_time - self._drivers_in_pit[driver_num]
-                    print(f"[RANKING_TOWER] PIT OUT: {driver_data.get('driver_tla', driver_num)} (pit duration: {pit_duration:.1f}s)")
                     del self._drivers_in_pit[driver_num]
             
             self._previous_pit_states[driver_num] = is_in_pit
         
-        # 暫停排序
-        self.table.setSortingEnabled(False)
-        self.table.setRowCount(len(sorted_drivers))
+        # ✅ 優化 2: 只在車手數量變化時才 setRowCount
+        current_row_count = self.table.rowCount()
+        needed_row_count = len(sorted_drivers)
         
+        if current_row_count != needed_row_count:
+            self.table.setSortingEnabled(False)
+            self.table.setRowCount(needed_row_count)
+        
+        # ✅ 計算全場最快的 best_lap (用於紫色背景顯示)
+        fastest_best_lap_time = None
+        fastest_best_lap_seconds = float('inf')
+        
+        for driver_num, driver_data in drivers.items():
+            best_lap_time = driver_data.get('best_lap_time', '')
+            if best_lap_time and best_lap_time.strip():
+                # 轉換為秒數進行比較 (格式: "1:23.456")
+                try:
+                    if ':' in best_lap_time:
+                        parts = best_lap_time.split(':')
+                        minutes = int(parts[0])
+                        seconds = float(parts[1])
+                        total_seconds = minutes * 60 + seconds
+                    else:
+                        total_seconds = float(best_lap_time)
+                    
+                    if total_seconds < fastest_best_lap_seconds:
+                        fastest_best_lap_seconds = total_seconds
+                        fastest_best_lap_time = best_lap_time
+                except (ValueError, IndexError):
+                    pass
+        
+        # 儲存最快圈速供 _set_lap_times 使用
+        self._fastest_best_lap = fastest_best_lap_time
+        
+        # ✅ 優化 3: 批次更新所有行
         for row, (driver_num, driver_data) in enumerate(sorted_drivers):
             self._update_row(row, driver_num, driver_data)
+        
+        # ✅ 優化 4: 恢復信號觸發
+        self.table.blockSignals(False)
     
+    def update_fast_columns(self, snapshot: Dict):
+        """
+        快速更新關鍵欄位（Gap Leader, Gap Ahead, DRS）
+        
+        這些欄位變化頻繁，需要較高的更新率 (30 FPS)
+        其他欄位由 update_display() 以較低頻率更新 (10 FPS)
+        """
+        self.table.blockSignals(True)
+        
+        self._current_snapshot = snapshot
+        self._current_race_time_seconds = snapshot.get('race_time_seconds', 0.0)
+        
+        drivers = snapshot.get('drivers', {})
+        
+        # 按排名排序
+        def get_sort_key(item):
+            pos = item[1].get('position')
+            if pos is None:
+                return 999
+            try:
+                return int(pos)
+            except (ValueError, TypeError):
+                return 999
+        
+        sorted_drivers = sorted(drivers.items(), key=get_sort_key)
+        
+        # 快速更新每行的 Gap 和 DRS 欄位
+        for row, (driver_num, driver_data) in enumerate(sorted_drivers):
+            if row >= self.table.rowCount():
+                break
+            
+            # Gap to Leader (欄位 14) - P1 永遠不顯示
+            position = driver_data.get('position')
+            if position == 1 or position == '1':
+                gap_leader_text = ""
+            else:
+                gap_leader_text = driver_data.get('gap_to_leader_display', '')
+                if not gap_leader_text:
+                    # fallback 嘗試其他可能的欄位名
+                    gap_leader_text = driver_data.get('gap_leader', driver_data.get('gap_to_leader', ''))
+            gap_item = self.table.item(row, 14)
+            if gap_item:
+                gap_item.setText(str(gap_leader_text) if gap_leader_text else '')
+            
+            # Gap to Ahead (欄位 15) - 使用與完整更新相同的欄位名
+            if driver_data.get('position') == 1:
+                gap_ahead_text = ""
+            else:
+                gap_ahead_text = driver_data.get('gap_to_ahead_display', '')
+                if not gap_ahead_text:
+                    # fallback 嘗試其他可能的欄位名
+                    gap_ahead_text = driver_data.get('gap_ahead', driver_data.get('interval', ''))
+            interval_item = self.table.item(row, 15)
+            if interval_item:
+                interval_item.setText(str(gap_ahead_text) if gap_ahead_text else '')
+            
+            # DRS (欄位 23)
+            self._set_telemetry(row, driver_num)
+        
+        self.table.blockSignals(False)
+
     def _update_row(self, row: int, driver_num: str, driver_data: Dict):
-        """更新單行數據"""
-        # 深色模式預設文字顏色
-        default_text_color = QColor('#E0E0E0')
+        """
+        更新單行數據（✅ 高頻優化版本）
+        
+        優化策略：
+        1. 使用緩存的顏色對象
+        2. 減少臨時對象創建
+        3. 複用 QTableWidgetItem（如果可能）
+        """
+        # ✅ 使用緩存的顏色
+        default_text_color = self._color_cache['default_text']
         
         # P - 排名 (欄位 0)
-        pos_item = QTableWidgetItem(str(driver_data.get('position', 'N/A')))
+        pos_item = self.table.item(row, 0)
+        if not pos_item:
+            pos_item = QTableWidgetItem()
+            self.table.setItem(row, 0, pos_item)
+        
+        pos_item.setText(str(driver_data.get('position', 'N/A')))
         pos_item.setTextAlignment(Qt.AlignCenter)
         pos_item.setForeground(default_text_color)
         font = pos_item.font()
         font.setBold(True)
         pos_item.setFont(font)
-        self.table.setItem(row, 0, pos_item)
         
         # 車手 (欄位 1)
         self._set_driver_info(row, driver_num, driver_data)
@@ -529,10 +694,14 @@ class RankingTableWidget(QWidget):
         self._set_position_change(row, driver_num, driver_data)
         
         # No - 車號 (欄位 3)
-        num_item = QTableWidgetItem(driver_num)
+        num_item = self.table.item(row, 3)
+        if not num_item:
+            num_item = QTableWidgetItem()
+            self.table.setItem(row, 3, num_item)
+        
+        num_item.setText(driver_num)
         num_item.setTextAlignment(Qt.AlignCenter)
         num_item.setForeground(default_text_color)
-        self.table.setItem(row, 3, num_item)
         
         # 輪胎相關欄位 (欄位 4-7)
         self._set_tyre_info(row, driver_num)
@@ -546,7 +715,7 @@ class RankingTableWidget(QWidget):
         # 勝率 (欄位 18-20)
         self._set_probabilities(row, driver_data)
         
-        # 遙測資料 (欄位 20-21)
+        # 遙測資料 (欄位 23)
         self._set_telemetry(row, driver_num)
         
         # 檢查是否需要顯示紅框 (名次變更)
@@ -583,6 +752,20 @@ class RankingTableWidget(QWidget):
                         new_g = max(0, current_bg.green() - 20)
                         new_b = max(0, current_bg.blue() - 20)
                         item.setBackground(QColor(new_r, new_g, new_b))
+            else:
+                # ✅ 時間已過 - 恢復原始背景色
+                for col in range(self.table.columnCount()):
+                    item = self.table.item(row, col)
+                    if item:
+                        # 恢復原始背景色
+                        original_bg_name = item.data(Qt.UserRole + 1)
+                        if original_bg_name:
+                            item.setBackground(QColor(original_bg_name))
+                            # 清除儲存的原始顏色標記
+                            item.setData(Qt.UserRole + 1, None)
+                
+                # 從追蹤字典中移除（避免重複處理）
+                del self._position_changed_drivers[driver_num]
     
     def _apply_pit_highlight(self, row: int, driver_num: str, driver_data: Dict):
         """
@@ -712,9 +895,13 @@ class RankingTableWidget(QWidget):
         if hasattr(self, '_current_snapshot'):
             driver_data = self._current_snapshot.get('drivers', {}).get(driver_num, {})
         driver_tla = driver_data.get('tla', '???') if driver_data else '???'
-        print(f"[RANKING_TOWER]  _set_tyre_info for Driver {driver_num} ({driver_tla}):")
-        print(f"   tyre_info dict: {tyre_info}")
-        print(f"   Reading 'tyre_age' key: {tyre_info.get('tyre_age', 'KEY_NOT_FOUND')}")
+        logger.debug(
+            "[RANKING_TOWER]  _set_tyre_info for Driver %s (%s): tyre_info=%s, tyre_age_key=%s",
+            driver_num,
+            driver_tla,
+            tyre_info,
+            tyre_info.get('tyre_age', 'KEY_NOT_FOUND'),
+        )
         
         # 胎 (欄位 4) - 黑底 + 對應顏色字體
         tyre_item = QTableWidgetItem(tyre_abbrev)
@@ -728,7 +915,7 @@ class RankingTableWidget(QWidget):
         
         # 齡 (欄位 5)
         tyre_age = tyre_info.get('tyre_age', tyre_info.get('stint_length', ''))
-        print(f"   Final tyre_age for display: {tyre_age}")
+        logger.debug("   Final tyre_age for display: %s", tyre_age)
         age_item = QTableWidgetItem(str(tyre_age) if tyre_age else '')
         age_item.setTextAlignment(Qt.AlignCenter)
         age_item.setForeground(default_text_color)  # 預設顏色，_set_age_color 會覆蓋
@@ -833,9 +1020,14 @@ class RankingTableWidget(QWidget):
         self.table.setItem(row, 1, driver_item)
     
     def _set_sector_times(self, row: int, driver_data: Dict):
-        """設置區間時間欄位"""
-        # 深色模式預設文字顏色
-        default_text_color = QColor('#E0E0E0')
+        """設置區間時間欄位（✅ 優化版本）"""
+        # ✅ 使用緩存的顏色
+        default_text_color = self._color_cache['default_text']
+        green = self._color_cache['green']
+        dark_green = self._color_cache['dark_green']
+        purple = self._color_cache['purple']
+        white = self._color_cache['white']
+        black = self._color_cache['black']
         
         for sector_idx in range(3):
             sector_name = f's{sector_idx + 1}'
@@ -864,9 +1056,13 @@ class RankingTableWidget(QWidget):
             self.table.setItem(row, 8 + sector_idx, sector_item)
     
     def _set_lap_times(self, row: int, driver_num: str, driver_data: Dict):
-        """設置圈時相關欄位"""
-        # 深色模式預設文字顏色
-        default_text_color = QColor('#E0E0E0')
+        """設置圈時相關欄位（✅ 優化版本）"""
+        # ✅ 使用緩存的顏色
+        default_text_color = self._color_cache['default_text']
+        white = self._color_cache['white']
+        dark_green = self._color_cache['dark_green']
+        purple = self._color_cache['purple']
+        black = self._color_cache['black']
         
         # 上圈 (欄位 11)
         last_lap_time = driver_data.get('last_lap_time', '')
@@ -897,16 +1093,36 @@ class RankingTableWidget(QWidget):
         best_lap_time = driver_data.get('best_lap_time', '')
         best_lap_item = QTableWidgetItem(best_lap_time if best_lap_time else '')
         best_lap_item.setTextAlignment(Qt.AlignCenter)
-        best_lap_item.setForeground(QColor('#FFFFFF'))  # 白色
+        
+        # ✅ 檢查是否為全場最快圈速 - 顯示深紫色背景
+        is_fastest_overall = (
+            best_lap_time 
+            and best_lap_time.strip() 
+            and hasattr(self, '_fastest_best_lap') 
+            and best_lap_time == self._fastest_best_lap
+        )
+        
+        if is_fastest_overall:
+            # 深紫色背景 (類似深紅色的色調)
+            best_lap_item.setBackground(QColor('#663399'))  # 深紫色 (Rebecca Purple)
+            best_lap_item.setForeground(QColor('#FFFFFF'))  # 白色文字
+            font = best_lap_item.font()
+            font.setBold(True)
+            best_lap_item.setFont(font)
+        else:
+            best_lap_item.setForeground(QColor('#FFFFFF'))  # 白色
+        
         self.table.setItem(row, 12, best_lap_item)
         
         # 差距 (欄位 13)
         self._set_delta(row, last_lap_time, best_lap_time)
         
-        # 領先 (欄位 14)
-        gap_leader_text = driver_data.get('gap_to_leader_display', '')
-        if not gap_leader_text and driver_data.get('position') == 1:
+        # 領先 (欄位 14) - P1 永遠不顯示
+        position = driver_data.get('position')
+        if position == 1 or position == '1':
             gap_leader_text = ""
+        else:
+            gap_leader_text = driver_data.get('gap_to_leader_display', '')
         gap_leader_item = QTableWidgetItem(gap_leader_text)
         gap_leader_item.setTextAlignment(Qt.AlignCenter)
         gap_leader_item.setForeground(default_text_color)
@@ -981,13 +1197,12 @@ class RankingTableWidget(QWidget):
     
     def _set_gap_ahead(self, row: int, driver_data: Dict):
         """
-        設置前車間隔欄位 - 與 Demo Live 邏輯一致
+        設置前車間隔欄位
         
-        顏色邏輯（深色模式優化）：
-        - ≤ 0秒：綠色背景 (DRS 範圍)
-        - 0-2.5秒：綠→黃漸變背景
-        - 2.5-5秒：黃→紅漸變背景
-        - ≥ 5秒：無背景，白色文字 (安全間距)
+        顏色邏輯（簡化版）：
+        - 0~1秒：綠色背景 (DRS 範圍 / 攻擊距離)
+        - 1~2.5秒：黃色背景 (追趕距離)
+        - >2.5秒：黑色背景 (安全間距)
         """
         # 深色模式預設文字顏色
         default_text_color = QColor('#E0E0E0')
@@ -1002,35 +1217,24 @@ class RankingTableWidget(QWidget):
         gap_ahead_item.setTextAlignment(Qt.AlignCenter)
         gap_ahead_item.setForeground(default_text_color)  # 預設顏色
         
-        # 顏色編碼 - 與 Demo Live 一致，深色模式優化
+        # 顏色編碼 - 簡化版
         if gap_ahead_text and gap_ahead_text not in ('', '-', 'LAP'):
             try:
                 gap_str = gap_ahead_text.replace('+', '').replace('s', '').strip()
                 gap_seconds = float(gap_str)
                 
-                if gap_seconds >= 5.0:
-                    # ≥5秒：黑色背景 + 白色字（安全間距）
+                if gap_seconds <= 1.0:
+                    # 0~1秒：淺綠色背景 (DRS 範圍 / 攻擊距離)
+                    gap_ahead_item.setBackground(QColor('#90EE90'))
+                    gap_ahead_item.setForeground(QColor('#000000'))
+                elif gap_seconds <= 2.5:
+                    # 1~2.5秒：黃色文字 (追趕距離) - 無背景
+                    gap_ahead_item.setForeground(QColor('#FFFF00'))  # 黃色文字
+                    # 不設置背景，使用預設深色背景
+                else:
+                    # >2.5秒：黑色背景 (安全間距)
                     gap_ahead_item.setBackground(QColor('#1A1A1A'))
                     gap_ahead_item.setForeground(QColor('#FFFFFF'))
-                elif gap_seconds <= 0.0:
-                    # ≤0秒：綠色背景 (DRS 範圍)
-                    gap_ahead_item.setBackground(QColor('#00FF00'))
-                    gap_ahead_item.setForeground(QColor('#000000'))
-                else:
-                    # 0~5秒：漸變 (綠色 → 黃色 → 紅色)
-                    ratio = gap_seconds / 5.0  # 0.0 ~ 1.0
-                    if ratio < 0.5:
-                        # 0~2.5秒：綠色 → 黃色
-                        r = int(255 * (ratio * 2))
-                        g = 255
-                        b = 0
-                    else:
-                        # 2.5~5秒：黃色 → 紅色
-                        r = 255
-                        g = int(255 * (1 - (ratio - 0.5) * 2))
-                        b = 0
-                    gap_ahead_item.setBackground(QColor(r, g, b))
-                    gap_ahead_item.setForeground(QColor('#000000'))
             except (ValueError, AttributeError):
                 pass
         
@@ -1175,14 +1379,18 @@ class RankingTableWidget(QWidget):
         self.table.setItem(row, 17, item)
     
     def _set_probabilities(self, row: int, driver_data: Dict):
-        """設置勝率欄位"""
-        # 深色模式預設文字顏色
-        default_text_color = QColor('#E0E0E0')
+        """設置勝率欄位（✅ 優化版本）"""
+        # ✅ 使用緩存的顏色
+        default_text_color = self._color_cache['default_text']
+        green = self._color_cache['green']
+        yellow = self._color_cache['yellow']
+        orange = self._color_cache['orange']
+        black = self._color_cache['black']
         
         probs = [
-            ('win_probability', 18, [50, 20, 5]),
-            ('p2_probability', 19, [70, 40, 15]),
-            ('p3_probability', 20, [80, 50, 20])
+            ('win_probability', 18, [70, 35]),   # P1%: ≥70% 綠, 35-69% 橙
+            ('p2_probability', 19, [70, 40]),    # P2%: ≥70% 綠, 40-69% 橙
+            ('p3_probability', 20, [80, 50])     # P3%: ≥80% 綠, 50-79% 橙
         ]
         
         for key, col, thresholds in probs:
@@ -1196,17 +1404,15 @@ class RankingTableWidget(QWidget):
             item.setTextAlignment(Qt.AlignCenter)
             
             if isinstance(prob, (int, float)):
+                # 統一使用兩層邏輯（綠色/橙色）
                 if prob >= thresholds[0]:
-                    item.setBackground(QColor('#00FF00'))  # 高機率：綠色（與 Demo 同步）
+                    item.setBackground(QColor('#00FF00'))  # 高機率：綠色
                     item.setForeground(QColor('#000000'))
                 elif prob >= thresholds[1]:
-                    item.setBackground(QColor('#FFFF00'))  # 中機率：黃色（與 Demo 同步）
-                    item.setForeground(QColor('#000000'))
-                elif prob >= thresholds[2]:
-                    item.setBackground(QColor('#FFA500'))  # 低機率：橙色（與 Demo 一致）
+                    item.setBackground(QColor('#FFA500'))  # 中機率：橙色
                     item.setForeground(QColor('#000000'))
                 else:
-                    # 極低機率：使用預設文字顏色
+                    # 低機率：無背景
                     item.setForeground(default_text_color)
             else:
                 item.setForeground(default_text_color)
@@ -1215,6 +1421,9 @@ class RankingTableWidget(QWidget):
         
         # F83: 超車機率 OT% (欄位 21)
         self._set_overtake_probability(row, driver_data, default_text_color)
+        
+        # F85: 近距離接觸機率 CC% (欄位 22)
+        self._set_close_combat_probability(row, driver_data, default_text_color)
     
     def _set_overtake_probability(self, row: int, driver_data: Dict, default_text_color: QColor):
         """
@@ -1255,6 +1464,45 @@ class RankingTableWidget(QWidget):
         
         self.table.setItem(row, 21, item)
     
+    def _set_close_combat_probability(self, row: int, driver_data: Dict, default_text_color: QColor):
+        """
+        F85: 設置近距離接觸機率欄位
+        
+        顏色編碼：
+        - >= 70%: 淺藍色背景 - 高機率追近
+        - < 70%: 黑底白字 - 一般顯示
+        - P1: 顯示 '-' (沒有前車)
+        """
+        position = driver_data.get('position', 99)
+        
+        # P1 沒有前車，顯示 '-'
+        if position == 1:
+            item = QTableWidgetItem('-')
+            item.setTextAlignment(Qt.AlignCenter)
+            item.setForeground(default_text_color)
+            self.table.setItem(row, 22, item)
+            return
+        
+        prob = driver_data.get('close_combat_probability', '')
+        
+        if isinstance(prob, (int, float)):
+            text = f"{int(round(prob))}%"
+        else:
+            text = str(prob) if prob else '-'
+        
+        item = QTableWidgetItem(text)
+        item.setTextAlignment(Qt.AlignCenter)
+        
+        if isinstance(prob, (int, float)) and prob >= 70:
+            # >= 70%：淺藍色背景 - 高機率追近
+            item.setBackground(QColor('#4A90E2'))
+            item.setForeground(QColor('#FFFFFF'))
+        else:
+            # 其餘：黑底白字
+            item.setForeground(default_text_color)
+        
+        self.table.setItem(row, 22, item)
+    
     def _set_telemetry(self, row: int, driver_num: str):
         """設置遙測資料欄位（DRS）"""
         # 深色模式預設文字顏色
@@ -1262,12 +1510,16 @@ class RankingTableWidget(QWidget):
         
         car_data = self._current_car_data.get(driver_num, {})
         
-        # DRS (欄位 22)
-        # DRS 值說明 (來源: FastF1 文檔):
+        # DRS (欄位 23)
+        # DRS 值說明 (來源: F1 Live Timing API):
         # - 0 = Off
-        # - 奇數 (1,3,5,...) = DRS Disabled (禁用)
-        # - 偶數且 >= 10 (10,12,14) = DRS ON (實際開啟)
-        # - 偶數且 2-8 = DRS Eligible (可用但未開)
+        # - 1 = DRS Disabled (禁用 - 76% of the time)
+        # - 2 = DRS Eligible/Available (可用但未開 - rare)
+        # - 3 = DRS Disabled (禁用變體)
+        # - 8 = DRS Available/Ready (在DRS區內可用 - 10%)
+        # - 10 = DRS Enabled (啟用中 - rare)
+        # - 12 = DRS Active/Open (實際開啟 - 13%)
+        # - 14 = DRS Enabled variant (啟用變體)
         drs = car_data.get('drs', '')
         drs_text = ''
         if drs:
@@ -1297,7 +1549,7 @@ class RankingTableWidget(QWidget):
         else:
             drs_item.setForeground(default_text_color)
         
-        self.table.setItem(row, 22, drs_item)
+        self.table.setItem(row, 23, drs_item)
     
     def _parse_lap_time(self, lap_time_str: str) -> Optional[float]:
         """解析圈時字串為秒數"""
@@ -1340,6 +1592,12 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         self.setWindowTitle(tr("live_ranking_tower"))
         self.resize(900, 500)
         
+        # 性能優化: 分層更新間隔
+        # 快速欄位 (Gap, DRS): 每 2 幀 (~30 FPS @ 60 FPS)
+        # 標準欄位 (其他所有): 每 6 幀 (~10 FPS @ 60 FPS)
+        self._fast_update_interval = 2    # Gap, DRS - 30 FPS
+        self._full_update_interval = 6    # 其他欄位 - 10 FPS
+        
         # 設置深色背景
         self.setStyleSheet("""
             LiveTimingRankingTower {
@@ -1355,19 +1613,36 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         # 傳遞 DataManager 給 widget (用於查詢 F87 省胎分數)
         if self._data_manager:
             self._ranking_widget.set_data_manager(self._data_manager)
-            print(f"[F87_DEBUG] LiveTimingRankingTower: DataManager passed to widget")
+            logger.debug("[F87_DEBUG] LiveTimingRankingTower: DataManager passed to widget")
         else:
-            print(f"[F87_DEBUG] LiveTimingRankingTower: _data_manager is None in _setup_ui!")
+            logger.warning(
+                "[F87_DEBUG] LiveTimingRankingTower: _data_manager is None in _setup_ui!"
+            )
         
         # 連接信號
         self._ranking_widget.driver_selected.connect(self._on_driver_selected)
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """處理快照更新"""
+        """
+        處理快照更新 - 分層更新策略
+        
+        快速欄位 (每 3 幀): 位置、名次變動、區間時間、Gap
+        完整更新 (每 10 幀): 所有欄位（輪胎、圈速、DRS 等）
+        """
         # 調試輸出 - 每個快照都輸出
         if not hasattr(self, '_snapshot_count'):
             self._snapshot_count = 0
         self._snapshot_count += 1
+        
+        frame_counter = snapshot.get('frame_counter', 0)
+        
+        # 分層更新策略
+        is_fast_update = (frame_counter == 0 or frame_counter % self._fast_update_interval == 0)
+        is_full_update = (frame_counter == 0 or frame_counter % self._full_update_interval == 0)
+        
+        # 如果不是任何更新時機，跳過
+        if not is_fast_update and not is_full_update:
+            return
         
         drivers = snapshot.get('drivers', {})
         current_lap = snapshot.get('current_lap', 0)
@@ -1375,12 +1650,31 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         
         # 每個快照都輸出調試
         if self._snapshot_count <= 5 or self._snapshot_count % 20 == 0:
-            print(f"[RANKING_TOWER] Snapshot #{self._snapshot_count}: {len(drivers)} drivers, lap {current_lap}/{total_laps}")
+            logger.debug(
+                "[RANKING_TOWER] Snapshot #%d: %d drivers, lap %s/%s",
+                self._snapshot_count,
+                len(drivers),
+                current_lap,
+                total_laps,
+            )
             if drivers:
                 sample_num = next(iter(drivers.keys()))
                 sample = drivers[sample_num]
-                print(f"[RANKING_TOWER] Sample driver {sample_num}: pos={sample.get('position')}, tla={sample.get('tla')}")
-                print(f"[RANKING_TOWER] Sample has compound={sample.get('compound')}, tyre_age={sample.get('tyre_age')}")
+                logger.debug(
+                    "[RANKING_TOWER] Sample driver %s: pos=%s, tla=%s, compound=%s, tyre_age=%s",
+                    sample_num,
+                    sample.get('position'),
+                    sample.get('tla'),
+                    sample.get('compound'),
+                    sample.get('tyre_age'),
+                )
+        
+        # 快速更新：只更新位置、Gap、區間時間，跳過輪胎和遙測數據處理
+        if is_fast_update and not is_full_update:
+            self._ranking_widget.update_fast_columns(snapshot)
+            return
+        
+        # === 以下為完整更新邏輯 ===
         
         # 獲取輪胎狀態
         # 1. 即時模式：直接從 snapshot drivers 中提取 tyre 數據
@@ -1389,7 +1683,10 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         drivers = snapshot.get('drivers', {})
         
         # 優先從 snapshot 的 drivers 中提取（即時模式）
-        print(f"[RANKING_TOWER]  Extracting tyre data from snapshot.drivers: {len(drivers)} drivers")
+        logger.debug(
+            "[RANKING_TOWER]  Extracting tyre data from snapshot.drivers: %d drivers",
+            len(drivers),
+        )
         for driver_num, driver_data in drivers.items():
             compound = driver_data.get('compound')
             tyre_age_raw = driver_data.get('tyre_age')
@@ -1403,9 +1700,22 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
                     'stint_count': driver_data.get('pit_count', 0) + 1,  # stint_count = pit_count + 1
                     'stints': driver_data.get('stints', []),
                 }
-                print(f"[RANKING_TOWER]  Driver {driver_num} ({driver_tla}): compound={compound}, tyre_age={tyre_age_raw} → stored as 'tyre_age'={tyre_state[driver_num]['tyre_age']}")
+                logger.debug(
+                    "[RANKING_TOWER]  Driver %s (%s): compound=%s, tyre_age=%s → stored as tyre_age=%s",
+                    driver_num,
+                    driver_tla,
+                    compound,
+                    tyre_age_raw,
+                    tyre_state[driver_num]['tyre_age'],
+                )
             else:
-                print(f"[RANKING_TOWER]  Driver {driver_num} ({driver_tla}): NO tyre data (compound={compound}, tyre_age={tyre_age_raw})")
+                logger.debug(
+                    "[RANKING_TOWER]  Driver %s (%s): NO tyre data (compound=%s, tyre_age=%s)",
+                    driver_num,
+                    driver_tla,
+                    compound,
+                    tyre_age_raw,
+                )
         
         # 如果 snapshot 沒有輪胎數據，嘗試從 DataManager 獲取（歷史模式）
         if not tyre_state:
@@ -1418,10 +1728,14 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         
         # 調試：輪胎狀態
         if self._snapshot_count % 100 == 0:
-            print(f"[RANKING_TOWER] Tyre state: {len(tyre_state)} drivers")
+            logger.debug("[RANKING_TOWER] Tyre state: %d drivers", len(tyre_state))
             if tyre_state:
                 sample_driver = next(iter(tyre_state.keys()))
-                print(f"[RANKING_TOWER] Sample tyre ({sample_driver}): {tyre_state.get(sample_driver, {})}")
+                logger.debug(
+                    "[RANKING_TOWER] Sample tyre (%s): %s",
+                    sample_driver,
+                    tyre_state.get(sample_driver, {}),
+                )
         
         # 從 drivers 中提取車輛遙測數據
         car_data = {}
@@ -1443,13 +1757,17 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
         if tyre_state:
             self._ranking_widget.set_tyre_state(tyre_state)
         
-        # 更新顯示
+        # 完整更新：所有欄位
         self._ranking_widget.update_display(snapshot, tyre_state)
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """處理賽事載入"""
         race_name = race_info.get('race', '')
-        print(f"[LiveTimingRankingTower] Race loaded: {race_info.get('year')} {race_name}")
+        logger.info(
+            "[LiveTimingRankingTower] Race loaded: %s %s",
+            race_info.get('year'),
+            race_name,
+        )
         
         # 設置賽道，載入對應的輪胎建議數據
         self._ranking_widget.set_circuit(race_name)
@@ -1461,11 +1779,14 @@ class LiveTimingRankingTower(BaseLiveTimingMDI):
     
     def _on_driver_selected(self, driver_num: str):
         """處理車手選擇 - 透過 DataManager 廣播給其他模組"""
-        print(f"[LiveTimingRankingTower] Driver selected: {driver_num}")
+        logger.debug("[LiveTimingRankingTower] Driver selected: %s", driver_num)
         # 透過 DataManager 廣播車手選擇信號
         if self._data_manager:
             self._data_manager.driver_selected.emit(driver_num)
-            print(f"[LiveTimingRankingTower] Emitted driver_selected signal via DataManager: {driver_num}")
+            logger.debug(
+                "[LiveTimingRankingTower] Emitted driver_selected signal via DataManager: %s",
+                driver_num,
+            )
     
     def _cleanup(self):
         """清理資源"""

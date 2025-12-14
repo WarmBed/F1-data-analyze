@@ -40,12 +40,18 @@ from PyQt5.QtGui import QColor, QBrush  # ✨ 添加 QBrush（用於顏色應用
 
 from core.gui_i18n import tr, get_team_name_text  # ✨ 添加車隊名稱翻譯函數
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="parts_analysis_widget")
+
 # ✨ 導入通用顏色系統（與 Ideal Lap Ranking 保持一致）
 try:
     from modules.gui.themes.color_palette_provider import color_palette_provider
-    print("[PARTS_WIDGET] ✅ 已導入通用顏色系統 (color_palette_provider)")
+    logger.info("[PARTS_WIDGET] ✅ 已導入通用顏色系統 (color_palette_provider)")
 except ImportError:
-    print("[PARTS_WIDGET] ⚠️  無法導入 color_palette_provider，使用預設配色")
+    logger.warning("[PARTS_WIDGET] ⚠️ 無法導入 color_palette_provider，使用預設配色")
     color_palette_provider = None
 
 # 🗺️ 車手全名到代碼的映射（2025 賽季）
@@ -187,6 +193,7 @@ class PartsAnalysisWidget(QWidget):
     
     def __init__(self, api_base_url: str, year: int = 2025, parent=None):
         super().__init__(parent)
+        self.logger = logger
         self.year = year
         self._api_base_url = api_base_url
         self._is_initializing = False  # 防止初始化時重複觸發篩選
@@ -357,61 +364,66 @@ class PartsAnalysisWidget(QWidget):
     def on_data_loaded(self, data: Dict[str, Any]):
         """數據載入成功 - 從 MDI 調用"""
         try:
-            print(f"🔥🔥🔥 [DEBUG] PartsAnalysisWidget.on_data_loaded called")
-            print(f"🔥🔥🔥 [DEBUG] Data type: {type(data)}")
-            print(f"🔥🔥🔥 [DEBUG] Data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            self.logger.debug("🔥🔥🔥 [DEBUG] PartsAnalysisWidget.on_data_loaded called")
+            self.logger.debug("🔥🔥🔥 [DEBUG] Data type: %s", type(data))
+            self.logger.debug("🔥🔥🔥 [DEBUG] Data keys: %s", list(data.keys()) if isinstance(data, dict) else 'Not a dict')
             
             # 🔍 深度調試：檢查是否有嵌套的 data
             if isinstance(data, dict):
                 if 'data' in data:
-                    print(f"🔥 [DEBUG] Found nested 'data' key")
-                    print(f"🔥 [DEBUG] Nested data type: {type(data['data'])}")
+                    self.logger.debug("🔥 [DEBUG] Found nested 'data' key")
+                    self.logger.debug("🔥 [DEBUG] Nested data type: %s", type(data['data']))
                     if isinstance(data['data'], dict):
-                        print(f"🔥 [DEBUG] Nested data keys: {list(data['data'].keys())}")
+                        self.logger.debug("🔥 [DEBUG] Nested data keys: %s", list(data['data'].keys()))
                 if 'records' in data:
-                    print(f"🔥 [DEBUG] Found 'records' at top level, count: {len(data['records'])}")
+                    self.logger.debug("🔥 [DEBUG] Found 'records' at top level, count: %s", len(data['records']))
             
-            print(f"🔥 [DEBUG] 準備調用 _validate_records_data()...")
+            self.logger.debug("🔥 [DEBUG] 準備調用 _validate_records_data()...")
             records_list = self._validate_records_data(data)
-            print(f"🔥🔥🔥 [DEBUG] _validate_records_data() 返回: {type(records_list)}, is None: {records_list is None}")
+            self.logger.debug(
+                "🔥🔥🔥 [DEBUG] _validate_records_data() 返回: %s, is None: %s",
+                type(records_list),
+                records_list is None
+            )
             
             if records_list is None:
-                print(f"❌❌❌ [ERROR] Data validation failed - records_list is None!")
+                self.logger.error("❌❌❌ [ERROR] Data validation failed - records_list is None!")
                 self.show_error_message(tr('invalid_data_format', 'Invalid data format'))
                 return
 
-            print(f"🔥 [DEBUG] records_list 不是 None，準備賦值...")
-            print(f"🔥 [DEBUG] records_list 不是 None，準備賦值...")
+            self.logger.debug("🔥 [DEBUG] records_list 不是 None，準備賦值...")
+            self.logger.debug("🔥 [DEBUG] records_list 不是 None，準備賦值...")
             self.records_data = records_list
-            print(
-                f"🔥🔥🔥 [DEBUG] Successfully got records list, count: {len(self.records_data)}, "
-                f"source path: {self._last_record_path or 'unknown'}"
+            self.logger.debug(
+                "🔥🔥🔥 [DEBUG] Successfully got records list, count: %s, source path: %s",
+                len(self.records_data),
+                self._last_record_path or 'unknown'
             )
 
             # 重置狀態樣式
             self.stats_label.setStyleSheet("font-weight: bold; color: #495057;")
 
             # 更新篩選選項
-            print(f"🔥 [DEBUG] 準備調用 update_filter_options()...")
+            self.logger.debug("🔥 [DEBUG] 準備調用 update_filter_options()...")
             self.update_filter_options()
-            print(f"🔥 [DEBUG] update_filter_options() 完成, _is_initializing={self._is_initializing}")
+            self.logger.debug("🔥 [DEBUG] update_filter_options() 完成, _is_initializing=%s", self._is_initializing)
             
             # 🔥 確保初始化標誌已重置
             self._is_initializing = False
-            print(f"🔥 [DEBUG] 強制設置 _is_initializing=False")
+            self.logger.debug("🔥 [DEBUG] 強制設置 _is_initializing=False")
             
             # 應用當前篩選
-            print(f"🔥 [DEBUG] 準備調用 apply_filters()...")
+            self.logger.debug("🔥 [DEBUG] 準備調用 apply_filters()...")
             self.apply_filters()
-            print(f"🔥 [DEBUG] apply_filters() 完成")
+            self.logger.debug("🔥 [DEBUG] apply_filters() 完成")
             
             # 更新統計
-            print(f"🔥 [DEBUG] 準備調用 update_statistics()...")
+            self.logger.debug("🔥 [DEBUG] 準備調用 update_statistics()...")
             self.update_statistics()
-            print(f"🔥🔥🔥 [DEBUG] on_data_loaded() 全部完成！")
+            self.logger.debug("🔥🔥🔥 [DEBUG] on_data_loaded() 全部完成！")
             
         except Exception as e:
-            print(f"[ERROR] Failed to update records data: {str(e)}")
+            self.logger.exception("[ERROR] Failed to update records data: %s", str(e))
             self.show_error_message(f"Failed to update records data: {str(e)}")
             
     def _validate_records_data(self, data: Dict[str, Any]) -> Optional[List[Dict]]:
@@ -420,18 +432,18 @@ class PartsAnalysisWidget(QWidget):
             records, path = self._extract_records_list(data)
 
             if records is None:
-                print("[ERROR] [VALIDATE] PartsAnalysisWidget: Cannot find records list in data")
+                self.logger.error("[ERROR] [VALIDATE] PartsAnalysisWidget: Cannot find records list in data")
                 return None
 
             if not isinstance(records, list):
-                print("[ERROR] [VALIDATE] PartsAnalysisWidget: Records is not a list type")
+                self.logger.error("[ERROR] [VALIDATE] PartsAnalysisWidget: Records is not a list type")
                 return None
 
             self._last_record_path = " -> ".join(path) if path else "data.records"
-            print(f"[OK] [VALIDATE] PartsAnalysisWidget: Data validation passed, path: {self._last_record_path}")
+            self.logger.info("[OK] [VALIDATE] PartsAnalysisWidget: Data validation passed, path: %s", self._last_record_path)
             return records
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] PartsAnalysisWidget: Validation exception: {e}")
+            self.logger.exception("[ERROR] [VALIDATE] PartsAnalysisWidget: Validation exception: %s", e)
             return None
 
     def _extract_records_list(self, data: Any) -> Tuple[Optional[List[Dict[str, Any]]], List[str]]:
@@ -582,15 +594,15 @@ class PartsAnalysisWidget(QWidget):
     
     def apply_filters(self, _=None):
         """應用篩選條件 - 增加主分類和子分類篩選"""
-        print(f"🔥🔥 [FILTER] apply_filters() 開始執行")
-        print(f"🔥🔥 [FILTER] _is_initializing={self._is_initializing}")
+        self.logger.debug("🔥🔥 [FILTER] apply_filters() 開始執行")
+        self.logger.debug("🔥🔥 [FILTER] _is_initializing=%s", self._is_initializing)
         
         # 如果正在初始化，跳過篩選
         if self._is_initializing:
-            print(f"🔥🔥 [FILTER] 跳過篩選（正在初始化）")
+            self.logger.debug("🔥🔥 [FILTER] 跳過篩選（正在初始化）")
             return
         
-        print(f"🔥🔥 [FILTER] records_data 數量: {len(self.records_data)}")
+        self.logger.debug("🔥🔥 [FILTER] records_data 數量: %s", len(self.records_data))
         
         # 收集篩選條件
         try:
@@ -603,33 +615,29 @@ class PartsAnalysisWidget(QWidget):
                 "type": self.type_combo.currentData() if self.type_combo.currentData() else "",
                 "search": self.search_input.text().strip().lower()
             }
-            print(f"🔥🔥 [FILTER] 篩選條件: {filters}")
+            self.logger.debug("🔥🔥 [FILTER] 篩選條件: %s", filters)
         except Exception as e:
-            print(f"❌❌ [FILTER] 收集篩選條件時出錯: {e}")
-            import traceback
-            traceback.print_exc()
-            return
-            traceback.print_exc()
+            self.logger.exception("❌❌ [FILTER] 收集篩選條件時出錯: %s", e)
             return
         
         # 篩選數據
-        print(f"🔥🔥 [FILTER] 開始篩選...")
+        self.logger.debug("🔥🔥 [FILTER] 開始篩選...")
         self.filtered_data = []
         for record in self.records_data:
             if self._matches_filters(record, filters):
                 self.filtered_data.append(record)
         
-        print(f"🔥🔥🔥 [DEBUG] Filter result: {len(self.filtered_data)}/{len(self.records_data)} records")
+        self.logger.debug("🔥🔥🔥 [DEBUG] Filter result: %s/%s records", len(self.filtered_data), len(self.records_data))
         
         # 更新表格
-        print(f"🔥🔥 [FILTER] 準備調用 populate_table()...")
+        self.logger.debug("🔥🔥 [FILTER] 準備調用 populate_table()...")
         self.populate_table()
-        print(f"🔥🔥 [FILTER] populate_table() 完成")
+        self.logger.debug("🔥🔥 [FILTER] populate_table() 完成")
         
         # 更新統計
-        print(f"🔥🔥 [FILTER] 準備調用 update_statistics()...")
+        self.logger.debug("🔥🔥 [FILTER] 準備調用 update_statistics()...")
         self.update_statistics()
-        print(f"🔥🔥 [FILTER] apply_filters() 全部完成")
+        self.logger.debug("🔥🔥 [FILTER] apply_filters() 全部完成")
         
     def _matches_filters(self, record: dict, filters: dict) -> bool:
         """檢查記錄是否符合篩選條件 - 只檢查 PDF 原始欄位"""
@@ -669,7 +677,7 @@ class PartsAnalysisWidget(QWidget):
         
     def populate_table(self):
         """填充表格數據 - 只顯示 PDF 原始欄位（6欄：序號、賽事、車隊、車手、部件、日期）"""
-        print(f"🔥🔥 [POPULATE] 開始填充表格，filtered_data 數量: {len(self.filtered_data)}")
+        self.logger.debug("🔥🔥 [POPULATE] 開始填充表格，filtered_data 數量: %s", len(self.filtered_data))
         self.table_widget.setRowCount(len(self.filtered_data))
         
         # 🎨 確保顏色配置已載入
@@ -677,7 +685,7 @@ class PartsAnalysisWidget(QWidget):
             try:
                 color_palette_provider.ensure_loaded()
             except Exception as e:
-                print(f"[PARTS_WIDGET] ⚠️  顏色配置載入失敗: {e}")
+                self.logger.warning("[PARTS_WIDGET] ⚠️ 顏色配置載入失敗: %s", e)
         
         for row, record in enumerate(self.filtered_data):
             try:
@@ -698,7 +706,11 @@ class PartsAnalysisWidget(QWidget):
                 # 如果找不到映射，使用前三個字母並記錄警告
                 if driver_code is None:
                     driver_code = driver_full_name[:3].upper() if driver_full_name else "UNK"
-                    print(f"⚠️ [POPULATE] 找不到車手映射: '{driver_full_name}' (車隊: {record.get('車隊', 'Unknown')})")
+                    self.logger.warning(
+                        "⚠️ [POPULATE] 找不到車手映射: '%s' (車隊: %s)",
+                        driver_full_name,
+                        record.get('車隊', 'Unknown')
+                    )
                 
                 # 🔄 獲取翻譯後的車隊名稱（與 Ideal Lap Ranking 一致）
                 team_original = record.get("車隊", "")
@@ -735,11 +747,9 @@ class PartsAnalysisWidget(QWidget):
                 self.table_widget.setItem(row, 6, action_item)
                 
             except Exception as e:
-                print(f"❌ [POPULATE] 填充第 {row} 行時出錯: {e}")
-                import traceback
-                traceback.print_exc()
+                self.logger.exception("❌ [POPULATE] 填充第 %s 行時出錯: %s", row, e)
         
-        print(f"🔥🔥 [POPULATE] 表格填充完成，共 {len(self.filtered_data)} 行")
+        self.logger.debug("🔥🔥 [POPULATE] 表格填充完成，共 %s 行", len(self.filtered_data))
             
     def get_type_color(self, change_type: str) -> str:
         """
@@ -820,7 +830,7 @@ class PartsAnalysisWidget(QWidget):
         
         if driver_code not in self._debug_driver_mapping_printed:
             if driver_code != actual_code:
-                print(f"[PARTS_WIDGET] 🗺️  車手映射: {driver_code} → {actual_code}")
+                self.logger.info("[PARTS_WIDGET] 🗺️ 車手映射: %s → %s", driver_code, actual_code)
             self._debug_driver_mapping_printed.add(driver_code)
         
         if color_palette_provider:
@@ -828,7 +838,7 @@ class PartsAnalysisWidget(QWidget):
                 color = color_palette_provider.get_driver_color(actual_code, fallback=True)
                 return color
             except Exception as e:
-                print(f"[PARTS_WIDGET] ⚠️  獲取車手顏色失敗 ({actual_code}): {e}")
+                self.logger.warning("[PARTS_WIDGET] ⚠️ 獲取車手顏色失敗 (%s): %s", actual_code, e)
         
         # Fallback: 返回預設灰色
         return QColor(128, 128, 128)

@@ -23,8 +23,10 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
+from core.logger import get_logger
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
 
+logger = get_logger(component="gui")
 
 class CornerPerformanceApiWorker(QThread):
     """
@@ -56,75 +58,97 @@ class CornerPerformanceApiWorker(QThread):
     def run(self):
         """✅ 在背景執行緒執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
-            print(f"[CORNER_API_WORKER] 🌐 調用 API: {self.endpoint}")
-            print(f"[CORNER_API_WORKER] 📋 Payload: {self.payload}")
+            logger.info(f"[CORNER_API_WORKER] 🌐 調用 API: {self.endpoint}")
+            logger.info(f"[CORNER_API_WORKER] 📋 Query Params: {self.payload}")
             
-            # ✅ 在背景執行緒發送 POST 請求（不阻塞主 GUI）
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
+            
+            # ✅ 使用 query parameters（與 Ideal Lap Ranking 一致）
             start_ts = time.perf_counter()
             response = requests.post(
                 self.endpoint,
-                json=self.payload,
+                params=self.payload,  # ✅ 使用 params 而非 json
                 timeout=self.timeout,
-                headers={"Content-Type": "application/json"}
+                headers={"Accept": "application/json"}  # ✅ 修改 header
             )
             self.progress.emit(70)
             
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
+            
             # 檢查 HTTP 狀態
-            if response.status_code != 200:
-                raise RuntimeError(f"HTTP {response.status_code}")
+            response.raise_for_status()  # ✅ 使用 raise_for_status()
             
             # 解析 JSON 回應
             api_response = response.json()
             if not isinstance(api_response, dict):
                 raise ValueError("API 回應必須是 JSON 物件")
             
-            if not api_response.get("success"):
+            if not api_response.get("success", False):
                 error_msg = api_response.get("message", "API 返回 success=False")
                 raise RuntimeError(error_msg)
             
             # 提取數據
-            data = api_response.get("data", {})
-            if not data:
-                raise ValueError("API 返回的數據為空")
+            data = api_response.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API 回應缺少 'data' 物件")
             
             # 計算延遲
             latency_ms = (time.perf_counter() - start_ts) * 1000.0
             
             # 構建元數據
             meta = {
-                "source": "api",
+                "source": api_response.get("source", "api"),
+                "execution_time": api_response.get("execution_time"),
+                "request_id": api_response.get("request_id"),
+                "timestamp": api_response.get("timestamp"),
+                "function_spec": api_response.get("function_spec"),
                 "latency_ms": round(latency_ms, 2),
                 "endpoint": self.endpoint,
             }
             
-            print(f"[CORNER_API_WORKER] ✅ API 調用成功")
-            print(f"[CORNER_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.info("[CORNER_API_WORKER] ✅ API 調用成功")
+            logger.info(f"[CORNER_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             # ✅ 通過信號將結果返回主線程
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[CORNER_API_WORKER] ❌ {error_msg}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"[CORNER_API_WORKER] ❌ {error_msg}")
+            logger.exception(exc)
             # ✅ 通過信號發送錯誤訊息
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class CornerPerformanceDataLoader(UniversalDataLoader):
     """
-    統一的彎道性能數據載入器（Function 47）
+    統一的彎道性能數據載入器（Function 120）
     
-    支援：
-    - API 優先載入
-    - 本地 JSON 檔案讀取
+    ⚠️ API-ONLY 模式：
+    - 僅通過 API 獲取數據
+    - 禁用本地 JSON 檔案讀取
     - 數據格式驗證
+    - 過濾旗標支援 (entry_filtered, exit_filtered)
     - 錯誤處理
     """
 
@@ -135,11 +159,11 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
         config = AnalysisConfig(
             display_name=tr("corner_performance_analysis", "彎道性能分析"),
             debug_prefix="CORNER_PERF",
-            data_source="json",
-            cli_function="47",
+            data_source="api",  # ✅ 改為 API 模式
+            cli_function="120",
             file_patterns=[
-                "all_drivers_cornering_analysis_*.json",
-                "corner_performance_*.json"
+                "F120_corner_all_laps_analysis_*.json",
+                "corner_all_laps_analysis_*.json"
             ],
         )
 
@@ -147,6 +171,10 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
             self.register_analysis_type(self.ANALYSIS_TYPE, config)
 
         super().__init__(self.ANALYSIS_TYPE, parent)
+
+        # ✅ API-ONLY 模式：停用本地 JSON 後備
+        self._allow_local_fallback = False
+        self._debug("[CORNER_PERF] ⚠️ API-ONLY 模式已啟用，禁用本地 JSON 讀取")
 
         self._api_base_url = self._determine_api_base_url()
         self._api_timeout = 45.0
@@ -159,11 +187,13 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
 
     def load_data(self, **kwargs) -> bool:  # type: ignore[override]
         """
-        載入彎道性能數據
+        載入彎道性能數據（API-ONLY 模式）
         
-        優先順序：
-        1. 檢查本地 JSON 檔案
-        2. 如果沒有本地檔案，透過 API 獲取（異步）
+        ⚠️ 強制使用 API 獲取數據，禁用本地 JSON 讀取
+        
+        流程：
+        1. 驗證參數
+        2. 直接透過 API 獲取（異步）
         3. 處理並驗證數據
         
         Args:
@@ -177,14 +207,10 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
             self.load_error.emit(tr("corner_perf_load_param_invalid", "載入參數不正確"))
             return False
 
-        existing = self._find_data_file(**kwargs)
-        if not existing:
-            self._debug(tr("corner_perf_no_local_file", "找不到本地彎道性能檔案，準備透過 API 取得最新資料"))
-            # ✅ 修復：使用異步 API Worker（不阻塞主 GUI）
-            self._fetch_via_api_async(**kwargs)
-            return True  # 立即返回，不阻塞
-
-        return super().load_data(**kwargs)
+        # ✅ API-ONLY 模式：直接調用 API，不檢查本地 JSON
+        self._debug(tr("corner_perf_api_only_mode", "⚠️ API-ONLY 模式：強制通過 API 獲取最新資料"))
+        self._fetch_via_api_async(**kwargs)
+        return True  # 立即返回，不阻塞
 
     # ------------------------------------------------------------------
     # UniversalDataLoader contract
@@ -208,13 +234,14 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
 
     def _validate_data_format(self, raw_data: Any) -> bool:
         """
-        驗證 Function 47 JSON 數據格式
+        驗證 Function 120 JSON 數據格式
         
         必須包含：
         - success: True
         - selected_corners: {low_speed, mid_speed, high_speed}
-        - fastest_lap_analysis: {total_drivers, drivers}
-        - all_laps_analysis: {total_drivers, drivers}
+        - mode_a_unified: {drivers: [...]}
+        
+        每個車手的 corners 中應包含 entry_filtered, exit_filtered 過濾旗標
         """
         if not isinstance(raw_data, dict):
             self._error("數據不是字典格式")
@@ -225,66 +252,117 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
             self._error("數據標記為失敗 (success: false)")
             return False
 
-        required_keys = ["selected_corners", "fastest_lap_analysis", "all_laps_analysis"]
-        for key in required_keys:
-            if key not in raw_data:
-                self._error(f"缺少必要欄位: {key}")
-                return False
-
-        # 檢查 selected_corners 結構
-        corners = raw_data["selected_corners"]
-        corner_types = ["low_speed", "mid_speed", "high_speed"]
-        for corner_type in corner_types:
-            if corner_type not in corners:
-                self._error(f"缺少彎道類型: {corner_type}")
+        # F120 結構檢查
+        if "mode_a_unified" in raw_data:
+            # F120 格式
+            mode_a = raw_data["mode_a_unified"]
+            if "drivers" not in mode_a or not isinstance(mode_a["drivers"], list):
+                self._error("mode_a_unified.drivers 不是列表")
                 return False
             
-            corner_data = corners[corner_type]
-            if not isinstance(corner_data, dict):
-                self._error(f"{corner_type} 不是字典格式")
+            # 檢查 selected_corners
+            if "selected_corners" not in raw_data:
+                self._error("缺少 selected_corners")
                 return False
             
-            # 檢查彎道數據欄位
-            required_corner_keys = ["corner_number", "apex_distance", "avg_apex_speed"]
-            for key in required_corner_keys:
-                if key not in corner_data:
-                    self._error(f"{corner_type} 缺少欄位: {key}")
+            self._debug("F120 數據格式驗證通過")
+            return True
+        
+        # 兼容舊版 F47 格式
+        elif "fastest_lap_analysis" in raw_data:
+            self._debug("⚠️ 偵測到舊版 F47 格式數據")
+            required_keys = ["selected_corners", "fastest_lap_analysis"]
+            for key in required_keys:
+                if key not in raw_data:
+                    self._error(f"缺少必要欄位: {key}")
                     return False
-
-        # 檢查 fastest_lap_analysis 結構
-        fastest = raw_data["fastest_lap_analysis"]
-        if "drivers" not in fastest or not isinstance(fastest["drivers"], list):
-            self._error("fastest_lap_analysis.drivers 不是列表")
+            
+            self._debug("F47 數據格式驗證通過 (兼容模式)")
+            return True
+        
+        else:
+            self._error("無法識別的數據格式 (非 F120 也非 F47)")
             return False
-
-        # 檢查 all_laps_analysis 結構
-        all_laps = raw_data["all_laps_analysis"]
-        if "drivers" not in all_laps or not isinstance(all_laps["drivers"], list):
-            self._error("all_laps_analysis.drivers 不是列表")
-            return False
-
-        self._debug("數據格式驗證通過")
-        return True
 
     def _process_data(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         處理原始數據
         
-        轉換為前端友好的格式
+        F120 格式轉換為前端友好的格式，包含過濾旗標支援
         """
         try:
-            processed = {
-                "success": True,
-                "year": raw_data.get("year"),
-                "race": raw_data.get("race"),
-                "session": raw_data.get("session"),
-                "selected_corners": raw_data["selected_corners"],
-                "fastest_lap_analysis": raw_data["fastest_lap_analysis"],
-                "all_laps_analysis": raw_data["all_laps_analysis"],
-                "raw_data": raw_data  # 保留原始數據
-            }
-
-            self._debug(f"數據處理完成: {len(processed['fastest_lap_analysis']['drivers'])} 位車手")
+            # 判斷數據格式
+            is_f120 = "mode_a_unified" in raw_data
+            
+            if is_f120:
+                # F120 格式處理
+                mode_a = raw_data["mode_a_unified"]
+                drivers_data = mode_a.get("drivers", [])
+                
+                # 轉換為 GUI 兼容格式 (模擬 fastest_lap_analysis 結構)
+                converted_drivers = []
+                for driver_info in drivers_data:
+                    driver = driver_info.get("driver", "")
+                    corners = driver_info.get("corners", {})
+                    
+                    # 轉換彎道數據格式
+                    converted_corners = {}
+                    for corner_key, corner_data in corners.items():
+                        converted_corners[corner_key] = {
+                            # GUI 使用的欄位 (來自 F120 的 GUI 相容欄位)
+                            "entry_50m_speed": corner_data.get("entry_50m_speed", corner_data.get("entry_speed_median", 0)),
+                            "exit_50m_speed": corner_data.get("exit_50m_speed", corner_data.get("exit_speed_median", 0)),
+                            "apex_speed": corner_data.get("apex_speed", corner_data.get("median_speed", 0)),
+                            # 過濾旗標 (F120 新增)
+                            "entry_filtered": corner_data.get("entry_filtered", False),
+                            "exit_filtered": corner_data.get("exit_filtered", False),
+                            # 保留原始統計數據
+                            "median_speed": corner_data.get("median_speed", 0),
+                            "entry_speed_median": corner_data.get("entry_speed_median", 0),
+                            "exit_speed_median": corner_data.get("exit_speed_median", 0),
+                        }
+                    
+                    converted_drivers.append({
+                        "driver": driver,
+                        "corners": converted_corners
+                    })
+                
+                processed = {
+                    "success": True,
+                    "year": raw_data.get("year"),
+                    "race": raw_data.get("race"),
+                    "session": raw_data.get("session"),
+                    "data_source": "F120",
+                    "selected_corners": raw_data.get("selected_corners", {}),
+                    "fastest_lap_analysis": {
+                        "total_drivers": len(converted_drivers),
+                        "drivers": converted_drivers
+                    },
+                    "mode_a_unified": raw_data.get("mode_a_unified"),
+                    "mode_b_grouped": raw_data.get("mode_b_grouped"),
+                    "raw_data": raw_data
+                }
+                
+                self._debug(f"F120 數據處理完成: {len(converted_drivers)} 位車手")
+                
+            else:
+                # F47 兼容模式 (舊版數據)
+                self._debug("⚠️ 使用 F47 兼容模式處理數據")
+                processed = {
+                    "success": True,
+                    "year": raw_data.get("year"),
+                    "race": raw_data.get("race"),
+                    "session": raw_data.get("session"),
+                    "data_source": "F47",
+                    "selected_corners": raw_data.get("selected_corners", {}),
+                    "fastest_lap_analysis": raw_data.get("fastest_lap_analysis", {}),
+                    "all_laps_analysis": raw_data.get("all_laps_analysis", {}),
+                    "raw_data": raw_data
+                }
+                
+                drivers_count = len(processed.get("fastest_lap_analysis", {}).get("drivers", []))
+                self._debug(f"F47 數據處理完成: {drivers_count} 位車手")
+            
             return processed
 
         except Exception as e:
@@ -305,10 +383,13 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
         race = kwargs.get("race")
         session = kwargs.get("session")
 
-        endpoint = f"{self._api_base_url}/analyze"
+        # ✅ 使用新版 API 端點（與 Ideal Lap Ranking 一致）
+        endpoint = f"{self._api_base_url}/api/v2/analysis/execute"
+        
+        # ✅ 使用 query parameters（不是 POST body）
         payload = {
-            "function_id": "47",
-            "year": year,
+            "function_id": 120,  # ✅ 整數格式（不是字串）
+            "year": int(year),
             "race": race,
             "session": session,
         }
@@ -392,70 +473,81 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
 
     def _fetch_via_api_and_cache(self, **kwargs) -> Optional[str]:
         """
-        透過 API 獲取數據並快取
+        ⚠️ 已棄用：透過 API 獲取數據並快取（舊版同步方法）
+        
+        此方法已被 _fetch_via_api_async() 取代，不再使用。
+        保留供參考，請勿調用。
         
         Returns:
             Optional[str]: 快取檔案路徑，失敗返回 None
         """
-        year = kwargs.get("year")
-        race = kwargs.get("race")
-        session = kwargs.get("session")
-
-        endpoint = f"{self._api_base_url}/analyze"
-        payload = {
-            "function_id": "47",
-            "year": year,
-            "race": race,
-            "session": session,
-        }
-
-        self._debug(f"發送 API 請求: {endpoint}")
-        self._debug(f"Payload: {payload}")
-
-        try:
-            self.status_changed.emit(tr("corner_perf_fetching_api", "正在從 API 獲取彎道性能數據..."))
-
-            response = requests.post(
-                endpoint,
-                json=payload,
-                timeout=self._api_timeout,
-                headers={"Content-Type": "application/json"}
-            )
-
-            if response.status_code == 200:
-                api_response = response.json()
-                
-                if not api_response.get("success"):
-                    error_msg = api_response.get("message", "未知錯誤")
-                    self._error(f"API 返回失敗: {error_msg}")
-                    return None
-
-                # 提取數據
-                data = api_response.get("data", {})
-                if not data:
-                    self._error("API 返回的數據為空")
-                    return None
-
-                # 儲存到快取
-                self._last_api_payload = data
-                
-                # 寫入檔案
-                cache_file = self._write_cache_file(data, **kwargs)
-                
-                return cache_file
-
-            else:
-                self._error(f"API 請求失敗: HTTP {response.status_code}")
-                return None
-
-        except requests.Timeout:
-            self._error(f"API 請求超時 ({self._api_timeout}s)")
-            return None
-        except Exception as e:
-            self._error(f"API 請求發生錯誤: {e}")
-            import traceback
-            traceback.print_exc()
-            return None
+        # ⚠️ 強制拋出錯誤，禁止使用已棄用的方法
+        raise DeprecationWarning(
+            "⚠️ _fetch_via_api_and_cache() 已棄用！\n"
+            "請使用 _fetch_via_api_async() 方法（異步 API Worker）。\n"
+            "此方法使用已棄用的 /analyze 端點，且會阻塞主 GUI。"
+        )
+        
+        # ⚠️ 以下代碼已停用（保留供參考）
+        # year = kwargs.get("year")
+        # race = kwargs.get("race")
+        # session = kwargs.get("session")
+        #
+        # endpoint = f"{self._api_base_url}/analyze"  # ⚠️ 已棄用端點
+        # payload = {
+        #     "function_id": "120",
+        #     "year": year,
+        #     "race": race,
+        #     "session": session,
+        # }
+        #
+        # self._debug(f"發送 API 請求: {endpoint}")
+        # self._debug(f"Payload: {payload}")
+        #
+        # try:
+        #     self.status_changed.emit(tr("corner_perf_fetching_api", "正在從 API 獲取彎道性能數據..."))
+        #
+        #     response = requests.post(
+        #         endpoint,
+        #         json=payload,
+        #         timeout=self._api_timeout,
+        #         headers={"Content-Type": "application/json"}
+        #     )
+        #
+        #     if response.status_code == 200:
+        #         api_response = response.json()
+        #         
+        #         if not api_response.get("success"):
+        #             error_msg = api_response.get("message", "未知錯誤")
+        #             self._error(f"API 返回失敗: {error_msg}")
+        #             return None
+        #
+        #         # 提取數據
+        #         data = api_response.get("data", {})
+        #         if not data:
+        #             self._error("API 返回的數據為空")
+        #             return None
+        #
+        #         # 儲存到快取
+        #         self._last_api_payload = data
+        #         
+        #         # 寫入檔案
+        #         cache_file = self._write_cache_file(data, **kwargs)
+        #         
+        #         return cache_file
+        #
+        #     else:
+        #         self._error(f"API 請求失敗: HTTP {response.status_code}")
+        #         return None
+        #
+        # except requests.Timeout:
+        #     self._error(f"API 請求超時 ({self._api_timeout}s)")
+        #     return None
+        # except Exception as e:
+        #     self._error(f"API 請求發生錯誤: {e}")
+        #     import traceback
+        #     traceback.print_exc()
+        #     return None
 
     def _write_cache_file(self, data: Dict[str, Any], **kwargs) -> Optional[str]:
         """

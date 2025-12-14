@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FP3/Q 補償數據收集器
 
@@ -19,8 +21,15 @@ FP3/Q 補償數據收集器
 日期: 2025-12-01
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import json
 import argparse
 from pathlib import Path

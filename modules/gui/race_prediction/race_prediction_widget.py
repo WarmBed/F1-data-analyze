@@ -23,6 +23,12 @@ from typing import Dict, List, Any, Optional
 from core.gui_i18n import tr, get_team_name_text
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="race_prediction_widget")
+
 
 class RacePredictionWidget(QWidget):
     """
@@ -203,7 +209,7 @@ class RacePredictionWidget(QWidget):
             team_ratings = data.get("team_ratings", {})
             
             if not predictions:
-                print("[RACE_PRED_WIDGET] No prediction data")
+                logger.warning("[RACE_PRED_WIDGET] No prediction data")
                 return
             
             # 更新車隊評級面板
@@ -215,12 +221,10 @@ class RacePredictionWidget(QWidget):
             # 更新統計摘要
             self._update_statistics_panel(metadata, predictions)
             
-            print(f"[RACE_PRED_WIDGET] Updated display ({len(predictions)} drivers)")
+            logger.info("[RACE_PRED_WIDGET] Updated display (%s drivers)", len(predictions))
             
         except Exception as e:
-            print(f"[RACE_PRED_WIDGET] Update display failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_WIDGET] Update display failed: %s", e)
     
     def _update_team_rating_panel(self, team_ratings: Dict[str, float]):
         """更新車隊評級面板"""
@@ -263,7 +267,7 @@ class RacePredictionWidget(QWidget):
                     lbl.setStyleSheet("background-color: #CCCCCC; padding: 5px; border-radius: 3px;")
                     
         except Exception as e:
-            print(f"[RACE_PRED_WIDGET] Update team rating panel failed: {e}")
+            logger.exception("[RACE_PRED_WIDGET] Update team rating panel failed: %s", e)
     
     def _get_short_team_name(self, team_name: str) -> str:
         """獲取縮短的車隊名稱"""
@@ -292,7 +296,7 @@ class RacePredictionWidget(QWidget):
             self._set_row_data(row, pred)
         
         self.table.setSortingEnabled(True)
-        print(f"[TABLE] Loaded {row_count} drivers")
+        logger.info("[TABLE] Loaded %s drivers", row_count)
     
     def _set_row_data(self, row: int, pred: Dict[str, Any]):
         """設置單行資料"""
@@ -364,7 +368,7 @@ class RacePredictionWidget(QWidget):
             self.table.setItem(row, 6, change_item)
             
         except Exception as e:
-            print(f"Set row data failed (row {row}): {e}")
+            logger.exception("Set row data failed (row %s): %s", row, e)
     
     def _create_change_item(self, change: Optional[int]) -> QTableWidgetItem:
         """創建變化欄位項目"""
@@ -459,7 +463,7 @@ class RacePredictionWidget(QWidget):
             self.lbl_explanation.setText(explanation)
             
         except Exception as e:
-            print(f"Update statistics panel failed: {e}")
+            logger.exception("Update statistics panel failed: %s", e)
     
     def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
         """創建帶背景色的表格項目"""

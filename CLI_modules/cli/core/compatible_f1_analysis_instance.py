@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 分析實例模組 - 兼容版本
 Compatible F1 Analysis Instance Module
@@ -9,6 +10,13 @@ Compatible F1 Analysis Instance Module
 
 import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 from pathlib import Path
 
 try:

@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 按年份分析 F1 Parc Fermé 文件
 處理 FIAdoc/2024 和 FIAdoc/2025 資料夾
 為每個年份生成獨立的分類 JSON
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import PyPDF2
 import pandas as pd
 import json
 from pathlib import Path
 from collections import defaultdict
 import re
-import sys
 
 
 class F1UpgradeAnalyzerByYear:

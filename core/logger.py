@@ -13,11 +13,11 @@ import threading
 from pathlib import Path
 from typing import Any, Dict, Optional, Union
 
-# 🔒 EXE 模式檢測：EXE 模式下預設禁用日誌輸出
-# 可以透過設定環境變數 F1T_EXE_ENABLE_LOG=1 來開啟 EXE 日誌（除錯用）
+# 🔒 EXE 模式檢測：EXE 模式下可選擇性禁用日誌輸出
+# 可以透過設定環境變數 F1T_EXE_DISABLE_LOG=1 來禁用 EXE 日誌（節省效能）
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-# EXE 模式下預設靜默，除非明確設定 F1T_EXE_ENABLE_LOG=1
-FORCE_SILENT = IS_EXE_MODE and os.getenv('F1T_EXE_ENABLE_LOG') != '1'
+# EXE 模式下預設啟用日誌（方便除錯），除非明確設定 F1T_EXE_DISABLE_LOG=1
+FORCE_SILENT = IS_EXE_MODE and os.getenv('F1T_EXE_DISABLE_LOG') == '1'
 
 
 def _load_logging_config() -> Dict[str, Any]:
@@ -198,7 +198,7 @@ def setup_logging(
     if "patch_print" in logging_config:
         patch_print = logging_config["patch_print"]
 
-    # 🔒 EXE 模式：只有當 FORCE_SILENT=True 時才完全禁用日誌
+    # 🔒 EXE 模式：只有當明確設置 F1T_EXE_DISABLE_LOG=1 時才完全禁用日誌
     if IS_EXE_MODE and FORCE_SILENT:
         with _CONFIG_LOCK:
             if not _CONFIGURED or force:
@@ -225,13 +225,13 @@ def setup_logging(
                 })
                 _CONFIGURED = True
                 _ACTIVE_COMPONENT = _normalise_component(component)
-                
+
                 # EXE 模式下不 patch print（保持原生行為）
                 # 這樣 print() 仍然可以輸出到終端（如果需要的話）
         return
-    
-    # 🔍 EXE 模式但未設置 FORCE_SILENT：正常記錄日誌到檔案
-    # 這樣可以在 EXE 出問題時查看 logs/ 目錄中的日誌檔案
+
+    # ✅ EXE 模式預設啟用日誌：正常記錄日誌到檔案
+    # 這樣可以在 EXE 出問題時查看 logs/ 目錄中的日誌檔案，方便除錯
 
     with _CONFIG_LOCK:
         if _CONFIGURED and not force:

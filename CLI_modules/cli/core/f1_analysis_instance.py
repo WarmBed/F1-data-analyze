@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 Analysis Instance Module
 F1分析實例模組 - 完整復刻版本
@@ -7,6 +8,13 @@ F1分析實例模組 - 完整復刻版本
 
 import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import time
 import json
 import pandas as pd

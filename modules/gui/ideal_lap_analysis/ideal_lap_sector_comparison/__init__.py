@@ -21,6 +21,10 @@ from .ideal_lap_sector_comparison_mdi import (
 from .ideal_lap_sector_comparison_data_loader import IdealLapSectorComparisonDataLoader
 from .ideal_lap_sector_comparison_widget import IdealLapSectorComparisonWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 __all__ = [
     "IdealLapSectorComparisonModule",
     "IdealLapSectorComparisonMDI",
@@ -34,4 +38,4 @@ try:
     from .register_module import register
     register()
 except Exception as e:
-    print(f"⚠️  IdealLapSectorComparison 自動註冊失敗: {e}")
+    logger.warning(f"IdealLapSectorComparison 自動註冊失敗: {e}")

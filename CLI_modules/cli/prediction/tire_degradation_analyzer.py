@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F56 - 輪胎衰退分析器 (Tire Degradation Analyzer)
 
@@ -7,12 +8,12 @@ F56 - 輪胎衰退分析器 (Tire Degradation Analyzer)
     採用時變線性模型: degradation(t) = base_rate + acceleration * tire_age
     
 原理 (基於 Cappello & Hoegh 2025 論文):
-    - 觀測方程: y_t = α_t + γ * fuel_t + ε_t
-    - 過程方程: α_{t+1} = (1-I_pit) * (α_t + ν[compound]) + I_pit * α_reset + η_t
-    - 時變衰退: ν_{t+1} = ν_t + β[compound]
+    - 觀測方程: y_t = alpha_t + gamma * fuel_t + epsilon_t
+    - 過程方程: alpha_{t+1} = (1-I_pit) * (alpha_t + nu[compound]) + I_pit * alpha_reset + eta_t
+    - 時變衰退: nu_{t+1} = nu_t + beta[compound]
     
 簡化實用公式:
-    total_degradation = base_rate * laps + 0.5 * acceleration * laps²
+    total_degradation = base_rate * laps + 0.5 * acceleration * laps^2
     
 數據來源:
     - json/LiveF1/{year}/{race}_{session}/TimingAppData.json (F1 官方 Live Timing)
@@ -32,8 +33,15 @@ F56 - 輪胎衰退分析器 (Tire Degradation Analyzer)
 參考: Cappello & Hoegh 2025 - A State-Space Approach to Modeling Tire Degradation in Formula 1 Racing
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import json
 import re
 from datetime import datetime

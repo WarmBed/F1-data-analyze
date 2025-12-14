@@ -6,12 +6,12 @@
 2. 結合 2025 賽季數據動態更新評級
 3. 使用 Q 排位賽結果預測 R 正賽結果
 4. 載入實際正賽結果計算 rank_change
-5. 輸出 JSON 格式分析結果（與 FP3→Q 格式兼容）
+5. 輸出 JSON 格式分析結果（與 FP3->Q 格式兼容）
 
 評級公式：
 rating = (win_rate * 4) + (pole_rate * 2) + (podium_rate * 2) + (normalized_points * 2)
 
-輸出格式（與 FP3→Q 相同）：
+輸出格式（與 FP3->Q 相同）：
 {
   "metadata": {"track": "...", "year": ..., "has_actual_results": true/false},
   "predictions": [
@@ -21,6 +21,14 @@ rating = (win_rate * 4) + (pole_rate * 2) + (podium_rate * 2) + (normalized_poin
   "team_ratings": {...}
 }
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import sys
@@ -1181,6 +1189,13 @@ def run_dynamic_team_rating_analysis(data_loader=None,
 
 if __name__ == "__main__":
     import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     
     print("="*60)
     print("動態車隊評級分析模組測試")

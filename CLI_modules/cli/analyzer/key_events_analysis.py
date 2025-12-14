@@ -3,6 +3,14 @@ F1 Analysis API - 關鍵事件摘要分析模組 (功能4.1)
 專門的關鍵事件分析，包含Raw Data和JSON輸出
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import pandas as pd
 from datetime import datetime
@@ -275,6 +283,14 @@ def save_events_raw_data(session_info, events_data):
     
     # 確保json資料夾存在
     import os
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     json_dir = "json"
     os.makedirs(json_dir, exist_ok=True)
     

@@ -25,9 +25,21 @@ from PyQt5.QtWidgets import (
 )
 
 from core.gui_i18n import tr
-from core.logger import get_logger
 
 logger = get_logger("objgraph_diagnostic", component="gui")
+
+
+def _log_to_logger(*args, sep=" ", end=""):
+    message = sep.join(str(arg) for arg in args)
+    if message.startswith("[ERROR]") or "❌" in message:
+        logger.error(message)
+    elif message.startswith("[WARNING]") or "⚠️" in message:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
+print = _log_to_logger
 
 
 class ObjectScanWorker(QThread):
@@ -69,9 +81,15 @@ class ObjectScanWorker(QThread):
             else:
                 result = {"type": "unknown", "data": []}
             
+            # ✅ 中斷檢查：被中斷時不發送信號
+            if self.isInterruptionRequested():
+                return
             self.scan_completed.emit(result)
         except Exception as e:
             logger.error(f"掃描失敗: {e}")
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             self.error_occurred.emit(str(e))
 
 
@@ -127,15 +145,23 @@ class ReferenceGraphWorker(QThread):
             
             # 檢查檔案是否成功生成
             if not output_file.exists():
+                if self.isInterruptionRequested():
+                    return
                 self.error_occurred.emit(f"引用圖生成失敗：檔案未創建\n{output_file}")
                 return
             
+            # ✅ 中斷檢查：被中斷時不發送信號
+            if self.isInterruptionRequested():
+                return
             self.graph_completed.emit(str(output_file))
             
         except Exception as e:
             logger.error(f"生成引用圖失敗: {e}")
             import traceback
             error_detail = traceback.format_exc()
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             self.error_occurred.emit(f"生成引用圖失敗:\n{str(e)}\n\n詳細錯誤:\n{error_detail}")
 
 
@@ -473,7 +499,7 @@ class ObjgraphDiagnosticWindow(QWidget):
             'import objgraph, gc\n'
             'gc.collect()\n'
             'count = objgraph.count("_DummyThread")\n'
-            'print(f"DummyThread 數量: {count}")'
+            'logger.debug(f"DummyThread 數量: {count}")'
         ))
         row1_layout.addWidget(btn_dummy_count)
         
@@ -482,9 +508,9 @@ class ObjgraphDiagnosticWindow(QWidget):
             'import objgraph, gc\n'
             'gc.collect()\n'
             'workers = objgraph.by_type("TelemetryApiWorker")\n'
-            'print(f"TelemetryApiWorker 實例數: {len(workers)}")\n'
+            'logger.debug(f"TelemetryApiWorker 實例數: {len(workers)}")\n'
             'for i, w in enumerate(workers[:5]):\n'
-            '    print(f"  Worker {i+1}: isRunning={w.isRunning()}, isFinished={w.isFinished()}")'
+            '    logger.debug(f"  Worker {i+1}: isRunning={w.isRunning()}, isFinished={w.isFinished()}")'
         ))
         row1_layout.addWidget(btn_api_worker)
         
@@ -493,9 +519,9 @@ class ObjgraphDiagnosticWindow(QWidget):
             'import threading, gc\n'
             'gc.collect()\n'
             'active = threading._active\n'
-            'print(f"threading._active 執行緒數: {len(active)}")\n'
+            'logger.debug(f"threading._active 執行緒數: {len(active)}")\n'
             'dummy_count = sum(1 for t in active.values() if type(t).__name__ == "_DummyThread")\n'
-            'print(f"其中 DummyThread: {dummy_count} 個")'
+            'logger.debug(f"其中 DummyThread: {dummy_count} 個")'
         ))
         row1_layout.addWidget(btn_threading)
         
@@ -513,7 +539,7 @@ class ObjgraphDiagnosticWindow(QWidget):
             'for lt in loader_types:\n'
             '    count = objgraph.count(lt)\n'
             '    if count > 0:\n'
-            '        print(f"{lt}: {count} 個")'
+            '        logger.debug(f"{lt}: {count} 個")'
         ))
         row2_layout.addWidget(btn_dataloader)
         
@@ -523,23 +549,23 @@ class ObjgraphDiagnosticWindow(QWidget):
             'gc.collect()\n'
             'active = threading._active\n'
             'dead_count = sum(1 for t in active.values() if not t.is_alive())\n'
-            'print(f"死亡但未清理的執行緒: {dead_count} 個")\n'
+            'logger.debug(f"死亡但未清理的執行緒: {dead_count} 個")\n'
             'if dead_count > 0:\n'
-            '    print("\\n前 10 個死亡執行緒:")\n'
+            '    logger.debug("\\n前 10 個死亡執行緒:")\n'
             '    for i, (tid, t) in enumerate(list(active.items())[:10]):\n'
             '        if not t.is_alive():\n'
-            '            print(f"  {t.name} (ID: {tid})")'
+            '            logger.debug(f"  {t.name} (ID: {tid})")'
         ))
         row2_layout.addWidget(btn_dead_threads)
         
         btn_force_gc = QPushButton('強制 GC + 報告')
         btn_force_gc.clicked.connect(lambda: self._run_quick_command(
             'import gc, objgraph\n'
-            'print("執行垃圾回收...")\n'
+            'logger.debug("執行垃圾回收...")\n'
             'collected = gc.collect()\n'
-            'print(f"回收了 {collected} 個物件")\n'
-            'print(f"當前 DummyThread: {objgraph.count(\'_DummyThread\')}")\n'
-            'print(f"當前 TelemetryApiWorker: {objgraph.count(\'TelemetryApiWorker\')}")'
+            'logger.debug(f"回收了 {collected} 個物件")\n'
+            'logger.debug(f"當前 DummyThread: {objgraph.count(\'_DummyThread\')}")\n'
+            'logger.debug(f"當前 TelemetryApiWorker: {objgraph.count(\'TelemetryApiWorker\')}")'
         ))
         row2_layout.addWidget(btn_force_gc)
         
@@ -637,65 +663,68 @@ import threading
 from pathlib import Path
 from datetime import datetime
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 強制垃圾回收
-print("\\n步驟 1: 執行垃圾回收...")
+logger.debug("\\n步驟 1: 執行垃圾回收...")
 collected = gc.collect()
-print(f"  回收了 {collected} 個物件")
+logger.debug(f"  回收了 {collected} 個物件")
 
 # 統計 DummyThread
-print("\\n步驟 2: 統計 DummyThread...")
+logger.debug("\\n步驟 2: 統計 DummyThread...")
 dummy_count_objgraph = objgraph.count("_DummyThread")
 active_threads = threading._active
 dummy_count_threading = sum(1 for t in active_threads.values() if type(t).__name__ == "_DummyThread")
-print(f"  objgraph.count: {dummy_count_objgraph}")
-print(f"  threading._active: {dummy_count_threading}")
+logger.debug(f"  objgraph.count: {dummy_count_objgraph}")
+logger.debug(f"  threading._active: {dummy_count_threading}")
 
 # 獲取所有 DummyThread 實例
-print("\\n步驟 3: 獲取 DummyThread 實例...")
+logger.debug("\\n步驟 3: 獲取 DummyThread 實例...")
 dummies = objgraph.by_type("_DummyThread")
-print(f"  找到 {len(dummies)} 個 DummyThread 實例")
+logger.debug(f"  找到 {len(dummies)} 個 DummyThread 實例")
 
 if dummies:
     # 分析前 3 個實例
-    print("\\n步驟 4: 分析前 3 個 DummyThread 的引用...")
-    print("-" * 60)
+    logger.debug("\\n步驟 4: 分析前 3 個 DummyThread 的引用...")
+    logger.debug("-" * 60)
     
     output_dir = Path("objgraph_traces")
     output_dir.mkdir(exist_ok=True)
     
     for i, dummy in enumerate(dummies[:3], 1):
-        print(f"\\n🔍 DummyThread #{i}:")
-        print(f"   名稱: {dummy.name}")
-        print(f"   存活: {dummy.is_alive()}")
-        print(f"   Daemon: {dummy.daemon}")
-        print(f"   Ident: {dummy.ident}")
+        logger.debug(f"\\n🔍 DummyThread #{i}:")
+        logger.debug(f"   名稱: {dummy.name}")
+        logger.debug(f"   存活: {dummy.is_alive()}")
+        logger.debug(f"   Daemon: {dummy.daemon}")
+        logger.debug(f"   Ident: {dummy.ident}")
         
         # 生成引用圖
         graph_file = output_dir / f"dummythread_{i}_backrefs_{datetime.now().strftime('%H%M%S')}.png"
         try:
-            print(f"   生成引用圖: {graph_file.name}")
+            logger.debug(f"   生成引用圖: {graph_file.name}")
             objgraph.show_backrefs(
                 [dummy],
                 max_depth=5,
                 filename=str(graph_file),
                 refcounts=True
             )
-            print(f"   ✅ 引用圖已保存至: {graph_file}")
+            logger.info(f"   ✅ 引用圖已保存至: {graph_file}")
         except Exception as e:
-            print(f"   ❌ 生成引用圖失敗: {e}")
+            logger.error(f"   ❌ 生成引用圖失敗: {e}")
         
         # 列出直接引用者
-        print(f"   直接引用者（前 3 個）:")
+        logger.debug(f"   直接引用者（前 3 個）:")
         referrers = gc.get_referrers(dummy)
         for j, ref in enumerate(referrers[:3], 1):
             ref_type = type(ref).__name__
             ref_str = str(ref)[:80].replace("\\n", " ")
-            print(f"     {j}. {ref_type}: {ref_str}")
+            logger.debug(f"     {j}. {ref_type}: {ref_str}")
         
-        print("-" * 60)
+        logger.debug("-" * 60)
     
-    print("\\n步驟 5: 檢查常見的 DummyThread 來源...")
-    print("-" * 60)
+    logger.debug("\\n步驟 5: 檢查常見的 DummyThread 來源...")
+    logger.debug("-" * 60)
     
     # 檢查可能的來源
     potential_sources = [
@@ -710,29 +739,29 @@ if dummies:
     for class_name, description in potential_sources:
         count = objgraph.count(class_name)
         if count > 0:
-            print(f"  ✅ {description} ({class_name}): {count} 個")
+            logger.info(f"  ✅ {description} ({class_name}): {count} 個")
     
-    print("-" * 60)
+    logger.debug("-" * 60)
     
     # 生成類型統計
-    print("\\n步驟 6: 生成物件類型統計...")
+    logger.debug("\\n步驟 6: 生成物件類型統計...")
     stats_file = output_dir / f"object_stats_{datetime.now().strftime('%H%M%S')}.txt"
     with open(stats_file, 'w', encoding='utf-8') as f:
         f.write("物件類型統計（Top 30）\\n")
         f.write("=" * 80 + "\\n\\n")
         objgraph.show_most_common_types(limit=30, file=f)
-    print(f"  ✅ 統計已保存至: {stats_file}")
+    logger.info(f"  ✅ 統計已保存至: {stats_file}")
 
-print("\\n" + "=" * 60)
-print("✅ 追蹤完成！")
-print("=" * 60)
-print("\\n📁 輸出檔案位置:")
-print(f"  - 引用圖: objgraph_traces/dummythread_*_backrefs_*.png")
-print(f"  - 統計: objgraph_traces/object_stats_*.txt")
-print("\\n💡 下一步:")
-print("  1. 查看引用圖，找出是誰在持有 DummyThread")
-print("  2. 檢查對應模組是否正確實現了 cleanup()")
-print("=" * 60)
+logger.debug("\\n" + "=" * 60)
+logger.info("追蹤完成！")
+logger.debug("=" * 60)
+logger.debug("\\n📁 輸出檔案位置:")
+logger.debug(f"  - 引用圖: objgraph_traces/dummythread_*_backrefs_*.png")
+logger.debug(f"  - 統計: objgraph_traces/object_stats_*.txt")
+logger.debug("\\n💡 下一步:")
+logger.debug("  1. 查看引用圖，找出是誰在持有 DummyThread")
+logger.debug("  2. 檢查對應模組是否正確實現了 cleanup()")
+logger.debug("=" * 60)
 '''
         
         self.console_input.setPlainText(code)

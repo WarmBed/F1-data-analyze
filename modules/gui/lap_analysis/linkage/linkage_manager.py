@@ -7,6 +7,9 @@
 from typing import List, Dict, Any
 from PyQt5.QtCore import QObject, pyqtSignal
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class LinkageManager(QObject):
     """
@@ -61,23 +64,23 @@ class LinkageManager(QObject):
             if hasattr(module, 'set_master_linkage_enabled'):
                 module.set_master_linkage_enabled(self.master_linkage_enabled)
             
-            print(f"[LINKAGE_MANAGER] 已註冊 {module_type} 連動模組，目前共 {len(self.registered_modules)} 個模組")
+            logger.debug(f"[LINKAGE_MANAGER] 已註冊 {module_type} 連動模組，目前共 {len(self.registered_modules)} 個模組")
     
     def unregister_module(self, module):
         """取消註冊連動模組"""
-        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 前: list 長度 = {len(self.registered_modules)}")
-        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 在 list 中: {module in self.registered_modules}")
-        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module ID: {id(module)}")
-        print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] list 中的 ID: {[id(m) for m in self.registered_modules]}")
+        logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 前: list 長度 = {len(self.registered_modules)}")
+        logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 在 list 中: {module in self.registered_modules}")
+        logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module ID: {id(module)}")
+        logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] list 中的 ID: {[id(m) for m in self.registered_modules]}")
         
         if module in self.registered_modules:
             self.registered_modules.remove(module)
             self._disconnect_module_signals(module)
-            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] 已從 list 移除")
-            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 後: list 長度 = {len(self.registered_modules)}")
-            print(f"[LINKAGE_MANAGER] 已取消註冊連動模組，目前共 {len(self.registered_modules)} 個模組")
+            logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] 已從 list 移除")
+            logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] unregister 後: list 長度 = {len(self.registered_modules)}")
+            logger.debug(f"[LINKAGE_MANAGER] 已取消註冊連動模組，目前共 {len(self.registered_modules)} 個模組")
         else:
-            print(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 不在 list 中，無法移除")
+            logger.debug(f"[LINKAGE_MANAGER] [UNREGISTER_DEBUG] module 不在 list 中，無法移除")
     
     def set_master_linkage_enabled(self, enabled: bool):
         """設置主連動開關狀態"""
@@ -92,12 +95,12 @@ class LinkageManager(QObject):
                     elif hasattr(module, 'set_master_linkage_enabled'):
                         module.set_master_linkage_enabled(enabled)
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] 通知模組主開關變更失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] 通知模組主開關變更失敗: {e}")
             
             # 發送信號
             self.master_linkage_changed.emit(enabled)
             
-            print(f"[LINKAGE_MANAGER] 主連動開關: {'啟用' if enabled else '停用'}，已通知 {len(self.registered_modules)} 個模組")
+            logger.debug(f"[LINKAGE_MANAGER] 主連動開關: {'啟用' if enabled else '停用'}，已通知 {len(self.registered_modules)} 個模組")
     
     def is_master_linkage_enabled(self) -> bool:
         """獲取主連動開關狀態"""
@@ -119,12 +122,12 @@ class LinkageManager(QObject):
                     if hasattr(module, 'set_time_axis_mode'):
                         module.set_time_axis_mode(use_time_axis)
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] 通知模組時間軸模式變更失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] 通知模組時間軸模式變更失敗: {e}")
             
             # 發送信號
             self.time_axis_mode_changed.emit(use_time_axis)
             
-            print(f"[LINKAGE_MANAGER] 時間軸模式: {'啟用（時間軸）' if use_time_axis else '停用（距離軸）'}，已通知 {len(self.registered_modules)} 個模組")
+            logger.debug(f"[LINKAGE_MANAGER] 時間軸模式: {'啟用（時間軸）' if use_time_axis else '停用（距離軸）'}，已通知 {len(self.registered_modules)} 個模組")
     
     def is_time_axis_mode(self) -> bool:
         """獲取當前時間軸模式狀態"""
@@ -141,7 +144,7 @@ class LinkageManager(QObject):
                 try:
                     module.on_x_linkage_received(distance_value, y_relative)
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] X軸連動信號發送失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] X軸連動信號發送失敗: {e}")
         
         # 發送全域信號
         self.x_linkage_signal.emit(distance_value, y_relative)
@@ -157,7 +160,7 @@ class LinkageManager(QObject):
                 try:
                     module.on_x_linkage_clear()
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] X軸連動清除信號發送失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] X軸連動清除信號發送失敗: {e}")
         
         # 發送全域信號
         self.x_linkage_clear.emit()
@@ -173,7 +176,7 @@ class LinkageManager(QObject):
                 try:
                     module.on_click_linkage_received(distance_value)
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] 點擊連動信號發送失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] 點擊連動信號發送失敗: {e}")
         
         # 發送全域信號
         self.click_linkage_signal.emit(distance_value)
@@ -189,7 +192,7 @@ class LinkageManager(QObject):
                 try:
                     module.on_click_linkage_clear()
                 except Exception as e:
-                    print(f"[ERROR] [LINKAGE_MANAGER] 點擊連動清除信號發送失敗: {e}")
+                    logger.error(f"[LINKAGE_MANAGER] 點擊連動清除信號發送失敗: {e}")
         
         # 發送全域信號
         self.click_linkage_clear.emit()
@@ -222,7 +225,7 @@ class LinkageManager(QObject):
     
     def broadcast_signal(self, signal_name: str, data: Any):
         """廣播信號到所有模組"""
-        print(f"[LINKAGE_MANAGER] 廣播信號: {signal_name}, 數據: {data}")
+        logger.debug(f"[LINKAGE_MANAGER] 廣播信號: {signal_name}, 數據: {data}")
         # 這裡可以根據需要實現特定的信號廣播邏輯
     
     def _connect_module_signals(self, module):
@@ -239,7 +242,7 @@ class LinkageManager(QObject):
         """清除所有連動狀態"""
         self.send_x_linkage_clear()
         self.send_click_linkage_clear()
-        print(f"[LINKAGE_MANAGER] 已清除所有連動狀態")
+        logger.debug(f"[LINKAGE_MANAGER] 已清除所有連動狀態")
 
 
 # 全域連動管理器實例

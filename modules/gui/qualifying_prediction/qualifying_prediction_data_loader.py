@@ -13,7 +13,11 @@ Qualifying Prediction Data Loader
 
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader
 from core.gui_i18n import tr
+from core.logger import get_logger
 from typing import Dict, Any, Optional, List
+
+
+logger = get_logger(component="qualifying_prediction_loader")
 
 
 class QualifyingPredictionDataLoader(UniversalDataLoader):
@@ -416,9 +420,9 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     import sys
     
-    print("=" * 60)
-    print("排位賽預測資料載入器 - 獨立測試")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("排位賽預測資料載入器 - 獨立測試")
+    logger.info("=" * 60)
     
     # 創建 Qt 應用程式（需要 QTimer）
     app = QApplication(sys.argv)
@@ -429,65 +433,69 @@ if __name__ == "__main__":
         race="Austria"
     )
     
-    print(f"\n📋 載入器配置:")
-    print(f"  CLI Function: {loader.CLI_FUNCTION}")
-    print(f"  JSON Pattern: {loader.JSON_PATTERN}")
-    print(f"  參數: {loader.year} {loader.race}")
+    logger.info("\n📋 載入器配置:")
+    logger.info("  CLI Function: %s", loader.CLI_FUNCTION)
+    logger.info("  JSON Pattern: %s", loader.JSON_PATTERN)
+    logger.info("  參數: %s %s", loader.year, loader.race)
     
     # 測試檔案搜尋模式
-    print(f"\n🔍 檔案搜尋模式:")
+    logger.info("\n🔍 檔案搜尋模式:")
     patterns = loader._build_filename_patterns(
         year=loader.year,
         race=loader.race
     )
     for i, pattern in enumerate(patterns, 1):
-        print(f"  {i}. {pattern}")
+        logger.info("  %s. %s", i, pattern)
     
     # 設置信號處理
     def on_data_loaded(data):
-        print(f"\n✅ 數據載入成功!")
+        logger.info("\n✅ 數據載入成功!")
         
         if "metadata" in data and "predictions" in data:
             metadata = data["metadata"]
             predictions = data["predictions"]
             
-            print(f"\n📊 資料摘要:")
-            print(f"  賽道: {metadata.get('track', 'N/A')}")
-            print(f"  年份: {metadata.get('year', 'N/A')}")
-            print(f"  模型 R²: {metadata.get('model_r2', 0):.4f}")
-            print(f"  模型 MAE: {metadata.get('model_mae', 0):.3f}s")
-            print(f"  預測數量: {len(predictions)}")
-            print(f"  平均預測時間: {metadata.get('avg_prediction_time', 0):.3f}s")
-            print(f"  平均改善: {metadata.get('avg_improvement', 0):.3f}s")
-            print(f"  可靠性: {metadata.get('reliability_text', 'N/A')}")
+            logger.info("\n📊 資料摘要:")
+            logger.info("  賽道: %s", metadata.get("track", "N/A"))
+            logger.info("  年份: %s", metadata.get("year", "N/A"))
+            logger.info("  模型 R²: %.4f", metadata.get("model_r2", 0))
+            logger.info("  模型 MAE: %.3fs", metadata.get("model_mae", 0))
+            logger.info("  預測數量: %s", len(predictions))
+            logger.info("  平均預測時間: %.3fs", metadata.get("avg_prediction_time", 0))
+            logger.info("  平均改善: %.3fs", metadata.get("avg_improvement", 0))
+            logger.info("  可靠性: %s", metadata.get("reliability_text", "N/A"))
             
             # 顯示前 3 名預測
-            print(f"\n🏆 前 3 名預測:")
+            logger.info("\n🏆 前 3 名預測:")
             for i, pred in enumerate(predictions[:3]):
-                print(
-                    f"  {i+1}. {pred['driver']} ({pred['team']}) - "
-                    f"預測: {pred['predicted_time']:.3f}s "
-                    f"(FP3: {pred['fp3_time']:.3f}s, 改善: {pred['improvement']:.3f}s)"
+                logger.info(
+                    "  %s. %s (%s) - 預測: %.3fs (FP3: %.3fs, 改善: %.3fs)",
+                    i + 1,
+                    pred["driver"],
+                    pred["team"],
+                    pred["predicted_time"],
+                    pred["fp3_time"],
+                    pred["improvement"],
                 )
         
         app.quit()
     
     def on_load_error(error_msg):
-        print(f"\n❌ 載入錯誤: {error_msg}")
+        logger.error("\n❌ 載入錯誤: %s", error_msg)
         app.quit()
     
     loader.data_loaded.connect(on_data_loaded)
     loader.load_error.connect(on_load_error)
     
     # 啟動載入
-    print(f"\n🚀 啟動數據載入...")
+    logger.info("\n🚀 啟動數據載入...")
     success = loader.load_data(
         year=loader.year,
         race=loader.race
     )
     
     if not success:
-        print("❌ 載入啟動失敗")
+        logger.error("❌ 載入啟動失敗")
         sys.exit(1)
     
     # 進入事件循環

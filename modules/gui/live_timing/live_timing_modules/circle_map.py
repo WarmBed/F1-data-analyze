@@ -21,7 +21,12 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QFont, QPainterPath
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
+from ..core.local_source import NON_RACE_CAR_NUMBERS
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.circle_map", component="gui")
 
 # 嘗試導入通用顏色系統
 try:
@@ -29,7 +34,7 @@ try:
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     COLOR_PALETTE_AVAILABLE = False
-    print("[CIRCLE_MAP] color_palette_provider not available")
+    logger.warning("[CIRCLE_MAP] color_palette_provider not available")
 
 
 class CircleMapWidget(QWidget):
@@ -115,14 +120,14 @@ class CircleMapWidget(QWidget):
             '6': ('VIRTUAL SAFETY CAR', '#FF8000', '#000000'),  # VSC - Orange
         }
         
-        print("[CIRCLE_MAP] CircleMapWidget initialized (GPS coordinate mode)")
+        logger.info("[CIRCLE_MAP] CircleMapWidget initialized (GPS coordinate mode)")
     
     def load_track_data(self, track_data: Dict):
         """Load track outline data"""
         try:
             position_records = track_data.get('position_records', [])
             if not position_records:
-                print("[CIRCLE_MAP] No track outline data")
+                logger.warning("[CIRCLE_MAP] No track outline data")
                 return
             
             self.track_points = []
@@ -148,10 +153,14 @@ class CircleMapWidget(QWidget):
             
             if self.track_points:
                 self.track_length = self.track_points[-1]['distance']
-                print(f"[CIRCLE_MAP] Track outline loaded: {len(self.track_points)} points, length {self.track_length:.0f}m")
+                logger.info(
+                    "[CIRCLE_MAP] Track outline loaded: %s points, length %.0fm",
+                    len(self.track_points),
+                    self.track_length,
+                )
             
         except Exception as e:
-            print(f"[CIRCLE_MAP] Failed to load track outline: {e}")
+            logger.exception("[CIRCLE_MAP] Failed to load track outline: %s", e)
     
     def set_track_length(self, length: float):
         """Set track length"""
@@ -170,7 +179,7 @@ class CircleMapWidget(QWidget):
             corners: List of corner dicts with 'number' and 'distance' or 'lap_distance' keys
         """
         self._corners = corners or []
-        print(f"[CIRCLE_MAP] Corners set: {len(self._corners)} corners")
+        logger.info("[CIRCLE_MAP] Corners set: %s corners", len(self._corners))
         self.update()
     
     def set_show_corners(self, show: bool):
@@ -183,11 +192,14 @@ class CircleMapWidget(QWidget):
         self.driver_info = driver_info or {}
     
     def update_positions(self, drivers_data: Dict, current_lap: int = 0, race_time: str = "00:00:00"):
-        """Update driver positions - filter DNF/Stopped drivers"""
-        # Filter out DNF/Retired/Stopped drivers
+        """Update driver positions - filter DNF/Stopped drivers and Safety Cars"""
+        # Filter out DNF/Retired/Stopped drivers and Safety/Medical Cars
         if drivers_data:
             filtered_drivers = {}
             for driver_num, driver_data in drivers_data.items():
+                # 排除 Safety Car / Medical Car (241, 242, 243)
+                if driver_num in NON_RACE_CAR_NUMBERS:
+                    continue
                 status = driver_data.get('status', '')
                 if status and status.upper() in ('DNF', 'RETIRED', 'OUT', 'STOPPED'):
                     continue
@@ -279,7 +291,7 @@ class CircleMapWidget(QWidget):
         """
         new_status = str(status)
         if new_status != self._track_status:
-            print(f"[CIRCLE_MAP] Track status changed: {self._track_status} -> {new_status}")
+            logger.info("[CIRCLE_MAP] Track status changed: %s -> %s", self._track_status, new_status)
             self._track_status = new_status
             self.update()
     
@@ -327,7 +339,7 @@ class CircleMapWidget(QWidget):
         status_info = self._track_status_display.get(self._track_status)
         # Debug output
         if self._track_status != '1':
-            print(f"[CIRCLE_MAP] Drawing status bar: status={self._track_status}, info={status_info}")
+            logger.debug("[CIRCLE_MAP] Drawing status bar: status=%s, info=%s", self._track_status, status_info)
         if not status_info:
             return  # Green flag or unknown - don't show bar
         
@@ -745,7 +757,7 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
         self._track_data = None
         self._current_race_key = None
         
-        print("[CIRCLE_MAP_MDI] LiveTimingCircleMap initialized")
+        logger.info("[CIRCLE_MAP_MDI] LiveTimingCircleMap initialized")
     
     def _setup_ui(self):
         """Setup UI components - no selector needed"""
@@ -773,7 +785,7 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
             return True
         
         # API 失敗，返回錯誤（禁止本地回退）
-        print(f"[CIRCLE_MAP_MDI] API 獲取失敗，請確認 API 服務器已啟動")
+        logger.error("[CIRCLE_MAP_MDI] API 獲取失敗，請確認 API 服務器已啟動")
         return False
     
     def _load_track_via_api(self, year: int, track_name: str) -> bool:
@@ -794,7 +806,7 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
                     continue
                 seen.add(try_year)
                 
-                print(f"[CIRCLE_MAP_MDI] 嘗試 API 獲取: {try_year} {track_name}")
+                logger.info("[CIRCLE_MAP_MDI] 嘗試 API 獲取: %s %s", try_year, track_name)
                 data = api_client.get_track_analysis(try_year, track_name, "R")
                 
                 if data:
@@ -815,17 +827,17 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
                             if 'mapped_distance' in corner:
                                 corner['lap_distance'] = corner['mapped_distance']
                         self.circle_widget.set_corners(corners)
-                        print(f"[CIRCLE_MAP_MDI] Corners loaded (API): {len(corners)} corners")
+                        logger.info("[CIRCLE_MAP_MDI] Corners loaded (API): %s corners", len(corners))
                     
                     if try_year != year:
-                        print(f"[CIRCLE_MAP_MDI] 使用 {try_year} 賽道數據 (API, 原始年份 {year} 不可用)")
-                    print(f"[CIRCLE_MAP_MDI] 賽道載入成功 (API): {track_name}, {len(self._track_data['position_records'])} 點")
+                        logger.info("[CIRCLE_MAP_MDI] 使用 %s 賽道數據 (API, 原始年份 %s 不可用)", try_year, year)
+                    logger.info("[CIRCLE_MAP_MDI] 賽道載入成功 (API): %s, %s 點", track_name, len(self._track_data['position_records']))
                     return True
             
             return False
             
         except Exception as e:
-            print(f"[CIRCLE_MAP_MDI] API 獲取賽道數據失敗: {e}")
+            logger.exception("[CIRCLE_MAP_MDI] API 獲取賽道數據失敗: %s", e)
             return False
     
     # ===========================================
@@ -836,7 +848,7 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
         year = race_info.get('year', 2025)
         race_key = race_info.get('race', '')
         
-        print(f"[CIRCLE_MAP_MDI] Race loaded: {year} {race_key}")
+        logger.info("[CIRCLE_MAP_MDI] Race loaded: %s %s", year, race_key)
         
         # Set driver info
         driver_info = race_info.get('driver_info', {})
@@ -853,12 +865,17 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
     
     def _on_race_unloaded(self):
         """Race unloaded"""
-        print("[CIRCLE_MAP_MDI] Race unloaded")
+        logger.info("[CIRCLE_MAP_MDI] Race unloaded")
         self.circle_widget.driver_positions = {}
         self.circle_widget.update()
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """Snapshot updated"""
+        """Snapshot updated（60 FPS 優化：每 2 幀渲染一次 = 30 FPS）"""
+        # 跳幀渲染：只有偶數幀才更新（30 FPS）
+        frame_counter = snapshot.get('frame_counter', 0)
+        if frame_counter % 2 != 0:
+            return  # 跳過奇數幀
+        
         drivers = snapshot.get('drivers', {})
         race_time = snapshot.get('race_time_seconds', 0)
         current_lap = snapshot.get('current_lap', 0)
@@ -882,7 +899,7 @@ class LiveTimingCircleMap(BaseLiveTimingMDI):
         race_time_for_status = snapshot.get('race_time', '')
         if race_time_for_status and self._data_manager:
             track_status = self._data_manager.get_track_status_at_time(race_time_for_status)
-            print(f"[CIRCLE_MAP_MDI] Track status at {race_time_for_status}: {track_status}")
+            logger.debug("[CIRCLE_MAP_MDI] Track status at %s: %s", race_time_for_status, track_status)
             self.circle_widget.update_track_status(track_status)
     
     def _on_interpolation_updated(self, current_snap: Dict[str, Any], next_snap: Dict[str, Any],

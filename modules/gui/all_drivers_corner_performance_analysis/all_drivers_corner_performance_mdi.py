@@ -43,6 +43,24 @@ except ImportError:
 # 導入國際化
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+logger = get_logger(component="gui")
+
+
+def _log_to_logger(*args, sep=" ", end=""):
+    message = sep.join(str(arg) for arg in args)
+    if message.startswith("[ERROR]") or "❌" in message:
+        logger.error(message)
+    elif message.startswith("[WARNING]") or "⚠️" in message:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
+# print = _log_to_logger  # 已停用：避免 print 輸出到終端
+
 
 class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
     """
@@ -70,7 +88,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("corner_performance", config)
             cls._REGISTERED = True
-            print("[CORNER_MDI] 模組類型已註冊")
+            logger.debug("[CORNER_MDI] 模組類型已註冊")
     
     def __init__(self, parent=None, corner_type="low_speed"):
         """
@@ -80,7 +98,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             parent: 父元件
             corner_type: 彎道類型 ("low_speed", "mid_speed", "high_speed")
         """
-        print(f"[CORNER_MDI] AllDriversCornerPerformanceMDI 開始初始化... corner_type={corner_type}")
+        logger.debug(f"[CORNER_MDI] AllDriversCornerPerformanceMDI 開始初始化... corner_type={corner_type}")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -100,7 +118,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         self._current_data = None
         self._is_data_loaded = False
         
-        print(f"[CORNER_MDI] 基類初始化完成，等待參數設置... corner_type={corner_type}")
+        logger.debug(f"[CORNER_MDI] 基類初始化完成，等待參數設置... corner_type={corner_type}")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -114,19 +132,19 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print("[CORNER_MDI] 開始初始化模組...")
+            logger.debug("[CORNER_MDI] 開始初始化模組...")
             
             # ✅ 驗證必要屬性（與 Brake Performance 完全相同）
             if not hasattr(self, 'current_year') or not self.current_year:
-                print("[CORNER_MDI] 缺少 current_year 屬性")
+                logger.debug("[CORNER_MDI] 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print("[CORNER_MDI] 缺少 current_race 屬性")
+                logger.debug("[CORNER_MDI] 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print("[CORNER_MDI] 缺少 current_session 屬性")
+                logger.debug("[CORNER_MDI] 缺少 current_session 屬性")
                 return False
             
             # ✅ 設置參數（從實例屬性獲取，與 Brake Performance 完全相同）
@@ -134,32 +152,32 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[CORNER_MDI] 參數已設置: {self.year} {self.race} {self.session}")
+            logger.debug(f"[CORNER_MDI] 參數已設置: {self.year} {self.race} {self.session}")
             
             # ✅ 調用基類的 initialize_module（與 Brake Performance 完全相同）
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print("[CORNER_MDI] 基類初始化失敗")
+                logger.debug("[CORNER_MDI] 基類初始化失敗")
                 return False
             
             # ✅ 驗證組件已創建（與 Brake Performance 完全相同）
             if not self.chart_widget:
-                print("[CORNER_MDI] chart_widget 未創建")
+                logger.debug("[CORNER_MDI] chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print("[CORNER_MDI] data_manager 未創建")
+                logger.debug("[CORNER_MDI] data_manager 未創建")
                 return False
             
-            print(f"[CORNER_MDI] 組件創建成功")
+            logger.debug(f"[CORNER_MDI] 組件創建成功")
             
             # ✅ 自動載入初始數據（與 Brake Performance 完全相同）
-            print("[CORNER_MDI] 準備載入初始數據...")
+            logger.debug("[CORNER_MDI] 準備載入初始數據...")
             self.load_initial_data()
             
             return True
             
         except Exception as e:
-            print(f"[CORNER_MDI] 初始化失敗: {e}")
+            logger.debug(f"[CORNER_MDI] 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -175,7 +193,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         Returns:
             CornerPerformanceDataLoader: 資料載入器實例
         """
-        print("[CORNER_MDI] 創建資料管理器...")
+        logger.debug("[CORNER_MDI] 創建資料管理器...")
         
         loader = CornerPerformanceDataLoader(parent=self)
         
@@ -184,7 +202,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("[CORNER_MDI] 資料管理器已創建")
+        logger.debug("[CORNER_MDI] 資料管理器已創建")
         return loader
     
     def create_chart_widget(self):
@@ -194,7 +212,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         Returns:
             CornerPerformanceScatterWidget: 散點圖元件實例
         """
-        print(f"[CORNER_MDI] 創建圖表元件... corner_type={self.corner_type}")
+        logger.debug(f"[CORNER_MDI] 創建圖表元件... corner_type={self.corner_type}")
         
         # 創建散點圖元件（傳遞彎道類型）
         widget = CornerPerformanceScatterWidget(parent=None, corner_type=self.corner_type)
@@ -203,7 +221,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         widget.driver_clicked.connect(self._on_driver_clicked)
         widget.corner_switched.connect(self._on_corner_switched)
         
-        print(f"[CORNER_MDI] 圖表元件已創建 corner_type={self.corner_type}")
+        logger.debug(f"[CORNER_MDI] 圖表元件已創建 corner_type={self.corner_type}")
         return widget
     
     def create_additional_widgets(self) -> list:
@@ -213,7 +231,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         Returns:
             list: 額外的 Widget 列表（空）
         """
-        print("[CORNER_MDI] 不創建額外組件")
+        logger.debug("[CORNER_MDI] 不創建額外組件")
         
         # ✅ 不創建統計面板，返回空列表（與 Brake Performance 完全相同）
         return []
@@ -229,7 +247,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             data: 載入的資料
         """
         try:
-            print("[CORNER_MDI] 收到資料載入完成信號")
+            logger.debug("[CORNER_MDI] 收到資料載入完成信號")
             
             # ✅ 檢查數據是否為空（與 Brake Performance 完全相同）
             if not data:
@@ -243,10 +261,10 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             if self.chart_widget:
                 self.chart_widget.update_data(data)
             
-            print("[CORNER_MDI] 資料處理完成")
+            logger.debug("[CORNER_MDI] 資料處理完成")
             
         except Exception as e:
-            print(f"[CORNER_MDI] 資料處理失敗: {e}")
+            logger.debug(f"[CORNER_MDI] 資料處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_load_error(f"{tr('data_processing_error', '資料處理錯誤')}: {str(e)}")
@@ -259,21 +277,21 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"[CORNER_MDI] 資料載入錯誤: {error_msg}")
+        logger.debug(f"[CORNER_MDI] 資料載入錯誤: {error_msg}")
         QMessageBox.critical(None, tr("load_error", "載入錯誤"), error_msg)
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):
         """狀態變更回調（與 Brake Performance 完全相同）"""
-        print(f"[CORNER_MDI] 狀態: {status}")
+        logger.debug(f"[CORNER_MDI] 狀態: {status}")
     
     def load_initial_data(self):
         """載入初始數據（與 Brake Performance 完全相同）"""
         try:
-            print("[CORNER_MDI] 開始載入初始數據...")
+            logger.debug("[CORNER_MDI] 開始載入初始數據...")
             
             if not self.data_manager:
-                print("[CORNER_MDI] data_manager 不存在")
+                logger.debug("[CORNER_MDI] data_manager 不存在")
                 return
             
             # ✅ 呼叫資料載入器（與 Brake Performance 完全相同）
@@ -284,10 +302,10 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             )
             
             if not success:
-                print("[CORNER_MDI] 資料載入失敗")
+                logger.debug("[CORNER_MDI] 資料載入失敗")
                 
         except Exception as e:
-            print(f"[CORNER_MDI] 載入初始數據失敗: {e}")
+            logger.debug(f"[CORNER_MDI] 載入初始數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -321,7 +339,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_driver_clicked(self, driver_code: str):
         """車手點擊事件（與 Brake Performance 完全相同）"""
-        print(f"[CORNER_MDI] 車手被點擊: {driver_code}")
+        logger.debug(f"[CORNER_MDI] 車手被點擊: {driver_code}")
     
     @pyqtSlot(str)
     def _on_corner_switched(self, corner_type: str):
@@ -331,7 +349,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         Args:
             corner_type: 彎道類型（low_speed, mid_speed, high_speed）
         """
-        print(f"[CORNER_MDI] 彎道類型切換: {corner_type}")
+        logger.debug(f"[CORNER_MDI] 彎道類型切換: {corner_type}")
     
     # ========== 參數更新機制（完全複製 Ideal Lap Ranking）==========
     
@@ -350,7 +368,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[CORNER_MDI] 🔄 更新參數: {year} {race} {session}")
+            logger.debug(f"[CORNER_MDI] 🔄 更新參數: {year} {race} {session}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -365,23 +383,23 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
                 self.data_manager.session = session
-                print(f"[CORNER_MDI] ✅ DataManager 參數已同步")
+                logger.info(f"[CORNER_MDI] ✅ DataManager 參數已同步")
             elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
                 self.data_loader.session = session
-                print(f"[CORNER_MDI] ✅ DataLoader 參數已同步")
+                logger.info(f"[CORNER_MDI] ✅ DataLoader 參數已同步")
             
             # 🔑 重點：調用 load_initial_data() 觸發資料重新載入
             # 這個方法會啟動 DataLoader 並更新 UI
-            print(f"[CORNER_MDI] 🌐 觸發資料重新載入...")
+            logger.debug(f"[CORNER_MDI] 🌐 觸發資料重新載入...")
             self.load_initial_data()
             
             # 異步載入，返回 True 表示啟動成功
             return True
             
         except Exception as e:
-            print(f"❌ [CORNER_MDI] 參數更新失敗: {e}")
+            logger.error(f"[CORNER_MDI] 參數更新失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -409,7 +427,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
 
             # 驗證必要參數
             if not all([target_year, target_race, target_session]):
-                print("❌ [CORNER_MDI] 參數更新失敗：缺少必要參數")
+                logger.error("[CORNER_MDI] 參數更新失敗：缺少必要參數")
                 return False
 
             # 步驟 2: 標準化參數
@@ -434,7 +452,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             self.update_window_title()
 
             # 步驟 6: 觸發實際的數據載入（關鍵步驟）
-            print(f"[CORNER_MDI] 📊 調用 update_analysis_parameters...")
+            logger.debug(f"[CORNER_MDI] 📊 調用 update_analysis_parameters...")
             return self.update_analysis_parameters(
                 self.current_year,
                 self.current_race,
@@ -442,7 +460,7 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
             )
 
         except Exception as exc:
-            print(f"❌ [CORNER_MDI] update_parameters 失敗: {exc}")
+            logger.error(f"[CORNER_MDI] update_parameters 失敗: {exc}")
             import traceback
             traceback.print_exc()
             return False
@@ -457,24 +475,24 @@ class AllDriversCornerPerformanceMDI(UniversalAnalysisMDI):
         用於恢復所有被隱藏的車手數據
         """
         try:
-            print("[CORNER_MDI] 🔄 收到 reset_chart_view 請求")
+            logger.debug("[CORNER_MDI] 🔄 收到 reset_chart_view 請求")
             
             # 檢查 chart_widget 是否存在
             if not hasattr(self, 'chart_widget') or not self.chart_widget:
-                print("[CORNER_MDI] ⚠️  chart_widget 不存在")
+                logger.warning("[CORNER_MDI] ⚠️  chart_widget 不存在")
                 return
             
             # 檢查 chart_widget 是否有 show_all_drivers 方法
             if not hasattr(self.chart_widget, 'show_all_drivers'):
-                print("[CORNER_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
+                logger.warning("[CORNER_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
                 return
             
             # 調用 Widget 的 show_all_drivers() 方法
-            print("[CORNER_MDI] ✅ 調用 chart_widget.show_all_drivers()")
+            logger.info("[CORNER_MDI] ✅ 調用 chart_widget.show_all_drivers()")
             self.chart_widget.show_all_drivers()
             
         except Exception as e:
-            print(f"[CORNER_MDI] ❌ reset_chart_view 失敗: {e}")
+            logger.error(f"[CORNER_MDI] ❌ reset_chart_view 失敗: {e}")
             import traceback
             traceback.print_exc()
 

@@ -25,6 +25,9 @@ from typing import Dict, List, Any, Optional
 
 from ..telemetry_data_loader_base import TelemetryDataLoader
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
     """距離差分析數據載入器 - 基於 TelemetryDataLoader 基類的輕量級包裝器"""
     
@@ -41,7 +44,7 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
         # 距離差特有的額外屬性（如果需要）
         self.current_session = None
         
-        print("[DISTANCEDIFF_LOADER] ✅ 距離差分析數據載入器初始化完成（基於TelemetryDataLoader v2.0）")
+        logger.info("[DISTANCEDIFF_LOADER] ✅ 距離差分析數據載入器初始化完成（基於TelemetryDataLoader v2.0）")
     
     # ========== 向後兼容的API方法 ==========
     
@@ -67,8 +70,8 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
         Returns:
             bool: 載入是否成功啟動
         """
-        print(f"[DISTANCEDIFF_LOADER] 🔄 向後兼容接口：load_distancediff_data")
-        print(f"[DISTANCEDIFF_LOADER] 參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
+        logger.debug(f"[DISTANCEDIFF_LOADER] 🔄 向後兼容接口：load_distancediff_data")
+        logger.debug(f"[DISTANCEDIFF_LOADER] 參數: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
         
         # 儲存會話資訊（保持與舊版本的兼容性）
         self.current_session = {
@@ -94,8 +97,8 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
                 必須包含：year, race, driver1, driver2, lap1, lap2
         """
         try:
-            print(f"[DISTANCEDIFF_LOADER] 🔄 向後兼容接口：load_distancediff_analysis_data")
-            print(f"[DISTANCEDIFF_LOADER] 會話資訊: {session_info}")
+            logger.debug(f"[DISTANCEDIFF_LOADER] 🔄 向後兼容接口：load_distancediff_analysis_data")
+            logger.debug(f"[DISTANCEDIFF_LOADER] 會話資訊: {session_info}")
             
             # 提取參數
             year = session_info.get('year')
@@ -107,13 +110,13 @@ class DistanceDiffAnalysisDataLoader(TelemetryDataLoader):
             lap2 = session_info.get('lap2', 1)
             is_fastest_lap = session_info.get('is_fastest_lap', False)
             
-            print(f"[DISTANCEDIFF_LOADER] 解析參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
+            logger.debug(f"[DISTANCEDIFF_LOADER] 解析參數: {year} {race} {session} {driver1}vs{driver2} L{lap1}vsL{lap2}")
             
             # 調用新的載入方法
             self.load_distancediff_data(year, race, session, driver1, driver2, lap1, lap2, is_fastest_lap)
             
         except Exception as e:
-            print(f"[ERROR] [DISTANCEDIFF_LOADER] load_distancediff_analysis_data 失敗: {str(e)}")
+            logger.error(f"[DISTANCEDIFF_LOADER] load_distancediff_analysis_data 失敗: {str(e)}")
             self.load_error.emit(f"載入失敗: {str(e)}")
     
     # ========== 擴展方法（如果需要距離差特有功能） ==========
@@ -189,6 +192,7 @@ if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QTimer
+
     
     app = QApplication(sys.argv)
     
@@ -197,19 +201,19 @@ if __name__ == "__main__":
     
     # 連接信號
     def on_data_loaded(data):
-        print("✅ 距離差數據載入成功!")
-        print(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
-        print(f"顯示名稱: {data.get('metadata', {}).get('display_name')}")
+        logger.info("距離差數據載入成功!")
+        logger.debug(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
+        logger.debug(f"顯示名稱: {data.get('metadata', {}).get('display_name')}")
         distancediff_data = data.get('distancediff_data', {})
-        print(f"距離數據點數: {len(distancediff_data.get('distance', []))}")
+        logger.debug(f"距離數據點數: {len(distancediff_data.get('distance', []))}")
         app.quit()
     
     def on_error(error_msg):
-        print(f"❌ 載入錯誤: {error_msg}")
+        logger.error(f"載入錯誤: {error_msg}")
         app.quit()
     
     def on_status_changed(status):
-        print(f"📊 狀態: {status}")
+        logger.debug(f"狀態: {status}")
     
     distancediff_loader.data_loaded.connect(on_data_loaded)
     distancediff_loader.load_error.connect(on_error)
@@ -217,7 +221,7 @@ if __name__ == "__main__":
     
     # 測試載入
     def test_load():
-        print("=== 距離差數據載入器測試 ===")
+        logger.debug("=== 距離差數據載入器測試 ===")
         success = distancediff_loader.load_distancediff_data(
             year=2025,
             race="Japan",
@@ -227,10 +231,10 @@ if __name__ == "__main__":
             lap1=1,
             lap2=1
         )
-        print(f"載入啟動: {success}")
+        logger.debug(f"載入啟動: {success}")
         
         if not success:
-            print("載入啟動失敗，退出測試")
+            logger.debug("載入啟動失敗，退出測試")
             app.quit()
     
     # 1秒後開始測試
@@ -239,8 +243,8 @@ if __name__ == "__main__":
     # 30秒後強制退出
     QTimer.singleShot(30000, app.quit)
     
-    print("距離差數據載入器重構版本測試")
-    print("原始檔案：1203 行 → 重構後：~150 行 (88% 代碼減少)")
-    print("基於 TelemetryDataLoader 基類實現")
+    logger.debug("距離差數據載入器重構版本測試")
+    logger.debug("原始檔案：1203 行 → 重構後：~150 行 (88% 代碼減少)")
+    logger.debug("基於 TelemetryDataLoader 基類實現")
     
     sys.exit(app.exec_())

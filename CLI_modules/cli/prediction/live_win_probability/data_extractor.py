@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Live Win Probability - Training Data Extractor
 
@@ -23,6 +25,15 @@ Live Win Probability - Training Data Extractor
 9. laps_remaining: 剩餘圈數
 10. track_status: 賽道狀態 (GREEN=1, YELLOW=2, SC=3, VSC=4, RED=5)
 11. air_temp: 空氣溫度（攝氏）
+"""
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 12. rainfall: 降雨量 (0=乾燥, 1=潮濕, 2=大雨)
 
 [歷史/靜態特徵 - 6 個]

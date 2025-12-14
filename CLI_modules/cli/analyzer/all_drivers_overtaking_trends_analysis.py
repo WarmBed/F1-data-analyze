@@ -6,7 +6,7 @@ All Drivers Overtaking Trends Analysis Module (Function 16.4)
 
 本模組提供全部車手超車趨勢分析功能，包含：
 - [STATS] 多年度超車趨勢分析
-- 🔄 車手進步曲線分析
+- 車手進步曲線分析
 - [INFO] 車隊超車策略演變
 - JSON格式完整輸出
 
@@ -14,6 +14,14 @@ All Drivers Overtaking Trends Analysis Module (Function 16.4)
 作者: F1 Analysis Team
 日期: 2025-08-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import os

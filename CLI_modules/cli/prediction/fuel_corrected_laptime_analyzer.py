@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F53 - 燃油校正圈速分析器 (Fuel-Corrected Lap Time Analyzer)
 
@@ -26,6 +27,14 @@ F53 - 燃油校正圈速分析器 (Fuel-Corrected Lap Time Analyzer)
 作者: F1 Analysis Team
 日期: 2025-12-03
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import sys

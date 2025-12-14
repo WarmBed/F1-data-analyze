@@ -3,6 +3,10 @@
 一圈約90秒，看看有多少數據點
 """
 import sys
+from core.logger import get_logger
+
+logger = get_logger("live_timing_test.check_lap_data_points", component="gui")
+
 sys.path.insert(0, '.')
 
 if sys.platform == 'win32':
@@ -17,7 +21,7 @@ data_source = LiveF1DataSource(
     session="2025-04-06_Race"
 )
 
-print("載入資料...")
+logger.info("載入資料...")
 data_source.load_all_data()
 
 position_data = data_source.get_position_data()
@@ -51,16 +55,24 @@ for rec in cardata:
     if start_sec <= t <= end_sec:
         cardata_count += 1
 
-print(f"\n在90秒內 (一圈時間):")
-print(f"  Position 資料點: {position_count} 個")
-print(f"  CarData 資料點: {cardata_count} 個")
-print(f"\n這意味著:")
-print(f"  Position: 每 {90/max(1,position_count):.1f} 秒更新一次")
-print(f"  CarData: 每 {90/max(1,cardata_count):.1f} 秒更新一次")
+logger.info("在90秒內 (一圈時間):")
+logger.info("  Position 資料點: %s 個", position_count)
+logger.info("  CarData 資料點: %s 個", cardata_count)
+logger.info(
+    "  Position: 每 %.1f 秒更新一次",
+    90 / max(1, position_count),
+)
+logger.info(
+    "  CarData: 每 %.1f 秒更新一次",
+    90 / max(1, cardata_count),
+)
 
-print(f"\n對比 FastF1:")
-print(f"  遙測資料: 90秒 × 7.6 Hz = 約 {90*7.6:.0f} 個資料點")
-print(f"  位置資料: 90秒 × 3.8 Hz = 約 {90*3.8:.0f} 個資料點")
+logger.info("對比 FastF1:")
+logger.info("  遙測資料: 90秒 × 7.6 Hz = 約 %.0f 個資料點", 90 * 7.6)
+logger.info("  位置資料: 90秒 × 3.8 Hz = 約 %.0f 個資料點", 90 * 3.8)
 
-print(f"\n結論:")
-print(f"  Live F1 的資料密度是 FastF1 的 {(90*3.8)/max(1,position_count):.1f}x 到 {(90*7.6)/max(1,cardata_count):.1f}x")
+logger.info(
+    "結論: Live F1 的資料密度是 FastF1 的 %.1fx 到 %.1fx",
+    (90 * 3.8) / max(1, position_count),
+    (90 * 7.6) / max(1, cardata_count),
+)

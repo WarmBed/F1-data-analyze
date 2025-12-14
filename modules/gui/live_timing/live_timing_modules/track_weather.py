@@ -24,6 +24,12 @@ from core.gui_i18n import tr
 from ..core.data_manager import LiveTimingDataManager
 from ..core.base_live_mdi import BaseLiveTimingMDI
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("live_timing.track_weather", component="gui")
+
 
 class TrackWeatherWidget(QWidget):
     """
@@ -175,6 +181,20 @@ class TrackWeatherWidget(QWidget):
         self._wind_label.setStyleSheet("color: #AAAAFF; font-size: 12px;")
         row2_layout.addWidget(self._wind_label)
         
+        # 降雨狀態 (獨立顯示)
+        self._rainfall_label = QLabel(tr("rainfall_dry", "Dry"))
+        self._rainfall_label.setAlignment(Qt.AlignCenter)
+        self._rainfall_label.setMinimumWidth(60)
+        self._rainfall_label.setStyleSheet("""
+            background-color: #228B22;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 3px;
+        """)
+        row2_layout.addWidget(self._rainfall_label)
+        
         row2_layout.addStretch()
         main_layout.addWidget(row2)
         
@@ -305,11 +325,31 @@ class TrackWeatherWidget(QWidget):
         direction_str = self._degree_to_direction(self._wind_direction)
         self._wind_label.setText(f"Wind {self._wind_speed:.1f}m/s {direction_str}")
         
-        # 降雨指示 - 改變顏色
-        if 'Rainfall' in weather and weather['Rainfall']:
-            self._wind_label.setStyleSheet("color: #66CCFF; font-size: 12px;")
-        else:
-            self._wind_label.setStyleSheet("color: #AAAAFF; font-size: 12px;")
+        # 降雨狀態 - 獨立顯示
+        if 'Rainfall' in weather:
+            self._rainfall = weather['Rainfall']
+            if self._rainfall:
+                # 下雨狀態
+                self._rainfall_label.setText(tr("rainfall_wet", "Wet"))
+                self._rainfall_label.setStyleSheet("""
+                    background-color: #1E90FF;
+                    color: #FFFFFF;
+                    font-weight: bold;
+                    font-size: 11px;
+                    padding: 2px 8px;
+                    border-radius: 3px;
+                """)
+            else:
+                # 乾燥狀態
+                self._rainfall_label.setText(tr("rainfall_dry", "Dry"))
+                self._rainfall_label.setStyleSheet("""
+                    background-color: #228B22;
+                    color: #FFFFFF;
+                    font-weight: bold;
+                    font-size: 11px;
+                    padding: 2px 8px;
+                    border-radius: 3px;
+                """)
     
     def clear(self):
         """清除所有顯示"""
@@ -330,6 +370,15 @@ class TrackWeatherWidget(QWidget):
         self._humidity_label.setText("Humidity --%")
         self._pressure_label.setText("Pressure --mb")
         self._wind_label.setText("Wind -- m/s")
+        self._rainfall_label.setText(tr("rainfall_dry", "Dry"))
+        self._rainfall_label.setStyleSheet("""
+            background-color: #228B22;
+            color: #FFFFFF;
+            font-weight: bold;
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 3px;
+        """)
 
 
 class TrackWeatherMDI(BaseLiveTimingMDI):
@@ -337,6 +386,8 @@ class TrackWeatherMDI(BaseLiveTimingMDI):
     Track & Weather MDI 視窗
     
     繼承 BaseLiveTimingMDI 以自動訂閱 DataManager 信號。
+    
+    性能優化: 每 60 秒更新一次 (天氣變化極慢)
     """
     
     _window_title_key = "track_weather"
@@ -349,7 +400,11 @@ class TrackWeatherMDI(BaseLiveTimingMDI):
         self.setMinimumSize(500, 60)
         self.resize(700, 70)
         
-        print(f"[TRACK_WEATHER_MDI] initialized")
+        # 性能優化: 追蹤上次更新的賽事時間
+        self._last_update_time: float = 0.0
+        self._update_interval: float = 60.0  # 60 秒
+        
+        logger.info("[TRACK_WEATHER_MDI] initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -371,13 +426,24 @@ class TrackWeatherMDI(BaseLiveTimingMDI):
         session_type = race_info.get('session', 'Race')
         total_laps = race_info.get('total_laps', 0)
         self._widget.update_race_info(race_name, session_type, total_laps)
-        print(f"[TRACK_WEATHER_MDI] Race loaded: {race_name} {session_type}")
+        logger.info("[TRACK_WEATHER_MDI] Race loaded: %s %s", race_name, session_type)
     
     def _on_race_unloaded(self):
         """處理賽事卸載"""
         self._widget.clear()
-        print("[TRACK_WEATHER_MDI] Race unloaded")
+        logger.info("[TRACK_WEATHER_MDI] Race unloaded")
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """處理快照更新"""
+        """
+        處理快照更新
+        
+        性能優化: 每 60 秒更新一次
+        """
+        current_time = snapshot.get('race_time_seconds', 0)
+        
+        # 性能優化: 檢查是否達到更新間隔
+        if current_time - self._last_update_time < self._update_interval and self._last_update_time > 0:
+            return
+        
+        self._last_update_time = current_time
         self._widget.update_from_snapshot(snapshot)

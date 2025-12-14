@@ -14,6 +14,9 @@ Ideal Lap Ranking Table Data Loader
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader
 from typing import Dict, Any, Optional, List
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapRankingTableDataLoader(UniversalDataLoader):
     """
@@ -364,10 +367,11 @@ class IdealLapRankingTableDataLoader(UniversalDataLoader):
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     import sys
+
     
-    print("=" * 60)
-    print("理想圈排名表格資料載入器 - 獨立測試")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("理想圈排名表格資料載入器 - 獨立測試")
+    logger.debug("=" * 60)
     
     # 創建 Qt 應用程式（需要 QTimer）
     app = QApplication(sys.argv)
@@ -379,40 +383,40 @@ if __name__ == "__main__":
         session="R"
     )
     
-    print(f"\n📋 載入器配置:")
-    print(f"  CLI Function: {loader.CLI_FUNCTION}")
-    print(f"  JSON Pattern: {loader.JSON_PATTERN}")
-    print(f"  參數: {loader.year} {loader.race} {loader.session}")
+    logger.debug(f"\n📋 載入器配置:")
+    logger.debug(f"  CLI Function: {loader.CLI_FUNCTION}")
+    logger.debug(f"  JSON Pattern: {loader.JSON_PATTERN}")
+    logger.debug(f"  參數: {loader.year} {loader.race} {loader.session}")
     
     # 測試檔案搜尋模式
-    print(f"\n🔍 檔案搜尋模式:")
+    logger.debug(f"\n🔍 檔案搜尋模式:")
     patterns = loader._build_filename_patterns(
         year=loader.year,
         race=loader.race,
         session=loader.session
     )
     for i, pattern in enumerate(patterns, 1):
-        print(f"  {i}. {pattern}")
+        logger.debug(f"  {i}. {pattern}")
     
     # 設置信號處理
     def on_data_loaded(data):
-        print(f"\n✅ 數據載入成功!")
+        logger.info(f"\n✅ 數據載入成功!")
         
         if "analysis_result" in data:
             ranking = data["analysis_result"]["ranking"]
             summary = data["analysis_result"]["summary"]
             
-            print(f"\n📊 資料摘要:")
-            print(f"  總車手數: {len(ranking)}")
-            print(f"  全場最速圈: {summary.get('session_fastest_lap', 'N/A')}")
-            print(f"  創造者: {summary.get('session_fastest_driver', 'N/A')}")
-            print(f"  平均差異: {summary.get('average_gap', 0):.3f}s")
-            print(f"  完美單圈: {summary.get('perfect_lap_rate', 'N/A')}")
+            logger.debug(f"\n📊 資料摘要:")
+            logger.debug(f"  總車手數: {len(ranking)}")
+            logger.debug(f"  全場最速圈: {summary.get('session_fastest_lap', 'N/A')}")
+            logger.debug(f"  創造者: {summary.get('session_fastest_driver', 'N/A')}")
+            logger.debug(f"  平均差異: {summary.get('average_gap', 0):.3f}s")
+            logger.debug(f"  完美單圈: {summary.get('perfect_lap_rate', 'N/A')}")
             
             # 顯示前 3 名
-            print(f"\n🏆 前 3 名:")
+            logger.debug(f"\n前 3 名:")
             for i, driver in enumerate(ranking[:3]):
-                print(
+                logger.debug(
                     f"  {i+1}. {driver['driver']} - "
                     f"理想圈: {driver['ideal_lap_time']:.3f}s "
                     f"(差異: +{driver['time_gap']:.3f}s)"
@@ -421,14 +425,14 @@ if __name__ == "__main__":
         app.quit()
     
     def on_load_error(error_msg):
-        print(f"\n❌ 載入錯誤: {error_msg}")
+        logger.error(f"\n❌ 載入錯誤: {error_msg}")
         app.quit()
     
     loader.data_loaded.connect(on_data_loaded)
     loader.load_error.connect(on_load_error)
     
     # 啟動載入
-    print(f"\n🚀 啟動數據載入...")
+    logger.debug(f"\n🚀 啟動數據載入...")
     success = loader.load_data(
         year=loader.year,
         race=loader.race,
@@ -436,7 +440,7 @@ if __name__ == "__main__":
     )
     
     if not success:
-        print("❌ 載入啟動失敗")
+        logger.error("載入啟動失敗")
         sys.exit(1)
     
     # 進入事件循環

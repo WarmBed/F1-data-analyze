@@ -30,28 +30,31 @@ from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-        try:
-            logger.info("[THROTTLE_MDI] 🔄 收到 reset_chart_view 請求")
-            
-            # 檢查 chart_widget 是否存在
-            if not hasattr(self, 'chart_widget') or not self.chart_widget:
-                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 不存在")
-                return
-            
-            # 檢查 chart_widget 是否有 show_all_drivers 方法
-            if not hasattr(self.chart_widget, 'show_all_drivers'):
-                logger.warning("[THROTTLE_MDI] ⚠️  chart_widget 沒有 show_all_drivers 方法")
-                return
-            
-            # 調用 Widget 的 show_all_drivers() 方法
-            logger.info("[THROTTLE_MDI] ✅ 調用 chart_widget.show_all_drivers()")
-            self.chart_widget.show_all_drivers()
-            
-        except Exception as e:
-            logger.exception("[THROTTLE_MDI] ❌ reset_chart_view 失敗: %s", e)
-            import traceback
+    QLabel,
+    QPushButton,
+    QSpinBox,
+    QDoubleSpinBox,
+    QCheckBox,
+    QGroupBox,
+    QFileDialog,
+    QMessageBox,
+)
 
-            traceback.print_exc()
+from core.gui_i18n import tr
+from core.gui_settings_manager import gui_settings_manager
+from core.logger import get_logger
+from core.api_base_url import resolve_api_base_url
+
+# 導入圈速過濾工具
+from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
+    extract_caution_laps,
+    extract_red_flag_laps,
+    lap_is_under_caution,
+    lap_is_under_red_flag,
+    lap_is_pit_stop,
+    normalize_lap_number,
+)
+
 try:
     from ...base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from ...base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
@@ -59,6 +62,7 @@ except ImportError:  # pragma: no cover
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 
+from .throttle_box_plot_chart_widget import ThrottleBoxPlotChartWidget
 
 logger = get_logger(__name__)
 
@@ -78,6 +82,11 @@ class ThrottleBoxPlotApiWorker(QThread):
 
     def run(self) -> None:  # pragma: no cover - thread run
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_BOXPLOT_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(15)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -89,6 +98,11 @@ class ThrottleBoxPlotApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_BOXPLOT_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -96,6 +110,12 @@ class ThrottleBoxPlotApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_BOXPLOT_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(65)
             response.raise_for_status()
 
@@ -121,12 +141,21 @@ class ThrottleBoxPlotApiWorker(QThread):
                 "params": dict(query_params),
             }
 
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_BOXPLOT_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:  # pragma: no cover - network errors
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class ThrottleBoxPlotDataManager(UniversalDataLoader):

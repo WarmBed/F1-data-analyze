@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 車手超車分析模組 - 功能 14.3
 Driver Overtaking Analysis Module
 提供車手超車分析（當前比賽）
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import pandas as pd
 import numpy as np
@@ -310,6 +319,14 @@ def run_driver_overtaking_analysis(data_loader, dynamic_team_mapping=None, f1_an
     except Exception as e:
         print(f"[ERROR] 車手超車分析執行失敗: {e}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return False
 

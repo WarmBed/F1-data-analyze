@@ -7,6 +7,9 @@ Dedicated to GUI interface language switching, does not affect CLI print output
 
 import os
 import json
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 import sys
 
 def get_config_path():
@@ -47,10 +50,10 @@ class GuiTranslator:
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
                     loaded_lang = config.get('language', 'en')
-                    print(f"[GUI_I18N] 已載入語言設定: {loaded_lang} (檔案: {config_file})")
+                    logger.debug(f"[GUI_I18N] 已載入語言設定: {loaded_lang} (檔案: {config_file})")
                     return loaded_lang
         except Exception as e:
-            print(f"[GUI_I18N] 載入語言設定失敗: {e}")
+            logger.debug(f"[GUI_I18N] 載入語言設定失敗: {e}")
         return None
     
     def _save_language(self, language):
@@ -60,10 +63,10 @@ class GuiTranslator:
             config_file = get_config_path()
             with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, ensure_ascii=False, indent=2)
-            print(f"[GUI_I18N] 語言設定已保存: {language} (檔案: {config_file})")
+            logger.debug(f"[GUI_I18N] 語言設定已保存: {language} (檔案: {config_file})")
             return True
         except Exception as e:
-            print(f"[GUI_I18N] 保存語言設定失敗: {e}")
+            logger.debug(f"[GUI_I18N] 保存語言設定失敗: {e}")
             return False
     
     def _load_translations(self):
@@ -936,8 +939,9 @@ class GuiTranslator:
             
             # Straight Speed Analysis 主項目與子模組
             'straight_speed_analysis': {'zh': '直線速度分析(實驗)', 'en': 'Straight Speed Analysis (Experimental)', 'ja': '直線速度分析(実験)'},
-            'all_drivers_straight_speed': {'zh': '全車手速度與加速', 'en': 'All Drivers Speed & Acceleration', 'ja': '全ドライバー速度と加速'},
-            'all_drivers_brake_performance': {'zh': '全車手煞車性能', 'en': 'All Drivers Brake Performance', 'ja': '全ドライバーブレーキ性能'},
+            'all_drivers_straight_speed': {'zh': '全車手速度與加速(開發中)', 'en': 'All Drivers Speed & Acceleration (Dev)', 'ja': '全ドライバー速度と加速(開発中)'},
+            'all_drivers_max_speed': {'zh': '全車手最高速度', 'en': 'All Drivers Max Speed', 'ja': '全ドライバー最高速度'},
+            'all_drivers_brake_performance': {'zh': '全車手煞車性能(開發中)', 'en': 'All Drivers Brake Performance (Dev)', 'ja': '全ドライバーブレーキ性能(開発中)'},
             
             # Driver Position Analysis 車手比賽排名分析 (F25)
             'driver_position_analysis': {'zh': '車手比賽排名', 'en': 'Driver Race Position', 'ja': 'ドライバーレースポジション'},
@@ -1880,9 +1884,9 @@ Acceleration (100 → {max_speed_full} km/h):
             self.language = language
             # 保存語言設定
             self._save_language(language)
-            print(f"[GUI_I18N]  語言已切換至: {language}")
+            logger.debug(f"[GUI_I18N]  語言已切換至: {language}")
             return True
-        print(f"[GUI_I18N]  不支援的語言: {language}")
+        logger.debug(f"[GUI_I18N]  不支援的語言: {language}")
         return False
     
     def get_language(self):

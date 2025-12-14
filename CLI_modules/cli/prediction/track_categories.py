@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 賽道分類定義模組
 
-用途：為 FP→Q 預測提供賽道分類，支援按類別訓練獨立模型
+用途：為 FP->Q 預測提供賽道分類，支援按類別訓練獨立模型
 創建時間：2025-11-02
 相關文檔：docs/develop task/CLI develop task/AI分析FP,Q,R-精簡版.md
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # 賽道分類定義
 TRACK_CATEGORIES = {

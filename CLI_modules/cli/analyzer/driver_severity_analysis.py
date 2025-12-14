@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 車手嚴重程度分數統計模組 (功能 4.3)
 作者: F1 Analysis Team
@@ -11,8 +12,15 @@ F1 車手嚴重程度分數統計模組 (功能 4.3)
 - DNF責任分析
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import json
 from datetime import datetime
 from typing import Dict, List, Any, Optional
@@ -413,6 +421,13 @@ def run_driver_severity_analysis(data_loader):
     except Exception as e:
         print(f"[ERROR] 執行車手嚴重程度分數統計時發生錯誤: {e}")
         import traceback
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return False
 

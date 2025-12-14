@@ -15,6 +15,10 @@ import zlib
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 
+from core.logger import get_logger
+
+logger = get_logger(component="gui")
+
 # ========== 解碼器 (參考 LiveF1) ==========
 
 def decode_f1_packet(raw_b64_string: str) -> Dict:
@@ -60,14 +64,14 @@ class F1DataDownloader:
     def download_file(self, filename: str) -> bytes:
         """下載檔案"""
         url = self._build_url(filename)
-        print(f"[Download] {filename}")
-        print(f"  URL: {url}")
+        logger.info(f"[Download] {filename}")
+        logger.info(f"  URL: {url}")
         
         response = requests.get(url, timeout=60)
         response.raise_for_status()
         
         size_mb = len(response.content) / 1024 / 1024
-        print(f"  Size: {size_mb:.2f} MB")
+        logger.info(f"  Size: {size_mb:.2f} MB")
         return response.content
     
     def parse_jsonstream(self, content: bytes) -> List[Dict]:
@@ -125,21 +129,21 @@ class LapDataExtractor:
         
     def load_data(self):
         """下載並解析必要資料"""
-        print("\n" + "="*70)
-        print("Step 1: Loading CarData.z (遙測資料)")
-        print("="*70)
+        logger.info("=" * 70)
+        logger.info("Step 1: Loading CarData.z (遙測資料)")
+        logger.info("=" * 70)
         
         car_content = self.downloader.download_file("CarData.z.jsonStream")
         self.car_data_records = self.downloader.parse_jsonstream(car_content)
-        print(f"[OK] Loaded {len(self.car_data_records)} CarData records")
+        logger.info(f"[OK] Loaded {len(self.car_data_records)} CarData records")
         
-        print("\n" + "="*70)
-        print("Step 2: Loading TimingData (圈數資訊)")
-        print("="*70)
+        logger.info("=" * 70)
+        logger.info("Step 2: Loading TimingData (圈數資訊)")
+        logger.info("=" * 70)
         
         timing_content = self.downloader.download_file("TimingData.jsonStream")
         self.timing_data_records = self.downloader.parse_jsonstream(timing_content)
-        print(f"[OK] Loaded {len(self.timing_data_records)} TimingData records")
+        logger.info(f"[OK] Loaded {len(self.timing_data_records)} TimingData records")
     
     def get_lap_times(self, driver_number: str) -> List[Dict]:
         """
@@ -175,13 +179,13 @@ class LapDataExtractor:
         1. 從 TimingData 找到該圈的開始/結束時間
         2. 從 CarData 過濾該時間範圍內的資料
         """
-        print("\n" + "="*70)
-        print(f"Step 3: Extracting Driver {driver_number} Lap {lap_number}")
-        print("="*70)
+        logger.info("=" * 70)
+        logger.info(f"Step 3: Extracting Driver {driver_number} Lap {lap_number}")
+        logger.info("=" * 70)
         
         # 1. 找到圈時資訊
         lap_times = self.get_lap_times(driver_number)
-        print(f"[OK] Found {len(lap_times)} lap timing records for driver {driver_number}")
+        logger.info(f"[OK] Found {len(lap_times)} lap timing records for driver {driver_number}")
         
         # 找到 Lap N 和 Lap N+1 的時間戳
         lap_start = None
@@ -190,21 +194,21 @@ class LapDataExtractor:
         for i, lap_info in enumerate(lap_times):
             if lap_info['lap_number'] == lap_number:
                 lap_start = parse_timestamp(lap_info['timestamp'])
-                print(f"  Lap {lap_number} starts at: {lap_info['timestamp']}")
+                logger.info(f"  Lap {lap_number} starts at: {lap_info['timestamp']}")
                 
                 # 找下一圈的開始 = 這一圈的結束
                 if i + 1 < len(lap_times):
                     lap_end = parse_timestamp(lap_times[i + 1]['timestamp'])
-                    print(f"  Lap {lap_number} ends at: {lap_times[i + 1]['timestamp']}")
+                    logger.info(f"  Lap {lap_number} ends at: {lap_times[i + 1]['timestamp']}")
                 break
         
         if not lap_start:
-            print(f"[ERROR] Cannot find Lap {lap_number} start time")
+            logger.error(f"[ERROR] Cannot find Lap {lap_number} start time")
             return []
         
         # 2. 從 CarData 過濾該時間範圍
-        print(f"\n[Processing] Filtering CarData in time range...")
-        print(f"  Range: {lap_start} to {lap_end if lap_end else 'end of race'}")
+        logger.info("[Processing] Filtering CarData in time range...")
+        logger.info(f"  Range: {lap_start} to {lap_end if lap_end else 'end of race'}")
         speed_data = []
         in_range_count = 0
         found_driver_count = 0
@@ -240,21 +244,21 @@ class LapDataExtractor:
                                         'speed': speed
                                     })
         
-        print(f"  Records in time range: {in_range_count}")
-        print(f"  Driver found in: {found_driver_count} records")
+                logger.info(f"  Records in time range: {in_range_count}")
+                logger.info(f"  Driver found in: {found_driver_count} records")
         if all_speeds:
-            print(f"  Speed range (raw): {min(all_speeds)} - {max(all_speeds)} km/h")
-        print(f"[OK] Extracted {len(speed_data)} speed readings (including all positive values)")
+                    logger.info(f"  Speed range (raw): {min(all_speeds)} - {max(all_speeds)} km/h")
+                logger.info(f"[OK] Extracted {len(speed_data)} speed readings (including all positive values)")
         return speed_data
 
 
 # ========== 主程式 ==========
 
 def main():
-    print("="*70)
-    print("F1 Live Timing - Custom Lap Speed Extractor")
-    print("Target: HAM (44) Lap 10 @ 2025 Japan")
-    print("="*70)
+    logger.info("=" * 70)
+    logger.info("F1 Live Timing - Custom Lap Speed Extractor")
+    logger.info("Target: HAM (44) Lap 10 @ 2025 Japan")
+    logger.info("=" * 70)
     
     # 初始化下載器
     downloader = F1DataDownloader(
@@ -276,44 +280,44 @@ def main():
     )
     
     # 顯示結果
-    print("\n" + "="*70)
-    print("Results: HAM Lap 10 Speed Data")
-    print("="*70)
+    logger.info("=" * 70)
+    logger.info("Results: HAM Lap 10 Speed Data")
+    logger.info("=" * 70)
     
     if ham_lap10_speeds:
-        print(f"\nTotal data points: {len(ham_lap10_speeds)}")
-        print(f"Speed range: {min(s['speed'] for s in ham_lap10_speeds):.0f} - {max(s['speed'] for s in ham_lap10_speeds):.0f} km/h")
+        logger.info(f"Total data points: {len(ham_lap10_speeds)}")
+        logger.info(f"Speed range: {min(s['speed'] for s in ham_lap10_speeds):.0f} - {max(s['speed'] for s in ham_lap10_speeds):.0f} km/h")
         
-        print(f"\nFirst 10 readings:")
+        logger.info("First 10 readings:")
         for i, data in enumerate(ham_lap10_speeds[:10]):
-            print(f"  {i+1:2d}. T+{data['time_offset']:6.2f}s | Speed: {data['speed']:3.0f} km/h | {data['timestamp']}")
+            logger.info(f"  {i+1:2d}. T+{data['time_offset']:6.2f}s | Speed: {data['speed']:3.0f} km/h | {data['timestamp']}")
         
-        print(f"\n... ({len(ham_lap10_speeds) - 20} more) ...")
+        logger.info(f"... ({len(ham_lap10_speeds) - 20} more) ...")
         
-        print(f"\nLast 10 readings:")
+        logger.info("Last 10 readings:")
         for i, data in enumerate(ham_lap10_speeds[-10:]):
             idx = len(ham_lap10_speeds) - 10 + i
-            print(f"  {idx+1:2d}. T+{data['time_offset']:6.2f}s | Speed: {data['speed']:3.0f} km/h | {data['timestamp']}")
+            logger.info(f"  {idx+1:2d}. T+{data['time_offset']:6.2f}s | Speed: {data['speed']:3.0f} km/h | {data['timestamp']}")
         
         # 與 fastf1 比較
-        print(f"\n" + "="*70)
-        print("Comparison with fastf1")
-        print("="*70)
-        print(f"  Custom extractor: {len(ham_lap10_speeds)} data points")
-        print(f"  fastf1:           714 data points (from previous test)")
-        print(f"  Difference:       {abs(len(ham_lap10_speeds) - 714)} points")
+        logger.info("=" * 70)
+        logger.info("Comparison with fastf1")
+        logger.info("=" * 70)
+        logger.info(f"  Custom extractor: {len(ham_lap10_speeds)} data points")
+        logger.info(f"  fastf1:           714 data points (from previous test)")
+        logger.info(f"  Difference:       {abs(len(ham_lap10_speeds) - 714)} points")
         
         if abs(len(ham_lap10_speeds) - 714) < 50:
-            print(f"\n  [SUCCESS] Results are very close!")
+            logger.info("  [SUCCESS] Results are very close!")
         else:
-            print(f"\n  [NOTE] Difference may be due to:")
-            print(f"    - Different filtering criteria")
-            print(f"    - Timing boundary differences")
-            print(f"    - fastf1 interpolation")
+            logger.info("  [NOTE] Difference may be due to:")
+            logger.info("    - Different filtering criteria")
+            logger.info("    - Timing boundary differences")
+            logger.info("    - fastf1 interpolation")
     else:
-        print("[ERROR] No data extracted!")
+        logger.error("[ERROR] No data extracted!")
     
-    print("\n" + "="*70)
+    logger.info("=" * 70)
 
 if __name__ == "__main__":
     main()

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Live Win Probability Predictor - GUI 整合模組 (v3.4 Dynamic Strategy)
 
@@ -22,6 +24,16 @@ v3.2 更新 (2025-12-01):
 v3.1 更新 (2025-11-29):
 - 新增 SHAP 可解釋性功能 (SHAPExplainer 類)
 - 新增賽道適應性因子 (CircuitAffinityCalculator 類)
+
+"""
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 v3.0 重大更新 (2025-11-27):
 - 基於學術研究 (arXiv:2508.00200) 的專業預測架構
@@ -1925,7 +1937,7 @@ class LiveWinProbabilityPredictor:
         self._team_quality = DEFAULT_TEAM_RATINGS.copy()
         
         # v3.0: 調試模式
-        self._debug_mode = True
+        self._debug_mode = False
         self._last_lap_debug = -1
         
         # v3.1: 緩存最新預測數據供 SHAP 使用

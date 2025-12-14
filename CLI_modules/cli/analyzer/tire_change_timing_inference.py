@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 輪胎更換時機推算模組 (CLI -f26 修正版)
 Tire Change Timing Inference Module
@@ -11,6 +12,14 @@ Tire Change Timing Inference Module
 版本: 1.0 - 輪胎更換時機推算專用版
 作者: F1 Analysis Team
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -117,6 +126,13 @@ class TireChangeTimingInference:
         except Exception as e:
             print(f"❌ 輪胎更換時機推算失敗: {e}")
             import traceback
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             traceback.print_exc()
             return {
                 "success": False,

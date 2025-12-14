@@ -107,6 +107,8 @@ class ColorPaletteProvider:
         self._last_error: Optional[str] = None
         self._defaults_applied: bool = False
         self._allow_defaults: bool = self._resolve_fallback_policy()
+        # 車手車隊映射緩存 (從 Driver Standings 或 CLI JSON 更新)
+        self._driver_team_map: Dict[str, str] = {}
 
     # ------------------------------------------------------------------
     # Public API
@@ -221,6 +223,119 @@ class ColorPaletteProvider:
         """Enable or disable the built-in fallback palette at runtime."""
 
         self._allow_defaults = bool(allowed)
+
+    # ------------------------------------------------------------------
+    # Driver Team Mapping API (2025-12-14 新增)
+    # ------------------------------------------------------------------
+    def get_driver_team(self, driver_code: str, *, fallback: bool = True) -> Optional[str]:
+        """
+        返回車手所屬車隊的顯示名稱
+        
+        Args:
+            driver_code: 車手代碼 (如 "VER", "TSU")
+            fallback: 如果找不到是否返回預設值
+            
+        Returns:
+            車隊顯示名稱 (如 "Red Bull Racing", "McLaren")
+            如果找不到且 fallback=True 返回 "Unknown"
+            如果找不到且 fallback=False 返回 None
+        """
+        if not driver_code:
+            return "Unknown" if fallback else None
+        
+        code = self._normalize_driver_code(driver_code)
+        
+        # 優先級 1: 從動態映射獲取 (Driver Standings / CLI JSON)
+        if code in self._driver_team_map:
+            return self._driver_team_map[code]
+        
+        # 優先級 2: 從 DEFAULT_DRIVER_MAP 靜態映射獲取
+        if code in DEFAULT_DRIVER_MAP:
+            team_slug, _ = DEFAULT_DRIVER_MAP[code]
+            # 轉換 slug 為顯示名稱
+            team_display = DEFAULT_TEAM_HEX.get(team_slug, (team_slug.title(), "#808080"))[0]
+            return team_display
+        
+        return "Unknown" if fallback else None
+    
+    def update_driver_teams_from_standings(self, standings_data: Dict[str, Any]) -> int:
+        """
+        從 Driver Standings JSON (F99) 更新車手車隊映射
+        
+        Args:
+            standings_data: Driver Standings API 返回的數據
+            格式: {"data": {"drivers": [{"driver": {"code": "VER"}, "constructors": [{"name": "Red Bull Racing"}]}]}}
+            
+        Returns:
+            更新的車手數量
+        """
+        count = 0
+        try:
+            data = standings_data.get("data", standings_data)
+            drivers = data.get("drivers", [])
+            
+            for entry in drivers:
+                driver_info = entry.get("driver", {})
+                code = driver_info.get("code")
+                constructors = entry.get("constructors", [])
+                
+                if code and constructors:
+                    # 取第一個 constructor 的名稱
+                    team_name = constructors[0].get("name", "Unknown")
+                    normalized_code = self._normalize_driver_code(code)
+                    self._driver_team_map[normalized_code] = team_name
+                    count += 1
+            
+            if count > 0:
+                logger.info("[COLOR] 從 Driver Standings 更新 %d 位車手的車隊映射", count)
+        except Exception as exc:
+            logger.warning("[COLOR] 解析 Driver Standings 失敗: %s", exc)
+        
+        return count
+    
+    def update_driver_teams_from_json(self, json_data: Dict[str, Any]) -> int:
+        """
+        從 CLI JSON (F48/F121/F122 等) 更新車手車隊映射
+        
+        Args:
+            json_data: CLI 分析結果 JSON
+            格式: {"data": {"drivers": [{"driver": "VER", "team": "Red Bull Racing"}]}}
+            或: {"data": {"driver_speeds": [{"driver": "VER", "team": "Red Bull Racing"}]}}
+            
+        Returns:
+            更新的車手數量
+        """
+        count = 0
+        try:
+            data = json_data.get("data", json_data)
+            
+            # 嘗試多種可能的數據結構
+            drivers_list = (
+                data.get("drivers") or 
+                data.get("driver_speeds") or 
+                data.get("driver_data") or
+                []
+            )
+            
+            for entry in drivers_list:
+                code = entry.get("driver")
+                team = entry.get("team")
+                
+                if code and team:
+                    normalized_code = self._normalize_driver_code(code)
+                    self._driver_team_map[normalized_code] = team
+                    count += 1
+            
+            if count > 0:
+                logger.debug("[COLOR] 從 JSON 更新 %d 位車手的車隊映射", count)
+        except Exception as exc:
+            logger.warning("[COLOR] 解析 JSON 失敗: %s", exc)
+        
+        return count
+    
+    def get_driver_team_map(self) -> Dict[str, str]:
+        """返回當前的車手車隊映射副本"""
+        return dict(self._driver_team_map)
 
     # ------------------------------------------------------------------
     # Internal helpers

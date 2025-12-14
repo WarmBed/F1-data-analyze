@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F87 - Real-Time Driver Strategy Predictor (即時車手策略預測器)
 
@@ -9,7 +10,7 @@ F87 - Real-Time Driver Strategy Predictor (即時車手策略預測器)
 核心邏輯:
     1. 使用滑動視窗 (最近 N 圈) 計算即時 tire saving score
     2. 隨著每圈數據更新，動態調整進站預測
-    3. 補償公式: 預測進站圈 = 基準最佳圈數 × (1 + 累積補償係數)
+    3. 補償公式: 預測進站圈 = 基準最佳圈數 x (1 + 累積補償係數)
     
 即時計算指標:
     - coasting_trend: 滑行時間變化率
@@ -26,6 +27,14 @@ Live Timing 整合:
 作者: F1T Team
 日期: 2025-12-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import numpy as np

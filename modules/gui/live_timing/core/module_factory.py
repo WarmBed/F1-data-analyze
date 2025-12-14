@@ -16,6 +16,8 @@ Date: 2025-12-03
 
 from typing import Optional, Type, Dict, Any, TYPE_CHECKING
 
+from core.logger import get_logger
+
 if TYPE_CHECKING:
     from .data_manager import LiveTimingDataManager
     from .base_live_mdi import BaseLiveTimingMDI
@@ -126,6 +128,36 @@ class LiveTimingModuleFactory:
         "速度追蹤": "speed_trace",
         "スピードトレース": "speed_trace",
         "speed_trace": "speed_trace",
+        
+        # Throttle Trace 油門追蹤
+        "Throttle Trace": "throttle_trace",
+        "油門追蹤": "throttle_trace",
+        "スロットルトレース": "throttle_trace",
+        "throttle_trace": "throttle_trace",
+        
+        # Brake Trace 煞車追蹤
+        "Brake Trace": "brake_trace",
+        "煞車追蹤": "brake_trace",
+        "ブレーキトレース": "brake_trace",
+        "brake_trace": "brake_trace",
+        
+        # Gear Trace 檔位追蹤
+        "Gear Trace": "gear_trace",
+        "檔位追蹤": "gear_trace",
+        "ギアトレース": "gear_trace",
+        "gear_trace": "gear_trace",
+        
+        # DRS Trace DRS追蹤
+        "DRS Trace": "drs_trace",
+        "DRS追蹤": "drs_trace",
+        "DRSトレース": "drs_trace",
+        "drs_trace": "drs_trace",
+        
+        # RPM Trace 轉速追蹤
+        "RPM Trace": "rpm_trace",
+        "轉速追蹤": "rpm_trace",
+        "回転数トレース": "rpm_trace",
+        "rpm_trace": "rpm_trace",
         
         # Driver Strategy 車手策略
         "Driver Strategy": "driver_strategy",
@@ -262,6 +294,36 @@ class LiveTimingModuleFactory:
             "icon": "speed_trace.png",
             "implemented": True,
         },
+        "throttle_trace": {
+            "display_name": "Throttle Trace",
+            "description": "Real-time throttle application vs distance trace",
+            "icon": "throttle_trace.png",
+            "implemented": True,
+        },
+        "brake_trace": {
+            "display_name": "Brake Trace",
+            "description": "Real-time brake application vs distance trace (0/1)",
+            "icon": "brake_trace.png",
+            "implemented": True,
+        },
+        "gear_trace": {
+            "display_name": "Gear Trace",
+            "description": "Real-time gear position vs distance trace (1-8)",
+            "icon": "gear_trace.png",
+            "implemented": True,
+        },
+        "drs_trace": {
+            "display_name": "DRS Trace",
+            "description": "Real-time DRS status vs distance trace (0-14)",
+            "icon": "drs_trace.png",
+            "implemented": True,
+        },
+        "rpm_trace": {
+            "display_name": "RPM Trace",
+            "description": "Real-time engine RPM vs distance trace (0-15000)",
+            "icon": "rpm_trace.png",
+            "implemented": True,
+        },
         "driver_strategy": {
             "display_name": "Driver Strategy",
             "description": "Single driver strategy graph with lap time prediction",
@@ -319,7 +381,8 @@ class LiveTimingModuleFactory:
             return
         self._initialized = True
         self._module_cache: Dict[str, Type] = {}
-        print("[LIVE_TIMING_FACTORY] LiveTimingModuleFactory initialized")
+        self._logger = get_logger("live_timing.module_factory", component="gui")
+        self._logger.debug("LiveTimingModuleFactory initialized")
     
     @classmethod
     def get_instance(cls) -> 'LiveTimingModuleFactory':
@@ -445,12 +508,12 @@ class LiveTimingModuleFactory:
                 
             elif module_key == "gap_chart":
                 # TODO: 實現後取消註釋
-                print(f"[LIVE_TIMING_FACTORY] Module '{module_key}' not yet implemented")
+                self._logger.info("Module '%s' not yet implemented", module_key)
                 return None
                 
             elif module_key == "battle_tracker":
                 # TODO: 實現後取消註釋
-                print(f"[LIVE_TIMING_FACTORY] Module '{module_key}' not yet implemented")
+                self._logger.info("Module '%s' not yet implemented", module_key)
                 return None
                 
             elif module_key == "circle_map":
@@ -481,6 +544,26 @@ class LiveTimingModuleFactory:
                 from ..live_timing_modules.speed_trace import LiveTimingSpeedTrace
                 module_class = LiveTimingSpeedTrace
                 
+            elif module_key == "throttle_trace":
+                from ..live_timing_modules.throttle_trace import LiveTimingThrottleTrace
+                module_class = LiveTimingThrottleTrace
+                
+            elif module_key == "brake_trace":
+                from ..live_timing_modules.brake_trace import LiveTimingBrakeTrace
+                module_class = LiveTimingBrakeTrace
+                
+            elif module_key == "gear_trace":
+                from ..live_timing_modules.gear_trace import LiveTimingGearTrace
+                module_class = LiveTimingGearTrace
+                
+            elif module_key == "drs_trace":
+                from ..live_timing_modules.drs_trace import LiveTimingDRSTrace
+                module_class = LiveTimingDRSTrace
+                
+            elif module_key == "rpm_trace":
+                from ..live_timing_modules.rpm_trace import LiveTimingRPMTrace
+                module_class = LiveTimingRPMTrace
+                
             elif module_key == "driver_strategy":
                 from ..live_timing_modules.driver_strategy import LiveTimingDriverStrategy
                 module_class = LiveTimingDriverStrategy
@@ -510,16 +593,16 @@ class LiveTimingModuleFactory:
                 module_class = TrackWeatherMDI
                 
             else:
-                print(f"[LIVE_TIMING_FACTORY] Unknown module key: {module_key}")
+                self._logger.warning("Unknown module key: %s", module_key)
                 return None
             
             # 緩存成功導入的類別
             if module_class is not None:
                 self._module_cache[module_key] = module_class
-                print(f"[LIVE_TIMING_FACTORY] Module class loaded: {module_key}")
+                self._logger.debug("Module class loaded: %s", module_key)
                 
         except ImportError as e:
-            print(f"[LIVE_TIMING_FACTORY] Failed to import module '{module_key}': {e}")
+            self._logger.error("Failed to import module '%s': %s", module_key, e)
             return None
         
         return module_class
@@ -542,12 +625,12 @@ class LiveTimingModuleFactory:
         # 查找模組鍵值
         module_key = self.get_module_key(name)
         if module_key is None:
-            print(f"[LIVE_TIMING_FACTORY] Module not registered: {name}")
+            self._logger.warning("Module not registered: %s", name)
             return None
         
         # 檢查是否已實現
         if not self.is_implemented(name):
-            print(f"[LIVE_TIMING_FACTORY] Module not yet implemented: {name} ({module_key})")
+            self._logger.info("Module not yet implemented: %s (%s)", name, module_key)
             return None
         
         # 導入模組類別
@@ -558,10 +641,10 @@ class LiveTimingModuleFactory:
         # 創建模組實例
         try:
             module_instance = module_class(parent)
-            print(f"[LIVE_TIMING_FACTORY] Module created: {name} ({module_key})")
+            self._logger.debug("Module created: %s (%s)", name, module_key)
             return module_instance
         except Exception as e:
-            print(f"[LIVE_TIMING_FACTORY] Failed to create module '{name}': {e}")
+            self._logger.error("Failed to create module '%s': %s", name, e)
             import traceback
             traceback.print_exc()
             return None

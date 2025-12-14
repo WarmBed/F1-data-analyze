@@ -45,6 +45,9 @@ from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
 from core.api_runtime_state import is_api_available
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class TelemetryApiWorker(QThread):
     """Background worker responsible for fetching telemetry comparison data via REST API."""
@@ -67,7 +70,7 @@ class TelemetryApiWorker(QThread):
         try:
             # 🔴 添加中斷檢查點 1: 開始前檢查
             if self.isInterruptionRequested():
-                print(f"[API_WORKER] ⚠️ 執行緒在開始前被中斷")
+                logger.warning(f"[API_WORKER] ⚠️ 執行緒在開始前被中斷")
                 return
             
             self.progress.emit(15)
@@ -88,7 +91,7 @@ class TelemetryApiWorker(QThread):
 
             # 🔴 添加中斷檢查點 2: HTTP 請求前檢查
             if self.isInterruptionRequested():
-                print(f"[API_WORKER] ⚠️ 執行緒在 HTTP 請求前被中斷")
+                logger.warning(f"[API_WORKER] ⚠️ 執行緒在 HTTP 請求前被中斷")
                 return
             
             start_ts = time.perf_counter()
@@ -102,7 +105,7 @@ class TelemetryApiWorker(QThread):
             
             # 🔴 添加中斷檢查點 3: HTTP 請求後檢查
             if self.isInterruptionRequested():
-                print(f"[API_WORKER] ⚠️ 執行緒在 HTTP 響應後被中斷")
+                logger.warning(f"[API_WORKER] ⚠️ 執行緒在 HTTP 響應後被中斷")
                 return
             
             self.progress.emit(70)
@@ -269,12 +272,12 @@ class TelemetryDataLoader(QObject):
     def _debug(self, message: str):
         """統一的除錯輸出"""
         prefix = self.config['debug_prefix']
-        print(f"[{prefix} DEBUG] {message}")
+        logger.debug(f"[{prefix} DEBUG] {message}")
     
     def _error(self, message: str):
         """統一的錯誤輸出"""
         prefix = self.config['debug_prefix']
-        print(f"[ERROR] [{prefix}] {message}")
+        logger.error(f"[{prefix}] {message}")
 
     def _normalize_driver_code(self, raw_value: Optional[str], fallback: Optional[str] = None) -> Optional[str]:
         """正規化車手代碼輸入"""
@@ -674,7 +677,7 @@ class TelemetryDataLoader(QObject):
 
         # 🔴 關鍵修復：檢查是否有執行緒正在運行
         if self._api_worker_running:
-            print(f"[{self.config['debug_prefix']}_LOADER] ⚠️ API Worker 仍在運行，取消新請求")
+            logger.warning(f"[{self.config['debug_prefix']}_LOADER] ⚠️ API Worker 仍在運行，取消新請求")
             self._debug("⚠️ 前一個 API 請求仍在處理中，跳過新請求")
             # 可選：發送錯誤信號或排隊
             self.load_error.emit("前一個請求仍在處理中，請稍後再試")
@@ -703,7 +706,7 @@ class TelemetryDataLoader(QObject):
         # 🔴 修復：finished 信號中清除運行標誌
         self._api_worker.finished.connect(self._on_api_worker_finished)
         self._api_worker.start()
-        print(f"[{self.config['debug_prefix']}_LOADER] ✅ API Worker 已啟動（超時: {timeout}s）")
+        logger.info(f"[{self.config['debug_prefix']}_LOADER] ✅ API Worker 已啟動（超時: {timeout}s）")
 
     def _on_api_progress(self, value: int) -> None:
         try:
@@ -758,14 +761,14 @@ class TelemetryDataLoader(QObject):
         - 即使出錯也確保標誌被清除
         """
         try:
-            print(f"[{self.config['debug_prefix']}_LOADER] 🏁 API Worker 執行緒已完成")
+            logger.debug(f"[{self.config['debug_prefix']}_LOADER] 🏁 API Worker 執行緒已完成")
             self._api_worker_running = False  # 清除運行標誌
             
             # 注意：不在這裡調用 _cleanup_api_worker()
             # 因為 cleanup 會在成功/失敗的回調中已經執行
             
         except Exception as e:
-            print(f"[{self.config['debug_prefix']}_LOADER] ⚠️ _on_api_worker_finished 異常: {e}")
+            logger.warning(f"[{self.config['debug_prefix']}_LOADER] ⚠️ _on_api_worker_finished 異常: {e}")
             # 即使出錯也要清除標誌（防禦性）
             self._api_worker_running = False
 
@@ -779,7 +782,7 @@ class TelemetryDataLoader(QObject):
             try:
                 # 🔴 步驟 1：請求中斷
                 if self._api_worker.isRunning():
-                    print(f"[TELEMETRY_LOADER] ⚠️ API Worker 仍在運行，請求中斷...")
+                    logger.warning(f"[TELEMETRY_LOADER] ⚠️ API Worker 仍在運行，請求中斷...")
                     self._api_worker.requestInterruption()
                     
                     # 🔴 步驟 2：調用 quit() 停止事件循環
@@ -787,11 +790,11 @@ class TelemetryDataLoader(QObject):
                     
                     # 🔴 步驟 3：等待最多 5 秒讓執行緒結束
                     if not self._api_worker.wait(5000):  # 5 秒超時
-                        print(f"[ERROR] [TELEMETRY_LOADER] API Worker 5秒後仍未停止，強制終止")
+                        logger.error(f"[TELEMETRY_LOADER] API Worker 5秒後仍未停止，強制終止")
                         self._api_worker.terminate()  # 強制終止
                         self._api_worker.wait(1000)  # 再等 1 秒
                     else:
-                        print(f"[TELEMETRY_LOADER] ✅ API Worker 已正常停止")
+                        logger.info(f"[TELEMETRY_LOADER] ✅ API Worker 已正常停止")
                 
                 # 🔴 步驟 4：斷開所有信號連接
                 self._api_worker.progress.disconnect()
@@ -814,9 +817,9 @@ class TelemetryDataLoader(QObject):
             if not self._api_worker.isRunning():
                 self._api_worker.deleteLater()
                 self._api_worker = None
-                print(f"[TELEMETRY_LOADER] ✅ API Worker 已安全刪除")
+                logger.info(f"[TELEMETRY_LOADER] ✅ API Worker 已安全刪除")
             else:
-                print(f"[ERROR] [TELEMETRY_LOADER] API Worker 仍在運行，無法安全刪除！")
+                logger.error(f"[TELEMETRY_LOADER] API Worker 仍在運行，無法安全刪除！")
                 # 保留引用，避免崩潰
                 # 但設置為 None 以避免重複清理
                 old_worker = self._api_worker
@@ -837,7 +840,7 @@ class TelemetryDataLoader(QObject):
         3. 內部數據
         """
         try:
-            print(f"[TELEMETRY_LOADER] 🧹 開始清理 {self.telemetry_type} 載入器...")
+            logger.debug(f"[TELEMETRY_LOADER] 🧹 開始清理 {self.telemetry_type} 載入器...")
             
             # 1. 清理 API Worker 執行緒
             self._cleanup_api_worker()
@@ -854,10 +857,10 @@ class TelemetryDataLoader(QObject):
             self._active_request_token = None
             self._is_loading = False
             
-            print(f"[TELEMETRY_LOADER] ✅ {self.telemetry_type} 載入器清理完成")
+            logger.info(f"[TELEMETRY_LOADER] ✅ {self.telemetry_type} 載入器清理完成")
             
         except Exception as e:
-            print(f"[ERROR] [TELEMETRY_LOADER] 清理 {self.telemetry_type} 載入器失敗: {e}")
+            logger.error(f"[TELEMETRY_LOADER] 清理 {self.telemetry_type} 載入器失敗: {e}")
 
     def _handle_api_success(self, data: Any, payload: Dict[str, Any], meta: Dict[str, Any],
                             request_token: Optional[int] = None) -> None:
@@ -1711,6 +1714,7 @@ class TelemetryDataLoader(QObject):
         except Exception as e:
             self._error(f"數據處理失敗: {e}")
             import traceback
+
             traceback.print_exc()
             # 返回空數據結構避免錯誤
             return self._get_empty_data_structure()

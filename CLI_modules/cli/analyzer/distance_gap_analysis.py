@@ -8,6 +8,13 @@
 """
 
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import os
 import traceback
 import numpy as np
@@ -23,6 +30,13 @@ from matplotlib.lines import Line2D
 sys.path.append(str(Path(__file__).parent.parent))
 
 from modules.base import F1AnalysisBase
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 class DistanceGapAnalyzer(F1AnalysisBase):
     """距離差距分析器 - 專門分析兩車手之間的距離差距"""

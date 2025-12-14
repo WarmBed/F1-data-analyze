@@ -213,8 +213,19 @@ class TrackAnalysisWorkerThread(QThread):
 
     def run(self):
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress_updated.emit(10, "透過 API 載入賽道資料...")
+            
+            # ✅ 中斷檢查點 2: API 請求前
+            if self.isInterruptionRequested():
+                return
             track_payload, api_meta, full_payload = self._fetch_analysis_via_api()
+            
+            # ✅ 中斷檢查點 3: API 請求後
+            if self.isInterruptionRequested():
+                return
             processed_data = self._prepare_track_data(track_payload, full_payload)
             metadata = processed_data.setdefault("metadata", {})
             metadata.setdefault("data_source", "api")
@@ -226,9 +237,15 @@ class TrackAnalysisWorkerThread(QThread):
             metadata["requested_force_refresh"] = self.force_refresh
 
             self.progress_updated.emit(100, "API 載入完成")
+            # ✅ 中斷檢查點 4: 發送 completed 信號前
+            if self.isInterruptionRequested():
+                return
             self.analysis_completed.emit(processed_data)
 
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不執行錯誤處理
+            if self.isInterruptionRequested():
+                return
             if self.allow_local_fallback:
                 self.progress_updated.emit(55, "API 失敗，啟動本地 JSON 後備流程...")
                 try:

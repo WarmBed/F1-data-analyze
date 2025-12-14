@@ -20,6 +20,9 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 from prettytable import PrettyTable
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 def clean_for_json(obj):
     """清理數據以便JSON序列化"""
@@ -41,7 +44,7 @@ def analyze_special_incidents_data(data_loader):
     """分析特殊事件數據"""
     try:
         if not data_loader or not hasattr(data_loader, 'loaded_data') or not data_loader.loaded_data:
-            print("[ERROR] 無法獲取已載入的數據")
+            logger.error("無法獲取已載入的數據")
             return None
             
         loaded_data = data_loader.loaded_data
@@ -67,7 +70,7 @@ def analyze_special_incidents_data(data_loader):
         }
         
     except Exception as e:
-        print(f"[ERROR] 分析特殊事件數據時發生錯誤: {e}")
+        logger.error(f"分析特殊事件數據時發生錯誤: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -90,7 +93,7 @@ def extract_race_control_messages(loaded_data):
         return []
         
     except Exception as e:
-        print(f"[WARNING] 提取賽事控制消息失敗: {e}")
+        logger.warning(f"提取賽事控制消息失敗: {e}")
         return []
 
 
@@ -157,7 +160,7 @@ def categorize_special_incidents(race_control_messages):
             categories["all_incidents"].append(incident)
             
         except Exception as e:
-            print(f"[WARNING] 處理消息時發生錯誤: {e}")
+            logger.warning(f"處理消息時發生錯誤: {e}")
             continue
     
     return categories
@@ -180,19 +183,19 @@ def generate_incident_summary(special_incidents):
 def display_special_incidents_table(analysis_result):
     """顯示特殊事件表格"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可顯示")
+        logger.error("無分析結果可顯示")
         return
     
     session_info = analysis_result.get("session_info", {})
     special_incidents = analysis_result.get("special_incidents", {})
     incident_summary = analysis_result.get("incident_summary", {})
     
-    print(f"\n[CRITICAL] 特殊事件報告分析 (功能 4.2)")
-    print("=" * 80)
-    print(f"📅 賽事: {session_info.get('year')} {session_info.get('track_name')}")
-    print(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
-    print(f"[INFO] 總特殊事件數: {analysis_result.get('total_incidents', 0)}")
-    print("=" * 80)
+    logger.warning(f"\n[CRITICAL] 特殊事件報告分析 (功能 4.2)")
+    logger.debug("=" * 80)
+    logger.debug(f"賽事: {session_info.get('year')} {session_info.get('track_name')}")
+    logger.debug(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
+    logger.info(f"總特殊事件數: {analysis_result.get('total_incidents', 0)}")
+    logger.debug("=" * 80)
     
     # 事件摘要表格
     summary_table = PrettyTable()
@@ -213,8 +216,8 @@ def display_special_incidents_table(analysis_result):
     for event_type, count, description in summary_data:
         summary_table.add_row([event_type, count, description])
     
-    print("\n[LIST] 特殊事件摘要:")
-    print(summary_table)
+    logger.debug("\n[LIST] 特殊事件摘要:")
+    logger.debug(f"{summary_table}")
     
     # 詳細事件列表
     if special_incidents.get("all_incidents"):
@@ -233,17 +236,17 @@ def display_special_incidents_table(analysis_result):
                 incident.get("message", "")[:50] + "..." if len(incident.get("message", "")) > 50 else incident.get("message", "")
             ])
         
-        print(f"\n[NOTE] 詳細事件列表 (顯示前20項，共{len(special_incidents['all_incidents'])}項):")
-        print(detail_table)
+        logger.debug(f"\n[NOTE] 詳細事件列表 (顯示前20項，共{len(special_incidents['all_incidents'])}項):")
+        logger.debug(f"{detail_table}")
         
         if len(special_incidents["all_incidents"]) > 20:
-            print(f"... 還有 {len(special_incidents['all_incidents']) - 20} 項事件 (請查看JSON文件獲取完整列表)")
+            logger.debug(f"... 還有 {len(special_incidents['all_incidents']) - 20} 項事件 (請查看JSON文件獲取完整列表)")
 
 
 def save_special_incidents_raw_data(analysis_result, data_loader):
     """保存特殊事件原始數據為JSON格式"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可保存")
+        logger.error("無分析結果可保存")
         return
     
     try:
@@ -281,18 +284,18 @@ def save_special_incidents_raw_data(analysis_result, data_loader):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-        print(f"\n💾 原始數據已保存至: {filename}")
-        print(f"[INFO] JSON包含 {len(json_data.get('detailed_incidents', {}).get('all_incidents', []))} 項詳細事件記錄")
+        logger.debug(f"\n💾 原始數據已保存至: {filename}")
+        logger.info(f"JSON包含 {len(json_data.get('detailed_incidents', {}).get('all_incidents', []))} 項詳細事件記錄")
         
     except Exception as e:
-        print(f"[ERROR] 保存JSON文件失敗: {e}")
+        logger.error(f"保存JSON文件失敗: {e}")
 
 
 def run_special_incidents_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False):
     """執行特殊事件報告分析並返回 JSON 格式結果"""
     try:
         if enable_debug:
-            print("\n🚨 開始特殊事件報告分析 (JSON模式)...")
+            logger.debug("\n🚨 開始特殊事件報告分析 (JSON模式)...")
         
         # 檢查數據載入器
         if not data_loader:
@@ -357,17 +360,17 @@ def run_special_incidents_analysis_json(data_loader, dynamic_team_mapping=None, 
                 json.dump(json_output, f, indent=2, ensure_ascii=False)
             
             if enable_debug:
-                print(f"[SUCCESS] JSON 檔案已保存: {json_path}")
+                logger.info(f"JSON 檔案已保存: {json_path}")
                 
             json_output["data"]["json_file"] = json_path
             
         except Exception as json_error:
             if enable_debug:
-                print(f"[WARNING] JSON 檔案保存失敗: {json_error}")
+                logger.warning(f"JSON 檔案保存失敗: {json_error}")
             json_output["data"]["json_file"] = None
         
         if enable_debug:
-            print("[SUCCESS] 特殊事件報告分析完成 (JSON模式)")
+            logger.info("特殊事件報告分析完成 (JSON模式)")
         
         return json_output
         
@@ -380,7 +383,7 @@ def run_special_incidents_analysis_json(data_loader, dynamic_team_mapping=None, 
         }
         
         if enable_debug:
-            print(f"[ERROR] {error_result['message']}")
+            logger.error(f"{error_result['message']}")
             import traceback
             traceback.print_exc()
         
@@ -390,18 +393,18 @@ def run_special_incidents_analysis_json(data_loader, dynamic_team_mapping=None, 
 def run_special_incidents_analysis(data_loader):
     """執行特殊事件報告分析的主函數"""
     try:
-        print("\n[CRITICAL] 開始特殊事件報告分析...")
+        logger.warning("\n[CRITICAL] 開始特殊事件報告分析...")
         
         # 檢查數據載入器
         if not data_loader:
-            print("[ERROR] 數據載入器未初始化")
+            logger.error("數據載入器未初始化")
             return False
         
         # 分析特殊事件數據
         analysis_result = analyze_special_incidents_data(data_loader)
         
         if not analysis_result:
-            print("[ERROR] 特殊事件分析失敗")
+            logger.error("特殊事件分析失敗")
             return False
         
         # 顯示分析結果
@@ -410,16 +413,17 @@ def run_special_incidents_analysis(data_loader):
         # 保存原始數據
         save_special_incidents_raw_data(analysis_result, data_loader)
         
-        print("\n[SUCCESS] 特殊事件報告分析完成")
+        logger.info("\n[SUCCESS] 特殊事件報告分析完成")
         return True
         
     except Exception as e:
-        print(f"[ERROR] 執行特殊事件報告分析時發生錯誤: {e}")
+        logger.error(f"執行特殊事件報告分析時發生錯誤: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 if __name__ == "__main__":
-    print("[WARNING] 此模組需要通過主程式調用")
-    print("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.2")
+    logger.warning("此模組需要通過主程式調用")
+    logger.debug("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.2")

@@ -29,12 +29,13 @@ try:
     WEBENGINE_AVAILABLE = True
 except ImportError:
     WEBENGINE_AVAILABLE = False
-    from core.logger import get_logger
     logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
     logger.warning("PyQtWebEngine not available")
 
 from core.gui_i18n import tr
+
 from core.logger import get_logger
+logger = get_logger(__name__)
 
 logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
 

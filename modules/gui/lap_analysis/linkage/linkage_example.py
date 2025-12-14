@@ -15,6 +15,10 @@ project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(c
 sys.path.insert(0, project_root)
 
 from modules.gui.lap_analysis.linkage import (
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
     LapAnalysisLinkageMixin,
     LapAnalysisLinkageDrawingMixin,
     linkage_manager,
@@ -146,44 +150,44 @@ def demonstrate_linkage_migration():
     - 維護性佳：連動邏輯修改只需更新混合類
     """
     
-    print("=== 連動模組化遷移示例 ===")
-    print()
+    logger.debug("=== 連動模組化遷移示例 ===")
+    logger.debug("")
     
-    print("1. 原始模組結構：")
-    print("   - speed_analysis_chart.py （包含重複的連動代碼）")
-    print("   - rpm_analysis_chart.py   （包含重複的連動代碼）")
-    print("   - throttle_analysis_chart.py （包含重複的連動代碼）")
-    print()
+    logger.debug("1. 原始模組結構：")
+    logger.debug("   - speed_analysis_chart.py （包含重複的連動代碼）")
+    logger.debug("   - rpm_analysis_chart.py   （包含重複的連動代碼）")
+    logger.debug("   - throttle_analysis_chart.py （包含重複的連動代碼）")
+    logger.debug("")
     
-    print("2. 模組化後結構：")
-    print("   - modules/gui/lap_analysis/linkage/")
-    print("     ├── linkage_mixin.py      （統一的連動邏輯）")
-    print("     ├── linkage_manager.py    （集中的連動管理）")
-    print("     ├── linkage_ui.py         （標準化的UI組件）")
-    print("     └── __init__.py           （模組介面）")
-    print()
+    logger.debug("2. 模組化後結構：")
+    logger.debug("   - modules/gui/lap_analysis/linkage/")
+    logger.debug("     ├── linkage_mixin.py      （統一的連動邏輯）")
+    logger.debug("     ├── linkage_manager.py    （集中的連動管理）")
+    logger.debug("     ├── linkage_ui.py         （標準化的UI組件）")
+    logger.debug("     └── __init__.py           （模組介面）")
+    logger.debug("")
     
-    print("3. 遷移後的圖表類：")
-    print("   class SpeedAnalysisChart(QWidget, LapAnalysisLinkageMixin):")
-    print("       def __init__(self):")
-    print("           super().__init__()")
-    print("           self.init_linkage('speed_analysis')")
-    print("           linkage_manager.register_module(self, 'speed_analysis')")
-    print()
+    logger.debug("3. 遷移後的圖表類：")
+    logger.debug("   class SpeedAnalysisChart(QWidget, LapAnalysisLinkageMixin):")
+    logger.debug("       def __init__(self):")
+    logger.debug("           super().__init__()")
+    logger.debug("           self.init_linkage('speed_analysis')")
+    logger.debug("           linkage_manager.register_module(self, 'speed_analysis')")
+    logger.debug("")
     
-    print("4. 連動管理器統計：")
+    logger.debug("4. 連動管理器統計：")
     stats = linkage_manager.get_module_stats()
-    print(f"   - 已註冊模組：{stats['total_modules']} 個")
-    print(f"   - 模組類型：{stats['module_types']}")
-    print(f"   - 主連動狀態：{'啟用' if stats['master_linkage_enabled'] else '停用'}")
-    print()
+    logger.debug(f"   - 已註冊模組：{stats['total_modules']} 個")
+    logger.debug(f"   - 模組類型：{stats['module_types']}")
+    logger.debug(f"   - 主連動狀態：{'啟用' if stats['master_linkage_enabled'] else '停用'}")
+    logger.debug("")
     
-    print("5. 遷移好處：")
-    print("   ✅ 消除了 20+ 個重複的連動函數")
-    print("   ✅ 統一了連動邏輯和狀態管理")
-    print("   ✅ 標準化了UI組件和樣式")
-    print("   ✅ 提高了代碼可維護性")
-    print("   ✅ 簡化了新模組的開發")
+    logger.debug("5. 遷移好處：")
+    logger.info("   ✅ 消除了 20+ 個重複的連動函數")
+    logger.info("   ✅ 統一了連動邏輯和狀態管理")
+    logger.info("   ✅ 標準化了UI組件和樣式")
+    logger.info("   ✅ 提高了代碼可維護性")
+    logger.info("   ✅ 簡化了新模組的開發")
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@
         # 6. 保存緩存
         if self.cache_enabled and result:
             self._save_cache(result, cache_key)
-            print("💾 分析結果已緩存")
+            print("[CACHE] 分析結果已緩存")
         
         return result手煞車 vs 距離比較
 - 雙車手檔位 vs 距離比較
@@ -23,6 +23,14 @@
 - 速度差 vs 距離分析
 - 賽道累積距離差 vs 距離分析
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -1173,6 +1181,14 @@ class TwoDriverTelemetryComparison:
     def _display_difference_analysis_table(self, result):
         """顯示速度差和距離差分析表格"""
         from prettytable import PrettyTable
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         
         # 速度差分析
         speed_diff = result.get('speed_difference', {})

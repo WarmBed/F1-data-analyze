@@ -4,6 +4,14 @@ Function 24: 全部車手年度DNF分析 - Function 19的擴展版本
 符合開發核心原則的實現
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import os
 import pickle
@@ -151,6 +159,14 @@ class AllDriversAnnualDNFAnalysis:
         
         # 模擬一些合理的數據（在實際實現中會從真實數據計算）
         import random
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         random.seed(hash(driver + str(self.year)))  # 確保一致性
         
         if driver in ["VER", "HAM", "LEC"]:  # 頂級車手較少DNF

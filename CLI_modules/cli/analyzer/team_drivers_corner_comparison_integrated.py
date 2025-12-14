@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 團隊車手彎道對比分析模組 (集成進站與事件版)
 功能 12.2 - 整合進站資料與特殊事件報告的車手對比分析
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -213,6 +221,13 @@ class TeamDriversCornerComparisonIntegrated:
             # 保存JSON文件
             # 確保json資料夾存在
             import os
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             json_dir = "json"
             os.makedirs(json_dir, exist_ok=True)
             

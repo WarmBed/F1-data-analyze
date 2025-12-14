@@ -4,6 +4,14 @@
 提供單一車手的完整分析功能，包含輪胎分析、Pitstop分析、區間時間、超車分析及圖表生成
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -1165,6 +1173,14 @@ def run_all_drivers_telemetry_analysis(data_loader, open_analyzer, f1_analysis_i
         if enable_debug:
             print(f"[ERROR] 執行所有車手遙測分析時發生錯誤: {str(e)}")
             import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             traceback.print_exc()
         
         return {

@@ -3,6 +3,9 @@
 """檢查 Position.json 結構 - 提取起跑和最終位置"""
 
 import json
+from core.logger import get_logger
+
+logger = get_logger("live_timing_test.check_timing_structure", component="gui")
 
 base = r'c:\Users\mike2\OneDrive\Code\F1-data-analyze\json\LiveF1\2023\Australian_Race'
 
@@ -11,7 +14,7 @@ pos_path = f'{base}/Position.json'
 with open(pos_path, 'r', encoding='utf-8') as f:
     pos_data = json.load(f)
 
-print(f'Position.json records: {len(pos_data.get("records", []))}')
+logger.info('Position.json records: %s', len(pos_data.get("records", [])))
 
 # 收集第一筆和最後一筆 Position
 first_positions = None
@@ -25,22 +28,22 @@ for rec in pos_data['records']:
             first_positions = positions.copy()
         last_positions = positions.copy()
 
-print(f'\n起跑位置 (第一筆數據):')
+logger.info('起跑位置 (第一筆數據):')
 if first_positions:
     for entry in first_positions[:5]:
-        print(f"  #{entry.get('RacingNumber')}: P{entry.get('Position')}")
+    logger.info("  #%s: P%s", entry.get('RacingNumber'), entry.get('Position'))
 
-print(f'\n最終位置 (最後一筆數據):')
+logger.info('最終位置 (最後一筆數據):')
 if last_positions:
     for entry in last_positions[:5]:
-        print(f"  #{entry.get('RacingNumber')}: P{entry.get('Position')}")
+    logger.info("  #%s: P%s", entry.get('RacingNumber'), entry.get('Position'))
         
 # 讀取 DriverList 以獲取車手名稱
 driver_path = f'{base}/DriverList.json'
 with open(driver_path, 'r', encoding='utf-8') as f:
     dl = json.load(f)
 
-print(f'\n車手列表:')
+logger.info('車手列表:')
 drivers = {}
 for rec in dl.get('records', []):
     d = rec.get('data', {})
@@ -50,4 +53,4 @@ for rec in dl.get('records', []):
                 drivers[num] = info.get('Tla', '')
                 
 for num, tla in list(drivers.items())[:5]:
-    print(f"  #{num}: {tla}")
+                    logger.info("  #%s: %s", num, tla)

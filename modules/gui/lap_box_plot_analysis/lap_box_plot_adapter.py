@@ -22,6 +22,9 @@ Version: 1.0.0
 from typing import Optional
 from PyQt5.QtCore import QObject
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入 MDI 類別
 try:
     from .lap_box_plot_analysis_mdi import LapTimeBoxPlotAnalysis
@@ -54,7 +57,7 @@ class LapTimeBoxPlotAnalysisAdapter(QObject):
         race = kwargs.get('race')
         session = kwargs.get('session')
         
-        print(f"🚀 [LAP_BOXPLOT_ADAPTER] 初始化 Adapter: year={year}, race={race}, session={session}")
+        logger.debug(f"[LAP_BOXPLOT_ADAPTER] 初始化 Adapter: year={year}, race={race}, session={session}")
         
         # 創建內部 MDI 實例
         self._mdi_core = LapTimeBoxPlotAnalysis(parent=parent)
@@ -73,7 +76,7 @@ class LapTimeBoxPlotAnalysisAdapter(QObject):
         # 適配器版本
         self.adapter_version = "1.0.0"
         
-        print(f"✅ [LAP_BOXPLOT_ADAPTER] Adapter 初始化完成")
+        logger.info(f"[LAP_BOXPLOT_ADAPTER] Adapter 初始化完成")
     
     def get_widget(self):
         """返回內部 MDI 的 Widget（不是 MDI 對象本身）"""
@@ -85,7 +88,7 @@ class LapTimeBoxPlotAnalysisAdapter(QObject):
             return self._mdi_core.main_widget
         else:
             # 最後回退：返回 MDI 對象（可能不work）
-            print(f"[LAP_BOXPLOT_ADAPTER] ⚠️  MDI 沒有 get_widget() 或 main_widget，返回 MDI 對象")
+            logger.warning(f"[LAP_BOXPLOT_ADAPTER] ⚠️  MDI 沒有 get_widget() 或 main_widget，返回 MDI 對象")
             return self._mdi_core
     
     def __getattr__(self, name):

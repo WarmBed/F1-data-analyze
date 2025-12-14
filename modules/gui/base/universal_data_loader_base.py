@@ -40,6 +40,11 @@ from typing import Dict, List, Any, Optional, Tuple, Callable
 from abc import ABC
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
 
+from core.logger import get_logger
+
+
+logger = get_logger("gui.universal_data_loader", component="gui")
+
 
 class AnalysisConfig:
     """分析類型配置類"""
@@ -97,8 +102,8 @@ class CliAnalysisWorker(QThread):
         ⚠️ API-ONLY 模式: CliAnalysisWorker 已完全禁用
         系統只允許通過 REST API 獲取數據
         """
-        print("[CLI_WORKER] ⚠️  [API-ONLY] CliAnalysisWorker 已禁用")
-        print("[CLI_WORKER] 💡 提示: 請使用 API 或手動執行 CLI 獲取數據")
+        logger.warning("[CLI_WORKER] ⚠️  [API-ONLY] CliAnalysisWorker 已禁用")
+        logger.info("[CLI_WORKER] 💡 提示: 請使用 API 或手動執行 CLI 獲取數據")
         self.progress_updated.emit("⚠️ CLI 調用已禁用 - 請使用 API")
         self.analysis_completed.emit(False, "API-ONLY 模式: CLI 調用已禁用")
     
@@ -155,7 +160,10 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
                 file_patterns=[f"{analysis_type}_*.json"] if analysis_type else ["*.json"],
             )
             self.ANALYSIS_TYPES[analysis_type] = fallback_config
-            print(f"[UNIVERSAL_LOADER] ⚠️ 未註冊的分析類型 '{analysis_type}'，已建立臨時配置以維持相容性")
+            logger.warning(
+                "[UNIVERSAL_LOADER] ⚠️ 未註冊的分析類型 '%s'，已建立臨時配置以維持相容性",
+                analysis_type,
+            )
             
         self.analysis_type = analysis_type
         self.config = self.ANALYSIS_TYPES[analysis_type]
@@ -205,12 +213,12 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
     def _debug(self, message: str):
         """統一的除錯輸出"""
         prefix = self.config.debug_prefix
-        print(f"[{prefix} DEBUG] {message}")
+        logger.debug("[%s DEBUG] %s", prefix, message)
     
     def _error(self, message: str):
         """統一的錯誤輸出"""
         prefix = self.config.debug_prefix
-        print(f"[ERROR] [{prefix}] {message}")
+        logger.error("[ERROR] [%s] %s", prefix, message)
     
     # ========== 公開API方法 ==========
     

@@ -21,6 +21,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 嘗試導入國際化模組
 try:
     from core.gui_i18n import tr, set_gui_language
@@ -83,7 +86,7 @@ class IdealLapAnalysisOptionsDialog(QDialog):
         # 初始化 UI
         self.init_ui()
         
-        print("[IDEAL_LAP_DIALOG] IdealLapAnalysisOptionsDialog 已初始化")
+        logger.debug("[IDEAL_LAP_DIALOG] IdealLapAnalysisOptionsDialog 已初始化")
     
     def _apply_stylesheet(self):
         """應用樣式表 - 完全複製自 DetailedLapAnalysisOptionsDialog"""
@@ -259,7 +262,7 @@ class IdealLapAnalysisOptionsDialog(QDialog):
         
         layout.addLayout(button_layout)
         
-        print("[IDEAL_LAP_DIALOG] UI 初始化完成")
+        logger.debug("[IDEAL_LAP_DIALOG] UI 初始化完成")
     
     def get_selected_types(self) -> list:
         """
@@ -273,24 +276,24 @@ class IdealLapAnalysisOptionsDialog(QDialog):
             selected_type = item.data(Qt.UserRole)
             selected_types.append(selected_type)
         
-        print(f"[IDEAL_LAP_DIALOG] 使用者選擇的分析類型: {selected_types}")
+        logger.debug(f"[IDEAL_LAP_DIALOG] 使用者選擇的分析類型: {selected_types}")
         
         # 如果沒有選擇任何項目，返回預設值（排名表格）
         if not selected_types:
-            print("[IDEAL_LAP_DIALOG] 未選擇任何項目，返回預設值: [ranking_table]")
+            logger.debug("[IDEAL_LAP_DIALOG] 未選擇任何項目，返回預設值: [ranking_table]")
             return [self.TYPE_RANKING_TABLE]
         
         return selected_types
     
     def select_all(self):
         """選擇所有分析類型"""
-        print("[IDEAL_LAP_DIALOG] 選擇所有分析類型")
+        logger.debug("[IDEAL_LAP_DIALOG] 選擇所有分析類型")
         for i in range(self.analysis_list.count()):
             self.analysis_list.item(i).setSelected(True)
     
     def select_none(self):
         """取消選擇所有分析類型"""
-        print("[IDEAL_LAP_DIALOG] 取消選擇所有分析類型")
+        logger.debug("[IDEAL_LAP_DIALOG] 取消選擇所有分析類型")
         self.analysis_list.clearSelection()
     
     def accept(self):
@@ -304,12 +307,12 @@ class IdealLapAnalysisOptionsDialog(QDialog):
                 type_names.append("Sector Heatmap")
             elif st == self.TYPE_SECTOR_COMPARISON:
                 type_names.append("Sector Comparison")
-        print(f"[IDEAL_LAP_DIALOG] 使用者確認選擇: {', '.join(type_names)}")
+        logger.debug(f"[IDEAL_LAP_DIALOG] 使用者確認選擇: {', '.join(type_names)}")
         super().accept()
     
     def reject(self):
         """取消按鈕被點擊"""
-        print("[IDEAL_LAP_DIALOG] 使用者取消選擇")
+        logger.debug("[IDEAL_LAP_DIALOG] 使用者取消選擇")
         super().reject()
 
 
@@ -317,6 +320,7 @@ class IdealLapAnalysisOptionsDialog(QDialog):
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
+
     
     app = QApplication(sys.argv)
     
@@ -325,15 +329,15 @@ if __name__ == "__main__":
     
     if dialog.exec_() == QDialog.Accepted:
         selected_types = dialog.get_selected_types()
-        print(f"✅ 測試結果: 使用者選擇了 {len(selected_types)} 個分析類型:")
+        logger.info(f"測試結果: 使用者選擇了 {len(selected_types)} 個分析類型:")
         for st in selected_types:
             if st == IdealLapAnalysisOptionsDialog.TYPE_RANKING_TABLE:
-                print("   - 📊 排名表格總覽")
+                logger.debug("   - 📊 排名表格總覽")
             elif st == IdealLapAnalysisOptionsDialog.TYPE_SECTOR_HEATMAP:
-                print("   - 🔥 分段熱力圖")
+                logger.debug("   - 🔥 分段熱力圖")
             elif st == IdealLapAnalysisOptionsDialog.TYPE_SECTOR_COMPARISON:
-                print("   - 📈 分段對比圖")
+                logger.debug("   - 📈 分段對比圖")
     else:
-        print("❌ 測試結果: 使用者取消了選擇")
+        logger.error("測試結果: 使用者取消了選擇")
     
     sys.exit()

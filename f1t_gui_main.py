@@ -105,13 +105,14 @@ from core.logger import setup_logging, get_logger
 
 # 🔧 日誌系統配置：
 # - 開發模式 (Python): level="INFO" (詳細日誌)
-# - EXE 模式 (PyInstaller): level="CRITICAL" (極度靜默，僅記錄嚴重錯誤)
+# - EXE 模式 (PyInstaller): level="INFO" (預設啟用日誌，方便除錯)
+#   * 可設置環境變數 F1T_EXE_DISABLE_LOG=1 來禁用 EXE 日誌（節省效能）
 # - console_level=None : 已停用終端機輸出（在 logger.py 中移除 console handler）
-# - 日誌檔案：logs/f1_gui_2025-10-06.log（依日期自動切換）
+# - 日誌檔案：logs/f1_gui_YYYY-MM-DD.log（依日期自動切換，保留 30 天）
 
 # 檢測是否為 PyInstaller 打包的 EXE
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
-LOG_LEVEL = "INFO"  # 統一使用 INFO 級別（包含 EXE 模式）以便調試
+LOG_LEVEL = "INFO"  # 統一使用 INFO 級別（開發模式和 EXE 模式）
 
 def get_resource_path(relative_path):
     """獲取資源文件的絕對路徑（支援 EXE 模式）
@@ -130,7 +131,7 @@ def get_resource_path(relative_path):
 
 setup_logging(component="gui", level=LOG_LEVEL, console_level=None)
 logger = get_logger("main", component="gui")
-logger.info(f"F1T GUI 控制台初始化完成 - 日誌系統已啟用 ({LOG_LEVEL} level, {'EXE 極度靜默模式' if IS_EXE_MODE else '開發模式'})")
+logger.info(f"F1T GUI 控制台初始化完成 - 日誌系統已啟用 ({LOG_LEVEL} level, {'EXE 模式' if IS_EXE_MODE else '開發模式'})")
 
 # 導入連動管理器
 from modules.gui.lap_analysis.linkage import linkage_manager
@@ -313,7 +314,7 @@ class CustomMdiArea(QMdiArea):
         # ✅ 當視窗超出可視範圍時，自動顯示滾動條
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        print(f"[MDI_INIT] ✅ 已啟用滾動條策略：當視窗超出範圍時自動顯示")
+        logger.debug(f"[MDI_INIT] ✅ 已啟用滾動條策略：當視窗超出範圍時自動顯示")
         
         # ========== Snap 功能 ==========
         self._snap_preview = SnapPreviewOverlay(self)
@@ -485,7 +486,7 @@ class CustomMdiArea(QMdiArea):
         ]
         
         if not fixed_windows:
-            print(f"[MDI_RESIZE] ⚠️  沒有找到固定視窗")
+            logger.debug(f"[MDI_RESIZE] ⚠️  沒有找到固定視窗")
             return
         
         # 按位置分類視窗
@@ -509,8 +510,8 @@ class CustomMdiArea(QMdiArea):
         mdi_width = self.width()
         mdi_height = self.height()
         
-        print(f"[MDI_RESIZE] 重新排列 {len(fixed_windows)} 個固定視窗（三欄排列）")
-        print(f"[MDI_RESIZE] MDI 尺寸: {mdi_width}x{mdi_height}")
+        logger.debug(f"[MDI_RESIZE] 重新排列 {len(fixed_windows)} 個固定視窗（三欄排列）")
+        logger.debug(f"[MDI_RESIZE] MDI 尺寸: {mdi_width}x{mdi_height}")
         
         # 三欄寬度: 左 33%, 中 33%, 右 34%
         left_width = mdi_width // 3
@@ -526,25 +527,25 @@ class CustomMdiArea(QMdiArea):
             old_geom = left_top_window.geometry()
             left_top_window.setGeometry(0, 0, left_width, left_top_height)
             new_geom = left_top_window.geometry()
-            print(f"[MDI_RESIZE] 左上視窗 ({left_top_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+            logger.debug(f"[MDI_RESIZE] 左上視窗 ({left_top_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
         
         if left_bottom_window:
             old_geom = left_bottom_window.geometry()
             left_bottom_window.setGeometry(0, left_top_height, left_width, left_bottom_height)
             new_geom = left_bottom_window.geometry()
-            print(f"[MDI_RESIZE] 左下視窗 ({left_bottom_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+            logger.debug(f"[MDI_RESIZE] 左下視窗 ({left_bottom_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
         
         if middle_window:
             old_geom = middle_window.geometry()
             middle_window.setGeometry(left_width, 0, middle_width, mdi_height)
             new_geom = middle_window.geometry()
-            print(f"[MDI_RESIZE] 中欄視窗 ({middle_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+            logger.debug(f"[MDI_RESIZE] 中欄視窗 ({middle_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
         
         if right_window:
             old_geom = right_window.geometry()
             right_window.setGeometry(left_width + middle_width, 0, right_width, mdi_height)
             new_geom = right_window.geometry()
-            print(f"[MDI_RESIZE] 右欄視窗 ({right_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
+            logger.debug(f"[MDI_RESIZE] 右欄視窗 ({right_window.windowTitle()}): {old_geom.width()}x{old_geom.height()} → {new_geom.width()}x{new_geom.height()}")
 
         
     def addSubWindow(self, widget, flags=None):
@@ -627,10 +628,10 @@ class CustomMdiArea(QMdiArea):
             
             # ✅ 這個方法會讓 QMdiArea 知道實際內容大小
             # 從而自動顯示滾動條
-            print(f"[MDI_SCROLL] 📏 檢測到視窗超出範圍")
-            print(f"[MDI_SCROLL]   可視範圍: {current_width}x{current_height}")
-            print(f"[MDI_SCROLL]   實際範圍: {max_right}x{max_bottom}")
-            print(f"[MDI_SCROLL]   ✅ 滾動條已自動啟用")
+            logger.debug(f"[MDI_SCROLL] 📏 檢測到視窗超出範圍")
+            logger.debug(f"[MDI_SCROLL]   可視範圍: {current_width}x{current_height}")
+            logger.debug(f"[MDI_SCROLL]   實際範圍: {max_right}x{max_bottom}")
+            logger.debug(f"[MDI_SCROLL]   ✅ 滾動條已自動啟用")
             
             # QMdiArea 會自動根據子視窗位置調整滾動範圍
             # 但我們可以手動觸發更新
@@ -1060,11 +1061,11 @@ class CustomMdiArea(QMdiArea):
             
             # 碰撞檢測：確保不會覆蓋其他視窗
             if self._would_overlap_other_windows(target_geometry, subwindow):
-                print(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
+                logger.debug(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
                 return
             
-            print(f"[SNAP] 視窗邊緣貼靠 '{subwindow.windowTitle()}'")
-            print(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
+            logger.debug(f"[SNAP] 視窗邊緣貼靠 '{subwindow.windowTitle()}'")
+            logger.debug(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
             subwindow.setGeometry(target_geometry)
             return
             
@@ -1094,12 +1095,12 @@ class CustomMdiArea(QMdiArea):
         if not target_geometry.isNull():
             # 碰撞檢測：確保不會覆蓋其他視窗
             if self._would_overlap_other_windows(target_geometry, subwindow):
-                print(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
+                logger.debug(f"[SNAP] 取消：目標區域會覆蓋其他視窗")
                 return
             
-            print(f"[SNAP] Snap 視窗 '{subwindow.windowTitle()}' 到 {zone.name}")
-            print(f"[SNAP] 模組類型: {module_name}")
-            print(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
+            logger.debug(f"[SNAP] Snap 視窗 '{subwindow.windowTitle()}' 到 {zone.name}")
+            logger.debug(f"[SNAP] 模組類型: {module_name}")
+            logger.debug(f"[SNAP] 目標區域: {target_geometry.x()},{target_geometry.y()} {target_geometry.width()}x{target_geometry.height()}")
             subwindow.setGeometry(target_geometry)
             
     def set_snap_enabled(self, enabled: bool):
@@ -1228,12 +1229,12 @@ class CustomMdiArea(QMdiArea):
     def set_magnetic_snap_enabled(self, enabled: bool):
         """啟用或禁用磁吸對齊"""
         self._magnetic_snap_enabled = enabled
-        print(f"[MDI] 磁吸對齊: {'啟用' if enabled else '禁用'}")
+        logger.debug(f"[MDI] 磁吸對齊: {'啟用' if enabled else '禁用'}")
     
     def set_magnetic_snap_distance(self, distance: int):
         """設置磁吸距離閾值"""
         self._magnetic_snap_distance = max(5, min(50, distance))
-        print(f"[MDI] 磁吸距離: {self._magnetic_snap_distance}px")
+        logger.debug(f"[MDI] 磁吸距離: {self._magnetic_snap_distance}px")
 
 
 # CLI 分析工作執行緒
@@ -1267,8 +1268,8 @@ class CliAnalysisWorker(QThread):
                 "-s", self.session
             ]
             
-            print(f"[DEBUG]    [CLI_WORKER] 準備執行命令: {' '.join(cmd)}")
-            print(f"[DEBUG]    [CLI_WORKER] 工作目錄: {os.getcwd()}")
+            logger.debug(f"[DEBUG]    [CLI_WORKER] 準備執行命令: {' '.join(cmd)}")
+            logger.debug(f"[DEBUG]    [CLI_WORKER] 工作目錄: {os.getcwd()}")
             
             self.progress_updated.emit(f"啟動 CLI 分析: {self.year} {self.race} {self.session}")
             
@@ -1277,7 +1278,7 @@ class CliAnalysisWorker(QThread):
             env['PYTHONIOENCODING'] = 'utf-8'
             env['PYTHONLEGACYWINDOWSFS'] = '0'
             
-            print(f"[DEBUG]    [CLI_WORKER] 環境變數已設置: PYTHONIOENCODING=utf-8")
+            logger.debug(f"[DEBUG]    [CLI_WORKER] 環境變數已設置: PYTHONIOENCODING=utf-8")
             
             # 啟動進程，使用 UTF-8 編碼避免編碼問題
             self.process = subprocess.Popen(
@@ -1293,7 +1294,7 @@ class CliAnalysisWorker(QThread):
                 universal_newlines=True
             )
             
-            print(f"[DEBUG]    [CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
+            logger.debug(f"[DEBUG]    [CLI_WORKER] 進程已啟動，PID: {self.process.pid}")
             self.progress_updated.emit(f"CLI 分析已啟動 (PID: {self.process.pid})")
             
             # 即時讀取輸出
@@ -1322,22 +1323,22 @@ class CliAnalysisWorker(QThread):
             # 獲取最終結果
             if not self.should_stop:
                 return_code = self.process.wait()
-                print(f"[DEBUG]    [CLI_WORKER] 進程結束，返回碼: {return_code}")
+                logger.debug(f"[DEBUG]    [CLI_WORKER] 進程結束，返回碼: {return_code}")
                 
                 if return_code == 0:
-                    print(f"[DEBUG]    [CLI_WORKER] CLI 分析成功完成")
+                    logger.debug(f"[DEBUG]    [CLI_WORKER] CLI 分析成功完成")
                     self.analysis_completed.emit(True, "CLI 分析成功完成")
                 else:
-                    print(f"[DEBUG]    [CLI_WORKER] CLI 分析失敗，返回碼: {return_code}")
+                    logger.debug(f"[DEBUG]    [CLI_WORKER] CLI 分析失敗，返回碼: {return_code}")
                     try:
                         stderr_output = self.process.stderr.read()
-                        print(f"[DEBUG]    [CLI_WORKER] 錯誤輸出: {stderr_output}")
+                        logger.debug(f"[DEBUG]    [CLI_WORKER] 錯誤輸出: {stderr_output}")
                         self.analysis_completed.emit(False, f"CLI 分析失敗: {stderr_output}")
                     except UnicodeDecodeError as e:
-                        print(f"[DEBUG]    [CLI_WORKER] 錯誤輸出編碼問題: {str(e)}")
+                        logger.debug(f"[DEBUG]    [CLI_WORKER] 錯誤輸出編碼問題: {str(e)}")
                         self.analysis_completed.emit(False, f"CLI 分析失敗 (編碼錯誤): {str(e)}")
             else:
-                print(f"[DEBUG]    [CLI_WORKER] 分析被用戶取消")
+                logger.debug(f"[DEBUG]    [CLI_WORKER] 分析被用戶取消")
                 self.analysis_completed.emit(False, "分析被用戶取消")
                 
         except Exception as e:
@@ -1381,7 +1382,7 @@ class GlobalSignalManager(QObject):
         """設置遙測分析連動總開關狀態"""
         self.lap_analysis_linkage_master_enabled = enabled
         self.lap_analysis_master_linkage_changed.emit(enabled)
-        print(f"[GLOBAL_SIGNALS] 遙測分析連動總開關: {'啟用' if enabled else '停用'}")
+        logger.debug(f"[GLOBAL_SIGNALS] 遙測分析連動總開關: {'啟用' if enabled else '停用'}")
     
     def is_lap_linkage_enabled(self) -> bool:
         """檢查遙測分析連動總開關是否啟用"""
@@ -1436,7 +1437,7 @@ class CliAnalysisManager(QObject):
         # 開始監控 JSON 文件
         self._start_json_monitoring(request_id, year, race, session)
         
-        print(f"[START] CLI分析請求已創建: {request_id} ({year} {race} {session})")
+        logger.debug(f"[START] CLI分析請求已創建: {request_id} ({year} {race} {session})")
         return request_id
     
     def cancel_analysis(self, request_id):
@@ -1451,7 +1452,7 @@ class CliAnalysisManager(QObject):
         if request_id in self.active_requests:
             del self.active_requests[request_id]
             
-        print(f"[STOP] CLI分析已取消: {request_id}")
+        logger.debug(f"[STOP] CLI分析已取消: {request_id}")
     
     def _on_analysis_completed(self, request_id, success, message):
         """處理分析完成"""
@@ -1461,7 +1462,7 @@ class CliAnalysisManager(QObject):
         if request_id in self.worker_threads:
             del self.worker_threads[request_id]
             
-        print(f"[OK] CLI分析完成: {request_id}, 成功: {success}")
+        logger.debug(f"[OK] CLI分析完成: {request_id}, 成功: {success}")
     
     def _start_json_monitoring(self, request_id, year, race, session):
         """開始監控 JSON 文件產生"""
@@ -1499,7 +1500,7 @@ class CliAnalysisManager(QObject):
                 self.active_requests[request_id]['timeout_timer'].stop()
             
             self.json_ready.emit(request_id, json_data)
-            print(f"📄 JSON已準備好: {request_id}")
+            logger.debug(f"📄 JSON已準備好: {request_id}")
             
             # 清理請求
             if request_id in self.active_requests:
@@ -1515,7 +1516,7 @@ class CliAnalysisManager(QObject):
         if request_id in self.active_requests:
             del self.active_requests[request_id]
         
-        print(f"[TIME] JSON等待超時: {request_id}")
+        logger.debug(f"[TIME] JSON等待超時: {request_id}")
     
     def _try_load_json(self, year, race, session):
         """嘗試載入 JSON 檔案"""
@@ -1542,25 +1543,25 @@ class CliAnalysisManager(QObject):
                     with open(pattern, 'r', encoding='utf-8') as f:
                         return json.load(f)
                 except Exception as e:
-                    print(f"[ERROR] JSON載入錯誤 {pattern}: {e}")
+                    logger.error(f"[ERROR] JSON載入錯誤 {pattern}: {e}")
         
         return None
     
     def cleanup_all(self):
         """清理所有活動的分析"""
-        print(f"[CLEANUP] 🔍 檢查活動的分析請求: {len(self.active_requests)} 個")
+        logger.debug(f"[CLEANUP] 🔍 檢查活動的分析請求: {len(self.active_requests)} 個")
         
         if not self.active_requests:
-            print("[CLEANUP] ℹ️ 沒有活動的分析請求需要清理")
+            logger.debug("[CLEANUP] ℹ️ 沒有活動的分析請求需要清理")
         else:
-            print(f"[CLEANUP] 🧹 開始清理 {len(self.active_requests)} 個活動請求...")
+            logger.debug(f"[CLEANUP] 🧹 開始清理 {len(self.active_requests)} 個活動請求...")
             
         for i, request_id in enumerate(list(self.active_requests.keys())):
-            print(f"[CLEANUP] 🛑 正在取消分析請求 {i+1}/{len(self.active_requests)}: {request_id}")
+            logger.debug(f"[CLEANUP] 🛑 正在取消分析請求 {i+1}/{len(self.active_requests)}: {request_id}")
             self.cancel_analysis(request_id)
-            print(f"[CLEANUP] ✅ 分析請求已取消: {request_id}")
+            logger.debug(f"[CLEANUP] ✅ 分析請求已取消: {request_id}")
             
-        print("[CLEANUP] 🧹 CLI分析管理器已清理所有資源")
+        logger.debug("[CLEANUP] 🧹 CLI分析管理器已清理所有資源")
 
 # 創建全域 CLI 分析管理器實例
 cli_analysis_manager = CliAnalysisManager()
@@ -1579,7 +1580,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'year_combo') and self.main_window.year_combo:
                 return self.main_window.year_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [PARAM_PROVIDER] 獲取年份失敗: {e}")
+            logger.warning(f"[WARNING] [PARAM_PROVIDER] 獲取年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race(self) -> str:
@@ -1590,7 +1591,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'race_combo') and self.main_window.race_combo:
                 return self.main_window.race_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [PARAM_PROVIDER] 獲取賽事失敗: {e}")
+            logger.warning(f"[WARNING] [PARAM_PROVIDER] 獲取賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session(self) -> str:
@@ -1601,7 +1602,7 @@ class MainWindowParameterProvider:
             if hasattr(self.main_window, 'session_combo') and self.main_window.session_combo:
                 return self.main_window.session_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [PARAM_PROVIDER] 獲取賽段失敗: {e}")
+            logger.warning(f"[WARNING] [PARAM_PROVIDER] 獲取賽段失敗: {e}")
         return "R"  # 預設值
 
 class LapAnalysisOptionsDialog(QDialog):
@@ -1835,9 +1836,9 @@ class LapAnalysisOptionsDialog(QDialog):
             self.driver2_combo.addItem(tr("none_option", "None"))
             self.driver2_combo.addItems(drivers)
             self.driver2_combo.setCurrentIndex(0)  # 預設 None
-            print(f"[DIALOG] ✅ 已載入 {len(drivers)} 位車手到對話框")
+            logger.debug(f"[DIALOG] ✅ 已載入 {len(drivers)} 位車手到對話框")
         else:
-            print(f"[DIALOG] ⚠️  無車手數據")
+            logger.debug(f"[DIALOG] ⚠️  無車手數據")
         
         # 創建列表控件 - 更緊湊的設計
         telemetry_group = QGroupBox(tr("telemetry_options"))
@@ -2834,7 +2835,7 @@ class DraggableTitleBar(QWidget):
         layout.addWidget(self.driver_lap_sync_btn)
         
         # 初始化顏色狀態 - 確保預設綠色正確顯示
-        print(f"[GREEN] 接收同步初始化為啟動狀態")
+        logger.debug(f"[GREEN] 接收同步初始化為啟動狀態")
         
         layout.addStretch()
         
@@ -3065,11 +3066,11 @@ class DraggableTitleBar(QWidget):
         if is_enabled:
             self.sync_btn.setText("S")
             self.sync_btn.setToolTip("接收主程式同步：啟用 (S)")
-            print(f"[SYNC] 接收同步已啟動 (S) - 將接收主程式參數")
+            logger.debug(f"[SYNC] 接收同步已啟動 (S) - 將接收主程式參數")
         else:
             self.sync_btn.setText("X")
             self.sync_btn.setToolTip("接收主程式同步：停用 (X)")
-            print(f"[SYNC] 接收同步已停用 (X) - 獨立運作模式")
+            logger.debug(f"[SYNC] 接收同步已停用 (X) - 獨立運作模式")
         
         # 強制重新應用樣式確保顏色更新
         self.sync_btn.style().unpolish(self.sync_btn)
@@ -3079,7 +3080,7 @@ class DraggableTitleBar(QWidget):
         # 更新父視窗的同步狀態
         if hasattr(self.parent_window, 'sync_enabled'):
             self.parent_window.sync_enabled = is_enabled
-            print(f"[REFRESH] 視窗 '{self.parent_window.windowTitle()}' 同步接收狀態已更新: {is_enabled}")
+            logger.debug(f"[REFRESH] 視窗 '{self.parent_window.windowTitle()}' 同步接收狀態已更新: {is_enabled}")
             
             # [TOOL] 新增：立即更新標題（同步狀態改變時）
             if hasattr(self.parent_window, 'update_window_title'):
@@ -3093,11 +3094,11 @@ class DraggableTitleBar(QWidget):
         if is_enabled:
             self.linkage_btn.setText("L")
             self.linkage_btn.setToolTip("個別連動：啟用 (L)")
-            print(f"[LINKAGE] 個別連動已啟用 (L)")
+            logger.debug(f"[LINKAGE] 個別連動已啟用 (L)")
         else:
             self.linkage_btn.setText("X")
             self.linkage_btn.setToolTip("個別連動：停用 (X)")
-            print(f"[LINKAGE] 個別連動已停用 (X)")
+            logger.debug(f"[LINKAGE] 個別連動已停用 (X)")
         
         # 強制重新應用樣式確保顏色更新
         self.linkage_btn.style().unpolish(self.linkage_btn)
@@ -3107,7 +3108,7 @@ class DraggableTitleBar(QWidget):
         # 通知分析模組更新連動狀態
         if hasattr(self.parent_window, 'set_linkage_enabled'):
             self.parent_window.set_linkage_enabled(is_enabled)
-            print(f"[LINKAGE] 視窗 '{self.parent_window.windowTitle()}' 個別連動狀態已更新: {is_enabled}")
+            logger.debug(f"[LINKAGE] 視窗 '{self.parent_window.windowTitle()}' 個別連動狀態已更新: {is_enabled}")
     
     def toggle_driver_lap_sync(self):
         """切換車手與圈數同步狀態（僅遙測模組）"""
@@ -3117,11 +3118,11 @@ class DraggableTitleBar(QWidget):
         if is_enabled:
             self.driver_lap_sync_btn.setText("D")
             self.driver_lap_sync_btn.setToolTip("與主視窗同步車手與圈數：啟用 (D)")
-            print(f"[DRIVER_LAP_SYNC] 車手與圈數同步已啟用 (D)")
+            logger.debug(f"[DRIVER_LAP_SYNC] 車手與圈數同步已啟用 (D)")
         else:
             self.driver_lap_sync_btn.setText("X")
             self.driver_lap_sync_btn.setToolTip("與主視窗同步車手與圈數：停用 (X)")
-            print(f"[DRIVER_LAP_SYNC] 車手與圈數同步已停用 (X)")
+            logger.debug(f"[DRIVER_LAP_SYNC] 車手與圈數同步已停用 (X)")
         
         # 強制重新應用樣式確保顏色更新
         self.driver_lap_sync_btn.style().unpolish(self.driver_lap_sync_btn)
@@ -3396,7 +3397,7 @@ class DraggableTitleBar(QWidget):
         - 遍歷所有子 QPushButton 以斷開所有 clicked 信號
         """
         try:
-            print(f"[CLEANUP] 開始清理 DraggableTitleBar 資源...")
+            logger.debug(f"[CLEANUP] 開始清理 DraggableTitleBar 資源...")
             
             # 🔧 步驟1: 遍歷所有子 QPushButton 並斷開 clicked 信號
             # 這樣可以處理實例屬性按鈕和局部變數按鈕
@@ -3406,16 +3407,16 @@ class DraggableTitleBar(QWidget):
                 try:
                     child.clicked.disconnect()
                     button_count += 1
-                    print(f"[CLEANUP]   ✅ 斷開按鈕信號: {child.objectName() or '未命名按鈕'}")
+                    logger.debug(f"[CLEANUP]   ✅ 斷開按鈕信號: {child.objectName() or '未命名按鈕'}")
                 except TypeError:
                     # 信號已經斷開或無連接
                     pass
             
-            print(f"[CLEANUP]   📊 共斷開 {button_count} 個按鈕信號")
+            logger.debug(f"[CLEANUP]   📊 共斷開 {button_count} 個按鈕信號")
             
             # 🔧 步驟2: 清除 parent_window 循環引用
             if hasattr(self, 'parent_window'):
-                print(f"[CLEANUP]   ✅ 清除 parent_window 引用")
+                logger.debug(f"[CLEANUP]   ✅ 清除 parent_window 引用")
                 self.parent_window = None
             
             # 🔧 步驟3: 清除其他對象引用
@@ -3424,10 +3425,10 @@ class DraggableTitleBar(QWidget):
             self.linkage_btn = None
             self.popout_btn = None
             
-            print(f"[CLEANUP] ✅ DraggableTitleBar 資源清理完成")
+            logger.debug(f"[CLEANUP] ✅ DraggableTitleBar 資源清理完成")
             
         except Exception as e:
-            print(f"[WARNING] DraggableTitleBar cleanup 失敗: {e}")
+            logger.warning(f"[WARNING] DraggableTitleBar cleanup 失敗: {e}")
             import traceback
             traceback.print_exc()
 
@@ -3452,12 +3453,12 @@ class PopoutSubWindow(QMdiSubWindow):
         self._parameter_provider = parameter_provider
         
         # [DEBUG] 方案A調試：驗證 analysis_module 保存
-        print(f"[POPOUT_INIT] Title: '{title}'")
-        print(f"[POPOUT_INIT] analysis_module parameter: {type(analysis_module).__name__ if analysis_module else None}")
-        print(f"[POPOUT_INIT] analysis_module id: {id(analysis_module) if analysis_module else 'None'}")
+        logger.debug(f"[POPOUT_INIT] Title: '{title}'")
+        logger.debug(f"[POPOUT_INIT] analysis_module parameter: {type(analysis_module).__name__ if analysis_module else None}")
+        logger.debug(f"[POPOUT_INIT] analysis_module id: {id(analysis_module) if analysis_module else 'None'}")
         if analysis_module and hasattr(analysis_module, 'analysis_type'):
-            print(f"[POPOUT_INIT] analysis_module.analysis_type: {analysis_module.analysis_type}")
-        print(f"[POPOUT_INIT] self.analysis_module stored: {type(self.analysis_module).__name__ if self.analysis_module else None}")
+            logger.debug(f"[POPOUT_INIT] analysis_module.analysis_type: {analysis_module.analysis_type}")
+        logger.debug(f"[POPOUT_INIT] self.analysis_module stored: {type(self.analysis_module).__name__ if self.analysis_module else None}")
         logger.info(f"[POPOUT_INIT] PopoutSubWindow created: title='{title}', module={type(analysis_module).__name__ if analysis_module else None}")
 
         # 確保關閉後釋放資源並從父層列表移除
@@ -3490,7 +3491,7 @@ class PopoutSubWindow(QMdiSubWindow):
                     # [TOOL] 新增：設置參數提供者（如果沒有傳入的話）
                     if not self._parameter_provider:
                         self._parameter_provider = MainWindowParameterProvider(current_parent)
-                    print(f"[LINK] [INIT] {title} 已找到主視窗引用")
+                    logger.debug(f"[LINK] [INIT] {title} 已找到主視窗引用")
                     break
                 current_parent = current_parent.parent()
         
@@ -3503,7 +3504,7 @@ class PopoutSubWindow(QMdiSubWindow):
             if hasattr(self.analysis_module, 'parameters_updated'):
                 self.analysis_module.parameters_updated.connect(self._handle_parameters_updated)
                 
-            print(f"[SYNC] [INIT] {title} 已連接模組同步信號")
+            logger.debug(f"[SYNC] [INIT] {title} 已連接模組同步信號")
             
             # [FIX] 立即進行一次初始同步，確保模組獲得當前參數
             try:
@@ -3511,10 +3512,10 @@ class PopoutSubWindow(QMdiSubWindow):
                     year = int(self._parameter_provider.get_current_year())
                     race = self._parameter_provider.get_current_race()
                     session = self._parameter_provider.get_current_session()
-                    print(f"[SYNC] [INIT] 進行初始參數同步: {year} {race} {session}")
+                    logger.debug(f"[SYNC] [INIT] 進行初始參數同步: {year} {race} {session}")
                     self.analysis_module.update_parameters(year, race, session)
             except Exception as e:
-                print(f"[WARNING] [INIT] 初始同步失敗: {e}")
+                logger.warning(f"[WARNING] [INIT] 初始同步失敗: {e}")
         
         # 初始化最小化狀態
         self.is_minimized = False
@@ -3531,7 +3532,7 @@ class PopoutSubWindow(QMdiSubWindow):
         self.setAttribute(Qt.WA_Hover, True)
         self.setAttribute(Qt.WA_MouseTracking, True)
         
-        print(f"[OK] [INIT] PopoutSubWindow '{title}' 初始化完成 - 包含調整大小支援")
+        logger.debug(f"[OK] [INIT] PopoutSubWindow '{title}' 初始化完成 - 包含調整大小支援")
     
     def _extract_module_name_from_title(self, title):
         """從標題中提取模組名稱"""
@@ -3568,47 +3569,47 @@ class PopoutSubWindow(QMdiSubWindow):
                 return title.strip()
                 
         except Exception as e:
-            print(f"[WARNING] [TITLE] 提取模組名稱失敗: {e}, 使用原標題: {title}")
+            logger.warning(f"[WARNING] [TITLE] 提取模組名稱失敗: {e}, 使用原標題: {title}")
             return title
         
     def _handle_module_error(self, error_message):
         """處理模組錯誤"""
-        print(f"[ERROR] [MODULE] {self.windowTitle()} 模組錯誤: {error_message}")
+        logger.error(f"[ERROR] [MODULE] {self.windowTitle()} 模組錯誤: {error_message}")
     
     def _handle_parameters_updated(self, params):
         """處理模組參數更新"""
-        print(f"[REFRESH] [MODULE] {self.windowTitle()} 參數已更新: {params}")
+        logger.debug(f"[REFRESH] [MODULE] {self.windowTitle()} 參數已更新: {params}")
     
     def update_current_window(self):
         """更新當前視窗 - 委託給模組處理"""
-        print(f"[UPDATE_DEBUG] ========== 視窗更新請求 ==========")
-        print(f"[UPDATE_DEBUG] 視窗標題: {self.windowTitle()}")
-        print(f"[UPDATE_DEBUG] 是否有 analysis_module: {self.analysis_module is not None}")
-        print(f"🚨 [SYNC_DEBUG] sync_enabled 值: {getattr(self, 'sync_enabled', 'N/A')}")
-        print(f"🚨 [SYNC_DEBUG] _parameter_provider 存在: {hasattr(self, '_parameter_provider') and self._parameter_provider is not None}")
+        logger.debug(f"[UPDATE_DEBUG] ========== 視窗更新請求 ==========")
+        logger.debug(f"[UPDATE_DEBUG] 視窗標題: {self.windowTitle()}")
+        logger.debug(f"[UPDATE_DEBUG] 是否有 analysis_module: {self.analysis_module is not None}")
+        logger.debug(f"🚨 [SYNC_DEBUG] sync_enabled 值: {getattr(self, 'sync_enabled', 'N/A')}")
+        logger.debug(f"🚨 [SYNC_DEBUG] _parameter_provider 存在: {hasattr(self, '_parameter_provider') and self._parameter_provider is not None}")
         
         if self.analysis_module:
-            print(f"[UPDATE_DEBUG] 🎯 使用新版模組更新邏輯")
+            logger.debug(f"[UPDATE_DEBUG] 🎯 使用新版模組更新邏輯")
             # 如果有模組，委託給模組處理
             try:
                 params = {}
                 if self.sync_enabled and self._parameter_provider:
                     # 同步模式：使用主視窗參數
-                    print(f"🟢 [SYNC_DEBUG] 同步模式啟用 - 使用主視窗參數")
+                    logger.debug(f"🟢 [SYNC_DEBUG] 同步模式啟用 - 使用主視窗參數")
                     params = {
                         'year': int(self._parameter_provider.get_current_year()),  # 轉換為int
                         'race': self._parameter_provider.get_current_race(),
                         'session': self._parameter_provider.get_current_session()
                     }
-                    print(f"🟢 [SYNC_DEBUG] 主視窗參數: {params}")
+                    logger.debug(f"🟢 [SYNC_DEBUG] 主視窗參數: {params}")
                     # 更新本地參數
                     self.local_year = str(params['year'])  # 本地參數保持字符串
                     self.local_race = params['race'] 
                     self.local_session = params['session']
                 else:
                     # 非同步模式：使用本地參數
-                    print(f"🔴 [SYNC_DEBUG] 同步模式停用 - 使用本地參數")
-                    print(f"🔴 [SYNC_DEBUG] 本地參數: year={self.local_year}, race={self.local_race}, session={self.local_session}")
+                    logger.debug(f"🔴 [SYNC_DEBUG] 同步模式停用 - 使用本地參數")
+                    logger.debug(f"🔴 [SYNC_DEBUG] 本地參數: year={self.local_year}, race={self.local_race}, session={self.local_session}")
                     params = {
                         'year': int(self.local_year),  # 轉換為int
                         'race': self.local_race,
@@ -3618,24 +3619,24 @@ class PopoutSubWindow(QMdiSubWindow):
                 # 更新標題
                 self.update_window_title()
                 
-                print(f"[REFRESH] [{self.windowTitle()}] 更新視窗數據: {params['year']} {params['race']} {params['session']}")
+                logger.debug(f"[REFRESH] [{self.windowTitle()}] 更新視窗數據: {params['year']} {params['race']} {params['session']}")
                 
                 # [TOOL] 重新載入模組而不是委託更新
                 success = self.analysis_module.update_parameters(**params)
                 if success:
-                    print(f"[OK] [MODULE] {self.windowTitle()} 模組更新成功")
+                    logger.debug(f"[OK] [MODULE] {self.windowTitle()} 模組更新成功")
                 else:
-                    print(f"[WARNING] [MODULE] {self.windowTitle()} 模組更新失敗")
+                    logger.warning(f"[WARNING] [MODULE] {self.windowTitle()} 模組更新失敗")
                 return success
                 
             except Exception as e:
-                print(f"[ERROR] [MODULE] {self.windowTitle()} 更新異常: {e}")
+                logger.error(f"[ERROR] [MODULE] {self.windowTitle()} 更新異常: {e}")
                 return False
         else:
             # 舊版模式：直接調用原有邏輯
-            print(f"[UPDATE_DEBUG] ⚠️ 使用舊版更新邏輯")
-            print(f"[UPDATE_DEBUG] 原因: analysis_module 為 None")
-            print(f"[WARNING] [LEGACY] {self.windowTitle()} 使用舊版更新模式")
+            logger.debug(f"[UPDATE_DEBUG] ⚠️ 使用舊版更新邏輯")
+            logger.debug(f"[UPDATE_DEBUG] 原因: analysis_module 為 None")
+            logger.warning(f"[WARNING] [LEGACY] {self.windowTitle()} 使用舊版更新模式")
             return self._legacy_update_current_window()
     
     def update_window_title(self):
@@ -3656,8 +3657,8 @@ class PopoutSubWindow(QMdiSubWindow):
                 
                 # 傳遞當前參數給模組的 get_window_title 方法
                 new_title = self.analysis_module.get_window_title(year, race, session)
-                print(f"[TITLE] [MODULE] 使用模組標題: {new_title}")
-                print(f"[TITLE] [MODULE] 參數: {year} {race} {session}")
+                logger.debug(f"[TITLE] [MODULE] 使用模組標題: {new_title}")
+                logger.debug(f"[TITLE] [MODULE] 參數: {year} {race} {session}")
             else:
                 # 舊版邏輯：保持原始格式，只更新參數部分
                 if hasattr(self, 'original_title') and self.original_title:
@@ -3666,7 +3667,7 @@ class PopoutSubWindow(QMdiSubWindow):
                 else:
                     # 最後備選方案
                     new_title = f"{self.module_name}_{self.local_year}_{self.local_race}_{self.local_session}"
-                print(f"[TITLE] [LEGACY] 使用舊版標題格式: {new_title}")
+                logger.debug(f"[TITLE] [LEGACY] 使用舊版標題格式: {new_title}")
             
             self.setWindowTitle(new_title)
             
@@ -3674,10 +3675,10 @@ class PopoutSubWindow(QMdiSubWindow):
             if hasattr(self, 'title_bar') and self.title_bar:
                 self.title_bar.update_title(new_title)
                 
-            print(f"[LABEL] [TITLE] 標題已更新: {new_title}")
+            logger.debug(f"[LABEL] [TITLE] 標題已更新: {new_title}")
             
         except Exception as e:
-            print(f"[ERROR] [TITLE] 標題更新失敗: {e}")
+            logger.error(f"[ERROR] [TITLE] 標題更新失敗: {e}")
     
     def toggle_x_sync(self, enabled: Optional[bool] = None) -> bool:
         """切換或設定 X 軸同步狀態，支援還原快照時直接指定狀態。"""
@@ -3714,7 +3715,7 @@ class PopoutSubWindow(QMdiSubWindow):
         # 立即更新標題
         self.update_window_title()
         
-        print(f"[REFRESH] [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
+        logger.debug(f"[REFRESH] [LOCAL] {self.windowTitle()} 本地參數已更新: {self.local_year} {self.local_race} {self.local_session}")
     
     def _get_calendar_events_for_year(self, year: int) -> List[SeasonEvent]:
         if self.main_window and hasattr(self.main_window, "_get_calendar_events"):
@@ -3723,7 +3724,7 @@ class PopoutSubWindow(QMdiSubWindow):
             try:
                 return self.main_window._season_provider.get_completed_events(year)
             except SeasonCalendarError as exc:
-                print(f"[CALENDAR] 子視窗取得日曆失敗: {exc}")
+                logger.debug(f"[CALENDAR] 子視窗取得日曆失敗: {exc}")
         return []
 
     def _format_race_display(self, event: SeasonEvent) -> str:
@@ -3856,7 +3857,7 @@ class PopoutSubWindow(QMdiSubWindow):
                 race = self._parameter_provider.get_current_race()
                 session = self._parameter_provider.get_current_session()
             
-            print(f"[REFRESH] [LEGACY] {self.windowTitle()} 舊版更新: {year} {race} {session}")
+            logger.debug(f"[REFRESH] [LEGACY] {self.windowTitle()} 舊版更新: {year} {race} {session}")
             
             # 如果內容widget有更新方法，調用它
             if self.content_widget and hasattr(self.content_widget, 'update'):
@@ -3866,7 +3867,7 @@ class PopoutSubWindow(QMdiSubWindow):
             return True
             
         except Exception as e:
-            print(f"[ERROR] [LEGACY] 舊版更新失敗: {e}")
+            logger.error(f"[ERROR] [LEGACY] 舊版更新失敗: {e}")
             return False
         
         # [TEST][HOT] 設置最小尺寸防止縮小到無法使用 - 已取消限制
@@ -4299,7 +4300,7 @@ class PopoutSubWindow(QMdiSubWindow):
             # 從模組讀取初始同步狀態
             initial_sync_state = getattr(self.analysis_module, 'sync_driver_lap_enabled', True)
             self.title_bar.driver_lap_sync_btn.setChecked(initial_sync_state)
-            print(f"[DRIVER_LAP_SYNC] 遙測模組檢測到，顯示車手與圈數同步按鈕，初始狀態: {initial_sync_state}")
+            logger.debug(f"[DRIVER_LAP_SYNC] 遙測模組檢測到，顯示車手與圈數同步按鈕，初始狀態: {initial_sync_state}")
         
         # 確保標題欄使用正確的 QSS
         self.title_bar.setStyleSheet(self.styleSheet())
@@ -4525,7 +4526,7 @@ class PopoutSubWindow(QMdiSubWindow):
         """處理賽事變更"""
         # ✅ 調試點 1: 方法入口
         logger.info(f"🔵 [DEBUG]    on_race_changed 被調用: race={race}")
-        print(f"🔵 [DEBUG]    on_race_changed 被調用: race={race}")
+        logger.debug(f"🔵 [DEBUG]    on_race_changed 被調用: race={race}")
         
         window_title = self.windowTitle()
         #print(f"[FINISH] [{window_title}] 賽事變更為: {race}")
@@ -4547,7 +4548,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         # Debounced parameter broadcast for race change
         logger.info("🔵 [DEBUG]    on_race_changed - scheduling parameter broadcast")
-        print("🔵 [DEBUG]    on_race_changed - scheduling parameter broadcast")
+        logger.debug("🔵 [DEBUG]    on_race_changed - scheduling parameter broadcast")
         self._schedule_parameter_broadcast("race_changed")
 
             
@@ -4555,7 +4556,7 @@ class PopoutSubWindow(QMdiSubWindow):
         """處理賽段變更"""
         # ✅ 調試點 1: 方法入口
         logger.info(f"🔵 [DEBUG]    on_session_changed 被調用: session={session}")
-        print(f"🔵 [DEBUG]    on_session_changed 被調用: session={session}")
+        logger.debug(f"🔵 [DEBUG]    on_session_changed 被調用: session={session}")
         
         window_title = self.windowTitle()
         #print(f"[F1] [{window_title}] 賽段變更為: {session}")
@@ -4569,7 +4570,7 @@ class PopoutSubWindow(QMdiSubWindow):
         
         # Debounced parameter broadcast for session change
         logger.info("🔵 [DEBUG]    on_session_changed - scheduling parameter broadcast")
-        print("🔵 [DEBUG]    on_session_changed - scheduling parameter broadcast")
+        logger.debug("🔵 [DEBUG]    on_session_changed - scheduling parameter broadcast")
         self._schedule_parameter_broadcast("session_changed")
 
             
@@ -4602,7 +4603,7 @@ class PopoutSubWindow(QMdiSubWindow):
         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
         
-        print(f"[REFRESH] [{window_title}] 同步參數到其他視窗: {year} {race} {session}")
+        logger.debug(f"[REFRESH] [{window_title}] 同步參數到其他視窗: {year} {race} {session}")
         
         # 同步到同一MDI區域中的其他子視窗
         synced_count = 0
@@ -4620,9 +4621,9 @@ class PopoutSubWindow(QMdiSubWindow):
                         }
                         subwindow.set_analysis_parameters(params, skip_sync=True)
                         synced_count += 1
-                        print(f"[REFRESH] 同步到子視窗: {subwindow.windowTitle()}")
+                        logger.debug(f"[REFRESH] 同步到子視窗: {subwindow.windowTitle()}")
         
-        print(f"[OK] 完成子視窗同步，共更新 {synced_count} 個視窗")
+        logger.debug(f"[OK] 完成子視窗同步，共更新 {synced_count} 個視窗")
             
     def _legacy_update_current_window(self):
         """舊版更新當前視窗的分析數據 - 使用安全的參數獲取"""
@@ -4633,7 +4634,7 @@ class PopoutSubWindow(QMdiSubWindow):
         race = getattr(self, 'local_race', None) or self.get_current_race_from_main_window()
         session = getattr(self, 'local_session', None) or self.get_current_session_from_main_window()
         
-        print(f"[REFRESH] [{window_title}] 舊版更新視窗數據: {year} {race} {session}")
+        logger.debug(f"[REFRESH] [{window_title}] 舊版更新視窗數據: {year} {race} {session}")
         
         # 啟動資料載入流程
         self.load_race_data(year, race, session)
@@ -4645,11 +4646,11 @@ class PopoutSubWindow(QMdiSubWindow):
         
         if json_data:
             # JSON存在，直接使用
-            print(f"[OK] 找到JSON檔案，直接載入資料")
+            logger.debug(f"[OK] 找到JSON檔案，直接載入資料")
             self.update_charts_and_analysis(json_data)
         else:
             # Step 2: 無JSON則進行CLI參數呼叫
-            print(f"[ERROR] 未找到JSON檔案，啟動CLI分析...")
+            logger.error(f"[ERROR] 未找到JSON檔案，啟動CLI分析...")
             self.call_cli_analysis(year, race, session)
             # 注意：JSON監控已在 call_cli_analysis 中啟動
     
@@ -4666,7 +4667,7 @@ class PopoutSubWindow(QMdiSubWindow):
                 with open(rain_analysis_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                print(f"[ERROR] JSON載入錯誤: {e}")
+                logger.error(f"[ERROR] JSON載入錯誤: {e}")
         
         # 2. 備用搜尋 - 構建JSON檔案搜尋模式
         json_patterns = [
@@ -4682,15 +4683,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 json_files = [f for f in json_files if f.lower().endswith('.json')]
                 if json_files:
                     json_file = json_files[0]  # 取第一個符合的檔案
-                    print(f"[FILES] 找到JSON檔案: {json_file}")
+                    logger.debug(f"[FILES] 找到JSON檔案: {json_file}")
                     try:
                         with open(json_file, 'r', encoding='utf-8') as f:
                             return json.load(f)
                     except Exception as e:
-                        print(f"[ERROR] JSON載入錯誤: {e}")
+                        logger.error(f"[ERROR] JSON載入錯誤: {e}")
                         continue
         
-        print(f"[WARNING] 未找到適合的JSON檔案: {year}/{race}/{session}")
+        logger.warning(f"[WARNING] 未找到適合的JSON檔案: {year}/{race}/{session}")
         return None
     
     def get_races_for_year_in_subwindow(self, year):
@@ -4700,10 +4701,10 @@ class PopoutSubWindow(QMdiSubWindow):
             events = self._get_calendar_events_for_year(year_int)
             self._rebuild_race_mapping(events)
             race_labels = [self._format_race_display(event) for event in events]
-            print(f"[SUBWINDOW] 載入 {year_int} 年的賽事列表: {len(race_labels)} 個賽事")
+            logger.debug(f"[SUBWINDOW] 載入 {year_int} 年的賽事列表: {len(race_labels)} 個賽事")
             return race_labels
         except Exception as e:
-            print(f"[SUBWINDOW ERROR] 獲取賽事列表時出錯: {e}")
+            logger.debug(f"[SUBWINDOW ERROR] 獲取賽事列表時出錯: {e}")
             return ["Japan", "Great Britain", "Monaco"]  # 回退列表
     
     def update_races_for_year(self, year):
@@ -4761,7 +4762,7 @@ class PopoutSubWindow(QMdiSubWindow):
 
         self._update_session_combo(preserve_session_code=self.local_session)
 
-        print(f"[SUBWINDOW] 已更新賽事列表，當前選擇: {self.get_selected_race_key()}")
+        logger.debug(f"[SUBWINDOW] 已更新賽事列表，當前選擇: {self.get_selected_race_key()}")
     
     def call_cli_analysis(self, year, race, session):
         """呼叫CLI參數進行分析 - 使用背景執行緒避免GUI凍結"""
@@ -4787,14 +4788,14 @@ class PopoutSubWindow(QMdiSubWindow):
         # 開始等待 JSON 產生
         self.start_json_monitoring(year, race, session)
         
-        print(f"[START] CLI 分析執行緒已啟動: {year} {race} {session}")
+        logger.debug(f"[START] CLI 分析執行緒已啟動: {year} {race} {session}")
     
     def stop_cli_analysis(self):
         """停止 CLI 分析"""
         if hasattr(self, 'cli_worker') and self.cli_worker and self.cli_worker.isRunning():
             self.cli_worker.stop()
             self.cli_worker.wait(5000)  # 等待最多 5 秒
-            print("[TEST] CLI 分析已停止")
+            logger.debug("[TEST] CLI 分析已停止")
         
         # 停止 JSON 監控
         self.stop_json_monitoring()
@@ -4822,13 +4823,13 @@ class PopoutSubWindow(QMdiSubWindow):
     
     def on_analysis_progress(self, message):
         """處理分析進度更新"""
-        print(f"[STATS] {message}")
+        logger.debug(f"[STATS] {message}")
         if hasattr(self, 'progress_dialog') and self.progress_dialog:
             self.progress_dialog.setLabelText(message)
     
     def on_analysis_output(self, output):
         """處理分析輸出"""
-        print(f"[UPLOAD] CLI 輸出: {output}")
+        logger.debug(f"[UPLOAD] CLI 輸出: {output}")
         # 可以在這裡處理特定的輸出訊息來更新進度
         if "下載" in output or "Download" in output.lower():
             if hasattr(self, 'progress_dialog') and self.progress_dialog:
@@ -4839,13 +4840,13 @@ class PopoutSubWindow(QMdiSubWindow):
     
     def on_analysis_completed(self, success, message):
         """處理分析完成"""
-        print(f"[OK] CLI 分析完成: {success}, {message}")
+        logger.debug(f"[OK] CLI 分析完成: {success}, {message}")
         
         if success:
             if hasattr(self, 'progress_dialog') and self.progress_dialog:
                 self.progress_dialog.setLabelText("分析完成，正在載入結果...")
         else:
-            print(f"[ERROR] CLI 分析失敗: {message}")
+            logger.error(f"[ERROR] CLI 分析失敗: {message}")
             from core.gui_i18n import tr
             QMessageBox.warning(self, tr('analysis_failed', 'Analysis Failed'), f"{tr('cli_error', 'Error occurred during CLI analysis')}:\n{message}")
             self.hide_analysis_progress()
@@ -4869,7 +4870,7 @@ class PopoutSubWindow(QMdiSubWindow):
         self.max_wait_timer.timeout.connect(self.on_json_wait_timeout)
         self.max_wait_timer.start(120000)  # 120秒超時
         
-        print(f"⏳ 開始監控 JSON 檔案產生... (最多等待120秒)")
+        logger.debug(f"⏳ 開始監控 JSON 檔案產生... (最多等待120秒)")
     
     def stop_json_monitoring(self):
         """停止 JSON 監控"""
@@ -4887,7 +4888,7 @@ class PopoutSubWindow(QMdiSubWindow):
             # JSON已產生，停止監控
             self.stop_json_monitoring()
             
-            print(f"[OK] JSON檔案已產生，開始載入資料")
+            logger.debug(f"[OK] JSON檔案已產生，開始載入資料")
             
             # 更新進度顯示
             if hasattr(self, 'progress_dialog') and self.progress_dialog:
@@ -4899,14 +4900,14 @@ class PopoutSubWindow(QMdiSubWindow):
             # 隱藏進度顯示
             self.hide_analysis_progress()
         else:
-            print(f"⏳ 繼續等待JSON檔案產生...")
+            logger.debug(f"⏳ 繼續等待JSON檔案產生...")
     
     def on_json_wait_timeout(self):
         """JSON等待超時處理"""
         self.stop_json_monitoring()
         self.hide_analysis_progress()
         
-        print(f"[TIME] JSON等待超時，分析可能失敗或仍在進行中")
+        logger.debug(f"[TIME] JSON等待超時，分析可能失敗或仍在進行中")
         
         # 顯示超時警告
         QMessageBox.warning(
@@ -4917,29 +4918,29 @@ class PopoutSubWindow(QMdiSubWindow):
     
     def update_charts_and_analysis(self, json_data):
         """更新圖表和分析結果"""
-        print(f"[STATS] 開始更新圖表和分析結果...")
+        logger.debug(f"[STATS] 開始更新圖表和分析結果...")
         
         try:
             # 檢查當前視窗是否為速度分析視窗
             window_title = self.windowTitle()
-            print(f"[CHART UPDATE] 更新視窗: {window_title}")
+            logger.debug(f"[CHART UPDATE] 更新視窗: {window_title}")
             
             # ✅ 修復：添加日文翻譯支援
             # ⚠️ 注意順序：先檢查更具體的「加速度分析」，再檢查「速度分析」（避免誤判）
             if '加速度分析' in window_title or 'Acceleration Analysis' in window_title or 'アクセラレーション分析' in window_title or '加速度分析' in window_title:
-                print(f"[ACCELERATION UPDATE] 檢測到加速度分析視窗，使用專用更新邏輯")
+                logger.debug(f"[ACCELERATION UPDATE] 檢測到加速度分析視窗，使用專用更新邏輯")
                 self._update_acceleration_analysis_chart(json_data)
             elif '速度分析' in window_title or 'Speed Analysis' in window_title or '速度分析' in window_title:
-                print(f"[SPEED UPDATE] 檢測到速度分析視窗，使用專用更新邏輯")
+                logger.debug(f"[SPEED UPDATE] 檢測到速度分析視窗，使用專用更新邏輯")
                 self._update_speed_analysis_chart(json_data)
             elif '油門分析' in window_title or 'Throttle Analysis' in window_title or 'スロットル分析' in window_title:
-                print(f"[THROTTLE UPDATE] 檢測到油門分析視窗，使用專用更新邏輯")
+                logger.debug(f"[THROTTLE UPDATE] 檢測到油門分析視窗，使用專用更新邏輯")
                 self._update_throttle_analysis_chart(json_data)
             elif 'RPM分析' in window_title or 'RPM Analysis' in window_title or 'RPM分析' in window_title:
-                print(f"[RPM UPDATE] 檢測到RPM分析視窗，使用專用更新邏輯")
+                logger.debug(f"[RPM UPDATE] 檢測到RPM分析視窗，使用專用更新邏輯")
                 self._update_rpm_analysis_chart(json_data)
             elif '檔位分析' in window_title or 'Gear Analysis' in window_title or 'ギア分析' in window_title:
-                print(f"[GEAR UPDATE] 檢測到檔位分析視窗，使用專用更新邏輯")
+                logger.debug(f"[GEAR UPDATE] 檢測到檔位分析視窗，使用專用更新邏輯")
                 self._update_gear_analysis_chart(json_data)
             else:
                 # 更新遙測圖表
@@ -4954,16 +4955,16 @@ class PopoutSubWindow(QMdiSubWindow):
                 if 'analysis_results' in json_data:
                     self.update_analysis_data(json_data['analysis_results'])
                 
-            print(f"[OK] 圖表和分析結果更新完成")
+            logger.debug(f"[OK] 圖表和分析結果更新完成")
             
         except Exception as e:
-            print(f"[ERROR] 圖表更新錯誤: {e}")
+            logger.error(f"[ERROR] 圖表更新錯誤: {e}")
             import traceback
             traceback.print_exc()
     
     def _update_speed_analysis_chart(self, json_data):
         """更新速度分析圖表的專用方法"""
-        print(f"[SPEED UPDATE] ========== 開始更新速度分析圖表 ==========")
+        logger.debug(f"[SPEED UPDATE] ========== 開始更新速度分析圖表 ==========")
         
         try:
             # 尋找速度分析圖表組件
@@ -4986,15 +4987,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 return widgets
             
             speed_widgets = find_speed_widgets(self)
-            print(f"[SPEED UPDATE] 找到 {len(speed_widgets)} 個速度分析圖表組件")
+            logger.debug(f"[SPEED UPDATE] 找到 {len(speed_widgets)} 個速度分析圖表組件")
             
             if speed_widgets:
                 for i, widget in enumerate(speed_widgets):
-                    print(f"[SPEED UPDATE] 更新第 {i+1} 個速度分析圖表")
+                    logger.debug(f"[SPEED UPDATE] 更新第 {i+1} 個速度分析圖表")
                     
                     # 檢查是否有數據載入器
                     if hasattr(widget, 'speed_loader'):
-                        print(f"[SPEED UPDATE] 找到數據載入器，觸發重新載入")
+                        logger.debug(f"[SPEED UPDATE] 找到數據載入器，觸發重新載入")
                         
                         # 獲取當前參數
                         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
@@ -5010,9 +5011,9 @@ class PopoutSubWindow(QMdiSubWindow):
                         lap2 = self.lap2_spinbox.value()
                         is_fastest = self.fastest_lap_checkbox.isChecked()
                         
-                        print(f"[SPEED UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
-                        print(f"[SPEED UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
-                        print(f"[SPEED UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()}, data: {driver2_data})")
+                        logger.debug(f"[SPEED UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        logger.debug(f"[SPEED UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
+                        logger.debug(f"[SPEED UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()}, data: {driver2_data})")
                         
                         # 重新載入數據（使用實際選擇的車手）
                         widget.speed_loader.load_speed_data(
@@ -5025,27 +5026,27 @@ class PopoutSubWindow(QMdiSubWindow):
                             lap2=lap2,
                             is_fastest_lap=is_fastest
                         )
-                        print(f"[SPEED UPDATE] ✅ 已觸發數據重新載入")
+                        logger.debug(f"[SPEED UPDATE] ✅ 已觸發數據重新載入")
                     else:
-                        print(f"[SPEED UPDATE] ⚠️ 未找到數據載入器")
+                        logger.debug(f"[SPEED UPDATE] ⚠️ 未找到數據載入器")
                         
                         # 嘗試直接更新數據（使用JSON數據）
                         if json_data:
-                            print(f"[SPEED UPDATE] 嘗試直接使用JSON數據更新")
+                            logger.debug(f"[SPEED UPDATE] 嘗試直接使用JSON數據更新")
                             widget.update_speed_data(json_data)
             else:
-                print(f"[SPEED UPDATE] ⚠️ 未找到速度分析圖表組件")
+                logger.debug(f"[SPEED UPDATE] ⚠️ 未找到速度分析圖表組件")
                 
-            print(f"[SPEED UPDATE] ========== 速度分析圖表更新完成 ==========")
+            logger.debug(f"[SPEED UPDATE] ========== 速度分析圖表更新完成 ==========")
             
         except Exception as e:
-            print(f"[ERROR] [SPEED UPDATE] 速度分析圖表更新失敗: {e}")
+            logger.error(f"[ERROR] [SPEED UPDATE] 速度分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _update_throttle_analysis_chart(self, json_data):
         """更新油門分析圖表的專用方法"""
-        print(f"[THROTTLE UPDATE] ========== 開始更新油門分析圖表 ==========")
+        logger.debug(f"[THROTTLE UPDATE] ========== 開始更新油門分析圖表 ==========")
         
         try:
             # 尋找油門分析圖表組件
@@ -5068,15 +5069,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 return widgets
             
             throttle_widgets = find_throttle_widgets(self)
-            print(f"[THROTTLE UPDATE] 找到 {len(throttle_widgets)} 個油門分析圖表組件")
+            logger.debug(f"[THROTTLE UPDATE] 找到 {len(throttle_widgets)} 個油門分析圖表組件")
             
             if throttle_widgets:
                 for i, widget in enumerate(throttle_widgets):
-                    print(f"[THROTTLE UPDATE] 更新第 {i+1} 個油門分析圖表")
+                    logger.debug(f"[THROTTLE UPDATE] 更新第 {i+1} 個油門分析圖表")
                     
                     # 檢查是否有數據載入器
                     if hasattr(widget, 'throttle_loader'):
-                        print(f"[THROTTLE UPDATE] 找到數據載入器，觸發重新載入")
+                        logger.debug(f"[THROTTLE UPDATE] 找到數據載入器，觸發重新載入")
                         
                         # 獲取當前參數
                         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
@@ -5092,9 +5093,9 @@ class PopoutSubWindow(QMdiSubWindow):
                         lap2 = self.lap2_spinbox.value()
                         is_fastest = self.fastest_lap_checkbox.isChecked()
                         
-                        print(f"[THROTTLE UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
-                        print(f"[THROTTLE UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
-                        print(f"[THROTTLE UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()})")
+                        logger.debug(f"[THROTTLE UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        logger.debug(f"[THROTTLE UPDATE] 🎯 車手1 combo 值: '{driver1}' (索引: {self.driver1_combo.currentIndex()})")
+                        logger.debug(f"[THROTTLE UPDATE] 🎯 車手2 combo 值: '{driver2}' (索引: {self.driver2_combo.currentIndex()})")
                         
                         # 重新載入數據（使用實際選擇的車手）
                         widget.throttle_loader.load_throttle_data(
@@ -5107,27 +5108,27 @@ class PopoutSubWindow(QMdiSubWindow):
                             lap2=lap2,
                             is_fastest_lap=is_fastest
                         )
-                        print(f"[THROTTLE UPDATE] ✅ 已觸發數據重新載入")
+                        logger.debug(f"[THROTTLE UPDATE] ✅ 已觸發數據重新載入")
                     else:
-                        print(f"[THROTTLE UPDATE] ⚠️ 未找到數據載入器")
+                        logger.debug(f"[THROTTLE UPDATE] ⚠️ 未找到數據載入器")
                         
                         # 嘗試直接更新數據（使用JSON數據）
                         if json_data:
-                            print(f"[THROTTLE UPDATE] 嘗試直接使用JSON數據更新")
+                            logger.debug(f"[THROTTLE UPDATE] 嘗試直接使用JSON數據更新")
                             widget.update_throttle_data(json_data)
             else:
-                print(f"[THROTTLE UPDATE] ⚠️ 未找到油門分析圖表組件")
+                logger.debug(f"[THROTTLE UPDATE] ⚠️ 未找到油門分析圖表組件")
                 
-            print(f"[THROTTLE UPDATE] ========== 油門分析圖表更新完成 ==========")
+            logger.debug(f"[THROTTLE UPDATE] ========== 油門分析圖表更新完成 ==========")
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE UPDATE] 油門分析圖表更新失敗: {e}")
+            logger.error(f"[ERROR] [THROTTLE UPDATE] 油門分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _update_rpm_analysis_chart(self, json_data):
         """更新RPM分析圖表的專用方法"""
-        print(f"[RPM UPDATE] ========== 開始更新RPM分析圖表 ==========")
+        logger.debug(f"[RPM UPDATE] ========== 開始更新RPM分析圖表 ==========")
         
         try:
             # 尋找RPM分析圖表組件
@@ -5150,15 +5151,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 return widgets
             
             rpm_widgets = find_rpm_widgets(self)
-            print(f"[RPM UPDATE] 找到 {len(rpm_widgets)} 個RPM分析圖表組件")
+            logger.debug(f"[RPM UPDATE] 找到 {len(rpm_widgets)} 個RPM分析圖表組件")
             
             if rpm_widgets:
                 for i, widget in enumerate(rpm_widgets):
-                    print(f"[RPM UPDATE] 更新第 {i+1} 個RPM分析圖表")
+                    logger.debug(f"[RPM UPDATE] 更新第 {i+1} 個RPM分析圖表")
                     
                     # 檢查是否有數據載入器
                     if hasattr(widget, 'rpm_loader'):
-                        print(f"[RPM UPDATE] 找到數據載入器，觸發重新載入")
+                        logger.debug(f"[RPM UPDATE] 找到數據載入器，觸發重新載入")
                         
                         # 獲取當前參數
                         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
@@ -5174,7 +5175,7 @@ class PopoutSubWindow(QMdiSubWindow):
                         lap2 = self.lap2_spinbox.value()
                         is_fastest = self.fastest_lap_checkbox.isChecked()
                         
-                        print(f"[RPM UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        logger.debug(f"[RPM UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
                         
                         # 重新載入數據（使用實際選擇的車手）
                         widget.rpm_loader.load_rpm_data(
@@ -5187,27 +5188,27 @@ class PopoutSubWindow(QMdiSubWindow):
                             lap2=lap2,
                             is_fastest_lap=is_fastest
                         )
-                        print(f"[RPM UPDATE] ✅ 已觸發數據重新載入")
+                        logger.debug(f"[RPM UPDATE] ✅ 已觸發數據重新載入")
                     else:
-                        print(f"[RPM UPDATE] ⚠️ 未找到數據載入器")
+                        logger.debug(f"[RPM UPDATE] ⚠️ 未找到數據載入器")
                         
                         # 嘗試直接更新數據（使用JSON數據）
                         if json_data:
-                            print(f"[RPM UPDATE] 嘗試直接使用JSON數據更新")
+                            logger.debug(f"[RPM UPDATE] 嘗試直接使用JSON數據更新")
                             widget.update_rpm_data(json_data)
             else:
-                print(f"[RPM UPDATE] ⚠️ 未找到RPM分析圖表組件")
+                logger.debug(f"[RPM UPDATE] ⚠️ 未找到RPM分析圖表組件")
                 
-            print(f"[RPM UPDATE] ========== RPM分析圖表更新完成 ==========")
+            logger.debug(f"[RPM UPDATE] ========== RPM分析圖表更新完成 ==========")
             
         except Exception as e:
-            print(f"[ERROR] [RPM UPDATE] RPM分析圖表更新失敗: {e}")
+            logger.error(f"[ERROR] [RPM UPDATE] RPM分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _update_gear_analysis_chart(self, json_data):
         """更新檔位分析圖表的專用方法"""
-        print(f"[GEAR UPDATE] ========== 開始更新檔位分析圖表 ==========")
+        logger.debug(f"[GEAR UPDATE] ========== 開始更新檔位分析圖表 ==========")
         
         try:
             # 尋找檔位分析圖表組件
@@ -5230,15 +5231,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 return widgets
             
             gear_widgets = find_gear_widgets(self)
-            print(f"[GEAR UPDATE] 找到 {len(gear_widgets)} 個檔位分析圖表組件")
+            logger.debug(f"[GEAR UPDATE] 找到 {len(gear_widgets)} 個檔位分析圖表組件")
             
             if gear_widgets:
                 for i, widget in enumerate(gear_widgets):
-                    print(f"[GEAR UPDATE] 更新第 {i+1} 個檔位分析圖表")
+                    logger.debug(f"[GEAR UPDATE] 更新第 {i+1} 個檔位分析圖表")
                     
                     # 檢查是否有數據載入器
                     if hasattr(widget, 'gear_loader'):
-                        print(f"[GEAR UPDATE] 找到數據載入器，觸發重新載入")
+                        logger.debug(f"[GEAR UPDATE] 找到數據載入器，觸發重新載入")
                         
                         # 獲取當前參數
                         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
@@ -5254,7 +5255,7 @@ class PopoutSubWindow(QMdiSubWindow):
                         lap2 = self.lap2_spinbox.value()
                         is_fastest = self.fastest_lap_checkbox.isChecked()
                         
-                        print(f"[GEAR UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
+                        logger.debug(f"[GEAR UPDATE] 🎯 使用實際選擇的參數: {driver1} vs {driver2}, 第{lap1}圈 vs 第{lap2}圈, 最速圈: {is_fastest}")
                         
                         # 重新載入數據（使用實際選擇的車手）
                         widget.gear_loader.load_gear_data(
@@ -5267,27 +5268,27 @@ class PopoutSubWindow(QMdiSubWindow):
                             lap2=lap2,
                             is_fastest_lap=is_fastest
                         )
-                        print(f"[GEAR UPDATE] ✅ 已觸發數據重新載入")
+                        logger.debug(f"[GEAR UPDATE] ✅ 已觸發數據重新載入")
                     else:
-                        print(f"[GEAR UPDATE] ⚠️ 未找到數據載入器")
+                        logger.debug(f"[GEAR UPDATE] ⚠️ 未找到數據載入器")
                         
                         # 嘗試直接更新數據（使用JSON數據）
                         if json_data:
-                            print(f"[GEAR UPDATE] 嘗試直接使用JSON數據更新")
+                            logger.debug(f"[GEAR UPDATE] 嘗試直接使用JSON數據更新")
                             widget.update_gear_data(json_data)
             else:
-                print(f"[GEAR UPDATE] ⚠️ 未找到檔位分析圖表組件")
+                logger.debug(f"[GEAR UPDATE] ⚠️ 未找到檔位分析圖表組件")
                 
-            print(f"[GEAR UPDATE] ========== 檔位分析圖表更新完成 ==========")
+            logger.debug(f"[GEAR UPDATE] ========== 檔位分析圖表更新完成 ==========")
             
         except Exception as e:
-            print(f"[ERROR] [GEAR UPDATE] 檔位分析圖表更新失敗: {e}")
+            logger.error(f"[ERROR] [GEAR UPDATE] 檔位分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
 
     def _update_acceleration_analysis_chart(self, json_data):
         """更新加速度分析圖表的專用方法"""
-        print(f"[ACCELERATION UPDATE] ========== 開始更新加速度分析圖表 ==========")
+        logger.debug(f"[ACCELERATION UPDATE] ========== 開始更新加速度分析圖表 ==========")
         
         try:
             # 尋找加速度分析圖表組件
@@ -5310,15 +5311,15 @@ class PopoutSubWindow(QMdiSubWindow):
                 return widgets
             
             acceleration_widgets = find_acceleration_widgets(self)
-            print(f"[ACCELERATION UPDATE] 找到 {len(acceleration_widgets)} 個加速度分析圖表組件")
+            logger.debug(f"[ACCELERATION UPDATE] 找到 {len(acceleration_widgets)} 個加速度分析圖表組件")
             
             if acceleration_widgets:
                 for i, widget in enumerate(acceleration_widgets):
-                    print(f"[ACCELERATION UPDATE] 更新第 {i+1} 個加速度分析圖表")
+                    logger.debug(f"[ACCELERATION UPDATE] 更新第 {i+1} 個加速度分析圖表")
                     
                     # 檢查是否有數據載入器
                     if hasattr(widget, 'acceleration_loader'):
-                        print(f"[ACCELERATION UPDATE] 找到數據載入器，觸發重新載入")
+                        logger.debug(f"[ACCELERATION UPDATE] 找到數據載入器，觸發重新載入")
                         
                         # 獲取當前參數
                         year = getattr(self, 'local_year', None) or self.get_current_year_from_main_window()
@@ -5332,8 +5333,8 @@ class PopoutSubWindow(QMdiSubWindow):
                         lap2 = getattr(self, 'local_lap2', None) or self.get_current_lap2_from_main_window()
                         is_fastest = getattr(self, 'local_is_fastest', False) or self.get_current_fastest_from_main_window()
                         
-                        print(f"[ACCELERATION UPDATE] 使用參數: {year} {race} {session}")
-                        print(f"[ACCELERATION UPDATE] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}, 最速圈: {is_fastest}")
+                        logger.debug(f"[ACCELERATION UPDATE] 使用參數: {year} {race} {session}")
+                        logger.debug(f"[ACCELERATION UPDATE] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}, 最速圈: {is_fastest}")
                         
                         # 觸發數據重新載入
                         widget.acceleration_loader.load_acceleration_data(
@@ -5346,39 +5347,39 @@ class PopoutSubWindow(QMdiSubWindow):
                             lap2=lap2,
                             is_fastest_lap=is_fastest
                         )
-                        print(f"[ACCELERATION UPDATE] ✅ 已觸發數據重新載入")
+                        logger.debug(f"[ACCELERATION UPDATE] ✅ 已觸發數據重新載入")
                     else:
-                        print(f"[ACCELERATION UPDATE] ⚠️ 未找到數據載入器")
+                        logger.debug(f"[ACCELERATION UPDATE] ⚠️ 未找到數據載入器")
                         
                         # 嘗試直接更新數據（使用JSON數據）
                         if json_data:
-                            print(f"[ACCELERATION UPDATE] 嘗試直接使用JSON數據更新")
+                            logger.debug(f"[ACCELERATION UPDATE] 嘗試直接使用JSON數據更新")
                             widget.update_acceleration_data(json_data)
             else:
-                print(f"[ACCELERATION UPDATE] ⚠️ 未找到加速度分析圖表組件")
+                logger.debug(f"[ACCELERATION UPDATE] ⚠️ 未找到加速度分析圖表組件")
                 
-            print(f"[ACCELERATION UPDATE] ========== 加速度分析圖表更新完成 ==========")
+            logger.debug(f"[ACCELERATION UPDATE] ========== 加速度分析圖表更新完成 ==========")
             
         except Exception as e:
-            print(f"[ERROR] [ACCELERATION UPDATE] 加速度分析圖表更新失敗: {e}")
+            logger.error(f"[ERROR] [ACCELERATION UPDATE] 加速度分析圖表更新失敗: {e}")
             import traceback
             traceback.print_exc()
 
     def update_telemetry_chart(self, telemetry_data):
         """更新遙測圖表"""
-        print(f"[CHART] 更新遙測圖表資料")
+        logger.debug(f"[CHART] 更新遙測圖表資料")
         # 實現具體的遙測圖表更新邏輯
         pass
     
     def update_track_map(self, track_data):
         """更新軌道地圖"""
-        print(f"🗺️ 更新軌道地圖資料")
+        logger.debug(f"🗺️ 更新軌道地圖資料")
         # 實現具體的軌道地圖更新邏輯
         pass
     
     def update_analysis_data(self, analysis_data):
         """更新分析數據"""
-        print(f"[STATS] 更新分析數據")
+        logger.debug(f"[STATS] 更新分析數據")
         # 實現具體的分析數據更新邏輯
         pass
         
@@ -5590,7 +5591,7 @@ class PopoutSubWindow(QMdiSubWindow):
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數變更通知"""
         window_title = self.windowTitle()
-        print(f"[ANNOUNCE] [NOTIFICATION] {window_title} 收到主視窗更新通知: {param_type}={value}")
+        logger.debug(f"[ANNOUNCE] [NOTIFICATION] {window_title} 收到主視窗更新通知: {param_type}={value}")
         
         # 檢查同步狀態 - 支援多種同步狀態檢查方式
         sync_enabled = False
@@ -5598,19 +5599,19 @@ class PopoutSubWindow(QMdiSubWindow):
         # 方法1: 檢查 sync_windows_checkbox (用於有控制面板的子視窗)
         if hasattr(self, 'sync_windows_checkbox') and self.sync_windows_checkbox:
             sync_enabled = self.sync_windows_checkbox.isChecked()
-            print(f"[SEARCH] [NOTIFICATION] {window_title} 使用 checkbox 檢查同步狀態: {sync_enabled}")
+            logger.debug(f"[SEARCH] [NOTIFICATION] {window_title} 使用 checkbox 檢查同步狀態: {sync_enabled}")
         
         # 方法2: 檢查 sync_enabled 屬性 (用於 PopoutSubWindow 等)
         elif hasattr(self, 'sync_enabled'):
             sync_enabled = self.sync_enabled
-            print(f"[SEARCH] [NOTIFICATION] {window_title} 使用屬性檢查同步狀態: {sync_enabled}")
+            logger.debug(f"[SEARCH] [NOTIFICATION] {window_title} 使用屬性檢查同步狀態: {sync_enabled}")
         
         # 如果未啟用同步，直接返回
         if not sync_enabled:
-            print(f"🔴 [NOTIFICATION] {window_title} 同步已停用，忽略更新通知")
+            logger.debug(f"🔴 [NOTIFICATION] {window_title} 同步已停用，忽略更新通知")
             return
         
-        print(f"[GREEN] [NOTIFICATION] {window_title} 同步已啟用，處理參數更新")
+        logger.debug(f"[GREEN] [NOTIFICATION] {window_title} 同步已啟用，處理參數更新")
         
         # [TOOL] 更新本地參數（同步模式）
         if param_type == 'year':
@@ -5627,11 +5628,11 @@ class PopoutSubWindow(QMdiSubWindow):
         try:
             success = self.update_current_window()
             if success:
-                print(f"[OK] [NOTIFICATION] {window_title} 內容更新成功")
+                logger.debug(f"[OK] [NOTIFICATION] {window_title} 內容更新成功")
             else:
-                print(f"[WARNING] [NOTIFICATION] {window_title} 內容更新完成但可能有問題")
+                logger.warning(f"[WARNING] [NOTIFICATION] {window_title} 內容更新完成但可能有問題")
         except Exception as e:
-            print(f"[ERROR] [NOTIFICATION] {window_title} 內容更新失敗: {e}")
+            logger.error(f"[ERROR] [NOTIFICATION] {window_title} 內容更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -5652,7 +5653,7 @@ class PopoutSubWindow(QMdiSubWindow):
             # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"[WARNING] [GET_YEAR] 獲取主視窗年份失敗: {e}")
+            logger.warning(f"[WARNING] [GET_YEAR] 獲取主視窗年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race_from_main_window(self):
@@ -5672,7 +5673,7 @@ class PopoutSubWindow(QMdiSubWindow):
             # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"[WARNING] [GET_RACE] 獲取主視窗賽事失敗: {e}")
+            logger.warning(f"[WARNING] [GET_RACE] 獲取主視窗賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session_from_main_window(self):
@@ -5692,7 +5693,7 @@ class PopoutSubWindow(QMdiSubWindow):
             # [TOOL] 移除不安全的parent遍歷邏輯，避免AttributeError
                     
         except Exception as e:
-            print(f"[WARNING] [GET_SESSION] 獲取主視窗賽段失敗: {e}")
+            logger.warning(f"[WARNING] [GET_SESSION] 獲取主視窗賽段失敗: {e}")
         return "R"  # 預設值
     
     def closeEvent(self, event):
@@ -5705,11 +5706,11 @@ class PopoutSubWindow(QMdiSubWindow):
                 try:
                     # ✅ 調用模組的 cleanup() 方法清理所有資源
                     if hasattr(self.analysis_module, 'cleanup'):
-                        print(f"[CLEANUP] {window_title} 正在調用模組 cleanup()...")
+                        logger.debug(f"[CLEANUP] {window_title} 正在調用模組 cleanup()...")
                         self.analysis_module.cleanup()
-                        print(f"[CLEANUP] {window_title} ✅ 模組 cleanup() 完成")
+                        logger.debug(f"[CLEANUP] {window_title} ✅ 模組 cleanup() 完成")
                     else:
-                        print(f"[WARNING] {window_title} 模組沒有 cleanup() 方法")
+                        logger.warning(f"[WARNING] {window_title} 模組沒有 cleanup() 方法")
                     
                     # 斷開模組信號
                     if hasattr(self.analysis_module, 'module_error'):
@@ -5722,9 +5723,9 @@ class PopoutSubWindow(QMdiSubWindow):
                             self.analysis_module.parameters_updated.disconnect()
                         except:
                             pass
-                    print(f"[CLEANUP] {window_title} 已斷開模組信號連接")
+                    logger.debug(f"[CLEANUP] {window_title} 已斷開模組信號連接")
                 except Exception as e:
-                    print(f"[ERROR] {window_title} 模組清理時出錯: {e}")
+                    logger.error(f"[ERROR] {window_title} 模組清理時出錯: {e}")
                     import traceback
                     traceback.print_exc()
             
@@ -5733,9 +5734,9 @@ class PopoutSubWindow(QMdiSubWindow):
                 try:
                     self.title_bar.cleanup()
                     self.title_bar = None
-                    print(f"[CLEANUP] {window_title} 已清理 TitleBar 資源")
+                    logger.debug(f"[CLEANUP] {window_title} 已清理 TitleBar 資源")
                 except Exception as e:
-                    print(f"[WARNING] {window_title} TitleBar 清理失敗: {e}")
+                    logger.warning(f"[WARNING] {window_title} TitleBar 清理失敗: {e}")
             
             # 發出關閉信號
             self.window_closed.emit()
@@ -5764,26 +5765,26 @@ class PopoutSubWindow(QMdiSubWindow):
             # 從父層 MDI 區域移除子視窗，避免殘留在 subWindowList()
             if self.parent_mdi and hasattr(self.parent_mdi, 'removeSubWindow'):
                 try:
-                    print(f"[CLEANUP] {window_title} 正在從 MDI 區域移除子視窗...")
+                    logger.debug(f"[CLEANUP] {window_title} 正在從 MDI 區域移除子視窗...")
                     self.parent_mdi.removeSubWindow(self)
-                    print(f"[CLEANUP] {window_title} ✅ 已從 MDI 區域移除")
+                    logger.debug(f"[CLEANUP] {window_title} ✅ 已從 MDI 區域移除")
                 except Exception as e:
-                    print(f"[ERROR] {window_title} 從 MDI 移除失敗: {e}")
+                    logger.error(f"[ERROR] {window_title} 從 MDI 移除失敗: {e}")
             else:
-                print(f"[WARNING] {window_title} 無法移除（parent_mdi={self.parent_mdi}, hasRemove={hasattr(self.parent_mdi, 'removeSubWindow') if self.parent_mdi else False}）")
+                logger.warning(f"[WARNING] {window_title} 無法移除（parent_mdi={self.parent_mdi}, hasRemove={hasattr(self.parent_mdi, 'removeSubWindow') if self.parent_mdi else False}）")
             
             # 🔧 修復洩漏5: 明確調用 deleteLater() 確保 Qt 釋放資源
-            print(f"[CLEANUP] {window_title} 正在調用 deleteLater()...")
+            logger.debug(f"[CLEANUP] {window_title} 正在調用 deleteLater()...")
             self.deleteLater()
-            print(f"[CLEANUP] {window_title} ✅ deleteLater() 已調用")
+            logger.debug(f"[CLEANUP] {window_title} ✅ deleteLater() 已調用")
             
-            print(f"[CLEANUP] {window_title} 資源已清理完成")
+            logger.debug(f"[CLEANUP] {window_title} 資源已清理完成")
             
             # 接受關閉事件，讓 PyQt 自動處理移除
             event.accept()
             
         except Exception as e:
-            print(f"[ERROR] closeEvent 異常: {e}")
+            logger.error(f"[ERROR] closeEvent 異常: {e}")
             event.accept()  # 即使出錯也要關閉
 
 class ContextMenuTreeWidget(QTreeWidget):
@@ -5807,6 +5808,28 @@ class ContextMenuTreeWidget(QTreeWidget):
         self._click_debounce_ms = 100  # 100ms 防抖
         self.itemClicked.connect(self.on_item_clicked, Qt.UniqueConnection)
         
+        # ✅ 自適應列寬：當項目展開/收合時自動調整寬度
+        self.itemExpanded.connect(self._adjust_column_width, Qt.UniqueConnection)
+        self.itemCollapsed.connect(self._adjust_column_width, Qt.UniqueConnection)
+        
+        # 記錄用戶是否手動調整過寬度（由主窗口的 Splitter 設置）
+        self._user_resized = False
+        
+    def _adjust_column_width(self):
+        """當樹狀圖展開/收合時自動調整列寬（除非用戶已手動調整 Splitter）"""
+        if not self._user_resized:
+            old_width = self.columnWidth(0)
+            self.resizeColumnToContents(0)
+            new_width = self.columnWidth(0)
+            
+            # 如果寬度有變化，通知主窗口調整 Splitter
+            if new_width != old_width and self.main_window:
+                self.main_window._adjust_splitter_for_tree(new_width)
+    
+    def mark_user_resized(self):
+        """標記用戶已手動調整寬度（由主窗口調用）"""
+        self._user_resized = True
+        
     def on_item_clicked(self, item, column):
         """處理項目點擊事件 - 僅用於選擇，不觸發分析
         
@@ -5829,19 +5852,19 @@ class ContextMenuTreeWidget(QTreeWidget):
             
             if selected_count > 1:
                 # 多選模式：顯示選中的項目數量
-                print(f"[MULTI_SELECT] 已選擇 {selected_count} 個分析模組")
+                logger.debug(f"[MULTI_SELECT] 已選擇 {selected_count} 個分析模組")
                 # ✅ 優化：只在少於 10 個時詳細列出
                 if selected_count <= 10:
                     for selected_item in selected_items:
                         if selected_item.childCount() == 0:  # 確保是葉節點
-                            print(f"  - {selected_item.text(0)}")
+                            logger.debug(f"  - {selected_item.text(0)}")
                 else:
-                    print(f"  (項目過多，不詳細列出)")
-                print(f"[MULTI_SELECT] 💡 提示：右鍵點擊可執行批量分析")
+                    logger.debug(f"  (項目過多，不詳細列出)")
+                logger.debug(f"[MULTI_SELECT] 💡 提示：右鍵點擊可執行批量分析")
             else:
                 # 單選模式：僅顯示選中項目，不直接執行分析
-                print(f"[SINGLE_SELECT] 已選擇分析模組: {item.text(0)}")
-                print(f"[SINGLE_SELECT] 💡 提示：右鍵點擊可執行分析")
+                logger.debug(f"[SINGLE_SELECT] 已選擇分析模組: {item.text(0)}")
+                logger.debug(f"[SINGLE_SELECT] 💡 提示：右鍵點擊可執行分析")
     
     def show_context_menu(self, position):
         """顯示右鍵選單"""
@@ -5943,37 +5966,37 @@ class ContextMenuTreeWidget(QTreeWidget):
         leaf_items = [item for item in items if item.childCount() == 0]
         
         if not leaf_items:
-            print(f"[BATCH_ANALYSIS] 沒有可執行的葉節點")
+            logger.debug(f"[BATCH_ANALYSIS] 沒有可執行的葉節點")
             return
         
         # 計算被過濾掉的父項目數量
         filtered_count = len(items) - len(leaf_items)
         if filtered_count > 0:
-            print(f"[BATCH_ANALYSIS] 已過濾掉 {filtered_count} 個父項目")
+            logger.debug(f"[BATCH_ANALYSIS] 已過濾掉 {filtered_count} 個父項目")
         
-        print(f"[BATCH_ANALYSIS] 開始批量分析 {len(leaf_items)} 個模組")
+        logger.debug(f"[BATCH_ANALYSIS] 開始批量分析 {len(leaf_items)} 個模組")
         
         for item in leaf_items:
             function_name = item.text(0).strip()
-            print(f"[BATCH_ANALYSIS] 正在創建: {function_name}")
+            logger.debug(f"[BATCH_ANALYSIS] 正在創建: {function_name}")
             # 傳遞 batch_mode=True 防止彈出對話框
             self.analyze_function(function_name, batch_mode=True)
             
-        print(f"[BATCH_ANALYSIS] 批量分析完成，共創建了 {len(leaf_items)} 個分析視窗")
+        logger.debug(f"[BATCH_ANALYSIS] 批量分析完成，共創建了 {len(leaf_items)} 個分析視窗")
     
     def export_multiple_functions(self, items):
         """批量匯出多個功能的數據"""
         # 只處理葉節點
         leaf_items = [item for item in items if item.childCount() == 0]
         
-        print(f"[BATCH_EXPORT] 開始批量匯出 {len(leaf_items)} 個模組的數據")
+        logger.debug(f"[BATCH_EXPORT] 開始批量匯出 {len(leaf_items)} 個模組的數據")
         
         for item in leaf_items:
             function_name = item.text(0).strip()
-            print(f"[BATCH_EXPORT] 正在匯出: {function_name}")
+            logger.debug(f"[BATCH_EXPORT] 正在匯出: {function_name}")
             self.export_function(function_name)
             
-        print(f"[BATCH_EXPORT] 批量匯出完成")
+        logger.debug(f"[BATCH_EXPORT] 批量匯出完成")
     
     def cleanup(self):
         """
@@ -5982,28 +6005,28 @@ class ContextMenuTreeWidget(QTreeWidget):
         ⚠️ 資源洩漏修復: 斷開所有信號，防止循環引用
         """
         try:
-            print("[CLEANUP] 開始清理 ContextMenuTreeWidget 資源...")
+            logger.debug("[CLEANUP] 開始清理 ContextMenuTreeWidget 資源...")
             
             # 🔧 斷開所有信號連接
             try:
                 self.customContextMenuRequested.disconnect()
-                print("[CLEANUP]   ✅ 斷開 customContextMenuRequested")
+                logger.debug("[CLEANUP]   ✅ 斷開 customContextMenuRequested")
             except TypeError:
                 pass  # 信號已經斷開
             
             try:
                 self.itemClicked.disconnect()
-                print("[CLEANUP]   ✅ 斷開 itemClicked")
+                logger.debug("[CLEANUP]   ✅ 斷開 itemClicked")
             except TypeError:
                 pass  # 信號已經斷開
             
             # 🔧 清除 main_window 引用
             self.main_window = None
             
-            print("[CLEANUP] ✅ ContextMenuTreeWidget 資源清理完成")
+            logger.debug("[CLEANUP] ✅ ContextMenuTreeWidget 資源清理完成")
             
         except Exception as e:
-            print(f"[WARNING] ContextMenuTreeWidget cleanup 失敗: {e}")
+            logger.warning(f"[WARNING] ContextMenuTreeWidget cleanup 失敗: {e}")
     
     def analyze_function(self, function_name, batch_mode=False):
         """分析單個功能（支援批量模式）
@@ -6028,7 +6051,7 @@ class ContextMenuTreeWidget(QTreeWidget):
                 clean_name = clean_name[len(prefix):]
                 break
         
-        print(f"[TREE_CLICK] 項目: {clean_name} (原始: {original_name}, 前綴: {item_prefix}), 批量模式: {batch_mode}")
+        logger.debug(f"[TREE_CLICK] 項目: {clean_name} (原始: {original_name}, 前綴: {item_prefix}), 批量模式: {batch_mode}")
         
         # ========== 父項目禁用政策 ==========
         # 父項目清單（這些項目只作為導航，不觸發任何操作）
@@ -6046,7 +6069,7 @@ class ContextMenuTreeWidget(QTreeWidget):
             parent_items.append(clean_name)
         
         if not batch_mode and clean_name in parent_items:
-            print(f"[TREE_CLICK] ⚠️ 父項目 '{clean_name}' (前綴: {item_prefix}) 不執行任何操作（僅作為路標）")
+            logger.debug(f"[TREE_CLICK] ⚠️ 父項目 '{clean_name}' (前綴: {item_prefix}) 不執行任何操作（僅作為路標）")
             return
         
         # ========== 子項目處理（直接開啟對應模組）==========
@@ -6057,7 +6080,7 @@ class ContextMenuTreeWidget(QTreeWidget):
             try:
                 lap_params = self.main_window.get_current_lap_toolbar_parameters() or {}
             except Exception as exc:
-                print(f"[TREE_CLICK] ⚠️ 讀取圈速工具欄參數失敗: {exc}")
+                logger.debug(f"[TREE_CLICK] ⚠️ 讀取圈速工具欄參數失敗: {exc}")
 
         if not isinstance(lap_params, dict):
             lap_params = {}
@@ -6146,7 +6169,7 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         elif clean_name in ["Throttle Analysis", "油門分析"]:
             # Lap Analysis 下的 Throttle Analysis 子模組（不是父項目）
-            print(f"[TREE_CLICK] 開啟油門遙測分析（Lap Analysis 子模組）")
+            logger.debug(f"[TREE_CLICK] 開啟油門遙測分析（Lap Analysis 子模組）")
             self.main_window.create_telemetry_window(
                 "throttle", params,
                 driver1=driver1, driver2=driver2,
@@ -6156,53 +6179,67 @@ class ContextMenuTreeWidget(QTreeWidget):
         
         # Detailed Lap Analysis 子模組
         elif clean_name in ["Detailed Lap Table", "詳細圈速表格"]:
-            print(f"[TREE_CLICK] 開啟詳細圈速表格（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟詳細圈速表格（模組工廠模式）")
             # ✅ 使用統一的 create_analysis_window 入口（支援模組工廠）
             self.main_window.create_analysis_window(clean_name)
         
         elif clean_name in ["Lap Time Box Plot", "圈速箱線圖", "圈速箱型圖"]:
-            print(f"[TREE_CLICK] 開啟圈速箱線圖（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟圈速箱線圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         # Throttle Analysis 子模組（父項目的子視圖）
         elif clean_name in ["Throttle Box Plot", "油門箱線圖", "油門箱型圖"]:
-            print(f"[TREE_CLICK] 開啟油門箱線圖（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟油門箱線圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         elif clean_name in ["Throttle Line Chart", "油門折線圖"]:
-            print(f"[TREE_CLICK] 開啟油門折線圖（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟油門折線圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         # Ideal Lap Analysis 子模組
         elif clean_name in ["Ideal Lap Ranking Table", "Ranking Table", "排名表格", "理想圈排名"]:  # ✅ 添加新名稱
-            print(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         elif clean_name in ["Sector Comparison", "分段對比", "分段比較", "理想圈分段對比"]:
-            print(f"[TREE_CLICK] 開啟理想圈分段對比（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟理想圈分段對比（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         elif clean_name in ["Sector Heat Map", "Sector Heatmap", "分段熱力圖", "セクターヒートマップ"]:
-            print(f"[TREE_CLICK] 開啟理想圈分段熱力圖（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟理想圈分段熱力圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         # Straight Speed Analysis 子模組 ⭐ 新增
         elif clean_name in ["All Drivers Speed & Acceleration", "全車手速度與加速", "全車手直線速度"]:
-            print(f"[TREE_CLICK] 開啟全車手直線速度與加速性能分析（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟全車手直線速度與加速性能分析（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        # All Drivers Max Speed 子模組 ⭐ F121 新增
+        elif clean_name in ["All Drivers Max Speed", "全車手最高速度", "全車手最速分析", "最高速度分析"]:
+            logger.debug(f"[TREE_CLICK] 開啟全車手最高速度分析（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        # All Drivers Acceleration Chart 子模組 ⭐ F121 新增
+        elif clean_name in ["Acceleration Chart", "加速度圖表", "全車手加速度圖表", "速度加速度圖"]:
+            logger.debug(f"[TREE_CLICK] 開啟全車手加速度圖表（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         elif clean_name in ["All Drivers Brake Performance", "全車手煞車性能", "全車手煞車分析"]:
-            print(f"[TREE_CLICK] 開啟全車手煞車性能分析（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟全車手煞車性能分析（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
+        elif clean_name in ["All Drivers Brake All Laps Analysis", "全車手煞車全圈數分析"]:
+            logger.debug(f"[TREE_CLICK] 開啟全車手煞車全圈數分析（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         # Track Analysis 特殊處理
         elif clean_name in ["Track Analysis", "賽道分析"]:
-            print(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
+            logger.debug(f"[TRACK] 檢測到賽道分析請求，使用專門的開啟方法")
             self.main_window.open_track_analysis_window()
         
         # FIA Parts Analysis / 車輛零件變動 ⭐ 支援多國語言
         elif clean_name in ["FIA Parts Analysis", "車輛零件變動", "Vehicle Parts Changes", "車両部品変更", "部件分析", "FIA 部件分析", "部品解析"]:
-            print(f"[TREE_CLICK] 開啟 Parts Analysis（模組工廠模式）")
+            logger.debug(f"[TREE_CLICK] 開啟 Parts Analysis（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
         else:
@@ -6210,11 +6247,11 @@ class ContextMenuTreeWidget(QTreeWidget):
             from modules.gui.live_timing import is_live_timing_module
             
             if is_live_timing_module(clean_name):
-                print(f"[TREE_CLICK] 開啟 Live Timing 模組（工廠模式）: {clean_name}")
+                logger.debug(f"[TREE_CLICK] 開啟 Live Timing 模組（工廠模式）: {clean_name}")
                 self.main_window._open_live_timing_module(clean_name)
             else:
                 # 未知模組，使用原有邏輯
-                print(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
+                logger.debug(f"[TREE_CLICK] 使用原有邏輯處理: {clean_name}")
                 self.main_window.create_analysis_window(function_name)
         
     def export_function(self, function_name):
@@ -6420,7 +6457,7 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
         # 連接主視窗參數變更信號（如果需要同步）
         self._connect_parameter_signals()
         
-        print(f"[TAB_STANDALONE] ✅ 獨立視窗已創建: '{tab_name}'")
+        logger.debug(f"[TAB_STANDALONE] ✅ 獨立視窗已創建: '{tab_name}'")
     
     def setup_toolbar(self):
         """設定工具列（6 個按鈕）"""
@@ -6464,7 +6501,7 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
         cascade_action.setToolTip("層疊所有子視窗")
         cascade_action.triggered.connect(self.cascade_windows)
         
-        print(f"[TAB_STANDALONE] ✅ 工具列已設置（6 個按鈕）")
+        logger.debug(f"[TAB_STANDALONE] ✅ 工具列已設置（6 個按鈕）")
     
     def _connect_parameter_signals(self):
         """連接主視窗參數變更信號"""
@@ -6475,9 +6512,9 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 self.main_window.race_combo.currentIndexChanged.connect(self._on_main_parameter_changed)
             if hasattr(self.main_window, 'session_combo'):
                 self.main_window.session_combo.currentIndexChanged.connect(self._on_main_parameter_changed)
-            print(f"[TAB_STANDALONE] ✅ 已連接主視窗參數變更信號")
+            logger.debug(f"[TAB_STANDALONE] ✅ 已連接主視窗參數變更信號")
         except Exception as e:
-            print(f"[TAB_STANDALONE] ⚠️ 連接參數信號失敗: {e}")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ 連接參數信號失敗: {e}")
     
     def _disconnect_parameter_signals(self):
         """斷開主視窗參數變更信號"""
@@ -6488,24 +6525,24 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 self.main_window.race_combo.currentIndexChanged.disconnect(self._on_main_parameter_changed)
             if hasattr(self.main_window, 'session_combo'):
                 self.main_window.session_combo.currentIndexChanged.disconnect(self._on_main_parameter_changed)
-            print(f"[TAB_STANDALONE] ✅ 已斷開主視窗參數變更信號")
+            logger.debug(f"[TAB_STANDALONE] ✅ 已斷開主視窗參數變更信號")
         except Exception as e:
-            print(f"[TAB_STANDALONE] ⚠️ 斷開參數信號失敗: {e}")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ 斷開參數信號失敗: {e}")
     
     def toggle_sync(self):
         """切換參數同步狀態"""
         self.sync_enabled = not self.sync_enabled
         new_text = f"🔗 同步: {'ON' if self.sync_enabled else 'OFF'}"
         self.sync_action.setText(new_text)
-        print(f"[TAB_STANDALONE] 🔄 參數同步已{'啟用' if self.sync_enabled else '禁用'}")
+        logger.debug(f"[TAB_STANDALONE] 🔄 參數同步已{'啟用' if self.sync_enabled else '禁用'}")
     
     def _on_main_parameter_changed(self):
         """主視窗參數變更時的處理"""
         if not self.sync_enabled:
-            print(f"[TAB_STANDALONE] ⏭️ 同步已禁用，忽略參數變更")
+            logger.debug(f"[TAB_STANDALONE] ⏭️ 同步已禁用，忽略參數變更")
             return
         
-        print(f"[TAB_STANDALONE] 🔄 檢測到主視窗參數變更，準備更新子視窗...")
+        logger.debug(f"[TAB_STANDALONE] 🔄 檢測到主視窗參數變更，準備更新子視窗...")
         
         # 獲取當前參數
         try:
@@ -6513,13 +6550,13 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
             race = self.main_window.race_combo.currentText() if hasattr(self.main_window, 'race_combo') else "Japan"
             session = self.main_window.session_combo.currentText() if hasattr(self.main_window, 'session_combo') else "R"
             
-            print(f"[TAB_STANDALONE] 📊 新參數: {year} {race} {session}")
+            logger.debug(f"[TAB_STANDALONE] 📊 新參數: {year} {race} {session}")
             
             # 更新所有 MDI 子視窗
             self._update_all_subwindows(year, race, session)
             
         except Exception as e:
-            print(f"[TAB_STANDALONE] ❌ 更新子視窗失敗: {e}")
+            logger.debug(f"[TAB_STANDALONE] ❌ 更新子視窗失敗: {e}")
     
     def _update_all_subwindows(self, year, race, session):
         """更新所有 MDI 子視窗的參數"""
@@ -6536,14 +6573,14 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                     sub_win.update_current_window()
                     updated_count += 1
             except Exception as e:
-                print(f"[TAB_STANDALONE] ⚠️ 更新子視窗失敗: {e}")
+                logger.debug(f"[TAB_STANDALONE] ⚠️ 更新子視窗失敗: {e}")
         
-        print(f"[TAB_STANDALONE] ✅ 已更新 {updated_count}/{len(subwindows)} 個子視窗")
+        logger.debug(f"[TAB_STANDALONE] ✅ 已更新 {updated_count}/{len(subwindows)} 個子視窗")
     
     def show_all_data(self):
         """重置所有子視窗視圖"""
         if not self.mdi_area:
-            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
             return
         
         subwindows = self.mdi_area.subWindowList()
@@ -6559,23 +6596,23 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                     widget.chart_widget.reset_view()
                     reset_count += 1
             except Exception as e:
-                print(f"[TAB_STANDALONE] ⚠️ 重置視圖失敗: {e}")
+                logger.debug(f"[TAB_STANDALONE] ⚠️ 重置視圖失敗: {e}")
         
-        print(f"[TAB_STANDALONE] ✅ 已重置 {reset_count}/{len(subwindows)} 個視窗")
+        logger.debug(f"[TAB_STANDALONE] ✅ 已重置 {reset_count}/{len(subwindows)} 個視窗")
     
     def close_all_windows(self):
         """關閉所有子視窗"""
         if not self.mdi_area:
-            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
             return
         
         self.mdi_area.closeAllSubWindows()
-        print(f"[TAB_STANDALONE] ✅ 已關閉所有子視窗")
+        logger.debug(f"[TAB_STANDALONE] ✅ 已關閉所有子視窗")
     
     def tile_windows(self):
         """重新排列視窗 - 智能平鋪獨立視窗中的所有子視窗（與主 GUI 邏輯一致）"""
         if not self.mdi_area:
-            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
             return
         
         try:
@@ -6588,76 +6625,76 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 and not sw.isWindowModified() 
                 and not sw.property("is_welcome_fixed")  # 排除固定視窗
             ]
-            print(f"[TAB_STANDALONE] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
+            logger.debug(f"[TAB_STANDALONE] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
             
             if not subwindows:
-                print(f"[TAB_STANDALONE] ⚠️ 沒有可見的非固定子視窗需要排列")
+                logger.debug(f"[TAB_STANDALONE] ⚠️ 沒有可見的非固定子視窗需要排列")
                 return
             
-            print(f"[TAB_STANDALONE] 準備排列 {len(subwindows)} 個視窗")
+            logger.debug(f"[TAB_STANDALONE] 準備排列 {len(subwindows)} 個視窗")
             
             # 步驟 2: 計算可用空間（無邊距，完全填滿）
             available_width = self.mdi_area.width()
             available_height = self.mdi_area.height()
-            print(f"[TAB_STANDALONE] MDI 區域大小: {self.mdi_area.width()}x{self.mdi_area.height()}")
-            print(f"[TAB_STANDALONE] 📏 可用空間: {available_width}x{available_height}")
+            logger.debug(f"[TAB_STANDALONE] MDI 區域大小: {self.mdi_area.width()}x{self.mdi_area.height()}")
+            logger.debug(f"[TAB_STANDALONE] 📏 可用空間: {available_width}x{available_height}")
             
             # 步驟 3: 計算最佳的行列配置
             num_windows = len(subwindows)
-            print(f"[TAB_STANDALONE] 視窗數量: {num_windows}")
+            logger.debug(f"[TAB_STANDALONE] 視窗數量: {num_windows}")
             
             if num_windows == 0:
-                print(f"[TAB_STANDALONE] 視窗數量為 0，退出")
+                logger.debug(f"[TAB_STANDALONE] 視窗數量為 0，退出")
                 return
             
             # 計算列數（基於平方根）
             cols = int(num_windows ** 0.5)
-            print(f"[TAB_STANDALONE] 初始計算 cols: {cols}")
+            logger.debug(f"[TAB_STANDALONE] 初始計算 cols: {cols}")
             
             if cols == 0:  # 防止除零錯誤
                 cols = 1
-                print(f"[TAB_STANDALONE] cols 修正為 1")
+                logger.debug(f"[TAB_STANDALONE] cols 修正為 1")
             
             if cols * cols < num_windows:
                 cols += 1
-                print(f"[TAB_STANDALONE] cols 調整為: {cols}")
+                logger.debug(f"[TAB_STANDALONE] cols 調整為: {cols}")
             
             # 計算行數
             rows = (num_windows + cols - 1) // cols
-            print(f"[TAB_STANDALONE] 計算得到 rows: {rows}")
+            logger.debug(f"[TAB_STANDALONE] 計算得到 rows: {rows}")
             
             if rows == 0:  # 額外保護
                 rows = 1
-                print(f"[TAB_STANDALONE] rows 修正為 1")
+                logger.debug(f"[TAB_STANDALONE] rows 修正為 1")
             
             # 步驟 4: 計算每個視窗的尺寸
             window_width = available_width // cols if cols > 0 else available_width
             window_height = available_height // rows if rows > 0 else available_height
-            print(f"[TAB_STANDALONE] 每個視窗尺寸: {window_width}x{window_height}")
+            logger.debug(f"[TAB_STANDALONE] 每個視窗尺寸: {window_width}x{window_height}")
             
             # 步驟 5: 確保最小尺寸
             min_width, min_height = 250, 150
             window_width = max(window_width, min_width)
             window_height = max(window_height, min_height)
-            print(f"[TAB_STANDALONE] 📐 調整後視窗尺寸: {window_width}x{window_height}")
+            logger.debug(f"[TAB_STANDALONE] 📐 調整後視窗尺寸: {window_width}x{window_height}")
             
             # 步驟 6: 開始排列視窗
-            print(f"[TAB_STANDALONE] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
+            logger.debug(f"[TAB_STANDALONE] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
             
             # 預檢查：確保所有視窗的基本設定一致
-            print(f"[TAB_STANDALONE] ========== 預檢查視窗設定 ==========")
+            logger.debug(f"[TAB_STANDALONE] ========== 預檢查視窗設定 ==========")
             for i, subwindow in enumerate(subwindows):
                 widget = subwindow.widget()
                 if widget:
                     min_size = widget.minimumSize()
                     size_policy = widget.sizePolicy()
-                    print(f"[TAB_STANDALONE] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
+                    logger.debug(f"[TAB_STANDALONE] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
                     
                     # 檢查是否有調試方法可以調用
                     if hasattr(widget, 'debug_window_status'):
-                        print(f"[TAB_STANDALONE] 調用視窗 {i} 的狀態報告:")
+                        logger.debug(f"[TAB_STANDALONE] 調用視窗 {i} 的狀態報告:")
                         widget.debug_window_status()
-            print(f"[TAB_STANDALONE] ========== 預檢查完成 ==========")
+            logger.debug(f"[TAB_STANDALONE] ========== 預檢查完成 ==========")
             
             # 步驟 7: 逐個設置視窗位置和尺寸
             for i, subwindow in enumerate(subwindows):
@@ -6667,7 +6704,7 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 x = col * window_width
                 y = row * window_height
                 
-                print(f"[TAB_STANDALONE] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
+                logger.debug(f"[TAB_STANDALONE] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
                 
                 # 設置視窗位置和尺寸
                 subwindow.setGeometry(x, y, window_width, window_height)
@@ -6681,32 +6718,32 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                 
                 # 檢查實際尺寸並調試
                 actual_size = subwindow.size()
-                print(f"[TAB_STANDALONE] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
+                logger.debug(f"[TAB_STANDALONE] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
                 
                 if actual_size.width() != window_width or actual_size.height() != window_height:
-                    print(f"[TAB_STANDALONE] ⚠️ 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
+                    logger.debug(f"[TAB_STANDALONE] ⚠️ 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
                     
                     # 嘗試重新設置
                     subwindow.resize(window_width, window_height)
                     QApplication.processEvents()
                     final_size = subwindow.size()
-                    print(f"[TAB_STANDALONE] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
+                    logger.debug(f"[TAB_STANDALONE] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
             
             # 步驟 8: 最終同步步驟 - 確保所有視窗尺寸一致
-            print(f"[TAB_STANDALONE] ========== 開始最終尺寸同步 ==========")
+            logger.debug(f"[TAB_STANDALONE] ========== 開始最終尺寸同步 ==========")
             
             # 收集所有視窗的實際尺寸
             actual_sizes = []
             for i, subwindow in enumerate(subwindows):
                 size = subwindow.size()
                 actual_sizes.append((size.width(), size.height()))
-                print(f"[TAB_STANDALONE] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
+                logger.debug(f"[TAB_STANDALONE] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
             
             # 找到最小的共同尺寸（確保所有視窗都能適應）
             if actual_sizes:
                 min_common_width = min(size[0] for size in actual_sizes)
                 min_common_height = min(size[1] for size in actual_sizes)
-                print(f"[TAB_STANDALONE] 統一目標尺寸: {min_common_width}x{min_common_height}")
+                logger.debug(f"[TAB_STANDALONE] 統一目標尺寸: {min_common_width}x{min_common_height}")
                 
                 # 將所有視窗設置為相同尺寸
                 for i, subwindow in enumerate(subwindows):
@@ -6715,57 +6752,57 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
                     QApplication.processEvents()
                     
                     final_size = subwindow.size()
-                    print(f"[TAB_STANDALONE] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
+                    logger.debug(f"[TAB_STANDALONE] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
             
-            print(f"[TAB_STANDALONE] ========== 尺寸同步完成 ==========")
+            logger.debug(f"[TAB_STANDALONE] ========== 尺寸同步完成 ==========")
             
             # 步驟 9: 調試 - 檢查每個子視窗的邊距設定
-            print(f"[TAB_STANDALONE] ========== 子視窗邊距檢查 ==========")
+            logger.debug(f"[TAB_STANDALONE] ========== 子視窗邊距檢查 ==========")
             for i, subwindow in enumerate(subwindows):
                 widget = subwindow.widget()
-                print(f"[TAB_STANDALONE] 子視窗 {i}: {subwindow.windowTitle()}")
+                logger.debug(f"[TAB_STANDALONE] 子視窗 {i}: {subwindow.windowTitle()}")
                 
                 # 檢查 MDI 子視窗的邊距
                 margins = subwindow.contentsMargins()
-                print(f"[TAB_STANDALONE]   MDI 邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
+                logger.debug(f"[TAB_STANDALONE]   MDI 邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
                 
                 # 檢查子視窗的 frameGeometry vs geometry
                 frame_geo = subwindow.frameGeometry()
                 geo = subwindow.geometry()
-                print(f"[TAB_STANDALONE]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
-                print(f"[TAB_STANDALONE]   geometry: {geo.width()}x{geo.height()}")
-                print(f"[TAB_STANDALONE]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
+                logger.debug(f"[TAB_STANDALONE]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
+                logger.debug(f"[TAB_STANDALONE]   geometry: {geo.width()}x{geo.height()}")
+                logger.debug(f"[TAB_STANDALONE]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
                 
                 if widget:
                     widget_size = widget.size()
-                    print(f"[TAB_STANDALONE]   內部 widget 尺寸: {widget_size.width()}x{widget_size.height()}")
+                    logger.debug(f"[TAB_STANDALONE]   內部 widget 尺寸: {widget_size.width()}x{widget_size.height()}")
             
-            print(f"[TAB_STANDALONE] ========== 邊距檢查完成 ==========")
-            print(f"[TAB_STANDALONE] ✅ 已平鋪 {num_windows} 個子視窗")
+            logger.debug(f"[TAB_STANDALONE] ========== 邊距檢查完成 ==========")
+            logger.debug(f"[TAB_STANDALONE] ✅ 已平鋪 {num_windows} 個子視窗")
             
         except Exception as e:
-            print(f"[TAB_STANDALONE] ❌ 平鋪失敗: {e}")
+            logger.debug(f"[TAB_STANDALONE] ❌ 平鋪失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def cascade_windows(self):
         """層疊子視窗"""
         if not self.mdi_area:
-            print(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
+            logger.debug(f"[TAB_STANDALONE] ⚠️ MDI 區域不存在")
             return
         
         self.mdi_area.cascadeSubWindows()
-        print(f"[TAB_STANDALONE] ✅ 已層疊所有子視窗")
+        logger.debug(f"[TAB_STANDALONE] ✅ 已層疊所有子視窗")
     
     def _on_return_to_main(self):
         """返回主畫面按鈕處理"""
-        print(f"[TAB_STANDALONE] 🔄 用戶點擊返回按鈕")
+        logger.debug(f"[TAB_STANDALONE] 🔄 用戶點擊返回按鈕")
         if self.main_window and hasattr(self.main_window, 'pop_back_in_tab'):
             self.main_window.pop_back_in_tab(self.tab_index)
     
     def closeEvent(self, event):
         """關閉事件：自動返回主視窗"""
-        print(f"[TAB_STANDALONE] 🚪 獨立視窗正在關閉...")
+        logger.debug(f"[TAB_STANDALONE] 🚪 獨立視窗正在關閉...")
         
         # 斷開參數信號
         self._disconnect_parameter_signals()
@@ -6773,13 +6810,13 @@ class TabStandaloneWindow(ResizableStandaloneWindow):
         # ✅ 修復：檢查是否仍在彈出列表中（避免重複調用 pop_back_in_tab）
         if self.main_window and hasattr(self.main_window, 'pop_back_in_tab'):
             if self.tab_index in self.main_window.popped_out_tabs:
-                print(f"[TAB_STANDALONE] 🔄 自動返回主視窗（closeEvent 觸發）")
+                logger.debug(f"[TAB_STANDALONE] 🔄 自動返回主視窗（closeEvent 觸發）")
                 self.main_window.pop_back_in_tab(self.tab_index)
             else:
-                print(f"[TAB_STANDALONE] ⚠️ 分頁 {self.tab_index} 已經返回（跳過重複返回）")
+                logger.debug(f"[TAB_STANDALONE] ⚠️ 分頁 {self.tab_index} 已經返回（跳過重複返回）")
         
         event.accept()
-        print(f"[TAB_STANDALONE] ✅ 獨立視窗已關閉")
+        logger.debug(f"[TAB_STANDALONE] ✅ 獨立視窗已關閉")
 
 
 class WindowSettingsDialog(QDialog):
@@ -6880,15 +6917,15 @@ class WindowSettingsDialog(QDialog):
         
         # [DEBUG] 調用前確認點
         logger.info(f"🔍 [SESSION_CALL] 即將調用 _update_session_combo，current_session={current_session}")
-        print(f"🔍 [SESSION_CALL] 即將調用 _update_session_combo，current_session={current_session}")
+        logger.debug(f"🔍 [SESSION_CALL] 即將調用 _update_session_combo，current_session={current_session}")
         
         try:
             self._update_session_combo(preserve_session_code=current_session)
             logger.info(f"✅ [SESSION_CALL] _update_session_combo 調用完成")
-            print(f"✅ [SESSION_CALL] _update_session_combo 調用完成")
+            logger.debug(f"✅ [SESSION_CALL] _update_session_combo 調用完成")
         except Exception as e:
             logger.error(f"❌ [SESSION_CALL] _update_session_combo 調用失敗: {e}")
-            print(f"❌ [SESSION_CALL] _update_session_combo 調用失敗: {e}")
+            logger.debug(f"❌ [SESSION_CALL] _update_session_combo 調用失敗: {e}")
             import traceback
             traceback.print_exc()
         
@@ -6914,7 +6951,7 @@ class WindowSettingsDialog(QDialog):
     
     def on_sync_checkbox_toggled(self, checked):
         """處理同步勾選框狀態變化"""
-        print(f"[LINK] [SETTING] 同步接收狀態變更為: {'啟用' if checked else '停用'}")
+        logger.debug(f"[LINK] [SETTING] 同步接收狀態變更為: {'啟用' if checked else '停用'}")
         self.update_analysis_params_editability()
         
         # [TOOL] 移除錯誤的同步調用 - 不需要從主程式同步，保持當前設定
@@ -6935,12 +6972,12 @@ class WindowSettingsDialog(QDialog):
             self.year_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
             self.race_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
             self.session_combo.setToolTip(tr("params_locked_tooltip", "Sync enabled, parameters controlled by main window"))
-            print(f"[LOCK] [SETTING] 分析參數已鎖定 - 接收主程式同步")
+            logger.debug(f"[LOCK] [SETTING] 分析參數已鎖定 - 接收主程式同步")
         else:
             self.year_combo.setToolTip(tr("year_tooltip", "Set year manually"))
             self.race_combo.setToolTip(tr("race_tooltip", "Set race manually"))
             self.session_combo.setToolTip(tr("session_tooltip", "Set session manually"))
-            print(f"🔓 [SETTING] 分析參數已解鎖 - 可手動編輯")
+            logger.debug(f"🔓 [SETTING] 分析參數已解鎖 - 可手動編輯")
     
     def sync_params_from_main_window(self):
         """從主程式同步參數到設定對話框"""
@@ -6949,7 +6986,7 @@ class WindowSettingsDialog(QDialog):
             current_race = self.get_current_race_from_main_window()
             current_session = self.get_current_session_from_main_window()
             
-            print(f"📥 [SETTING] 從主程式同步參數: {current_year} {current_race} {current_session}")
+            logger.debug(f"📥 [SETTING] 從主程式同步參數: {current_year} {current_race} {current_session}")
             
             # 更新對話框中的參數
             self.year_combo.blockSignals(True)
@@ -6966,10 +7003,10 @@ class WindowSettingsDialog(QDialog):
             self.race_combo.blockSignals(False)
             self.session_combo.blockSignals(False)
             
-            print(f"[OK] [SETTING] 參數同步完成")
+            logger.debug(f"[OK] [SETTING] 參數同步完成")
             
         except Exception as e:
-            print(f"[ERROR] [SETTING] 從主程式同步參數失敗: {e}")
+            logger.error(f"[ERROR] [SETTING] 從主程式同步參數失敗: {e}")
     
     def get_current_year_from_main_window(self):
         """從主視窗獲取當前年份"""
@@ -6983,7 +7020,7 @@ class WindowSettingsDialog(QDialog):
             # elif hasattr(self.parent_window, 'year_combo') and self.parent_window.year_combo:
             #     return self.parent_window.year_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [SETTING] 獲取年份失敗: {e}")
+            logger.warning(f"[WARNING] [SETTING] 獲取年份失敗: {e}")
         return "2025"  # 預設值
     
     def get_current_race_from_main_window(self):
@@ -6998,7 +7035,7 @@ class WindowSettingsDialog(QDialog):
             # elif hasattr(self.parent_window, 'race_combo') and self.parent_window.race_combo:
             #     return self.parent_window.race_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [SETTING] 獲取賽事失敗: {e}")
+            logger.warning(f"[WARNING] [SETTING] 獲取賽事失敗: {e}")
         return "Japan"  # 預設值
     
     def get_current_session_from_main_window(self):
@@ -7015,7 +7052,7 @@ class WindowSettingsDialog(QDialog):
             # elif hasattr(self.parent_window, 'session_combo') and self.parent_window.session_combo:
             #     return self.parent_window.session_combo.currentText()
         except Exception as e:
-            print(f"[WARNING] [SETTING] 獲取賽段失敗: {e}")
+            logger.warning(f"[WARNING] [SETTING] 獲取賽段失敗: {e}")
         return "R"  # 預設值
 
     # --- Season calendar helpers ---
@@ -7027,7 +7064,7 @@ class WindowSettingsDialog(QDialog):
             try:
                 return self.main_window._season_provider.get_completed_events(year)
             except SeasonCalendarError as exc:
-                print(f"[DIALOG] 取得賽事日曆失敗: {exc}")
+                logger.debug(f"[DIALOG] 取得賽事日曆失敗: {exc}")
         return []
 
     def _format_race_display(self, event: SeasonEvent) -> str:
@@ -7095,13 +7132,13 @@ class WindowSettingsDialog(QDialog):
 
     def _update_session_combo(self, preserve_session_code: Optional[str] = None) -> None:
         logger.info(f"🔍 [SESSION_DEBUG] _update_session_combo 入口，session_combo: {self.session_combo}")
-        print(f"🔍 [SESSION_DEBUG] _update_session_combo 入口，session_combo: {self.session_combo}")
+        logger.debug(f"🔍 [SESSION_DEBUG] _update_session_combo 入口，session_combo: {self.session_combo}")
         
         # ✅ 修復：不使用布爾檢查（PyQt5 已刪除的 widget 會返回 False）
         # 改用 hasattr 和 None 檢查
         if not hasattr(self, 'session_combo') or self.session_combo is None:
             logger.warning(f"🔍 [SESSION_DEBUG] session_combo 不存在或為 None，提早返回！")
-            print(f"🔍 [SESSION_DEBUG] session_combo 不存在或為 None，提早返回！")
+            logger.debug(f"🔍 [SESSION_DEBUG] session_combo 不存在或為 None，提早返回！")
             return
 
         event = self.get_selected_event()
@@ -7112,21 +7149,21 @@ class WindowSettingsDialog(QDialog):
         logger.info(f"🔍 [SESSION_DEBUG] preserve_session_code: {preserve_session_code}")
         logger.info(f"🔍 [SESSION_DEBUG] current_code: {current_code}")
         logger.info(f"🔍 [SESSION_DEBUG] event: {event}")
-        print(f"🔍 [SESSION_DEBUG] _update_session_combo 被調用")
-        print(f"🔍 [SESSION_DEBUG] preserve_session_code: {preserve_session_code}")
-        print(f"🔍 [SESSION_DEBUG] current_code: {current_code}")
-        print(f"🔍 [SESSION_DEBUG] event: {event}")
+        logger.debug(f"🔍 [SESSION_DEBUG] _update_session_combo 被調用")
+        logger.debug(f"🔍 [SESSION_DEBUG] preserve_session_code: {preserve_session_code}")
+        logger.debug(f"🔍 [SESSION_DEBUG] current_code: {current_code}")
+        logger.debug(f"🔍 [SESSION_DEBUG] event: {event}")
         if event:
             logger.info(f"🔍 [SESSION_DEBUG] event.race_key: {event.race_key}")
             logger.info(f"🔍 [SESSION_DEBUG] event.sessions: {event.sessions}")
-            print(f"🔍 [SESSION_DEBUG] event.race_key: {event.race_key}")
-            print(f"🔍 [SESSION_DEBUG] event.sessions: {event.sessions}")
+            logger.debug(f"🔍 [SESSION_DEBUG] event.race_key: {event.race_key}")
+            logger.debug(f"🔍 [SESSION_DEBUG] event.sessions: {event.sessions}")
             if event.sessions:
                 logger.info(f"🔍 [SESSION_DEBUG] sessions 數量: {len(event.sessions)}")
-                print(f"🔍 [SESSION_DEBUG] sessions 數量: {len(event.sessions)}")
+                logger.debug(f"🔍 [SESSION_DEBUG] sessions 數量: {len(event.sessions)}")
                 for session in event.sessions:
                     logger.info(f"🔍 [SESSION_DEBUG]   - {session.code}")
-                    print(f"🔍 [SESSION_DEBUG]   - {session.code}")
+                    logger.debug(f"🔍 [SESSION_DEBUG]   - {session.code}")
         
         self.session_combo.blockSignals(True)
         self.session_combo.clear()
@@ -7166,10 +7203,10 @@ class WindowSettingsDialog(QDialog):
             year_int = int(year)
             events = self._get_calendar_events_for_year(year_int)
             self._rebuild_race_mapping(events)
-            print(f"[DIALOG] 載入 {year_int} 年的賽事列表: {len(events)} 個賽事")
+            logger.debug(f"[DIALOG] 載入 {year_int} 年的賽事列表: {len(events)} 個賽事")
             return events
         except Exception as e:
-            print(f"[DIALOG ERROR] 獲取賽事列表時出錯: {e}")
+            logger.debug(f"[DIALOG ERROR] 獲取賽事列表時出錯: {e}")
             return []
     
     def populate_races_for_year(self, year):
@@ -7197,8 +7234,8 @@ class WindowSettingsDialog(QDialog):
             if self.race_combo.currentIndex() < 0:
                 preferred_event = select_preferred_event(completed_events, upcoming_events)
                 if preferred_event is not None:
-                    print(
-                        "[RACE_DEFAULT][MAIN] preferred=",
+                    logger.debug(
+                        "[RACE_DEFAULT][MAIN] preferred=%s %s %s",
                         preferred_event.race_key,
                         preferred_event.round,
                         preferred_event.is_completed,
@@ -7206,18 +7243,16 @@ class WindowSettingsDialog(QDialog):
                     before_index = self.race_combo.currentIndex()
                     self._select_race_by_key(preferred_event.race_key)
                     after_index = self.race_combo.currentIndex()
-                    print(
-                        "[RACE_DEFAULT][MAIN] index from",
+                    logger.debug(
+                        "[RACE_DEFAULT][MAIN] index from %s to %s text=%s",
                         before_index,
-                        "to",
                         after_index,
-                        "text=",
                         self.race_combo.currentText(),
                     )
             if self.race_combo.currentIndex() < 0 and self.race_combo.count() > 0:
                 self.race_combo.setCurrentIndex(0)
-                print(
-                    "[RACE_DEFAULT][MAIN] fallback index=0 text=",
+                logger.debug(
+                    "[RACE_DEFAULT][MAIN] fallback index=0 text=%s",
                     self.race_combo.currentText(),
                 )
         else:
@@ -7226,7 +7261,7 @@ class WindowSettingsDialog(QDialog):
         
     def on_year_changed_in_dialog(self, year):
         """處理設定對話框中的年份變更"""
-        print(f"[DIALOG] 年份變更為: {year}")
+        logger.debug(f"[DIALOG] 年份變更為: {year}")
         
         # 記住當前選擇的賽事
         current_event = self.get_selected_event()
@@ -7258,7 +7293,7 @@ class WindowSettingsDialog(QDialog):
                         'distancediff', 'brake', 'steering', 'drs'
                     ]
                     is_telemetry = analysis_type in telemetry_types
-                    print(f"[WINDOW_SETTINGS] 模組類型: {analysis_type}, 是否為遙測模組: {is_telemetry}")
+                    logger.debug(f"[WINDOW_SETTINGS] 模組類型: {analysis_type}, 是否為遙測模組: {is_telemetry}")
                     return is_telemetry
             
             # 方法2: 檢查父視窗的 _analysis_type 屬性
@@ -7271,14 +7306,14 @@ class WindowSettingsDialog(QDialog):
                     'distancediff', 'brake', 'steering', 'drs'
                 ]
                 is_telemetry = analysis_type in telemetry_types
-                print(f"[WINDOW_SETTINGS] 模組類型 (_analysis_type): {analysis_type}, 是否為遙測模組: {is_telemetry}")
+                logger.debug(f"[WINDOW_SETTINGS] 模組類型 (_analysis_type): {analysis_type}, 是否為遙測模組: {is_telemetry}")
                 return is_telemetry
             
-            print(f"[WINDOW_SETTINGS] 無法判斷模組類型，預設為非遙測模組")
+            logger.debug(f"[WINDOW_SETTINGS] 無法判斷模組類型，預設為非遙測模組")
             return False
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 檢查模組類型失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 檢查模組類型失敗: {e}")
             return False
     
     def _setup_driver_lap_controls(self, parent_layout):
@@ -7439,16 +7474,16 @@ class WindowSettingsDialog(QDialog):
                 if hasattr(self.main_window, 'use_time_axis_checkbox') and self.main_window.use_time_axis_checkbox:
                     current_time_axis_state = self.main_window.use_time_axis_checkbox.isChecked()
                     self.use_time_axis_checkbox.setChecked(current_time_axis_state)
-                    print(f"[WINDOW_SETTINGS] 從主視窗載入時間軸狀態: {current_time_axis_state}")
+                    logger.debug(f"[WINDOW_SETTINGS] 從主視窗載入時間軸狀態: {current_time_axis_state}")
                 elif hasattr(self.parent_window, 'analysis_module'):
                     analysis_module = self.parent_window.analysis_module
                     current_time_axis_state = getattr(analysis_module, 'use_time_axis', False)
                     self.use_time_axis_checkbox.setChecked(current_time_axis_state)
-                    print(f"[WINDOW_SETTINGS] 從分析模組載入時間軸狀態: {current_time_axis_state}")
+                    logger.debug(f"[WINDOW_SETTINGS] 從分析模組載入時間軸狀態: {current_time_axis_state}")
                 else:
                     self.use_time_axis_checkbox.setChecked(False)  # 預設不使用時間軸
             except (AttributeError, RuntimeError) as e:
-                print(f"[ERROR] [WINDOW_SETTINGS] 載入時間軸狀態失敗: {e}")
+                logger.error(f"[ERROR] [WINDOW_SETTINGS] 載入時間軸狀態失敗: {e}")
                 self.use_time_axis_checkbox.setChecked(False)  # 預設不使用時間軸
             
             self.use_time_axis_checkbox.setToolTip(tr("use_time_axis_tooltip", "切換橫軸為時間軸（秒）或距離軸（米）"))
@@ -7462,10 +7497,10 @@ class WindowSettingsDialog(QDialog):
             # 初始化控制項的可編輯性
             self._update_driver_lap_controls_editability()
             
-            print(f"[OK] [WINDOW_SETTINGS] 車手與圈數控制已設置（支援跨賽事比較）")
+            logger.debug(f"[OK] [WINDOW_SETTINGS] 車手與圈數控制已設置（支援跨賽事比較）")
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 設置車手與圈數控制失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 設置車手與圈數控制失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -7485,13 +7520,13 @@ class WindowSettingsDialog(QDialog):
                     default_drivers = ["VER", "LEC", "HAM", "PER", "SAI", "RUS", "NOR", "PIA", "ALO", "STR"]
                     combo.addItems(default_drivers)
             except (AttributeError, RuntimeError) as e:
-                print(f"[ERROR] [WINDOW_SETTINGS] 從主視窗獲取車手列表失敗: {e}")
+                logger.error(f"[ERROR] [WINDOW_SETTINGS] 從主視窗獲取車手列表失敗: {e}")
                 # 預設車手列表
                 default_drivers = ["VER", "LEC", "HAM", "PER", "SAI", "RUS", "NOR", "PIA", "ALO", "STR"]
                 combo.addItems(default_drivers)
                 
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手列表失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 填充車手列表失敗: {e}")
             # 使用最小預設列表
             combo.addItems(["VER", "LEC", "HAM"])
     
@@ -7517,7 +7552,7 @@ class WindowSettingsDialog(QDialog):
                     lap1, lap2 = 1, 1  # 預設值
                     
                 except AttributeError as e:
-                    print(f"[ERROR] [WINDOW_SETTINGS] 無法從主視窗載入參數: {e}")
+                    logger.error(f"[ERROR] [WINDOW_SETTINGS] 無法從主視窗載入參數: {e}")
                     # 使用預設值
                     source_year, source_race, source_session = "2024", "", "R"
                     source_driver1, source_driver2 = "VER", "NOR"
@@ -7585,12 +7620,12 @@ class WindowSettingsDialog(QDialog):
             else:
                 self.lap2_input.setText(str(lap2))
             
-            print(f"[WINDOW_SETTINGS] 已載入設定:")
-            print(f"  車手 1: {year1} {race1} {session1} {source_driver1} 第{lap1}圈")
-            print(f"  車手 2: {year2} {race2} {session2} {source_driver2} 第{lap2}圈")
+            logger.debug(f"[WINDOW_SETTINGS] 已載入設定:")
+            logger.debug(f"  車手 1: {year1} {race1} {session1} {source_driver1} 第{lap1}圈")
+            logger.debug(f"  車手 2: {year2} {race2} {session2} {source_driver2} 第{lap2}圈")
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 載入車手與圈數設定失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 載入車手與圈數設定失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -7611,7 +7646,7 @@ class WindowSettingsDialog(QDialog):
                 try:
                     events = self.main_window._season_provider.get_completed_events(year_int)
                 except Exception as exc:
-                    print(f"[WINDOW_SETTINGS] 獲取賽事列表失敗: {exc}")
+                    logger.debug(f"[WINDOW_SETTINGS] 獲取賽事列表失敗: {exc}")
             
             if events:
                 for event in events:
@@ -7633,10 +7668,10 @@ class WindowSettingsDialog(QDialog):
                 combo.setCurrentIndex(0)
             
             combo.blockSignals(False)
-            print(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽事列表已填充: {combo.count()} 個賽事")
+            logger.debug(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽事列表已填充: {combo.count()} 個賽事")
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽事列表失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽事列表失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -7663,17 +7698,17 @@ class WindowSettingsDialog(QDialog):
                         combo.setCurrentIndex(index)
             
             combo.blockSignals(False)
-            print(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽段列表已填充")
+            logger.debug(f"[WINDOW_SETTINGS] 車手 {driver_num} 賽段列表已填充")
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽段列表失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 填充車手 {driver_num} 賽段列表失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _on_driver1_year_changed(self, year: str):
         """處理車手 1 年份變更 → 動態更新賽事列表"""
         try:
-            print(f"[WINDOW_SETTINGS] 車手 1 年份變更: {year} → 重新載入賽事列表")
+            logger.debug(f"[WINDOW_SETTINGS] 車手 1 年份變更: {year} → 重新載入賽事列表")
             
             # 保留當前選擇的賽事（如果存在）
             current_race = self.driver1_race_combo.currentText()
@@ -7685,12 +7720,12 @@ class WindowSettingsDialog(QDialog):
             self._populate_race_combo_for_driver(2, self.driver2_year_combo.currentText(), current_race)
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 年份變更失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 年份變更失敗: {e}")
     
     def _on_driver2_year_changed(self, year: str):
         """處理車手 2 年份變更 → 動態更新賽事列表"""
         try:
-            print(f"[WINDOW_SETTINGS] 車手 2 年份變更: {year} → 重新載入賽事列表")
+            logger.debug(f"[WINDOW_SETTINGS] 車手 2 年份變更: {year} → 重新載入賽事列表")
             
             # 保留當前選擇的賽事（必須與車手 1 同步）
             current_race = self.driver1_race_combo.currentText()
@@ -7699,7 +7734,7 @@ class WindowSettingsDialog(QDialog):
             self._populate_race_combo_for_driver(2, year, current_race)
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 2 年份變更失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 處理車手 2 年份變更失敗: {e}")
     
     def _on_driver1_race_changed(self, index: int):
         """處理車手 1 賽事變更 → 自動同步車手 2 賽事"""
@@ -7707,7 +7742,7 @@ class WindowSettingsDialog(QDialog):
             if index < 0:
                 return
             selected_race = self.driver1_race_combo.currentText()
-            print(f"[WINDOW_SETTINGS] 車手 1 賽事變更: {selected_race} → 同步車手 2")
+            logger.debug(f"[WINDOW_SETTINGS] 車手 1 賽事變更: {selected_race} → 同步車手 2")
             
             # 強制同步車手 2 賽事（防止選錯賽道）
             self.driver2_race_combo.blockSignals(True)  # 避免觸發遞迴
@@ -7715,7 +7750,7 @@ class WindowSettingsDialog(QDialog):
             self.driver2_race_combo.blockSignals(False)
             
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 賽事變更失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 處理車手 1 賽事變更失敗: {e}")
     
     def _on_sync_driver_lap_toggled(self, checked: bool):
         """處理車手與圈數同步勾選框變更"""
@@ -7768,29 +7803,29 @@ class WindowSettingsDialog(QDialog):
         try:
             # ✅ 原則 0-1：驗證物件存在
             if not hasattr(self.main_window, 'shared_independent_params'):
-                print(f"[LOAD_SHARED] ⚠️  主視窗沒有 shared_independent_params")
+                logger.debug(f"[LOAD_SHARED] ⚠️  主視窗沒有 shared_independent_params")
                 return
             
             # ✅ 原則 0-1：在 try-except 內訪問物件（防止 EXE 中的 RuntimeError）
             try:
                 shared_params = self.main_window.shared_independent_params
             except (AttributeError, RuntimeError) as e:
-                print(f"[LOAD_SHARED] ❌ 無法訪問 shared_independent_params: {e}")
-                print(f"[LOAD_SHARED] 這通常發生在 EXE 中物件已被釋放")
+                logger.debug(f"[LOAD_SHARED] ❌ 無法訪問 shared_independent_params: {e}")
+                logger.debug(f"[LOAD_SHARED] 這通常發生在 EXE 中物件已被釋放")
                 return
             
             # ✅ 原則 0-1：驗證獲取的物件是字典
             if not isinstance(shared_params, dict):
-                print(f"[LOAD_SHARED] ⚠️  shared_independent_params 不是字典類型: {type(shared_params)}")
+                logger.debug(f"[LOAD_SHARED] ⚠️  shared_independent_params 不是字典類型: {type(shared_params)}")
                 return
             
-            print(f"[LOAD_SHARED] 全域參數池內容:")
+            logger.debug(f"[LOAD_SHARED] 全域參數池內容:")
             for key, value in shared_params.items():
-                print(f"   {key}: {value}")
+                logger.debug(f"   {key}: {value}")
             
             # 檢查是否為空（所有值都是 None）
             if all(v is None for k, v in shared_params.items() if k != 'use_time_axis'):
-                print(f"[LOAD_SHARED] ⚠️  全域參數池為空，跳過載入")
+                logger.debug(f"[LOAD_SHARED] ⚠️  全域參數池為空，跳過載入")
                 return
             
             # 載入車手 1 參數
@@ -7810,80 +7845,80 @@ class WindowSettingsDialog(QDialog):
             # 載入時間軸參數
             use_time_axis = shared_params.get('use_time_axis', False)
             
-            print(f"[LOAD_SHARED] 🔄 開始更新 UI 控制項...")
+            logger.debug(f"[LOAD_SHARED] 🔄 開始更新 UI 控制項...")
             
             # === 更新車手 1 UI ===
             if year1:
                 self.driver1_year_combo.setCurrentText(str(year1))
-                print(f"[LOAD_SHARED] ✅ 車手 1 年份: {year1}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 1 年份: {year1}")
             
             if race1:
                 # 需要先載入賽事列表
                 self._populate_race_combo_for_driver(1, str(year1) if year1 else "2025", race1)
-                print(f"[LOAD_SHARED] ✅ 車手 1 賽事: {race1}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 1 賽事: {race1}")
             
             if session1:
                 # 需要先載入賽段列表
                 self._populate_session_combo_for_driver(1, race1 if race1 else "", session1)
-                print(f"[LOAD_SHARED] ✅ 車手 1 賽段: {session1}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 1 賽段: {session1}")
             
             if driver1:
                 index = self.driver1_combo.findText(driver1)
                 if index >= 0:
                     self.driver1_combo.setCurrentIndex(index)
-                    print(f"[LOAD_SHARED] ✅ 車手 1: {driver1}")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 1: {driver1}")
             
             if lap1 is not None:
                 if lap1 == 99:
                     self.fastest_lap1_checkbox.setChecked(True)
                     self.lap1_input.setText("99")
-                    print(f"[LOAD_SHARED] ✅ 車手 1 圈數: 99 (最速圈)")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 1 圈數: 99 (最速圈)")
                 else:
                     self.fastest_lap1_checkbox.setChecked(False)
                     self.lap1_input.setText(str(lap1))
-                    print(f"[LOAD_SHARED] ✅ 車手 1 圈數: {lap1}")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 1 圈數: {lap1}")
             
             # === 更新車手 2 UI ===
             if year2:
                 self.driver2_year_combo.setCurrentText(str(year2))
-                print(f"[LOAD_SHARED] ✅ 車手 2 年份: {year2}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 2 年份: {year2}")
             
             if race2:
                 # 車手 2 的賽事自動同步車手 1
                 self._populate_race_combo_for_driver(2, str(year2) if year2 else "2025", race2)
-                print(f"[LOAD_SHARED] ✅ 車手 2 賽事: {race2}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 2 賽事: {race2}")
             
             if session2:
                 self._populate_session_combo_for_driver(2, race2 if race2 else "", session2)
-                print(f"[LOAD_SHARED] ✅ 車手 2 賽段: {session2}")
+                logger.debug(f"[LOAD_SHARED] ✅ 車手 2 賽段: {session2}")
             
             if driver2:
                 index = self.driver2_combo.findText(driver2)
                 if index >= 0:
                     self.driver2_combo.setCurrentIndex(index)
-                    print(f"[LOAD_SHARED] ✅ 車手 2: {driver2}")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 2: {driver2}")
             
             if lap2 is not None:
                 if lap2 == 99:
                     self.fastest_lap2_checkbox.setChecked(True)
                     self.lap2_input.setText("99")
-                    print(f"[LOAD_SHARED] ✅ 車手 2 圈數: 99 (最速圈)")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 2 圈數: 99 (最速圈)")
                 else:
                     self.fastest_lap2_checkbox.setChecked(False)
                     self.lap2_input.setText(str(lap2))
-                    print(f"[LOAD_SHARED] ✅ 車手 2 圈數: {lap2}")
+                    logger.debug(f"[LOAD_SHARED] ✅ 車手 2 圈數: {lap2}")
             
             # === 更新時間軸 checkbox ===
             if hasattr(self, 'use_time_axis_checkbox'):
                 self.use_time_axis_checkbox.setChecked(use_time_axis)
-                print(f"[LOAD_SHARED] ✅ 時間軸模式: {use_time_axis}")
+                logger.debug(f"[LOAD_SHARED] ✅ 時間軸模式: {use_time_axis}")
             
-            print(f"\n{'='*80}")
-            print(f"[LOAD_SHARED] ✅ 全域參數池已載入到 UI")
-            print(f"{'='*80}\n")
+            logger.debug(f"\n{'='*80}")
+            logger.debug(f"[LOAD_SHARED] ✅ 全域參數池已載入到 UI")
+            logger.debug(f"{'='*80}\n")
             
         except Exception as e:
-            print(f"[LOAD_SHARED] ❌ 載入失敗: {e}")
+            logger.debug(f"[LOAD_SHARED] ❌ 載入失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -7927,7 +7962,7 @@ class WindowSettingsDialog(QDialog):
             self.driver2_combo.setToolTip(tooltip)
             self.lap1_input.setToolTip(tooltip)
             self.lap2_input.setToolTip(tooltip)
-            print(f"[LOCK] [WINDOW_SETTINGS] 所有控制已鎖定（同步模式）")
+            logger.debug(f"[LOCK] [WINDOW_SETTINGS] 所有控制已鎖定（同步模式）")
         else:
             self.driver1_year_combo.setToolTip(tr("year1_tooltip", "設定車手 1 的年份"))
             self.driver1_race_combo.setToolTip(tr("race1_tooltip", "設定車手 1 的賽事"))
@@ -7939,7 +7974,7 @@ class WindowSettingsDialog(QDialog):
             self.driver2_combo.setToolTip(tr("driver2_tooltip", "選擇車手 2"))
             self.lap1_input.setToolTip(tr("lap1_tooltip", "設定圈數 1"))
             self.lap2_input.setToolTip(tr("lap2_tooltip", "設定圈數 2"))
-            print(f"🔓 [WINDOW_SETTINGS] 所有控制已解鎖（手動模式）")
+            logger.debug(f"🔓 [WINDOW_SETTINGS] 所有控制已解鎖（手動模式）")
     
     def _on_fastest_lap_changed(self, state, driver_num: int):
         """處理最速圈勾選框變更"""
@@ -7950,23 +7985,23 @@ class WindowSettingsDialog(QDialog):
                 self.lap1_input.setText("99")
                 self.lap1_input.setEnabled(False)
                 self.lap1_input.setStyleSheet("color: #666666;")
-                print(f"[WINDOW_SETTINGS] 車手 1 最速圈已啟用（圈數=99）")
+                logger.debug(f"[WINDOW_SETTINGS] 車手 1 最速圈已啟用（圈數=99）")
             else:
                 self.lap1_input.setText("1")
                 self.lap1_input.setEnabled(not self.sync_driver_lap_checkbox.isChecked())
                 self.lap1_input.setStyleSheet("")
-                print(f"[WINDOW_SETTINGS] 車手 1 最速圈已停用")
+                logger.debug(f"[WINDOW_SETTINGS] 車手 1 最速圈已停用")
         elif driver_num == 2:
             if is_checked:
                 self.lap2_input.setText("99")
                 self.lap2_input.setEnabled(False)
                 self.lap2_input.setStyleSheet("color: #666666;")
-                print(f"[WINDOW_SETTINGS] 車手 2 最速圈已啟用（圈數=99）")
+                logger.debug(f"[WINDOW_SETTINGS] 車手 2 最速圈已啟用（圈數=99）")
             else:
                 self.lap2_input.setText("1")
                 self.lap2_input.setEnabled(not self.sync_driver_lap_checkbox.isChecked())
                 self.lap2_input.setStyleSheet("")
-                print(f"[WINDOW_SETTINGS] 車手 2 最速圈已停用")
+                logger.debug(f"[WINDOW_SETTINGS] 車手 2 最速圈已停用")
         
     def accept_settings(self):
         """確認設定"""
@@ -7976,13 +8011,13 @@ class WindowSettingsDialog(QDialog):
         session = self.get_selected_session_code()
         sync_windows = self.sync_windows_checkbox.isChecked()
         
-        print(f"\n{'='*80}")
-        print(f"[ACCEPT_SETTINGS] 設定對話框 OK 按鈕被點擊")
-        print(f"[ACCEPT_SETTINGS] 視窗: {window_title}")
-        print(f"[ACCEPT_SETTINGS] 參數: {year} {race} {session}")
-        print(f"[ACCEPT_SETTINGS] 同步接收狀態: {'啟用' if sync_windows else '停用'}")
-        print(f"[ACCEPT_SETTINGS] 是否為遙測模組: {self.is_telemetry_module}")
-        print(f"{'='*80}\n")
+        logger.debug(f"\n{'='*80}")
+        logger.debug(f"[ACCEPT_SETTINGS] 設定對話框 OK 按鈕被點擊")
+        logger.debug(f"[ACCEPT_SETTINGS] 視窗: {window_title}")
+        logger.debug(f"[ACCEPT_SETTINGS] 參數: {year} {race} {session}")
+        logger.debug(f"[ACCEPT_SETTINGS] 同步接收狀態: {'啟用' if sync_windows else '停用'}")
+        logger.debug(f"[ACCEPT_SETTINGS] 是否為遙測模組: {self.is_telemetry_module}")
+        logger.debug(f"{'='*80}\n")
         
         # 保存同步狀態到父視窗
         self.parent_window.sync_enabled = sync_windows
@@ -7990,11 +8025,11 @@ class WindowSettingsDialog(QDialog):
         # [TOOL] 新增: 處理遙測模組的車手與圈數設定
         if self.is_telemetry_module:
             sync_driver_lap = self.sync_driver_lap_checkbox.isChecked()
-            print(f"\n[TELEMETRY_MODULE_DETECTED]")
-            print(f"   車手與圈數同步: {'啟用' if sync_driver_lap else '停用'}")
+            logger.debug(f"\n[TELEMETRY_MODULE_DETECTED]")
+            logger.debug(f"   車手與圈數同步: {'啟用' if sync_driver_lap else '停用'}")
             
             if not sync_driver_lap:
-                print(f"[MANUAL_MODE] 車手與圈數同步已停用，進入手動模式")
+                logger.debug(f"[MANUAL_MODE] 車手與圈數同步已停用，進入手動模式")
                 # 手動模式：獲取車手和圈數設定
                 driver1 = self.driver1_combo.currentText()
                 driver2 = self.driver2_combo.currentText()
@@ -8011,17 +8046,17 @@ class WindowSettingsDialog(QDialog):
                 
                 is_fastest_lap = (lap1 == 99 or lap2 == 99)
                 
-                print(f"   車手設定: {driver1} vs {driver2}")
-                print(f"   圈數設定: 第{lap1}圈 vs 第{lap2}圈")
-                print(f"   最速圈: {is_fastest_lap}")
+                logger.debug(f"   車手設定: {driver1} vs {driver2}")
+                logger.debug(f"   圈數設定: 第{lap1}圈 vs 第{lap2}圈")
+                logger.debug(f"   最速圈: {is_fastest_lap}")
                 
                 # 應用車手與圈數設定到分析模組
-                print(f"[CALLING] _apply_driver_lap_settings()")
+                logger.debug(f"[CALLING] _apply_driver_lap_settings()")
                 self._apply_driver_lap_settings(driver1, driver2, lap1, lap2, is_fastest_lap)
-                print(f"[RETURNED] _apply_driver_lap_settings()")
+                logger.debug(f"[RETURNED] _apply_driver_lap_settings()")
             else:
                 # 啟用同步：從主視窗讀取參數並應用
-                print(f"[SYNC_MODE] 車手與圈數同步已啟用，從主視窗讀取參數")
+                logger.debug(f"[SYNC_MODE] 車手與圈數同步已啟用，從主視窗讀取參數")
                 
                 try:
                     # ✅ 從主視窗讀取所有參數（加入 try-except 保護）
@@ -8037,26 +8072,26 @@ class WindowSettingsDialog(QDialog):
                     main_lap2 = self.main_window.lap2_spinbox.value() if hasattr(self.main_window, 'lap2_spinbox') else 1
                     main_is_fastest = self.main_window.fastest_lap_checkbox.isChecked() if hasattr(self.main_window, 'fastest_lap_checkbox') else False
                     
-                    print(f"[SYNC_MODE] 主視窗參數:")
-                    print(f"   車手 1: {main_driver1}")
-                    print(f"   車手 2: {main_driver2}")
-                    print(f"   圈數 1: {main_lap1}")
-                    print(f"   圈數 2: {main_lap2}")
-                    print(f"   最速圈: {main_is_fastest}")
+                    logger.debug(f"[SYNC_MODE] 主視窗參數:")
+                    logger.debug(f"   車手 1: {main_driver1}")
+                    logger.debug(f"   車手 2: {main_driver2}")
+                    logger.debug(f"   圈數 1: {main_lap1}")
+                    logger.debug(f"   圈數 2: {main_lap2}")
+                    logger.debug(f"   最速圈: {main_is_fastest}")
                     
                     # ✅ 調用 _apply_driver_lap_settings 實際套用主視窗參數
-                    print(f"[CALLING] _apply_driver_lap_settings() with main window params")
+                    logger.debug(f"[CALLING] _apply_driver_lap_settings() with main window params")
                     self._apply_driver_lap_settings(main_driver1, main_driver2, main_lap1, main_lap2, main_is_fastest)
-                    print(f"[RETURNED] _apply_driver_lap_settings()")
-                    print(f"[SYNC_MODE] ✅ 主視窗參數已套用到當前視窗")
+                    logger.debug(f"[RETURNED] _apply_driver_lap_settings()")
+                    logger.debug(f"[SYNC_MODE] ✅ 主視窗參數已套用到當前視窗")
                     
                 except AttributeError as e:
-                    print(f"[ERROR] [SYNC_MODE] 無法從主視窗讀取參數: {e}")
-                    print(f"[ERROR] 這通常發生在 EXE 中物件引用失效")
+                    logger.error(f"[ERROR] [SYNC_MODE] 無法從主視窗讀取參數: {e}")
+                    logger.error(f"[ERROR] 這通常發生在 EXE 中物件引用失效")
                     # 使用預設值繼續
                     self._apply_driver_lap_settings("VER", None, 1, 1, False)
                 except Exception as e:
-                    print(f"[ERROR] [SYNC_MODE] 讀取主視窗參數時發生未預期錯誤: {e}")
+                    logger.error(f"[ERROR] [SYNC_MODE] 讀取主視窗參數時發生未預期錯誤: {e}")
                     import traceback
                     traceback.print_exc()
         
@@ -8065,40 +8100,40 @@ class WindowSettingsDialog(QDialog):
         if sync_windows:
             # ✅ 車手與圈數同步已在上面的 if-else 處理完畢
             # 不需要再調用 update_current_window_only()
-            print(f"[REFRESH] [SETTING] [{window_title}] ✅ 車手與圈數已同步完成")
-            print(f"[REFRESH] [SETTING] [{window_title}] sync_driver_lap = {sync_driver_lap}")
+            logger.debug(f"[REFRESH] [SETTING] [{window_title}] ✅ 車手與圈數已同步完成")
+            logger.debug(f"[REFRESH] [SETTING] [{window_title}] sync_driver_lap = {sync_driver_lap}")
         else:
             # 當停用同步時，允許手動設定並應用到當前視窗
-            print(f"[TOOL] [SETTING] [{window_title}] 手動設定模式 - 應用自定義參數")
+            logger.debug(f"[TOOL] [SETTING] [{window_title}] 手動設定模式 - 應用自定義參數")
             self.apply_manual_settings(year, race, session)
         
         self.accept()
     
     def _apply_driver_lap_settings(self, driver1: str, driver2: str, lap1: int, lap2: int, is_fastest_lap: bool):
         """應用車手與圈數設定到分析模組（支援跨賽事比較）"""
-        print(f"\n{'='*80}")
-        print(f"[_APPLY_DRIVER_LAP_SETTINGS] 方法開始執行")
-        print(f"[_APPLY_DRIVER_LAP_SETTINGS] 參數: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
-        print(f"{'='*80}\n")
+        logger.debug(f"\n{'='*80}")
+        logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 方法開始執行")
+        logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 參數: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+        logger.debug(f"{'='*80}\n")
         
         try:
             if not hasattr(self.parent_window, 'analysis_module'):
-                print(f"[WARNING] [WINDOW_SETTINGS] 父視窗沒有 analysis_module 屬性")
+                logger.warning(f"[WARNING] [WINDOW_SETTINGS] 父視窗沒有 analysis_module 屬性")
                 return
             
             analysis_module = self.parent_window.analysis_module
-            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 獲取到 analysis_module: {type(analysis_module).__name__}")
+            logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 獲取到 analysis_module: {type(analysis_module).__name__}")
             
             # === 保存同步狀態到分析模組 ===
             sync_enabled = self.sync_driver_lap_checkbox.isChecked()
             analysis_module.sync_driver_lap_enabled = sync_enabled
-            print(f"[WINDOW_SETTINGS] 同步狀態已保存: {sync_enabled}")
+            logger.debug(f"[WINDOW_SETTINGS] 同步狀態已保存: {sync_enabled}")
             
             # === 保存時間軸設定到分析模組 ===
             use_time_axis = self.use_time_axis_checkbox.isChecked()
             analysis_module.use_time_axis = use_time_axis
-            print(f"[WINDOW_SETTINGS] 時間軸設定已保存: {use_time_axis}")
-            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 時間軸 checkbox 狀態: {use_time_axis}")
+            logger.debug(f"[WINDOW_SETTINGS] 時間軸設定已保存: {use_time_axis}")
+            logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 時間軸 checkbox 狀態: {use_time_axis}")
             
             # === 獲取車手 1 和車手 2 的 Year/Race/Session ===
             year1 = self.driver1_year_combo.currentText()
@@ -8109,8 +8144,8 @@ class WindowSettingsDialog(QDialog):
             race2 = self.driver2_race_combo.currentText()  # 應該與 race1 相同（灰色同步）
             session2 = self.driver2_session_combo.currentText()
             
-            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 1: {year1} {race1} {session1} {driver1} Lap{lap1}")
-            print(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 2: {year2} {race2} {session2} {driver2} Lap{lap2}")
+            logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 1: {year1} {race1} {session1} {driver1} Lap{lap1}")
+            logger.debug(f"[_APPLY_DRIVER_LAP_SETTINGS] 車手 2: {year2} {race2} {session2} {driver2} Lap{lap2}")
             
             # === 保存所有參數到分析模組（用於下次開啟時載入）===
             analysis_module.driver1_year = year1
@@ -8125,12 +8160,12 @@ class WindowSettingsDialog(QDialog):
             analysis_module.driver2 = driver2
             analysis_module.lap2 = lap2
             
-            print(f"[WINDOW_SETTINGS] 所有參數已保存到分析模組")
+            logger.debug(f"[WINDOW_SETTINGS] 所有參數已保存到分析模組")
             
             # === 檢測是否為跨賽事比較 ===
             # ⚠️ 關鍵修復：如果啟用同步，強制使用主視窗參數（單賽事模式）
             if sync_enabled:
-                print(f"[SYNC_FIX] 🔒 已啟用同步，強制使用主視窗參數（單賽事模式）")
+                logger.debug(f"[SYNC_FIX] 🔒 已啟用同步，強制使用主視窗參數（單賽事模式）")
                 try:
                     # 從主視窗獲取當前參數（使用 combo box）- 加入 try-except 保護
                     year1 = self.main_window.year_combo.currentText() if hasattr(self.main_window, 'year_combo') else year1
@@ -8148,8 +8183,8 @@ class WindowSettingsDialog(QDialog):
                     race2 = race1  # 強制相同
                     session2 = session1  # 強制相同
                     
-                    print(f"[SYNC_FIX] 主視窗參數: {year1} {race1} {session1}")
-                    print(f"[SYNC_FIX] 強制設定: year2={year2}, session2={session2}")
+                    logger.debug(f"[SYNC_FIX] 主視窗參數: {year1} {race1} {session1}")
+                    logger.debug(f"[SYNC_FIX] 強制設定: year2={year2}, session2={session2}")
                     
                     # 更新分析模組的跨賽事參數為主視窗值
                     analysis_module.driver1_year = year1
@@ -8160,14 +8195,14 @@ class WindowSettingsDialog(QDialog):
                     analysis_module.driver2_session = session2
                     
                     is_cross_event = False  # 強制設為 False
-                    print(f"[SYNC_FIX] ✅ 已強制切換為單賽事模式（is_cross_event = False）")
+                    logger.debug(f"[SYNC_FIX] ✅ 已強制切換為單賽事模式（is_cross_event = False）")
                     
                 except AttributeError as e:
-                    print(f"[ERROR] [SYNC_FIX] 無法從主視窗獲取參數: {e}")
-                    print(f"[ERROR] 使用對話框設定的參數作為備用")
+                    logger.error(f"[ERROR] [SYNC_FIX] 無法從主視窗獲取參數: {e}")
+                    logger.error(f"[ERROR] 使用對話框設定的參數作為備用")
                     is_cross_event = (year1 != year2) or (session1 != session2)
                 except Exception as e:
-                    print(f"[ERROR] [SYNC_FIX] 獲取主視窗參數時發生錯誤: {e}")
+                    logger.error(f"[ERROR] [SYNC_FIX] 獲取主視窗參數時發生錯誤: {e}")
                     import traceback
                     traceback.print_exc()
                     is_cross_event = (year1 != year2) or (session1 != session2)
@@ -8175,13 +8210,13 @@ class WindowSettingsDialog(QDialog):
                 is_cross_event = (year1 != year2) or (session1 != session2)
             
             if is_cross_event:
-                print(f"[CROSS-EVENT] 檢測到跨賽事比較:")
-                print(f"   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
-                print(f"   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+                logger.debug(f"[CROSS-EVENT] 檢測到跨賽事比較:")
+                logger.debug(f"   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+                logger.debug(f"   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
                 
                 # 檢查分析模組是否支援跨賽事比較
                 if hasattr(analysis_module, 'update_cross_event_comparison'):
-                    print(f"[CROSS-EVENT] 調用 update_cross_event_comparison 方法")
+                    logger.debug(f"[CROSS-EVENT] 調用 update_cross_event_comparison 方法")
                     
                     success = analysis_module.update_cross_event_comparison(
                         year1=year1, race1=race1, session1=session1, driver1=driver1, lap1=lap1,
@@ -8191,21 +8226,21 @@ class WindowSettingsDialog(QDialog):
                     )
                     
                     if success:
-                        print(f"[OK] [CROSS-EVENT] 跨賽事比較設定已套用")
+                        logger.debug(f"[OK] [CROSS-EVENT] 跨賽事比較設定已套用")
                     else:
-                        print(f"[INFO] [CROSS-EVENT] 跨賽事比較功能開發中")
+                        logger.debug(f"[INFO] [CROSS-EVENT] 跨賽事比較功能開發中")
                 else:
-                    print(f"[INFO] [CROSS-EVENT] 分析模組不支援跨賽事比較")
+                    logger.debug(f"[INFO] [CROSS-EVENT] 分析模組不支援跨賽事比較")
             else:
                 # === 標準模式（同一賽事比較）===
-                print(f"[STANDARD] 標準比較模式:")
-                print(f"   賽事: {year1} {race1} {session1}")
-                print(f"   車手: {driver1} vs {driver2}")
-                print(f"   圈數: 第{lap1}圈 vs 第{lap2}圈")
+                logger.debug(f"[STANDARD] 標準比較模式:")
+                logger.debug(f"   賽事: {year1} {race1} {session1}")
+                logger.debug(f"   車手: {driver1} vs {driver2}")
+                logger.debug(f"   圈數: 第{lap1}圈 vs 第{lap2}圈")
                 
                 # 檢查分析模組是否有 update_lap_parameters 方法
                 if hasattr(analysis_module, 'update_lap_parameters'):
-                    print(f"[STANDARD] 調用 update_lap_parameters 更新車手與圈數")
+                    logger.debug(f"[STANDARD] 調用 update_lap_parameters 更新車手與圈數")
                     
                     success = analysis_module.update_lap_parameters(
                         year=year1,
@@ -8220,12 +8255,12 @@ class WindowSettingsDialog(QDialog):
                     )
                     
                     if success:
-                        print(f"[OK] [STANDARD] 車手與圈數設定已套用，視窗標題應已更新")
+                        logger.debug(f"[OK] [STANDARD] 車手與圈數設定已套用，視窗標題應已更新")
                     else:
-                        print(f"[WARNING] [STANDARD] 車手與圈數設定套用失敗")
+                        logger.warning(f"[WARNING] [STANDARD] 車手與圈數設定套用失敗")
                 else:
                     # 舊版模組：直接設定屬性
-                    print(f"[STANDARD] 使用直接屬性設定方式（舊版相容）")
+                    logger.debug(f"[STANDARD] 使用直接屬性設定方式（舊版相容）")
                     analysis_module.driver1 = driver1
                     analysis_module.driver2 = driver2
                     analysis_module.lap1 = lap1
@@ -8235,13 +8270,13 @@ class WindowSettingsDialog(QDialog):
                     if hasattr(self.parent_window, 'setWindowTitle'):
                         new_title = f"Speed Analysis - {year1} {race1} {session1}"
                         self.parent_window.setWindowTitle(new_title)
-                        print(f"[OK] [STANDARD] 車手與圈數屬性已設定，視窗標題已更新: {new_title}")
+                        logger.debug(f"[OK] [STANDARD] 車手與圈數屬性已設定，視窗標題已更新: {new_title}")
             
             # ⚠️ [全域共享參數池] 新增：同步所有停用同步的視窗
             if not sync_enabled:
-                print(f"\n{'='*80}")
-                print(f"[SHARED_PARAMS] 當前視窗已停用同步，準備更新全域參數池")
-                print(f"{'='*80}\n")
+                logger.debug(f"\n{'='*80}")
+                logger.debug(f"[SHARED_PARAMS] 當前視窗已停用同步，準備更新全域參數池")
+                logger.debug(f"{'='*80}\n")
                 
                 # 構建參數字典
                 updated_params = {
@@ -8258,68 +8293,68 @@ class WindowSettingsDialog(QDialog):
                     'use_time_axis': use_time_axis
                 }
                 
-                print(f"[SHARED_PARAMS] 構建的參數字典:")
+                logger.debug(f"[SHARED_PARAMS] 構建的參數字典:")
                 for key, value in updated_params.items():
-                    print(f"   {key}: {value}")
+                    logger.debug(f"   {key}: {value}")
                 
                 # 檢查全域參數池是否為空（首次停用同步）
                 if all(v is None for k, v in self.main_window.shared_independent_params.items() if k != 'use_time_axis'):
-                    print(f"[SHARED_PARAMS] 全域參數池為空，複製當前參數到全域池")
+                    logger.debug(f"[SHARED_PARAMS] 全域參數池為空，複製當前參數到全域池")
                     self.main_window.shared_independent_params.update(updated_params)
-                    print(f"[SHARED_PARAMS] ✅ 全域參數池已初始化")
+                    logger.debug(f"[SHARED_PARAMS] ✅ 全域參數池已初始化")
                 else:
-                    print(f"[SHARED_PARAMS] 全域參數池已有值，更新全域池並同步所有停用同步的視窗")
+                    logger.debug(f"[SHARED_PARAMS] 全域參數池已有值，更新全域池並同步所有停用同步的視窗")
                 
                 # 通知主 GUI 同步所有停用同步的視窗
                 if hasattr(self.main_window, 'sync_all_independent_windows'):
-                    print(f"[SHARED_PARAMS] ✅ 找到 sync_all_independent_windows() 方法")
-                    print(f"[SHARED_PARAMS] 🚀 準備調用 sync_all_independent_windows()")
+                    logger.debug(f"[SHARED_PARAMS] ✅ 找到 sync_all_independent_windows() 方法")
+                    logger.debug(f"[SHARED_PARAMS] 🚀 準備調用 sync_all_independent_windows()")
                     self.main_window.sync_all_independent_windows(updated_params)
-                    print(f"[SHARED_PARAMS] ✅ sync_all_independent_windows() 調用完成")
-                    print(f"[SHARED_PARAMS] ✅ 所有停用同步的視窗已同步")
+                    logger.debug(f"[SHARED_PARAMS] ✅ sync_all_independent_windows() 調用完成")
+                    logger.debug(f"[SHARED_PARAMS] ✅ 所有停用同步的視窗已同步")
                 else:
-                    print(f"[SHARED_PARAMS] ⚠️  主視窗沒有 sync_all_independent_windows() 方法")
+                    logger.debug(f"[SHARED_PARAMS] ⚠️  主視窗沒有 sync_all_independent_windows() 方法")
                 
-                print(f"\n{'='*80}")
-                print(f"[SHARED_PARAMS] 全域參數池同步流程結束")
-                print(f"{'='*80}\n")
+                logger.debug(f"\n{'='*80}")
+                logger.debug(f"[SHARED_PARAMS] 全域參數池同步流程結束")
+                logger.debug(f"{'='*80}\n")
             else:
-                print(f"[SHARED_PARAMS] ⚠️  當前視窗啟用了同步，跳過全域參數池更新")
+                logger.debug(f"[SHARED_PARAMS] ⚠️  當前視窗啟用了同步，跳過全域參數池更新")
                 
         except Exception as e:
-            print(f"[ERROR] [WINDOW_SETTINGS] 套用車手與圈數設定失敗: {e}")
+            logger.error(f"[ERROR] [WINDOW_SETTINGS] 套用車手與圈數設定失敗: {e}")
             import traceback
             traceback.print_exc()
         
     def update_current_window_only(self):
         """僅更新當前視窗（同步接收模式）"""
         window_title = self.parent_window.windowTitle()
-        print(f"[REFRESH] [SETTING] [{window_title}] 更新視窗數據（同步模式）")
+        logger.debug(f"[REFRESH] [SETTING] [{window_title}] 更新視窗數據（同步模式）")
         
         try:
             # 如果當前視窗有update_current_window方法，調用它
             if hasattr(self.parent_window, 'update_current_window'):
                 self.parent_window.update_current_window()
-                print(f"[OK] [SETTING] 當前視窗數據更新完成（同步模式）")
+                logger.debug(f"[OK] [SETTING] 當前視窗數據更新完成（同步模式）")
         except Exception as e:
-            print(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
+            logger.error(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
     
     def apply_manual_settings(self, year, race, session):
         """應用手動設定（獨立模式）"""
         window_title = self.parent_window.windowTitle()
-        print(f"[TOOL] [SETTING] [{window_title}] 應用手動設定: {year} {race} {session}")
+        logger.debug(f"[TOOL] [SETTING] [{window_title}] 應用手動設定: {year} {race} {session}")
         
         try:
             # 更新當前視窗的內容（使用手動設定的參數）
             self.update_current_window_with_params(year, race, session)
-            print(f"[OK] [SETTING] 手動設定應用完成")
+            logger.debug(f"[OK] [SETTING] 手動設定應用完成")
         except Exception as e:
-            print(f"[ERROR] [SETTING] 應用手動設定失敗: {e}")
+            logger.error(f"[ERROR] [SETTING] 應用手動設定失敗: {e}")
     
     def update_current_window_with_params(self, year, race, session):
         """使用指定參數更新當前視窗"""
         window_title = self.parent_window.windowTitle()
-        print(f"[REFRESH] [SETTING] [{window_title}] 使用參數更新視窗: {year} {race} {session}")
+        logger.debug(f"[REFRESH] [SETTING] [{window_title}] 使用參數更新視窗: {year} {race} {session}")
         
         try:
             # [TOOL] 新方法：直接更新子視窗的本地參數
@@ -8331,38 +8366,38 @@ class WindowSettingsDialog(QDialog):
                 if hasattr(self.parent_window, 'update_current_window'):
                     self.parent_window.update_current_window()
                     
-                print(f"[OK] [SETTING] 參數更新完成（新方法）: {year} {race} {session}")
+                logger.debug(f"[OK] [SETTING] 參數更新完成（新方法）: {year} {race} {session}")
                 return
             
             # [TOOL] 舊方法向後兼容：直接調用更新
-            print(f"[WARNING] [SETTING] 使用舊方法向後兼容模式")
+            logger.warning(f"[WARNING] [SETTING] 使用舊方法向後兼容模式")
             if hasattr(self.parent_window, 'update_current_window'):
                 self.parent_window.update_current_window()
-                print(f"[OK] [SETTING] 當前視窗數據更新完成（向後兼容模式）")
+                logger.debug(f"[OK] [SETTING] 當前視窗數據更新完成（向後兼容模式）")
             else:
-                print(f"[WARNING] [SETTING] 視窗沒有 update_current_window 方法")
+                logger.warning(f"[WARNING] [SETTING] 視窗沒有 update_current_window 方法")
                 
         except Exception as e:
-            print(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
-            print(f"[INFO] [SETTING] 錯誤詳情: {type(e).__name__}: {str(e)}")
+            logger.error(f"[ERROR] [SETTING] 更新當前視窗失敗: {e}")
+            logger.debug(f"[INFO] [SETTING] 錯誤詳情: {type(e).__name__}: {str(e)}")
     
     def apply_settings(self, year, race, session, sync_windows):
         """應用設定到父視窗（已棄用，由新方法取代）"""
         # [TOOL] 此方法已被 update_current_window_only 和 apply_manual_settings 取代
-        print(f"[WARNING] [SETTING] apply_settings 方法已棄用")
+        logger.warning(f"[WARNING] [SETTING] apply_settings 方法已棄用")
         pass
         
     def sync_to_other_windows(self, year, race, session):
         """同步參數到其他視窗（已棄用，避免命令混亂）"""
         # [TOOL] 移除此功能，避免MDI子視窗向主程式發送控制命令
-        print(f"[WARNING] [SETTING] sync_to_other_windows 方法已停用 - 避免多視窗命令混亂")
-        print(f"[TEST] [SETTING] 子視窗應僅接收主程式同步，不應發送控制命令")
+        logger.warning(f"[WARNING] [SETTING] sync_to_other_windows 方法已停用 - 避免多視窗命令混亂")
+        logger.debug(f"[TEST] [SETTING] 子視窗應僅接收主程式同步，不應發送控制命令")
         pass
         
     def update_current_window(self, year, race, session):
         """更新當前視窗的分析數據（已棄用，由新方法取代）"""
         # [TOOL] 此方法已被 update_current_window_only 取代
-        print(f"[WARNING] [SETTING] update_current_window 方法已棄用")
+        logger.warning(f"[WARNING] [SETTING] update_current_window 方法已棄用")
         pass
 
 
@@ -8542,7 +8577,7 @@ class StyleHMainWindow(QMainWindow):
         if progress_callback:
             from core.gui_i18n import tr
             progress_callback(0, tr('splash_initializing'))
-        print("[INIT] 🚀 開始初始化 F1 TelemetryStation Pro 主視窗...")
+        logger.debug("[INIT] 🚀 開始初始化 F1 TelemetryStation Pro 主視窗...")
         # API health monitor attributes
         self.ready_label = None
         self.api_status_label = None
@@ -8578,37 +8613,37 @@ class StyleHMainWindow(QMainWindow):
         icon_path = get_resource_path(Path("image") / "logo.ico")
         if icon_path.exists():
             self.setWindowIcon(QIcon(str(icon_path)))
-            print(f"[INIT] ✅ 視窗圖示已設定: {icon_path}")
+            logger.debug(f"[INIT] ✅ 視窗圖示已設定: {icon_path}")
         else:
-            print(f"[INIT] ⚠️  找不到圖示檔案: {icon_path}")
-            print(f"[INIT]    EXE 模式: {IS_EXE_MODE}, 基礎路徑: {Path(sys._MEIPASS) if IS_EXE_MODE else Path.cwd()}")
+            logger.debug(f"[INIT] ⚠️  找不到圖示檔案: {icon_path}")
+            logger.debug(f"[INIT]    EXE 模式: {IS_EXE_MODE}, 基礎路徑: {Path(sys._MEIPASS) if IS_EXE_MODE else Path.cwd()}")
         
         # 10% - 視窗標題設定完成
         if progress_callback:
             from core.gui_i18n import tr
             progress_callback(10, tr('splash_loading_window'))
-        print("[INIT] ✅ 視窗標題已設定")
+        logger.debug("[INIT] ✅ 視窗標題已設定")
         # self.setMinimumSize(1600, 900) - 主視窗尺寸限制已移除
         
         # 初始化分析追蹤屬性
         self.active_analysis_tabs = []
-        print("[INIT] ✅ 分析追蹤屬性已初始化")
+        logger.debug("[INIT] ✅ 分析追蹤屬性已初始化")
         
         # 初始化子視窗追蹤列表
         self.active_subwindows = []
-        print("[INIT] ✅ 子視窗追蹤列表已初始化")
+        logger.debug("[INIT] ✅ 子視窗追蹤列表已初始化")
         
         # 初始化MDI區域引用（用於同步功能）
         self.mdi_areas = []  # 存儲所有MDI區域的引用
-        print("[INIT] ✅ MDI區域引用已初始化")
+        logger.debug("[INIT] ✅ MDI區域引用已初始化")
 
         # 初始化彈出分頁追蹤字典
         self.popped_out_tabs = {}  # {tab_index: {'standalone_window': window, 'original_widget': widget, 'tab_name': name}}
-        print("[INIT] ✅ 彈出分頁追蹤字典已初始化")
+        logger.debug("[INIT] ✅ 彈出分頁追蹤字典已初始化")
 
         # 工作區快照紀錄
         self._last_workspace_path: Optional[str] = None
-        print("[INIT] ✅ 工作區儲存紀錄已初始化")
+        logger.debug("[INIT] ✅ 工作區儲存紀錄已初始化")
         
         # Workspace Manager 初始化
         from core.workspace_database import WorkspaceDatabase
@@ -8616,7 +8651,7 @@ class StyleHMainWindow(QMainWindow):
         workspace_db_path = Path("workspaces") / "f1t_workspaces.db"
         self.workspace_db = WorkspaceDatabase(str(workspace_db_path))
         self.workspace_serializer = WorkspaceSerializer(main_window=self)
-        print("[INIT] ✅ Workspace Manager 已初始化")
+        logger.debug("[INIT] ✅ Workspace Manager 已初始化")
         
         # 初始化遙測分析狀態追蹤
         self.lap_analysis_active = False  # 是否有遙測分析活動
@@ -8639,17 +8674,17 @@ class StyleHMainWindow(QMainWindow):
             'lap2': None,            # 車手 2 圈數
             'use_time_axis': False   # 時間軸模式
         }
-        print("[INIT] ✅ 全域共享參數池已初始化（用於跨模組停用同步功能）")
+        logger.debug("[INIT] ✅ 全域共享參數池已初始化（用於跨模組停用同步功能）")
         
         # 🆕 車手列表快取機制（啟動時載入，全域共享）
         self._cached_drivers_by_year = {}  # {year: [driver_codes]}
-        print("[INIT] ✅ 車手列表快取已初始化")
+        logger.debug("[INIT] ✅ 車手列表快取已初始化")
         
         # 20% - 追蹤屬性初始化完成
         if progress_callback:
             from core.gui_i18n import tr
             progress_callback(20, tr('splash_loading_state'))
-        print("[INIT] ✅ 遙測分析狀態追蹤已初始化")
+        logger.debug("[INIT] ✅ 遙測分析狀態追蹤已初始化")
 
         # F1TV 認證管理器
         from core.f1tv_auth import F1TVAuthManager
@@ -8658,7 +8693,7 @@ class StyleHMainWindow(QMainWindow):
         self.f1tv_auth_manager.auth_failed.connect(self._on_f1tv_auth_failed)
         self.f1tv_auth_manager.auth_state_changed.connect(self._on_f1tv_auth_state_changed)
         self.f1tv_status_label = None  # 將在狀態列中初始化
-        print("[INIT] ✅ F1TV 認證管理器已初始化")
+        logger.debug("[INIT] ✅ F1TV 認證管理器已初始化")
         
         # 賽季日曆支援
         self._season_provider = SeasonCalendarProvider()
@@ -8688,7 +8723,7 @@ class StyleHMainWindow(QMainWindow):
             from core.gui_i18n import tr
             progress_callback(40, tr('splash_loading_colors'))
 
-        print("[INIT] 🔧 開始初始化用戶界面...")
+        logger.debug("[INIT] 🔧 開始初始化用戶界面...")
         self.init_ui()
         
         # 55% - UI 初始化完成
@@ -8696,7 +8731,7 @@ class StyleHMainWindow(QMainWindow):
             from core.gui_i18n import tr
             progress_callback(55, tr('splash_loading_ui'))
         
-        print("[INIT] 🎨 開始應用樣式...")
+        logger.debug("[INIT] 🎨 開始應用樣式...")
         self.apply_style_h()
         
         # 70% - 樣式應用完成
@@ -8705,18 +8740,18 @@ class StyleHMainWindow(QMainWindow):
             progress_callback(70, tr('splash_applying_style'))
         
         # 整合連動管理器
-        print("[INIT] 🔗 開始整合連動管理器...")
+        logger.debug("[INIT] 🔗 開始整合連動管理器...")
         self.integrate_linkage_manager()
         
         # 85% - 連動管理器整合完成
         if progress_callback:
             from core.gui_i18n import tr
             progress_callback(85, tr('splash_setup_linkage'))
-        print("[INIT] ✅ 連動管理器整合完成")
+        logger.debug("[INIT] ✅ 連動管理器整合完成")
         
-        print("[INIT] [API] Initialising health monitor...")
+        logger.debug("[INIT] [API] Initialising health monitor...")
         self.setup_api_health_monitor()
-        print("[INIT] [API] Health monitor active")
+        logger.debug("[INIT] [API] Health monitor active")
 
         # 90% - API 監控設定完成
         if progress_callback:
@@ -8724,22 +8759,22 @@ class StyleHMainWindow(QMainWindow):
             progress_callback(90, tr('splash_setup_api'))
         
         # 🆕 預載入當前年份車手列表（啟動時快取）
-        print("[INIT] 🏎️ 開始預載入車手列表...")
+        logger.debug("[INIT] 🏎️ 開始預載入車手列表...")
         if progress_callback:
             progress_callback(95, "Loading driver list...")
         
         current_year = datetime.datetime.now().year
         drivers = self.get_drivers_for_year(current_year)
-        print(f"[INIT] ✅ 車手列表預載入完成 ({len(drivers)} 位車手)")
+        logger.debug(f"[INIT] ✅ 車手列表預載入完成 ({len(drivers)} 位車手)")
         
         # 100% - 初始化完成
         if progress_callback:
             from core.gui_i18n import tr
             progress_callback(100, tr('splash_complete'))
-        print("[INIT] ✅ 主視窗初始化完成！")
+        logger.debug("[INIT] ✅ 主視窗初始化完成！")
         
         # 延遲檢查標籤欄隱藏狀態和圈速控件狀態
-        print("[INIT] ⏰ 設置延遲檢查機制 (1秒後執行)...")
+        logger.debug("[INIT] ⏰ 設置延遲檢查機制 (1秒後執行)...")
         
         # 設置延遲檢查機制，確保標籤隱藏狀態正確
         QTimer.singleShot(1000, self.check_and_hide_tabs)
@@ -8753,28 +8788,72 @@ class StyleHMainWindow(QMainWindow):
         try:
             self._color_palette_provider.ensure_loaded(year=target_year)
         except ColorPaletteError as exc:
-            print(f"[INIT] ❌ 顏色配置載入失敗 (已禁用預設色票): {exc}")
+            logger.debug(f"[INIT] ❌ 顏色配置載入失敗 (已禁用預設色票): {exc}")
             self._show_palette_error_message(str(exc))
             return
         except Exception as exc:
             update_health_state('offline', str(exc))
-            print(f"[INIT] ❌ 顏色配置載入失敗: {exc}")
+            logger.debug(f"[INIT] ❌ 顏色配置載入失敗: {exc}")
             self._show_palette_error_message(str(exc))
             return
 
         error = self._color_palette_provider.last_error()
         if error:
             # ✅ 改善訊息：這不是錯誤，是正常的後備機制
-            print(f"[INIT] 💡 API 顏色資料不完整，已套用內建顏色配置")
-            print(f"[INIT] 📋 詳情: {error}")
+            logger.debug(f"[INIT] 💡 API 顏色資料不完整，已套用內建顏色配置")
+            logger.debug(f"[INIT] 📋 詳情: {error}")
         else:
-            print(f"[INIT] 🎨 顏色配置載入完成 (year={target_year})")
+            logger.debug(f"[INIT] 🎨 顏色配置載入完成 (year={target_year})")
+        
+        # ✅ 新增：從 Driver Standings JSON 載入車手車隊映射 (2025-12-14)
+        self._load_driver_team_mapping_from_standings(target_year)
+    
+    def _load_driver_team_mapping_from_standings(self, year: int) -> None:
+        """從本地 Driver Standings JSON 載入車手車隊映射"""
+        import glob
+        import json
+        
+        try:
+            json_dir = Path("json")
+            if not json_dir.exists():
+                logger.debug("[INIT] ⚠️ json 目錄不存在，跳過車隊映射載入")
+                return
+            
+            # 搜索最新的 championship_standings JSON
+            patterns = [
+                f"championship_standings_{year}_R*_*.json",
+                f"championship_standings_{year}.json",
+            ]
+            
+            latest_file = None
+            latest_time = 0
+            
+            for pattern in patterns:
+                for filepath in json_dir.glob(pattern):
+                    mtime = filepath.stat().st_mtime
+                    if mtime > latest_time:
+                        latest_time = mtime
+                        latest_file = filepath
+            
+            if not latest_file:
+                logger.debug(f"[INIT] ⚠️ 找不到 {year} 年的 Driver Standings JSON，使用預設車隊映射")
+                return
+            
+            # 載入並解析 JSON
+            with open(latest_file, 'r', encoding='utf-8') as f:
+                standings_data = json.load(f)
+            
+            count = self._color_palette_provider.update_driver_teams_from_standings(standings_data)
+            logger.debug(f"[INIT] 🏎️ 從 {latest_file.name} 載入 {count} 位車手的車隊映射")
+            
+        except Exception as exc:
+            logger.warning(f"[INIT] ⚠️ 載入車隊映射失敗: {exc}")
 
     def _show_palette_error_message(self, message: str) -> None:
         try:
             QMessageBox.warning(self, "Color Palette Error", message)
         except Exception:
-            print(f"[INIT] ⚠️ 顏色錯誤提示失敗: {message}")
+            logger.debug(f"[INIT] ⚠️ 顏色錯誤提示失敗: {message}")
 
     def init_ui(self):
         """初始化用戶界面"""
@@ -8782,9 +8861,9 @@ class StyleHMainWindow(QMainWindow):
         self.create_professional_menubar()
         
         # 創建工具欄
-        print("[INIT] 🔧 開始創建專業工具欄...")
+        logger.debug("[INIT] 🔧 開始創建專業工具欄...")
         self.create_professional_toolbar()
-        print("[INIT] ✅ 專業工具欄創建完成")
+        logger.debug("[INIT] ✅ 專業工具欄創建完成")
         
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -8808,6 +8887,13 @@ class StyleHMainWindow(QMainWindow):
         
         # 設置分割比例 - 移除右側面板
         analysis_splitter.setSizes([200, 1400])
+        
+        # 監聽 Splitter 調整事件，標記用戶手動調整
+        analysis_splitter.splitterMoved.connect(self._on_splitter_moved)
+        
+        # 保存 splitter 引用
+        self.analysis_splitter = analysis_splitter
+        
         main_layout.addWidget(analysis_splitter)
         
         # Live Timing Control Dock (預設隱藏，開啟任一 Live Timing 模組時自動顯示)
@@ -8906,7 +8992,7 @@ class StyleHMainWindow(QMainWindow):
         self.linkage_action.setChecked(True)  # 預設啟用
         self.linkage_action.triggered.connect(self.toggle_lap_analysis_linkage)
         tools_menu.addAction(self.linkage_action)
-
+        
         # F1TV Account 選單
         f1tv_menu = menubar.addMenu(tr('f1tv_account_menu', 'F1TV Account'))
         self.f1tv_login_action = QAction(tr('f1tv_login_action', 'Login / Manage Account'), self)
@@ -9030,9 +9116,35 @@ class StyleHMainWindow(QMainWindow):
         action_speed_trace.setStatusTip(tr('speed_trace_tip', 'Real-time speed vs distance trace with delta comparison'))
         action_speed_trace.triggered.connect(self._open_live_timing_speed_trace)
         
-        # Battle Insight 戰鬥分析
-        action_battle_insight = live_timing_menu.addAction(tr('menu_live_timing_battle_insight', 'Battle Insight'))
-        action_battle_insight.setStatusTip(tr('battle_insight_tip', 'Real-time battle analysis with overtake probability'))
+        # Throttle Trace 油門追蹤
+        action_throttle_trace = live_timing_menu.addAction(tr('menu_live_timing_throttle_trace', 'Throttle Trace'))
+        action_throttle_trace.setStatusTip(tr('throttle_trace_tip', 'Real-time throttle application vs distance trace'))
+        action_throttle_trace.triggered.connect(self._open_live_timing_throttle_trace)
+        
+        # Brake Trace 煞車追蹤
+        action_brake_trace = live_timing_menu.addAction(tr('menu_live_timing_brake_trace', 'Brake Trace'))
+        action_brake_trace.setStatusTip(tr('brake_trace_tip', 'Real-time brake application vs distance trace (0/1)'))
+        action_brake_trace.triggered.connect(self._open_live_timing_brake_trace)
+        
+        # Gear Trace 檔位追蹤
+        action_gear_trace = live_timing_menu.addAction(tr('menu_live_timing_gear_trace', 'Gear Trace'))
+        action_gear_trace.setStatusTip(tr('gear_trace_tip', 'Real-time gear position vs distance trace (1-8)'))
+        action_gear_trace.triggered.connect(self._open_live_timing_gear_trace)
+        
+        # DRS Trace DRS追蹤
+        action_drs_trace = live_timing_menu.addAction(tr('menu_live_timing_drs_trace', 'DRS Trace'))
+        action_drs_trace.setStatusTip(tr('drs_trace_tip', 'Real-time DRS status vs distance trace (0-14)'))
+        action_drs_trace.triggered.connect(self._open_live_timing_drs_trace)
+        
+        # RPM Trace 轉速追蹤
+        action_rpm_trace = live_timing_menu.addAction(tr('menu_live_timing_rpm_trace', 'RPM Trace'))
+        action_rpm_trace.setStatusTip(tr('rpm_trace_tip', 'Real-time engine RPM vs distance trace (0-15000)'))
+        action_rpm_trace.triggered.connect(self._open_live_timing_rpm_trace)
+        
+        # ❌ Battle Insight 已禁用（性能優化 - 占用 80% CPU）
+        action_battle_insight = live_timing_menu.addAction(tr('menu_live_timing_battle_insight', '⚠️ Battle Insight (已禁用)'))
+        action_battle_insight.setStatusTip(tr('battle_insight_disabled', 'Battle Insight has been disabled for performance optimization'))
+        action_battle_insight.setEnabled(False)  # 顯示但禁用
         action_battle_insight.triggered.connect(self._open_live_timing_battle_insight)
         
         # Chase Strategy 追趕策略
@@ -9114,18 +9226,18 @@ class StyleHMainWindow(QMainWindow):
         """
         # 僅使用 API 作為車手列表來源（移除 JSON 與硬編碼後備）
         if not IS_EXE_MODE:
-            print(f"[DRIVER_CACHE] DEBUG: get_drivers_for_year called, year={year}")
-            print(f"[DRIVER_CACHE] DEBUG: Cache keys: {list(self._cached_drivers_by_year.keys())}")
+            logger.debug(f"[DRIVER_CACHE] DEBUG: get_drivers_for_year called, year={year}")
+            logger.debug(f"[DRIVER_CACHE] DEBUG: Cache keys: {list(self._cached_drivers_by_year.keys())}")
 
         # 檢查快取
         if year in self._cached_drivers_by_year:
             cached_list = self._cached_drivers_by_year[year]
             if not IS_EXE_MODE:
-                print(f"[DRIVER_CACHE] SUCCESS: Returning cached drivers for {year} ({len(cached_list)} drivers)")
+                logger.debug(f"[DRIVER_CACHE] SUCCESS: Returning cached drivers for {year} ({len(cached_list)} drivers)")
             return cached_list
 
         if not IS_EXE_MODE:
-            print(f"[DRIVER_CACHE] DEBUG: Cache miss, loading {year} drivers from API...")
+            logger.debug(f"[DRIVER_CACHE] DEBUG: Cache miss, loading {year} drivers from API...")
 
         drivers = []
         try:
@@ -9139,21 +9251,21 @@ class StyleHMainWindow(QMainWindow):
             query_params = {"function_id": 97, "year": int(year)}
 
             if not IS_EXE_MODE:
-                print(f"[DRIVER_CACHE] DEBUG: Sending API request to {api_url} with params={query_params}")
+                logger.debug(f"[DRIVER_CACHE] DEBUG: Sending API request to {api_url} with params={query_params}")
             # 使用 params (URL 查詢參數) 而不是 json (請求 body)，與 Home 畫面的方式一致
             response = requests.post(api_url, params=query_params, timeout=60, headers={"Accept": "application/json"})
             if not IS_EXE_MODE:
-                print(f"[DRIVER_CACHE] DEBUG: API status code: {response.status_code}")
+                logger.debug(f"[DRIVER_CACHE] DEBUG: API status code: {response.status_code}")
 
             if response.status_code == 200:
                 result = response.json()
                 if not IS_EXE_MODE:
-                    print(f"[DRIVER_CACHE] DEBUG: API response keys: {list(result.keys())}")
+                    logger.debug(f"[DRIVER_CACHE] DEBUG: API response keys: {list(result.keys())}")
                 
                 if result.get('success') and 'data' in result:
                     data = result['data']
                     if not IS_EXE_MODE:
-                        print(f"[DRIVER_CACHE] DEBUG: data keys: {list(data.keys())}")
+                        logger.debug(f"[DRIVER_CACHE] DEBUG: data keys: {list(data.keys())}")
                     
                     # Function 97 返回的結構: {"data": {"drivers": [{"driver": {"code": "PIA"}}, ...]}}
                     if 'data' in data and isinstance(data['data'], dict):
@@ -9169,52 +9281,52 @@ class StyleHMainWindow(QMainWindow):
                                     drivers.append(driver_code)
                             
                             if not IS_EXE_MODE:
-                                print(f"[DRIVER_CACHE] DEBUG: Extracted {len(drivers)} drivers from API")
+                                logger.debug(f"[DRIVER_CACHE] DEBUG: Extracted {len(drivers)} drivers from API")
                             
                             if drivers:
                                 if not IS_EXE_MODE:
-                                    print(f"[DRIVER_CACHE] SUCCESS: Loaded {len(drivers)} drivers from API")
-                                    print(f"[DRIVER_CACHE] DEBUG: Drivers list: {drivers}")
+                                    logger.debug(f"[DRIVER_CACHE] SUCCESS: Loaded {len(drivers)} drivers from API")
+                                    logger.debug(f"[DRIVER_CACHE] DEBUG: Drivers list: {drivers}")
                                 
                                 # 緩存車手列表
                                 self._cached_drivers_by_year[year] = drivers
                                 if not IS_EXE_MODE:
-                                    print(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(self._cached_drivers_by_year.get(year, []))}")
+                                    logger.debug(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(self._cached_drivers_by_year.get(year, []))}")
                                 return drivers
                             else:
                                 if not IS_EXE_MODE:
-                                    print(f"[DRIVER_CACHE] WARNING: Extracted empty drivers list")
+                                    logger.debug(f"[DRIVER_CACHE] WARNING: Extracted empty drivers list")
                         else:
                             if not IS_EXE_MODE:
-                                print(f"[DRIVER_CACHE] WARNING: Missing 'drivers' key in inner data")
+                                logger.debug(f"[DRIVER_CACHE] WARNING: Missing 'drivers' key in inner data")
                                 if isinstance(inner_data, dict):
-                                    print(f"[DRIVER_CACHE] DEBUG: inner_data keys: {list(inner_data.keys())}")
+                                    logger.debug(f"[DRIVER_CACHE] DEBUG: inner_data keys: {list(inner_data.keys())}")
                     else:
                         if not IS_EXE_MODE:
-                            print(f"[DRIVER_CACHE] WARNING: Missing nested 'data' key or wrong format")
-                            print(f"[DRIVER_CACHE] DEBUG: data structure keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
+                            logger.debug(f"[DRIVER_CACHE] WARNING: Missing nested 'data' key or wrong format")
+                            logger.debug(f"[DRIVER_CACHE] DEBUG: data structure keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
                 else:
                     if not IS_EXE_MODE:
-                        print(f"[DRIVER_CACHE] WARNING: API response success=False or invalid format")
-                        print(f"[DRIVER_CACHE] DEBUG: result structure: {result}")
+                        logger.debug(f"[DRIVER_CACHE] WARNING: API response success=False or invalid format")
+                        logger.debug(f"[DRIVER_CACHE] DEBUG: result structure: {result}")
             else:
                 if not IS_EXE_MODE:
-                    print(f"[DRIVER_CACHE] ERROR: API request failed with HTTP {response.status_code}")
+                    logger.debug(f"[DRIVER_CACHE] ERROR: API request failed with HTTP {response.status_code}")
                     try:
                         error_detail = response.text[:200]  # 只顯示前 200 字元
-                        print(f"[DRIVER_CACHE] ERROR: Response detail: {error_detail}")
+                        logger.debug(f"[DRIVER_CACHE] ERROR: Response detail: {error_detail}")
                     except:
                         pass
 
         except Exception as e:
             if not IS_EXE_MODE:
-                print(f"[DRIVER_CACHE] ERROR: API call exception: {e}")
+                logger.debug(f"[DRIVER_CACHE] ERROR: API call exception: {e}")
 
         # 無論 API 成功與否，快取結果（若沒有資料則快取空列表以避免重複請求）
         self._cached_drivers_by_year[year] = drivers
         if not IS_EXE_MODE:
-            print(f"[DRIVER_CACHE] DEBUG: Cached keys after update: {list(self._cached_drivers_by_year.keys())}")
-            print(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(drivers)}")
+            logger.debug(f"[DRIVER_CACHE] DEBUG: Cached keys after update: {list(self._cached_drivers_by_year.keys())}")
+            logger.debug(f"[DRIVER_CACHE] DEBUG: Cached content length: {len(drivers)}")
 
         return drivers
 
@@ -9271,7 +9383,7 @@ class StyleHMainWindow(QMainWindow):
             return
         
         # 啟動認證流程 (使用 pywebview Edge WebView2)
-        print("[F1TV] Starting authentication flow...")
+        logger.debug("[F1TV] Starting authentication flow...")
         self.f1tv_auth_manager.start_auth_flow(self)
     
     def _logout_f1tv(self):
@@ -9295,7 +9407,7 @@ class StyleHMainWindow(QMainWindow):
     
     def _on_f1tv_auth_success(self, token: str):
         """F1TV 認證成功回調"""
-        print(f"[F1TV] Authentication successful (token length: {len(token)})")
+        logger.debug(f"[F1TV] Authentication successful (token length: {len(token)})")
         self._update_f1tv_status_label()
         QMessageBox.information(
             self,
@@ -9305,7 +9417,7 @@ class StyleHMainWindow(QMainWindow):
     
     def _on_f1tv_auth_failed(self, error: str):
         """F1TV 認證失敗回調"""
-        print(f"[F1TV] Authentication failed: {error}")
+        logger.debug(f"[F1TV] Authentication failed: {error}")
         QMessageBox.warning(
             self,
             tr('error', 'Error'),
@@ -9314,7 +9426,7 @@ class StyleHMainWindow(QMainWindow):
     
     def _on_f1tv_auth_state_changed(self, authenticated: bool):
         """F1TV 認證狀態變更回調"""
-        print(f"[F1TV] Auth state changed: authenticated={authenticated}")
+        logger.debug(f"[F1TV] Auth state changed: authenticated={authenticated}")
         self._update_f1tv_status_label()
         self._broadcast_f1tv_auth_state(authenticated)
     
@@ -9386,12 +9498,12 @@ class StyleHMainWindow(QMainWindow):
         if hasattr(self, 'f1tv_auth_manager') and self.f1tv_auth_manager:
             is_authenticated = self.f1tv_auth_manager.is_authenticated()
             self.live_timing_dock.set_f1tv_authenticated(is_authenticated)
-            print(f"[INIT] F1TV auth state passed to Control Dock: {is_authenticated}")
+            logger.debug(f"[INIT] F1TV auth state passed to Control Dock: {is_authenticated}")
         
         # 追蹤已開啟的 Live Timing 模組數量
         self._live_timing_module_count = 0
         
-        print("[INIT] Live Timing Control Dock initialized (hidden)")
+        logger.debug("[INIT] Live Timing Control Dock initialized (hidden)")
     
     def _show_live_timing_dock(self):
         """顯示 Live Timing Control Dock"""
@@ -9399,7 +9511,7 @@ class StyleHMainWindow(QMainWindow):
             self.live_timing_dock.show()
             if hasattr(self, '_action_control_panel'):
                 self._action_control_panel.setChecked(True)
-            print("[LIVE_TIMING] Control Dock shown")
+            logger.debug("[LIVE_TIMING] Control Dock shown")
     
     def _hide_live_timing_dock(self):
         """隱藏 Live Timing Control Dock"""
@@ -9407,7 +9519,7 @@ class StyleHMainWindow(QMainWindow):
             self.live_timing_dock.hide()
             if hasattr(self, '_action_control_panel'):
                 self._action_control_panel.setChecked(False)
-            print("[LIVE_TIMING] Control Dock hidden")
+            logger.debug("[LIVE_TIMING] Control Dock hidden")
     
     def _on_live_timing_module_opened(self):
         """當 Live Timing 模組開啟時調用"""
@@ -9452,18 +9564,18 @@ class StyleHMainWindow(QMainWindow):
         # 創建模組實例
         module_instance = factory.create_module(module_name, self)
         if module_instance is None:
-            print(f"[LIVE_TIMING] Failed to create module: {module_name}")
+            logger.debug(f"[LIVE_TIMING] Failed to create module: {module_name}")
             return
         
         # 獲取當前 MDI 區域（使用正確的方法）
         current_mdi_area = self.get_current_mdi_area(auto_create_tab=True)
         if current_mdi_area is None:
-            print(f"[LIVE_TIMING] No MDI area available for module: {module_name}")
+            logger.debug(f"[LIVE_TIMING] No MDI area available for module: {module_name}")
             return
         
         # 獲取模組標題
         window_title = module_instance.windowTitle() or module_name
-        print(f"[LIVE_TIMING] Creating PopoutSubWindow with title: {window_title}")
+        logger.debug(f"[LIVE_TIMING] Creating PopoutSubWindow with title: {window_title}")
         
         # 使用 PopoutSubWindow 包裝模組（與標準分析模組一致）
         # 注意：Live Timing 模組不需要同步功能（sync_enabled=False）
@@ -9497,7 +9609,7 @@ class StyleHMainWindow(QMainWindow):
         # 連接子視窗關閉信號
         sub_window.destroyed.connect(self._on_live_timing_module_closed)
         
-        print(f"[LIVE_TIMING] Module opened via factory with PopoutSubWindow: {module_name}")
+        logger.debug(f"[LIVE_TIMING] Module opened via factory with PopoutSubWindow: {module_name}")
     
     def _toggle_live_timing_control_panel(self, checked: bool):
         """切換 Live Timing 控制面板 Dock 的顯示狀態"""
@@ -9574,9 +9686,40 @@ class StyleHMainWindow(QMainWindow):
         """開啟 Live Timing Speed Trace"""
         self._open_live_timing_module("Speed Trace")
     
+    def _open_live_timing_throttle_trace(self):
+        """開啟 Live Timing Throttle Trace"""
+        self._open_live_timing_module("Throttle Trace")
+    
+    def _open_live_timing_brake_trace(self):
+        """開啟 Live Timing Brake Trace"""
+        self._open_live_timing_module("Brake Trace")
+    
+    def _open_live_timing_gear_trace(self):
+        """開啟 Live Timing Gear Trace"""
+        self._open_live_timing_module("Gear Trace")
+    
+    def _open_live_timing_drs_trace(self):
+        """開啟 Live Timing DRS Trace"""
+        self._open_live_timing_module("DRS Trace")
+    
+    def _open_live_timing_rpm_trace(self):
+        """開啟 Live Timing RPM Trace"""
+        self._open_live_timing_module("RPM Trace")
+    
     def _open_live_timing_battle_insight(self):
         """開啟 Live Timing Battle Insight"""
-        self._open_live_timing_module("Battle Insight")
+        # ❌ 性能優化：禁止開啟 Battle Insight（依賴已禁用的 OT% 和 CC% 預測）
+        from PyQt5.QtWidgets import QMessageBox
+        QMessageBox.warning(
+            self,
+            "功能已禁用",
+            "Battle Insight 模組已被禁用以提升系統性能。\n\n"
+            "此模組依賴的 OT% (超車機率) 和 CC% (近距離接觸) 預測\n"
+            "占用了 80% 的 CPU 資源，導致嚴重的 GUI 卡頓。\n\n"
+            "若需要此功能，請聯繫開發團隊討論優化方案。"
+        )
+        return
+        # self._open_live_timing_module("Battle Insight")  # 已禁用
     
     def _open_live_timing_chase_strategy(self):
         """開啟 Live Timing Chase Strategy"""
@@ -9660,7 +9803,7 @@ class StyleHMainWindow(QMainWindow):
             return events
         except SeasonCalendarError as exc:
             self._season_error_message = str(exc)
-            print(f"[CALENDAR] {self._season_error_message}")
+            logger.debug(f"[CALENDAR] {self._season_error_message}")
             return self._season_events_cache.get(year, [])
 
     def _refresh_calendar_for_year(
@@ -9729,8 +9872,8 @@ class StyleHMainWindow(QMainWindow):
         selected_event = self.get_selected_event()
         if selected_event:
             self.local_race = selected_event.race_key
-        print(
-            "[RACE_DEFAULT][MAIN] final selection:",
+        logger.debug(
+            "[RACE_DEFAULT][MAIN] final selection: %s",
             {
                 "index": self.race_combo.currentIndex(),
                 "text": self.race_combo.currentText(),
@@ -9859,7 +10002,7 @@ class StyleHMainWindow(QMainWindow):
     
     def _create_lap_analysis_controls(self):
         """創建遙測分析控件（不添加到工具欄）"""
-        print("[LAP_CONTROL] [DEBUG]   🏗️ 創建遙測分析控件...")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🏗️ 創建遙測分析控件...")
         
         # 動態遙測分析控件
         self.lap_separator = None
@@ -9922,7 +10065,7 @@ class StyleHMainWindow(QMainWindow):
         # self.lap2_spinbox.valueChanged.connect(self.on_lap_parameters_changed)
         # self.fastest_lap_checkbox.toggled.connect(self.on_lap_parameters_changed)
         
-        print("[LAP_CONTROL] [DEBUG]   ✅ 遙測分析控件創建完成（手動更新模式已啟用）")
+        logger.debug("[LAP_CONTROL] [DEBUG]   ✅ 遙測分析控件創建完成（手動更新模式已啟用）")
     
     def get_races_for_year(self, year):
         """根據年份獲取可用的賽事列表（使用與CLI相同的race_options）"""
@@ -9931,12 +10074,12 @@ class StyleHMainWindow(QMainWindow):
             events = self._get_calendar_events(year_int)
             if events:
                 race_keys = [event.race_key for event in events]
-                print(f"[RACE_OPTIONS] 從季賽日曆載入 {year_int} 年賽事: {len(race_keys)}")
+                logger.debug(f"[RACE_OPTIONS] 從季賽日曆載入 {year_int} 年賽事: {len(race_keys)}")
                 return race_keys
-            print(f"[RACE_OPTIONS] 無法取得 {year_int} 年的季賽日曆資料")
+            logger.debug(f"[RACE_OPTIONS] 無法取得 {year_int} 年的季賽日曆資料")
             return []
         except Exception as e:
-            print(f"[ERROR] 獲取賽事列表時出錯: {e}")
+            logger.error(f"[ERROR] 獲取賽事列表時出錯: {e}")
             # 回退到基本列表
             return ["Japan", "Great Britain", "Monaco"]
     
@@ -9989,7 +10132,7 @@ class StyleHMainWindow(QMainWindow):
         """處理年份變更事件"""
         # ✅ 調試點 1: 方法入口
         logger.info(f"🔵 [DEBUG]    on_year_changed 被調用: year={year}")
-        print(f"🔵 [DEBUG]    on_year_changed 被調用: year={year}")
+        logger.debug(f"🔵 [DEBUG]    on_year_changed 被調用: year={year}")
         
         try:
             previous_race = self.get_selected_race_key()
@@ -10003,7 +10146,7 @@ class StyleHMainWindow(QMainWindow):
         except Exception:
             year_int = self.get_selected_year()
 
-        print(f"[CALENDAR] 切換至 {year_int} 年賽季日曆")
+        logger.debug(f"[CALENDAR] 切換至 {year_int} 年賽季日曆")
         logger.info(f"[CALENDAR] 切換至 {year_int} 年賽季日曆")
 
         self._refresh_calendar_for_year(
@@ -10016,7 +10159,7 @@ class StyleHMainWindow(QMainWindow):
         
         # Debounced parameter broadcast for main window year change
         logger.info("🔵 [DEBUG]    on_main_year_changed - scheduling parameter broadcast")
-        print("🔵 [DEBUG]    on_main_year_changed - scheduling parameter broadcast")
+        logger.debug("🔵 [DEBUG]    on_main_year_changed - scheduling parameter broadcast")
         self._schedule_parameter_broadcast("main_year_changed")
 
         
@@ -10027,12 +10170,12 @@ class StyleHMainWindow(QMainWindow):
         """主視窗賽事變更處理"""
         # ✅ 調試點 1: 方法入口
         logger.info(f"🔵 [DEBUG]    on_main_race_changed 被調用: race={race}")
-        print(f"🔵 [DEBUG]    on_main_race_changed 被調用: race={race}")
+        logger.debug(f"🔵 [DEBUG]    on_main_race_changed 被調用: race={race}")
         
         event = self.get_selected_event()
         self._update_session_combo(event)
         race_key = self.get_selected_race_key()
-        print(f"[FINISH] [MAIN] 主視窗賽事變更為: {race_key}")
+        logger.debug(f"[FINISH] [MAIN] 主視窗賽事變更為: {race_key}")
         logger.info(f"[FINISH] [MAIN] 主視窗賽事變更為: {race_key}")
         self.update_status_bar()
         
@@ -10040,23 +10183,23 @@ class StyleHMainWindow(QMainWindow):
         
         # Debounced parameter broadcast for main window race change
         logger.info("🔵 [DEBUG]    on_main_race_changed - scheduling parameter broadcast")
-        print("🔵 [DEBUG]    on_main_race_changed - scheduling parameter broadcast")
+        logger.debug("🔵 [DEBUG]    on_main_race_changed - scheduling parameter broadcast")
         self._schedule_parameter_broadcast("main_race_changed")
     
     def on_main_session_changed(self, session):
         """主視窗賽段變更處理"""
         # ✅ 調試點 1: 方法入口
         logger.info(f"🔵 [DEBUG]    on_main_session_changed 被調用: session={session}")
-        print(f"🔵 [DEBUG]    on_main_session_changed 被調用: session={session}")
+        logger.debug(f"🔵 [DEBUG]    on_main_session_changed 被調用: session={session}")
         
         session_code = self.get_selected_session_code()
-        print(f"[F1] [MAIN] 主視窗賽段變更為: {session_code}")
+        logger.debug(f"[F1] [MAIN] 主視窗賽段變更為: {session_code}")
         logger.info(f"[F1] [MAIN] 主視窗賽段變更為: {session_code}")
         self.update_status_bar()
         
         # Debounced parameter broadcast for main window session change
         logger.info("🔵 [DEBUG]    on_main_session_changed - scheduling parameter broadcast")
-        print("🔵 [DEBUG]    on_main_session_changed - scheduling parameter broadcast")
+        logger.debug("🔵 [DEBUG]    on_main_session_changed - scheduling parameter broadcast")
         self._schedule_parameter_broadcast("main_session_changed")
     
     def check_and_show_lap_controls_if_needed(self):
@@ -10080,10 +10223,10 @@ class StyleHMainWindow(QMainWindow):
             
             if tab_name == "welcome_tab":
                 # ✅ 歡迎頁是正常的，使用 INFO 級別
-                print("[LAP_CONTROL] [DEBUG]   💡 當前在歡迎頁，無需檢查遙測控件")
+                logger.debug("[LAP_CONTROL] [DEBUG]   💡 當前在歡迎頁，無需檢查遙測控件")
             else:
                 # ⚠️  非歡迎頁但沒有 MDI，這才可能是問題
-                print(f"[LAP_CONTROL] [DEBUG]   ⚠️  分頁 '{tab_name}' 無 MDI 區域，跳過檢查")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   ⚠️  分頁 '{tab_name}' 無 MDI 區域，跳過檢查")
             return
         
         lap_analysis_windows_found = []
@@ -10095,7 +10238,7 @@ class StyleHMainWindow(QMainWindow):
             
             # ✅ 修復：過濾進站分析視窗，避免誤認為 lap_analysis 模組
             if any(keyword in window_title for keyword in ["進站分析", "Pitstop", "ピットストップ"]):
-                print(f"[LAP_CONTROL] [DEBUG]   ⏭️  跳過非遙測模組 (Pitstop): {window_title}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   ⏭️  跳過非遙測模組 (Pitstop): {window_title}")
                 continue
             
             widget = sub_window.widget()
@@ -10127,7 +10270,7 @@ class StyleHMainWindow(QMainWindow):
 
             if matched_module:
                 lap_analysis_windows_found.append((sub_window, matched_module, window_title, matched_source))
-                print(
+                logger.debug(
                     f"[LAP_CONTROL] [DEBUG]   🎯 發現遙測分析視窗: {window_title} (source={matched_source})"
                 )
                 continue
@@ -10139,10 +10282,10 @@ class StyleHMainWindow(QMainWindow):
                 "DistanceDiff", "距離差", "Acceleration Analysis", "加速度分析"
             ]):
                 lap_analysis_windows_found.append((sub_window, widget, window_title, "title_fallback"))
-                print(f"[LAP_CONTROL] [DEBUG]   🎯 (fallback) 發現遙測分析視窗: {window_title}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🎯 (fallback) 發現遙測分析視窗: {window_title}")
         
         if lap_analysis_windows_found:
-            print(f"[LAP_CONTROL] [DEBUG]   📊 找到 {len(lap_analysis_windows_found)} 個遙測分析視窗")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 找到 {len(lap_analysis_windows_found)} 個遙測分析視窗")
             
             # 🔧 修復：不清空現有追蹤，而是進行智能合併
             # 保留已正確追蹤的模組，只添加新發現的
@@ -10150,7 +10293,7 @@ class StyleHMainWindow(QMainWindow):
             for existing in self.lap_analysis_windows:
                 if hasattr(existing, 'update_lap_parameters'):
                     existing_modules.add(existing)
-                    print(f"[LAP_CONTROL] [DEBUG]   ✅ 保留現有模組追蹤: {type(existing).__name__}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]   ✅ 保留現有模組追蹤: {type(existing).__name__}")
             
             # 清空並重建，但保留正確的模組
             self.lap_analysis_windows.clear()
@@ -10163,7 +10306,7 @@ class StyleHMainWindow(QMainWindow):
                     if (hasattr(tracked_module, '_sub_window') and 
                         tracked_module._sub_window == sub_window):
                         already_tracked = True
-                        print(f"[LAP_CONTROL] [DEBUG]   ✅ 視窗已通過模組正確追蹤: {window_title}")
+                        logger.debug(f"[LAP_CONTROL] [DEBUG]   ✅ 視窗已通過模組正確追蹤: {window_title}")
                         break
                 
                 if already_tracked:
@@ -10172,29 +10315,29 @@ class StyleHMainWindow(QMainWindow):
                 # 優先使用已解析出的分析模組
                 if analysis_obj and hasattr(analysis_obj, 'update_lap_parameters'):
                     self.lap_analysis_windows.add(analysis_obj)
-                    print(
+                    logger.debug(
                         f"[LAP_CONTROL] [DEBUG]   ✅ 已添加模組到追蹤: {window_title} (source={source})"
                     )
                 # 🔧 修復：檢查子視窗是否仍然保有分析模組引用
                 elif hasattr(sub_window, 'analysis_module') and hasattr(sub_window.analysis_module, 'update_lap_parameters'):
                     self.lap_analysis_windows.add(sub_window.analysis_module)
-                    print(
+                    logger.debug(
                         f"[LAP_CONTROL] [DEBUG]   ✅ 已透過子視窗引用添加模組: {window_title}"
                     )
                 else:
                     # 如果不是分析模組，最後退回子視窗本身
                     self.lap_analysis_windows.add(sub_window)
-                    print(f"[LAP_CONTROL] [DEBUG]   ✅ 已添加子視窗到追蹤: {window_title}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]   ✅ 已添加子視窗到追蹤: {window_title}")
             
             # 強制顯示遙測分析控件
-            print("[LAP_CONTROL] [DEBUG]   🚀 強制顯示遙測分析控件...")
+            logger.debug("[LAP_CONTROL] [DEBUG]   🚀 強制顯示遙測分析控件...")
             self.show_lap_controls()
         else:
-            print("[LAP_CONTROL] [DEBUG]   ℹ️ 未發現遙測分析視窗，不顯示控件")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ℹ️ 未發現遙測分析視窗，不顯示控件")
     
     def force_show_lap_controls(self):
         """強制顯示遙測分析控件（測試用）"""
-        print("[LAP_CONTROL] [DEBUG]   🚨 強制顯示遙測分析控件...")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🚨 強制顯示遙測分析控件...")
         self.show_lap_controls()
     
     def initialize_driver_lists(self):
@@ -10204,85 +10347,85 @@ class StyleHMainWindow(QMainWindow):
         此方法已重構為使用主視窗的統一車手快取機制，
         不再重複讀取 JSON 或調用 API，提升效能並確保數據一致性。
         """
-        print("[LAP_CONTROL] [DEBUG]   🎮 開始初始化車手列表（使用快取）")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🎮 開始初始化車手列表（使用快取）")
             
         try:
             # 檢查控件狀態
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 檢查控件狀態:")
-            print(f"[LAP_CONTROL] [DEBUG]     driver1_combo.isVisible(): {self.driver1_combo.isVisible()}")
-            print(f"[LAP_CONTROL] [DEBUG]     driver1_combo.count(): {self.driver1_combo.count()}")
-            print(f"[LAP_CONTROL] [DEBUG]     driver2_combo.isVisible(): {self.driver2_combo.isVisible()}")
-            print(f"[LAP_CONTROL] [DEBUG]     driver2_combo.count(): {self.driver2_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 檢查控件狀態:")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver1_combo.isVisible(): {self.driver1_combo.isVisible()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver1_combo.count(): {self.driver1_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver2_combo.isVisible(): {self.driver2_combo.isVisible()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver2_combo.count(): {self.driver2_combo.count()}")
             
             # 獲取當前年份
             year_str = self.year_combo.currentText() if hasattr(self, 'year_combo') else "2025"
             year = int(year_str)
             
-            print(f"[LAP_CONTROL] [DEBUG]   📅 目標年份: {year} (字串: '{year_str}')")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   📅 目標年份: {year} (字串: '{year_str}')")
             
             # 🆕 從主視窗快取獲取車手列表
-            print(f"[LAP_CONTROL] [DEBUG]   🔄 準備調用 self.get_drivers_for_year({year})...")
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 self 類型: {type(self).__name__}")
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 self._cached_drivers_by_year 存在: {hasattr(self, '_cached_drivers_by_year')}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔄 準備調用 self.get_drivers_for_year({year})...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 self 類型: {type(self).__name__}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 self._cached_drivers_by_year 存在: {hasattr(self, '_cached_drivers_by_year')}")
             
             drivers = self.get_drivers_for_year(year)
             
-            print(f"[LAP_CONTROL] [DEBUG]   � get_drivers_for_year 返回: {type(drivers).__name__}, 長度={len(drivers)}")
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 車手列表內容: {drivers[:5] if len(drivers) > 5 else drivers}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   � get_drivers_for_year 返回: {type(drivers).__name__}, 長度={len(drivers)}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 車手列表內容: {drivers[:5] if len(drivers) > 5 else drivers}")
             
-            print("[LAP_CONTROL] [DEBUG]   �🔄 清空並填充車手列表...")
+            logger.debug("[LAP_CONTROL] [DEBUG]   �🔄 清空並填充車手列表...")
             # 清空並添加車手到兩個下拉框
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver1_combo...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver1_combo...")
             self.driver1_combo.clear()
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 清空後項目數: {self.driver1_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 清空後項目數: {self.driver1_combo.count()}")
             
             # 🔧 修復：使用 addItem 並設定 UserData
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver1_combo...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver1_combo...")
             for idx, driver in enumerate(drivers):
                 self.driver1_combo.addItem(driver, driver)
                 if idx < 3:  # 只顯示前 3 個的詳細信息
-                    print(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
             
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 添加後項目數: {self.driver1_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo 添加後項目數: {self.driver1_combo.count()}")
             
             if drivers:
-                print(f"[LAP_CONTROL] [DEBUG]   🔍 設置 driver1_combo 當前文字為: {drivers[0]}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 設置 driver1_combo 當前文字為: {drivers[0]}")
                 self.driver1_combo.setCurrentText(drivers[0])  # 預設選擇第一個車手
-                print(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo.currentText(): {self.driver1_combo.currentText()}")
-            print("[LAP_CONTROL] [DEBUG]   ✅ driver1_combo 設定完成")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 driver1_combo.currentText(): {self.driver1_combo.currentText()}")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ✅ driver1_combo 設定完成")
             
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver2_combo...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 清空 driver2_combo...")
             self.driver2_combo.clear()
             # 🔧 修復：第一個選項的 UserData 設為 None
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 添加 'None' 選項到 driver2_combo...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 添加 'None' 選項到 driver2_combo...")
             self.driver2_combo.addItem(tr("none_option", "None"), None)
             
             # 🔧 修復：使用 addItem 並設定 UserData（不使用 addItems）
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver2_combo...")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 開始添加 {len(drivers)} 位車手到 driver2_combo...")
             for idx, driver in enumerate(drivers):
                 self.driver2_combo.addItem(driver, driver)
                 if idx < 3:
-                    print(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]     添加 #{idx+1}: {driver}")
             
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo 添加後項目數: {self.driver2_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo 添加後項目數: {self.driver2_combo.count()}")
             self.driver2_combo.setCurrentIndex(0)  # 預設選擇 "None"
-            print(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo.currentText(): {self.driver2_combo.currentText()}")
-            print("[LAP_CONTROL] [DEBUG]   ✅ driver2_combo 設定完成")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 driver2_combo.currentText(): {self.driver2_combo.currentText()}")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ✅ driver2_combo 設定完成")
             
             # 驗證設定結果
-            print(f"[LAP_CONTROL] [DEBUG]   📊 設定後狀態:")
-            print(f"[LAP_CONTROL] [DEBUG]     driver1_combo當前文字: '{self.driver1_combo.currentText()}'")
-            print(f"[LAP_CONTROL] [DEBUG]     driver2_combo當前文字: '{self.driver2_combo.currentText()}'")
-            print(f"[LAP_CONTROL] [DEBUG]     driver1_combo項目數: {self.driver1_combo.count()}")
-            print(f"[LAP_CONTROL] [DEBUG]     driver2_combo項目數: {self.driver2_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 設定後狀態:")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver1_combo當前文字: '{self.driver1_combo.currentText()}'")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver2_combo當前文字: '{self.driver2_combo.currentText()}'")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver1_combo項目數: {self.driver1_combo.count()}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     driver2_combo項目數: {self.driver2_combo.count()}")
             
-            print(f"[LAP_CONTROL] [DEBUG]   ✅ 已初始化車手列表，共 {len(drivers)} 位車手")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   ✅ 已初始化車手列表，共 {len(drivers)} 位車手")
             if drivers:
-                print(f"[LAP_CONTROL] [DEBUG]   車手列表: {', '.join(drivers)}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   車手列表: {', '.join(drivers)}")
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame 引用
-            print(f"[ERROR] [LAP_CONTROL] [DEBUG]   初始化車手列表失敗: {e}")
+            logger.error(f"[ERROR] [LAP_CONTROL] [DEBUG]   初始化車手列表失敗: {e}")
             e = None  # 🔴 立即釋放異常對象
             # 調試時可以取消註解：
             # import traceback
@@ -10290,16 +10433,16 @@ class StyleHMainWindow(QMainWindow):
     
     def show_lap_controls(self):
         """顯示遙測分析控件（動態添加到工具欄）"""
-        print("[LAP_CONTROL] [DEBUG]   📊 開始顯示遙測分析控件（動態添加）")
+        logger.debug("[LAP_CONTROL] [DEBUG]   📊 開始顯示遙測分析控件（動態添加）")
         
         # 檢查是否已經添加到工具欄
         if hasattr(self, '_lap_controls_added') and self._lap_controls_added:
-            print("[LAP_CONTROL] [DEBUG]   ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ 遙測分析控件已經在工具欄中，跳過重複添加")
             return
         
         try:
             # 強制重新初始化車手列表，確保在重新顯示時車手列表正確
-            print("[LAP_CONTROL] [DEBUG]   🔄 強制重新初始化車手列表...")
+            logger.debug("[LAP_CONTROL] [DEBUG]   🔄 強制重新初始化車手列表...")
             self.initialize_driver_lists()
             
             # 在賽事會話控件後添加分隔符
@@ -10332,11 +10475,11 @@ class StyleHMainWindow(QMainWindow):
                     self.fastest_lap_checkbox, self.use_time_axis_checkbox
                 ]
                 
-                print(f"[LAP_CONTROL] [DEBUG]   🔧 準備添加 {len(controls_to_add)} 個控件到工具欄")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🔧 準備添加 {len(controls_to_add)} 個控件到工具欄")
                 for i, control in enumerate(controls_to_add):
                     control_name = control.__class__.__name__
                     control_text = getattr(control, 'text', lambda: '')() or getattr(control, 'currentText', lambda: '')()
-                    print(f"[LAP_CONTROL] [DEBUG]   添加控件 {i+1}: {control_name} - '{control_text}'")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]   添加控件 {i+1}: {control_name} - '{control_text}'")
                     
                     # 設置控件的基本屬性
                     control.setParent(self.main_toolbar)
@@ -10349,7 +10492,7 @@ class StyleHMainWindow(QMainWindow):
                     else:
                         self.main_toolbar.addWidget(control)
                     
-                    print(f"[LAP_CONTROL] [DEBUG]   控件 {i+1} 已添加，可見性: {control.isVisible()}, 啟用: {control.isEnabled()}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]   控件 {i+1} 已添加，可見性: {control.isVisible()}, 啟用: {control.isEnabled()}")
                 
                 # 添加更新按鈕
                 self.update_all_action = QAction("🔄 Update All Analysis", self)
@@ -10372,43 +10515,43 @@ class StyleHMainWindow(QMainWindow):
                 else:
                     self.main_toolbar.addAction(self.lap_linkage_action)
                 
-                print("[LAP_CONTROL] [DEBUG]   ✅ 圈速分析控件成功添加到工具欄")
-                print(f"[LAP_CONTROL] [DEBUG]   📊 工具欄狀態檢查:")
-                print(f"[LAP_CONTROL] [DEBUG]     - 工具欄可見: {self.main_toolbar.isVisible()}")
-                print(f"[LAP_CONTROL] [DEBUG]     - 工具欄動作數量: {len(self.main_toolbar.actions())}")
-                print(f"[LAP_CONTROL] [DEBUG]     - 工具欄尺寸: {self.main_toolbar.size()}")
+                logger.debug("[LAP_CONTROL] [DEBUG]   ✅ 圈速分析控件成功添加到工具欄")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 工具欄狀態檢查:")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]     - 工具欄可見: {self.main_toolbar.isVisible()}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]     - 工具欄動作數量: {len(self.main_toolbar.actions())}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]     - 工具欄尺寸: {self.main_toolbar.size()}")
                 
                 # 強制更新工具欄顯示
                 self.main_toolbar.update()
                 self.main_toolbar.repaint()
                 
                 # 檢查每個控件的狀態
-                print(f"[LAP_CONTROL] [DEBUG]   🔍 控件狀態最終檢查:")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🔍 控件狀態最終檢查:")
                 for i, control in enumerate(controls_to_add):
                     widget_name = control.__class__.__name__
                     is_visible = control.isVisible()
                     is_enabled = control.isEnabled()
                     size = control.size()
-                    print(f"[LAP_CONTROL] [DEBUG]     控件{i+1} ({widget_name}): 可見={is_visible}, 啟用={is_enabled}, 尺寸={size}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]     控件{i+1} ({widget_name}): 可見={is_visible}, 啟用={is_enabled}, 尺寸={size}")
                 
                 self._lap_controls_added = True
                 self.lap_controls_visible = True
                 
         except Exception as e:
-            print(f"[LAP_CONTROL] [DEBUG]   ❌ 添加圈速分析控件時發生錯誤: {e}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   ❌ 添加圈速分析控件時發生錯誤: {e}")
             e = None  # 🔴 立即釋放異常對象
     
     def hide_lap_controls(self):
         """隱藏遙測分析控件（從工具欄移除）"""
         if len(self.lap_analysis_windows) > 0:
-            print("[LAP_CONTROL] [DEBUG]   ⚠️ 還有圈速分析視窗開啟中，不隱藏控件")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ 還有圈速分析視窗開啟中，不隱藏控件")
             return
             
-        print("[LAP_CONTROL] [DEBUG]   🔴 開始隱藏圈速分析控件（從工具欄移除）")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🔴 開始隱藏圈速分析控件（從工具欄移除）")
         
         # 檢查是否已經從工具欄移除
         if not hasattr(self, '_lap_controls_added') or not self._lap_controls_added:
-            print("[LAP_CONTROL] [DEBUG]   ⚠️ 圈速分析控件已經不在工具欄中，跳過移除")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ 圈速分析控件已經不在工具欄中，跳過移除")
             return
         
         try:
@@ -10435,37 +10578,37 @@ class StyleHMainWindow(QMainWindow):
             
             # 移除更新按鈕
             if hasattr(self, 'update_all_action') and self.update_all_action:
-                print("[LAP_CONTROL] [DEBUG]   🗑️ 正在移除 Update All Analysis 按鈕...")
+                logger.debug("[LAP_CONTROL] [DEBUG]   🗑️ 正在移除 Update All Analysis 按鈕...")
                 self.main_toolbar.removeAction(self.update_all_action)
                 self.update_all_action = None
-                print("[LAP_CONTROL] [DEBUG]   ✅ Update All Analysis 按鈕已移除")
+                logger.debug("[LAP_CONTROL] [DEBUG]   ✅ Update All Analysis 按鈕已移除")
             else:
-                print("[LAP_CONTROL] [DEBUG]   ⚠️ update_all_action 不存在或已是 None")
+                logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ update_all_action 不存在或已是 None")
             
             # 🔧 修復：移除 Lap Linkage 按鈕
             if hasattr(self, 'lap_linkage_action') and self.lap_linkage_action:
-                print("[LAP_CONTROL] [DEBUG]   🗑️ 正在移除 Lap Linkage 按鈕...")
+                logger.debug("[LAP_CONTROL] [DEBUG]   🗑️ 正在移除 Lap Linkage 按鈕...")
                 self.main_toolbar.removeAction(self.lap_linkage_action)
                 self.lap_linkage_action = None
-                print("[LAP_CONTROL] [DEBUG]   ✅ Lap Linkage 按鈕已移除")
+                logger.debug("[LAP_CONTROL] [DEBUG]   ✅ Lap Linkage 按鈕已移除")
             else:
-                print("[LAP_CONTROL] [DEBUG]   ⚠️ lap_linkage_action 不存在或已是 None")
+                logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ lap_linkage_action 不存在或已是 None")
             
-            print("[LAP_CONTROL] [DEBUG]   ✅ 圈速分析控件成功從工具欄移除")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ✅ 圈速分析控件成功從工具欄移除")
             self._lap_controls_added = False
             self.lap_controls_visible = False
             
         except Exception as e:
-            print(f"[LAP_CONTROL] [DEBUG]   ❌ 移除圈速分析控件時發生錯誤: {e}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   ❌ 移除圈速分析控件時發生錯誤: {e}")
 
 
-        print("[LAP_CONTROL] [DEBUG]   🔍 ========== 調試結束 ==========")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🔍 ========== 調試結束 ==========")
     
     def on_lap_analysis_window_opened(self, window_object, analysis_type):
         """遙測分析視窗開啟時調用"""
         window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
-        print(f"[LAP_CONTROL] [DEBUG]   � on_lap_analysis_window_opened 被調用")
-        print(f"[LAP_CONTROL] [DEBUG]   參數: window_title='{window_title}', analysis_type='{analysis_type}'")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   � on_lap_analysis_window_opened 被調用")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   參數: window_title='{window_title}', analysis_type='{analysis_type}'")
         
         # 🔴 移除 traceback 代碼避免 frame 引用洩漏
         # 調試時可以取消註解以下代碼：
@@ -10478,19 +10621,19 @@ class StyleHMainWindow(QMainWindow):
         # 為視窗對象添加分析類型標記（用於後續過濾）
         if not hasattr(window_object, '_analysis_type'):
             window_object._analysis_type = analysis_type
-            print(f"[LAP_CONTROL] [DEBUG]   🏷️ 為視窗添加類型標記: {analysis_type}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🏷️ 為視窗添加類型標記: {analysis_type}")
         
         # 存儲視窗對象而不是標題字符串
         self.lap_analysis_windows.add(window_object)
-        print(f"[LAP_CONTROL] [DEBUG]   📊 圈速分析視窗已開啟: {window_title} ({analysis_type})")
-        print(f"[LAP_CONTROL] [DEBUG]   📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 圈速分析視窗已開啟: {window_title} ({analysis_type})")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
         
         # 顯示圈速控件
-        print("[LAP_CONTROL] [DEBUG]   🎯 即將調用 show_lap_controls()...")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🎯 即將調用 show_lap_controls()...")
         self.show_lap_controls()
         
         # 🎯 新增: 統一觸發工具欄狀態更新 - 任何遙測分析模組都會觸發
-        print(f"[TOOLBAR_TRIGGER] 🚀 圈速分析模組開啟，觸發工具欄狀態更新: {analysis_type}")
+        logger.debug(f"[TOOLBAR_TRIGGER] 🚀 圈速分析模組開啟，觸發工具欄狀態更新: {analysis_type}")
         self._trigger_toolbar_status_for_lap_analysis(analysis_type, window_object)
     
     def on_lap_analysis_window_closed(self, window_object):
@@ -10499,9 +10642,9 @@ class StyleHMainWindow(QMainWindow):
         # � 強制刷新日誌
         import sys
         
-        print(f"\n[LAP_CONTROL] [SET_DEBUG] START on_lap_analysis_window_closed", flush=True)
-        print(f"[LAP_CONTROL] [SET_DEBUG] window_object: {window_object}", flush=True)
-        print(f"[LAP_CONTROL] [SET_DEBUG] window_object id: {id(window_object)}", flush=True)
+        logger.debug(f"\n[LAP_CONTROL] [SET_DEBUG] START on_lap_analysis_window_closed", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] window_object: {window_object}", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] window_object id: {id(window_object)}", flush=True)
         sys.stdout.flush()
         
         # 第一步：斷開信號連接，釋放 partial 函數引用
@@ -10511,34 +10654,34 @@ class StyleHMainWindow(QMainWindow):
                 try:
                     # 斷開所有 window_closed 信號連接
                     sub_window.window_closed.disconnect()
-                    print(f"[LAP_CONTROL] SIGNAL_DISCONNECT: Success", flush=True)
+                    logger.debug(f"[LAP_CONTROL] SIGNAL_DISCONNECT: Success", flush=True)
                 except Exception as e:
-                    print(f"[LAP_CONTROL] SIGNAL_DISCONNECT: Failed ({e})", flush=True)
+                    logger.debug(f"[LAP_CONTROL] SIGNAL_DISCONNECT: Failed ({e})", flush=True)
         
         # 從追蹤集合中移除
-        print(f"[LAP_CONTROL] [SET_DEBUG] BEFORE discard: size={len(self.lap_analysis_windows)}", flush=True)
-        print(f"[LAP_CONTROL] [SET_DEBUG] Object to remove: {window_object}", flush=True)
-        print(f"[LAP_CONTROL] [SET_DEBUG] Object in set: {window_object in self.lap_analysis_windows}", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] BEFORE discard: size={len(self.lap_analysis_windows)}", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] Object to remove: {window_object}", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] Object in set: {window_object in self.lap_analysis_windows}", flush=True)
         sys.stdout.flush()
         
         self.lap_analysis_windows.discard(window_object)
         
-        print(f"[LAP_CONTROL] [SET_DEBUG] AFTER discard: size={len(self.lap_analysis_windows)}", flush=True)
+        logger.debug(f"[LAP_CONTROL] [SET_DEBUG] AFTER discard: size={len(self.lap_analysis_windows)}", flush=True)
         sys.stdout.flush()
         
         # 獲取視窗標題用於日誌
         window_title = window_object.windowTitle() if hasattr(window_object, 'windowTitle') else str(window_object)
-        print(f"[LAP_CONTROL] Window closed: {window_title}", flush=True)
+        logger.debug(f"[LAP_CONTROL] Window closed: {window_title}", flush=True)
         
         # ✅ 修復：調用模組的清理方法（如果存在）
         if hasattr(window_object, 'cleanup'):
             try:
-                print(f"[LAP_CONTROL] [DEBUG]   🧹 調用模組清理方法: {window_title}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🧹 調用模組清理方法: {window_title}")
                 window_object.cleanup()
-                print(f"[LAP_CONTROL] [DEBUG]   ✅ 模組清理成功: {window_title}")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   ✅ 模組清理成功: {window_title}")
             except Exception as e:
                 # 🔴 簡化錯誤日誌避免 traceback 持有 frame 引用
-                print(f"[ERROR] [LAP_CONTROL] [DEBUG]   模組清理失敗: {e}")
+                logger.error(f"[ERROR] [LAP_CONTROL] [DEBUG]   模組清理失敗: {e}")
                 # 調試時可以取消註解：
                 # import traceback
                 # traceback.print_exc()
@@ -10551,14 +10694,14 @@ class StyleHMainWindow(QMainWindow):
                 mdi_area = sub_window.parent()
                 if hasattr(mdi_area, 'removeSubWindow'):
                     mdi_area.removeSubWindow(sub_window)
-                    print(f"[LAP_CONTROL] [DEBUG]   🗑️ 已從 MDI 區域移除子視窗: {window_title}")
+                    logger.debug(f"[LAP_CONTROL] [DEBUG]   🗑️ 已從 MDI 區域移除子視窗: {window_title}")
             
             # 🔴 清理模組對子視窗的引用
             window_object._sub_window = None
             sub_window = None
-            print(f"[LAP_CONTROL] [DEBUG]   🗑️ 已清理模組的子視窗引用")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   🗑️ 已清理模組的子視窗引用")
         
-        print(f"[LAP_CONTROL] [DEBUG]   📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 當前活動視窗數: {len(self.lap_analysis_windows)}")
         
         # 如果沒有活動視窗，隱藏圈速控件
         if len(self.lap_analysis_windows) == 0:
@@ -10576,14 +10719,14 @@ class StyleHMainWindow(QMainWindow):
         # 🔴 強制垃圾回收，清理 frame 緩存
         import gc
         collected = gc.collect()
-        print(f"[LAP_CONTROL] [DEBUG]   🗑️ 垃圾回收完成，回收了 {collected} 個對象", flush=True)
-        print(f"[LAP_CONTROL] [DEBUG]   ========== on_lap_analysis_window_closed 完成 ==========\n", flush=True)
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   🗑️ 垃圾回收完成，回收了 {collected} 個對象", flush=True)
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   ========== on_lap_analysis_window_closed 完成 ==========\n", flush=True)
         sys.stdout.flush()
     
     def _trigger_toolbar_status_for_lap_analysis(self, analysis_type, window_object):
         """統一觸發工具欄狀態更新 - 任何遙測分析模組都會觸發"""
         try:
-            print(f"[TOOLBAR_TRIGGER] 🎯 開始為 {analysis_type} 分析模組觸發工具欄狀態更新")
+            logger.debug(f"[TOOLBAR_TRIGGER] 🎯 開始為 {analysis_type} 分析模組觸發工具欄狀態更新")
             
             # 根據分析類型設定模組名稱
             module_name_mapping = {
@@ -10628,11 +10771,11 @@ class StyleHMainWindow(QMainWindow):
                 lap_numbers=lap_numbers
             )
             
-            print(f"[TOOLBAR_TRIGGER] ✅ 已觸發工具欄狀態更新: {module_name} | {lap_numbers}")
+            logger.debug(f"[TOOLBAR_TRIGGER] ✅ 已觸發工具欄狀態更新: {module_name} | {lap_numbers}")
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 window_object 參數）
-            print(f"[ERROR] [TOOLBAR_TRIGGER] 觸發工具欄狀態更新失敗: {e}")
+            logger.error(f"[ERROR] [TOOLBAR_TRIGGER] 觸發工具欄狀態更新失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -10646,19 +10789,19 @@ class StyleHMainWindow(QMainWindow):
         """
         # ✅ 調試點 1: 方法入口
         logger.info("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 開始 ==========")
-        print("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 開始 ==========")
+        logger.debug("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 開始 ==========")
         
         from PyQt5.QtWidgets import QMessageBox
         
         # ✅ 調試點 2: 檢查視窗前
         logger.info("🔵 [DEBUG]    準備調用 _get_telemetry_analysis_windows()")
-        print("🔵 [DEBUG]    準備調用 _get_telemetry_analysis_windows()")
+        logger.debug("🔵 [DEBUG]    準備調用 _get_telemetry_analysis_windows()")
         
         # 檢查是否有需要更新的視窗
         try:
             analysis_windows = self._get_telemetry_analysis_windows()
             logger.info(f"🔵 [DEBUG]    _get_telemetry_analysis_windows() 返回: {len(analysis_windows)} 個視窗")
-            print(f"🔵 [DEBUG]    _get_telemetry_analysis_windows() 返回: {len(analysis_windows)} 個視窗")
+            logger.debug(f"🔵 [DEBUG]    _get_telemetry_analysis_windows() 返回: {len(analysis_windows)} 個視窗")
             
             # ✅ 調試點 3: 顯示視窗詳情
             if analysis_windows:
@@ -10666,17 +10809,17 @@ class StyleHMainWindow(QMainWindow):
                     win_type = getattr(win, 'analysis_type', 'unknown')
                     win_title = getattr(win, 'windowTitle', lambda: 'unknown')()
                     logger.info(f"🔵 [DEBUG]      視窗 {i}: type={win_type}, title={win_title}")
-                    print(f"🔵 [DEBUG]      視窗 {i}: type={win_type}, title={win_title}")
+                    logger.debug(f"🔵 [DEBUG]      視窗 {i}: type={win_type}, title={win_title}")
         except Exception as e:
             # 🔴 關鍵修復：移除 exc_info=True 避免 logging 持有 frame chain
             logger.error(f"🔴 [ERROR] 獲取分析視窗失敗: {e}")
-            print(f"🔴 [ERROR] 獲取分析視窗失敗: {e}")
+            logger.error(f"🔴 [ERROR] 獲取分析視窗失敗: {e}")
             e = None  # 🔴 立即釋放異常對象
             return
         
         if not analysis_windows:
             logger.info("🔵 [DEBUG]    無活動分析視窗，跳過批次更新")
-            print("[RACE_CONTROL] 📭 無活動分析視窗，跳過批次更新")
+            logger.debug("[RACE_CONTROL] 📭 無活動分析視窗，跳過批次更新")
             return
         
         # 獲取當前參數
@@ -10685,13 +10828,13 @@ class StyleHMainWindow(QMainWindow):
         current_session = self.get_selected_session_code()
         
         logger.info(f"🔵 [DEBUG]    當前參數: year={current_year}, race={current_race}, session={current_session}")
-        print(f"🔵 [DEBUG]    當前參數: year={current_year}, race={current_race}, session={current_session}")
-        print(f"[RACE_CONTROL] 🔍 發現 {len(analysis_windows)} 個需要更新的分析視窗")
+        logger.debug(f"🔵 [DEBUG]    當前參數: year={current_year}, race={current_race}, session={current_session}")
+        logger.debug(f"[RACE_CONTROL] 🔍 發現 {len(analysis_windows)} 個需要更新的分析視窗")
         logger.info(f"[RACE_CONTROL] 發現 {len(analysis_windows)} 個需要更新的分析視窗")
         
         # ✅ 調試點 4: 準備顯示對話框
         logger.info("🔵 [DEBUG]    準備顯示確認對話框")
-        print("🔵 [DEBUG]    準備顯示確認對話框")
+        logger.debug("🔵 [DEBUG]    準備顯示確認對話框")
         
         # 詢問用戶是否更新所有視窗
         reply = QMessageBox.question(
@@ -10711,46 +10854,46 @@ class StyleHMainWindow(QMainWindow):
         
         # ✅ 調試點 5: 對話框結果
         logger.info(f"🔵 [DEBUG]    對話框返回: reply={reply} (Yes={QMessageBox.Yes}, No={QMessageBox.No})")
-        print(f"🔵 [DEBUG]    對話框返回: reply={reply} (Yes={QMessageBox.Yes}, No={QMessageBox.No})")
+        logger.debug(f"🔵 [DEBUG]    對話框返回: reply={reply} (Yes={QMessageBox.Yes}, No={QMessageBox.No})")
         
         if reply == QMessageBox.Yes:
             logger.info("🔵 [DEBUG]    用戶點擊「是」，準備調用 update_all_lap_analysis()")
-            print("[RACE_CONTROL] ✅ 用戶確認更新，開始批次更新所有視窗...")
+            logger.debug("[RACE_CONTROL] ✅ 用戶確認更新，開始批次更新所有視窗...")
             
             # ✅ 調試點 6: 調用批次更新前
             logger.info("🔵 [DEBUG]    調用 update_all_lap_analysis()")
-            print("🔵 [DEBUG]    調用 update_all_lap_analysis()")
+            logger.debug("🔵 [DEBUG]    調用 update_all_lap_analysis()")
             
             self.update_all_lap_analysis()
             
             # ✅ 調試點 7: 批次更新完成
             logger.info("🔵 [DEBUG]    update_all_lap_analysis() 已完成")
-            print("🔵 [DEBUG]    update_all_lap_analysis() 已完成")
+            logger.debug("🔵 [DEBUG]    update_all_lap_analysis() 已完成")
         else:
             logger.info("🔵 [DEBUG]    用戶點擊「否」，取消更新")
-            print("[RACE_CONTROL] ❌ 用戶取消更新")
+            logger.debug("[RACE_CONTROL] ❌ 用戶取消更新")
         
         logger.info("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 結束 ==========")
-        print("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 結束 ==========")
+        logger.debug("🔵 [DEBUG]    ========== _check_and_trigger_batch_update 結束 ==========")
 
 
     def update_all_lap_analysis(self):
         """序列化更新所有遙測分析視窗（防止並發衝突）"""
         # ✅ 調試點 1: 方法入口
         logger.info("🟢 [DEBUG]    ========== update_all_lap_analysis 開始 ==========")
-        print("🟢 [DEBUG]    ========== update_all_lap_analysis 開始 ==========")
+        logger.debug("🟢 [DEBUG]    ========== update_all_lap_analysis 開始 ==========")
         
         from PyQt5.QtWidgets import QProgressDialog
         from PyQt5.QtCore import Qt
         import time
         
-        print("[LAP_CONTROL] [DEBUG]   🔄 開始序列化更新所有圈速分析視窗...")
+        logger.debug("[LAP_CONTROL] [DEBUG]   🔄 開始序列化更新所有圈速分析視窗...")
         logger.info("[LAP_CONTROL] [DEBUG]   開始序列化更新所有圈速分析視窗")
         
         # ✅ 調試點 2: 檢查視窗數量
         lap_window_count = len(self.lap_analysis_windows)
         logger.info(f"🟢 [DEBUG]    lap_analysis_windows 數量: {lap_window_count}")
-        print(f"🟢 [DEBUG]    lap_analysis_windows 數量: {lap_window_count}")
+        logger.debug(f"🟢 [DEBUG]    lap_analysis_windows 數量: {lap_window_count}")
         
         # 定義應該被更新的分析類型（包含所有模組類型）
         all_analysis_types = {
@@ -10787,7 +10930,11 @@ class StyleHMainWindow(QMainWindow):
             'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
             'race_prediction',  # ✅ 正賽預測 (F80) Q → R - 修復參數更新問題
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_max_speed',            # 全車手最高速度分析 (F121)
+            'all_drivers_acceleration_chart',   # 全車手加速度圖表 (F121)
+            'all_drivers_brake_chart',          # 全車手煞車圖表 (F122)
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'all_drivers_brake_all_laps',       # 全車手煞車全圈數分析 (F122)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100)
         }
@@ -10797,12 +10944,12 @@ class StyleHMainWindow(QMainWindow):
         
         # 獲取時間軸設定
         use_time_axis = self.use_time_axis_checkbox.isChecked() if hasattr(self, 'use_time_axis_checkbox') else False
-        print(f"🕒 [TIME_AXIS_DEBUG] ========== 時間軸追蹤開始 ==========")
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 1: 讀取復選框狀態")
-        print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(self, 'use_time_axis_checkbox'): {hasattr(self, 'use_time_axis_checkbox')}")
+        logger.debug(f"🕒 [TIME_AXIS_DEBUG] ========== 時間軸追蹤開始 ==========")
+        logger.debug(f"🕒 [TIME_AXIS_DEBUG] 步驟 1: 讀取復選框狀態")
+        logger.debug(f"🕒 [TIME_AXIS_DEBUG]   hasattr(self, 'use_time_axis_checkbox'): {hasattr(self, 'use_time_axis_checkbox')}")
         if hasattr(self, 'use_time_axis_checkbox'):
-            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis_checkbox.isChecked(): {self.use_time_axis_checkbox.isChecked()}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   最終 use_time_axis 值: {use_time_axis}")
+            logger.debug(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis_checkbox.isChecked(): {self.use_time_axis_checkbox.isChecked()}")
+        logger.debug(f"🕒 [TIME_AXIS_DEBUG]   最終 use_time_axis 值: {use_time_axis}")
         logger.info(f"圈速控制 - 時間軸設定: use_time_axis={use_time_axis}")
         
         # 🔍 詳細診斷：driver2_combo 狀態
@@ -10850,33 +10997,33 @@ class StyleHMainWindow(QMainWindow):
         all_analysis_windows = self._get_telemetry_analysis_windows()
         total_analysis_windows = len(all_analysis_windows)
         logger.info(f"🔵 [BATCH_UPDATE] 找到 {total_analysis_windows} 個分析視窗")
-        print(f"🔵 [BATCH_UPDATE] 找到 {total_analysis_windows} 個分析視窗")
+        logger.debug(f"🔵 [BATCH_UPDATE] 找到 {total_analysis_windows} 個分析視窗")
 
         if total_analysis_windows == 0:
             logger.warning("[LAP_CONTROL] [DEBUG]   沒有符合條件的分析視窗")
-            print("[LAP_CONTROL] [DEBUG]   ⚠️ 沒有符合條件的分析視窗")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ⚠️ 沒有符合條件的分析視窗")
             QMessageBox.information(self, tr('update'), tr('update_progress_no_windows'))
             return
 
         if lap_window_count == 0:
             logger.info("[LAP_CONTROL] [DEBUG]   備註: lap_analysis_windows 為空，但偵測到其他分析模組")
-            print("[LAP_CONTROL] [DEBUG]   ℹ️ lap_analysis_windows 為空，但偵測到其他分析模組")
+            logger.debug("[LAP_CONTROL] [DEBUG]   ℹ️ lap_analysis_windows 為空，但偵測到其他分析模組")
 
         # 🔥 [關鍵修復] 通知 LinkageManager 時間軸模式變更
         # 必須在更新各個模組之前調用，確保所有已註冊的模組接收到時間軸模式通知
         try:
             from modules.gui.lap_analysis.linkage import linkage_manager
             logger.info(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 通知 LinkageManager 時間軸模式")
-            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 通知 LinkageManager 時間軸模式")
+            logger.debug(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 通知 LinkageManager 時間軸模式")
             logger.info(f"🕒 [TIME_AXIS_DEBUG]   呼叫 linkage_manager.set_time_axis_mode({use_time_axis})")
-            print(f"🕒 [TIME_AXIS_DEBUG]   呼叫 linkage_manager.set_time_axis_mode({use_time_axis})")
+            logger.debug(f"🕒 [TIME_AXIS_DEBUG]   呼叫 linkage_manager.set_time_axis_mode({use_time_axis})")
             linkage_manager.set_time_axis_mode(use_time_axis)
             logger.info(f"🕒 [TIME_AXIS_DEBUG]   ✅ LinkageManager 通知完成")
-            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ LinkageManager 通知完成")
+            logger.debug(f"🕒 [TIME_AXIS_DEBUG]   ✅ LinkageManager 通知完成")
         except Exception as e:
             # 🔴 關鍵修復：移除 exc_info=True 避免 logging 持有 frame chain
             logger.error(f"🕒 [TIME_AXIS_DEBUG]   ❌ LinkageManager 通知失敗: {e}")
-            print(f"🕒 [TIME_AXIS_DEBUG]   ❌ LinkageManager 通知失敗: {e}")
+            logger.debug(f"🕒 [TIME_AXIS_DEBUG]   ❌ LinkageManager 通知失敗: {e}")
             e = None  # 🔴 立即釋放異常對象
 
         telemetry_types = {
@@ -10896,7 +11043,11 @@ class StyleHMainWindow(QMainWindow):
             'race_prediction_table',            # 正賽預測表格 (F80) Q → R - 別名
             'laptime_boxplot', 'throttle_boxplot', 'track_analysis', 'driver_position',
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_max_speed',            # 全車手最高速度分析 (F121)
+            'all_drivers_acceleration_chart',   # 全車手加速度圖表 (F121)
+            'all_drivers_brake_chart',          # 全車手煞車圖表 (F122)
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'all_drivers_brake_all_laps',       # 全車手煞車全圈數分析 (F122)
             'corner_performance',               # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',             # ✅ 歷年賽道旗幟統計 (F100)
         }
@@ -10912,16 +11063,16 @@ class StyleHMainWindow(QMainWindow):
                         continue
 
                     logger.info("🔍 [BATCH_DEBUG] 嘗試調用 %s，kwargs=%s", method_name, kwargs)
-                    print(f"🔍 [BATCH_DEBUG] 嘗試調用 {method_name}, kwargs={kwargs}")
+                    logger.debug(f"🔍 [BATCH_DEBUG] 嘗試調用 {method_name}, kwargs={kwargs}")
                     
                     # 🕒 時間軸追蹤
                     if 'use_time_axis' in kwargs:
-                        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 3: 調用 {method_name}")
-                        print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {kwargs['use_time_axis']}")
+                        logger.debug(f"🕒 [TIME_AXIS_DEBUG] 步驟 3: 調用 {method_name}")
+                        logger.debug(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {kwargs['use_time_axis']}")
 
                     result = method(**kwargs)
                     logger.info("🔍 [BATCH_DEBUG] %s 返回: %s", method_name, result)
-                    print(f"🔍 [BATCH_DEBUG] {method_name} 返回: {result}")
+                    logger.debug(f"🔍 [BATCH_DEBUG] {method_name} 返回: {result}")
                     
                     method = None  # 🔴 成功後立即清理 bound method
                     return True, result
@@ -10932,17 +11083,17 @@ class StyleHMainWindow(QMainWindow):
                     exc = None  # 🔴 立即釋放異常對象
                     
                     logger.warning("🔍 [BATCH_DEBUG] %s 參數不匹配: %s", method_name, error_msg)
-                    print(f"🔍 [BATCH_DEBUG] {method_name} 參數不匹配: {error_msg}")
+                    logger.debug(f"🔍 [BATCH_DEBUG] {method_name} 參數不匹配: {error_msg}")
 
                     if positional_keys:
                         try:
                             args = [kwargs.get(key) for key in positional_keys]
                             logger.info("🔍 [BATCH_DEBUG] 使用位置參數重試 %s, args=%s", method_name, args)
-                            print(f"🔍 [BATCH_DEBUG] 使用位置參數重試 {method_name}, args={args}")
+                            logger.debug(f"🔍 [BATCH_DEBUG] 使用位置參數重試 {method_name}, args={args}")
                             
                             result = method(*args)
                             logger.info("🔍 [BATCH_DEBUG] %s (位置參數) 返回: %s", method_name, result)
-                            print(f"🔍 [BATCH_DEBUG] {method_name} (位置參數) 返回: {result}")
+                            logger.debug(f"🔍 [BATCH_DEBUG] {method_name} (位置參數) 返回: {result}")
                             
                             method = None  # 🔴 成功後清理
                             args = None  # 🔴 清理參數列表
@@ -10954,7 +11105,7 @@ class StyleHMainWindow(QMainWindow):
                             inner_exc = None  # 🔴 釋放內部異常
                             
                             logger.warning("🔍 [BATCH_DEBUG] %s 位置參數重試失敗: %s", method_name, inner_error_msg)
-                            print(f"🔍 [BATCH_DEBUG] {method_name} 位置參數重試失敗: {inner_error_msg}")
+                            logger.debug(f"🔍 [BATCH_DEBUG] {method_name} 位置參數重試失敗: {inner_error_msg}")
                             
                             inner_error_msg = None  # 🔴 清理錯誤訊息
                     
@@ -10978,19 +11129,19 @@ class StyleHMainWindow(QMainWindow):
             
             modules_to_update.append((analysis_module, analysis_type))
             logger.info(f"  ✅ 將更新: {analysis_type}")
-            print(f"  ✅ 將更新: {analysis_type}")
+            logger.debug(f"  ✅ 將更新: {analysis_type}")
         
         if not modules_to_update:
             msg = tr('update_progress_no_modules').format(skipped_count)
             QMessageBox.information(self, tr('update'), msg)
             logger.info(f"圈速控制 - {msg}")
             logger.warning("🟢 [DEBUG]    沒有模組需要更新，退出")
-            print("🟢 [DEBUG]    沒有模組需要更新，退出")
+            logger.debug("🟢 [DEBUG]    沒有模組需要更新，退出")
             return
         
         logger.info(f"圈速控制 - 找到 {len(modules_to_update)} 個分析模組需要更新")
         logger.info(f"🟢 [DEBUG]    準備創建進度對話框")
-        print(f"🟢 [DEBUG]    準備創建進度對話框")
+        logger.debug(f"🟢 [DEBUG]    準備創建進度對話框")
         
         # 創建進度對話框
         progress = QProgressDialog(
@@ -11003,7 +11154,7 @@ class StyleHMainWindow(QMainWindow):
         
         # ✅ 調試點 3: 進度對話框創建完成
         logger.info("🟢 [DEBUG]    進度對話框已創建")
-        print("🟢 [DEBUG]    進度對話框已創建")
+        logger.debug("🟢 [DEBUG]    進度對話框已創建")
         progress.setWindowModality(Qt.WindowModal)
         progress.setWindowTitle(tr('update_progress_title'))
         progress.setMinimumDuration(0)
@@ -11048,11 +11199,11 @@ class StyleHMainWindow(QMainWindow):
                 
                 # 🔍 調試點：開始更新模組
                 logger.info(f"🔍 [BATCH_DEBUG] 模組 {i}/{len(modules_to_update)}: analysis_type={analysis_type}")
-                print(f"🔍 [BATCH_DEBUG] 模組 {i}/{len(modules_to_update)}: analysis_type={analysis_type}")
+                logger.debug(f"🔍 [BATCH_DEBUG] 模組 {i}/{len(modules_to_update)}: analysis_type={analysis_type}")
                 logger.info(f"🔍 [BATCH_DEBUG] 模組類型: {type(analysis_module).__name__}")
-                print(f"🔍 [BATCH_DEBUG] 模組類型: {type(analysis_module).__name__}")
+                logger.debug(f"🔍 [BATCH_DEBUG] 模組類型: {type(analysis_module).__name__}")
                 logger.info(f"🔍 [BATCH_DEBUG] 模組模組路徑: {type(analysis_module).__module__}")
-                print(f"🔍 [BATCH_DEBUG] 模組模組路徑: {type(analysis_module).__module__}")
+                logger.debug(f"🔍 [BATCH_DEBUG] 模組模組路徑: {type(analysis_module).__module__}")
                 
                 base_kwargs = {
                     'year': year,
@@ -11069,8 +11220,8 @@ class StyleHMainWindow(QMainWindow):
                     'use_time_axis': use_time_axis,  # 新增時間軸參數
                 }
                 
-                print(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 準備 telemetry_kwargs")
-                print(f"🕒 [TIME_AXIS_DEBUG]   telemetry_kwargs['use_time_axis'] = {telemetry_kwargs.get('use_time_axis')}")
+                logger.debug(f"🕒 [TIME_AXIS_DEBUG] 步驟 2: 準備 telemetry_kwargs")
+                logger.debug(f"🕒 [TIME_AXIS_DEBUG]   telemetry_kwargs['use_time_axis'] = {telemetry_kwargs.get('use_time_axis')}")
                 driver_primary = driver1 or driver2 or base_kwargs.get('driver')
                 driver_kwargs = {
                     **base_kwargs,
@@ -11081,7 +11232,7 @@ class StyleHMainWindow(QMainWindow):
 
                 if analysis_type in telemetry_types:
                     logger.info("🔍 [BATCH_DEBUG] 識別為遙測模組")
-                    print("🔍 [BATCH_DEBUG] 識別為遙測模組")
+                    logger.debug("🔍 [BATCH_DEBUG] 識別為遙測模組")
                     attempts = [
                         ('update_lap_parameters', telemetry_kwargs, None),
                         ('update_analysis_parameters', telemetry_kwargs, ('year', 'race', 'session')),
@@ -11090,7 +11241,7 @@ class StyleHMainWindow(QMainWindow):
                     ]
                 elif analysis_type in driver_only_types:
                     logger.info("🔍 [BATCH_DEBUG] 識別為單車手分析模組")
-                    print("🔍 [BATCH_DEBUG] 識別為單車手分析模組")
+                    logger.debug("🔍 [BATCH_DEBUG] 識別為單車手分析模組")
                     attempts = [
                         ('update_analysis_parameters', driver_kwargs, ('year', 'race', 'session', 'driver')),
                         ('update_parameters', driver_kwargs, ('year', 'race', 'session')),
@@ -11098,7 +11249,7 @@ class StyleHMainWindow(QMainWindow):
                     ]
                 elif analysis_type in session_only_types:
                     logger.info("🔍 [BATCH_DEBUG] 識別為賽事級模組")
-                    print("🔍 [BATCH_DEBUG] 識別為賽事級模組")
+                    logger.debug("🔍 [BATCH_DEBUG] 識別為賽事級模組")
                     attempts = [
                         ('update_parameters', base_kwargs, ('year', 'race', 'session')),
                         ('update_analysis_parameters', base_kwargs, ('year', 'race', 'session')),
@@ -11107,7 +11258,7 @@ class StyleHMainWindow(QMainWindow):
                     ]
                 else:
                     logger.info("🔍 [BATCH_DEBUG] 未定義分類的模組，使用通用流程")
-                    print("🔍 [BATCH_DEBUG] 未定義分類的模組，使用通用流程")
+                    logger.debug("🔍 [BATCH_DEBUG] 未定義分類的模組，使用通用流程")
                     attempts = [
                         ('update_parameters', base_kwargs, ('year', 'race', 'session')),
                         ('update_analysis_parameters', base_kwargs, ('year', 'race', 'session')),
@@ -11123,24 +11274,24 @@ class StyleHMainWindow(QMainWindow):
                 # 檢查 sync_driver_lap_enabled（遙測模組的同步屬性）
                 if hasattr(analysis_module, 'sync_driver_lap_enabled') and not analysis_module.sync_driver_lap_enabled:
                     logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用車手圈數同步 (sync_driver_lap_enabled=False)，跳過批次更新")
-                    print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用車手圈數同步，跳過批次更新")
+                    logger.debug(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用車手圈數同步，跳過批次更新")
                     skip_update = True
                 # 檢查子視窗的 sync_enabled 屬性（PopoutSubWindow）
                 elif hasattr(analysis_module, '_sub_window'):
                     sub_window = analysis_module._sub_window
                     if hasattr(sub_window, 'sync_enabled') and not sub_window.sync_enabled:
                         logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步 (sub_window.sync_enabled=False)，跳過批次更新")
-                        print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                        logger.debug(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
                         skip_update = True
                 # 檢查模組自己的 sync_enabled 屬性
                 elif hasattr(analysis_module, 'sync_enabled') and not analysis_module.sync_enabled:
                     logger.info(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步 (sync_enabled=False)，跳過批次更新")
-                    print(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
+                    logger.debug(f"🔒 [SYNC_FIX] 視窗 {window_title} 已停用同步，跳過批次更新")
                     skip_update = True
                 
                 if skip_update:
                     logger.info(f"🔒 [SYNC_FIX] ✅ 已跳過 {window_title}，保持獨立參數")
-                    print(f"🔒 [SYNC_FIX] ✅ 已跳過 {window_title}，保持獨立參數")
+                    logger.debug(f"🔒 [SYNC_FIX] ✅ 已跳過 {window_title}，保持獨立參數")
                     updated_count += 1  # 視為成功（已跳過，不是失敗）
                     continue
 
@@ -11148,7 +11299,7 @@ class StyleHMainWindow(QMainWindow):
 
                 if not executed:
                     logger.warning(f"🔍 [BATCH_DEBUG] ❌ 無可用的更新方法: {analysis_type}")
-                    print(f"🔍 [BATCH_DEBUG] ❌ 無可用的更新方法: {analysis_type}")
+                    logger.debug(f"🔍 [BATCH_DEBUG] ❌ 無可用的更新方法: {analysis_type}")
                     failed_count += 1
                     continue
 
@@ -11226,32 +11377,32 @@ class StyleHMainWindow(QMainWindow):
 
     def _on_main_fastest_lap_changed(self, checked):
         """主頁面最速圈checkbox變更時的處理 - 自動設置圈數為99"""
-        print(f"[LAP_CONTROL] [DEBUG]   🏁 主頁面最速圈checkbox變更: {checked}")
+        logger.debug(f"[LAP_CONTROL] [DEBUG]   🏁 主頁面最速圈checkbox變更: {checked}")
         
         if checked:
             # 最速圈被勾選，自動設置圈數為99
-            print("[LAP_CONTROL] [DEBUG]   🏁 最速圈被選中，自動設置圈數1和圈數2為99")
+            logger.debug("[LAP_CONTROL] [DEBUG]   🏁 最速圈被選中，自動設置圈數1和圈數2為99")
             
             if hasattr(self, 'lap1_spinbox'):
                 old_value1 = self.lap1_spinbox.value()
                 self.lap1_spinbox.setValue(99)
-                print(f"[LAP_CONTROL] [DEBUG]   🏁 圈數1: {old_value1} → 99")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🏁 圈數1: {old_value1} → 99")
                 
             if hasattr(self, 'lap2_spinbox'):
                 old_value2 = self.lap2_spinbox.value()
                 self.lap2_spinbox.setValue(99)
-                print(f"[LAP_CONTROL] [DEBUG]   🏁 圈數2: {old_value2} → 99")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🏁 圈數2: {old_value2} → 99")
         else:
             # 最速圈被取消，恢復預設圈數1
-            print("[LAP_CONTROL] [DEBUG]   🏁 最速圈被取消，恢復預設圈數1")
+            logger.debug("[LAP_CONTROL] [DEBUG]   🏁 最速圈被取消，恢復預設圈數1")
             
             if hasattr(self, 'lap1_spinbox'):
                 self.lap1_spinbox.setValue(1)
-                print(f"[LAP_CONTROL] [DEBUG]   🏁 圈數1: 恢復為1")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🏁 圈數1: 恢復為1")
                 
             if hasattr(self, 'lap2_spinbox'):
                 self.lap2_spinbox.setValue(1)
-                print(f"[LAP_CONTROL] [DEBUG]   🏁 圈數2: 恢復為1")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🏁 圈數2: 恢復為1")
 
     def on_lap_parameters_changed(self):
         """
@@ -11261,7 +11412,7 @@ class StyleHMainWindow(QMainWindow):
         現在僅用於記錄參數變更，不會觸發實際更新
         用戶必須手動點擊 "Update All Analysis" 按鈕才會更新
         """
-        print("[LAP_CONTROL] [DEBUG]   � 圈速參數已變更（手動更新模式，不自動更新）")
+        logger.debug("[LAP_CONTROL] [DEBUG]   � 圈速參數已變更（手動更新模式，不自動更新）")
         
         # 記錄當前參數值（僅用於調試）
         try:
@@ -11271,16 +11422,16 @@ class StyleHMainWindow(QMainWindow):
             lap2 = self.lap2_spinbox.value() if hasattr(self, 'lap2_spinbox') else "未知"
             is_fastest = self.fastest_lap_checkbox.isChecked() if hasattr(self, 'fastest_lap_checkbox') else False
             
-            print(f"[LAP_CONTROL] [DEBUG]   📊 當前參數值:")
-            print(f"[LAP_CONTROL] [DEBUG]     🏎️ 車手1: '{driver1}'")
-            print(f"[LAP_CONTROL] [DEBUG]     🏎️ 車手2: '{driver2}'")
-            print(f"[LAP_CONTROL] [DEBUG]     🏁 圈數1: {lap1}")
-            print(f"[LAP_CONTROL] [DEBUG]     🏁 圈數2: {lap2}")
-            print(f"[LAP_CONTROL] [DEBUG]     ⚡ 最速圈: {is_fastest}")
-            print(f"[LAP_CONTROL] [DEBUG]   � 提示: 請點擊 'Update All Analysis' 按鈕以應用更改")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   📊 當前參數值:")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     🏎️ 車手1: '{driver1}'")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     🏎️ 車手2: '{driver2}'")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     🏁 圈數1: {lap1}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     🏁 圈數2: {lap2}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]     ⚡ 最速圈: {is_fastest}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   � 提示: 請點擊 'Update All Analysis' 按鈕以應用更改")
                 
         except Exception as e:
-            print(f"[LAP_CONTROL] [DEBUG]   ❌ 參數記錄時發生錯誤: {e}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   ❌ 參數記錄時發生錯誤: {e}")
         
         # ⚠️ 已移除自動更新邏輯
         # 不再啟動計時器或調用 update_all_lap_analysis()
@@ -11323,18 +11474,18 @@ class StyleHMainWindow(QMainWindow):
         """
         from PyQt5.QtWidgets import QApplication
         
-        print(f"\n{'='*100}")
-        print(f"[SYNC_ALL_INDEPENDENT_WINDOWS] 方法被調用！")
-        print(f"{'='*100}")
-        print(f"[SHARED_PARAMS] 🔄 開始同步所有停用同步的視窗")
-        print(f"[SHARED_PARAMS] 更新參數:")
+        logger.debug(f"\n{'='*100}")
+        logger.debug(f"[SYNC_ALL_INDEPENDENT_WINDOWS] 方法被調用！")
+        logger.debug(f"{'='*100}")
+        logger.debug(f"[SHARED_PARAMS] 🔄 開始同步所有停用同步的視窗")
+        logger.debug(f"[SHARED_PARAMS] 更新參數:")
         for key, value in updated_params.items():
-            print(f"   {key}: {value}")
-        print(f"{'='*100}\n")
+            logger.debug(f"   {key}: {value}")
+        logger.debug(f"{'='*100}\n")
         
         # 步驟 1: 更新全域共享參數池
         self.shared_independent_params.update(updated_params)
-        print(f"[SHARED_PARAMS] ✅ 全域參數池已更新")
+        logger.debug(f"[SHARED_PARAMS] ✅ 全域參數池已更新")
         
         # 步驟 2: 遍歷所有 MDI 子視窗
         synchronized_count = 0
@@ -11348,48 +11499,48 @@ class StyleHMainWindow(QMainWindow):
             for sub_window in mdi_area.subWindowList():
                 total_windows += 1
                 
-                print(f"[SHARED_PARAMS] 檢查視窗 {total_windows}: {sub_window.windowTitle()}")
+                logger.debug(f"[SHARED_PARAMS] 檢查視窗 {total_windows}: {sub_window.windowTitle()}")
                 
                 # 步驟 3: 從 PopoutSubWindow 獲取 analysis_module
                 # ⚠️ 重要：不是從 widget 獲取，而是從 sub_window 獲取
                 if not hasattr(sub_window, 'analysis_module'):
-                    print(f"[SHARED_PARAMS]   ⚠️  sub_window 沒有 analysis_module 屬性")
+                    logger.debug(f"[SHARED_PARAMS]   ⚠️  sub_window 沒有 analysis_module 屬性")
                     no_analysis_module += 1
                     continue
                 
                 analysis_module = sub_window.analysis_module
-                print(f"[SHARED_PARAMS]   ✅ 有 analysis_module: {type(analysis_module).__name__}")
+                logger.debug(f"[SHARED_PARAMS]   ✅ 有 analysis_module: {type(analysis_module).__name__}")
                 
                 # 檢查 sync_driver_lap_enabled 屬性（遙測模組的同步控制）
                 if not hasattr(analysis_module, 'sync_driver_lap_enabled'):
-                    print(f"[SHARED_PARAMS]   ⚠️  沒有 sync_driver_lap_enabled 屬性")
+                    logger.debug(f"[SHARED_PARAMS]   ⚠️  沒有 sync_driver_lap_enabled 屬性")
                     no_sync_attribute += 1
                     continue
                 
                 sync_status = analysis_module.sync_driver_lap_enabled
-                print(f"[SHARED_PARAMS]   📊 sync_driver_lap_enabled = {sync_status}")
+                logger.debug(f"[SHARED_PARAMS]   📊 sync_driver_lap_enabled = {sync_status}")
                 
                 if analysis_module.sync_driver_lap_enabled:
                     # 啟用同步的視窗，跳過
-                    print(f"[SHARED_PARAMS]   ⏭️  已啟用同步，跳過")
+                    logger.debug(f"[SHARED_PARAMS]   ⏭️  已啟用同步，跳過")
                     skipped_count += 1
                     continue
                 
-                print(f"[SHARED_PARAMS]   ✅ 已停用同步，準備同步！")
+                logger.debug(f"[SHARED_PARAMS]   ✅ 已停用同步，準備同步！")
                 
                 # 步驟 4: 調用 update_from_shared_params() 同步參數（更新分析模組）
                 if hasattr(analysis_module, 'update_from_shared_params'):
                     try:
-                        print(f"[SHARED_PARAMS] 🔄 同步視窗: {sub_window.windowTitle()}")
+                        logger.debug(f"[SHARED_PARAMS] 🔄 同步視窗: {sub_window.windowTitle()}")
                         analysis_module.update_from_shared_params(self.shared_independent_params)
                         synchronized_count += 1
-                        print(f"[SHARED_PARAMS] ✅ 視窗同步成功")
+                        logger.debug(f"[SHARED_PARAMS] ✅ 視窗同步成功")
                     except Exception as e:
-                        print(f"[SHARED_PARAMS] ❌ 視窗同步失敗: {e}")
+                        logger.debug(f"[SHARED_PARAMS] ❌ 視窗同步失敗: {e}")
                         import traceback
                         traceback.print_exc()
                 else:
-                    print(f"[SHARED_PARAMS] ⚠️  視窗 {sub_window.windowTitle()} 沒有 update_from_shared_params() 方法")
+                    logger.debug(f"[SHARED_PARAMS] ⚠️  視窗 {sub_window.windowTitle()} 沒有 update_from_shared_params() 方法")
                 
                 # 步驟 5: 同步已打開的設定對話框（實時更新 UI）
                 # ⚠️ 設定對話框應該在 sub_window 上，因為 show_settings_dialog() 設置的是 self.settings_dialog
@@ -11400,25 +11551,25 @@ class StyleHMainWindow(QMainWindow):
                         # 檢查對話框是否可見且停用同步
                         if dialog.isVisible() and hasattr(dialog, 'sync_driver_lap_checkbox'):
                             if not dialog.sync_driver_lap_checkbox.isChecked():
-                                print(f"[SHARED_PARAMS] 🔄 同步已打開的設定對話框: {sub_window.windowTitle()}")
+                                logger.debug(f"[SHARED_PARAMS] 🔄 同步已打開的設定對話框: {sub_window.windowTitle()}")
                                 dialog._load_shared_params_to_ui()
                                 dialog_sync_count += 1
-                                print(f"[SHARED_PARAMS] ✅ 設定對話框已同步")
+                                logger.debug(f"[SHARED_PARAMS] ✅ 設定對話框已同步")
                     except Exception as e:
-                        print(f"[SHARED_PARAMS] ⚠️  設定對話框同步失敗: {e}")
+                        logger.debug(f"[SHARED_PARAMS] ⚠️  設定對話框同步失敗: {e}")
         
         # 處理 UI 事件
         QApplication.processEvents()
         
-        print(f"\n{'='*100}")
-        print(f"[SHARED_PARAMS] ✅ 同步完成總結:")
-        print(f"   � 總共檢查視窗: {total_windows} 個")
-        print(f"   ⚠️  無 analysis_module: {no_analysis_module} 個")
-        print(f"   ⚠️  無 sync_driver_lap_enabled: {no_sync_attribute} 個")
-        print(f"   ⏭️  已啟用同步（跳過）: {skipped_count} 個")
-        print(f"   📊 分析模組已同步: {synchronized_count} 個")
-        print(f"   🔧 設定對話框已同步: {dialog_sync_count} 個")
-        print(f"{'='*100}\n")
+        logger.debug(f"\n{'='*100}")
+        logger.debug(f"[SHARED_PARAMS] ✅ 同步完成總結:")
+        logger.debug(f"   � 總共檢查視窗: {total_windows} 個")
+        logger.debug(f"   ⚠️  無 analysis_module: {no_analysis_module} 個")
+        logger.debug(f"   ⚠️  無 sync_driver_lap_enabled: {no_sync_attribute} 個")
+        logger.debug(f"   ⏭️  已啟用同步（跳過）: {skipped_count} 個")
+        logger.debug(f"   📊 分析模組已同步: {synchronized_count} 個")
+        logger.debug(f"   🔧 設定對話框已同步: {dialog_sync_count} 個")
+        logger.debug(f"{'='*100}\n")
 
     def on_race_parameters_changed(self):
         """
@@ -11482,8 +11633,8 @@ class StyleHMainWindow(QMainWindow):
         """
         logger.info("=" * 80)
         logger.info("[DEBUG] _get_telemetry_analysis_windows() - 開始搜尋視窗")
-        print("=" * 80)
-        print("[DEBUG] _get_telemetry_analysis_windows() - 開始搜尋視窗")
+        logger.debug("=" * 80)
+        logger.debug("[DEBUG] _get_telemetry_analysis_windows() - 開始搜尋視窗")
         
         # 定義所有支援的分析類型
         all_analysis_types = {
@@ -11520,7 +11671,11 @@ class StyleHMainWindow(QMainWindow):
             'qualifying_prediction',  # ✅ 排位賽預測 (F74 v3.8) - 新增
             'race_prediction',  # ✅ 正賽預測 (F80) Q → R - 修復參數更新問題
             'all_drivers_straight_line_speed',  # 全車手直線速度分析
+            'all_drivers_max_speed',            # 全車手最高速度分析 (F121)
+            'all_drivers_acceleration_chart',   # 全車手加速度圖表 (F121)
+            'all_drivers_brake_chart',          # 全車手煞車圖表 (F122)
             'all_drivers_brake_performance',    # 全車手煞車性能分析 (F34)
+            'all_drivers_brake_all_laps',       # 全車手煞車全圈數分析 (F122)
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100) - 修復參數更新問題
         }
@@ -11528,12 +11683,12 @@ class StyleHMainWindow(QMainWindow):
         analysis_windows = []
         seen_ids = set()
         
-        print(f"[DEBUG] 📊 lap_analysis_windows 集合大小: {len(self.lap_analysis_windows)}")
+        logger.debug(f"[DEBUG] 📊 lap_analysis_windows 集合大小: {len(self.lap_analysis_windows)}")
         logger.info(f"[DEBUG] 📊 lap_analysis_windows 集合大小: {len(self.lap_analysis_windows)}")
         
         # ✅ 1. 檢查 MDI 視窗（遙測分析）
         logger.info("[DEBUG]    檢查 lap_analysis_windows: %d 個", len(self.lap_analysis_windows))
-        print(f"[DEBUG] 檢查 lap_analysis_windows: {len(self.lap_analysis_windows)} 個")
+        logger.debug(f"[DEBUG] 檢查 lap_analysis_windows: {len(self.lap_analysis_windows)} 個")
         
         for window in self.lap_analysis_windows:
             if hasattr(window, 'analysis_type') and window.analysis_type in all_analysis_types:
@@ -11543,14 +11698,14 @@ class StyleHMainWindow(QMainWindow):
                     analysis_windows.append(window)
                     seen_ids.add(window_id)
                     logger.info(f"  ✅ 找到 MDI 視窗: {window.analysis_type} (id={window_id})")
-                    print(f"  ✅ 找到 MDI 視窗: {window.analysis_type} (id={window_id})")
+                    logger.debug(f"  ✅ 找到 MDI 視窗: {window.analysis_type} (id={window_id})")
                 else:
                     logger.info(f"  ⏭️  跳過重複 MDI 視窗: {window.analysis_type} (id={window_id})")
-                    print(f"  ⏭️  跳過重複 MDI 視窗: {window.analysis_type} (id={window_id})")
+                    logger.debug(f"  ⏭️  跳過重複 MDI 視窗: {window.analysis_type} (id={window_id})")
         
         # ✅ 2. 檢查 Tab 視窗（賽事級分析）
         logger.info(f"🔵 [DEBUG]    檢查 tab_widget: {self.tab_widget.count()} 個標籤")
-        print(f"🔵 [DEBUG]    檢查 tab_widget: {self.tab_widget.count()} 個標籤")
+        logger.debug(f"🔵 [DEBUG]    檢查 tab_widget: {self.tab_widget.count()} 個標籤")
         
         for i in range(self.tab_widget.count()):
             widget = self.tab_widget.widget(i)
@@ -11559,7 +11714,7 @@ class StyleHMainWindow(QMainWindow):
             # ✅ 跳過 Welcome Tab 和 Home Tab
             if not widget or widget.objectName() in ["welcome_tab", "home_tab"]:
                 logger.info(f"  ⏭️  跳過 Tab {i} (Welcome/Home): '{tab_text}'")
-                print(f"  ⏭️  跳過 Tab {i} (Welcome/Home): '{tab_text}'")
+                logger.debug(f"  ⏭️  跳過 Tab {i} (Welcome/Home): '{tab_text}'")
                 continue
             
             if widget:
@@ -11601,7 +11756,7 @@ class StyleHMainWindow(QMainWindow):
                             sub_win_title = sub_win.windowTitle() if hasattr(sub_win, 'windowTitle') else 'Unknown'
                             sub_win_type = type(sub_win).__name__
                             is_visible = sub_win.isVisible() if hasattr(sub_win, 'isVisible') else 'N/A'
-                            print(f"       [SUB_WIN_CHECK] 檢查子視窗: '{sub_win_title}' (type={sub_win_type}, visible={is_visible})")
+                            logger.debug(f"       [SUB_WIN_CHECK] 檢查子視窗: '{sub_win_title}' (type={sub_win_type}, visible={is_visible})")
                             logger.info(f"       [SUB_WIN_CHECK] 檢查子視窗: '{sub_win_title}' (type={sub_win_type}, visible={is_visible})")
                             
                             # 優先使用 PopoutSubWindow 上綁定的 analysis_module
@@ -11611,15 +11766,15 @@ class StyleHMainWindow(QMainWindow):
                                 analysis_module = getattr(sub_win, 'analysis_module', None)
                                 
                                 # [DEBUG] 方案A調試：驗證 analysis_module 屬性
-                                print(f"       [SUB_WIN_CHECK] sub_win.analysis_module: {type(analysis_module).__name__ if analysis_module else 'None'}")
+                                logger.debug(f"       [SUB_WIN_CHECK] sub_win.analysis_module: {type(analysis_module).__name__ if analysis_module else 'None'}")
                                 logger.info(f"       [SUB_WIN_CHECK] sub_win.analysis_module: {type(analysis_module).__name__ if analysis_module else 'None'}")
                                 if analysis_module:
                                     module_id = id(analysis_module)
                                     has_type = hasattr(analysis_module, 'analysis_type')
                                     type_value = getattr(analysis_module, 'analysis_type', 'N/A')
-                                    print(f"       [SUB_WIN_CHECK]   - module_id: {module_id}")
-                                    print(f"       [SUB_WIN_CHECK]   - has analysis_type: {has_type}")
-                                    print(f"       [SUB_WIN_CHECK]   - analysis_type value: {type_value}")
+                                    logger.debug(f"       [SUB_WIN_CHECK]   - module_id: {module_id}")
+                                    logger.debug(f"       [SUB_WIN_CHECK]   - has analysis_type: {has_type}")
+                                    logger.debug(f"       [SUB_WIN_CHECK]   - analysis_type value: {type_value}")
                                     logger.info(f"       [SUB_WIN_CHECK]   - module_id: {module_id}, has_type: {has_type}, type: {type_value}")
                                 
                                 if analysis_module is not None:
@@ -11658,7 +11813,7 @@ class StyleHMainWindow(QMainWindow):
                                                 "  ✅ 找到 Tab 視窗 (CustomMdiArea 子視窗): %s",
                                                 analysis_type_value,
                                             )
-                                            print(
+                                            logger.debug(
                                                 f"  ✅ 找到 Tab 視窗 (CustomMdiArea 子視窗): {analysis_type_value}"
                                             )
                                         continue
@@ -11681,7 +11836,7 @@ class StyleHMainWindow(QMainWindow):
                 if hasattr(widget, 'analysis_type'):
                     analysis_type_value = widget.analysis_type
                     logger.info(f"     Widget 有 analysis_type: {analysis_type_value}")
-                    print(f"     [DEBUG] Widget 有 analysis_type: {analysis_type_value}")
+                    logger.debug(f"     [DEBUG] Widget 有 analysis_type: {analysis_type_value}")
                     
                     if analysis_type_value in all_analysis_types:
                         candidate_id = id(widget)
@@ -11689,12 +11844,12 @@ class StyleHMainWindow(QMainWindow):
                             analysis_windows.append(widget)
                             seen_ids.add(candidate_id)
                             logger.info(f"  ✅ 找到 Tab 視窗 (widget): {analysis_type_value}")
-                            print(f"  ✅ 找到 Tab 視窗 (widget): {analysis_type_value}")
+                            logger.debug(f"  ✅ 找到 Tab 視窗 (widget): {analysis_type_value}")
                         else:
-                            print(f"  ⏭️  跳過重複 (widget): {analysis_type_value}")
+                            logger.debug(f"  ⏭️  跳過重複 (widget): {analysis_type_value}")
                         continue
                     else:
-                        print(f"  ⚠️  Widget 的 analysis_type '{analysis_type_value}' 不在 all_analysis_types 中")
+                        logger.debug(f"  ⚠️  Widget 的 analysis_type '{analysis_type_value}' 不在 all_analysis_types 中")
                 
                 # ✅ 檢查是否是 RainAnalysisModuleAdapter 等包裝類型
                 # 這些類型的 widget 是通過 get_widget() 返回的
@@ -11773,8 +11928,8 @@ class StyleHMainWindow(QMainWindow):
                     else:
                         logger.info(f"  無法識別 Tab 類型")
         
-        print("=" * 80)
-        print(f"[DEBUG] ✅ 搜尋完成！總共找到 {len(analysis_windows)} 個分析視窗")
+        logger.debug("=" * 80)
+        logger.debug(f"[DEBUG] ✅ 搜尋完成！總共找到 {len(analysis_windows)} 個分析視窗")
         logger.info("=" * 80)
         logger.info(f"[DEBUG] ✅ 搜尋完成！總共找到 {len(analysis_windows)} 個分析視窗")
         
@@ -11783,10 +11938,10 @@ class StyleHMainWindow(QMainWindow):
             win_type = getattr(win, 'analysis_type', 'unknown')
             win_id = id(win)
             win_class = type(win).__name__
-            print(f"  [{idx+1}] {win_type} (class={win_class}, id={win_id})")
+            logger.debug(f"  [{idx+1}] {win_type} (class={win_class}, id={win_id})")
             logger.info(f"  [{idx+1}] {win_type} (class={win_class}, id={win_id})")
         
-        print("=" * 80)
+        logger.debug("=" * 80)
         logger.info("=" * 80)
         
         return analysis_windows
@@ -11827,6 +11982,10 @@ class StyleHMainWindow(QMainWindow):
         tree.setHeaderHidden(True)
         tree.setIndentation(12)  # 增加縮排以容納三層結構
         tree.setRootIsDecorated(True)
+        
+        # 啟用列寬度自適應內容
+        tree.header().setStretchLastSection(True)
+        tree.setColumnCount(1)
         
         # 存儲為實例屬性以便清理
         self.function_tree = tree
@@ -11877,7 +12036,11 @@ class StyleHMainWindow(QMainWindow):
         speed_corner_group = QTreeWidgetItem(historical_group, [tr("speed_corner_analysis", "Speed & Corner Analysis")])
         speed_corner_group.setExpanded(False)
         QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_straight_speed", "Straight Speed & Acceleration")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_max_speed", "All Drivers Max Speed")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_acceleration_chart", "Acceleration Chart")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_brake_chart", "Brake Chart")])
         QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_brake_performance", "Brake Performance")])
+        QTreeWidgetItem(speed_corner_group, ["    " + tr("all_drivers_brake_all_laps_analysis", "All Drivers Brake All Laps Analysis")])
         QTreeWidgetItem(speed_corner_group, ["    " + tr("low_speed_corner_analysis", "Low-Speed Corners")])
         QTreeWidgetItem(speed_corner_group, ["    " + tr("mid_speed_corner_analysis", "Mid-Speed Corners")])
         QTreeWidgetItem(speed_corner_group, ["    " + tr("high_speed_corner_analysis", "High-Speed Corners")])
@@ -11908,7 +12071,12 @@ class StyleHMainWindow(QMainWindow):
             ("live_timing_lap_distribution", "Lap Time Distribution"),
             ("live_timing_race_control", "Race Control Messages"),
             ("live_timing_speed_trace", "Speed Trace"),
-            ("live_timing_battle_insight", "Battle Insight"),
+            ("live_timing_throttle_trace", "Throttle Trace"),
+            ("live_timing_brake_trace", "Brake Trace"),
+            ("live_timing_gear_trace", "Gear Trace"),
+            ("live_timing_drs_trace", "DRS Trace"),
+            ("live_timing_rpm_trace", "RPM Trace"),
+            # ("live_timing_battle_insight", "Battle Insight"),  # ❌ 已禁用（性能優化）
             ("live_timing_chase_strategy", "Chase Strategy"),
             ("live_timing_track_weather", "Track & Weather"),
         ]
@@ -11936,6 +12104,9 @@ class StyleHMainWindow(QMainWindow):
         for key, default in sector_comparison_items:
             QTreeWidgetItem(sector_comparison_group, [tr(key, default)])
         
+        # 自動調整列寬以適應內容（但允許用戶手動調整）
+        tree.resizeColumnToContents(0)
+        
         layout.addWidget(tree)
         
         return widget
@@ -11957,7 +12128,7 @@ class StyleHMainWindow(QMainWindow):
         
         # ✅ 啟用標籤列顯示
         self.tab_widget.tabBar().setVisible(True)
-        print(f"[TAB] ✅ 標籤列已啟用，可見性: {self.tab_widget.tabBar().isVisible()}")
+        logger.debug(f"[TAB] ✅ 標籤列已啟用，可見性: {self.tab_widget.tabBar().isVisible()}")
         
         # 連接分頁關閉信號
         self.tab_widget.tabCloseRequested.connect(self.close_tab)
@@ -12111,7 +12282,7 @@ class StyleHMainWindow(QMainWindow):
         # 設置 TabBar 的右鍵選單策略
         self.tab_widget.tabBar().setContextMenuPolicy(Qt.CustomContextMenu)
         self.tab_widget.tabBar().customContextMenuRequested.connect(self._show_tab_context_menu)
-        print("[TAB_POPOUT] ✅ 分頁右鍵選單已設置")
+        logger.debug("[TAB_POPOUT] ✅ 分頁右鍵選單已設置")
     
     def _show_tab_context_menu(self, pos):
         """顯示分頁右鍵選單"""
@@ -12128,7 +12299,7 @@ class StyleHMainWindow(QMainWindow):
         
         # HOME 主頁不顯示任何選單
         if is_home_tab:
-            print(f"[TAB_MENU] {tr('home_tab_no_popout')} / {tr('home_tab_no_rename')}")
+            logger.debug(f"[TAB_MENU] {tr('home_tab_no_popout')} / {tr('home_tab_no_rename')}")
             return
         
         # 創建右鍵選單
@@ -12156,7 +12327,7 @@ class StyleHMainWindow(QMainWindow):
         # 顯示選單
         global_pos = tab_bar.mapToGlobal(pos)
         menu.exec_(global_pos)
-        print(f"[TAB_MENU] Show tab {tab_index} context menu (popped_out={is_popped_out})")
+        logger.debug(f"[TAB_MENU] Show tab {tab_index} context menu (popped_out={is_popped_out})")
         
     def add_new_tab(self):
         """新增分頁 - 簡化版，直接創建空白工作區"""
@@ -12182,7 +12353,7 @@ class StyleHMainWindow(QMainWindow):
         # 追蹤 MDI 區域
         self.mdi_areas.append(new_mdi_area)
         
-        print(f"[TAB] ✅ 已創建新分頁: {tab_name}")
+        logger.debug(f"[TAB] ✅ 已創建新分頁: {tab_name}")
         self.update_tab_count()
     
     def create_tab_for_workspace(self, tab_name: str) -> 'CustomMdiArea':
@@ -12206,7 +12377,7 @@ class StyleHMainWindow(QMainWindow):
         # 追蹤 MDI 區域
         self.mdi_areas.append(new_mdi_area)
         
-        print(f"[WORKSPACE] ✅ 已創建分頁（用於 workspace）: '{tab_name}' (index={index})")
+        logger.debug(f"[WORKSPACE] ✅ 已創建分頁（用於 workspace）: '{tab_name}' (index={index})")
         return new_mdi_area
     
     def _convert_to_chinese_number(self, num: int) -> str:
@@ -12222,7 +12393,7 @@ class StyleHMainWindow(QMainWindow):
         """關閉指定索引的分頁 - 最後分頁關閉時顯示歡迎頁"""
         # ✅ 最後一個分頁時，創建歡迎頁而不是退出
         if self.tab_widget.count() <= 1:
-            print("[TAB] 💡 關閉最後一個分頁，創建新的歡迎頁")
+            logger.debug("[TAB] 💡 關閉最後一個分頁，創建新的歡迎頁")
             # 先關閉當前分頁
             widget = self.tab_widget.widget(index)
             self.tab_widget.removeTab(index)
@@ -12235,7 +12406,7 @@ class StyleHMainWindow(QMainWindow):
             self.tab_widget.addTab(welcome_tab, tr("home_page", "主頁"))
             self.tab_widget.setCurrentIndex(0)
             
-            print("[TAB] ✅ 已創建新的歡迎頁")
+            logger.debug("[TAB] ✅ 已創建新的歡迎頁")
             self.update_tab_count()
             return
         
@@ -12246,7 +12417,7 @@ class StyleHMainWindow(QMainWindow):
         if widget:
             widget.deleteLater()
         
-        print(f"[TAB] ✅ 已關閉分頁 #{index}")
+        logger.debug(f"[TAB] ✅ 已關閉分頁 #{index}")
         self.update_tab_count()
         
     def close_current_tab(self):
@@ -12258,35 +12429,35 @@ class StyleHMainWindow(QMainWindow):
     def close_all_mdi_windows_in_current_tab(self):
         """關閉當前分頁的所有 MDI 視窗（全局工具列按鈕）"""
         try:
-            print(f"[CLOSE_ALL_DEBUG] ===== 開始關閉所有視窗 =====")
+            logger.debug(f"[CLOSE_ALL_DEBUG] ===== 開始關閉所有視窗 =====")
             
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
-                print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
-                print(f"[CLOSE_ALL_DEBUG] ================================")
+                logger.debug("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
+                logger.debug(f"[CLOSE_ALL_DEBUG] ================================")
                 return
             
-            print(f"[CLOSE_ALL_DEBUG] 找到 MDI 區域: {current_mdi_area.objectName()}")
+            logger.debug(f"[CLOSE_ALL_DEBUG] 找到 MDI 區域: {current_mdi_area.objectName()}")
             
             # 獲取所有子視窗
             all_subwindows = current_mdi_area.subWindowList()
-            print(f"[CLOSE_ALL_DEBUG] MDI 區域有 {len(all_subwindows)} 個子視窗")
+            logger.debug(f"[CLOSE_ALL_DEBUG] MDI 區域有 {len(all_subwindows)} 個子視窗")
             
             for i, sw in enumerate(all_subwindows):
-                print(f"[CLOSE_ALL_DEBUG]   子視窗 {i}: {sw.windowTitle()}, 可見={sw.isVisible()}")
+                logger.debug(f"[CLOSE_ALL_DEBUG]   子視窗 {i}: {sw.windowTitle()}, 可見={sw.isVisible()}")
             
             # 關閉所有子視窗
-            print(f"[CLOSE_ALL_DEBUG] 調用 closeAllSubWindows()...")
+            logger.debug(f"[CLOSE_ALL_DEBUG] 調用 closeAllSubWindows()...")
             current_mdi_area.closeAllSubWindows()
             
             # 驗證關閉結果
             remaining = current_mdi_area.subWindowList()
-            print(f"[CLOSE_ALL_DEBUG] 關閉後剩餘 {len(remaining)} 個子視窗")
-            print("[GLOBAL_TOOLBAR] ✅ 已關閉當前分頁的所有 MDI 視窗")
-            print(f"[CLOSE_ALL_DEBUG] ================================")
+            logger.debug(f"[CLOSE_ALL_DEBUG] 關閉後剩餘 {len(remaining)} 個子視窗")
+            logger.debug("[GLOBAL_TOOLBAR] ✅ 已關閉當前分頁的所有 MDI 視窗")
+            logger.debug(f"[CLOSE_ALL_DEBUG] ================================")
             
         except Exception as e:
-            print(f"[GLOBAL_TOOLBAR] ❌ 關閉 MDI 視窗失敗: {e}")
+            logger.debug(f"[GLOBAL_TOOLBAR] ❌ 關閉 MDI 視窗失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -12295,16 +12466,16 @@ class StyleHMainWindow(QMainWindow):
         try:
             current_mdi_area = self.get_current_mdi_area()
             if not current_mdi_area:
-                print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
+                logger.debug("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有 MDI 區域")
                 return
             
             # 🔧 獲取所有 MDI 子窗口（不只是 active 的）
             all_sub_windows = current_mdi_area.subWindowList()
             if not all_sub_windows:
-                print("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有任何分析窗口")
+                logger.debug("[GLOBAL_TOOLBAR] ⚠️  當前分頁沒有任何分析窗口")
                 return
             
-            print(f"[GLOBAL_TOOLBAR] 🔄 準備重置 {len(all_sub_windows)} 個視窗的 XY 軸...")
+            logger.debug(f"[GLOBAL_TOOLBAR] 🔄 準備重置 {len(all_sub_windows)} 個視窗的 XY 軸...")
             
             # 遍歷所有子窗口
             reset_count = 0
@@ -12314,18 +12485,18 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module = None
                     if hasattr(sub_window, 'analysis_module'):
                         analysis_module = sub_window.analysis_module
-                        print(f"[GLOBAL_TOOLBAR]   ✅ 找到模組: {analysis_module.__class__.__name__}")
+                        logger.debug(f"[GLOBAL_TOOLBAR]   ✅ 找到模組: {analysis_module.__class__.__name__}")
                     
                     # 如果沒有模組實例，嘗試獲取 widget
                     if not analysis_module:
                         analysis_widget = sub_window.widget()
                         if not analysis_widget:
-                            print(f"[GLOBAL_TOOLBAR]   ⚠️  無法獲取 widget，跳過此視窗")
+                            logger.debug(f"[GLOBAL_TOOLBAR]   ⚠️  無法獲取 widget，跳過此視窗")
                             continue
                         
                         # 檢查 widget 本身是否有 reset_chart_view()
                         if hasattr(analysis_widget, 'reset_chart_view'):
-                            print(f"[GLOBAL_TOOLBAR]   ✅ Widget 有 reset_chart_view(): {analysis_widget.__class__.__name__}")
+                            logger.debug(f"[GLOBAL_TOOLBAR]   ✅ Widget 有 reset_chart_view(): {analysis_widget.__class__.__name__}")
                             analysis_widget.reset_chart_view()
                             reset_count += 1
                             continue
@@ -12333,33 +12504,33 @@ class StyleHMainWindow(QMainWindow):
                         # 檢查 widget 是否有 analysis_module 屬性
                         if hasattr(analysis_widget, 'analysis_module'):
                             analysis_module = analysis_widget.analysis_module
-                            print(f"[GLOBAL_TOOLBAR]   ✅ 從 widget 找到模組: {analysis_module.__class__.__name__}")
+                            logger.debug(f"[GLOBAL_TOOLBAR]   ✅ 從 widget 找到模組: {analysis_module.__class__.__name__}")
                         else:
                             # 最後嘗試直接調用 chart_widget.reset_view()
                             if hasattr(analysis_widget, 'chart_widget') and hasattr(analysis_widget.chart_widget, 'reset_view'):
-                                print(f"[GLOBAL_TOOLBAR]   ✅ 直接調用 chart_widget.reset_view()")
+                                logger.debug(f"[GLOBAL_TOOLBAR]   ✅ 直接調用 chart_widget.reset_view()")
                                 analysis_widget.chart_widget.reset_view()
                                 reset_count += 1
                             else:
-                                print(f"[GLOBAL_TOOLBAR]   ⚠️  {analysis_widget.__class__.__name__} 無重置方法，跳過")
+                                logger.debug(f"[GLOBAL_TOOLBAR]   ⚠️  {analysis_widget.__class__.__name__} 無重置方法，跳過")
                             continue
                     
                     # 調用模組的 reset_chart_view() 方法
                     if analysis_module and hasattr(analysis_module, 'reset_chart_view'):
-                        print(f"[GLOBAL_TOOLBAR]   ✅ 調用 {analysis_module.__class__.__name__}.reset_chart_view()")
+                        logger.debug(f"[GLOBAL_TOOLBAR]   ✅ 調用 {analysis_module.__class__.__name__}.reset_chart_view()")
                         analysis_module.reset_chart_view()
                         reset_count += 1
                     else:
-                        print(f"[GLOBAL_TOOLBAR]   ⚠️  模組沒有 reset_chart_view()，跳過")
+                        logger.debug(f"[GLOBAL_TOOLBAR]   ⚠️  模組沒有 reset_chart_view()，跳過")
                 
                 except Exception as e:
-                    print(f"[GLOBAL_TOOLBAR]   ❌ 處理視窗時發生錯誤: {e}")
+                    logger.debug(f"[GLOBAL_TOOLBAR]   ❌ 處理視窗時發生錯誤: {e}")
                     continue
             
-            print(f"[GLOBAL_TOOLBAR] ✅ 完成！成功重置 {reset_count}/{len(all_sub_windows)} 個視窗")
+            logger.debug(f"[GLOBAL_TOOLBAR] ✅ 完成！成功重置 {reset_count}/{len(all_sub_windows)} 個視窗")
             
         except Exception as e:
-            print(f"[GLOBAL_TOOLBAR] ❌ 重置視圖失敗: {e}")
+            logger.debug(f"[GLOBAL_TOOLBAR] ❌ 重置視圖失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -12380,12 +12551,12 @@ class StyleHMainWindow(QMainWindow):
                         if mdi_areas:
                             mdi_area = mdi_areas[0]
                             if hasattr(mdi_area, 'arrange_welcome_windows'):
-                                print(f"[TAB_CHANGED] 🔧 切換到 Home 頁面，重新排列視窗")
+                                logger.debug(f"[TAB_CHANGED] 🔧 切換到 Home 頁面，重新排列視窗")
                                 mdi_area.arrange_welcome_windows()
                     # 延遲 200ms 以確保佈局完成
                     QTimer.singleShot(200, find_and_arrange)
         except Exception as e:
-            print(f"[ERROR] 分頁切換處理失敗: {e}")
+            logger.error(f"[ERROR] 分頁切換處理失敗: {e}")
     
     def update_tab_count(self):
         """更新分頁數量顯示"""
@@ -12399,12 +12570,12 @@ class StyleHMainWindow(QMainWindow):
         try:
             # 檢查是否為 HOME 主頁
             if tab_index == 0:
-                print(f"[TAB_POPOUT] {tr('home_tab_no_popout')}")
+                logger.debug(f"[TAB_POPOUT] {tr('home_tab_no_popout')}")
                 return
             
             # 檢查是否已經彈出
             if tab_index in self.popped_out_tabs:
-                print(f"[TAB_POPOUT] {tr('tab_already_popped')}")
+                logger.debug(f"[TAB_POPOUT] {tr('tab_already_popped')}")
                 return
             
             # 獲取分頁內容和名稱
@@ -12412,16 +12583,16 @@ class StyleHMainWindow(QMainWindow):
             tab_name = self.tab_widget.tabText(tab_index)
             
             if not tab_widget:
-                print(f"[TAB_POPOUT] Cannot get tab {tab_index} content")
+                logger.debug(f"[TAB_POPOUT] Cannot get tab {tab_index} content")
                 return
             
             # 檢查是否為 CustomMdiArea
             if not isinstance(tab_widget, CustomMdiArea):
-                print(f"[TAB_POPOUT] Tab {tab_index} is not MDI area")
+                logger.debug(f"[TAB_POPOUT] Tab {tab_index} is not MDI area")
                 return
             
-            print(f"[TAB_POPOUT] {tr('tab_starting_popout').format(index=tab_index, name=tab_name)}")
-            print(f"[TAB_POPOUT] 📊 MDI 子視窗數量: {len(tab_widget.subWindowList())}")
+            logger.debug(f"[TAB_POPOUT] {tr('tab_starting_popout').format(index=tab_index, name=tab_name)}")
+            logger.debug(f"[TAB_POPOUT] 📊 MDI 子視窗數量: {len(tab_widget.subWindowList())}")
             
             # 創建佔位符 widget（保持分頁索引不變）
             placeholder = QWidget()
@@ -12468,14 +12639,14 @@ class StyleHMainWindow(QMainWindow):
                 sub_win.show()
                 sub_win.update()
             
-            print(f"[TAB_POPOUT] 🔄 已強制更新 MDI 區域和 {len(tab_widget.subWindowList())} 個子視窗")
+            logger.debug(f"[TAB_POPOUT] 🔄 已強制更新 MDI 區域和 {len(tab_widget.subWindowList())} 個子視窗")
             
             # 顯示獨立視窗
             standalone_window.show()
             
             # 再次確認 MDI 區域可見性
             QTimer.singleShot(100, lambda: self._ensure_mdi_visible(tab_widget))
-            print(f"[TAB_POPOUT] 🔍 已設置延遲檢查 MDI 可見性")
+            logger.debug(f"[TAB_POPOUT] 🔍 已設置延遲檢查 MDI 可見性")
             
             # 更新分頁標籤為灰色 + 🔗 圖標
             self._update_tab_appearance(tab_index, is_popped_out=True)
@@ -12488,11 +12659,11 @@ class StyleHMainWindow(QMainWindow):
                 'tab_name': tab_name
             }
             
-            print(f"[TAB_POPOUT] {tr('tab_popout_success').format(index=tab_index)}")
-            print(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
+            logger.debug(f"[TAB_POPOUT] {tr('tab_popout_success').format(index=tab_index)}")
+            logger.debug(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
             
         except Exception as e:
-            print(f"[TAB_POPOUT] Pop out failed: {e}")
+            logger.debug(f"[TAB_POPOUT] Pop out failed: {e}")
             import traceback
             traceback.print_exc()
     
@@ -12501,10 +12672,10 @@ class StyleHMainWindow(QMainWindow):
         try:
             # ✅ 修復：檢查分頁是否已彈出（避免重複調用導致 KeyError）
             if tab_index not in self.popped_out_tabs:
-                print(f"[TAB_POPOUT] {tr('tab_not_popped').format(index=tab_index)}")
+                logger.debug(f"[TAB_POPOUT] {tr('tab_not_popped').format(index=tab_index)}")
                 return
             
-            print(f"[TAB_POPOUT] {tr('tab_starting_return').format(index=tab_index)}")
+            logger.debug(f"[TAB_POPOUT] {tr('tab_starting_return').format(index=tab_index)}")
             
             # 獲取彈出信息
             popout_info = self.popped_out_tabs[tab_index]
@@ -12513,11 +12684,11 @@ class StyleHMainWindow(QMainWindow):
             placeholder = popout_info['placeholder']
             tab_name = popout_info['tab_name']
             
-            print(f"[TAB_POPOUT] 📊 返回時 MDI 子視窗數量: {len(mdi_area.subWindowList())}")
+            logger.debug(f"[TAB_POPOUT] 📊 返回時 MDI 子視窗數量: {len(mdi_area.subWindowList())}")
             
             # ✅ 關鍵修復：先從字典移除（避免 closeEvent 重複調用）
             del self.popped_out_tabs[tab_index]
-            print(f"[TAB_POPOUT] 🗑️ 已從追蹤字典移除分頁 {tab_index}")
+            logger.debug(f"[TAB_POPOUT] 🗑️ 已從追蹤字典移除分頁 {tab_index}")
             
             # ✅ 關鍵修復：從獨立視窗取出 MDI 區域（避免關閉時刪除）
             standalone_window.takeCentralWidget()
@@ -12536,15 +12707,15 @@ class StyleHMainWindow(QMainWindow):
             # 關閉獨立視窗（不會刪除 MDI 區域，因為已經 takeCentralWidget）
             standalone_window.close()
             
-            print(f"[TAB_POPOUT] {tr('tab_return_success').format(index=tab_index)}")
-            print(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
+            logger.debug(f"[TAB_POPOUT] {tr('tab_return_success').format(index=tab_index)}")
+            logger.debug(f"[TAB_POPOUT] Current popped out tabs: {len(self.popped_out_tabs)}")
             
         except KeyError:
             # ✅ 修復：KeyError 表示分頁已返回，這是正常情況（closeEvent 重複調用）
-            print(f"[TAB_POPOUT] Tab {tab_index} already returned (skip duplicate return)")
+            logger.debug(f"[TAB_POPOUT] Tab {tab_index} already returned (skip duplicate return)")
         except Exception as e:
             # 其他真正的錯誤
-            print(f"[TAB_POPOUT] Return failed: {type(e).__name__}: {e}")
+            logger.debug(f"[TAB_POPOUT] Return failed: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()
     
@@ -12565,7 +12736,7 @@ class StyleHMainWindow(QMainWindow):
                 tab_bar = self.tab_widget.tabBar()
                 tab_bar.setTabTextColor(tab_index, QColor(102, 102, 102))  # #666666
                 
-                print(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已設為灰色 + 🔗")
+                logger.debug(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已設為灰色 + 🔗")
             else:
                 # 恢復正常文字和顏色
                 self.tab_widget.setTabText(tab_index, tab_name_clean)
@@ -12574,17 +12745,17 @@ class StyleHMainWindow(QMainWindow):
                 tab_bar = self.tab_widget.tabBar()
                 tab_bar.setTabTextColor(tab_index, QColor(0, 0, 0))  # 黑色
                 
-                print(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已恢復正常")
+                logger.debug(f"[TAB_POPOUT] 🎨 分頁 {tab_index} 標籤已恢復正常")
                 
         except Exception as e:
-            print(f"[TAB_POPOUT] ❌ 更新標籤外觀失敗: {e}")
+            logger.debug(f"[TAB_POPOUT] ❌ 更新標籤外觀失敗: {e}")
     
     def rename_tab(self, tab_index):
         """重新命名分頁"""
         try:
             # 禁止重命名主頁
             if tab_index == 0:
-                print(f"[TAB_RENAME] {tr('home_tab_no_rename')}")
+                logger.debug(f"[TAB_RENAME] {tr('home_tab_no_rename')}")
                 return
             
             # 獲取當前分頁名稱（移除可能的 🔗 圖標）
@@ -12601,7 +12772,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 用戶取消或未輸入
             if not ok or not new_name:
-                print(f"[TAB_RENAME] User cancelled rename operation")
+                logger.debug(f"[TAB_RENAME] User cancelled rename operation")
                 return
             
             # 去除首尾空白
@@ -12609,7 +12780,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 檢查名稱是否與當前相同
             if new_name == current_name:
-                print(f"[TAB_RENAME] Tab name unchanged: {current_name}")
+                logger.debug(f"[TAB_RENAME] Tab name unchanged: {current_name}")
                 return
             
             # 處理重複名稱：自動添加 (1), (2), (3) 後綴
@@ -12630,14 +12801,14 @@ class StyleHMainWindow(QMainWindow):
                 # 更新追蹤字典中的名稱
                 popout_info['tab_name'] = final_name
                 
-                print(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)} (已彈出)")
+                logger.debug(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)} (已彈出)")
             else:
                 # 一般分頁，直接更新名稱
                 self.tab_widget.setTabText(tab_index, final_name)
-                print(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)}")
+                logger.debug(f"[TAB_RENAME] {tr('tab_rename_success').format(index=tab_index, name=final_name)}")
             
         except Exception as e:
-            print(f"[TAB_RENAME] ❌ 重新命名失敗: {type(e).__name__}: {e}")
+            logger.debug(f"[TAB_RENAME] ❌ 重新命名失敗: {type(e).__name__}: {e}")
             import traceback
             traceback.print_exc()
     
@@ -12680,14 +12851,14 @@ class StyleHMainWindow(QMainWindow):
             geometry = mdi_area.geometry()
             sub_count = len(mdi_area.subWindowList())
             
-            print(f"[TAB_POPOUT] 🔍 MDI 可見性檢查:")
-            print(f"[TAB_POPOUT]   - 可見: {is_visible}")
-            print(f"[TAB_POPOUT]   - 幾何: {geometry.width()}x{geometry.height()}")
-            print(f"[TAB_POPOUT]   - 子視窗: {sub_count}")
+            logger.debug(f"[TAB_POPOUT] 🔍 MDI 可見性檢查:")
+            logger.debug(f"[TAB_POPOUT]   - 可見: {is_visible}")
+            logger.debug(f"[TAB_POPOUT]   - 幾何: {geometry.width()}x{geometry.height()}")
+            logger.debug(f"[TAB_POPOUT]   - 子視窗: {sub_count}")
             
             # 如果不可見或大小為 0，強制顯示
             if not is_visible or geometry.width() == 0 or geometry.height() == 0:
-                print(f"[TAB_POPOUT] ⚠️ MDI 區域異常，嘗試修復...")
+                logger.debug(f"[TAB_POPOUT] ⚠️ MDI 區域異常，嘗試修復...")
                 mdi_area.setVisible(True)
                 mdi_area.show()
                 mdi_area.update()
@@ -12695,47 +12866,47 @@ class StyleHMainWindow(QMainWindow):
                 # 強制設置合理的大小
                 if geometry.width() == 0 or geometry.height() == 0:
                     mdi_area.resize(800, 600)
-                    print(f"[TAB_POPOUT] 🔧 已設置 MDI 區域大小為 800x600")
+                    logger.debug(f"[TAB_POPOUT] 🔧 已設置 MDI 區域大小為 800x600")
             
             # 確保所有子視窗可見
             for sub_win in mdi_area.subWindowList():
                 if not sub_win.isVisible():
-                    print(f"[TAB_POPOUT] 🔧 顯示隱藏的子視窗: {sub_win.windowTitle()}")
+                    logger.debug(f"[TAB_POPOUT] 🔧 顯示隱藏的子視窗: {sub_win.windowTitle()}")
                     sub_win.setVisible(True)
                     sub_win.show()
                     
         except Exception as e:
-            print(f"[TAB_POPOUT] ❌ MDI 可見性檢查失敗: {e}")
+            logger.debug(f"[TAB_POPOUT] ❌ MDI 可見性檢查失敗: {e}")
     
     # ==================== 分頁彈出功能結束 ====================
         
     def check_and_hide_tabs(self):
         """✅ 檢查標籤欄狀態（已改為啟用模式）"""
-        print("[TAB] ⏰ 檢查標籤欄狀態...")
-        print(f"[TAB] QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
-        print(f"[TAB] QTabBar 高度: {self.tab_widget.tabBar().height()}")
+        logger.debug("[TAB] ⏰ 檢查標籤欄狀態...")
+        logger.debug(f"[TAB] QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
+        logger.debug(f"[TAB] QTabBar 高度: {self.tab_widget.tabBar().height()}")
         
         # ✅ 確保標籤欄顯示（與之前相反）
         self.tab_widget.tabBar().setVisible(True)
         
-        print(f"[TAB] ✅ 標籤欄已啟用")
+        logger.debug(f"[TAB] ✅ 標籤欄已啟用")
         
     def second_tab_check(self):
         """第二次標籤檢查（延遲2秒後）- 簡化版本"""
-        print(f"[TAB_HIDE] 延遲檢查 - QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
-        print(f"[TAB_HIDE] 延遲檢查 - QTabBar 高度: {self.tab_widget.tabBar().height()}")
+        logger.debug(f"[TAB_HIDE] 延遲檢查 - QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
+        logger.debug(f"[TAB_HIDE] 延遲檢查 - QTabBar 高度: {self.tab_widget.tabBar().height()}")
         
     def third_tab_check(self):
         """第三次標籤檢查（延遲5秒後）- 簡化版本"""
-        print(f"[TAB_HIDE] 最終檢查 - QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
-        print(f"[TAB_HIDE] 最終檢查 - QTabBar 高度: {self.tab_widget.tabBar().height()}")
+        logger.debug(f"[TAB_HIDE] 最終檢查 - QTabBar 可見性: {self.tab_widget.tabBar().isVisible()}")
+        logger.debug(f"[TAB_HIDE] 最終檢查 - QTabBar 高度: {self.tab_widget.tabBar().height()}")
         
         # 檢查 TabButtonsContainer 狀態
         corner_widget = self.tab_widget.cornerWidget(Qt.TopRightCorner)
         if corner_widget:
-            print(f"[TAB_HIDE] TabButtonsContainer 可見性: {corner_widget.isVisible()}")
-            print(f"[TAB_HIDE] TabButtonsContainer 大小: {corner_widget.size()}")
-        print(f"[TAB_HIDE] 所有標籤隱藏檢查完成")
+            logger.debug(f"[TAB_HIDE] TabButtonsContainer 可見性: {corner_widget.isVisible()}")
+            logger.debug(f"[TAB_HIDE] TabButtonsContainer 大小: {corner_widget.size()}")
+        logger.debug(f"[TAB_HIDE] 所有標籤隱藏檢查完成")
     
     # ==================== 同步功能實現 ====================
     
@@ -12752,55 +12923,55 @@ class StyleHMainWindow(QMainWindow):
     
     def register_mdi_area(self, mdi_area):
         """註冊MDI區域到主視窗（用於同步功能）"""
-        print(f"[LINK] [DEBUG]    嘗試註冊MDI區域: {mdi_area.objectName() if mdi_area else 'None'}")
-        print(f"[LINK] [DEBUG]    當前已註冊的MDI區域數量: {len(self.mdi_areas)}")
-        print(f"[LINK] [DEBUG]    主視窗類型: {type(self).__name__}")
+        logger.debug(f"[LINK] [DEBUG]    嘗試註冊MDI區域: {mdi_area.objectName() if mdi_area else 'None'}")
+        logger.debug(f"[LINK] [DEBUG]    當前已註冊的MDI區域數量: {len(self.mdi_areas)}")
+        logger.debug(f"[LINK] [DEBUG]    主視窗類型: {type(self).__name__}")
         
         if mdi_area not in self.mdi_areas:
             self.mdi_areas.append(mdi_area)
-            print(f"[OK] [MDI] MDI區域已註冊: {mdi_area.objectName()}")
-            print(f"[OK] [MDI] 註冊後MDI區域總數: {len(self.mdi_areas)}")
+            logger.debug(f"[OK] [MDI] MDI區域已註冊: {mdi_area.objectName()}")
+            logger.debug(f"[OK] [MDI] 註冊後MDI區域總數: {len(self.mdi_areas)}")
         else:
-            print(f"[WARNING] [MDI] MDI區域已存在，跳過註冊: {mdi_area.objectName()}")
+            logger.warning(f"[WARNING] [MDI] MDI區域已存在，跳過註冊: {mdi_area.objectName()}")
     
     def sync_to_all_mdi_subwindows(self, param_type, value):
         """同步參數到所有MDI子視窗"""
-        print(f"[REFRESH] [SYNC] 開始同步 {param_type} = {value} 到所有MDI子視窗")
-        print(f"[LINK] [SYNC] 已註冊的MDI區域數量: {len(self.mdi_areas)}")
+        logger.debug(f"[REFRESH] [SYNC] 開始同步 {param_type} = {value} 到所有MDI子視窗")
+        logger.debug(f"[LINK] [SYNC] 已註冊的MDI區域數量: {len(self.mdi_areas)}")
         
         synced_count = 0
         for i, mdi_area in enumerate(self.mdi_areas):
-            print(f"[SEARCH] [SYNC] 檢查MDI區域 {i+1}/{len(self.mdi_areas)}: {mdi_area.objectName()}")
+            logger.debug(f"[SEARCH] [SYNC] 檢查MDI區域 {i+1}/{len(self.mdi_areas)}: {mdi_area.objectName()}")
             synced_count += self.sync_to_mdi_area(mdi_area, param_type, value)
         
-        print(f"[OK] [SYNC] 完成同步，共更新 {synced_count} 個子視窗")
+        logger.debug(f"[OK] [SYNC] 完成同步，共更新 {synced_count} 個子視窗")
     
     def sync_to_mdi_area(self, mdi_area, param_type, value):
         """通知MDI區域內所有子視窗主頁面參數變更"""
         if not mdi_area:
-            print(f"[WARNING] [SYNC] MDI區域為空，跳過通知")
+            logger.warning(f"[WARNING] [SYNC] MDI區域為空，跳過通知")
             return 0
             
         notified_count = 0
         subwindow_list = mdi_area.subWindowList()
-        print(f"[TEST] [SYNC] 向MDI區域 {mdi_area.objectName()} 的 {len(subwindow_list)} 個子視窗發送參數變更通知")
+        logger.debug(f"[TEST] [SYNC] 向MDI區域 {mdi_area.objectName()} 的 {len(subwindow_list)} 個子視窗發送參數變更通知")
         
         for subwindow in subwindow_list:
             window_title = subwindow.windowTitle() if subwindow else "未知視窗"
-            print(f"[TEST] [SYNC] 發送通知到子視窗: {window_title} ({param_type}={value})")
+            logger.debug(f"[TEST] [SYNC] 發送通知到子視窗: {window_title} ({param_type}={value})")
             
             # 總是發送通知，讓子視窗自己決定是否響應
             if hasattr(subwindow, 'receive_main_window_update_notification'):
                 try:
                     subwindow.receive_main_window_update_notification(param_type, value)
                     notified_count += 1
-                    print(f"[OK] [SYNC] 已發送通知到: {window_title}")
+                    logger.debug(f"[OK] [SYNC] 已發送通知到: {window_title}")
                 except Exception as e:
-                    print(f"[ERROR] [SYNC] 發送通知失敗: {window_title}, 錯誤: {e}")
+                    logger.error(f"[ERROR] [SYNC] 發送通知失敗: {window_title}, 錯誤: {e}")
             else:
-                print(f"[WARNING] [SYNC] 子視窗 {window_title} 不支援通知機制")
+                logger.warning(f"[WARNING] [SYNC] 子視窗 {window_title} 不支援通知機制")
         
-        print(f"[STATS] [SYNC] MDI區域 {mdi_area.objectName()} 通知完成，共發送 {notified_count} 個通知")
+        logger.debug(f"[STATS] [SYNC] MDI區域 {mdi_area.objectName()} 通知完成，共發送 {notified_count} 個通知")
         return notified_count
     
     # ==================== 同步功能實現結束 ====================
@@ -12997,21 +13168,21 @@ class StyleHMainWindow(QMainWindow):
                 if upcoming_events:
                     next_event = upcoming_events[0]
                     race_base = next_event.race_key
-                    print(f"[WELCOME] Weather Timeline: 選擇下一場未開賽 → {race_base}")
+                    logger.debug(f"[WELCOME] Weather Timeline: 選擇下一場未開賽 → {race_base}")
                 elif completed_events:
                     # 回退：如果沒有未開賽的賽事，使用最新已完賽
                     next_event = completed_events[-1]
                     race_base = next_event.race_key
-                    print(f"[WELCOME] Weather Timeline: 無未開賽賽事，使用最新已完賽 → {race_base}")
+                    logger.debug(f"[WELCOME] Weather Timeline: 無未開賽賽事，使用最新已完賽 → {race_base}")
                 else:
                     race_base = "Japan"
-                    print(f"[WELCOME] Weather Timeline: 無賽事數據，使用預設值 → {race_base}")
+                    logger.debug(f"[WELCOME] Weather Timeline: 無賽事數據，使用預設值 → {race_base}")
                 
                 # ✅ Function 96 期望簡短的賽事名稱（如 "Mexico"），不需要 "Grand Prix" 後綴
                 weather_race = race_base
                     
             except Exception as e:
-                print(f"[WELCOME] ⚠️ Weather Timeline 賽事選擇失敗: {e}")
+                logger.debug(f"[WELCOME] ⚠️ Weather Timeline 賽事選擇失敗: {e}")
                 weather_race = "Japan"  # 使用簡短格式
             
             # 📊 積分榜/進度: 使用當前 race_combo 選擇的賽事
@@ -13023,9 +13194,9 @@ class StyleHMainWindow(QMainWindow):
                 else:
                     current_race = display_text
             
-            print(f"[WELCOME] 使用年份: {current_year}")
-            print(f"[WELCOME] 積分榜/進度賽事: {current_race}")
-            print(f"[WELCOME] 天氣預報賽事: {weather_race}")
+            logger.debug(f"[WELCOME] 使用年份: {current_year}")
+            logger.debug(f"[WELCOME] 積分榜/進度賽事: {current_race}")
+            logger.debug(f"[WELCOME] 天氣預報賽事: {weather_race}")
             
             # 創建四個 MDI 子視窗 - 三欄排列 (左欄上下分割)
             # 這四個視窗是固定的歡迎頁面內容，不受 Tile/Cascade 影響
@@ -13097,7 +13268,7 @@ class StyleHMainWindow(QMainWindow):
                 mdi_width = mdi_area.width()
                 mdi_height = mdi_area.height()
                 
-                print(f"[WELCOME] 🔧 自動排列視窗: MDI 區域大小 {mdi_width}x{mdi_height}")
+                logger.debug(f"[WELCOME] 🔧 自動排列視窗: MDI 區域大小 {mdi_width}x{mdi_height}")
                 
                 # 三欄寬度: 左 33%, 中 33%, 右 34%
                 left_width = mdi_width // 3
@@ -13127,7 +13298,7 @@ class StyleHMainWindow(QMainWindow):
                 constructor_sub.show()
                 driver_sub.show()
                 
-                print(f"[WELCOME] 視窗排列完成 (三欄): 左上{left_width}x{left_top_height} + 左下{left_width}x{left_bottom_height} + 中{middle_width}x{mdi_height} + 右{right_width}x{mdi_height}")
+                logger.debug(f"[WELCOME] 視窗排列完成 (三欄): 左上{left_width}x{left_top_height} + 左下{left_width}x{left_bottom_height} + 中{middle_width}x{mdi_height} + 右{right_width}x{mdi_height}")
             
             # 儲存 arrange_windows 函數以便 resize 時調用
             mdi_area.arrange_welcome_windows = arrange_windows
@@ -13155,9 +13326,9 @@ class StyleHMainWindow(QMainWindow):
             mdi_area.installEventFilter(resize_filter)
             mdi_area._resize_filter = resize_filter  # 保持引用避免被垃圾回收
             
-            print(f"[WELCOME] ✅ 賽季進度 + 天氣時間軸 + 積分榜模組已載入 (year={current_year}, race={current_race})")
+            logger.debug(f"[WELCOME] ✅ 賽季進度 + 天氣時間軸 + 積分榜模組已載入 (year={current_year}, race={current_race})")
         except Exception as e:
-            print(f"[WELCOME] ❌ 模組載入失敗: {e}")
+            logger.debug(f"[WELCOME] ❌ 模組載入失敗: {e}")
             import traceback
             traceback.print_exc()
         
@@ -13630,6 +13801,30 @@ class StyleHMainWindow(QMainWindow):
         layout.addWidget(table)
         
         return widget
+    
+    def _on_splitter_moved(self, pos, index):
+        """當用戶拖動 Splitter 時，標記功能樹為用戶已調整"""
+        if hasattr(self, 'function_tree'):
+            self.function_tree.mark_user_resized()
+    
+    def _adjust_splitter_for_tree(self, tree_width):
+        """根據樹狀圖寬度調整 Splitter"""
+        if hasattr(self, 'analysis_splitter'):
+            # 加上一些邊距（20px）以避免文字緊貼邊緣
+            desired_width = tree_width + 20
+            
+            # 獲取當前 Splitter 的總寬度
+            total_width = self.analysis_splitter.width()
+            
+            # 計算右側面板的寬度
+            right_width = total_width - desired_width
+            
+            # 確保右側面板至少保留 800px
+            if right_width < 800:
+                desired_width = total_width - 800
+            
+            # 設置新的 Splitter 大小
+            self.analysis_splitter.setSizes([desired_width, right_width])
         
     def create_professional_status_bar(self):
         """Create professional status bar - 簡化版，只顯示 API 狀態"""
@@ -14027,33 +14222,33 @@ class StyleHMainWindow(QMainWindow):
             
             # 🔧 修復：更新 Welcome Screen 的固定視窗
             current_year = self.year_combo.currentText() if hasattr(self, 'year_combo') else '2025'
-            print(f"🔍 [BROADCAST] 檢查 Welcome Screen 視窗更新: year={current_year}")
+            logger.debug(f"🔍 [BROADCAST] 檢查 Welcome Screen 視窗更新: year={current_year}")
             
             # 更新 Season Progress
             if hasattr(self, 'welcome_season_progress') and self.welcome_season_progress:
                 try:
-                    print(f"🔍 [BROADCAST] 更新 Season Progress: {current_year}")
+                    logger.debug(f"🔍 [BROADCAST] 更新 Season Progress: {current_year}")
                     self.welcome_season_progress.update_year(current_year)
                 except Exception as e:
-                    print(f"❌ [BROADCAST] Season Progress 更新失敗: {e}")
+                    logger.debug(f"❌ [BROADCAST] Season Progress 更新失敗: {e}")
             
             # 更新 Constructor Standings
             if hasattr(self, 'welcome_constructor_standings') and self.welcome_constructor_standings:
                 try:
-                    print(f"🔍 [BROADCAST] 更新 Constructor Standings: {current_year}")
+                    logger.debug(f"🔍 [BROADCAST] 更新 Constructor Standings: {current_year}")
                     if hasattr(self.welcome_constructor_standings, 'update_year'):
                         self.welcome_constructor_standings.update_year(current_year)
                 except Exception as e:
-                    print(f"❌ [BROADCAST] Constructor Standings 更新失敗: {e}")
+                    logger.debug(f"❌ [BROADCAST] Constructor Standings 更新失敗: {e}")
             
             # 更新 Driver Standings
             if hasattr(self, 'welcome_driver_standings') and self.welcome_driver_standings:
                 try:
-                    print(f"🔍 [BROADCAST] 更新 Driver Standings: {current_year}")
+                    logger.debug(f"🔍 [BROADCAST] 更新 Driver Standings: {current_year}")
                     if hasattr(self.welcome_driver_standings, 'update_year'):
                         self.welcome_driver_standings.update_year(current_year)
                 except Exception as e:
-                    print(f"❌ [BROADCAST] Driver Standings 更新失敗: {e}")
+                    logger.debug(f"❌ [BROADCAST] Driver Standings 更新失敗: {e}")
             
             logger.info("[BROADCAST_DEBUG] 調用 on_race_parameters_changed()")
             self.on_race_parameters_changed()
@@ -14147,7 +14342,7 @@ class StyleHMainWindow(QMainWindow):
                     lap2_number = None
 
         except Exception as exc:
-            print(f"[LAP_CONTROL] [DEBUG]   ⚠️ 無法讀取圈速工具欄參數: {exc}")
+            logger.debug(f"[LAP_CONTROL] [DEBUG]   ⚠️ 無法讀取圈速工具欄參數: {exc}")
 
         return {
             "driver1": driver1,
@@ -14193,9 +14388,9 @@ class StyleHMainWindow(QMainWindow):
                             if hasattr(subwindow, 'title_bar') and subwindow.title_bar:
                                 subwindow.title_bar.update_title(new_title)
                             
-                            print(f"[TITLE] 更新子窗口標題: {module_name} -> {new_title}")
+                            logger.debug(f"[TITLE] 更新子窗口標題: {module_name} -> {new_title}")
         except Exception as e:
-            print(f"[ERROR] 更新標題時發生錯誤: {e}")
+            logger.error(f"[ERROR] 更新標題時發生錯誤: {e}")
         
     def check_and_remove_welcome_page(self):
         """
@@ -14210,7 +14405,7 @@ class StyleHMainWindow(QMainWindow):
         
         # ✅ 只有當前在主頁時才創建新分頁
         if current_tab and current_tab.objectName() == "welcome_tab":
-            print("[TAB] 💡 檢測到在主頁，自動創建 '分頁一'")
+            logger.debug("[TAB] 💡 檢測到在主頁，自動創建 '分頁一'")
             
             # 檢查是否已經有非主頁的分頁存在
             has_non_welcome_tab = False
@@ -14218,20 +14413,20 @@ class StyleHMainWindow(QMainWindow):
                 tab = self.tab_widget.widget(i)
                 if tab.objectName() != "welcome_tab":
                     has_non_welcome_tab = True
-                    print(f"[TAB] 💡 發現已存在的分頁，切換到該分頁而不創建新分頁")
+                    logger.debug(f"[TAB] 💡 發現已存在的分頁，切換到該分頁而不創建新分頁")
                     self.tab_widget.setCurrentIndex(i)
                     break
             
             # 如果沒有其他分頁，才創建新分頁
             if not has_non_welcome_tab:
                 self.add_new_tab()  # 創建 "分頁一" 並自動切換
-                print("[TAB] ✅ 已創建 '分頁一' 並切換過去")
+                logger.debug("[TAB] ✅ 已創建 '分頁一' 並切換過去")
         else:
             # 當前不在主頁，不做任何操作（模組會添加到當前分頁）
             if current_tab:
-                print(f"[TAB] 💡 當前在分頁 '{self.tab_widget.tabText(self.tab_widget.currentIndex())}'，模組將添加到此分頁")
+                logger.debug(f"[TAB] 💡 當前在分頁 '{self.tab_widget.tabText(self.tab_widget.currentIndex())}'，模組將添加到此分頁")
             else:
-                print("[TAB] ⚠️ 無法獲取當前分頁")
+                logger.debug("[TAB] ⚠️ 無法獲取當前分頁")
                 
     def create_empty_analysis_tab(self):
         """創建空白的分析分頁，只包含MDI區域"""
@@ -14328,7 +14523,7 @@ class StyleHMainWindow(QMainWindow):
         
         # [TOOL] 修復: 註冊MDI區域到主視窗
         self.register_mdi_area(mdi_area)
-        print(f"[OK] [MDI] 已註冊分析MDI區域: {mdi_area.objectName()}")
+        logger.debug(f"[OK] [MDI] 已註冊分析MDI區域: {mdi_area.objectName()}")
         
         # 連接關閉所有視窗按鈕
         close_all_btn.clicked.connect(lambda: self.close_all_mdi_windows(mdi_area))
@@ -14448,10 +14643,10 @@ class StyleHMainWindow(QMainWindow):
                 # 顯示狀態區域
                 self.toolbar_status_widget.setVisible(True)
                 
-                print(f"[TOOLBAR_STATUS] 已更新: {module_name} | {lap_time} | {tyre_compound} | {lap_numbers}")
+                logger.debug(f"[TOOLBAR_STATUS] 已更新: {module_name} | {lap_time} | {tyre_compound} | {lap_numbers}")
                 
         except Exception as e:
-            print(f"[ERROR] 更新工具欄狀態失敗: {e}")
+            logger.error(f"[ERROR] 更新工具欄狀態失敗: {e}")
     
     def clear_toolbar_status(self):
         """清除工具欄狀態信息"""
@@ -14459,9 +14654,9 @@ class StyleHMainWindow(QMainWindow):
         
     def create_analysis_window(self, function_name):
         """為功能樹的分析項目創建新視窗 - 升級支援模組化架構"""
-        print(f"[DEBUG]    [CREATE_WINDOW] =============== 開始創建分析視窗 ===============")
-        print(f"[DEBUG]    [CREATE_WINDOW] 功能名稱: '{function_name}'")
-        print(f"[DEBUG]    [CREATE_WINDOW] 將嘗試調用 _create_analysis_module...")
+        logger.debug(f"[DEBUG]    [CREATE_WINDOW] =============== 開始創建分析視窗 ===============")
+        logger.debug(f"[DEBUG]    [CREATE_WINDOW] 功能名稱: '{function_name}'")
+        logger.debug(f"[DEBUG]    [CREATE_WINDOW] 將嘗試調用 _create_analysis_module...")
         
         # 檢查是否為首次使用分析功能
         self.check_and_remove_welcome_page()
@@ -14474,23 +14669,23 @@ class StyleHMainWindow(QMainWindow):
         )
 
         if is_ideal_lap_analysis:
-            print(f"[IDEAL_LAP] 🏁 檢測到理想圈分析請求: {function_name}")
+            logger.debug(f"[IDEAL_LAP] 🏁 檢測到理想圈分析請求: {function_name}")
             
             # 顯示選項對話框
             ideal_lap_selection = self._prompt_ideal_lap_options()
             if ideal_lap_selection is None:
-                print("[IDEAL_LAP] 使用者取消理想圈分析選項對話框")
+                logger.debug("[IDEAL_LAP] 使用者取消理想圈分析選項對話框")
                 return
             if not ideal_lap_selection:
-                print("[IDEAL_LAP] 未選擇任何理想圈分析模組")
+                logger.debug("[IDEAL_LAP] 未選擇任何理想圈分析模組")
                 return
 
-            print(f"[IDEAL_LAP] ✅ 使用者選擇了 {len(ideal_lap_selection)} 個分析類型: {ideal_lap_selection}")
+            logger.debug(f"[IDEAL_LAP] ✅ 使用者選擇了 {len(ideal_lap_selection)} 個分析類型: {ideal_lap_selection}")
             
             # 查找當前分頁中的 MDI 區域（與 detailed lap 相同方式）
             current_tab = self.tab_widget.currentWidget()
             if not current_tab:
-                print("[IDEAL_LAP] ❌ 無法取得當前分頁")
+                logger.debug("[IDEAL_LAP] ❌ 無法取得當前分頁")
                 return
                 
             mdi_area = None
@@ -14502,20 +14697,20 @@ class StyleHMainWindow(QMainWindow):
                     break
                     
             if mdi_area is None:
-                print("[IDEAL_LAP] ❌ 無法找到 MDI 區域")
+                logger.debug("[IDEAL_LAP] ❌ 無法找到 MDI 區域")
                 return
             
             # 獲取當前參數
             current_year = self.get_selected_year()
             current_race = self.get_selected_race_key()
             current_session = self.get_selected_session_code()
-            print(f"[IDEAL_LAP] 📋 賽事參數: {current_year} {current_race} {current_session}")
+            logger.debug(f"[IDEAL_LAP] 📋 賽事參數: {current_year} {current_race} {current_session}")
             
             from modules.gui.ideal_lap_analysis.ideal_lap_options_dialog import IdealLapAnalysisOptionsDialog
             
             # 為每個選擇的分析類型創建視窗
             for analysis_type in ideal_lap_selection:
-                print(f"[IDEAL_LAP] 🚀 創建分析視窗: {analysis_type}")
+                logger.debug(f"[IDEAL_LAP] 🚀 創建分析視窗: {analysis_type}")
                 
                 try:
                     if analysis_type == IdealLapAnalysisOptionsDialog.TYPE_RANKING_TABLE:
@@ -14544,7 +14739,7 @@ class StyleHMainWindow(QMainWindow):
                         )
                     
                 except Exception as e:
-                    print(f"[IDEAL_LAP] ❌ 創建分析視窗失敗: {e}")
+                    logger.debug(f"[IDEAL_LAP] ❌ 創建分析視窗失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     QMessageBox.critical(
@@ -14568,7 +14763,7 @@ class StyleHMainWindow(QMainWindow):
             or ("Lap Analysis" in function_name)
             or ("ラップ分析" in function_name)
         ):
-            print(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
+            logger.debug(f"[遙測分析] 檢測到遙測分析請求: {function_name}")
             self.lap_analysis()
             return
 
@@ -14582,7 +14777,7 @@ class StyleHMainWindow(QMainWindow):
             throttle_selection = self._prompt_throttle_analysis_options()
 
             if throttle_selection is None:
-                print("[THROTTLE] 使用者取消油門分析選項對話框")
+                logger.debug("[THROTTLE] 使用者取消油門分析選項對話框")
                 return
 
             if throttle_selection.get("line_chart"):
@@ -14591,7 +14786,7 @@ class StyleHMainWindow(QMainWindow):
             if throttle_selection.get("box_plot"):
                 function_name = tr("throttle_box_plot", "Throttle Box Plot")
             else:
-                print("[THROTTLE] 未選擇任何可用的油門分析模組，結束建立流程")
+                logger.debug("[THROTTLE] 未選擇任何可用的油門分析模組，結束建立流程")
                 return
 
         # 獲取當前活動的分頁
@@ -14656,7 +14851,7 @@ class StyleHMainWindow(QMainWindow):
         if is_detailed_lap:
             selection = self._prompt_detailed_lap_options()
             if selection is None:
-                print("[DETAILED_LAP] 使用者取消了詳細圈速分析選項對話框")
+                logger.debug("[DETAILED_LAP] 使用者取消了詳細圈速分析選項對話框")
                 return
             detailed_lap_selection = selection
 
@@ -14669,7 +14864,7 @@ class StyleHMainWindow(QMainWindow):
                 )
 
             if not detailed_lap_selection.get("detail_table"):
-                print("[DETAILED_LAP] 僅選擇圈速箱型圖，跳過詳細圈速模組視窗建立")
+                logger.debug("[DETAILED_LAP] 僅選擇圈速箱型圖，跳過詳細圈速模組視窗建立")
                 return
 
         # [TOOL] 新增：嘗試使用模組化架構
@@ -14684,7 +14879,7 @@ class StyleHMainWindow(QMainWindow):
             # 🔧 [CRITICAL FIX] 清理 race 名稱，移除日期後綴
             # 例如: "Australia (2025-03-16)" → "Australia"
             clean_race_value = self._get_race_key_from_display(current_race_value)
-            print(f"[TITLE] [CLEAN] 清理 race 名稱: '{current_race_value}' → '{clean_race_value}'")
+            logger.debug(f"[TITLE] [CLEAN] 清理 race 名稱: '{current_race_value}' → '{clean_race_value}'")
             
             # 使用 get_window_title 方法並傳入當前參數
             if hasattr(analysis_module, 'get_window_title'):
@@ -14693,10 +14888,10 @@ class StyleHMainWindow(QMainWindow):
                     clean_race_value,  # 🔧 使用清理後的 race 名稱
                     current_session_value,
                 )
-                print(f"[TITLE] [FIX] 使用當前參數生成標題: {window_title}")
+                logger.debug(f"[TITLE] [FIX] 使用當前參數生成標題: {window_title}")
             else:
                 window_title = analysis_module.get_title()
-                print(f"[TITLE] [FALLBACK] 使用預設標題: {window_title}")
+                logger.debug(f"[TITLE] [FALLBACK] 使用預設標題: {window_title}")
                 
             analysis_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             
@@ -14707,16 +14902,16 @@ class StyleHMainWindow(QMainWindow):
             # 🔧 [CRITICAL FIX] 設置模組的父視窗引用（與其他模組保持一致）
             if hasattr(analysis_module, 'set_parent_window'):
                 analysis_module.set_parent_window(analysis_window)
-                print(f"[LINK] [INIT] 已設置模組的父視窗引用: {window_title}")
+                logger.debug(f"[LINK] [INIT] 已設置模組的父視窗引用: {window_title}")
             
             # [REMOVED] 不再需要重新設置標題，因為已經使用 get_window_title 設置正確標題
-            print(f"[TITLE] [OK] 視窗標題已設置為: {window_title}")
+            logger.debug(f"[TITLE] [OK] 視窗標題已設置為: {window_title}")
             
             # 使用模組推薦的尺寸
             width, height = analysis_module.get_default_size()
             analysis_window.resize(width, height)
             
-            print(f"[OK] [MODULE] 使用模組化架構創建視窗: {analysis_window.windowTitle()}")
+            logger.debug(f"[OK] [MODULE] 使用模組化架構創建視窗: {analysis_window.windowTitle()}")
             
         else:
             # [TOOL] 保留：舊版相容性邏輯
@@ -14731,7 +14926,7 @@ class StyleHMainWindow(QMainWindow):
                 content_widget, analysis_module = legacy_result
                 analysis_window.setWidget(content_widget)
                 analysis_window.analysis_module = analysis_module  # 設置模組引用
-                print(f"[OK] [LEGACY] 設置分析模組到視窗: {analysis_module.__class__.__name__}")
+                logger.debug(f"[OK] [LEGACY] 設置分析模組到視窗: {analysis_module.__class__.__name__}")
             else:
                 content_widget = legacy_result
                 analysis_window.setWidget(content_widget)
@@ -14744,11 +14939,11 @@ class StyleHMainWindow(QMainWindow):
             else:
                 analysis_window.resize(450, 280)
             
-            print(f"[WARNING] [LEGACY] 使用舊版架構創建視窗: {window_title}")
+            logger.warning(f"[WARNING] [LEGACY] 使用舊版架構創建視窗: {window_title}")
 
         # 通用視窗設定
         mdi_area.addSubWindow(analysis_window)
-        print(f"[OK] [MDI] 已創建MDI子視窗: {analysis_window.windowTitle()}")
+        logger.debug(f"[OK] [MDI] 已創建MDI子視窗: {analysis_window.windowTitle()}")
         
         # 連接關閉信號 - 確保視窗關閉時從追蹤列表移除
         if hasattr(analysis_window, 'window_closed'):
@@ -14877,7 +15072,7 @@ class StyleHMainWindow(QMainWindow):
                 ThrottleAnalysisOptionsDialog,
             )
         except ImportError as exc:
-            print(f"[THROTTLE] 無法載入油門分析選項對話框: {exc}")
+            logger.debug(f"[THROTTLE] 無法載入油門分析選項對話框: {exc}")
             return {"box_plot": True, "line_chart": False}
 
         dialog = ThrottleAnalysisOptionsDialog(self)
@@ -14895,7 +15090,7 @@ class StyleHMainWindow(QMainWindow):
         if not selection["box_plot"] and not selection["line_chart"]:
             selection["box_plot"] = True
 
-        print(f"[THROTTLE] 選項結果: {selection}")
+        logger.debug(f"[THROTTLE] 選項結果: {selection}")
         return selection
 
     def _show_throttle_line_chart_placeholder(self):
@@ -14905,12 +15100,12 @@ class StyleHMainWindow(QMainWindow):
 
     def _create_throttle_line_chart_window(self):
         """創建油門折線圖分析視窗"""
-        print("[THROTTLE_LINE] 開始創建油門折線圖視窗...")
+        logger.debug("[THROTTLE_LINE] 開始創建油門折線圖視窗...")
         
         # 獲取當前參數
         current_tab = self.tab_widget.currentWidget()
         if current_tab is None:
-            print("[THROTTLE_LINE] 錯誤: 無活動分頁")
+            logger.debug("[THROTTLE_LINE] 錯誤: 無活動分頁")
             QMessageBox.warning(self, "錯誤", "無活動分頁")
             return
 
@@ -14921,7 +15116,7 @@ class StyleHMainWindow(QMainWindow):
         current_session = parameter_provider.get_current_session()
 
         if not all([current_year, current_race, current_session]):
-            print(f"[THROTTLE_LINE] 錯誤: 參數不完整 Year={current_year}, Race={current_race}, Session={current_session}")
+            logger.debug(f"[THROTTLE_LINE] 錯誤: 參數不完整 Year={current_year}, Race={current_race}, Session={current_session}")
             QMessageBox.warning(
                 self,
                 "參數錯誤",
@@ -14929,7 +15124,7 @@ class StyleHMainWindow(QMainWindow):
             )
             return
 
-        print(f"[THROTTLE_LINE] 參數: {current_year} {current_race} {current_session}")
+        logger.debug(f"[THROTTLE_LINE] 參數: {current_year} {current_race} {current_session}")
 
         # 獲取 MDI 區域
         mdi_area = None
@@ -14941,11 +15136,11 @@ class StyleHMainWindow(QMainWindow):
                 break
 
         if mdi_area is None:
-            print("[THROTTLE_LINE] 錯誤: 找不到MDI區域")
+            logger.debug("[THROTTLE_LINE] 錯誤: 找不到MDI區域")
             QMessageBox.warning(self, "錯誤", "找不到MDI區域")
             return
 
-        print("[THROTTLE_LINE] 開始創建油門折線圖模組...")
+        logger.debug("[THROTTLE_LINE] 開始創建油門折線圖模組...")
 
         try:
             from modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_module import (
@@ -14958,7 +15153,7 @@ class StyleHMainWindow(QMainWindow):
             except (TypeError, ValueError):
                 year_int = current_year
 
-            print(f"[THROTTLE_LINE] 模組參數: {year_int} {current_race} {current_session}")
+            logger.debug(f"[THROTTLE_LINE] 模組參數: {year_int} {current_race} {current_session}")
 
             # 創建模組實例（直接傳入參數）
             module = ThrottleLineChartModule(
@@ -14975,7 +15170,7 @@ class StyleHMainWindow(QMainWindow):
             widget = module.get_widget()
 
             if widget:
-                print("[THROTTLE_LINE] ✅ 模組初始化成功")
+                logger.debug("[THROTTLE_LINE] ✅ 模組初始化成功")
                 
                 # 獲取視窗標題
                 window_title = module.get_window_title()
@@ -14995,10 +15190,10 @@ class StyleHMainWindow(QMainWindow):
                 mdi_area.addSubWindow(sub_window)
                 sub_window.show()
                 
-                print(f"[THROTTLE_LINE] ✅ 油門折線圖視窗已創建: {window_title}")
+                logger.debug(f"[THROTTLE_LINE] ✅ 油門折線圖視窗已創建: {window_title}")
                 
             else:
-                print("[THROTTLE_LINE] ❌ 模組初始化失敗")
+                logger.debug("[THROTTLE_LINE] ❌ 模組初始化失敗")
                 QMessageBox.warning(
                     self,
                     "初始化失敗",
@@ -15006,7 +15201,7 @@ class StyleHMainWindow(QMainWindow):
                 )
 
         except Exception as e:
-            print(f"[THROTTLE_LINE] ❌ 創建失敗: {e}")
+            logger.debug(f"[THROTTLE_LINE] ❌ 創建失敗: {e}")
             import traceback
             traceback.print_exc()
             QMessageBox.critical(
@@ -15022,7 +15217,7 @@ class StyleHMainWindow(QMainWindow):
                 DetailedLapAnalysisOptionsDialog,
             )
         except ImportError as exc:
-            print(f"[DETAILED_LAP] 無法載入選項對話框: {exc}")
+            logger.debug(f"[DETAILED_LAP] 無法載入選項對話框: {exc}")
             return {"detail_table": True, "box_plot": False}
 
         dialog = DetailedLapAnalysisOptionsDialog(self)
@@ -15040,7 +15235,7 @@ class StyleHMainWindow(QMainWindow):
         if not selection["detail_table"] and not selection["box_plot"]:
             selection["detail_table"] = True
 
-        print(f"[DETAILED_LAP] 選項結果: {selection}")
+        logger.debug(f"[DETAILED_LAP] 選項結果: {selection}")
         return selection
 
     def _prompt_ideal_lap_options(self):
@@ -15053,7 +15248,7 @@ class StyleHMainWindow(QMainWindow):
         try:
             from modules.gui.ideal_lap_analysis import IdealLapAnalysisOptionsDialog
         except ImportError as exc:
-            print(f"[IDEAL_LAP] ❌ 無法載入選項對話框: {exc}")
+            logger.debug(f"[IDEAL_LAP] ❌ 無法載入選項對話框: {exc}")
             import traceback
             traceback.print_exc()
             return None
@@ -15062,22 +15257,22 @@ class StyleHMainWindow(QMainWindow):
         result = dialog.exec_()
 
         if result != QDialog.Accepted:
-            print("[IDEAL_LAP] 使用者取消對話框")
+            logger.debug("[IDEAL_LAP] 使用者取消對話框")
             return None
 
         selected_types = dialog.get_selected_types()
         
         if not selected_types:
-            print("[IDEAL_LAP] ⚠️ 未選擇任何分析類型")
+            logger.debug("[IDEAL_LAP] ⚠️ 未選擇任何分析類型")
             return None
 
-        print(f"[IDEAL_LAP] ✅ 選項結果: {selected_types}")
+        logger.debug(f"[IDEAL_LAP] ✅ 選項結果: {selected_types}")
         return selected_types
 
     def _create_detailed_lap_boxplot_window(self, mdi_area, year, race, session):
         """建立圈速箱型圖視窗並加入 MDI (✅ 使用 module_factory 模式 - 2025-11-13 重構)。"""
         try:
-            print(f"[BOXPLOT] 🚀 使用 module_factory 創建圈速箱型圖模組...")
+            logger.debug(f"[BOXPLOT] 🚀 使用 module_factory 創建圈速箱型圖模組...")
             
             # ✅ 使用 module_factory 創建包裝器模組
             analysis_module = self.create_module_from_factory(
@@ -15088,19 +15283,19 @@ class StyleHMainWindow(QMainWindow):
             if not analysis_module:
                 raise RuntimeError("Module factory 創建失敗")
             
-            print(f"[BOXPLOT] ✅ 模組工廠創建成功")
+            logger.debug(f"[BOXPLOT] ✅ 模組工廠創建成功")
             
             # 設置當前參數
             analysis_module.current_year = str(year)
             analysis_module.current_race = race
             analysis_module.current_session = session
-            print(f"[BOXPLOT] ✅ 基本參數設置完成: {year} {race} {session}")
+            logger.debug(f"[BOXPLOT] ✅ 基本參數設置完成: {year} {race} {session}")
             
             # 更新參數（觸發數據載入）
-            print(f"[BOXPLOT] 🚀 更新模組參數...")
+            logger.debug(f"[BOXPLOT] 🚀 更新模組參數...")
             if hasattr(analysis_module, 'update_parameters'):
                 analysis_module.update_parameters(int(year), race, session)
-            print(f"[BOXPLOT] ✅ 參數更新成功！")
+            logger.debug(f"[BOXPLOT] ✅ 參數更新成功！")
             
             # 獲取模組標題
             window_title = analysis_module.get_window_title(
@@ -15108,10 +15303,10 @@ class StyleHMainWindow(QMainWindow):
                 race=race,
                 session=session
             )
-            print(f"[BOXPLOT] 📝 視窗標題: {window_title}")
+            logger.debug(f"[BOXPLOT] 📝 視窗標題: {window_title}")
             
             # 創建子視窗
-            print(f"[BOXPLOT] 🖼️ 創建 MDI 子視窗...")
+            logger.debug(f"[BOXPLOT] 🖼️ 創建 MDI 子視窗...")
             sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             sub_window.setWidget(analysis_module.get_widget())
             
@@ -15122,11 +15317,11 @@ class StyleHMainWindow(QMainWindow):
             # 設置視窗尺寸
             width, height = analysis_module.get_default_size()
             sub_window.resize(width, height)
-            print(f"[BOXPLOT] 📐 設置視窗尺寸: {width}x{height}")
+            logger.debug(f"[BOXPLOT] 📐 設置視窗尺寸: {width}x{height}")
             
             # 添加到 MDI 區域
             mdi_area.addSubWindow(sub_window)
-            print(f"[BOXPLOT] ✅ 已添加到 MDI 區域")
+            logger.debug(f"[BOXPLOT] ✅ 已添加到 MDI 區域")
             
             # 連接關閉信號
             if hasattr(sub_window, 'window_closed'):
@@ -15140,13 +15335,13 @@ class StyleHMainWindow(QMainWindow):
             
             # 顯示視窗
             sub_window.show()
-            print(f"[BOXPLOT] 🎉 圈速箱型圖視窗創建完成（使用包裝器架構）！")
+            logger.debug(f"[BOXPLOT] 🎉 圈速箱型圖視窗創建完成（使用包裝器架構）！")
             
             return sub_window
             
         except Exception as exc:
             message = f"建立圈速箱型圖視窗時發生錯誤: {exc}"
-            print(f"[BOXPLOT] ❌ {message}")
+            logger.debug(f"[BOXPLOT] ❌ {message}")
             self.show_error_message("Lap Time Box Plot", message)
             import traceback
             traceback.print_exc()
@@ -15155,19 +15350,19 @@ class StyleHMainWindow(QMainWindow):
     def _create_ideal_lap_ranking_window(self, mdi_area, year, race, session):
         """建立理想圈排名表格視窗並加入 MDI"""
         try:
-            print(f"[IDEAL_LAP_RANKING] 🚀 啟動理想圈排名表格模組...")
+            logger.debug(f"[IDEAL_LAP_RANKING] 🚀 啟動理想圈排名表格模組...")
             from modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_module import IdealLapRankingTableModule
-            print(f"[IDEAL_LAP_RANKING] ✅ 模組導入成功")
+            logger.debug(f"[IDEAL_LAP_RANKING] ✅ 模組導入成功")
         except ImportError as exc:
             message = f"無法載入理想圈排名表格模組: {exc}"
-            print(f"[IDEAL_LAP_RANKING] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_RANKING] ❌ {message}")
             QMessageBox.critical(self, "模組載入失敗", message)
             import traceback
             traceback.print_exc()
             return None
 
         try:
-            print(f"[IDEAL_LAP_RANKING] 🔧 創建模組實例...")
+            logger.debug(f"[IDEAL_LAP_RANKING] 🔧 創建模組實例...")
             # 創建模組實例
             analysis_module = IdealLapRankingTableModule(
                 parent=self,
@@ -15175,31 +15370,31 @@ class StyleHMainWindow(QMainWindow):
                 race=race,
                 session=session
             )
-            print(f"[IDEAL_LAP_RANKING] ✅ 模組實例創建成功")
+            logger.debug(f"[IDEAL_LAP_RANKING] ✅ 模組實例創建成功")
             
             # 初始化模組
-            print(f"[IDEAL_LAP_RANKING] 🚀 初始化模組...")
+            logger.debug(f"[IDEAL_LAP_RANKING] 🚀 初始化模組...")
             if not analysis_module.initialize_module(parent_widget=self):
                 raise RuntimeError("Module initialization failed")
-            print(f"[IDEAL_LAP_RANKING] ✅ 模組初始化成功！")
+            logger.debug(f"[IDEAL_LAP_RANKING] ✅ 模組初始化成功！")
             
             # 獲取模組標題
             window_title = analysis_module.get_title()
-            print(f"[IDEAL_LAP_RANKING] 📝 視窗標題: {window_title}")
+            logger.debug(f"[IDEAL_LAP_RANKING] 📝 視窗標題: {window_title}")
             
             # 創建子視窗
-            print(f"[IDEAL_LAP_RANKING] 🖼️ 創建 MDI 子視窗...")
+            logger.debug(f"[IDEAL_LAP_RANKING] 🖼️ 創建 MDI 子視窗...")
             sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             sub_window.setWidget(analysis_module.get_widget())
             
             # 設置視窗尺寸
             width, height = analysis_module.get_default_size()
             sub_window.resize(width, height)
-            print(f"[IDEAL_LAP_RANKING] 📐 設置視窗尺寸: {width}x{height}")
+            logger.debug(f"[IDEAL_LAP_RANKING] 📐 設置視窗尺寸: {width}x{height}")
             
             # 添加到 MDI 區域
             mdi_area.addSubWindow(sub_window)
-            print(f"[IDEAL_LAP_RANKING] ✅ 已添加到 MDI 區域")
+            logger.debug(f"[IDEAL_LAP_RANKING] ✅ 已添加到 MDI 區域")
             
             # 連接關閉信號
             if hasattr(sub_window, 'window_closed'):
@@ -15217,17 +15412,17 @@ class StyleHMainWindow(QMainWindow):
             
             # 顯示視窗
             sub_window.show()
-            print(f"[IDEAL_LAP_RANKING] 🎉 理想圈排名表格視窗創建完成！")
+            logger.debug(f"[IDEAL_LAP_RANKING] 🎉 理想圈排名表格視窗創建完成！")
             
             # 載入資料
-            print(f"[IDEAL_LAP_RANKING] 📊 開始載入資料...")
+            logger.debug(f"[IDEAL_LAP_RANKING] 📊 開始載入資料...")
             analysis_module.load_data()
             
             return sub_window
             
         except Exception as exc:
             message = f"建立理想圈排名表格視窗時發生錯誤: {exc}"
-            print(f"[IDEAL_LAP_RANKING] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_RANKING] ❌ {message}")
             QMessageBox.critical(self, "創建失敗", message)
             import traceback
             traceback.print_exc()
@@ -15236,19 +15431,19 @@ class StyleHMainWindow(QMainWindow):
     def _create_driver_position_window(self, mdi_area, year, race, session):
         """建立車手比賽排名分析視窗並加入 MDI"""
         try:
-            print(f"[DRIVER_POSITION] 🚀 啟動車手比賽排名分析模組...")
+            logger.debug(f"[DRIVER_POSITION] 🚀 啟動車手比賽排名分析模組...")
             from modules.gui.driver_position_analysis.driver_position_analysis_module import DriverPositionAnalysisModule
-            print(f"[DRIVER_POSITION] ✅ 模組導入成功")
+            logger.debug(f"[DRIVER_POSITION] ✅ 模組導入成功")
         except ImportError as exc:
             message = f"無法載入車手比賽排名分析模組: {exc}"
-            print(f"[DRIVER_POSITION] ❌ {message}")
+            logger.debug(f"[DRIVER_POSITION] ❌ {message}")
             QMessageBox.critical(self, tr("module_load_failed", "模組載入失敗"), message)
             import traceback
             traceback.print_exc()
             return None
 
         try:
-            print(f"[DRIVER_POSITION] 🔧 創建模組實例...")
+            logger.debug(f"[DRIVER_POSITION] 🔧 創建模組實例...")
             # 創建模組實例
             analysis_module = DriverPositionAnalysisModule(
                 parent=self,
@@ -15256,31 +15451,31 @@ class StyleHMainWindow(QMainWindow):
                 race=race,
                 session=session
             )
-            print(f"[DRIVER_POSITION] ✅ 模組實例創建成功")
+            logger.debug(f"[DRIVER_POSITION] ✅ 模組實例創建成功")
             
             # 初始化模組
-            print(f"[DRIVER_POSITION] 🚀 初始化模組...")
+            logger.debug(f"[DRIVER_POSITION] 🚀 初始化模組...")
             if not analysis_module.initialize_module(parent_widget=self):
                 raise RuntimeError("Module initialization failed")
-            print(f"[DRIVER_POSITION] ✅ 模組初始化成功！")
+            logger.debug(f"[DRIVER_POSITION] ✅ 模組初始化成功！")
             
             # 獲取模組標題
             window_title = analysis_module.get_title()
-            print(f"[DRIVER_POSITION] 📝 視窗標題: {window_title}")
+            logger.debug(f"[DRIVER_POSITION] 📝 視窗標題: {window_title}")
             
             # 創建子視窗
-            print(f"[DRIVER_POSITION] 🖼️ 創建 MDI 子視窗...")
+            logger.debug(f"[DRIVER_POSITION] 🖼️ 創建 MDI 子視窗...")
             sub_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
             sub_window.setWidget(analysis_module.get_widget())
             
             # 設置視窗尺寸
             width, height = analysis_module.get_default_size()
             sub_window.resize(width, height)
-            print(f"[DRIVER_POSITION] 📐 設置視窗尺寸: {width}x{height}")
+            logger.debug(f"[DRIVER_POSITION] 📐 設置視窗尺寸: {width}x{height}")
             
             # 添加到 MDI 區域
             mdi_area.addSubWindow(sub_window)
-            print(f"[DRIVER_POSITION] ✅ 已添加到 MDI 區域")
+            logger.debug(f"[DRIVER_POSITION] ✅ 已添加到 MDI 區域")
             
             # 連接關閉信號
             if hasattr(sub_window, 'window_closed'):
@@ -15294,17 +15489,17 @@ class StyleHMainWindow(QMainWindow):
             
             # 顯示視窗
             sub_window.show()
-            print(f"[DRIVER_POSITION] 🎉 車手比賽排名分析視窗創建完成！")
+            logger.debug(f"[DRIVER_POSITION] 🎉 車手比賽排名分析視窗創建完成！")
             
             # 載入資料
-            print(f"[DRIVER_POSITION] 📊 開始載入資料...")
+            logger.debug(f"[DRIVER_POSITION] 📊 開始載入資料...")
             analysis_module.load_data()
             
             return sub_window
             
         except Exception as exc:
             message = f"建立車手比賽排名分析視窗時發生錯誤: {exc}"
-            print(f"[DRIVER_POSITION] ❌ {message}")
+            logger.debug(f"[DRIVER_POSITION] ❌ {message}")
             QMessageBox.critical(self, tr("creation_failed", "創建失敗"), message)
             import traceback
             traceback.print_exc()
@@ -15313,12 +15508,12 @@ class StyleHMainWindow(QMainWindow):
     def _create_ideal_lap_heatmap_window(self, mdi_area, year, race, session):
         """建立理想圈分段熱力圖視窗"""
         try:
-            print(f"[IDEAL_LAP_HEATMAP] 🚀 啟動理想圈分段熱力圖模組...")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] 🚀 啟動理想圈分段熱力圖模組...")
             from modules.gui.ideal_lap_analysis.ideal_lap_sector_heatmap.ideal_lap_sector_heatmap_module import IdealLapSectorHeatmapModule
-            print(f"[IDEAL_LAP_HEATMAP] ✅ 模組導入成功")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] ✅ 模組導入成功")
         except ImportError as exc:
             message = f"無法載入理想圈分段熱力圖模組: {exc}"
-            print(f"[IDEAL_LAP_HEATMAP] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] ❌ {message}")
             QMessageBox.critical(self, "模組載入失敗", message)
             import traceback
             traceback.print_exc()
@@ -15326,18 +15521,18 @@ class StyleHMainWindow(QMainWindow):
 
         try:
             module = IdealLapSectorHeatmapModule(parent=self, year=year, race=race, session=session)
-            print(f"[IDEAL_LAP_HEATMAP] 🔧 創建模組實例...")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] 🔧 創建模組實例...")
 
             if not module.initialize_module(parent_widget=self):
                 raise RuntimeError("Module initialization failed")
-            print(f"[IDEAL_LAP_HEATMAP] ✅ 模組初始化完成")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] ✅ 模組初始化完成")
 
             get_title = getattr(module, "get_title", None)
             if callable(get_title):
                 window_title = get_title()
             else:
                 window_title = module.get_window_title(int(year), race, session)
-            print(f"[IDEAL_LAP_HEATMAP] 📛 視窗標題: {window_title}")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] 📛 視窗標題: {window_title}")
 
             sub_window = PopoutSubWindow(window_title, mdi_area, module)
             sub_window.setWidget(module.get_widget())
@@ -15348,10 +15543,10 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(module, "get_default_size"):
                 width, height = module.get_default_size()
                 sub_window.resize(width, height)
-                print(f"[IDEAL_LAP_HEATMAP] 📐 視窗尺寸: {width}x{height}")
+                logger.debug(f"[IDEAL_LAP_HEATMAP] 📐 視窗尺寸: {width}x{height}")
 
             mdi_area.addSubWindow(sub_window)
-            print(f"[IDEAL_LAP_HEATMAP] ✅ 已加入 MDI")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] ✅ 已加入 MDI")
 
             if hasattr(sub_window, 'window_closed'):
                 # 🔴 使用 partial 避免 lambda 閉包洩漏
@@ -15368,12 +15563,12 @@ class StyleHMainWindow(QMainWindow):
             self._position_subwindow(mdi_area, sub_window)
 
             module.load_data()
-            print(f"[IDEAL_LAP_HEATMAP] 📊 資料載入觸發完成")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] 📊 資料載入觸發完成")
             return sub_window
 
         except Exception as exc:
             message = f"建立理想圈分段熱力圖視窗時發生錯誤: {exc}"
-            print(f"[IDEAL_LAP_HEATMAP] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_HEATMAP] ❌ {message}")
             QMessageBox.critical(self, "創建失敗", message)
             import traceback
             traceback.print_exc()
@@ -15382,12 +15577,12 @@ class StyleHMainWindow(QMainWindow):
     def _create_ideal_lap_sector_comparison_window(self, mdi_area, year, race, session):
         """建立理想圈分段對比視窗"""
         try:
-            print(f"[IDEAL_LAP_COMPARISON] 🚀 啟動理想圈分段對比模組...")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] 🚀 啟動理想圈分段對比模組...")
             from modules.gui.ideal_lap_analysis.ideal_lap_sector_comparison.ideal_lap_sector_comparison_module import IdealLapSectorComparisonModule
-            print(f"[IDEAL_LAP_COMPARISON] ✅ 模組導入成功")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] ✅ 模組導入成功")
         except ImportError as exc:
             message = f"無法載入理想圈分段對比模組: {exc}"
-            print(f"[IDEAL_LAP_COMPARISON] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] ❌ {message}")
             QMessageBox.critical(self, "模組載入失敗", message)
             import traceback
             traceback.print_exc()
@@ -15395,18 +15590,18 @@ class StyleHMainWindow(QMainWindow):
 
         try:
             module = IdealLapSectorComparisonModule(parent=self, year=year, race=race, session=session)
-            print(f"[IDEAL_LAP_COMPARISON] 🔧 創建模組實例...")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] 🔧 創建模組實例...")
 
             if not module.initialize_module(parent_widget=self):
                 raise RuntimeError("Module initialization failed")
-            print(f"[IDEAL_LAP_COMPARISON] ✅ 模組初始化完成")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] ✅ 模組初始化完成")
 
             get_title = getattr(module, "get_title", None)
             if callable(get_title):
                 window_title = get_title()
             else:
                 window_title = module.get_window_title(int(year), race, session)
-            print(f"[IDEAL_LAP_COMPARISON] 📛 視窗標題: {window_title}")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] 📛 視窗標題: {window_title}")
 
             sub_window = PopoutSubWindow(window_title, mdi_area, module)
             sub_window.setWidget(module.get_widget())
@@ -15417,10 +15612,10 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(module, "get_default_size"):
                 width, height = module.get_default_size()
                 sub_window.resize(width, height)
-                print(f"[IDEAL_LAP_COMPARISON] 📐 視窗尺寸: {width}x{height}")
+                logger.debug(f"[IDEAL_LAP_COMPARISON] 📐 視窗尺寸: {width}x{height}")
 
             mdi_area.addSubWindow(sub_window)
-            print(f"[IDEAL_LAP_COMPARISON] ✅ 已加入 MDI")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] ✅ 已加入 MDI")
 
             if hasattr(sub_window, 'window_closed'):
                 # 🔴 使用 partial 避免 lambda 閉包洩漏
@@ -15437,12 +15632,12 @@ class StyleHMainWindow(QMainWindow):
             self._position_subwindow(mdi_area, sub_window)
 
             module.load_data()
-            print(f"[IDEAL_LAP_COMPARISON] 📊 資料載入觸發完成")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] 📊 資料載入觸發完成")
             return sub_window
 
         except Exception as exc:
             message = f"建立理想圈分段對比視窗時發生錯誤: {exc}"
-            print(f"[IDEAL_LAP_COMPARISON] ❌ {message}")
+            logger.debug(f"[IDEAL_LAP_COMPARISON] ❌ {message}")
             QMessageBox.critical(self, "創建失敗", message)
             import traceback
             traceback.print_exc()
@@ -15461,14 +15656,14 @@ class StyleHMainWindow(QMainWindow):
 
             sub_window.move(base_x, base_y)
         except Exception as exc:
-            print(f"[WARNING] 無法調整子視窗位置: {exc}")
+            logger.warning(f"[WARNING] 無法調整子視窗位置: {exc}")
 
     def _create_analysis_module(self, function_name, module_type_hint: Optional[str] = None):
         """創建分析模組實例"""
         # ✅ 🔥🔥🔥 調試點 0：方法入口 🔥🔥🔥
-        print(f"🔥🔥🔥 [MODULE_FACTORY] _create_analysis_module 被調用！")
-        print(f"🔥 function_name = {function_name}")
-        print(f"🔥 module_type_hint = {module_type_hint}")
+        logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] _create_analysis_module 被調用！")
+        logger.debug(f"🔥 function_name = {function_name}")
+        logger.debug(f"🔥 module_type_hint = {module_type_hint}")
         
         try:
             # 導入模組工廠和類型定義
@@ -15488,20 +15683,20 @@ class StyleHMainWindow(QMainWindow):
             try:
                 from modules.gui.track_analysis import TrackAnalysisUniversal
                 TRACK_ANALYSIS_AVAILABLE = True
-                print("[OK] [MODULE_IMPORT] TrackAnalysisUniversal 載入完成")
+                logger.debug("[OK] [MODULE_IMPORT] TrackAnalysisUniversal 載入完成")
             except ImportError as e:
                 TRACK_ANALYSIS_AVAILABLE = False
-                print(f"警告: TrackAnalysisUniversal 不可用: {e}")
+                logger.debug(f"警告: TrackAnalysisUniversal 不可用: {e}")
             
             # 🔥 調試點：確認到達映射邏輯前
-            print(f"🔥🔥 [MODULE_FACTORY] TrackAnalysisUniversal 導入後，準備進入映射邏輯")
+            logger.debug(f"🔥🔥 [MODULE_FACTORY] TrackAnalysisUniversal 導入後，準備進入映射邏輯")
             
             # ✅ 調試訊息：確認進入映射邏輯
-            print(f"[DEBUG] [MODULE_FACTORY] 開始映射邏輯")
-            print(f"[DEBUG] [MODULE_FACTORY] function_name={function_name}, module_type_hint={module_type_hint}")
+            logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始映射邏輯")
+            logger.debug(f"[DEBUG] [MODULE_FACTORY] function_name={function_name}, module_type_hint={module_type_hint}")
             
             # 🔥🔥🔥 調試點：字典定義前
-            print(f"🔥🔥🔥 [MODULE_FACTORY] 準備定義 module_alias_groups 字典")
+            logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] 準備定義 module_alias_groups 字典")
             
             # 根據功能名稱映射到模組類型，支援多語系顯示文字
             module_alias_groups = {
@@ -15670,12 +15865,41 @@ class StyleHMainWindow(QMainWindow):
                     "直線速度分析(實驗)",
                     "All Drivers Speed & Acceleration",
                 ],
+                "all_drivers_max_speed": [  # ⭐ F121 全車手最高速度分析
+                    ("all_drivers_max_speed", "All Drivers Max Speed"),
+                    ("max_speed_analysis", "Max Speed Analysis (All Laps)"),
+                    "全車手最高速度",
+                    "全車手最速分析",
+                    "最高速度分析",
+                    "All Drivers Max Speed",
+                ],
+                "all_drivers_acceleration_chart": [  # ⭐ F121 全車手加速度圖表
+                    ("all_drivers_acceleration_chart", "Acceleration Chart"),
+                    ("acceleration_chart", "Speed vs Acceleration Chart"),
+                    "加速度圖表",
+                    "全車手加速度圖表",
+                    "速度加速度圖",
+                    "Acceleration Chart",
+                ],
+                "all_drivers_brake_chart": [  # ⭐ F122 全車手煞車圖表
+                    ("all_drivers_brake_chart", "Brake Chart"),
+                    ("brake_chart", "Entry Speed vs Deceleration Chart"),
+                    "煞車圖表",
+                    "全車手煞車圖表",
+                    "煞車性能圖",
+                    "Brake Chart",
+                ],
                 "all_drivers_brake_performance": [  # ⭐ F34 煞車性能分析
                     ("all_drivers_brake_perf", "All Drivers Brake Performance"),
                     ("brake_performance_analysis", "Brake Performance Analysis"),
                     "全車手煞車性能",
                     "全車手煞車分析",
                     "All Drivers Brake Performance",
+                ],
+                "all_drivers_brake_all_laps": [  # ⭐ F122 全車手煞車全圈數分析
+                    ("all_drivers_brake_all_laps_analysis", "All Drivers Brake All Laps Analysis"),
+                    "全車手煞車全圈數分析",
+                    "All Drivers Brake All Laps Analysis",
                 ],
                 "corner_performance": [  # ⭐ F47 彎道性能分析（統一 analysis_type）
                     ("low_speed_corner_analysis", "Low-Speed Corner Analysis"),
@@ -15719,62 +15943,62 @@ class StyleHMainWindow(QMainWindow):
             }
 
             # 🔥🔥🔥 調試點：字典定義完成
-            print(f"🔥🔥🔥 [MODULE_FACTORY] module_alias_groups 字典定義完成！共 {len(module_alias_groups)} 個模組類型")
-            print(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 在字典中: {'rain_analysis' in module_alias_groups}")
+            logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] module_alias_groups 字典定義完成！共 {len(module_alias_groups)} 個模組類型")
+            logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 在字典中: {'rain_analysis' in module_alias_groups}")
             if 'rain_analysis' in module_alias_groups:
-                print(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 別名數量: {len(module_alias_groups['rain_analysis'])}")
+                logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] rain_analysis 別名數量: {len(module_alias_groups['rain_analysis'])}")
 
             module_mapping = {}
             
             # ✅ 調試點 1：確認開始建立映射表
-            print(f"[DEBUG] [MODULE_FACTORY] 步驟1: 開始建立映射表")
-            print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 原始別名數量: {len(module_alias_groups.get('rain_analysis', []))}")
+            logger.debug(f"[DEBUG] [MODULE_FACTORY] 步驟1: 開始建立映射表")
+            logger.debug(f"[DEBUG] [MODULE_FACTORY] rain_analysis 原始別名數量: {len(module_alias_groups.get('rain_analysis', []))}")
 
             def _register_module_alias(alias_value, module_type):
                 # 🔥🔥🔥 調試：顯示註冊過程
                 if module_type == "rain_analysis":
-                    print(f"🔥 [REGISTER] 嘗試註冊: alias_value='{alias_value}' (type={type(alias_value).__name__}), module_type='{module_type}'")
-                    print(f"🔥 [REGISTER] isinstance(alias_value, str) = {isinstance(alias_value, str)}")
-                    print(f"🔥 [REGISTER] bool(alias_value) = {bool(alias_value) if isinstance(alias_value, str) else 'N/A'}")
+                    logger.debug(f"🔥 [REGISTER] 嘗試註冊: alias_value='{alias_value}' (type={type(alias_value).__name__}), module_type='{module_type}'")
+                    logger.debug(f"🔥 [REGISTER] isinstance(alias_value, str) = {isinstance(alias_value, str)}")
+                    logger.debug(f"🔥 [REGISTER] bool(alias_value) = {bool(alias_value) if isinstance(alias_value, str) else 'N/A'}")
                 
                 if isinstance(alias_value, str) and alias_value:
                     module_mapping[alias_value] = module_type
                     if module_type == "rain_analysis":
-                        print(f"🔥 [REGISTER] ✅ 已註冊: '{alias_value}' → '{module_type}'")
+                        logger.debug(f"🔥 [REGISTER] ✅ 已註冊: '{alias_value}' → '{module_type}'")
                 else:
                     if module_type == "rain_analysis":
-                        print(f"🔥 [REGISTER] ❌ 跳過註冊（不是字串或為空）")
+                        logger.debug(f"🔥 [REGISTER] ❌ 跳過註冊（不是字串或為空）")
 
 
             for module_type, aliases in module_alias_groups.items():
                 # ✅ 調試點 2：顯示正在處理的模組類型
                 if module_type == "rain_analysis":
-                    print(f"[DEBUG] [MODULE_FACTORY] 步驟2: 處理 rain_analysis，別名數量={len(aliases)}")
-                    print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名內容: {aliases}")
+                    logger.debug(f"[DEBUG] [MODULE_FACTORY] 步驟2: 處理 rain_analysis，別名數量={len(aliases)}")
+                    logger.debug(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名內容: {aliases}")
                     
                 for alias in aliases:
                     if isinstance(alias, tuple):
                         translated_value = tr(alias[0], alias[1])
                         # 🔥🔥🔥 調試：顯示翻譯結果
                         if module_type == "rain_analysis":
-                            print(f"🔥 [TRANSLATE] Tuple {alias} → tr() 返回: '{translated_value}' (type={type(translated_value).__name__})")
+                            logger.debug(f"🔥 [TRANSLATE] Tuple {alias} → tr() 返回: '{translated_value}' (type={type(translated_value).__name__})")
                         _register_module_alias(translated_value, module_type)
                         # ✅ 調試點 3：顯示 tuple 翻譯結果
                         if module_type == "rain_analysis":
-                            print(f"[DEBUG] [MODULE_FACTORY]   - Tuple {alias} -> '{translated_value}'")
+                            logger.debug(f"[DEBUG] [MODULE_FACTORY]   - Tuple {alias} -> '{translated_value}'")
                     else:
                         _register_module_alias(alias, module_type)
                         # ✅ 調試點 4：顯示字串別名
                         if module_type == "rain_analysis":
-                            print(f"[DEBUG] [MODULE_FACTORY]   - String '{alias}'")
+                            logger.debug(f"[DEBUG] [MODULE_FACTORY]   - String '{alias}'")
             
             # ✅ 調試：確認映射表已建立
-            print(f"[DEBUG] [MODULE_FACTORY] 映射表已建立，共 {len(module_mapping)} 個條目")
+            logger.debug(f"[DEBUG] [MODULE_FACTORY] 映射表已建立，共 {len(module_mapping)} 個條目")
             if 'rain_weather' in module_mapping:
-                print(f"[DEBUG] [MODULE_FACTORY] ✅ 'rain_weather' 在映射表中: {module_mapping['rain_weather']}")
+                logger.debug(f"[DEBUG] [MODULE_FACTORY] ✅ 'rain_weather' 在映射表中: {module_mapping['rain_weather']}")
             else:
-                print(f"[DEBUG] [MODULE_FACTORY] ❌ 'rain_weather' 不在映射表中！")
-                print(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名: {module_alias_groups.get('rain_analysis', [])}")
+                logger.debug(f"[DEBUG] [MODULE_FACTORY] ❌ 'rain_weather' 不在映射表中！")
+                logger.debug(f"[DEBUG] [MODULE_FACTORY] rain_analysis 別名: {module_alias_groups.get('rain_analysis', [])}")
             
             # 尋找匹配的模組類型
             module_type = None
@@ -15782,20 +16006,20 @@ class StyleHMainWindow(QMainWindow):
             
             # ✅ 修正：優先檢查 module_type_hint 是否在映射表中
             if module_type_hint:
-                print(f"[DEBUG]    [MODULE_FACTORY] 收到模組類型提示: {module_type_hint}")
+                logger.debug(f"[DEBUG]    [MODULE_FACTORY] 收到模組類型提示: {module_type_hint}")
                 # 先嘗試在映射表中查找
                 if module_type_hint in module_mapping:
                     module_type = module_mapping[module_type_hint]
                     matched_keyword = module_type_hint
-                    print(f"[DEBUG]    [MODULE_FACTORY] ✅ 類型提示在映射表中找到: '{module_type_hint}' -> '{module_type}'")
+                    logger.debug(f"[DEBUG]    [MODULE_FACTORY] ✅ 類型提示在映射表中找到: '{module_type_hint}' -> '{module_type}'")
                 else:
                     # 如果不在映射表中，假設它本身就是模組類型
                     module_type = module_type_hint
-                    print(f"[DEBUG]    [MODULE_FACTORY] 使用類型提示作為模組類型: {module_type}")
+                    logger.debug(f"[DEBUG]    [MODULE_FACTORY] 使用類型提示作為模組類型: {module_type}")
             else:
                 # 沒有提供 module_type_hint，從 function_name 中搜索
                 normalized_function_name = function_name.casefold() if isinstance(function_name, str) else ""
-                print(f"[DEBUG]    [MODULE_FACTORY] 開始尋找匹配的模組類型，功能名稱: '{function_name}'")
+                logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始尋找匹配的模組類型，功能名稱: '{function_name}'")
                 
                 # ✅ 修正：按關鍵字長度排序，優先匹配更長的關鍵字（避免 "speed" 搶先匹配到 "all drivers speed"）
                 sorted_mapping = sorted(module_mapping.items(), key=lambda x: len(x[0]) if isinstance(x[0], str) else 0, reverse=True)
@@ -15805,24 +16029,24 @@ class StyleHMainWindow(QMainWindow):
                     if normalized_keyword and normalized_keyword in normalized_function_name:
                         module_type = mod_type
                         matched_keyword = keyword
-                        print(f"[DEBUG]    [MODULE_FACTORY] 🎯 匹配成功! 關鍵字: '{keyword}' ({len(keyword)} 字元)")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 🎯 匹配成功! 關鍵字: '{keyword}' ({len(keyword)} 字元)")
                         break
                 if module_type and matched_keyword:
-                    print(f"[DEBUG]    [MODULE_FACTORY] ✅ 找到匹配! 關鍵字: '{matched_keyword}' -> 模組類型: '{module_type}'")
+                    logger.debug(f"[DEBUG]    [MODULE_FACTORY] ✅ 找到匹配! 關鍵字: '{matched_keyword}' -> 模組類型: '{module_type}'")
                 else:
-                    print(f"[DEBUG]    [MODULE_FACTORY] ⚠️ 功能 '{function_name}' 未找到對應模組別名，將保持預設流程")
+                    logger.debug(f"[DEBUG]    [MODULE_FACTORY] ⚠️ 功能 '{function_name}' 未找到對應模組別名，將保持預設流程")
             
             if module_type:
-                print(f"[DEBUG]    [MODULE_FACTORY] 最終確定的模組類型: {module_type}")
+                logger.debug(f"[DEBUG]    [MODULE_FACTORY] 最終確定的模組類型: {module_type}")
                 # 創建參數提供者
                 parameter_provider = MainWindowParameterProvider(self)
-                print(f"[DEBUG]    [MODULE_FACTORY] 開始處理模組類型: {module_type} (來自功能: {function_name})")
+                logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始處理模組類型: {module_type} (來自功能: {function_name})")
                 
                 # 處理進站分析模組
                 if module_type == "pitstop_analysis":
                     try:
                         from modules.gui.pitstop_analysis.pitstop_analysis_mdi import PitstopAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建進站分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建進站分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = PitstopAnalysisModule()
@@ -15839,17 +16063,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 進站分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 進站分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 進站分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 進站分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 進站分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 進站分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 進站分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 進站分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -15858,7 +16082,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "accident_analysis":
                     try:
                         from modules.gui.accident_analysis.accident_analysis_mdi import AccidentAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建事故分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建事故分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = AccidentAnalysisModule()
@@ -15875,17 +16099,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 事故分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 事故分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 事故分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 事故分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 事故分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 事故分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 事故分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 事故分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -15894,7 +16118,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "telemetry_analysis":
                     try:
                         from modules.gui.telemetry_analysis_mdi import TelemetryAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建單場賽事總攬模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建單場賽事總攬模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = TelemetryAnalysisModule()
@@ -15911,17 +16135,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 單場賽事總攬模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 單場賽事總攬模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 單場賽事總攬模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 單場賽事總攬模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 單場賽事總攬模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -15929,7 +16153,7 @@ class StyleHMainWindow(QMainWindow):
                 # 處理賽道分析模組
                 elif module_type == "track_analysis":
                     if not TRACK_ANALYSIS_AVAILABLE:
-                        print(f"[INFO] [MODULE_FACTORY] TrackAnalysisUniversal 不可用，返回舊版流程")
+                        logger.debug(f"[INFO] [MODULE_FACTORY] TrackAnalysisUniversal 不可用，返回舊版流程")
                         return None
 
                     try:
@@ -15952,10 +16176,10 @@ class StyleHMainWindow(QMainWindow):
                             session=current_session
                         )
 
-                        print(f"[OK] [MODULE_FACTORY] 賽道分析模組初始化成功: {current_year} {current_race} {current_session}")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 賽道分析模組初始化成功: {current_year} {current_race} {current_session}")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 賽道分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 賽道分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -15964,7 +16188,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "throttle_analysis":
                     try:
                         from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_mdi import ThrottleAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建油門分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建油門分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = ThrottleAnalysisModule()
@@ -15981,17 +16205,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 油門分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 油門分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 油門分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 油門分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 油門分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 油門分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 油門分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 油門分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16003,7 +16227,7 @@ class StyleHMainWindow(QMainWindow):
                             ThrottleBoxPlotAnalysisModule,
                         )
 
-                        print(f"[OK] [MODULE_FACTORY] 創建油門箱型圖分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建油門箱型圖分析模組實例")
 
                         module = ThrottleBoxPlotAnalysisModule(parent=self)
                         module.parameter_provider = parameter_provider
@@ -16026,12 +16250,12 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
 
-                            print(
+                            logger.debug(
                                 f"[INIT] [MODULE_FACTORY] 油門箱型圖模組參數預設為: {module.current_year} {module.current_race} {module.current_session}"
                             )
 
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 油門箱型圖模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 油門箱型圖模組初始化成功")
                             if parameter_provider:
                                 sync_year = current_year_value
                                 try:
@@ -16044,14 +16268,14 @@ class StyleHMainWindow(QMainWindow):
                                 try:
                                     module.update_parameters(update_year, current_race, current_session)
                                 except Exception as sync_exc:
-                                    print(f"[WARN] [MODULE_FACTORY] 油門箱型圖模組參數同步失敗: {sync_exc}")
+                                    logger.debug(f"[WARN] [MODULE_FACTORY] 油門箱型圖模組參數同步失敗: {sync_exc}")
 
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 油門箱型圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16063,7 +16287,7 @@ class StyleHMainWindow(QMainWindow):
                             LapTimeBoxPlotAnalysisModule,
                         )
 
-                        print(f"[OK] [MODULE_FACTORY] 創建圈速箱型圖分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建圈速箱型圖分析模組實例")
 
                         module = LapTimeBoxPlotAnalysisModule(parent=self)
                         module.parameter_provider = parameter_provider
@@ -16086,12 +16310,12 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
 
-                            print(
+                            logger.debug(
                                 f"[INIT] [MODULE_FACTORY] 圈速箱型圖模組參數預設為: {module.current_year} {module.current_race} {module.current_session}"
                             )
 
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 圈速箱型圖模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 圈速箱型圖模組初始化成功")
                             if parameter_provider:
                                 sync_year = current_year_value
                                 try:
@@ -16104,14 +16328,14 @@ class StyleHMainWindow(QMainWindow):
                                 try:
                                     module.update_parameters(update_year, current_race, current_session)
                                 except Exception as sync_exc:
-                                    print(f"[WARN] [MODULE_FACTORY] 圈速箱型圖模組參數同步失敗: {sync_exc}")
+                                    logger.debug(f"[WARN] [MODULE_FACTORY] 圈速箱型圖模組參數同步失敗: {sync_exc}")
 
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 圈速箱型圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16119,15 +16343,15 @@ class StyleHMainWindow(QMainWindow):
                 # 油門折線圖分析模組
                 elif module_type == "throttle_line_chart":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建油門折線圖模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建油門折線圖模組...")
                         from modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_mdi import (
                             ThrottleLineChartMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 油門折線圖 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 油門折線圖 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = ThrottleLineChartMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 油門折線圖 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 油門折線圖 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16138,7 +16362,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 油門折線圖模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 油門折線圖模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16146,13 +16370,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 油門折線圖模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 油門折線圖模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 油門折線圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16161,7 +16385,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "gear_analysis":
                     try:
                         from modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi import GearAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建檔位分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建檔位分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = GearAnalysisModule()
@@ -16178,17 +16402,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 檔位分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 檔位分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 檔位分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 檔位分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 檔位分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 檔位分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 檔位分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 檔位分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16197,7 +16421,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "brake_analysis":
                     try:
                         from modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi import BrakeAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建煞車分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建煞車分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = BrakeAnalysisModule()
@@ -16214,17 +16438,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 煞車分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 煞車分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 煞車分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 煞車分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 煞車分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 煞車分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16232,9 +16456,9 @@ class StyleHMainWindow(QMainWindow):
                 # 處理降雨分析模組
                 elif module_type == "rain_analysis":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建降雨分析模組...")
-                        from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
-                        print(f"[OK] [MODULE_FACTORY] 降雨分析適配器導入成功")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建降雨分析模組...")
+                        from modules.gui.rain_analysis.rain_analysis_mdi import RainAnalysisUniversal
+                        logger.debug(f"[OK] [MODULE_FACTORY] 降雨分析模組導入成功（使用新版 Universal）")
                         
                         # 獲取當前參數
                         if parameter_provider:
@@ -16242,21 +16466,21 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race() 
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 降雨分析模組參數: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 降雨分析模組參數: {current_year} {current_race} {current_session}")
                             
-                            # 創建模組實例
-                            module = RainAnalysisModuleAdapter(
+                            # 創建模組實例（使用新版 Universal MDI）
+                            module = RainAnalysisUniversal(
                                 year=current_year,
                                 race=current_race,
                                 session=current_session
                             )
-                            print(f"[OK] 降雨分析模組初始化成功")
+                            logger.debug(f"[OK] 降雨分析模組初始化成功（Universal MDI）")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] 降雨分析模組創建失敗：無參數")
+                            logger.error(f"[ERROR] 降雨分析模組創建失敗：無參數")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] 降雨分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] 降雨分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16264,9 +16488,9 @@ class StyleHMainWindow(QMainWindow):
                 # 處理輪胎策略分析模組
                 elif module_type == "tire_analysis":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建輪胎策略分析模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建輪胎策略分析模組...")
                         from modules.gui.tire_analysis.tire_analysis_module import TireAnalysisModuleAdapter
-                        print(f"[OK] [MODULE_FACTORY] 輪胎策略分析適配器導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 輪胎策略分析適配器導入成功")
                         
                         # 獲取當前參數
                         if parameter_provider:
@@ -16274,7 +16498,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race() 
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 輪胎策略分析模組參數: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 輪胎策略分析模組參數: {current_year} {current_race} {current_session}")
                             
                             # 創建模組實例
                             module = TireAnalysisModuleAdapter(
@@ -16282,13 +16506,13 @@ class StyleHMainWindow(QMainWindow):
                                 race=current_race,
                                 session=current_session
                             )
-                            print(f"[OK] 輪胎策略分析模組初始化成功")
+                            logger.debug(f"[OK] 輪胎策略分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] 輪胎策略分析模組創建失敗：無參數")
+                            logger.error(f"[ERROR] 輪胎策略分析模組創建失敗：無參數")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] 輪胎策略分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] 輪胎策略分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16296,13 +16520,13 @@ class StyleHMainWindow(QMainWindow):
                 # 處理詳細圈速分析模組
                 elif module_type == "driverlap_analysis":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建詳細圈速分析模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建詳細圈速分析模組...")
                         from modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi import driverLapAnalysisMDI
-                        print(f"[OK] [MODULE_FACTORY] 詳細圈速分析 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 詳細圈速分析 MDI 導入成功")
                         
                         # 直接創建 MDI 實例，不再需要包裝模組
                         module = driverLapAnalysisMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 詳細圈速分析 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 詳細圈速分析 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16313,7 +16537,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race() 
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 詳細圈速分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 詳細圈速分析模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             # 直接設置參數（與直接模式一致）
                             module.current_year = str(current_year)
@@ -16322,13 +16546,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # ✅ 初始化模組（關鍵步驟）
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 詳細圈速分析模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 詳細圈速分析模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 詳細圈速分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16336,15 +16560,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理圈速箱線圖模組
                 elif module_type == "laptime_box_plot":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建圈速箱線圖模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建圈速箱線圖模組...")
                         from modules.gui.lap_box_plot_analysis.lap_box_plot_analysis_mdi import (
                             LapTimeBoxPlotAnalysis
                         )
-                        print(f"[OK] [MODULE_FACTORY] 圈速箱線圖 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 圈速箱線圖 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = LapTimeBoxPlotAnalysis(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 圈速箱線圖 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 圈速箱線圖 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16355,7 +16579,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 圈速箱線圖模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 圈速箱線圖模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16363,13 +16587,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 圈速箱線圖模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 圈速箱線圖模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 圈速箱線圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16377,15 +16601,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理理想圈排名表格模組
                 elif module_type == "ideal_lap_ranking":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈排名表格模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈排名表格模組...")
                         from modules.gui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_mdi import (
                             IdealLapRankingTableMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 理想圈排名表格 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈排名表格 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = IdealLapRankingTableMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 理想圈排名表格 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 理想圈排名表格 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16396,7 +16620,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 理想圈排名表格模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 理想圈排名表格模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16404,13 +16628,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 理想圈排名表格模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈排名表格模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈排名表格模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16418,15 +16642,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理排位賽預測表格模組 ⭐ F74 v3.8 新增
                 elif module_type == "qualifying_prediction_table":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建排位賽預測表格模組 (v3.8)...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建排位賽預測表格模組 (v3.8)...")
                         from modules.gui.qualifying_prediction.qualifying_prediction_mdi import (
                             QualifyingPredictionMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 排位賽預測 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 排位賽預測 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = QualifyingPredictionMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 排位賽預測 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 排位賽預測 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16437,7 +16661,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 排位賽預測模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 排位賽預測模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16445,13 +16669,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 排位賽預測模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 排位賽預測模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 排位賽預測模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16459,15 +16683,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理正賽預測表格模組 ⭐ F80 新增
                 elif module_type == "race_prediction_table":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建正賽預測表格模組 (F80)...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建正賽預測表格模組 (F80)...")
                         from modules.gui.race_prediction.race_prediction_mdi import (
                             RacePredictionMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 正賽預測 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 正賽預測 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = RacePredictionMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 正賽預測 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 正賽預測 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16478,7 +16702,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 正賽預測模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 正賽預測模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16486,13 +16710,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 正賽預測模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 正賽預測模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 正賽預測模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 正賽預測模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 正賽預測模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 正賽預測模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16500,14 +16724,14 @@ class StyleHMainWindow(QMainWindow):
                 # 處理理想圈分段熱力圖模組
                 elif module_type == "ideal_lap_sector_heatmap":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈分段熱力圖模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈分段熱力圖模組...")
                         from modules.gui.ideal_lap_analysis.ideal_lap_sector_heatmap.ideal_lap_sector_heatmap_mdi import (
                             IdealLapSectorHeatmapMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 理想圈分段熱力圖 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈分段熱力圖 MDI 導入成功")
                         
                         module = IdealLapSectorHeatmapMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 理想圈分段熱力圖 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 理想圈分段熱力圖 MDI 實例創建成功")
                         
                         module.parameter_provider = parameter_provider
                         
@@ -16516,20 +16740,20 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 理想圈分段熱力圖模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 理想圈分段熱力圖模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
                             module.current_session = current_session
                         
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 理想圈分段熱力圖模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈分段熱力圖模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 理想圈分段熱力圖模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈分段熱力圖模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 理想圈分段熱力圖模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈分段熱力圖模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16537,15 +16761,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理理想圈分段對比模組
                 elif module_type == "ideal_lap_sector_comparison":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈分段對比模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建理想圈分段對比模組...")
                         from modules.gui.ideal_lap_analysis.ideal_lap_sector_comparison.ideal_lap_sector_comparison_mdi import (
                             IdealLapSectorComparisonMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 理想圈分段對比 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈分段對比 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = IdealLapSectorComparisonMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 理想圈分段對比 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 理想圈分段對比 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16556,7 +16780,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 理想圈分段對比模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 理想圈分段對比模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16564,13 +16788,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 理想圈分段對比模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 理想圈分段對比模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 理想圈分段對比模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16578,15 +16802,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理全車手直線速度分析模組 ⭐ 新增
                 elif module_type == "all_drivers_straight_line_speed":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建全車手直線速度分析模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建全車手直線速度分析模組...")
                         from modules.gui.all_drivers_straight_line_speed_analysis.all_drivers_straight_line_speed_mdi import (
                             AllDriversStraightLineSpeedMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 全車手直線速度 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手直線速度 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = AllDriversStraightLineSpeedMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 全車手直線速度 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 全車手直線速度 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16597,7 +16821,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 全車手直線速度模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手直線速度模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16605,13 +16829,136 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 全車手直線速度模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手直線速度模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 全車手直線速度模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手直線速度模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 全車手直線速度模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手直線速度模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理全車手最高速度分析模組 ⭐ F121 新增
+                elif module_type == "all_drivers_max_speed":
+                    try:
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手最高速度分析模組...")
+                        from modules.gui.all_drivers_max_speed_analysis.all_drivers_max_speed_mdi import (
+                            AllDriversMaxSpeedMDI
+                        )
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手最高速度 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = AllDriversMaxSpeedMDI(parent=self)
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手最高速度 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手最高速度模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手最高速度模組初始化失敗")
+                            return None
+                        
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手最高速度模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手最高速度模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理全車手加速度圖表模組 ⭐ F121 新增
+                elif module_type == "all_drivers_acceleration_chart":
+                    try:
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手加速度圖表模組...")
+                        from modules.gui.all_drivers_acceleration_chart.acceleration_chart_mdi import (
+                            AllDriversAccelerationChartMDI
+                        )
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手加速度圖表 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = AllDriversAccelerationChartMDI(parent=self)
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手加速度圖表 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手加速度圖表模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手加速度圖表模組初始化失敗")
+                            return None
+                        
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手加速度圖表模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手加速度圖表模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理全車手煞車圖表模組 ⭐ F122 新增
+                elif module_type == "all_drivers_brake_chart":
+                    try:
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手煞車圖表模組...")
+                        from modules.gui.all_drivers_brake_chart.brake_chart_mdi import (
+                            AllDriversBrakeChartMDI
+                        )
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車圖表 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = AllDriversBrakeChartMDI(parent=self)
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車圖表 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手煞車圖表模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車圖表模組初始化失敗")
+                            return None
+                        
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車圖表模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車圖表模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16619,15 +16966,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理全車手煞車性能分析模組 ⭐ F34 新增
                 elif module_type == "all_drivers_brake_performance":
                     try:
-                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手煞車性能分析模組...")
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手煞車性能分析模組...")
                         from modules.gui.all_drivers_brake_performance_analysis.all_drivers_brake_performance_mdi import (
                             AllDriversBrakePerformanceMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 全車手煞車性能 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車性能 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = AllDriversBrakePerformanceMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 全車手煞車性能 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 全車手煞車性能 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16638,7 +16985,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 全車手煞車性能模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手煞車性能模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16646,13 +16993,54 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 全車手煞車性能模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車性能模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車性能模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理全車手煞車全圈數分析模組 ⭐ F122 新增
+                elif module_type == "all_drivers_brake_all_laps":
+                    try:
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建全車手煞車全圈數分析模組...")
+                        from modules.gui.all_drivers_brake_all_laps_analysis.all_drivers_brake_all_laps_mdi import (
+                            AllDriversBrakeAllLapsMDI
+                        )
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車全圈數 MDI 導入成功")
+                        
+                        # 創建 MDI 實例
+                        module = AllDriversBrakeAllLapsMDI(parent=self)
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車全圈數 MDI 實例創建成功")
+                        
+                        # 設置參數提供者
+                        module.parameter_provider = parameter_provider
+                        
+                        # 設置參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race()
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 全車手煞車全圈數模組參數預設為: {current_year} {current_race} {current_session}")
+                            
+                            module.current_year = str(current_year)
+                            module.current_race = current_race
+                            module.current_session = current_session
+                        
+                        # 初始化模組
+                        if not module.initialize_module():
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車全圈數模組初始化失敗")
+                            return None
+                        
+                        logger.debug(f"[OK] [MODULE_FACTORY] 全車手煞車全圈數模組初始化成功")
+                        return self._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 全車手煞車全圈數模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16660,15 +17048,15 @@ class StyleHMainWindow(QMainWindow):
                 # 處理車手比賽排名分析模組 ⭐ F25 新增
                 elif module_type == "driver_position_analysis":
                     try:
-                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建車手比賽排名分析模組...")
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建車手比賽排名分析模組...")
                         from modules.gui.driver_position_analysis.driver_position_analysis_mdi import (
                             DriverPositionAnalysisMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 車手比賽排名 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 車手比賽排名 MDI 導入成功")
                         
                         # 創建 MDI 實例
                         module = DriverPositionAnalysisMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] 車手比賽排名 MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] 車手比賽排名 MDI 實例創建成功")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16679,7 +17067,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 車手比賽排名模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 車手比賽排名模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16687,13 +17075,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 車手比賽排名模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 車手比賽排名模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 車手比賽排名模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16701,13 +17089,13 @@ class StyleHMainWindow(QMainWindow):
                 # 處理 FIA Parts Analysis 模組 ⭐ 新增
                 elif module_type == "parts_analysis":
                     try:
-                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建 FIA Parts Analysis 模組...")
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建 FIA Parts Analysis 模組...")
                         from modules.gui.partupdated_analysis.parts_analysis_mdi import PartsAnalysisMDI
-                        print(f"[OK] [MODULE_FACTORY] FIA Parts Analysis MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] FIA Parts Analysis MDI 導入成功")
                         
                         # 創建 MDI 實例
                         mdi_module = PartsAnalysisMDI(parent=self)
-                        print(f"✅ [MODULE_FACTORY] FIA Parts Analysis MDI 實例創建成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] FIA Parts Analysis MDI 實例創建成功")
                         
                         # 設置參數提供者
                         mdi_module.parameter_provider = parameter_provider
@@ -16715,22 +17103,22 @@ class StyleHMainWindow(QMainWindow):
                         # 設置參數
                         if parameter_provider:
                             current_year = parameter_provider.get_current_year()
-                            print(f"[INIT] [MODULE_FACTORY] FIA Parts Analysis 模組參數預設為: 年份={current_year}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] FIA Parts Analysis 模組參數預設為: 年份={current_year}")
                             mdi_module.year = str(current_year)
                         else:
                             mdi_module.year = "2025"
                         
                         # ✅ 初始化模組（UniversalAnalysisMDI 要求）
-                        print(f"[INIT] [MODULE_FACTORY] 初始化 FIA Parts Analysis 模組...")
+                        logger.debug(f"[INIT] [MODULE_FACTORY] 初始化 FIA Parts Analysis 模組...")
                         if not mdi_module.initialize_module(parent_widget=self):
                             raise RuntimeError("Module initialization failed")
-                        print(f"✅ [MODULE_FACTORY] FIA Parts Analysis 模組初始化成功")
+                        logger.debug(f"✅ [MODULE_FACTORY] FIA Parts Analysis 模組初始化成功")
                         
                         # ✅ 返回 MDI 模組本身（它實現了 get_widget() 方法）
-                        print(f"[OK] [MODULE_FACTORY] FIA Parts Analysis 模組創建成功（返回 MDI 模組）")
+                        logger.debug(f"[OK] [MODULE_FACTORY] FIA Parts Analysis 模組創建成功（返回 MDI 模組）")
                         return self._mark_module_factory_type(mdi_module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] FIA Parts Analysis 模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] FIA Parts Analysis 模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16748,15 +17136,15 @@ class StyleHMainWindow(QMainWindow):
                                 corner_type = "high_speed"
                             # 其他情況保持 low_speed
                         
-                        print(f"[DEBUG] [MODULE_FACTORY] 開始創建彎道性能分析模組 (corner_type={corner_type})...")
+                        logger.debug(f"[DEBUG] [MODULE_FACTORY] 開始創建彎道性能分析模組 (corner_type={corner_type})...")
                         from modules.gui.all_drivers_corner_performance_analysis.all_drivers_corner_performance_mdi import (
                             AllDriversCornerPerformanceMDI
                         )
-                        print(f"[OK] [MODULE_FACTORY] 彎道性能分析 MDI 導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 彎道性能分析 MDI 導入成功")
                         
                         # 創建 MDI 實例（傳遞彎道類型）
                         module = AllDriversCornerPerformanceMDI(parent=self, corner_type=corner_type)
-                        print(f"✅ [MODULE_FACTORY] 彎道性能分析 MDI 實例創建成功 (corner_type={corner_type})")
+                        logger.debug(f"✅ [MODULE_FACTORY] 彎道性能分析 MDI 實例創建成功 (corner_type={corner_type})")
                         
                         # 設置參數提供者
                         module.parameter_provider = parameter_provider
@@ -16767,7 +17155,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race()
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 彎道性能分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 彎道性能分析模組參數預設為: {current_year} {current_race} {current_session}")
                             
                             module.current_year = str(current_year)
                             module.current_race = current_race
@@ -16775,13 +17163,13 @@ class StyleHMainWindow(QMainWindow):
                         
                         # 初始化模組
                         if not module.initialize_module():
-                            print(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組初始化失敗")
                             return None
                         
-                        print(f"[OK] [MODULE_FACTORY] 彎道性能分析模組初始化成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 彎道性能分析模組初始化成功")
                         return self._mark_module_factory_type(module, module_type)
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 彎道性能分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16790,7 +17178,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "speed_analysis":
                     try:
                         from modules.gui.lap_analysis.speed_analysis.speed_analysis_mdi import SpeedAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建速度分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建速度分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = SpeedAnalysisModule()
@@ -16807,17 +17195,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 速度分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 速度分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 速度分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 速度分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 速度分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 速度分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 速度分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 速度分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16826,7 +17214,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "rpm_analysis":
                     try:
                         from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_mdi import RPMAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建RPM分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建RPM分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = RPMAnalysisModule()
@@ -16843,17 +17231,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] RPM分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] RPM分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] RPM分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] RPM分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] RPM分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] RPM分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] RPM分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] RPM分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16862,7 +17250,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "acceleration_analysis":
                     try:
                         from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi import accelerationAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建加速度分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建加速度分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = accelerationAnalysisModule()
@@ -16879,17 +17267,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 加速度分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 加速度分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 加速度分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 加速度分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 加速度分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 加速度分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 加速度分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 加速度分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16898,7 +17286,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "speeddiff_analysis":
                     try:
                         from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_mdi import SpeeddiffAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建速度差分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建速度差分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = SpeeddiffAnalysisModule()
@@ -16915,17 +17303,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 速度差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 速度差分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 速度差分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 速度差分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 速度差分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 速度差分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 速度差分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 速度差分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16934,7 +17322,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "distancediff_analysis":
                     try:
                         from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi import distancediffAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建距離差分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建距離差分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = distancediffAnalysisModule()
@@ -16951,17 +17339,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 距離差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 距離差分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 距離差分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 距離差分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 距離差分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 距離差分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 距離差分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 距離差分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -16970,7 +17358,7 @@ class StyleHMainWindow(QMainWindow):
                 elif module_type == "timediff_analysis":
                     try:
                         from modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi import timediffAnalysisModule
-                        print(f"[OK] [MODULE_FACTORY] 創建時間差分析模組實例")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 創建時間差分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
                         module = timediffAnalysisModule()
@@ -16987,17 +17375,17 @@ class StyleHMainWindow(QMainWindow):
                             module.current_race = current_race
                             module.current_session = current_session
                             
-                            print(f"[INIT] [MODULE_FACTORY] 時間差分析模組參數預設為: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 時間差分析模組參數預設為: {current_year} {current_race} {current_session}")
                         
                         # 初始化模組
                         if module.initialize_module():
-                            print(f"[OK] [MODULE_FACTORY] 時間差分析模組初始化成功")
+                            logger.debug(f"[OK] [MODULE_FACTORY] 時間差分析模組初始化成功")
                             return self._mark_module_factory_type(module, module_type)
                         else:
-                            print(f"[ERROR] [MODULE_FACTORY] 時間差分析模組初始化失敗")
+                            logger.error(f"[ERROR] [MODULE_FACTORY] 時間差分析模組初始化失敗")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] [MODULE_FACTORY] 時間差分析模組創建失敗: {e}")
+                        logger.error(f"[ERROR] [MODULE_FACTORY] 時間差分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
@@ -17005,9 +17393,9 @@ class StyleHMainWindow(QMainWindow):
                 # 處理歷年賽道旗幟統計模組 (F100)
                 elif module_type == "historical_track_map":
                     try:
-                        print(f"[DEBUG]    [MODULE_FACTORY] 開始創建歷年賽道旗幟統計模組...")
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建歷年賽道旗幟統計模組...")
                         from modules.gui.Historical_track_map.historical_track_map_mdi import HistoricalTrackMapMDI
-                        print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組導入成功")
+                        logger.debug(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組導入成功")
                         
                         # 獲取當前參數
                         if parameter_provider:
@@ -17015,7 +17403,7 @@ class StyleHMainWindow(QMainWindow):
                             current_race = parameter_provider.get_current_race() 
                             current_session = parameter_provider.get_current_session()
                             
-                            print(f"[INIT] [MODULE_FACTORY] 歷年賽道旗幟統計模組參數: {current_year} {current_race} {current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] 歷年賽道旗幟統計模組參數: {current_year} {current_race} {current_session}")
                             
                             # 創建模組實例
                             module = HistoricalTrackMapMDI(parent=None)
@@ -17024,11 +17412,11 @@ class StyleHMainWindow(QMainWindow):
                             module.current_year = str(current_year)
                             module.current_race = current_race
                             module.current_session = current_session
-                            print(f"[INIT] [MODULE_FACTORY] ✅ 參數已預設: {module.current_year} {module.current_race} {module.current_session}")
+                            logger.debug(f"[INIT] [MODULE_FACTORY] ✅ 參數已預設: {module.current_year} {module.current_race} {module.current_session}")
                             
                             # 初始化模組
                             if module.initialize_module():
-                                print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化成功")
+                                logger.debug(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化成功")
                                 
                                 # ❌ 移除重複調用：initialize_module() 已經調用 load_initial_data()
                                 # 再次調用 update_lap_parameters() 會導致數據被載入兩次，
@@ -17037,31 +17425,31 @@ class StyleHMainWindow(QMainWindow):
                                 # module.update_lap_parameters(current_year, current_race, current_session)
                                 # print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組參數已設置")
                                 
-                                print(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組已就緒（跳過重複參數設置）")
+                                logger.debug(f"[OK] [MODULE_FACTORY] 歷年賽道旗幟統計模組已就緒（跳過重複參數設置）")
                                 
                                 return self._mark_module_factory_type(module, module_type)
                             else:
-                                print(f"[ERROR] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化失敗")
+                                logger.error(f"[ERROR] [MODULE_FACTORY] 歷年賽道旗幟統計模組初始化失敗")
                                 return None
                         else:
-                            print(f"[ERROR] 歷年賽道旗幟統計模組創建失敗：無參數")
+                            logger.error(f"[ERROR] 歷年賽道旗幟統計模組創建失敗：無參數")
                             return None
                     except Exception as e:
-                        print(f"[ERROR] 歷年賽道旗幟統計模組創建失敗: {e}")
+                        logger.error(f"[ERROR] 歷年賽道旗幟統計模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None
                 
                 # 處理其他模組類型...
                 else:
-                    print(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
+                    logger.debug(f"[INFO] [MODULE_FACTORY] 模組類型 {module_type} 尚未實現")
                     return None
             
-            print(f"[INFO] [MODULE_FACTORY] 無法找到匹配的模組類型: {function_name}")
+            logger.debug(f"[INFO] [MODULE_FACTORY] 無法找到匹配的模組類型: {function_name}")
             return None
             
         except Exception as e:
-            print(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {e}")
+            logger.error(f"[ERROR] [MODULE_FACTORY] 模組創建失敗: {e}")
             import traceback
             traceback.print_exc()  # ✅ 添加完整的異常追蹤
             return None
@@ -17075,20 +17463,20 @@ class StyleHMainWindow(QMainWindow):
         """創建舊版內容 - 保持向後相容性"""
         # 根據功能類型創建相應的內容
         if "降雨分析" in function_name:
-            # 使用新的雨量分析模組 (通用圖表系統)
+            # 使用新的雨量分析模組 (Universal MDI 架構)
             try:
-                from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
+                from modules.gui.rain_analysis.rain_analysis_mdi import RainAnalysisUniversal
                 params = self.get_current_parameters()
-                content = RainAnalysisModuleAdapter(
+                content = RainAnalysisUniversal(
                     year=params['year'],
                     race=params['race'],
                     session=params['session']
                 )
-                print(f"[OK] 已載入降雨分析模組 (通用圖表) - {params['year']} {params['race']} {params['session']}")
+                logger.debug(f"[OK] 已載入降雨分析模組 (Universal MDI) - {params['year']} {params['race']} {params['session']}")
                 return content
                 
             except ImportError as e:
-                print(f"[ERROR] 模組導入失敗: {e}")
+                logger.error(f"[ERROR] 模組導入失敗: {e}")
                 return TelemetryChartWidget("speed")  # 後備方案
         elif "遙測" in function_name:
             return TelemetryChartWidget("speed")
@@ -17115,21 +17503,21 @@ class StyleHMainWindow(QMainWindow):
                     module.current_race = current_race
                     module.current_session = current_session
                     
-                    print(f"[INIT] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
+                    logger.debug(f"[INIT] 煞車分析模組參數預設為: {current_year} {current_race} {current_session}")
                 
                 # 初始化模組
                 if module.initialize_module():
-                    print(f"[OK] 煞車分析模組初始化成功")
+                    logger.debug(f"[OK] 煞車分析模組初始化成功")
                     return module
                 else:
-                    print(f"[ERROR] 煞車分析模組初始化失敗")
+                    logger.error(f"[ERROR] 煞車分析模組初始化失敗")
                     return TelemetryChartWidget("brake")  # 後備方案
                     
             except ImportError as e:
-                print(f"[ERROR] 煞車分析模組導入失敗: {e}")
+                logger.error(f"[ERROR] 煞車分析模組導入失敗: {e}")
                 return TelemetryChartWidget("brake")  # 後備方案
             except Exception as e:
-                print(f"[ERROR] 煞車分析模組創建失敗: {e}")
+                logger.error(f"[ERROR] 煞車分析模組創建失敗: {e}")
                 return TelemetryChartWidget("brake")  # 後備方案
         elif "油門" in function_name or "節流" in function_name:
             return TelemetryChartWidget("throttle")
@@ -17156,13 +17544,13 @@ class StyleHMainWindow(QMainWindow):
                     session=params['session']
                 )
 
-                print(f"[OK] [LEGACY->UNIVERSAL] 使用 TrackAnalysisUniversal: {params['year']} {params['race']} {params['session']}")
+                logger.debug(f"[OK] [LEGACY->UNIVERSAL] 使用 TrackAnalysisUniversal: {params['year']} {params['race']} {params['session']}")
                 return module.get_widget(), module
 
             except ImportError as e:
-                print(f"[ERROR] TrackAnalysisUniversal 導入失敗: {e}")
+                logger.error(f"[ERROR] TrackAnalysisUniversal 導入失敗: {e}")
             except Exception as e:
-                print(f"[ERROR] TrackAnalysisUniversal 初始化失敗: {e}")
+                logger.error(f"[ERROR] TrackAnalysisUniversal 初始化失敗: {e}")
                 import traceback
                 traceback.print_exc()
 
@@ -17186,21 +17574,21 @@ class StyleHMainWindow(QMainWindow):
             # 使用新的進站分析模組
             try:
                 from modules.gui.pitstop_analysis import PitstopAnalysisModule
-                print(f"[OK] [LEGACY] 創建進站分析模組")
+                logger.debug(f"[OK] [LEGACY] 創建進站分析模組")
                 
                 # 創建模組實例
                 module = PitstopAnalysisModule()
                 
                 # 初始化模組
                 if module.initialize_module():
-                    print(f"[OK] [LEGACY] 進站分析模組初始化成功")
+                    logger.debug(f"[OK] [LEGACY] 進站分析模組初始化成功")
                     return module.get_widget(), module  # 返回 (widget, module) tuple
                 else:
-                    print(f"[ERROR] [LEGACY] 進站分析模組初始化失敗")
+                    logger.error(f"[ERROR] [LEGACY] 進站分析模組初始化失敗")
                     raise Exception("模組初始化失敗")
                 
             except ImportError as e:
-                print(f"[ERROR] 進站分析模組導入失敗: {e}")
+                logger.error(f"[ERROR] 進站分析模組導入失敗: {e}")
                 # 後備方案 - 顯示錯誤提示
                 placeholder = QLabel("[ERROR] 進站分析模組不可用\n\n請檢查模組是否正確安裝")
                 placeholder.setAlignment(Qt.AlignCenter)
@@ -17216,7 +17604,7 @@ class StyleHMainWindow(QMainWindow):
                 """)
                 return placeholder
             except Exception as e:
-                print(f"[ERROR] 進站分析模組創建失敗: {e}")
+                logger.error(f"[ERROR] 進站分析模組創建失敗: {e}")
                 # 後備方案 - 顯示錯誤提示
                 placeholder = QLabel(f"[ERROR] 進站分析模組錯誤\n\n{str(e)}")
                 placeholder.setAlignment(Qt.AlignCenter)
@@ -17238,14 +17626,14 @@ class StyleHMainWindow(QMainWindow):
     def close_all_mdi_windows(self, mdi_area):
         """關閉指定MDI區域中的所有子視窗並徹底清理所有相關註冊（排除固定視窗）"""
         try:
-            print(f"[CLOSE] 開始關閉 MDI 區域中的非固定視窗...")
+            logger.debug(f"[CLOSE] 開始關閉 MDI 區域中的非固定視窗...")
             
             # 獲取所有子視窗（排除固定視窗）
             all_subwindows = mdi_area.subWindowList()
             subwindows = [sw for sw in all_subwindows if not sw.property("is_welcome_fixed")]
             window_count = len(subwindows)
             
-            print(f"[STATS] MDI區域中共有 {len(all_subwindows)} 個子視窗，其中 {window_count} 個非固定視窗")
+            logger.debug(f"[STATS] MDI區域中共有 {len(all_subwindows)} 個子視窗，其中 {window_count} 個非固定視窗")
             
             if window_count > 0:
                 # 1. 在關閉視窗前，先從連動管理器中取消註冊所有相關模組
@@ -17262,9 +17650,9 @@ class StyleHMainWindow(QMainWindow):
                             try:
                                 linkage_manager.unregister_module(module)
                                 linkage_unregister_count += 1
-                                print(f"[CLEANUP] 已從連動管理器取消註冊模組: {type(module).__name__}")
+                                logger.debug(f"[CLEANUP] 已從連動管理器取消註冊模組: {type(module).__name__}")
                             except Exception as e:
-                                print(f"[WARNING] 取消註冊連動模組失敗: {e}")
+                                logger.warning(f"[WARNING] 取消註冊連動模組失敗: {e}")
                 
                 # 2. 逐一關閉並刪除子視窗
                 closed_count = 0
@@ -17281,10 +17669,10 @@ class StyleHMainWindow(QMainWindow):
                             # 刪除對象
                             subwindow.deleteLater()
                             closed_count += 1
-                            print(f"[CLEANUP] 已關閉並清理視窗: {title}")
+                            logger.debug(f"[CLEANUP] 已關閉並清理視窗: {title}")
                             
                     except Exception as e:
-                        print(f"[WARNING] 關閉視窗時發生錯誤: {e}")
+                        logger.warning(f"[WARNING] 關閉視窗時發生錯誤: {e}")
                 
                 # 3. 強制清理MDI區域
                 try:
@@ -17295,7 +17683,7 @@ class StyleHMainWindow(QMainWindow):
                     mdi_area.repaint()
                     
                 except Exception as e:
-                    print(f"[WARNING] MDI區域清理時發生錯誤: {e}")
+                    logger.warning(f"[WARNING] MDI區域清理時發生錯誤: {e}")
                 
                 # 4. 強制Qt事件處理和垃圾回收
                 try:
@@ -17306,31 +17694,31 @@ class StyleHMainWindow(QMainWindow):
                     gc.collect()  # 強制垃圾回收
                     
                 except Exception as e:
-                    print(f"[WARNING] 事件處理和垃圾回收時發生錯誤: {e}")
+                    logger.warning(f"[WARNING] 事件處理和垃圾回收時發生錯誤: {e}")
                 
                 # 5. 驗證清理結果
                 final_subwindows = mdi_area.subWindowList()
                 final_count = len(final_subwindows)
                 
-                print(f"[OK] 關閉完成統計:")
-                print(f"    原始視窗數: {window_count}")
-                print(f"    已關閉視窗: {closed_count}")
-                print(f"    連動模組取消註冊: {linkage_unregister_count}")
-                print(f"    清理後剩餘視窗: {final_count}")
+                logger.debug(f"[OK] 關閉完成統計:")
+                logger.debug(f"    原始視窗數: {window_count}")
+                logger.debug(f"    已關閉視窗: {closed_count}")
+                logger.debug(f"    連動模組取消註冊: {linkage_unregister_count}")
+                logger.debug(f"    清理後剩餘視窗: {final_count}")
                 
                 if final_count > 0:
-                    print(f"[WARNING] 仍有 {final_count} 個視窗未完全清理")
+                    logger.warning(f"[WARNING] 仍有 {final_count} 個視窗未完全清理")
                     for i, remaining in enumerate(final_subwindows):
                         title = remaining.windowTitle() if remaining else "Unknown"
-                        print(f"    剩餘視窗 {i+1}: {title}")
+                        logger.debug(f"    剩餘視窗 {i+1}: {title}")
                 else:
-                    print(f"[OK] ✅ 所有視窗已完全清理")
+                    logger.debug(f"[OK] ✅ 所有視窗已完全清理")
                     
             else:
-                print(f"[INFO] 沒有需要關閉的視窗")
+                logger.debug(f"[INFO] 沒有需要關閉的視窗")
                 
         except Exception as e:
-            print(f"[ERROR] 關閉視窗時發生錯誤: {e}")
+            logger.error(f"[ERROR] 關閉視窗時發生錯誤: {e}")
             import traceback
             traceback.print_exc()
     
@@ -17353,13 +17741,13 @@ class StyleHMainWindow(QMainWindow):
     def reset_all_charts(self, mdi_area):
         """重置MDI區域中所有圖表以顯示完整數據範圍"""
         try:
-            print(f"[REFRESH] 開始調整 MDI 區域中的所有圖表以顯示完整數據...")
+            logger.debug(f"[REFRESH] 開始調整 MDI 區域中的所有圖表以顯示完整數據...")
             
             # 獲取所有子視窗
             subwindows = mdi_area.subWindowList()
             reset_count = 0
             
-            print(f"[STATS] MDI區域中共有 {len(subwindows)} 個子視窗")
+            logger.debug(f"[STATS] MDI區域中共有 {len(subwindows)} 個子視窗")
             
             def find_telemetry_widgets(widget):
                 """遞歸查找 TelemetryChartWidget"""
@@ -17555,7 +17943,7 @@ class StyleHMainWindow(QMainWindow):
                 if subwindow and subwindow.widget():
                     widget = subwindow.widget()
                     widget_type = type(widget).__name__
-                    print(f"[SEARCH] 檢查視窗 {i+1}: {widget_type}")
+                    logger.debug(f"[SEARCH] 檢查視窗 {i+1}: {widget_type}")
                     
                     # 遞歸查找所有 TelemetryChartWidget
                     telemetry_widgets = find_telemetry_widgets(widget)
@@ -17571,9 +17959,9 @@ class StyleHMainWindow(QMainWindow):
                     distancediff_widgets = find_distancediff_analysis_widgets(widget)
                     acceleration_widgets = find_acceleration_analysis_widgets(widget)
                     
-                    print(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表")
-                    print(f"  分析模組: 速度={len(speed_widgets)}, 煞車={len(brake_widgets)}, RPM={len(rpm_widgets)}, 檔位={len(gear_widgets)}, 油門={len(throttle_widgets)}")
-                    print(f"  差異分析: 速度差={len(speeddiff_widgets)}, 距離差={len(distancediff_widgets)}, 加速度={len(acceleration_widgets)}")
+                    logger.debug(f"  找到 {len(telemetry_widgets)} 個遙測圖表, {len(universal_widgets)} 個通用圖表")
+                    logger.debug(f"  分析模組: 速度={len(speed_widgets)}, 煞車={len(brake_widgets)}, RPM={len(rpm_widgets)}, 檔位={len(gear_widgets)}, 油門={len(throttle_widgets)}")
+                    logger.debug(f"  差異分析: 速度差={len(speeddiff_widgets)}, 距離差={len(distancediff_widgets)}, 加速度={len(acceleration_widgets)}")
                     
                     if telemetry_widgets:
                         for telemetry_widget in telemetry_widgets:
@@ -17655,92 +18043,92 @@ class StyleHMainWindow(QMainWindow):
                     # 處理通用圖表 (UniversalChartWidget)
                     if universal_widgets:
                         for universal_widget in universal_widgets:
-                            print(f"[TARGET] 重置通用圖表: {universal_widget.title}")
+                            logger.debug(f"[TARGET] 重置通用圖表: {universal_widget.title}")
                             universal_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 通用圖表重置完成: {universal_widget.title}")
+                            logger.debug(f"[OK] 通用圖表重置完成: {universal_widget.title}")
                     
                     # 處理速度分析圖表 (SpeedAnalysisChartWidget)
                     if speed_widgets:
                         for speed_widget in speed_widgets:
-                            print(f"[TARGET] 重置速度分析圖表")
+                            logger.debug(f"[TARGET] 重置速度分析圖表")
                             speed_widget.reset_chart_view()
                             reset_count += 1
-                            print(f"[OK] 速度分析圖表重置完成")
+                            logger.debug(f"[OK] 速度分析圖表重置完成")
                     
                     # 處理煞車分析圖表 (BrakeAnalysisChartWidget) 
                     if brake_widgets:
                         for brake_widget in brake_widgets:
-                            print(f"[TARGET] 重置煞車分析圖表")
+                            logger.debug(f"[TARGET] 重置煞車分析圖表")
                             if hasattr(brake_widget, 'reset_chart_view'):
                                 brake_widget.reset_chart_view()
                             elif hasattr(brake_widget, 'chart_widget') and hasattr(brake_widget.chart_widget, 'reset_view'):
                                 brake_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 煞車分析圖表重置完成")
+                            logger.debug(f"[OK] 煞車分析圖表重置完成")
                     
                     # 處理RPM分析圖表 (RPMAnalysisChartWidget)
                     if rpm_widgets:
                         for rpm_widget in rpm_widgets:
-                            print(f"[TARGET] 重置RPM分析圖表")
+                            logger.debug(f"[TARGET] 重置RPM分析圖表")
                             if hasattr(rpm_widget, 'reset_chart_view'):
                                 rpm_widget.reset_chart_view()
                             elif hasattr(rpm_widget, 'chart_widget') and hasattr(rpm_widget.chart_widget, 'reset_view'):
                                 rpm_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] RPM分析圖表重置完成")
+                            logger.debug(f"[OK] RPM分析圖表重置完成")
                     
                     # 處理檔位分析圖表 (GearAnalysisChartWidget)
                     if gear_widgets:
                         for gear_widget in gear_widgets:
-                            print(f"[TARGET] 重置檔位分析圖表")
+                            logger.debug(f"[TARGET] 重置檔位分析圖表")
                             if hasattr(gear_widget, 'reset_chart_view'):
                                 gear_widget.reset_chart_view()
                             elif hasattr(gear_widget, 'chart_widget') and hasattr(gear_widget.chart_widget, 'reset_view'):
                                 gear_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 檔位分析圖表重置完成")
+                            logger.debug(f"[OK] 檔位分析圖表重置完成")
                     
                     # 處理油門分析圖表 (ThrottleAnalysisChartWidget)
                     if throttle_widgets:
                         for throttle_widget in throttle_widgets:
-                            print(f"[TARGET] 重置油門分析圖表")
+                            logger.debug(f"[TARGET] 重置油門分析圖表")
                             throttle_widget.reset_chart_view()
                             reset_count += 1
-                            print(f"[OK] 油門分析圖表重置完成")
+                            logger.debug(f"[OK] 油門分析圖表重置完成")
                     
                     # 處理速度差異分析圖表 (SpeedDiffAnalysisChartWidget)
                     if speeddiff_widgets:
                         for speeddiff_widget in speeddiff_widgets:
-                            print(f"[TARGET] 重置速度差異分析圖表")
+                            logger.debug(f"[TARGET] 重置速度差異分析圖表")
                             if hasattr(speeddiff_widget, 'reset_chart_view'):
                                 speeddiff_widget.reset_chart_view()
                             elif hasattr(speeddiff_widget, 'chart_widget') and hasattr(speeddiff_widget.chart_widget, 'reset_view'):
                                 speeddiff_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 速度差異分析圖表重置完成")
+                            logger.debug(f"[OK] 速度差異分析圖表重置完成")
                     
                     # 處理距離差異分析圖表 (DistanceDiffAnalysisChartWidget)
                     if distancediff_widgets:
                         for distancediff_widget in distancediff_widgets:
-                            print(f"[TARGET] 重置距離差異分析圖表")
+                            logger.debug(f"[TARGET] 重置距離差異分析圖表")
                             if hasattr(distancediff_widget, 'reset_chart_view'):
                                 distancediff_widget.reset_chart_view()
                             elif hasattr(distancediff_widget, 'chart_widget') and hasattr(distancediff_widget.chart_widget, 'reset_view'):
                                 distancediff_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 距離差異分析圖表重置完成")
+                            logger.debug(f"[OK] 距離差異分析圖表重置完成")
                     
                     # 處理加速度分析圖表 (AccelerationAnalysisChartWidget)
                     if acceleration_widgets:
                         for acceleration_widget in acceleration_widgets:
-                            print(f"[TARGET] 重置加速度分析圖表")
+                            logger.debug(f"[TARGET] 重置加速度分析圖表")
                             if hasattr(acceleration_widget, 'reset_chart_view'):
                                 acceleration_widget.reset_chart_view()
                             elif hasattr(acceleration_widget, 'chart_widget') and hasattr(acceleration_widget.chart_widget, 'reset_view'):
                                 acceleration_widget.chart_widget.reset_view()
                             reset_count += 1
-                            print(f"[OK] 加速度分析圖表重置完成")
+                            logger.debug(f"[OK] 加速度分析圖表重置完成")
                     
                     # 檢查是否為其他類型的圖表或可縮放小部件
                     elif hasattr(widget, 'fit_to_view'):
@@ -17761,10 +18149,10 @@ class StyleHMainWindow(QMainWindow):
                     #print(f"[WARNING] 視窗 {i+1} 沒有有效的widget")
                     pass
             
-            print(f"[OK] 調整完成！共調整了 {reset_count} 個圖表以顯示完整數據")
+            logger.debug(f"[OK] 調整完成！共調整了 {reset_count} 個圖表以顯示完整數據")
             
         except Exception as e:
-            print(f"[ERROR] 調整圖表時發生錯誤: {e}")
+            logger.error(f"[ERROR] 調整圖表時發生錯誤: {e}")
             import traceback
             traceback.print_exc()
     
@@ -17772,7 +18160,7 @@ class StyleHMainWindow(QMainWindow):
             
     def open_session(self): 
         params = self.get_current_parameters()
-        print(f"[檔案] 開啟會話請求 - {params['year']} {params['race']} {params['session']}")
+        logger.debug(f"[檔案] 開啟會話請求 - {params['year']} {params['race']} {params['session']}")
         QMessageBox.information(
             self,
             tr('open_session_disabled', '開啟會話'),
@@ -17832,12 +18220,12 @@ class StyleHMainWindow(QMainWindow):
     
     def _on_workspace_saved(self, workspace_id: int, workspace_name: str):
         """Workspace 儲存完成的回調"""
-        print(f"[WORKSPACE] ✅ Workspace 已儲存: ID={workspace_id}, Name={workspace_name}")
+        logger.debug(f"[WORKSPACE] ✅ Workspace 已儲存: ID={workspace_id}, Name={workspace_name}")
         # 未來可以在這裡添加 Recent Workspaces 更新邏輯
     
     def _on_workspace_loaded(self, workspace_id: int, config: Dict):
         """Workspace 載入的回調 - 重建所有分頁和視窗"""
-        print(f"[WORKSPACE] 🔄 開始載入 Workspace: ID={workspace_id}")
+        logger.debug(f"[WORKSPACE] 🔄 開始載入 Workspace: ID={workspace_id}")
         
         try:
             # 調用 deserialize_workspace 重建 GUI 狀態
@@ -17849,7 +18237,7 @@ class StyleHMainWindow(QMainWindow):
                 
                 # ✅ 不再自動平鋪，保持保存時的視窗位置
                 # 原本：QTimer.singleShot(500, self._tile_all_workspace_windows_delayed)
-                print(f"[WORKSPACE] ✅ 保持保存時的視窗位置（不自動平鋪）")
+                logger.debug(f"[WORKSPACE] ✅ 保持保存時的視窗位置（不自動平鋪）")
                 
                 # ✅ 更新所有分頁的滾動範圍（確保超出範圍的視窗可透過滾動條訪問）
                 QTimer.singleShot(300, self._update_all_mdi_scroll_areas)
@@ -17883,7 +18271,7 @@ class StyleHMainWindow(QMainWindow):
         
         用於 Workspace 載入後，確保所有超出範圍的視窗都能透過滾動條訪問
         """
-        print(f"[WORKSPACE] 🔄 更新所有 MDI 區域的滾動範圍...")
+        logger.debug(f"[WORKSPACE] 🔄 更新所有 MDI 區域的滾動範圍...")
         
         updated_tabs = 0
         for tab_index in range(1, self.tab_widget.count()):  # 跳過 HOME
@@ -17892,29 +18280,29 @@ class StyleHMainWindow(QMainWindow):
             # 檢查是否為 CustomMdiArea
             if hasattr(tab_widget, '_update_scroll_area'):
                 tab_name = self.tab_widget.tabText(tab_index)
-                print(f"[WORKSPACE] 📏 更新分頁 '{tab_name}' 的滾動範圍")
+                logger.debug(f"[WORKSPACE] 📏 更新分頁 '{tab_name}' 的滾動範圍")
                 tab_widget._update_scroll_area()
                 updated_tabs += 1
         
-        print(f"[WORKSPACE] ✅ 已更新 {updated_tabs} 個分頁的滾動範圍")
+        logger.debug(f"[WORKSPACE] ✅ 已更新 {updated_tabs} 個分頁的滾動範圍")
     
     def _tile_all_workspace_windows_delayed(self):
         """延遲執行的自動平鋪 - 確保 MDI 區域尺寸已更新"""
-        print(f"[WORKSPACE] 🔲 開始延遲自動平鋪...")
+        logger.debug(f"[WORKSPACE] 🔲 開始延遲自動平鋪...")
         
         # 強制處理所有待處理事件，確保 MDI 區域尺寸已更新
         QApplication.processEvents()
         
         # 保存當前活動分頁
         current_tab_index = self.tab_widget.currentIndex()
-        print(f"[WORKSPACE] 💾 當前活動分頁: index={current_tab_index}")
+        logger.debug(f"[WORKSPACE] 💾 當前活動分頁: index={current_tab_index}")
         
         # 遍歷所有分頁（跳過 HOME）
         tiled_tabs = 0
         for tab_index in range(1, self.tab_widget.count()):
             tab_name = self.tab_widget.tabText(tab_index)
             
-            print(f"[WORKSPACE] 🔍 處理分頁 {tab_index}: '{tab_name}'")
+            logger.debug(f"[WORKSPACE] 🔍 處理分頁 {tab_index}: '{tab_name}'")
             
             # 切換到該分頁
             self.tab_widget.setCurrentIndex(tab_index)
@@ -17928,10 +18316,10 @@ class StyleHMainWindow(QMainWindow):
             tiled_tabs += 1
         
         # 恢復原本的活動分頁
-        print(f"[WORKSPACE] 🔄 恢復活動分頁: index={current_tab_index}")
+        logger.debug(f"[WORKSPACE] 🔄 恢復活動分頁: index={current_tab_index}")
         self.tab_widget.setCurrentIndex(current_tab_index)
         
-        print(f"[WORKSPACE] ✅ 延遲自動平鋪完成: 共處理 {tiled_tabs} 個分頁")
+        logger.debug(f"[WORKSPACE] ✅ 延遲自動平鋪完成: 共處理 {tiled_tabs} 個分頁")
     
     def _tile_all_workspace_windows(self):
         """
@@ -17941,8 +18329,8 @@ class StyleHMainWindow(QMainWindow):
         原因: Qt 原生方法在 MDI 區域尺寸未更新時會計算錯誤的視窗位置
         新方法使用智能 tile_windows() 並添加延遲處理
         """
-        print(f"[WORKSPACE] ⚠️ 調用了已棄用的 _tile_all_workspace_windows()")
-        print(f"[WORKSPACE] → 請改用 _tile_all_workspace_windows_delayed()")
+        logger.debug(f"[WORKSPACE] ⚠️ 調用了已棄用的 _tile_all_workspace_windows()")
+        logger.debug(f"[WORKSPACE] → 請改用 _tile_all_workspace_windows_delayed()")
         
         # 為了向後兼容，直接調用新方法
         self._tile_all_workspace_windows_delayed()
@@ -18337,7 +18725,7 @@ class StyleHMainWindow(QMainWindow):
     def lap_analysis(self): 
         """圈速分析 - 彈出選項對話框讓使用者選擇要顯示的遙測圖表和車手"""
         params = self.get_current_parameters()
-        print(f"[分析] 圈速分析 - {params['year']} {params['race']} {params['session']}")
+        logger.debug(f"[分析] 圈速分析 - {params['year']} {params['race']} {params['session']}")
         
         try:
             # 移除歡迎頁面（如果存在）
@@ -18369,15 +18757,15 @@ class StyleHMainWindow(QMainWindow):
                 lap_word = tr("lap", "Lap")
                 fastest_label = tr("fastest_lap_type", "Fastest Lap")
 
-                print(f"[圈速分析] 使用者選擇的圖表: {selected_charts}")
-                print(f"[圈速分析] 選擇的車手: 車手1={driver1}, 車手2={driver2 if driver2 else none_display}")
+                logger.debug(f"[圈速分析] 使用者選擇的圖表: {selected_charts}")
+                logger.debug(f"[圈速分析] 選擇的車手: 車手1={driver1}, 車手2={driver2 if driver2 else none_display}")
                 if is_fastest_lap:
-                    print(f"[圈速分析] 圈數設定: {fastest_label}")
+                    logger.debug(f"[圈速分析] 圈數設定: {fastest_label}")
                 else:
                     if driver2:
-                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}")
+                        logger.debug(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}")
                     else:
-                        print(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}")
+                        logger.debug(f"[圈速分析] 圈數設定: 車手1第{lap1_number}{lap_word}")
                 
                 # 🆕 將對話框的選擇同步到主視窗參數欄
                 try:
@@ -18386,7 +18774,7 @@ class StyleHMainWindow(QMainWindow):
                         index = self.driver1_combo.findText(driver1)
                         if index >= 0:
                             self.driver1_combo.setCurrentIndex(index)
-                            print(f"[同步] Driver 1 → {driver1}")
+                            logger.debug(f"[同步] Driver 1 → {driver1}")
                     
                     # 同步 Driver 2
                     if hasattr(self, 'driver2_combo'):
@@ -18394,37 +18782,37 @@ class StyleHMainWindow(QMainWindow):
                             index = self.driver2_combo.findText(driver2)
                             if index >= 0:
                                 self.driver2_combo.setCurrentIndex(index)
-                                print(f"[同步] Driver 2 → {driver2}")
+                                logger.debug(f"[同步] Driver 2 → {driver2}")
                         else:
                             # Driver 2 為 None，設定為第一個選項（通常是空或 None）
                             self.driver2_combo.setCurrentIndex(0)
-                            print(f"[同步] Driver 2 → None")
+                            logger.debug(f"[同步] Driver 2 → None")
                     
                     # 同步 Lap 1
                     if lap1_number and hasattr(self, 'lap1_spinbox'):
                         self.lap1_spinbox.setValue(lap1_number)
-                        print(f"[同步] Lap 1 → {lap1_number}")
+                        logger.debug(f"[同步] Lap 1 → {lap1_number}")
                     
                     # 同步 Lap 2
                     if lap2_number and hasattr(self, 'lap2_spinbox'):
                         self.lap2_spinbox.setValue(lap2_number)
-                        print(f"[同步] Lap 2 → {lap2_number}")
+                        logger.debug(f"[同步] Lap 2 → {lap2_number}")
                     
                     # 同步 Fastest Lap 選項
                     if hasattr(self, 'fastest_lap_checkbox'):
                         self.fastest_lap_checkbox.setChecked(is_fastest_lap)
-                        print(f"[同步] Fastest Lap → {is_fastest_lap}")
+                        logger.debug(f"[同步] Fastest Lap → {is_fastest_lap}")
                     
-                    print(f"[同步] ✅ 主視窗參數已同步")
+                    logger.debug(f"[同步] ✅ 主視窗參數已同步")
                 except Exception as sync_error:
-                    print(f"[同步] ⚠️ 參數同步失敗: {sync_error}")
+                    logger.debug(f"[同步] ⚠️ 參數同步失敗: {sync_error}")
                 
                 # 為每個選擇的圖表類型創建視窗
                 for chart_type in selected_charts:
                     # 特殊處理：將速度圖表映射到速度分析
                     if chart_type == 'speed':
                         chart_type = 'speed_analysis'
-                        print(f"[圈速分析] 映射 'speed' -> 'speed_analysis'")
+                        logger.debug(f"[圈速分析] 映射 'speed' -> 'speed_analysis'")
                     
                     self.create_telemetry_window(chart_type, params, driver1, driver2, lap1_number, lap2_number, lap_type, is_fastest_lap)
                 
@@ -18436,23 +18824,23 @@ class StyleHMainWindow(QMainWindow):
                         lap_summary = f"車手1第{lap1_number}{lap_word}, 車手2第{lap2_number}{lap_word}"
                     else:
                         lap_summary = f"第{lap1_number}{lap_word}"
-                print(f"[OK] 圈速分析完成，已開啟 {len(selected_charts)} 個遙測圖表視窗 ({driver_summary}, {lap_summary})")
+                logger.debug(f"[OK] 圈速分析完成，已開啟 {len(selected_charts)} 個遙測圖表視窗 ({driver_summary}, {lap_summary})")
             else:
-                print(f"[圈速分析] 使用者取消了分析")
+                logger.debug(f"[圈速分析] 使用者取消了分析")
                 
         except Exception as e:
-            print(f"[ERROR] 圈速分析失敗: {e}")
+            logger.error(f"[ERROR] 圈速分析失敗: {e}")
             import traceback
             traceback.print_exc()
             self.show_error_message("圈速分析錯誤", f"開啟圈速分析時發生錯誤: {e}")
     
     def create_telemetry_window(self, chart_type, params, driver1=None, driver2=None, lap1_number=1, lap2_number=1, lap_type="最快圈", is_fastest_lap=False):
         """創建單個遙測圖表視窗 - 支援速度分析"""
-        print(f"[CREATE_DEBUG] ========== 創建遙測視窗 ==========")
-        print(f"[CREATE_DEBUG] 圖表類型: {chart_type}")
-        print(f"[CREATE_DEBUG] 參數: {params}")
-        print(f"[CREATE_DEBUG] 車手: {driver1} vs {driver2}")
-        print(f"[CREATE_DEBUG] 圈數: {lap1_number} vs {lap2_number}")
+        logger.debug(f"[CREATE_DEBUG] ========== 創建遙測視窗 ==========")
+        logger.debug(f"[CREATE_DEBUG] 圖表類型: {chart_type}")
+        logger.debug(f"[CREATE_DEBUG] 參數: {params}")
+        logger.debug(f"[CREATE_DEBUG] 車手: {driver1} vs {driver2}")
+        logger.debug(f"[CREATE_DEBUG] 圈數: {lap1_number} vs {lap2_number}")
         
         # 檢查並移除歡迎頁面（首次使用分析功能時）
         self.check_and_remove_welcome_page()
@@ -18460,20 +18848,20 @@ class StyleHMainWindow(QMainWindow):
         # 獲取當前分頁的 MDI 區域 - 提前定義避免變量未定義錯誤
         current_mdi_area = self.get_current_mdi_area()
         if not current_mdi_area:
-            print("[ERROR] 無法獲取當前 MDI 區域")
+            logger.error("[ERROR] 無法獲取當前 MDI 區域")
             return
         
         try:
             # 檢查是否為速度分析 - 使用新版模組架構
             if chart_type == 'speed_analysis':
-                print(f"[CREATE_DEBUG] 🎯 檢測到速度分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🎯 檢測到速度分析請求，嘗試新版模組架構")
                 
                 # 使用新版模組化架構創建速度分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入速度分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入速度分析模組...")
                     from modules.gui.lap_analysis.speed_analysis.speed_analysis_mdi import SpeedAnalysisModule
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = SpeedAnalysisModule()
                     
@@ -18492,13 +18880,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化速度分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化速度分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -18506,10 +18894,10 @@ class StyleHMainWindow(QMainWindow):
                             race=params['race'], 
                             session=params['session']
                         )
-                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
-                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -18533,7 +18921,7 @@ class StyleHMainWindow(QMainWindow):
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 速度分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 速度分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -18542,7 +18930,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "speed_analysis")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入速度分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入速度分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -18555,30 +18943,30 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 速度分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 速度分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
                     # 🔴 簡化錯誤日誌避免 traceback 持有 frame 引用（包含 analysis_module）
-                    print(f"[ERROR] 速度分析模組創建失敗: {e}，回退到舊版模式")
+                    logger.error(f"[ERROR] 速度分析模組創建失敗: {e}，回退到舊版模式")
                     e = None  # 🔴 立即釋放異常對象
                     # 調試時可以取消註解：
                     # import traceback
                     # traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版速度分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版速度分析模式")
                 
                 # 回退：特殊處理速度分析（舊版模式）
                 if driver2 is None:
                     driver2 = driver1
                     lap2_number = lap1_number
-                    print(f"[SPEED] 速度分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
+                    logger.debug(f"[SPEED] 速度分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
                 
                 # 創建速度分析組件（舊版）
                 try:
@@ -18593,7 +18981,7 @@ class StyleHMainWindow(QMainWindow):
                     speed_loader.load_error.connect(lambda error: print(f"[ERROR] 速度數據載入失敗: {error}"))
                     
                     # 開始載入數據
-                    print(f"[SPEED] 開始載入速度數據: {driver1} vs {driver2}")
+                    logger.debug(f"[SPEED] 開始載入速度數據: {driver1} vs {driver2}")
                     speed_loader.load_speed_data(
                         year=params['year'],
                         race=params['race'], 
@@ -18609,37 +18997,37 @@ class StyleHMainWindow(QMainWindow):
                     chart_widget.speed_loader = speed_loader
                     
                     # 舊版速度分析視窗創建（僅作為回退，應該避免使用）
-                    print(f"[WARNING] [LEGACY] 使用舊版速度分析創建模式")
+                    logger.warning(f"[WARNING] [LEGACY] 使用舊版速度分析創建模式")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入速度分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入速度分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('speed_analysis')
                 
             elif chart_type == 'rpm':
                 # RPM分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到RPM分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到RPM分析請求，嘗試新版模組架構")
                 
                 # 使用新版模組化架構創建RPM分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入RPM分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入RPM分析模組...")
                     from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_mdi import RPMAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ RPM分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ RPM分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = RPMAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ RPM模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ RPM模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -18647,13 +19035,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化RPM分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化RPM分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -18661,10 +19049,10 @@ class StyleHMainWindow(QMainWindow):
                             race=params['race'], 
                             session=params['session']
                         )
-                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
-                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -18688,7 +19076,7 @@ class StyleHMainWindow(QMainWindow):
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] RPM分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] RPM分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -18697,7 +19085,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "rpm")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入RPM分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入RPM分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -18710,24 +19098,24 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] RPM分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] RPM分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ RPM分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ RPM分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版RPM分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版RPM分析模式")
                 
                 # 回退：舊版RPM分析模式
                 
@@ -18735,17 +19123,17 @@ class StyleHMainWindow(QMainWindow):
                     from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_chart_widget import RPMAnalysisChartWidget
                     from modules.gui.lap_analysis.rpm_analysis.rpm_analysis_data_loader import RPMAnalysisDataLoader
                     
-                    print(f"[CREATE_DEBUG] 📦 創建RPM分析組件...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 創建RPM分析組件...")
                     chart_widget = RPMAnalysisChartWidget()
                     
                     # 創建RPM資料載入器
-                    print(f"[CREATE_DEBUG] � 創建RPM資料載入器...")
+                    logger.debug(f"[CREATE_DEBUG] � 創建RPM資料載入器...")
                     rpm_loader = RPMAnalysisDataLoader()
                     rpm_loader.data_loaded.connect(chart_widget.update_rpm_data)
                     rpm_loader.load_error.connect(lambda error: print(f"[ERROR] RPM資料載入失敗: {error}"))
                     
                     # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入RPM資料: {driver1} vs {driver2}")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 開始載入RPM資料: {driver1} vs {driver2}")
                     
                     session_info = {
                         'year': params['year'],
@@ -18763,42 +19151,42 @@ class StyleHMainWindow(QMainWindow):
                     # 將載入器保存到widget以避免被回收
                     chart_widget.rpm_loader = rpm_loader
                     
-                    print(f"[OK] RPM分析組件創建成功")
+                    logger.debug(f"[OK] RPM分析組件創建成功")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入RPM分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入RPM分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('rpm')
                 except Exception as e:
-                    print(f"[ERROR] RPM分析組件創建失敗: {e}")
+                    logger.error(f"[ERROR] RPM分析組件創建失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('rpm')
                 
             elif chart_type == 'gear':
                 # 檔位分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到檔位分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到檔位分析請求，嘗試新版模組架構")
                 
                 # 使用新版模組化架構創建檔位分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入檔位分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入檔位分析模組...")
                     from modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi import GearAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 檔位分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 檔位分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = GearAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 檔位模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 檔位模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -18806,13 +19194,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化檔位分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化檔位分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -18820,10 +19208,10 @@ class StyleHMainWindow(QMainWindow):
                             race=params['race'], 
                             session=params['session']
                         )
-                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
-                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -18847,7 +19235,7 @@ class StyleHMainWindow(QMainWindow):
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 檔位分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 檔位分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -18856,7 +19244,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "gear")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入檔位分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入檔位分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -18869,41 +19257,41 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 檔位分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 檔位分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ 檔位分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ 檔位分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版檔位分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版檔位分析模式")
                 
                 # 回退：舊版檔位分析模式
                 try:
                     from modules.gui.lap_analysis.gear_analysis.gear_analysis_chart_widget import GearAnalysisChartWidget
                     from modules.gui.lap_analysis.gear_analysis.gear_analysis_data_loader import GearAnalysisDataLoader
                     
-                    print(f"[CREATE_DEBUG] 📦 創建檔位分析組件...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 創建檔位分析組件...")
                     chart_widget = GearAnalysisChartWidget()
                     
                     # 創建檔位資料載入器
-                    print(f"[CREATE_DEBUG] 📊 創建檔位資料載入器...")
+                    logger.debug(f"[CREATE_DEBUG] 📊 創建檔位資料載入器...")
                     gear_loader = GearAnalysisDataLoader()
                     gear_loader.data_loaded.connect(chart_widget.update_gear_data)
                     gear_loader.load_error.connect(lambda error: print(f"[ERROR] 檔位資料載入失敗: {error}"))
                     
                     # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入檔位資料: {driver1} vs {driver2}")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 開始載入檔位資料: {driver1} vs {driver2}")
                     
                     session_info = {
                         'year': params['year'],
@@ -18921,42 +19309,42 @@ class StyleHMainWindow(QMainWindow):
                     # 將載入器保存到widget以避免被回收
                     chart_widget.gear_loader = gear_loader
                     
-                    print(f"[OK] 檔位分析組件創建成功")
+                    logger.debug(f"[OK] 檔位分析組件創建成功")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入檔位分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入檔位分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('gear')
                 except Exception as e:
-                    print(f"[ERROR] 檔位分析組件創建失敗: {e}")
+                    logger.error(f"[ERROR] 檔位分析組件創建失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('gear')
 
             elif chart_type == 'Speeddiff' or chart_type == 'speeddiff' or chart_type == 'speed_diff':
                 # 速度差分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到速度差分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到速度差分析請求，嘗試新版模組架構")
 
                 # 使用新版模組化架構創建速度差分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入速度差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入速度差分析模組...")
                     from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_mdi import SpeeddiffAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 速度差分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 速度差分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = SpeeddiffAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 速度差模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 速度差模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -18964,13 +19352,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化速度差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化速度差分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -18982,10 +19370,10 @@ class StyleHMainWindow(QMainWindow):
                             lap1=analysis_module.lap1,
                             lap2=analysis_module.lap2
                         )
-                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
                         
                         # 創建子視窗並設置標題 - 使用與 RPM 分析相同的模式
-                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -18998,17 +19386,17 @@ class StyleHMainWindow(QMainWindow):
                         sub_window.window_closed.connect(
                             partial(self.on_lap_analysis_window_closed, analysis_module)
                         )
-                        print(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
                         
                         # 設置視窗大小
                         sub_window.resize(1200, 800)
-                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
                         
                         # 添加到MDI區域
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 速度差分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 速度差分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19017,7 +19405,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "Speeddiff")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入速度差分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入速度差分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19030,41 +19418,41 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 速度差分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 速度差分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ 速度差分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ 速度差分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版速度差分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版速度差分析模式")
                 
                 # 回退：舊版速度差分析模式
                 try:
                     from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_chart_widget import SpeeddiffAnalysisChartWidget
                     from modules.gui.lap_analysis.speeddiff_analysis.speeddiff_analysis_data_loader import SpeeddiffAnalysisDataLoader
                     
-                    print(f"[CREATE_DEBUG] 📦 創建速度差分析組件...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 創建速度差分析組件...")
                     chart_widget = SpeeddiffAnalysisChartWidget()
                     
                     # 創建速度差資料載入器
-                    print(f"[CREATE_DEBUG] 📊 創建速度差資料載入器...")
+                    logger.debug(f"[CREATE_DEBUG] 📊 創建速度差資料載入器...")
                     Speeddiff_loader = SpeeddiffAnalysisDataLoader()
                     Speeddiff_loader.data_loaded.connect(chart_widget.update_speeddiff_data)
                     Speeddiff_loader.load_error.connect(lambda error: print(f"[ERROR] 速度差資料載入失敗: {error}"))
                     
                     # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入速度差資料: {driver1} vs {driver2}")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 開始載入速度差資料: {driver1} vs {driver2}")
                     
                     session_info = {
                         'year': params['year'],
@@ -19082,42 +19470,42 @@ class StyleHMainWindow(QMainWindow):
                     # 將載入器保存到widget以避免被回收
                     chart_widget.Speeddiff_loader = Speeddiff_loader
                     
-                    print(f"[OK] 速度差分析組件創建成功")
+                    logger.debug(f"[OK] 速度差分析組件創建成功")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入速度差分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入速度差分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('speeddiff')
                 except Exception as e:
-                    print(f"[ERROR] 速度差分析組件創建失敗: {e}")
+                    logger.error(f"[ERROR] 速度差分析組件創建失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('speeddiff')
                 
             elif chart_type == 'acceleration':
                 # 加速度分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到加速度分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到加速度分析請求，嘗試新版模組架構")
                 
                 # 使用新版模組化架構創建加速度分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入加速度分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入加速度分析模組...")
                     from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi import accelerationAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 加速度分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 加速度分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = accelerationAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 加速度模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 加速度模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -19125,13 +19513,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化加速度分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化加速度分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -19143,10 +19531,10 @@ class StyleHMainWindow(QMainWindow):
                             lap1=analysis_module.lap1,
                             lap2=analysis_module.lap2
                         )
-                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
                         
                         # 創建子視窗並設置標題 - 使用與 RPM 分析相同的模式
-                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -19159,17 +19547,17 @@ class StyleHMainWindow(QMainWindow):
                         sub_window.window_closed.connect(
                             partial(self.on_lap_analysis_window_closed, analysis_module)
                         )
-                        print(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
                         
                         # 設置視窗大小
                         sub_window.resize(1200, 800)
-                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
                         
                         # 添加到MDI區域
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 加速度分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 加速度分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19178,7 +19566,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "acceleration")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入加速度分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入加速度分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19191,41 +19579,41 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 加速度分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 加速度分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ 加速度分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ 加速度分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版加速度分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版加速度分析模式")
                 
                 # 回退：舊版加速度分析模式
                 try:
                     from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_chart_widget import accelerationAnalysisChartWidget
                     from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_data_loader import accelerationAnalysisDataLoader
                     
-                    print(f"[CREATE_DEBUG] 📦 創建加速度分析組件...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 創建加速度分析組件...")
                     chart_widget = accelerationAnalysisChartWidget()
                     
                     # 創建加速度資料載入器
-                    print(f"[CREATE_DEBUG] 📊 創建加速度資料載入器...")
+                    logger.debug(f"[CREATE_DEBUG] 📊 創建加速度資料載入器...")
                     acceleration_loader = accelerationAnalysisDataLoader()
                     acceleration_loader.data_loaded.connect(chart_widget.update_acceleration_data)
                     acceleration_loader.load_error.connect(lambda error: print(f"[ERROR] 加速度資料載入失敗: {error}"))
                     
                     # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入加速度資料: {driver1} vs {driver2}")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 開始載入加速度資料: {driver1} vs {driver2}")
                     
                     session_info = {
                         'year': params['year'],
@@ -19243,42 +19631,42 @@ class StyleHMainWindow(QMainWindow):
                     # 將載入器保存到widget以避免被回收
                     chart_widget.acceleration_loader = acceleration_loader
                     
-                    print(f"[OK] 加速度分析組件創建成功")
+                    logger.debug(f"[OK] 加速度分析組件創建成功")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入加速度分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入加速度分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('acceleration')
                 except Exception as e:
-                    print(f"[ERROR] 加速度分析組件創建失敗: {e}")
+                    logger.error(f"[ERROR] 加速度分析組件創建失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('acceleration')
 
             elif chart_type == 'throttle':
                 # 油門分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到油門分析請求，使用新版模組架構")
                 
                 # 使用新版模組化架構創建油門分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入油門分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入油門分析模組...")
                     from modules.gui.lap_analysis.Throttle_analysis.throttle_analysis_mdi import ThrottleAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 油門分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 油門分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = ThrottleAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 油門模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 油門模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -19286,13 +19674,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化油門分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化油門分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -19300,10 +19688,10 @@ class StyleHMainWindow(QMainWindow):
                             race=params['race'], 
                             session=params['session']
                         )
-                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
-                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -19326,7 +19714,7 @@ class StyleHMainWindow(QMainWindow):
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 油門分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 油門分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19335,7 +19723,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "throttle")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）- 與速度分析完全一致
-                        print(f"[CREATE_DEBUG] 🚀 自動載入油門分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入油門分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19348,53 +19736,53 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 油門分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 油門分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] 油門分析模組創建失敗: {e}，回退到舊版模式")
+                    logger.error(f"[ERROR] 油門分析模組創建失敗: {e}，回退到舊版模式")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版油門分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版油門分析模式")
                 
                 # 回退：特殊處理油門分析（舊版模式）
                 if driver2 is None:
                     driver2 = driver1
                     lap2_number = lap1_number
-                    print(f"[THROTTLE] 油門分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
+                    logger.debug(f"[THROTTLE] 油門分析自動設定: 車手2={driver2}, 圈數={lap2_number} (與車手1相同)")
 
             elif chart_type == 'distancediff':
                 # 距離差分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] 🔄 檢測到距離差分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🔄 檢測到距離差分析請求，嘗試新版模組架構")
 
                 # 使用新版模組化架構創建距離差分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入距離差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入距離差分析模組...")
                     from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi import distancediffAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 距離差分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 距離差分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = distancediffAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 距離差模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 距離差模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -19402,13 +19790,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化距離差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化距離差分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -19420,10 +19808,10 @@ class StyleHMainWindow(QMainWindow):
                             lap1=analysis_module.lap1,
                             lap2=analysis_module.lap2
                         )
-                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
                         
                         # 創建子視窗並設置標題 - 使用與 RPM 分析相同的模式
-                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -19436,17 +19824,17 @@ class StyleHMainWindow(QMainWindow):
                         sub_window.window_closed.connect(
                             partial(self.on_lap_analysis_window_closed, analysis_module)
                         )
-                        print(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
                         
                         # 設置視窗大小
                         sub_window.resize(1200, 800)
-                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
                         
                         # 添加到MDI區域
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 距離差分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 距離差分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19455,7 +19843,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "distancediff")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入距離差分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入距離差分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19468,41 +19856,41 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 距離差分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 距離差分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ 距離差分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ 距離差分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版距離差分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版距離差分析模式")
                 
                 # 回退：舊版距離差分析模式
                 try:
                     from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_chart_widget import distancediffAnalysisChartWidget
                     from modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_data_loader import distancediffAnalysisDataLoader
                     
-                    print(f"[CREATE_DEBUG] 📦 創建距離差分析組件...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 創建距離差分析組件...")
                     chart_widget = distancediffAnalysisChartWidget()
                     
                     # 創建距離差資料載入器
-                    print(f"[CREATE_DEBUG] 📊 創建距離差資料載入器...")
+                    logger.debug(f"[CREATE_DEBUG] 📊 創建距離差資料載入器...")
                     distancediff_loader = distancediffAnalysisDataLoader()
                     distancediff_loader.data_loaded.connect(chart_widget.update_distancediff_data)
                     distancediff_loader.load_error.connect(lambda error: print(f"[ERROR] 距離差資料載入失敗: {error}"))
                     
                     # 開始載入資料
-                    print(f"[CREATE_DEBUG] 🚀 開始載入距離差資料: {driver1} vs {driver2}")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 開始載入距離差資料: {driver1} vs {driver2}")
                     
                     session_info = {
                         'year': params['year'],
@@ -19520,42 +19908,42 @@ class StyleHMainWindow(QMainWindow):
                     # 將載入器保存到widget以避免被回收
                     chart_widget.distancediff_loader = distancediff_loader
                     
-                    print(f"[OK] 距離差分析組件創建成功")
+                    logger.debug(f"[OK] 距離差分析組件創建成功")
                     
                 except ImportError as e:
-                    print(f"[ERROR] 無法導入距離差分析模組: {e}")
+                    logger.error(f"[ERROR] 無法導入距離差分析模組: {e}")
                     chart_widget = self.create_placeholder_telemetry_widget('distancediff')
                 except Exception as e:
-                    print(f"[ERROR] 距離差分析組件創建失敗: {e}")
+                    logger.error(f"[ERROR] 距離差分析組件創建失敗: {e}")
                     import traceback
                     traceback.print_exc()
                     chart_widget = self.create_placeholder_telemetry_widget('distancediff')
                 
             elif chart_type == 'timediff':
                 # 時間差分析 - 使用新版模組架構
-                print(f"[CREATE_DEBUG] ⏱️ 檢測到時間差分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] ⏱️ 檢測到時間差分析請求，嘗試新版模組架構")
 
                 # 使用新版模組化架構創建時間差分析
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入時間差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入時間差分析模組...")
                     from modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi import timediffAnalysisModule
-                    print(f"[CREATE_DEBUG] ✅ 時間差分析模組導入成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 時間差分析模組導入成功")
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = timediffAnalysisModule()
-                    print(f"[CREATE_DEBUG] ✅ 時間差模組實例創建成功")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 時間差模組實例創建成功")
                     
                     # 創建正確的參數提供者
                     parameter_provider = MainWindowParameterProvider(self)
                     analysis_module.parameter_provider = parameter_provider
-                    print(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 參數提供者設置完成")
                     
                     # 設置當前參數
                     analysis_module.current_year = str(params['year'])
                     analysis_module.current_race = params['race']
                     analysis_module.current_session = params['session']
-                    print(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] ✅ 基本參數設置完成: {params['year']} {params['race']} {params['session']}")
                     
                     # 設置車手和圈數參數
                     analysis_module.driver1 = driver1 if driver1 else "VER"
@@ -19563,13 +19951,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化時間差分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化時間差分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -19581,10 +19969,10 @@ class StyleHMainWindow(QMainWindow):
                             lap1=analysis_module.lap1,
                             lap2=analysis_module.lap2
                         )
-                        print(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📝 視窗標題: {window_title}")
                         
                         # 創建子視窗並設置標題
-                        print(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🖼️ 創建MDI子視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -19597,17 +19985,17 @@ class StyleHMainWindow(QMainWindow):
                         sub_window.window_closed.connect(
                             partial(self.on_lap_analysis_window_closed, analysis_module)
                         )
-                        print(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 視窗關閉信號已連接")
                         
                         # 設置視窗大小
                         sub_window.resize(1200, 800)
-                        print(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 子視窗創建成功")
                         
                         # 添加到MDI區域
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 時間差分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 時間差分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19616,7 +20004,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "timediff")
                         
                         # 自動載入數據
-                        print(f"[CREATE_DEBUG] 🚀 自動載入時間差分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入時間差分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19629,37 +20017,37 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 時間差分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 時間差分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] ❌ 時間差分析模組創建失敗: {e}")
-                    print(f"[ERROR] 錯誤類型: {type(e).__name__}")
-                    print(f"[ERROR] 回退到舊版模式")
+                    logger.error(f"[ERROR] ❌ 時間差分析模組創建失敗: {e}")
+                    logger.error(f"[ERROR] 錯誤類型: {type(e).__name__}")
+                    logger.error(f"[ERROR] 回退到舊版模式")
                     import traceback
-                    print(f"[ERROR] 詳細錯誤追踪:")
+                    logger.error(f"[ERROR] 詳細錯誤追踪:")
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版時間差分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版時間差分析模式")
                 
                 # 回退：創建佔位組件
                 chart_widget = self.create_placeholder_telemetry_widget('timediff')
                 
             elif chart_type == 'brake':
                 # 使用新的煞車分析模組
-                print(f"[CREATE_DEBUG] 🎯 檢測到煞車分析請求，嘗試新版模組架構")
+                logger.debug(f"[CREATE_DEBUG] 🎯 檢測到煞車分析請求，嘗試新版模組架構")
                 
                 try:
-                    print(f"[CREATE_DEBUG] 📦 正在導入煞車分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 📦 正在導入煞車分析模組...")
                     from modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi import BrakeAnalysisModule
                     
-                    print(f"[CREATE_DEBUG] 🔧 創建模組實例...")
+                    logger.debug(f"[CREATE_DEBUG] 🔧 創建模組實例...")
                     # 創建模組實例
                     analysis_module = BrakeAnalysisModule()
                     
@@ -19678,13 +20066,13 @@ class StyleHMainWindow(QMainWindow):
                     analysis_module.lap1 = lap1_number if lap1_number else 1
                     analysis_module.lap2 = lap2_number  # 允許為 None
                     
-                    print(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
-                    print(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
+                    logger.debug(f"[CREATE_DEBUG] ⚙️ 模組參數已設置: {params['year']} {params['race']} {params['session']}")
+                    logger.debug(f"[CREATE_DEBUG] 🏁 車手和圈數已設置: {analysis_module.driver1} vs {analysis_module.driver2 if analysis_module.driver2 else 'None'}, 第{analysis_module.lap1}圈 vs 第{analysis_module.lap2 if analysis_module.lap2 else 'None'}圈")
                     
                     # 初始化模組
-                    print(f"[CREATE_DEBUG] 🚀 初始化煞車分析模組...")
+                    logger.debug(f"[CREATE_DEBUG] 🚀 初始化煞車分析模組...")
                     if analysis_module.initialize_module():
-                        print(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
+                        logger.debug(f"[CREATE_DEBUG] ✅ 模組初始化成功！")
                         
                         # 獲取模組標題，傳遞當前參數
                         window_title = analysis_module.get_window_title(
@@ -19692,10 +20080,10 @@ class StyleHMainWindow(QMainWindow):
                             race=params['race'], 
                             session=params['session']
                         )
-                        print(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
+                        logger.debug(f"[CREATE_DEBUG] 📋 視窗標題: {window_title}")
                         
                         # 創建帶有模組的視窗
-                        print(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
+                        logger.debug(f"[CREATE_DEBUG] 🪟 創建新版模組視窗...")
                         sub_window = PopoutSubWindow(window_title, current_mdi_area, analysis_module)
                         sub_window.setWidget(analysis_module.get_widget())
                         
@@ -19719,7 +20107,7 @@ class StyleHMainWindow(QMainWindow):
                         current_mdi_area.addSubWindow(sub_window)
                         sub_window.show()
                         
-                        print(f"[OK] [NEW_MODULE] 煞車分析模組視窗已創建: {window_title}")
+                        logger.debug(f"[OK] [NEW_MODULE] 煞車分析模組視窗已創建: {window_title}")
                         
                         # 建立分析模組和子視窗的對應關係
                         analysis_module._sub_window = sub_window  # 存儲子視窗引用
@@ -19728,7 +20116,7 @@ class StyleHMainWindow(QMainWindow):
                         self.on_lap_analysis_window_opened(analysis_module, "brake")
                         
                         # 🔧 修復：自動載入數據（包含最速圈參數）
-                        print(f"[CREATE_DEBUG] 🚀 自動載入煞車分析數據...")
+                        logger.debug(f"[CREATE_DEBUG] 🚀 自動載入煞車分析數據...")
                         success = analysis_module.load_data(
                             year=params['year'],
                             race=params['race'],
@@ -19741,21 +20129,21 @@ class StyleHMainWindow(QMainWindow):
                         )
                         
                         if success:
-                            print(f"[CREATE_DEBUG] ✅ 數據載入成功！")
+                            logger.debug(f"[CREATE_DEBUG] ✅ 數據載入成功！")
                         else:
-                            print(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
+                            logger.debug(f"[CREATE_DEBUG] ⚠️ 數據載入失敗")
                         
-                        print(f"[CREATE_DEBUG] ========== 新版煞車模組創建完成 ==========")
+                        logger.debug(f"[CREATE_DEBUG] ========== 新版煞車模組創建完成 ==========")
                         return
                     else:
-                        print(f"[ERROR] 煞車分析模組初始化失敗，回退到舊版模式")
+                        logger.error(f"[ERROR] 煞車分析模組初始化失敗，回退到舊版模式")
                         
                 except Exception as e:
-                    print(f"[ERROR] 煞車分析模組創建失敗: {e}，回退到舊版模式")
+                    logger.error(f"[ERROR] 煞車分析模組創建失敗: {e}，回退到舊版模式")
                     import traceback
                     traceback.print_exc()
                 
-                print(f"[CREATE_DEBUG] ⚠️ 回退到舊版煞車分析模式")
+                logger.debug(f"[CREATE_DEBUG] ⚠️ 回退到舊版煞車分析模式")
                 # 回退到舊版
                 chart_widget = TelemetryChartWidget(chart_type)
                 
@@ -19812,7 +20200,7 @@ class StyleHMainWindow(QMainWindow):
             current_mdi_area.addSubWindow(sub_window)
             sub_window.show()
             
-            print(f"[OK] 已創建遙測視窗: {window_title}")
+            logger.debug(f"[OK] 已創建遙測視窗: {window_title}")
             
             # 檢查是否為圈速分析相關視窗，如果是則通知主視窗
             # 包含所有圈速分析子模組類型
@@ -19829,11 +20217,11 @@ class StyleHMainWindow(QMainWindow):
                 'distancediff'     # 累積距離差分析
             ]
             if chart_type in lap_analysis_types:
-                print(f"[LAP_CONTROL] [DEBUG]   🎯 檢測到圈速分析類型: {chart_type} - 觸發工具欄控件")
+                logger.debug(f"[LAP_CONTROL] [DEBUG]   🎯 檢測到圈速分析類型: {chart_type} - 觸發工具欄控件")
                 self.on_lap_analysis_window_opened(chart_widget, chart_type)
             
         except Exception as e:
-            print(f"[ERROR] 創建遙測視窗失敗 ({chart_type}): {e}")
+            logger.error(f"[ERROR] 創建遙測視窗失敗 ({chart_type}): {e}")
     
     def get_current_mdi_area(self, auto_create_tab=False):
         """
@@ -19847,42 +20235,42 @@ class StyleHMainWindow(QMainWindow):
             # 獲取當前分頁
             current_tab = self.tab_widget.currentWidget()
             if not current_tab:
-                print("[ERROR] 無法獲取當前分頁")
+                logger.error("[ERROR] 無法獲取當前分頁")
                 return None
             
             # [深度調試] 輸出當前分頁資訊
             current_index = self.tab_widget.currentIndex()
-            print(f"[MDI_AREA_DEBUG] ===== 查找 MDI 區域 =====")
-            print(f"[MDI_AREA_DEBUG] 當前分頁索引: {current_index}")
-            print(f"[MDI_AREA_DEBUG] 當前分頁 ObjectName: {current_tab.objectName()}")
-            print(f"[MDI_AREA_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
+            logger.debug(f"[MDI_AREA_DEBUG] ===== 查找 MDI 區域 =====")
+            logger.debug(f"[MDI_AREA_DEBUG] 當前分頁索引: {current_index}")
+            logger.debug(f"[MDI_AREA_DEBUG] 當前分頁 ObjectName: {current_tab.objectName()}")
+            logger.debug(f"[MDI_AREA_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
             
             # 檢查是否為主頁（歡迎頁）
             is_welcome_tab = (current_index == 0 and current_tab.objectName() == "welcome_tab")
-            print(f"[MDI_AREA_DEBUG] 是否為歡迎頁: {is_welcome_tab}")
+            logger.debug(f"[MDI_AREA_DEBUG] 是否為歡迎頁: {is_welcome_tab}")
             
             # ✅ 只有明確要求時才自動創建分頁（避免初始化時誤觸發）
             if is_welcome_tab and auto_create_tab:
-                print("[TAB] 💡 檢測到在主頁，自動創建 '分頁一' 避免 toolbar 衝突")
+                logger.debug("[TAB] 💡 檢測到在主頁，自動創建 '分頁一' 避免 toolbar 衝突")
                 self.add_new_tab()  # 創建 "分頁一"
                 # 重新獲取當前分頁（已切換到新分頁）
                 current_tab = self.tab_widget.currentWidget()
             elif is_welcome_tab:
                 # 主頁沒有 MDI 區域，直接返回 None
-                print("[TAB] 💡 當前在主頁，無 MDI 區域（未自動創建分頁）")
+                logger.debug("[TAB] 💡 當前在主頁，無 MDI 區域（未自動創建分頁）")
                 return None
             
             # [深度調試] 首先檢查 current_tab 本身是否就是 CustomMdiArea
-            print(f"[MDI_AREA_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
-            print(f"[MDI_AREA_DEBUG] current_tab 類別物件 ID: {id(type(current_tab))}")  # ✅ 新增
-            print(f"[MDI_AREA_DEBUG] CustomMdiArea 類別 ID: {id(CustomMdiArea)}")  # ✅ 新增
-            print(f"[MDI_AREA_DEBUG] 兩者是否相同類別: {type(current_tab) is CustomMdiArea}")  # ✅ 新增
+            logger.debug(f"[MDI_AREA_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
+            logger.debug(f"[MDI_AREA_DEBUG] current_tab 類別物件 ID: {id(type(current_tab))}")
+            logger.debug(f"[MDI_AREA_DEBUG] CustomMdiArea 類別 ID: {id(CustomMdiArea)}")
+            logger.debug(f"[MDI_AREA_DEBUG] 兩者是否相同類別: {type(current_tab) is CustomMdiArea}")
             
             if isinstance(current_tab, CustomMdiArea):
-                print(f"[MDI_AREA_DEBUG] ✅ current_tab 本身就是 CustomMdiArea！")
-                print(f"[MDI_AREA_DEBUG] MDI ObjectName: {current_tab.objectName()}")
-                print(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(current_tab.subWindowList())}")
-                print(f"[MDI_AREA_DEBUG] ================================")
+                logger.debug(f"[MDI_AREA_DEBUG] ✅ current_tab 本身就是 CustomMdiArea！")
+                logger.debug(f"[MDI_AREA_DEBUG] MDI ObjectName: {current_tab.objectName()}")
+                logger.debug(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(current_tab.subWindowList())}")
+                logger.debug(f"[MDI_AREA_DEBUG] ================================")
                 return current_tab
             
             # 在當前分頁中查找 CustomMdiArea
@@ -19899,24 +20287,24 @@ class StyleHMainWindow(QMainWindow):
                                 return result
                 return None
             
-            print(f"[MDI_AREA_DEBUG] current_tab 不是 CustomMdiArea，開始遞歸查找...")
+            logger.debug(f"[MDI_AREA_DEBUG] current_tab 不是 CustomMdiArea，開始遞歸查找...")
             mdi_area = find_mdi_area(current_tab)
             
             if not mdi_area:
-                print(f"[MDI_AREA_DEBUG] ❌ 遞歸查找失敗")
-                print(f"[ERROR] 在當前分頁中未找到 MDI 區域: {current_tab.objectName()}")
-                print(f"[MDI_AREA_DEBUG] ================================")
+                logger.debug(f"[MDI_AREA_DEBUG] ❌ 遞歸查找失敗")
+                logger.error(f"[ERROR] 在當前分頁中未找到 MDI 區域: {current_tab.objectName()}")
+                logger.debug(f"[MDI_AREA_DEBUG] ================================")
                 return None
             
-            print(f"[MDI_AREA_DEBUG] ✅ 遞歸查找成功")
-            print(f"[MDI_AREA_DEBUG] MDI ObjectName: {mdi_area.objectName()}")
-            print(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(mdi_area.subWindowList())}")
-            print(f"[OK] 找到當前 MDI 區域: {mdi_area.objectName()}")
-            print(f"[MDI_AREA_DEBUG] ================================")
+            logger.debug(f"[MDI_AREA_DEBUG] ✅ 遞歸查找成功")
+            logger.debug(f"[MDI_AREA_DEBUG] MDI ObjectName: {mdi_area.objectName()}")
+            logger.debug(f"[MDI_AREA_DEBUG] MDI 子視窗數量: {len(mdi_area.subWindowList())}")
+            logger.debug(f"[OK] 找到當前 MDI 區域: {mdi_area.objectName()}")
+            logger.debug(f"[MDI_AREA_DEBUG] ================================")
             return mdi_area
             
         except Exception as e:
-            print(f"[ERROR] 獲取當前 MDI 區域失敗: {e}")
+            logger.error(f"[ERROR] 獲取當前 MDI 區域失敗: {e}")
             import traceback
             traceback.print_exc()
             return None
@@ -19974,7 +20362,7 @@ class StyleHMainWindow(QMainWindow):
         
         def log_step(step_name):
             elapsed = (time.perf_counter() - start_time) * 1000
-            print(f"[TRACK_DEBUG] {elapsed:7.2f}ms | {step_name}")
+            logger.debug(f"[TRACK_DEBUG] {elapsed:7.2f}ms | {step_name}")
         
         try:
             log_step("🚀 開始 open_track_analysis_window()")
@@ -20135,12 +20523,12 @@ class StyleHMainWindow(QMainWindow):
             
         except Exception as e:
             elapsed = (time.perf_counter() - start_time) * 1000
-            print(f"[TRACK_DEBUG] {elapsed:7.2f}ms | ❌ 異常: {e}")
+            logger.debug(f"[TRACK_DEBUG] {elapsed:7.2f}ms | ❌ 異常: {e}")
             import traceback
             traceback.print_exc()
             from core.gui_i18n import tr
             QMessageBox.critical(self, tr('error', 'Error'), f"{tr('track_window_error', 'Cannot open track analysis window')}: {str(e)}")
-            print(f"[STATUS] 賽道分析視窗開啟失敗: {str(e)}")
+            logger.debug(f"[STATUS] 賽道分析視窗開啟失敗: {str(e)}")
     
     def rain_analysis(self):
         """開啟降雨分析 - 使用通用圖表系統"""
@@ -20149,13 +20537,13 @@ class StyleHMainWindow(QMainWindow):
             self.remove_welcome_tab()
             
             params = self.get_current_parameters()
-            print(f"[RAIN] {params['year']} {params['race']} {params['session']}")
+            logger.debug(f"[RAIN] {params['year']} {params['race']} {params['session']}")
             
-            # 導入新的雨量分析模組 (使用通用圖表)
-            from modules.gui.rain_analysis.rain_analysis_module import RainAnalysisModuleAdapter
+            # 導入新的雨量分析模組 (使用 Universal MDI 架構)
+            from modules.gui.rain_analysis.rain_analysis_mdi import RainAnalysisUniversal
             
             # 創建雨量分析模組
-            rain_widget = RainAnalysisModuleAdapter(
+            rain_widget = RainAnalysisUniversal(
                 year=params['year'],
                 race=params['race'], 
                 session=params['session']
@@ -20171,13 +20559,13 @@ class StyleHMainWindow(QMainWindow):
             # 添加到活動分頁列表
             self.active_analysis_tabs.append(tab_title)
             
-            print(f"[OK] 降雨分析頁面已開啟: {tab_title} (使用通用圖表系統)")
+            logger.debug(f"[OK] 降雨分析頁面已開啟: {tab_title} (使用通用圖表系統)")
             
         except ImportError as e:
-            print(f"[ERROR] 降雨分析組件導入失敗: {e}")
+            logger.error(f"[ERROR] 降雨分析組件導入失敗: {e}")
             self.show_error_message("模組錯誤", f"無法載入降雨分析組件: {e}")
         except Exception as e:
-            print(f"[ERROR] 降雨分析開啟失敗: {e}")
+            logger.error(f"[ERROR] 降雨分析開啟失敗: {e}")
             import traceback
             traceback.print_exc()
             self.show_error_message("降雨分析錯誤", f"開啟降雨分析時發生錯誤: {e}")
@@ -20189,7 +20577,7 @@ class StyleHMainWindow(QMainWindow):
             self.remove_welcome_tab()
             
             params = self.get_current_parameters()
-            print(f"[分析] [TELEMETRY] 單場賽事總攬 - {params['year']} {params['race']} {params['session']}")
+            logger.debug(f"[分析] [TELEMETRY] 單場賽事總攬 - {params['year']} {params['race']} {params['session']}")
             
             # 導入單場賽事總攬模組
             from modules.gui.telemetry_analysis_mdi import TelemetryAnalysisModule
@@ -20208,7 +20596,7 @@ class StyleHMainWindow(QMainWindow):
             
             # 初始化模組
             if telemetry_module.initialize_module():
-                print(f"[OK] 單場賽事總攬模組初始化成功")
+                logger.debug(f"[OK] 單場賽事總攬模組初始化成功")
                 
                 # 創建子視窗
                 subwindow = QMdiSubWindow()
@@ -20231,21 +20619,21 @@ class StyleHMainWindow(QMainWindow):
                     # 觸發參數更新以載入數據
                     telemetry_module.update_parameters(params['year'], params['race'], params['session'])
                     
-                    print(f"[OK] 單場賽事總攬視窗已開啟: {window_title}")
+                    logger.debug(f"[OK] 單場賽事總攬視窗已開啟: {window_title}")
                 else:
-                    print("[ERROR] 無法獲取當前 MDI 區域")
+                    logger.error("[ERROR] 無法獲取當前 MDI 區域")
                     self.show_error_message("錯誤", "無法獲取當前 MDI 區域")
                     return
                 
             else:
-                print(f"[ERROR] 單場賽事總攬模組初始化失敗")
+                logger.error(f"[ERROR] 單場賽事總攬模組初始化失敗")
                 self.show_error_message("模組錯誤", "單場賽事總攬模組初始化失敗")
             
         except ImportError as e:
-            print(f"[ERROR] 單場賽事總攬模組導入失敗: {e}")
+            logger.error(f"[ERROR] 單場賽事總攬模組導入失敗: {e}")
             self.show_error_message("模組錯誤", f"無法載入單場賽事總覽模組: {e}")
         except Exception as e:
-            print(f"[ERROR] 單場賽事總覽開啟失敗: {e}")
+            logger.error(f"[ERROR] 單場賽事總覽開啟失敗: {e}")
             import traceback
             traceback.print_exc()
             self.show_error_message("單場賽事總覽錯誤", f"開啟單場賽事總覽時發生錯誤: {e}")
@@ -20266,45 +20654,45 @@ class StyleHMainWindow(QMainWindow):
     def tile_windows(self):
         """重新排列視窗 - 智能平鋪當前活動MDI區域中的所有子視窗"""
         
-        print(f"[TILE_DEBUG] ===== 開始 Tile Windows =====")
+        logger.debug(f"[TILE_DEBUG] ===== 開始 Tile Windows =====")
         
         # 獲取當前活動的MDI區域
         current_tab = self.tab_widget.currentWidget()
         if current_tab is None:
-            print(f"[TILE_DEBUG] ❌ current_tab 為 None")
+            logger.debug(f"[TILE_DEBUG] ❌ current_tab 為 None")
             return
         
-        print(f"[TILE_DEBUG] 當前分頁: {current_tab.objectName()}")
-        print(f"[TILE_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
+        logger.debug(f"[TILE_DEBUG] 當前分頁: {current_tab.objectName()}")
+        logger.debug(f"[TILE_DEBUG] 當前分頁類型: {type(current_tab).__name__}")
         
         # 查找當前分頁中的MDI區域
         mdi_area = None
         
         # 首先檢查當前分頁是否本身就是MDI區域
-        print(f"[TILE_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
+        logger.debug(f"[TILE_DEBUG] 檢查 current_tab 是否為 CustomMdiArea: {isinstance(current_tab, CustomMdiArea)}")
         
         if isinstance(current_tab, CustomMdiArea):
             mdi_area = current_tab
-            print(f"[TILE_DEBUG] ✅ current_tab 本身就是 MDI 區域")
+            logger.debug(f"[TILE_DEBUG] ✅ current_tab 本身就是 MDI 區域")
         else:
             # 否則在分頁的子元件中查找
-            print(f"[TILE_DEBUG] 開始查找子元件中的 CustomMdiArea...")
+            logger.debug(f"[TILE_DEBUG] 開始查找子元件中的 CustomMdiArea...")
             children = current_tab.findChildren(CustomMdiArea)
-            print(f"[TILE_DEBUG] 找到 {len(children)} 個 CustomMdiArea 子元件")
+            logger.debug(f"[TILE_DEBUG] 找到 {len(children)} 個 CustomMdiArea 子元件")
             for i, child in enumerate(children):
-                print(f"[TILE_DEBUG]   子元件 {i}: ObjectName={child.objectName()}, 子視窗數={len(child.subWindowList())}")
+                logger.debug(f"[TILE_DEBUG]   子元件 {i}: ObjectName={child.objectName()}, 子視窗數={len(child.subWindowList())}")
                 mdi_area = child
                 break
                 
         if mdi_area is None:
-            print(f"[TILE_DEBUG] ❌ 找不到 MDI 區域")
+            logger.debug(f"[TILE_DEBUG] ❌ 找不到 MDI 區域")
             return
         
-        print(f"[TILE_DEBUG] ✅ 找到 MDI 區域: {mdi_area.objectName()}")
+        logger.debug(f"[TILE_DEBUG] ✅ 找到 MDI 區域: {mdi_area.objectName()}")
         
         # 獲取所有子視窗並過濾出可見的視窗
         all_subwindows = mdi_area.subWindowList()
-        print(f"[TILE_DEBUG] MDI 區域總共有 {len(all_subwindows)} 個子視窗")
+        logger.debug(f"[TILE_DEBUG] MDI 區域總共有 {len(all_subwindows)} 個子視窗")
         
         # 只包含可見且未關閉的視窗，並排除固定的歡迎頁面視窗
         subwindows = [
@@ -20313,53 +20701,53 @@ class StyleHMainWindow(QMainWindow):
             and not sw.isWindowModified() 
             and not sw.property("is_welcome_fixed")  # 排除固定視窗
         ]
-        print(f"[TILE_DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
+        logger.debug(f"[TILE_DEBUG] 找到 {len(all_subwindows)} 個子視窗，其中 {len(subwindows)} 個可見且非固定")
         
         if not subwindows:
-            print(f"[TILE DEBUG] 沒有可見的非固定子視窗需要排列")
+            logger.debug(f"[TILE DEBUG] 沒有可見的非固定子視窗需要排列")
             return
         
         # 移除有問題的清理邏輯 - 直接使用現有的子視窗列表
-        print(f"[TILE DEBUG] 準備排列 {len(subwindows)} 個視窗")
+        logger.debug(f"[TILE DEBUG] 準備排列 {len(subwindows)} 個視窗")
         
         # 計算排列配置 - 右邊和下方保留 10px
         margin_right = 10
         margin_bottom = 10
         available_width = mdi_area.width() - margin_right
         available_height = mdi_area.height() - margin_bottom
-        print(f"[TILE DEBUG] MDI區域大小: {mdi_area.width()}x{mdi_area.height()}")
-        print(f"[TILE DEBUG] 可用空間（扣除右下邊距）: {available_width}x{available_height}")
+        logger.debug(f"[TILE DEBUG] MDI區域大小: {mdi_area.width()}x{mdi_area.height()}")
+        logger.debug(f"[TILE DEBUG] 可用空間（扣除右下邊距）: {available_width}x{available_height}")
         
         # 計算最佳的行列配置
         num_windows = len(subwindows)
-        print(f"[TILE DEBUG] 視窗數量: {num_windows}")
+        logger.debug(f"[TILE DEBUG] 視窗數量: {num_windows}")
         
         if num_windows == 0:
-            print(f"[TILE DEBUG] 視窗數量為0，退出")
+            logger.debug(f"[TILE DEBUG] 視窗數量為0，退出")
             return  # 沒有視窗需要排列
             
         cols = int(num_windows ** 0.5)
-        print(f"[TILE DEBUG] 初始計算 cols: {cols}")
+        logger.debug(f"[TILE DEBUG] 初始計算 cols: {cols}")
         
         if cols == 0:  # 防止除零錯誤
             cols = 1
-            print(f"[TILE DEBUG] cols 修正為 1")
+            logger.debug(f"[TILE DEBUG] cols 修正為 1")
             
         if cols * cols < num_windows:
             cols += 1
-            print(f"[TILE DEBUG] cols 調整為: {cols}")
+            logger.debug(f"[TILE DEBUG] cols 調整為: {cols}")
             
         rows = (num_windows + cols - 1) // cols
-        print(f"[TILE DEBUG] 計算得到 rows: {rows}")
+        logger.debug(f"[TILE DEBUG] 計算得到 rows: {rows}")
         
         if rows == 0:  # 額外保護
             rows = 1
-            print(f"[TILE DEBUG] rows 修正為 1")
+            logger.debug(f"[TILE DEBUG] rows 修正為 1")
         
         # 計算每個視窗的尺寸
         window_width = available_width // cols if cols > 0 else available_width
         window_height = available_height // rows if rows > 0 else available_height
-        print(f"[TILE DEBUG] 每個視窗尺寸: {window_width}x{window_height}")
+        logger.debug(f"[TILE DEBUG] 每個視窗尺寸: {window_width}x{window_height}")
         
         # 檢查最小尺寸限制是否會導致超出範圍
         min_width, min_height = 250, 150
@@ -20371,35 +20759,35 @@ class StyleHMainWindow(QMainWindow):
         # 只在不會超出範圍時才套用最小尺寸限制
         if total_width_with_min <= available_width:
             window_width = max(window_width, min_width)
-            print(f"[TILE DEBUG] ✅ 套用最小寬度限制: {window_width}")
+            logger.debug(f"[TILE DEBUG] ✅ 套用最小寬度限制: {window_width}")
         else:
-            print(f"[TILE DEBUG] ⚠️ 跳過最小寬度限制（會超出範圍：{total_width_with_min} > {available_width}）")
+            logger.debug(f"[TILE DEBUG] ⚠️ 跳過最小寬度限制（會超出範圍：{total_width_with_min} > {available_width}）")
         
         if total_height_with_min <= available_height:
             window_height = max(window_height, min_height)
-            print(f"[TILE DEBUG] ✅ 套用最小高度限制: {window_height}")
+            logger.debug(f"[TILE DEBUG] ✅ 套用最小高度限制: {window_height}")
         else:
-            print(f"[TILE DEBUG] ⚠️ 跳過最小高度限制（會超出範圍：{total_height_with_min} > {available_height}）")
+            logger.debug(f"[TILE DEBUG] ⚠️ 跳過最小高度限制（會超出範圍：{total_height_with_min} > {available_height}）")
         
-        print(f"[TILE DEBUG] 最終視窗尺寸: {window_width}x{window_height}")
+        logger.debug(f"[TILE DEBUG] 最終視窗尺寸: {window_width}x{window_height}")
         
         # 排列視窗
-        print(f"[TILE DEBUG] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
+        logger.debug(f"[TILE DEBUG] 開始排列 {len(subwindows)} 個視窗，配置: {rows}行 x {cols}列")
         
         # 預檢查：確保所有視窗的基本設定一致
-        print(f"[TILE DEBUG] ========== 預檢查視窗設定 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 預檢查視窗設定 ==========")
         for i, subwindow in enumerate(subwindows):
             widget = subwindow.widget()
             if widget:
                 min_size = widget.minimumSize()
                 size_policy = widget.sizePolicy()
-                print(f"[TILE CHECK] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
+                logger.debug(f"[TILE CHECK] 視窗 {i}: 最小尺寸({min_size.width()}x{min_size.height()}), 尺寸策略({size_policy.horizontalPolicy()}x{size_policy.verticalPolicy()})")
                 
                 # 檢查是否有調試方法可以調用
                 if hasattr(widget, 'debug_window_status'):
-                    print(f"[TILE CHECK] 調用視窗 {i} 的狀態報告:")
+                    logger.debug(f"[TILE CHECK] 調用視窗 {i} 的狀態報告:")
                     widget.debug_window_status()
-        print(f"[TILE DEBUG] ========== 預檢查完成 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 預檢查完成 ==========")
         
         for i, subwindow in enumerate(subwindows):
             row = i // cols
@@ -20408,7 +20796,7 @@ class StyleHMainWindow(QMainWindow):
             x = col * window_width
             y = row * window_height
             
-            print(f"[TILE DEBUG] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
+            logger.debug(f"[TILE DEBUG] 視窗 {i}: 位置({x}, {y}) 尺寸({window_width}, {window_height})")
             
             # 設置視窗位置和尺寸
             subwindow.setGeometry(x, y, window_width, window_height)
@@ -20422,32 +20810,32 @@ class StyleHMainWindow(QMainWindow):
             
             # 檢查實際尺寸並調試
             actual_size = subwindow.size()
-            print(f"[TILE DEBUG] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
+            logger.debug(f"[TILE DEBUG] 視窗 {i} 實際尺寸: {actual_size.width()}x{actual_size.height()}")
             
             if actual_size.width() != window_width or actual_size.height() != window_height:
-                print(f"[TILE WARNING] 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
+                logger.debug(f"[TILE WARNING] 視窗 {i} 尺寸不匹配！目標: {window_width}x{window_height}, 實際: {actual_size.width()}x{actual_size.height()}")
                 
                 # 嘗試重新設置
                 subwindow.resize(window_width, window_height)
                 QApplication.processEvents()
                 final_size = subwindow.size()
-                print(f"[TILE DEBUG] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
+                logger.debug(f"[TILE DEBUG] 視窗 {i} 重設後尺寸: {final_size.width()}x{final_size.height()}")
         
         # 最終同步步驟：確保所有視窗尺寸一致
-        print(f"[TILE DEBUG] ========== 開始最終尺寸同步 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 開始最終尺寸同步 ==========")
         
         # 收集所有視窗的實際尺寸
         actual_sizes = []
         for i, subwindow in enumerate(subwindows):
             size = subwindow.size()
             actual_sizes.append((size.width(), size.height()))
-            print(f"[TILE SYNC] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
+            logger.debug(f"[TILE SYNC] 視窗 {i} 當前尺寸: {size.width()}x{size.height()}")
         
         # 找到最小的共同尺寸（確保所有視窗都能適應）
         if actual_sizes:
             min_width = min(size[0] for size in actual_sizes)
             min_height = min(size[1] for size in actual_sizes)
-            print(f"[TILE SYNC] 統一目標尺寸: {min_width}x{min_height}")
+            logger.debug(f"[TILE SYNC] 統一目標尺寸: {min_width}x{min_height}")
             
             # 將所有視窗設置為相同尺寸
             for i, subwindow in enumerate(subwindows):
@@ -20456,37 +20844,37 @@ class StyleHMainWindow(QMainWindow):
                 QApplication.processEvents()
                 
                 final_size = subwindow.size()
-                print(f"[TILE SYNC] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
+                logger.debug(f"[TILE SYNC] 視窗 {i} 最終尺寸: {final_size.width()}x{final_size.height()}")
         
-        print(f"[TILE DEBUG] ========== 尺寸同步完成 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 尺寸同步完成 ==========")
         
         # 調試：檢查每個子視窗的邊距設定
-        print(f"[TILE DEBUG] ========== 子視窗邊距檢查 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 子視窗邊距檢查 ==========")
         for i, subwindow in enumerate(subwindows):
             widget = subwindow.widget()
-            print(f"[TILE DEBUG] 子視窗 {i}: {subwindow.windowTitle()}")
+            logger.debug(f"[TILE DEBUG] 子視窗 {i}: {subwindow.windowTitle()}")
             
             # 檢查 MDI 子視窗的邊距
             margins = subwindow.contentsMargins()
-            print(f"[TILE DEBUG]   MDI邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
+            logger.debug(f"[TILE DEBUG]   MDI邊距: left={margins.left()}, top={margins.top()}, right={margins.right()}, bottom={margins.bottom()}")
             
             # 檢查子視窗的frameGeometry vs geometry
             frame_geo = subwindow.frameGeometry()
             geo = subwindow.geometry()
-            print(f"[TILE DEBUG]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
-            print(f"[TILE DEBUG]   geometry: {geo.width()}x{geo.height()}")
-            print(f"[TILE DEBUG]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
+            logger.debug(f"[TILE DEBUG]   frameGeometry: {frame_geo.width()}x{frame_geo.height()}")
+            logger.debug(f"[TILE DEBUG]   geometry: {geo.width()}x{geo.height()}")
+            logger.debug(f"[TILE DEBUG]   邊框差異: width={frame_geo.width()-geo.width()}, height={frame_geo.height()-geo.height()}")
             
             if widget:
                 widget_size = widget.size()
-                print(f"[TILE DEBUG]   內部widget尺寸: {widget_size.width()}x{widget_size.height()}")
+                logger.debug(f"[TILE DEBUG]   內部widget尺寸: {widget_size.width()}x{widget_size.height()}")
                 
                 # 如果有調試方法，調用之
                 if hasattr(widget, 'debug_margin_analysis'):
-                    print(f"[TILE DEBUG]   調用 widget 邊距分析...")
+                    logger.debug(f"[TILE DEBUG]   調用 widget 邊距分析...")
                     widget.debug_margin_analysis()
         
-        print(f"[TILE DEBUG] ========== 邊距檢查完成 ==========")
+        logger.debug(f"[TILE DEBUG] ========== 邊距檢查完成 ==========")
         
         # 刷新MDI區域
         mdi_area.update()
@@ -20742,9 +21130,9 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(self, 'mdi_area'):
                 self.mdi_area.addSubWindow(driver_sub)
                 driver_sub.show()
-                print(f"[MENU] Opened Driver Standings (year={current_year})")
+                logger.debug(f"[MENU] Opened Driver Standings (year={current_year})")
         except Exception as e:
-            print(f"[MENU] Failed to open Driver Standings: {e}")
+            logger.debug(f"[MENU] Failed to open Driver Standings: {e}")
             import traceback
             traceback.print_exc()
     
@@ -20767,9 +21155,9 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(self, 'mdi_area'):
                 self.mdi_area.addSubWindow(constructor_sub)
                 constructor_sub.show()
-                print(f"[MENU] Opened Constructor Standings (year={current_year})")
+                logger.debug(f"[MENU] Opened Constructor Standings (year={current_year})")
         except Exception as e:
-            print(f"[MENU] Failed to open Constructor Standings: {e}")
+            logger.debug(f"[MENU] Failed to open Constructor Standings: {e}")
             import traceback
             traceback.print_exc()
     
@@ -20792,9 +21180,9 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(self, 'mdi_area'):
                 self.mdi_area.addSubWindow(parts_sub)
                 parts_sub.show()
-                print(f"[MENU] Opened FIA Parts Analysis (year={current_year})")
+                logger.debug(f"[MENU] Opened FIA Parts Analysis (year={current_year})")
         except Exception as e:
-            print(f"[MENU] Failed to open FIA Parts Analysis: {e}")
+            logger.debug(f"[MENU] Failed to open FIA Parts Analysis: {e}")
             import traceback
             traceback.print_exc()
     
@@ -20817,9 +21205,9 @@ class StyleHMainWindow(QMainWindow):
             if hasattr(self, 'mdi_area'):
                 self.mdi_area.addSubWindow(progress_sub)
                 progress_sub.show()
-                print(f"[MENU] Opened Season Progress (year={current_year})")
+                logger.debug(f"[MENU] Opened Season Progress (year={current_year})")
         except Exception as e:
-            print(f"[MENU] Failed to open Season Progress: {e}")
+            logger.debug(f"[MENU] Failed to open Season Progress: {e}")
             import traceback
             traceback.print_exc()
         
@@ -20831,7 +21219,7 @@ class StyleHMainWindow(QMainWindow):
         try:
             gui_settings_manager.open_system_settings_dialog(self)
         except Exception as exc:
-            print(f"[ERROR] 開啟系統設定時發生錯誤: {exc}")
+            logger.error(f"[ERROR] 開啟系統設定時發生錯誤: {exc}")
     
     def set_interface_language(self, language):
         """設定介面語言"""
@@ -20862,10 +21250,10 @@ class StyleHMainWindow(QMainWindow):
             # 顯示提示訊息
             QMessageBox.information(self, "Language / 語言 / 言語", message)
             
-            print(f"[LANGUAGE] 介面語言已切換為: {language}")
+            logger.debug(f"[LANGUAGE] 介面語言已切換為: {language}")
             
         except Exception as e:
-            print(f"[ERROR] 語言切換失敗: {e}")
+            logger.error(f"[ERROR] 語言切換失敗: {e}")
     
     def refresh_menu_text(self):
         """刷新功能表文字"""
@@ -20874,26 +21262,26 @@ class StyleHMainWindow(QMainWindow):
             # 目前需要重啟應用程式才能完全生效
             pass
         except Exception as e:
-            print(f"[ERROR] 刷新功能表文字失敗: {e}")
+            logger.error(f"[ERROR] 刷新功能表文字失敗: {e}")
         
     def toggle_lap_analysis_linkage(self, checked):
         """切換圈速分析連動功能總開關"""
         try:
-            print(f"[LAP_LINKAGE] 圈速分析連動總開關: {'啟用' if checked else '停用'}")
+            logger.debug(f"[LAP_LINKAGE] 圈速分析連動總開關: {'啟用' if checked else '停用'}")
             
             # 優先使用新的連動管理器
             linkage_manager.set_master_linkage_enabled(checked)
             
             # 🔧 修復：獲取連動管理器統計資訊並顯示詳細狀態
             stats = linkage_manager.get_module_stats()
-            print(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
-            print(f"[LAP_LINKAGE] 模組類型分佈: {stats['module_types']}")
+            logger.debug(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
+            logger.debug(f"[LAP_LINKAGE] 模組類型分佈: {stats['module_types']}")
             
             # 更新全域信號管理器的連動狀態（向後相容）
             if hasattr(global_signals, 'set_lap_linkage_enabled'):
                 global_signals.set_lap_linkage_enabled(checked)
             stats = linkage_manager.get_module_stats()
-            print(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
+            logger.debug(f"[LAP_LINKAGE] 連動管理器統計: {stats['total_modules']} 個模組已註冊")
             
             # 兼容舊系統：通知現有的分析模組（在它們遷移到新系統之前）
             for analysis_module in self.lap_analysis_windows:
@@ -20905,9 +21293,9 @@ class StyleHMainWindow(QMainWindow):
                     elif hasattr(analysis_module, 'throttle_chart_widget') and analysis_module.throttle_chart_widget:
                         analysis_module.throttle_chart_widget.set_master_linkage_enabled(checked)
                     
-                    print(f"[LAP_LINKAGE] 已通知模組 {type(analysis_module).__name__} 更新連動狀態")
+                    logger.debug(f"[LAP_LINKAGE] 已通知模組 {type(analysis_module).__name__} 更新連動狀態")
                 except Exception as e:
-                    print(f"[ERROR] [LAP_LINKAGE] 通知模組時發生錯誤: {e}")
+                    logger.error(f"[ERROR] [LAP_LINKAGE] 通知模組時發生錯誤: {e}")
             
             # 通知所有MDI子視窗的個別連動按鈕更新狀態
             current_mdi_area = self.get_current_mdi_area()
@@ -20921,19 +21309,19 @@ class StyleHMainWindow(QMainWindow):
                         # 獲取MDI子視窗的標題欄
                         if hasattr(window, 'title_bar_widget') and hasattr(window.title_bar_widget, 'set_linkage_button_state'):
                             window.title_bar_widget.set_linkage_button_state(checked)
-                            print(f"[LAP_LINKAGE] 已通知MDI子視窗 '{widget.windowTitle()}' 更新個別連動按鈕狀態")
+                            logger.debug(f"[LAP_LINKAGE] 已通知MDI子視窗 '{widget.windowTitle()}' 更新個別連動按鈕狀態")
             else:
-                print(f"[LAP_LINKAGE] ⚠️ 未找到當前MDI區域，跳過MDI視窗連動按鈕更新")
+                logger.debug(f"[LAP_LINKAGE] ⚠️ 未找到當前MDI區域，跳過MDI視窗連動按鈕更新")
             
         except Exception as e:
-            print(f"[ERROR] [LAP_LINKAGE] 切換連動總開關失敗: {e}")
+            logger.error(f"[ERROR] [LAP_LINKAGE] 切換連動總開關失敗: {e}")
     
     def get_lap_linkage_enabled(self):
         """獲取圈速分析連動總開關狀態"""
         if hasattr(self, 'lap_linkage_action'):
             return self.lap_linkage_action.isChecked()
         return True  # 預設啟用
-        print(f"[LINKAGE_MASTER] 🔗 圈速分析連動總開關: {'啟用' if checked else '停用'}")
+        logger.debug(f"[LINKAGE_MASTER] 🔗 圈速分析連動總開關: {'啟用' if checked else '停用'}")
         
         # 更新全域連動狀態
         if hasattr(global_signals, 'lap_analysis_linkage_master_enabled'):
@@ -20950,36 +21338,36 @@ class StyleHMainWindow(QMainWindow):
                 if hasattr(analysis_module, 'set_master_linkage_enabled'):
                     analysis_module.set_master_linkage_enabled(checked)
                     updated_count += 1
-                    print(f"[LINKAGE_MASTER] ✅ 已更新 {type(analysis_module).__name__} 總開關狀態")
+                    logger.debug(f"[LINKAGE_MASTER] ✅ 已更新 {type(analysis_module).__name__} 總開關狀態")
                 elif hasattr(analysis_module, 'speed_chart_widget'):
                     # 速度分析模組
                     if hasattr(analysis_module.speed_chart_widget, 'set_master_linkage_enabled'):
                         analysis_module.speed_chart_widget.set_master_linkage_enabled(checked)
                         updated_count += 1
-                        print(f"[LINKAGE_MASTER] ✅ 已更新速度分析模組總開關狀態")
+                        logger.debug(f"[LINKAGE_MASTER] ✅ 已更新速度分析模組總開關狀態")
                 elif hasattr(analysis_module, 'rpm_chart_widget'):
                     # RPM分析模組
                     if hasattr(analysis_module.rpm_chart_widget, 'set_master_linkage_enabled'):
                         analysis_module.rpm_chart_widget.set_master_linkage_enabled(checked)
                         updated_count += 1
-                        print(f"[LINKAGE_MASTER] ✅ 已更新RPM分析模組總開關狀態")
+                        logger.debug(f"[LINKAGE_MASTER] ✅ 已更新RPM分析模組總開關狀態")
                 elif hasattr(analysis_module, 'throttle_chart_widget'):
                     # 油門分析模組
                     if hasattr(analysis_module.throttle_chart_widget, 'set_master_linkage_enabled'):
                         analysis_module.throttle_chart_widget.set_master_linkage_enabled(checked)
                         updated_count += 1
-                        print(f"[LINKAGE_MASTER] ✅ 已更新油門分析模組總開關狀態")
+                        logger.debug(f"[LINKAGE_MASTER] ✅ 已更新油門分析模組總開關狀態")
                 else:
-                    print(f"[LINKAGE_MASTER] ⚠️ {type(analysis_module).__name__} 不支援連動控制")
+                    logger.debug(f"[LINKAGE_MASTER] ⚠️ {type(analysis_module).__name__} 不支援連動控制")
                     
             except Exception as e:
-                print(f"[LINKAGE_MASTER] ❌ 更新 {type(analysis_module).__name__} 總開關狀態失敗: {e}")
+                logger.debug(f"[LINKAGE_MASTER] ❌ 更新 {type(analysis_module).__name__} 總開關狀態失敗: {e}")
         
-        print(f"[LINKAGE_MASTER] 📊 總開關狀態更新完成: {updated_count}/{len(self.lap_analysis_windows)} 個模組")
+        logger.debug(f"[LINKAGE_MASTER] 📊 總開關狀態更新完成: {updated_count}/{len(self.lap_analysis_windows)} 個模組")
     
     def toggle_lap_analysis_x_linkage(self, checked):
         """切換圈速分析X軸連動功能（保留舊版相容性）"""
-        print(f"[連動] 圈速分析X軸連動功能: {'啟用' if checked else '停用'}")
+        logger.debug(f"[連動] 圈速分析X軸連動功能: {'啟用' if checked else '停用'}")
         
         # 更新所有活躍的圖表組件的連動狀態
         mdi_windows = self.mdi_area.subWindowList()
@@ -21010,21 +21398,21 @@ class StyleHMainWindow(QMainWindow):
                 global_signals.lap_analysis_master_linkage_changed.connect(
                     linkage_manager.set_master_linkage_enabled
                 )
-                print("[LINKAGE_INTEGRATION] ✅ 全域信號已連接到連動管理器")
+                logger.debug("[LINKAGE_INTEGRATION] ✅ 全域信號已連接到連動管理器")
             
             # 確保主開關狀態同步
             if hasattr(self, 'lap_linkage_action'):
                 current_state = self.lap_linkage_action.isChecked()
                 linkage_manager.set_master_linkage_enabled(current_state)
-                print(f"[LINKAGE_INTEGRATION] ✅ 主開關狀態已同步: {'啟用' if current_state else '停用'}")
+                logger.debug(f"[LINKAGE_INTEGRATION] ✅ 主開關狀態已同步: {'啟用' if current_state else '停用'}")
             
             # 設置連動管理器的信號回調
             linkage_manager.master_linkage_changed.connect(self.on_linkage_manager_state_changed)
             
-            print("[LINKAGE_INTEGRATION] ✅ 連動管理器整合完成")
+            logger.debug("[LINKAGE_INTEGRATION] ✅ 連動管理器整合完成")
             
         except Exception as e:
-            print(f"[ERROR] [LINKAGE_INTEGRATION] 連動管理器整合失敗: {e}")
+            logger.error(f"[ERROR] [LINKAGE_INTEGRATION] 連動管理器整合失敗: {e}")
     
     def on_linkage_manager_state_changed(self, enabled: bool):
         """處理連動管理器狀態變更"""
@@ -21035,12 +21423,12 @@ class StyleHMainWindow(QMainWindow):
             
             # 獲取連動管理器統計
             stats = linkage_manager.get_module_stats()
-            print(f"[LINKAGE_MANAGER] 狀態更新: {'啟用' if enabled else '停用'}")
-            print(f"[LINKAGE_MANAGER] 已註冊模組: {stats['total_modules']} 個")
-            print(f"[LINKAGE_MANAGER] 模組類型: {stats['module_types']}")
+            logger.debug(f"[LINKAGE_MANAGER] 狀態更新: {'啟用' if enabled else '停用'}")
+            logger.debug(f"[LINKAGE_MANAGER] 已註冊模組: {stats['total_modules']} 個")
+            logger.debug(f"[LINKAGE_MANAGER] 模組類型: {stats['module_types']}")
             
         except Exception as e:
-            print(f"[ERROR] [LINKAGE_MANAGER] 狀態變更處理失敗: {e}")
+            logger.error(f"[ERROR] [LINKAGE_MANAGER] 狀態變更處理失敗: {e}")
         
     def apply_style_h(self):
         """應用風格H樣式 - 專業賽車分析工作站 (白色主題)"""
@@ -22123,7 +22511,7 @@ class StyleHMainWindow(QMainWindow):
                     # 遞迴搜尋 CustomMdiArea
                     mdi_area = self._find_mdi_area(tab_widget)
                     if mdi_area and hasattr(mdi_area, '_rearrange_fixed_windows'):
-                        print(f"[MAIN_RESIZE] 主視窗調整大小，觸發 MDI 重新排列")
+                        logger.debug(f"[MAIN_RESIZE] 主視窗調整大小，觸發 MDI 重新排列")
                         mdi_area._rearrange_fixed_windows()
     
     def _find_mdi_area(self, widget):
@@ -22173,7 +22561,7 @@ class StyleHMainWindow(QMainWindow):
                     self._api_health_worker.wait(500)  # 增加到 500ms
                     # 4. 如果仍在運行，強制終止
                     if self._api_health_worker.isRunning():
-                        print(f"[MAIN] ⚠️  API Health Worker 未在時限內結束，強制終止")
+                        logger.debug(f"[MAIN] ⚠️  API Health Worker 未在時限內結束，強制終止")
                         self._api_health_worker.quit()
                         self._api_health_worker.wait(200)
                         if self._api_health_worker.isRunning():
@@ -22211,7 +22599,7 @@ class StyleHMainWindow(QMainWindow):
                     self._api_runtime_worker.wait(500)  # 增加到 500ms
                     # 4. 如果仍在運行，強制終止
                     if self._api_runtime_worker.isRunning():
-                        print(f"[MAIN] ⚠️  API Runtime Worker 未在時限內結束，強制終止")
+                        logger.debug(f"[MAIN] ⚠️  API Runtime Worker 未在時限內結束，強制終止")
                         self._api_runtime_worker.quit()
                         self._api_runtime_worker.wait(200)
                         if self._api_runtime_worker.isRunning():
@@ -22223,7 +22611,7 @@ class StyleHMainWindow(QMainWindow):
                 self._api_runtime_worker = None
             self._api_runtime_worker_active = False
 
-            print("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
+            logger.debug("[MAIN] 🛑 接收到關閉請求，開始清理資源...")
             
             # 顯示關閉確認對話框（可選）
             from core.gui_i18n import tr
@@ -22240,37 +22628,37 @@ class StyleHMainWindow(QMainWindow):
                 return
             
             # 停止所有正在執行的 CLI 分析
-            print("[MAIN] 🔄 停止所有分析進程...")
+            logger.debug("[MAIN] 🔄 停止所有分析進程...")
             self.stop_all_analyses()
             
             # 關閉所有子視窗
-            print("[MAIN] 🪟 關閉所有子視窗...")
+            logger.debug("[MAIN] 🪟 關閉所有子視窗...")
             self.close_all_subwindows()
             
             # 清理分析模組管理器
             if hasattr(self, 'analysis_module_manager'):
                 try:
                     self.analysis_module_manager.cleanup_all()
-                    print("[MAIN] 🧹 分析模組管理器已清理")
+                    logger.debug("[MAIN] 🧹 分析模組管理器已清理")
                 except Exception as e:
-                    print(f"[MAIN] ⚠️ 分析模組管理器清理警告: {e}")
+                    logger.debug(f"[MAIN] ⚠️ 分析模組管理器清理警告: {e}")
             
             # 清理全域 CLI 分析管理器
             try:
                 cli_analysis_manager.cleanup_all()
-                print("[MAIN] 🔧 CLI 分析管理器已清理")
+                logger.debug("[MAIN] 🔧 CLI 分析管理器已清理")
             except Exception as e:
-                print(f"[MAIN] ⚠️ CLI 分析管理器清理警告: {e}")
+                logger.debug(f"[MAIN] ⚠️ CLI 分析管理器清理警告: {e}")
             
             # 強制垃圾回收
             try:
                 import gc
                 gc.collect()
-                print("[MAIN] 🗑️ 垃圾回收完成")
+                logger.debug("[MAIN] 🗑️ 垃圾回收完成")
             except Exception as e:
-                print(f"[MAIN] ⚠️ 垃圾回收警告: {e}")
+                logger.debug(f"[MAIN] ⚠️ 垃圾回收警告: {e}")
             
-            print("[MAIN] ✅ 資源清理完成，程序即將退出")
+            logger.debug("[MAIN] ✅ 資源清理完成，程序即將退出")
             
             # 接受關閉事件
             event.accept()
@@ -22286,7 +22674,7 @@ class StyleHMainWindow(QMainWindow):
                 QTimer.singleShot(100, lambda: sys.exit(0))
             
         except Exception as e:
-            print(f"[MAIN] ❌ 關閉事件處理錯誤: {e}")
+            logger.debug(f"[MAIN] ❌ 關閉事件處理錯誤: {e}")
             import traceback
             traceback.print_exc()
             # 即使出錯也要強制關閉
@@ -22334,7 +22722,7 @@ class StyleHMainWindow(QMainWindow):
                     try:
                         sub_window.close()
                     except Exception as e:
-                        print(f"[MAIN] ⚠️ 關閉子視窗時發生錯誤: {e}")
+                        logger.debug(f"[MAIN] ⚠️ 關閉子視窗時發生錯誤: {e}")
                         
                 # 清除MDI區域
                 mdi_area.closeAllSubWindows()
@@ -22344,7 +22732,7 @@ class StyleHMainWindow(QMainWindow):
                 self.active_subwindows.clear()
                 
         except Exception as e:
-            print(f"[MAIN] ⚠️ 關閉子視窗過程中發生錯誤: {e}")
+            logger.debug(f"[MAIN] ⚠️ 關閉子視窗過程中發生錯誤: {e}")
     
     def on_subwindow_closed(self, subwindow):
         """處理子視窗關閉事件 - 從追蹤列表中移除"""
@@ -22388,12 +22776,12 @@ class StyleHMainWindow(QMainWindow):
             if not subwindows:
                 # 沒有子視窗，清除工具欄狀態
                 self.clear_toolbar_status()
-                print(f"[TOOLBAR_STATUS] 沒有活動的分析模組，已清除工具欄狀態")
+                logger.debug(f"[TOOLBAR_STATUS] 沒有活動的分析模組，已清除工具欄狀態")
             else:
-                print(f"[TOOLBAR_STATUS] 當前有 {len(subwindows)} 個活動的分析模組")
+                logger.debug(f"[TOOLBAR_STATUS] 當前有 {len(subwindows)} 個活動的分析模組")
                 
         except Exception as e:
-            print(f"[ERROR] 檢查工具欄狀態失敗: {e}")
+            logger.error(f"[ERROR] 檢查工具欄狀態失敗: {e}")
             self.clear_toolbar_status()
         
     def remove_welcome_tab(self):
@@ -22424,7 +22812,7 @@ class StyleHMainWindow(QMainWindow):
         6. 清理全局管理器
         7. 等待所有 QThread 完全終止（修復 Python 3.13 執行緒清理錯誤）
         """
-        print("[CLEANUP] 🛑 主視窗正在關閉，開始清理資源...")
+        logger.debug("[CLEANUP] 🛑 主視窗正在關閉，開始清理資源...")
         
         try:
             # ========== 步驟 0: 收集所有活動的 QThread ==========
@@ -22453,142 +22841,142 @@ class StyleHMainWindow(QMainWindow):
                                     except:
                                         pass
             
-            print(f"[CLEANUP] 🔍 找到 {len(active_threads)} 個活動執行緒")
+            logger.debug(f"[CLEANUP] 🔍 找到 {len(active_threads)} 個活動執行緒")
             
             # ========== 步驟 1: 停止 API 監控執行緒 ==========
-            print("[CLEANUP] 📡 停止 API 監控執行緒...")
+            logger.debug("[CLEANUP] 📡 停止 API 監控執行緒...")
             
             # 停止 API 健康檢查執行緒
             if hasattr(self, '_api_health_worker') and self._api_health_worker:
                 try:
-                    print("[CLEANUP]   🔴 停止 ApiHealthWorker...")
+                    logger.debug("[CLEANUP]   🔴 停止 ApiHealthWorker...")
                     self._api_health_worker_active = False
                     self._api_health_worker.quit()
                     if not self._api_health_worker.wait(3000):  # 等待 3 秒
-                        print("[CLEANUP]   ⚠️ ApiHealthWorker 未正常退出，強制終止")
+                        logger.debug("[CLEANUP]   ⚠️ ApiHealthWorker 未正常退出，強制終止")
                         self._api_health_worker.terminate()
                         self._api_health_worker.wait(1000)
-                    print("[CLEANUP]   ✅ ApiHealthWorker 已停止")
+                    logger.debug("[CLEANUP]   ✅ ApiHealthWorker 已停止")
                 except Exception as e:
-                    print(f"[CLEANUP]   ⚠️ 停止 ApiHealthWorker 時出錯: {e}")
+                    logger.debug(f"[CLEANUP]   ⚠️ 停止 ApiHealthWorker 時出錯: {e}")
                 finally:
                     self._api_health_worker = None
             
             # 停止 API 運行時監控執行緒
             if hasattr(self, '_api_runtime_worker') and self._api_runtime_worker:
                 try:
-                    print("[CLEANUP]   🔴 停止 ApiRuntimeWorker...")
+                    logger.debug("[CLEANUP]   🔴 停止 ApiRuntimeWorker...")
                     self._api_runtime_worker_active = False
                     self._api_runtime_worker.quit()
                     if not self._api_runtime_worker.wait(3000):  # 等待 3 秒
-                        print("[CLEANUP]   ⚠️ ApiRuntimeWorker 未正常退出，強制終止")
+                        logger.debug("[CLEANUP]   ⚠️ ApiRuntimeWorker 未正常退出，強制終止")
                         self._api_runtime_worker.terminate()
                         self._api_runtime_worker.wait(1000)
-                    print("[CLEANUP]   ✅ ApiRuntimeWorker 已停止")
+                    logger.debug("[CLEANUP]   ✅ ApiRuntimeWorker 已停止")
                 except Exception as e:
-                    print(f"[CLEANUP]   ⚠️ 停止 ApiRuntimeWorker 時出錯: {e}")
+                    logger.debug(f"[CLEANUP]   ⚠️ 停止 ApiRuntimeWorker 時出錯: {e}")
                 finally:
                     self._api_runtime_worker = None
             
             # ========== 步驟 2: 停止所有定時器 ==========
-            print("[CLEANUP] ⏰ 停止所有定時器...")
+            logger.debug("[CLEANUP] ⏰ 停止所有定時器...")
             
             if hasattr(self, 'api_health_timer') and self.api_health_timer:
                 self.api_health_timer.stop()
-                print("[CLEANUP]   ✅ api_health_timer 已停止")
+                logger.debug("[CLEANUP]   ✅ api_health_timer 已停止")
             
             if hasattr(self, 'api_runtime_timer') and self.api_runtime_timer:
                 self.api_runtime_timer.stop()
-                print("[CLEANUP]   ✅ api_runtime_timer 已停止")
+                logger.debug("[CLEANUP]   ✅ api_runtime_timer 已停止")
             
             if hasattr(self, '_parameter_broadcast_timer') and self._parameter_broadcast_timer:
                 self._parameter_broadcast_timer.stop()
-                print("[CLEANUP]   ✅ _parameter_broadcast_timer 已停止")
+                logger.debug("[CLEANUP]   ✅ _parameter_broadcast_timer 已停止")
             
             # ========== 步驟 3: 關閉所有 MDI 子視窗 ==========
-            print("[CLEANUP] 🪟 關閉所有 MDI 子視窗...")
+            logger.debug("[CLEANUP] 🪟 關閉所有 MDI 子視窗...")
             
             if hasattr(self, 'mdi_areas') and self.mdi_areas:
                 for mdi_area in self.mdi_areas:
                     if mdi_area:
                         try:
                             mdi_area.closeAllSubWindows()
-                            print(f"[CLEANUP]   ✅ 已關閉 MDI 區域的所有子視窗")
+                            logger.debug(f"[CLEANUP]   ✅ 已關閉 MDI 區域的所有子視窗")
                         except Exception as e:
-                            print(f"[CLEANUP]   ⚠️ 關閉 MDI 子視窗時出錯: {e}")
+                            logger.debug(f"[CLEANUP]   ⚠️ 關閉 MDI 子視窗時出錯: {e}")
             
             # ========== 步驟 4: 等待所有收集到的執行緒完全終止 ==========
-            print(f"[CLEANUP] ⏳ 等待 {len(active_threads)} 個執行緒完全終止...")
+            logger.debug(f"[CLEANUP] ⏳ 等待 {len(active_threads)} 個執行緒完全終止...")
             
             for thread_name, thread in active_threads:
                 try:
                     if thread and thread.isRunning():
-                        print(f"[CLEANUP]   🔴 等待執行緒終止: {thread_name}")
+                        logger.debug(f"[CLEANUP]   🔴 等待執行緒終止: {thread_name}")
                         thread.quit()
                         if not thread.wait(3000):  # 等待 3 秒
-                            print(f"[CLEANUP]   ⚠️ {thread_name} 未正常退出，強制終止")
+                            logger.debug(f"[CLEANUP]   ⚠️ {thread_name} 未正常退出，強制終止")
                             thread.terminate()
                             thread.wait(1000)
-                        print(f"[CLEANUP]   ✅ {thread_name} 已完全終止")
+                        logger.debug(f"[CLEANUP]   ✅ {thread_name} 已完全終止")
                 except Exception as e:
-                    print(f"[CLEANUP]   ⚠️ 終止執行緒 {thread_name} 時出錯: {e}")
+                    logger.debug(f"[CLEANUP]   ⚠️ 終止執行緒 {thread_name} 時出錯: {e}")
             
             # ========== 步驟 5: 清理追蹤列表 ==========
-            print("[CLEANUP] 📋 清理追蹤列表...")
+            logger.debug("[CLEANUP] 📋 清理追蹤列表...")
             
             if hasattr(self, 'active_subwindows'):
                 self.active_subwindows.clear()
-                print("[CLEANUP]   ✅ active_subwindows 已清空")
+                logger.debug("[CLEANUP]   ✅ active_subwindows 已清空")
             
             if hasattr(self, 'lap_analysis_windows'):
                 self.lap_analysis_windows.clear()
-                print("[CLEANUP]   ✅ lap_analysis_windows 已清空")
+                logger.debug("[CLEANUP]   ✅ lap_analysis_windows 已清空")
             
             if hasattr(self, 'active_analysis_tabs'):
                 self.active_analysis_tabs.clear()
-                print("[CLEANUP]   ✅ active_analysis_tabs 已清空")
+                logger.debug("[CLEANUP]   ✅ active_analysis_tabs 已清空")
             
             # ========== 步驟 6: 清理全局管理器 ==========
-            print("[CLEANUP] 🌐 清理全局管理器...")
+            logger.debug("[CLEANUP] 🌐 清理全局管理器...")
             
             try:
                 from modules.gui.lap_analysis.linkage_manager import linkage_manager
                 if linkage_manager:
                     linkage_manager.clear_all_linkages()
-                    print("[CLEANUP]   ✅ linkage_manager 已清理")
+                    logger.debug("[CLEANUP]   ✅ linkage_manager 已清理")
             except Exception as e:
-                print(f"[CLEANUP]   ⚠️ 清理 linkage_manager 時出錯: {e}")
+                logger.debug(f"[CLEANUP]   ⚠️ 清理 linkage_manager 時出錯: {e}")
             
             # ========== 步驟 7: 清理功能樹 Widget ==========
-            print("[CLEANUP] 🌳 清理功能樹...")
+            logger.debug("[CLEANUP] 🌳 清理功能樹...")
             
             if hasattr(self, 'function_tree') and self.function_tree:
                 try:
                     self.function_tree.cleanup()
                     self.function_tree = None
-                    print("[CLEANUP]   ✅ function_tree 已清理")
+                    logger.debug("[CLEANUP]   ✅ function_tree 已清理")
                 except Exception as e:
-                    print(f"[CLEANUP]   ⚠️ 清理 function_tree 時出錯: {e}")
+                    logger.debug(f"[CLEANUP]   ⚠️ 清理 function_tree 時出錯: {e}")
             
             # ========== 步驟 8: 強制處理所有待處理的事件 ==========
-            print("[CLEANUP] 🔄 處理待處理的 Qt 事件...")
+            logger.debug("[CLEANUP] 🔄 處理待處理的 Qt 事件...")
             QApplication.processEvents()
             
-            print("[CLEANUP] ✅ 主視窗資源清理完成")
+            logger.debug("[CLEANUP] ✅ 主視窗資源清理完成")
             
         except Exception as e:
-            print(f"[CLEANUP] ❌ 清理過程中發生錯誤: {e}")
+            logger.debug(f"[CLEANUP] ❌ 清理過程中發生錯誤: {e}")
             import traceback
             traceback.print_exc()
         
         # 接受關閉事件
         event.accept()
-        print("[CLEANUP] 🏁 主視窗關閉事件處理完成")
+        logger.debug("[CLEANUP] 🏁 主視窗關閉事件處理完成")
 
 
 def main():
     """主函數"""
-    print("[MAIN] 啟動 F1T 專業賽車分析工作站...")
+    logger.debug("[MAIN] 啟動 F1T 專業賽車分析工作站...")
     
     # ========== Python 3.13 執行緒警告抑制器 ==========
     # 抑制 Python 3.13 在程式退出時的 Dummy Thread 清理警告
@@ -22610,7 +22998,7 @@ def main():
         original_excepthook(exc_type, exc_value, exc_traceback)
     
     sys.excepthook = custom_excepthook
-    print("[MAIN] ✅ Python 3.13 執行緒警告抑制器已啟用")
+    logger.debug("[MAIN] ✅ Python 3.13 執行緒警告抑制器已啟用")
     
     # ========== Windows 任務欄圖標設定 ==========
     # 在 Windows 上設定 App User Model ID，讓任務欄顯示自定義圖標
@@ -22620,9 +23008,9 @@ def main():
             # 設定 App User Model ID，使應用程式在任務欄中獨立顯示
             myappid = 'F1T.ProfessionalRacingAnalysis.GUI.V060'  # 唯一的應用程式 ID
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-            print("[MAIN] ✅ Windows App User Model ID 已設定")
+            logger.debug("[MAIN] ✅ Windows App User Model ID 已設定")
         except Exception as e:
-            print(f"[MAIN] ⚠️ 設定 App User Model ID 失敗: {e}")
+            logger.debug(f"[MAIN] ⚠️ 設定 App User Model ID 失敗: {e}")
     
     app = QApplication(sys.argv)
     
@@ -22635,11 +23023,11 @@ def main():
         if icon_path.exists():
             from PyQt5.QtGui import QIcon
             app.setWindowIcon(QIcon(str(icon_path)))
-            print(f"[MAIN] ✅ 應用程式圖標已設定: {icon_path}")
+            logger.debug(f"[MAIN] ✅ 應用程式圖標已設定: {icon_path}")
         else:
-            print(f"[MAIN] ⚠️ 找不到圖標檔案: {icon_path}")
+            logger.debug(f"[MAIN] ⚠️ 找不到圖標檔案: {icon_path}")
     except Exception as e:
-        print(f"[MAIN] ⚠️ 設定應用程式圖標失敗: {e}")
+        logger.debug(f"[MAIN] ⚠️ 設定應用程式圖標失敗: {e}")
     
     # 設置應用程式字體
     font = QFont("Arial", 8)
@@ -22649,7 +23037,7 @@ def main():
     app.setQuitOnLastWindowClosed(True)
     
     # ========== 整合啟動畫面 ==========
-    print("[MAIN] 🎨 創建啟動畫面...")
+    logger.debug("[MAIN] 🎨 創建啟動畫面...")
     from modules.gui.splash_screen import create_splash_screen
     from core.gui_i18n import tr
     
@@ -22662,22 +23050,22 @@ def main():
         splash.set_progress(progress, message)
         app.processEvents()  # 確保進度立即更新
     
-    print("[MAIN] ✅ 啟動畫面已顯示")
+    logger.debug("[MAIN] ✅ 啟動畫面已顯示")
     
     # ========== 創建主視窗（帶錯誤處理）==========
     window = None
     init_error = None
     
     try:
-        print("[MAIN] 🏗️ 創建主視窗...")
+        logger.debug("[MAIN] 🏗️ 創建主視窗...")
         window = StyleHMainWindow(progress_callback=update_progress)
-        print("[MAIN] ✅ 主視窗創建成功")
+        logger.debug("[MAIN] ✅ 主視窗創建成功")
         
         # 延遲 500ms 後關閉啟動畫面
         QTimer.singleShot(500, splash.close)
         
     except Exception as e:
-        print(f"[MAIN] ❌ 主視窗初始化失敗: {e}")
+        logger.debug(f"[MAIN] ❌ 主視窗初始化失敗: {e}")
         import traceback
         traceback.print_exc()
         
@@ -22689,11 +23077,11 @@ def main():
         
         # 嘗試創建最小化的視窗（無進度回調）
         try:
-            print("[MAIN] 🔄 嘗試創建簡化視窗...")
+            logger.debug("[MAIN] 🔄 嘗試創建簡化視窗...")
             window = StyleHMainWindow()  # 無回調版本
-            print("[MAIN] ⚠️ 簡化視窗創建成功（功能可能不完整）")
+            logger.debug("[MAIN] ⚠️ 簡化視窗創建成功（功能可能不完整）")
         except Exception as e2:
-            print(f"[MAIN] ❌ 簡化視窗創建也失敗: {e2}")
+            logger.debug(f"[MAIN] ❌ 簡化視窗創建也失敗: {e2}")
             # 完全失敗，只關閉啟動畫面
             splash.close()
             raise
@@ -22713,7 +23101,7 @@ def main():
     # 執行事件循環
     result = app.exec_()
     
-    print("[MAIN] 🧹 開始清理應用程式資源...")
+    logger.debug("[MAIN] 🧹 開始清理應用程式資源...")
     
     # ✅ 步驟 1: 強制處理所有待處理的事件
     app.processEvents()
@@ -22727,7 +23115,7 @@ def main():
     active_threads = [t for t in threading.enumerate() if t != threading.main_thread()]
     
     if active_threads:
-        print(f"[MAIN] ⏳ 檢測到 {len(active_threads)} 個活動執行緒")
+        logger.debug(f"[MAIN] ⏳ 檢測到 {len(active_threads)} 個活動執行緒")
         
         # 分類執行緒
         qthreads = []
@@ -22755,17 +23143,17 @@ def main():
         
         # 輸出執行緒分類
         if dummy_threads:
-            print(f"[MAIN]   ⚠️  {len(dummy_threads)} 個 DummyThread (跳過等待)")
+            logger.debug(f"[MAIN]   ⚠️  {len(dummy_threads)} 個 DummyThread (跳過等待)")
         if qthreads:
-            print(f"[MAIN]   🔵 {len(qthreads)} 個 QThread")
+            logger.debug(f"[MAIN]   🔵 {len(qthreads)} 個 QThread")
         if other_threads:
-            print(f"[MAIN]   🟡 {len(other_threads)} 個其他執行緒")
+            logger.debug(f"[MAIN]   🟡 {len(other_threads)} 個其他執行緒")
         
         # 僅等待 QThread 和其他執行緒（短超時）
         threads_to_wait = qthreads + other_threads
         
         if threads_to_wait:
-            print(f"[MAIN] ⏳ 等待 {len(threads_to_wait)} 個執行緒結束（最多 1.5 秒）...")
+            logger.debug(f"[MAIN] ⏳ 等待 {len(threads_to_wait)} 個執行緒結束（最多 1.5 秒）...")
             
             for thread in threads_to_wait:
                 # 計算剩餘時間
@@ -22773,33 +23161,33 @@ def main():
                 remaining = max(0, 1.5 - elapsed)  # 增加到 1.5 秒
                 
                 if remaining <= 0:
-                    print(f"[MAIN]   ⏱️  超時，跳過剩餘執行緒")
+                    logger.debug(f"[MAIN]   ⏱️  超時，跳過剩餘執行緒")
                     break
                 
                 if thread.is_alive():
                     thread_id = f"'{thread.name}' ({thread.__class__.__name__})"
                     thread.join(timeout=remaining)
                     if thread.is_alive():
-                        print(f"[MAIN]   ⚠️  執行緒 {thread_id} 未在時限內結束")
+                        logger.debug(f"[MAIN]   ⚠️  執行緒 {thread_id} 未在時限內結束")
                         # ✅ 對於 QThread，嘗試強制終止
                         if isinstance(thread, QThread):
-                            print(f"[MAIN]   🔨 強制終止 QThread {thread_id}")
+                            logger.debug(f"[MAIN]   🔨 強制終止 QThread {thread_id}")
                             thread.terminate()
                             thread.wait(100)
         
         # 最終狀態
         final_threads = [t for t in threading.enumerate() if t != threading.main_thread()]
         if final_threads:
-            print(f"[MAIN]   ℹ️  剩餘 {len(final_threads)} 個執行緒（將由 Python 自動清理）")
+            logger.debug(f"[MAIN]   ℹ️  剩餘 {len(final_threads)} 個執行緒（將由 Python 自動清理）")
             for t in final_threads:
-                print(f"[MAIN]      - {t.name} ({t.__class__.__name__})")
+                logger.debug(f"[MAIN]      - {t.name} ({t.__class__.__name__})")
     
     # ✅ 步驟 3: 強制垃圾回收
     import gc
     collected = gc.collect()
-    print(f"[MAIN] 🗑️  垃圾回收完成，釋放 {collected} 個對象")
+    logger.debug(f"[MAIN] 🗑️  垃圾回收完成，釋放 {collected} 個對象")
     
-    print("[MAIN] 🛑 F1T 程序正常退出")
+    logger.debug("[MAIN] 🛑 F1T 程序正常退出")
     sys.exit(result)
 
 if __name__ == "__main__":

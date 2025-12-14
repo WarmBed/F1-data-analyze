@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F57 - 綜合圈速預測器 (Combined Laptime Predictor)
 
@@ -10,7 +11,7 @@ F57 - 綜合圈速預測器 (Combined Laptime Predictor)
     
     其中:
     - fuel_effect = fuel_effect_coefficient * fuel_consumed (來自 F55)
-    - tire_degradation = base_rate * stint_lap + 0.5 * acceleration * stint_lap² (來自 F56)
+    - tire_degradation = base_rate * stint_lap + 0.5 * acceleration * stint_lap^2 (來自 F56)
     
 數據來源:
     - F55: 燃油校正圈速分析結果
@@ -28,6 +29,15 @@ F57 - 綜合圈速預測器 (Combined Laptime Predictor)
 版本: 1.0.0
 作者: F1 Analysis Team
 日期: 2025-12-03
+"""
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 """
 
 import os

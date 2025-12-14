@@ -3,8 +3,15 @@
 Single Driver Analysis Module - Standardized Interface
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import pickle
 import json
 from datetime import datetime
@@ -12,6 +19,7 @@ from datetime import datetime
 # 導入基礎分析模組接口
 try:
     from .analysis_module_manager import AnalysisModuleBase
+
 except ImportError:
     # 如果無法導入，創建一個簡單的基礎類別
     class AnalysisModuleBase:

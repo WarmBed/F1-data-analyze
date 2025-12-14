@@ -37,6 +37,9 @@ from core.gui_i18n import tr
 from .ideal_lap_sector_heatmap_data_loader import IdealLapSectorHeatmapDataLoader
 from .ideal_lap_sector_heatmap_widget import IdealLapSectorHeatmapWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 # ========================================================================
 # API Worker 類別（與 ranking_table 一致）
@@ -72,6 +75,9 @@ class IdealLapSectorHeatmapApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -89,8 +95,12 @@ class IdealLapSectorHeatmapApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[HEATMAP_API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[HEATMAP_API_WORKER] 📋 參數: {query_params}")
+            logger.debug(f"[HEATMAP_API_WORKER] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[HEATMAP_API_WORKER] 📋 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -101,6 +111,10 @@ class IdealLapSectorHeatmapApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -132,21 +146,29 @@ class IdealLapSectorHeatmapApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[HEATMAP_API_WORKER] ✅ API 調用成功")
-            print(f"[HEATMAP_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[HEATMAP_API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info(f"[HEATMAP_API_WORKER] ✅ API 調用成功")
+            logger.debug(f"[HEATMAP_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[HEATMAP_API_WORKER] 📊 數據源: {meta['source']}")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[HEATMAP_API_WORKER] ❌ {error_msg}")
+            logger.error(f"[HEATMAP_API_WORKER] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 # ========================================================================
@@ -537,7 +559,7 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
                 # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
                 try:
                     if worker and worker.isRunning():
-                        print("[WARNING] ideal_lap_heatmap API Worker 未在 15 秒內停止，強制終止")
+                        logger.warning("ideal_lap_heatmap API Worker 未在 15 秒內停止，強制終止")
                         worker.terminate()
                 except (RuntimeError, AttributeError):
                     # Worker 已被刪除，無需處理
@@ -703,12 +725,13 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
     def _show_error(self, title: str, message: str):
         """顯示錯誤對話框"""
         from PyQt5.QtWidgets import QMessageBox
+
         parent = self.chart_widget if hasattr(self, 'chart_widget') else None
         QMessageBox.critical(parent, title, message)
     
     def _debug(self, message: str):
         """調試輸出"""
-        print(f"[HEATMAP_MDI] {message}")
+        logger.debug(f"[HEATMAP_MDI] {message}")
 
     # ------------------------------------------------------------------ #
     # Event handlers / helpers

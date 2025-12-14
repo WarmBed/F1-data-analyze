@@ -20,14 +20,17 @@ Version: 2.0.0
 """
 
 # 主要模組匯出
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 try:
     from .driverlap_analysis_module import driverLapAnalysisModule
     from .driverlap_analysis_mdi import driverLapAnalysisMDI, driverLapAnalysisDataManager
     from .driverlap_analysis_chart_widget import driverLapAnalysisChartWidget
     # 移除已廢棄的 driverlap_data_loader 依賴
-    print(f"[OK] 詳細圈速分析模組 - 整合架構載入成功")
+    logger.info(f"詳細圈速分析模組 - 整合架構載入成功")
 except ImportError as e:
-    print(f"[WARNING] 詳細圈速分析模組導入部分失敗: {str(e)}")
+    logger.warning(f"詳細圈速分析模組導入部分失敗: {str(e)}")
     # 提供向後兼容性
     driverLapAnalysisModule = None
     driverLapAnalysisMDI = None

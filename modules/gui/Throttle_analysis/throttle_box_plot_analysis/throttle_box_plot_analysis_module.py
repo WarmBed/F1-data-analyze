@@ -20,6 +20,8 @@ from __future__ import annotations
 from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 
+from core.logger import get_logger
+
 try:
     from ...interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
 except ImportError:  # pragma: no cover
@@ -35,6 +37,9 @@ except ImportError:  # pragma: no cover
     from modules.gui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_mdi import (
         ThrottleBoxPlotAnalysis,
     )
+
+
+logger = get_logger(component="gui.throttle_box_plot")
 
 
 class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
@@ -104,7 +109,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
             self._is_initialized = True
             return True
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] 初始化失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] 初始化失敗")
             return False
 
     def get_widget(self):
@@ -124,7 +129,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
                 )
             return False
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] update_parameters 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] update_parameters 失敗")
             return False
 
     def load_data(self, **kwargs) -> bool:
@@ -133,7 +138,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
                 return self._throttle_boxplot_core.load_data(**kwargs)
             return False
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] 載入數據失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] 載入數據失敗")
             return False
 
     def refresh_analysis(self) -> None:
@@ -141,14 +146,14 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
             if self._throttle_boxplot_core:
                 self._throttle_boxplot_core.refresh_analysis()
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] refresh_analysis 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] refresh_analysis 失敗")
 
     def clear_data(self) -> None:
         try:
             if self._throttle_boxplot_core:
                 self._throttle_boxplot_core.clear_data()
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] clear_data 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] clear_data 失敗")
     
     def reset_chart_view(self) -> None:
         """
@@ -157,24 +162,22 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
         這個方法橋接主 GUI 與內部 MDI 實例的 reset_chart_view()
         """
         try:
-            print("[THROTTLE_MODULE] 🔄 收到 reset_chart_view 請求")
+            logger.info("[THROTTLE_MODULE] 收到 reset_chart_view 請求")
             
             if not self._throttle_boxplot_core:
-                print("[THROTTLE_MODULE] ⚠️  MDI 核心實例不存在")
+                logger.warning("[THROTTLE_MODULE] MDI 核心實例不存在")
                 return
             
             if not hasattr(self._throttle_boxplot_core, 'reset_chart_view'):
-                print("[THROTTLE_MODULE] ⚠️  MDI 核心沒有 reset_chart_view 方法")
+                logger.warning("[THROTTLE_MODULE] MDI 核心沒有 reset_chart_view 方法")
                 return
             
             # 轉發到內部 MDI 實例
-            print("[THROTTLE_MODULE] ✅ 轉發 reset_chart_view 至 MDI 核心")
+            logger.info("[THROTTLE_MODULE] 轉發 reset_chart_view 至 MDI 核心")
             self._throttle_boxplot_core.reset_chart_view()
             
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] reset_chart_view 失敗: {exc}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[THROTTLE_MODULE] reset_chart_view 失敗")
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         try:
@@ -182,7 +185,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
                 return self._throttle_boxplot_core.export_data(export_path, export_format)
             return False
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] export_data 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] export_data 失敗")
             return False
 
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -193,7 +196,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
                 return self._throttle_boxplot_core.data_manager.get_processed_data()
             return None
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] get_current_data 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] get_current_data 失敗")
             return None
 
     def get_default_size(self) -> tuple:
@@ -227,7 +230,7 @@ class ThrottleBoxPlotAnalysisModule(IAnalysisModule):
             self._is_initialized = False
             self._parameter_provider = None
         except Exception as exc:
-            print(f"❌ [THROTTLE_MODULE] cleanup 失敗: {exc}")
+            logger.exception("[THROTTLE_MODULE] cleanup 失敗")
 
 
 def create_throttle_boxplot_module(parent=None, **kwargs) -> ThrottleBoxPlotAnalysisModule:

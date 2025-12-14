@@ -44,9 +44,22 @@ async def root():
             "health": "/health",
             "cache_status": "/cache/status", 
             "cache_search": "/cache/search",
-            "analyze": "/analyze",
+            "analyze_v2": "/api/v2/analysis/execute",  # ✅ 新版端點
+            "analyze_deprecated": "/analyze",  # ⚠️ 已棄用
             "functions": "/functions",
             "docs": "/docs"
+        },
+        "deprecation_warnings": {
+            "deprecated_endpoints": [
+                {
+                    "endpoint": "/analyze",
+                    "status": "DEPRECATED",
+                    "reason": "不支援 Pydantic 驗證，缺少統一錯誤處理",
+                    "replacement": "/api/v2/analysis/execute",
+                    "http_status": "410 Gone",
+                    "action_required": "請更新客戶端代碼使用新版 API"
+                }
+            ]
         },
         "performance": {
             "cache_enabled": True,
@@ -149,37 +162,74 @@ async def search_cache(
 
 
 @router.post("/analyze",
-    summary="執行分析",
-    description="執行指定的 F1 數據分析功能",
+    deprecated=True,
+    summary="⚠️ 已棄用 - 執行分析（舊版端點）",
+    description="""
+    ⚠️ **此端點已棄用，請使用新版端點 `/api/v2/analysis/execute`**
+    
+    **棄用原因**：
+    - 不支援 Pydantic 請求驗證
+    - 缺少統一的錯誤處理
+    - 與新版 API 架構不一致
+    
+    **遷移指南**：
+    - 舊版：`POST /analyze` (body: {function_id, year, race, session})
+    - 新版：`POST /api/v2/analysis/execute?function_id=X&year=Y&race=Z&session=S`
+    
+    **此端點將在未來版本中移除。**
+    """,
     response_model=Dict[str, Any])
-async def execute_analysis(request: AnalysisRequest):
-    """執行 F1 分析"""
-    try:
-        service = get_analysis_service()
-        
-        # 轉換請求參數
-        params = {
-            "year": request.year,
-            "race": request.race.lower(),
-            "session": request.session.value if hasattr(request.session, 'value') else str(request.session)
+async def execute_analysis_deprecated(request: AnalysisRequest):
+    """
+    ⚠️ 已棄用的 F1 分析端點
+    
+    請改用 `/api/v2/analysis/execute` 端點
+    """
+    # ⚠️ 強制返回錯誤，禁止使用舊版 API
+    raise HTTPException(
+        status_code=410,  # 410 Gone - 資源已永久移除
+        detail={
+            "error": "API_ENDPOINT_DEPRECATED",
+            "message": "⚠️ 此 API 端點已棄用且已禁用",
+            "deprecated_endpoint": "/analyze",
+            "new_endpoint": "/api/v2/analysis/execute",
+            "migration_guide": {
+                "old_usage": "POST /analyze (body: {function_id, year, race, session})",
+                "new_usage": "POST /api/v2/analysis/execute?function_id=X&year=Y&race=Z&session=S",
+                "example": "POST /api/v2/analysis/execute?function_id=120&year=2025&race=Japan&session=R"
+            },
+            "documentation": "/docs",
+            "contact": "請更新您的客戶端代碼以使用新版 API"
         }
-        
-        # 添加可選參數
-        if request.driver1:
-            params["driver1"] = request.driver1
-        if request.driver2:
-            params["driver2"] = request.driver2
-        if request.force_refresh:
-            params["force_refresh"] = request.force_refresh
-        if request.include_telemetry:
-            params["include_telemetry"] = request.include_telemetry
-        
-        # 執行分析
-        result = await service.execute_analysis(request.function_id, **params)
-        return result
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析執行失敗: {str(e)}")
+    )
+    
+    # ⚠️ 以下代碼已停用（保留供參考）
+    # try:
+    #     service = get_analysis_service()
+    #     
+    #     # 轉換請求參數
+    #     params = {
+    #         "year": request.year,
+    #         "race": request.race.lower(),
+    #         "session": request.session.value if hasattr(request.session, 'value') else str(request.session)
+    #     }
+    #     
+    #     # 添加可選參數
+    #     if request.driver1:
+    #         params["driver1"] = request.driver1
+    #     if request.driver2:
+    #         params["driver2"] = request.driver2
+    #     if request.force_refresh:
+    #         params["force_refresh"] = request.force_refresh
+    #     if request.include_telemetry:
+    #         params["include_telemetry"] = request.include_telemetry
+    #     
+    #     # 執行分析
+    #     result = await service.execute_analysis(request.function_id, **params)
+    #     return result
+    #     
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=f"分析執行失敗: {str(e)}")
 
 
 @router.get("/functions",

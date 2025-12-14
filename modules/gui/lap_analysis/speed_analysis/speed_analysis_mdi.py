@@ -27,6 +27,9 @@ from modules.gui.interfaces.analysis_module import IAnalysisModule
 from core.gui_i18n import tr
 from core.api_base_url import resolve_api_base_url
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class CrossEventComparisonWorker(QThread):
     """跨賽事比較 API Worker - 調用 /api/v2/analysis/cross-event-comparison 端點"""
@@ -59,16 +62,16 @@ class CrossEventComparisonWorker(QThread):
             # ✅ 安全調用 resolve_api_base_url（防止 EXE 環境崩潰）
             try:
                 self.base_url = resolve_api_base_url().rstrip('/')
-                print(f"[CROSS-EVENT-WORKER] ✅ API base URL: {self.base_url}")
+                logger.info(f"[CROSS-EVENT-WORKER] ✅ API base URL: {self.base_url}")
             except Exception as e:
                 # 如果解析失敗，使用硬編碼的公開 API
                 from core.api_base_url import PUBLIC_API_BASE_URL
                 self.base_url = PUBLIC_API_BASE_URL.rstrip('/')
-                print(f"[CROSS-EVENT-WORKER] ⚠️ API URL 解析失敗，使用預設: {self.base_url}")
-                print(f"[CROSS-EVENT-WORKER] 錯誤: {e}")
+                logger.warning(f"[CROSS-EVENT-WORKER] ⚠️ API URL 解析失敗，使用預設: {self.base_url}")
+                logger.debug(f"[CROSS-EVENT-WORKER] 錯誤: {e}")
                 
         except Exception as e:
-            print(f"[ERROR] [CROSS-EVENT-WORKER] Worker 初始化失敗: {e}")
+            logger.error(f"[CROSS-EVENT-WORKER] Worker 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             raise  # 重新拋出異常，讓調用者知道初始化失敗
@@ -76,7 +79,11 @@ class CrossEventComparisonWorker(QThread):
     def run(self):
         """執行 API 請求 - 強化 EXE 環境異常處理"""
         try:
-            print(f"[CROSS-EVENT-WORKER] 開始執行 API 請求")
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                logger.debug("[CROSS-EVENT-WORKER] 開始前已被中斷")
+                return
+            logger.debug(f"[CROSS-EVENT-WORKER] 開始執行 API 請求")
             self.progress.emit(20)
             
             # ✅ 防禦性檢查：確保 base_url 存在
@@ -84,7 +91,7 @@ class CrossEventComparisonWorker(QThread):
                 raise RuntimeError("API base_url 未初始化")
             
             endpoint = f"{self.base_url}/api/v2/analysis/cross-event-comparison"
-            print(f"[CROSS-EVENT-WORKER] 目標端點: {endpoint}")
+            logger.debug(f"[CROSS-EVENT-WORKER] 目標端點: {endpoint}")
             
             # 構建請求參數
             query_params: Dict[str, Any] = {
@@ -103,16 +110,21 @@ class CrossEventComparisonWorker(QThread):
             if self.force_refresh:
                 query_params["force_refresh"] = True
 
-            print(f"[CROSS-EVENT-WORKER] 請求參數: {query_params}")
+            logger.debug(f"[CROSS-EVENT-WORKER] 請求參數: {query_params}")
             
             start_ts = time.perf_counter()
             self.progress.emit(30)
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                logger.debug("[CROSS-EVENT-WORKER] HTTP 請求前被中斷")
+                return
             
             # ✅ 防禦性檢查：確保 requests 模組可用
             if not hasattr(requests, 'post'):
                 raise RuntimeError("requests 模組未正確載入")
             
-            print(f"[CROSS-EVENT-WORKER] 發送 POST 請求...")
+            logger.debug(f"[CROSS-EVENT-WORKER] 發送 POST 請求...")
             response = requests.post(
                 endpoint,
                 params=query_params,
@@ -121,11 +133,16 @@ class CrossEventComparisonWorker(QThread):
             )
             self.progress.emit(70)
             
-            print(f"[CROSS-EVENT-WORKER] 收到回應，狀態碼: {response.status_code}")
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                logger.debug("[CROSS-EVENT-WORKER] HTTP 請求後被中斷")
+                return
+            
+            logger.debug(f"[CROSS-EVENT-WORKER] 收到回應，狀態碼: {response.status_code}")
             response.raise_for_status()
 
             payload = response.json()
-            print(f"[CROSS-EVENT-WORKER] JSON 解析成功")
+            logger.debug(f"[CROSS-EVENT-WORKER] JSON 解析成功")
             
             if not isinstance(payload, dict):
                 raise ValueError("API response must be a JSON object")
@@ -148,27 +165,43 @@ class CrossEventComparisonWorker(QThread):
             }
 
             self.progress.emit(90)
-            print(f"[CROSS-EVENT-WORKER] ✅ 請求成功，發送 success 信號")
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                logger.debug("[CROSS-EVENT-WORKER] success 信號前被中斷")
+                return
+            logger.info(f"[CROSS-EVENT-WORKER] ✅ 請求成功，發送 success 信號")
             self.success.emit({"data": data, "meta": meta})
             
         except requests.exceptions.Timeout as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求超時 ({self.timeout}秒): {e}"
-            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            logger.error(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except requests.exceptions.ConnectionError as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"無法連線到 API 伺服器: {e}"
-            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            logger.error(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except requests.exceptions.HTTPError as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"HTTP 錯誤 ({e.response.status_code}): {e}"
-            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            logger.error(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"未預期的錯誤: {type(exc).__name__}: {exc}"
-            print(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
+            logger.error(f"[CROSS-EVENT-WORKER] ❌ {error_msg}")
             try:
                 import traceback
                 traceback.print_exc()
@@ -178,8 +211,10 @@ class CrossEventComparisonWorker(QThread):
             
         finally:
             try:
-                self.progress.emit(100)
-                print(f"[CROSS-EVENT-WORKER] Worker 執行完成")
+                # ✅ 中斷檢查：被中斷時不發送 progress 信號
+                if not self.isInterruptionRequested():
+                    self.progress.emit(100)
+                logger.debug(f"[CROSS-EVENT-WORKER] Worker 執行完成")
             except:
                 pass  # 避免 finally 中的錯誤導致崩潰
 
@@ -207,12 +242,12 @@ class SpeedDataManager(QObject):
                        lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """載入速度對比數據"""
         try:
-            print(f"[SPEED_MDI_DATA] ========== 載入速度數據 ==========")
-            print(f"[SPEED_MDI_DATA] 參數: {year} {race} {session}")
-            print(f"[SPEED_MDI_DATA] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            logger.debug(f"[SPEED_MDI_DATA] ========== 載入速度數據 ==========")
+            logger.debug(f"[SPEED_MDI_DATA] 參數: {year} {race} {session}")
+            logger.debug(f"[SPEED_MDI_DATA] 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
             
             if self._is_loading:
-                print(f"[SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求")
+                logger.warning(f"[SPEED_MDI_DATA] ⚠️ 數據載入中，忽略新請求")
                 self.error_occurred.emit("載入器正忙，請稍後再試")
                 return False
                 
@@ -227,19 +262,19 @@ class SpeedDataManager(QObject):
             
             # 檢查最速圈選項並自動載入遙測分析
             if is_fastest or lap1 == "fastest" or lap2 == "fastest":
-                print(f"🔄 [SPEED_MDI_DATA] 檢測到最速圈選項，檢查遙測分析數據...")
+                logger.debug(f"[SPEED_MDI_DATA] 檢測到最速圈選項，檢查遙測分析數據...")
                 self._check_and_load_telemetry_if_needed()
                 
                 # 解析最速圈參數為實際圈數
                 lap1, lap2 = self._resolve_lap_numbers(lap1, lap2, driver1, driver2, is_fastest)
-                print(f"🔢 [SPEED_MDI_DATA] 最速圈解析完成: {driver1}=第{lap1}圈, {driver2}=第{lap2}圈")
+                logger.debug(f"🔢 [SPEED_MDI_DATA] 最速圈解析完成: {driver1}=第{lap1}圈, {driver2}=第{lap2}圈")
             
-            print(f"[SPEED_MDI_DATA] 🔗 創建 SpeedAnalysisDataLoader...")
+            logger.debug(f"[SPEED_MDI_DATA] 🔗 創建 SpeedAnalysisDataLoader...")
             
             # 使用現有的速度分析數據載入器
             from .speed_analysis_data_loader import SpeedAnalysisDataLoader
             
-            print(f"[SPEED_MDI_DATA] 🚀 調用 load_speed_data...")
+            logger.debug(f"[SPEED_MDI_DATA] 🚀 調用 load_speed_data...")
             
             # ✅ 修復：創建數據載入器並保存為實例變數（防止垃圾回收）
             self._speed_loader = SpeedAnalysisDataLoader()
@@ -263,20 +298,20 @@ class SpeedDataManager(QObject):
             # 將loader設置給chart widget以供直接更新
             if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
                 self.speed_chart_widget.speed_loader = self._speed_loader
-                print(f"[SPEED_MDI] ✅ 已將loader設置給chart widget")
+                logger.info(f"[SPEED_MDI] ✅ 已將loader設置給chart widget")
             
             if success:
-                print(f"[SPEED_MDI_DATA] ✅ 速度數據載入請求提交成功")
+                logger.info(f"[SPEED_MDI_DATA] ✅ 速度數據載入請求提交成功")
                 self.loading_progress.emit(50)
                 return True
             else:
-                print(f"[SPEED_MDI_DATA] ❌ 速度數據載入請求失敗")
+                logger.error(f"[SPEED_MDI_DATA] ❌ 速度數據載入請求失敗")
                 self._is_loading = False
                 self.error_occurred.emit("速度數據載入請求失敗")
                 return False
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI_DATA] 載入速度數據時發生錯誤: {e}")
+            logger.error(f"[SPEED_MDI_DATA] 載入速度數據時發生錯誤: {e}")
             self._is_loading = False
             self.error_occurred.emit(f"載入速度數據失敗: {str(e)}")
             return False
@@ -284,11 +319,11 @@ class SpeedDataManager(QObject):
     def _check_and_load_telemetry_if_needed(self):
         """檢查遙測分析數據（最速圈用）"""
         try:
-            print(f"[SPEED_MDI_DATA] 檢查遙測分析數據可用性...")
+            logger.debug(f"[SPEED_MDI_DATA] 檢查遙測分析數據可用性...")
 
             module_ref = getattr(self, "module_ref", None)
             if module_ref:
-                print(f"[SPEED_MDI_DATA] 委派給module_ref檢查遙測數據")
+                logger.debug(f"[SPEED_MDI_DATA] 委派給module_ref檢查遙測數據")
                 return module_ref._check_and_load_telemetry_if_needed()
 
             telemetry_patterns = [
@@ -303,20 +338,20 @@ class SpeedDataManager(QObject):
                     for pattern in telemetry_patterns:
                         file_path = os.path.join(directory, pattern)
                         if os.path.exists(file_path):
-                            print(f"[SPEED_MDI_DATA] 找到現有遙測檔案: {file_path}")
+                            logger.debug(f"[SPEED_MDI_DATA] 找到現有遙測檔案: {file_path}")
                             return True
 
-            print("[SPEED_MDI_DATA] API-ONLY 模式下未找到遙測檔案，請透過主視窗遙測模組或 REST API 取得資料")
+            logger.debug("[SPEED_MDI_DATA] API-ONLY 模式下未找到遙測檔案，請透過主視窗遙測模組或 REST API 取得資料")
             return False
 
         except Exception as e:
-            print(f"[SPEED_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
+            logger.debug(f"[SPEED_MDI_DATA] 檢查遙測數據時發生錯誤: {e}")
             return False
 
     def _get_fastest_lap_number(self, driver: str) -> int:
         """從遙測分析數據獲取指定車手的最速圈數"""
         try:
-            print(f"🔍 [SPEED_MDI] 開始搜尋 {driver} 的最速圈數據...")
+            logger.debug(f"[SPEED_MDI] 開始搜尋 {driver} 的最速圈數據...")
             
             # 搜尋遙測分析JSON檔案
             telemetry_patterns = [
@@ -334,20 +369,20 @@ class SpeedDataManager(QObject):
                         file_path = os.path.join(directory, pattern)
                         if os.path.exists(file_path):
                             telemetry_file = file_path
-                            print(f"📁 [SPEED_MDI] 找到遙測檔案: {telemetry_file}")
+                            logger.debug(f"📁 [SPEED_MDI] 找到遙測檔案: {telemetry_file}")
                             break
                     if telemetry_file:
                         break
             
             if not telemetry_file:
-                print(f"❌ [SPEED_MDI] 找不到遙測分析檔案，使用預設圈數 1")
+                logger.error(f"[SPEED_MDI] 找不到遙測分析檔案，使用預設圈數 1")
                 return 1
                 
             # 讀取並解析遙測分析數據
             with open(telemetry_file, 'r', encoding='utf-8') as f:
                 telemetry_data = json.load(f)
             
-            print(f"📊 [SPEED_MDI] 遙測檔案讀取成功，開始解析最速圈數據...")
+            logger.debug(f"[SPEED_MDI] 遙測檔案讀取成功，開始解析最速圈數據...")
             
             # 嘗試多種數據結構格式
             fastest_lap_num = None
@@ -358,7 +393,7 @@ class SpeedDataManager(QObject):
                 if driver_data and 'fastest_lap' in driver_data:
                     fastest_lap_num = driver_data['fastest_lap'].get('lap_number')
                     if fastest_lap_num:
-                        print(f"✅ [SPEED_MDI] 從格式1找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                        logger.info(f"[SPEED_MDI] 從格式1找到 {driver} 最速圈: 第{fastest_lap_num}圈")
                         return int(fastest_lap_num)
             
             # 格式2: data.fastest_laps中的列表
@@ -367,7 +402,7 @@ class SpeedDataManager(QObject):
                     if fastest_data.get('driver') == driver:
                         fastest_lap_num = fastest_data.get('lap_number')
                         if fastest_lap_num:
-                            print(f"✅ [SPEED_MDI] 從格式2找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                            logger.info(f"[SPEED_MDI] 從格式2找到 {driver} 最速圈: 第{fastest_lap_num}圈")
                             return int(fastest_lap_num)
             
             # 格式3: 直接在data下按車手分組
@@ -375,14 +410,14 @@ class SpeedDataManager(QObject):
                 driver_data = telemetry_data['data'].get(driver)
                 if driver_data and 'fastest_lap_number' in driver_data:
                     fastest_lap_num = driver_data['fastest_lap_number']
-                    print(f"✅ [SPEED_MDI] 從格式3找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                    logger.info(f"[SPEED_MDI] 從格式3找到 {driver} 最速圈: 第{fastest_lap_num}圈")
                     return int(fastest_lap_num)
             
-            print(f"⚠️ [SPEED_MDI] 無法找到 {driver} 的最速圈數據，使用預設圈數 1")
+            logger.warning(f"[SPEED_MDI] 無法找到 {driver} 的最速圈數據，使用預設圈數 1")
             return 1
             
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 解析最速圈數據時發生錯誤: {e}")
+            logger.error(f"[SPEED_MDI] 解析最速圈數據時發生錯誤: {e}")
             return 1
 
     def _resolve_lap_numbers(self, lap1, lap2, driver1, driver2, is_fastest):
@@ -393,37 +428,37 @@ class SpeedDataManager(QObject):
             
             # 處理lap1
             if lap1 == "fastest" or is_fastest:
-                print(f"🔄 [SPEED_MDI] 解析 {driver1} 的最速圈...")
+                logger.debug(f"[SPEED_MDI] 解析 {driver1} 的最速圈...")
                 resolved_lap1 = self._get_fastest_lap_number(driver1)
                 
             # 處理lap2
             if lap2 == "fastest" or is_fastest:
-                print(f"🔄 [SPEED_MDI] 解析 {driver2} 的最速圈...")
+                logger.debug(f"[SPEED_MDI] 解析 {driver2} 的最速圈...")
                 resolved_lap2 = self._get_fastest_lap_number(driver2)
             
-            print(f"📊 [SPEED_MDI] 圈數解析結果: {driver1}=第{resolved_lap1}圈, {driver2}=第{resolved_lap2}圈")
+            logger.debug(f"[SPEED_MDI] 圈數解析結果: {driver1}=第{resolved_lap1}圈, {driver2}=第{resolved_lap2}圈")
             
             return int(resolved_lap1), int(resolved_lap2)
             
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 解析圈數時發生錯誤: {e}")
+            logger.error(f"[SPEED_MDI] 解析圈數時發生錯誤: {e}")
             return 1, 1
     
     def _on_data_loaded(self, data):
         """數據載入完成回調"""
         try:
-            print(f"[SPEED_MDI_DATA] 速度數據載入完成")
+            logger.debug(f"[SPEED_MDI_DATA] 速度數據載入完成")
             self._is_loading = False
             self.loading_progress.emit(100)
             self.status_changed.emit("速度數據載入完成")
             self.data_loaded.emit(data)
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI_DATA] 處理載入完成回調時發生錯誤: {e}")
+            logger.error(f"[SPEED_MDI_DATA] 處理載入完成回調時發生錯誤: {e}")
             self._on_load_error(f"數據處理失敗: {str(e)}")
     
     def _on_load_error(self, error_msg):
         """數據載入錯誤回調"""
-        print(f"[SPEED_MDI_DATA] 速度數據載入錯誤: {error_msg}")
+        logger.debug(f"[SPEED_MDI_DATA] 速度數據載入錯誤: {error_msg}")
         self._is_loading = False
         self.loading_progress.emit(0)
         self.status_changed.emit(f"載入失敗: {error_msg}")
@@ -436,7 +471,7 @@ class SpeedDataManager(QObject):
         修復記憶體洩漏：清理 DataLoader 的 API Worker 執行緒
         """
         try:
-            print(f"[SPEEDDATAMANAGER] 🧹 開始清理資源...")
+            logger.debug(f"[SPEEDDATAMANAGER] 🧹 開始清理資源...")
             
             # 1. 清理 DataLoader 及其 QThread
             if hasattr(self, '_speed_loader') and self._speed_loader:
@@ -444,7 +479,7 @@ class SpeedDataManager(QObject):
                     # 調用 loader 的 cleanup() 方法（清理 API worker 執行緒）
                     if hasattr(self._speed_loader, 'cleanup'):
                         self._speed_loader.cleanup()
-                        print(f"[SPEEDDATAMANAGER] ✅ 已清理 loader 執行緒")
+                        logger.info(f"[SPEEDDATAMANAGER] ✅ 已清理 loader 執行緒")
                     
                     # 斷開信號連接
                     try:
@@ -469,11 +504,11 @@ class SpeedDataManager(QObject):
                     self._speed_loader = None
                     
                 except Exception as e:
-                    print(f"[ERROR] [SPEEDDATAMANAGER] 清理 loader 失敗: {e}")
+                    logger.error(f"[SPEEDDATAMANAGER] 清理 loader 失敗: {e}")
             
             # 2. 🔴 斷開循環引用：清理 module_ref
             if hasattr(self, 'module_ref'):
-                print(f"[SPEEDDATAMANAGER] 🔴 斷開循環引用：清理 module_ref")
+                logger.debug(f"[SPEEDDATAMANAGER] 🔴 斷開循環引用：清理 module_ref")
                 self.module_ref = None
             
             # 3. 清理內部狀態
@@ -482,11 +517,11 @@ class SpeedDataManager(QObject):
             self.current_session = None
             self._is_loading = False
             
-            print(f"[SPEEDDATAMANAGER] ✅ 資源清理完成")
+            logger.info(f"[SPEEDDATAMANAGER] ✅ 資源清理完成")
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedDataManager 實例）
-            print(f"[ERROR] [SPEEDDATAMANAGER] cleanup() 失敗: {e}")
+            logger.error(f"[SPEEDDATAMANAGER] cleanup() 失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -535,7 +570,7 @@ class SpeedAnalysisModule(IAnalysisModule):
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """初始化模組 - 實現抽象方法"""
         try:
-            print(f"[SPEED_MDI] 初始化速度分析模組")
+            logger.debug(f"[SPEED_MDI] 初始化速度分析模組")
             
             # 創建數據管理器
             self.data_manager = SpeedDataManager()
@@ -573,24 +608,24 @@ class SpeedAnalysisModule(IAnalysisModule):
                 self._analysis_manager = manager
                 self._module_id = module_id
                 
-                print(f"[SPEED_MDI] ✅ 已註冊到分析模組管理器: {module_id}")
+                logger.info(f"[SPEED_MDI] ✅ 已註冊到分析模組管理器: {module_id}")
                 
             except ImportError as e:
-                print(f"[WARNING] [SPEED_MDI] 無法導入分析模組管理器: {e}")
+                logger.warning(f"[SPEED_MDI] 無法導入分析模組管理器: {e}")
                 self._analysis_manager = None
                 self._module_id = None
             except Exception as e:
-                print(f"[ERROR] [SPEED_MDI] 註冊到分析模組管理器失敗: {e}")
+                logger.error(f"[SPEED_MDI] 註冊到分析模組管理器失敗: {e}")
                 self._analysis_manager = None
                 self._module_id = None
             
             self._initialized = True
-            print(f"[OK] [SPEED_MDI] 速度分析模組初始化完成")
+            logger.info(f"[SPEED_MDI] 速度分析模組初始化完成")
             return True
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [SPEED_MDI] 模組初始化失敗: {e}")
+            logger.error(f"[SPEED_MDI] 模組初始化失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -646,7 +681,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 # 同步模式：隱藏資訊標籤
                 if hasattr(self, 'info_label'):
                     self.info_label.hide()
-                print(f"[SPEED_MDI] 同步模式：隱藏資訊標籤")
+                logger.debug(f"[SPEED_MDI] 同步模式：隱藏資訊標籤")
                 return
             
             # 取消同步模式：顯示資訊標籤
@@ -690,36 +725,36 @@ class SpeedAnalysisModule(IAnalysisModule):
                 )
             
             self.info_label.setText(info_text)
-            print(f"[SPEED_MDI] 取消同步模式：顯示資訊標籤")
+            logger.debug(f"[SPEED_MDI] 取消同步模式：顯示資訊標籤")
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 更新資訊標籤失敗: {e}")
+            logger.error(f"[SPEED_MDI] 更新資訊標籤失敗: {e}")
     
     def _update_chart(self, data: dict):
         """更新圖表"""
         try:
-            print(f"[SPEED_MDI] ========== 更新速度圖表回調 ==========")
-            print(f"[SPEED_MDI] 📦 接收到數據類型: {type(data)}")
-            print(f"[SPEED_MDI] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            logger.debug(f"[SPEED_MDI] ========== 更新速度圖表回調 ==========")
+            logger.debug(f"[SPEED_MDI] 📦 接收到數據類型: {type(data)}")
+            logger.debug(f"[SPEED_MDI] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
             if isinstance(data, dict) and 'speed_data' in data:
                 speed_data = data['speed_data']
-                print(f"[SPEED_MDI] 📊 speed_data 鍵值: {list(speed_data.keys())}")
-                print(f"[SPEED_MDI] 📊 distance 點數: {len(speed_data.get('distance', []))}")
-                print(f"[SPEED_MDI] 📊 driver1_speed 點數: {len(speed_data.get('driver1_speed', []))}")
-                print(f"[SPEED_MDI] 📊 driver2_speed 點數: {len(speed_data.get('driver2_speed', []))}")
+                logger.debug(f"[SPEED_MDI] 📊 speed_data 鍵值: {list(speed_data.keys())}")
+                logger.debug(f"[SPEED_MDI] 📊 distance 點數: {len(speed_data.get('distance', []))}")
+                logger.debug(f"[SPEED_MDI] 📊 driver1_speed 點數: {len(speed_data.get('driver1_speed', []))}")
+                logger.debug(f"[SPEED_MDI] 📊 driver2_speed 點數: {len(speed_data.get('driver2_speed', []))}")
             if self.speed_chart_widget:
-                print(f"[SPEED_MDI] 🎨 調用 speed_chart_widget.update_speed_data...")
+                logger.debug(f"[SPEED_MDI] 🎨 調用 speed_chart_widget.update_speed_data...")
                 self.speed_chart_widget.update_speed_data(data)
-                print(f"[SPEED_MDI] ✅ 圖表更新完成")
+                logger.info(f"[SPEED_MDI] ✅ 圖表更新完成")
                 
                 # 更新工具欄狀態信息
                 self._update_toolbar_status(data)
             else:
-                print(f"[SPEED_MDI] ❌ speed_chart_widget 未初始化")
+                logger.error(f"[SPEED_MDI] ❌ speed_chart_widget 未初始化")
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [SPEED_MDI] 圖表更新失敗: {e}")
+            logger.error(f"[SPEED_MDI] 圖表更新失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -780,10 +815,10 @@ class SpeedAnalysisModule(IAnalysisModule):
                 lap_numbers=lap_numbers
             )
             
-            print(f"[SPEED_MDI] 已更新工具欄狀態: {module_name}")
+            logger.debug(f"[SPEED_MDI] 已更新工具欄狀態: {module_name}")
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 更新工具欄狀態失敗: {e}")
+            logger.error(f"[SPEED_MDI] 更新工具欄狀態失敗: {e}")
     
     def _get_main_window(self):
         """獲取主視窗引用"""
@@ -799,30 +834,30 @@ class SpeedAnalysisModule(IAnalysisModule):
                     return widget
             return None
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 獲取主視窗失敗: {e}")
+            logger.error(f"[SPEED_MDI] 獲取主視窗失敗: {e}")
             return None
     
     def _handle_error(self, error_message: str):
         """處理錯誤"""
-        print(f"[ERROR] [SPEED_MDI] {error_message}")
+        logger.error(f"[SPEED_MDI] {error_message}")
         self.module_error.emit(error_message)
     
     def _on_lap_numbers_changed(self, lap1: int, lap2: int):
         """處理圈數變更"""
         try:
-            print(f"[SPEED_MDI] ========== 圈數變更處理 ==========")
-            print(f"[SPEED_MDI] 新圈數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[SPEED_MDI] ========== 圈數變更處理 ==========")
+            logger.debug(f"[SPEED_MDI] 新圈數: 第{lap1}圈 vs 第{lap2}圈")
             
             # 更新模組的圈數參數
             old_lap1, old_lap2 = self.lap1, self.lap2
             self.lap1 = lap1
             self.lap2 = lap2
             
-            print(f"[SPEED_MDI] 圈數變更: 第{old_lap1}圈 vs 第{old_lap2}圈 → 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[SPEED_MDI] 圈數變更: 第{old_lap1}圈 vs 第{old_lap2}圈 → 第{lap1}圈 vs 第{lap2}圈")
             
             # 重新載入數據
             if self.data_manager:
-                print(f"[SPEED_MDI] 🔄 因圈數變更重新載入數據...")
+                logger.debug(f"[SPEED_MDI] 🔄 因圈數變更重新載入數據...")
                 success = self.data_manager.load_speed_data(
                     year=self.current_year,
                     race=self.current_race,
@@ -834,15 +869,15 @@ class SpeedAnalysisModule(IAnalysisModule):
                 )
                 
                 if success:
-                    print(f"[SPEED_MDI] ✅ 圈數變更後數據重載成功")
+                    logger.info(f"[SPEED_MDI] ✅ 圈數變更後數據重載成功")
                 else:
-                    print(f"[SPEED_MDI] ❌ 圈數變更後數據重載失敗")
+                    logger.error(f"[SPEED_MDI] ❌ 圈數變更後數據重載失敗")
             else:
-                print(f"[SPEED_MDI] ❌ 數據管理器未初始化，無法重載數據")
+                logger.error(f"[SPEED_MDI] ❌ 數據管理器未初始化，無法重載數據")
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [SPEED_MDI] 處理圈數變更失敗: {e}")
+            logger.error(f"[SPEED_MDI] 處理圈數變更失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -919,7 +954,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [SPEED_PARAMS_DEBUG] 參數更新失敗: {e}")
+            logger.error(f"[SPEED_PARAMS_DEBUG] 參數更新失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -932,33 +967,33 @@ class SpeedAnalysisModule(IAnalysisModule):
                             is_fastest: bool = False, use_time_axis: bool = False) -> bool:
         """更新圈速分析參數（包含車手和圈數）"""
         try:
-            print(f"[SPEED_MDI] ========== 圈速參數更新 ==========")
-            print(f"[SPEED_MDI] 收到參數: {year} {race} {session}")
-            print(f"[SPEED_MDI] 車手: {driver1} vs {driver2}")
-            print(f"[SPEED_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
-            print(f"[SPEED_MDI] 最速圈: {is_fastest}")
-            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 4: MDI 收到 use_time_axis 參數")
-            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
-            print(f"[SPEED_MDI] ⏱️  使用時間軸: {use_time_axis}")
+            logger.debug(f"[SPEED_MDI] ========== 圈速參數更新 ==========")
+            logger.debug(f"[SPEED_MDI] 收到參數: {year} {race} {session}")
+            logger.debug(f"[SPEED_MDI] 車手: {driver1} vs {driver2}")
+            logger.debug(f"[SPEED_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[SPEED_MDI] 最速圈: {is_fastest}")
+            logger.debug(f"[TIME_AXIS_DEBUG] 步驟 4: MDI 收到 use_time_axis 參數")
+            logger.debug(f"[TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
+            logger.debug(f"[SPEED_MDI] ⏱️  使用時間軸: {use_time_axis}")
             
             # 儲存時間軸設定
             self.use_time_axis = use_time_axis
-            print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
-                print(f"[SPEED_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
+                logger.debug(f"[SPEED_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
                 fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
                 if fastest_laps:
                     # 使用最速圈數據更新圈數
                     if driver1 in fastest_laps:
                         lap1 = fastest_laps[driver1]
-                        print(f"[SPEED_MDI] 🏁 車手 {driver1} 最速圈: 第{lap1}圈")
+                        logger.debug(f"[SPEED_MDI] 🏁 車手 {driver1} 最速圈: 第{lap1}圈")
                     if driver2 and driver2 in fastest_laps:
                         lap2 = fastest_laps[driver2]
-                        print(f"[SPEED_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
+                        logger.debug(f"[SPEED_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
                 else:
-                    print(f"[SPEED_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
+                    logger.warning(f"[SPEED_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
             
             # 檢查參數是否有變化
             params_changed = (
@@ -971,7 +1006,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 self.lap2 != lap2
             )
             
-            print(f"[SPEED_MDI] 參數是否變化: {params_changed}")
+            logger.debug(f"[SPEED_MDI] 參數是否變化: {params_changed}")
             
             # 更新所有參數 - 保持 driver2 的原始值（包括 None）
             self.current_year = str(year)
@@ -987,14 +1022,14 @@ class SpeedAnalysisModule(IAnalysisModule):
             # 更新圖表組件的圈數顯示
             if self.speed_chart_widget:
                 self.speed_chart_widget.set_lap_numbers(lap1, lap2)
-                print(f"[SPEED_MDI] ✅ 已更新圖表組件的圈數顯示")
+                logger.info(f"[SPEED_MDI] ✅ 已更新圖表組件的圈數顯示")
             
             if params_changed:
-                print(f"[SPEED_MDI] 🔄 參數已變化，開始重載數據...")
+                logger.debug(f"[SPEED_MDI] 🔄 參數已變化，開始重載數據...")
                 
                 # 載入新數據
                 if self.data_manager:
-                    print(f"[SPEED_MDI] 📡 調用數據管理器載入新數據...")
+                    logger.debug(f"[SPEED_MDI] 📡 調用數據管理器載入新數據...")
                     success = self.data_manager.load_speed_data(
                         year=self.current_year,
                         race=self.current_race,
@@ -1006,21 +1041,21 @@ class SpeedAnalysisModule(IAnalysisModule):
                     )
                     
                     if success:
-                        print(f"[SPEED_MDI] ✅ 圈速參數更新後數據重載成功")
+                        logger.info(f"[SPEED_MDI] ✅ 圈速參數更新後數據重載成功")
                         
                         # 應用時間軸設定到圖表
-                        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: 準備設置圖表時間軸模式")
-                        print(f"🕒 [TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
+                        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 5: 準備設置圖表時間軸模式")
+                        logger.debug(f"[TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
                         if self.speed_chart_widget:
-                            print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
+                            logger.debug(f"[TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
                         
                         if self.speed_chart_widget and hasattr(self.speed_chart_widget, 'set_time_axis_mode'):
-                            print(f"🕒 [TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
+                            logger.debug(f"[TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
                             self.speed_chart_widget.set_time_axis_mode(use_time_axis)
-                            print(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
-                            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                            logger.debug(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
+                            logger.info(f"[TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
                         else:
-                            print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
+                            logger.error(f"[TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
                         
                         # 發送參數更新信號
                         self.parameters_updated.emit({
@@ -1041,19 +1076,19 @@ class SpeedAnalysisModule(IAnalysisModule):
                         if parent and hasattr(parent, 'setWindowTitle'):
                             new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                             parent.setWindowTitle(new_title)
-                            print(f"[SPEED_MDI] 🏷️ 視窗標題已更新為: {new_title}")
+                            logger.debug(f"[SPEED_MDI] 🏷️ 視窗標題已更新為: {new_title}")
                         else:
-                            print(f"[SPEED_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                            logger.warning(f"[SPEED_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
                         
                         return True
                     else:
-                        print(f"[SPEED_MDI] ❌ 圈速參數更新後數據重載失敗")
+                        logger.error(f"[SPEED_MDI] ❌ 圈速參數更新後數據重載失敗")
                         return False
                 else:
-                    print(f"[SPEED_MDI] ❌ 數據管理器未初始化")
+                    logger.error(f"[SPEED_MDI] ❌ 數據管理器未初始化")
                     return False
             else:
-                print(f"[SPEED_MDI] ℹ️ 圈速參數未變化，保持現有數據")
+                logger.debug(f"[SPEED_MDI] ℹ️ 圈速參數未變化，保持現有數據")
                 
                 # 即使參數未變化，也確保視窗標題是正確的 - 使用統一的 get_window_title
                 parent = getattr(self, 'parent_window', None)
@@ -1062,15 +1097,15 @@ class SpeedAnalysisModule(IAnalysisModule):
                     expected_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                     if current_title != expected_title:
                         parent.setWindowTitle(expected_title)
-                        print(f"[SPEED_MDI] 🏷️ 同步視窗標題: {expected_title}")
+                        logger.debug(f"[SPEED_MDI] 🏷️ 同步視窗標題: {expected_title}")
                 else:
-                    print(f"[SPEED_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
+                    logger.warning(f"[SPEED_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
                 
                 return True
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 bound method 和 self）
-            print(f"[ERROR] [SPEED_MDI] 圈速參數更新失敗: {e}")
+            logger.error(f"[SPEED_MDI] 圈速參數更新失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1081,15 +1116,15 @@ class SpeedAnalysisModule(IAnalysisModule):
                                      is_fastest: bool = False, use_time_axis: bool = False) -> bool:
         """更新跨賽事比較參數（支援跨年度/跨賽段）- 強化 EXE 環境異常處理"""
         try:
-            print(f"[CROSS-EVENT] ========== 跨賽事比較更新 ==========")
-            print(f"[CROSS-EVENT] 車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
-            print(f"[CROSS-EVENT] 車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
-            print(f"[CROSS-EVENT] 🕒 時間軸模式: {use_time_axis}")
+            logger.debug(f"[CROSS-EVENT] ========== 跨賽事比較更新 ==========")
+            logger.debug(f"[CROSS-EVENT] 車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+            logger.debug(f"[CROSS-EVENT] 車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+            logger.debug(f"[CROSS-EVENT] 🕒 時間軸模式: {use_time_axis}")
             
             # ✅ 防禦性檢查：確保所有參數有效
             if not all([year1, race1, session1, driver1, year2, race2, session2, driver2]):
                 error_msg = "跨賽事比較參數不完整"
-                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                logger.error(f"[CROSS-EVENT] {error_msg}")
                 return False
             
             # 保存跨賽事比較的參數
@@ -1107,26 +1142,26 @@ class SpeedAnalysisModule(IAnalysisModule):
             
             # ⚠️ 關鍵：跨賽事比較時停用同步，避免被 Update All Analysis 覆蓋
             self.sync_driver_lap_enabled = False
-            print(f"[CROSS-EVENT] ⚠️ 已停用同步模式 (sync_driver_lap_enabled = False)")
+            logger.warning(f"[CROSS-EVENT] ⚠️ 已停用同步模式 (sync_driver_lap_enabled = False)")
             
             # 保存時間軸設定
             self.use_time_axis = use_time_axis
-            print(f"[CROSS-EVENT] 🕒 已保存時間軸設定: use_time_axis={use_time_axis}")
+            logger.debug(f"[CROSS-EVENT] 🕒 已保存時間軸設定: use_time_axis={use_time_axis}")
             
             # 更新資訊標籤（顯示跨賽事比較資訊）
             try:
                 self._update_info_label()
             except Exception as e:
-                print(f"[WARNING] [CROSS-EVENT] 更新資訊標籤失敗: {e}")
+                logger.warning(f"[CROSS-EVENT] 更新資訊標籤失敗: {e}")
             
             # 實作跨賽事比較邏輯：調用 API 端點
-            print(f"[CROSS-EVENT] 開始調用 API 端點: /api/v2/analysis/cross-event-comparison")
+            logger.debug(f"[CROSS-EVENT] 開始調用 API 端點: /api/v2/analysis/cross-event-comparison")
             
             # ✅ 檢查是否有舊的 Worker 還在運行
             if hasattr(self, '_cross_event_worker') and self._cross_event_worker is not None:
                 try:
                     if self._cross_event_worker.isRunning():
-                        print(f"[CROSS-EVENT] ⚠️ 停止舊的 API Worker...")
+                        logger.warning(f"[CROSS-EVENT] ⚠️ 停止舊的 API Worker...")
                         self._cross_event_worker.requestInterruption()
                         self._cross_event_worker.wait(500)
                 except:
@@ -1140,10 +1175,10 @@ class SpeedAnalysisModule(IAnalysisModule):
                     force_refresh=False,
                     timeout=120
                 )
-                print(f"[CROSS-EVENT] ✅ Worker 創建成功")
+                logger.info(f"[CROSS-EVENT] ✅ Worker 創建成功")
             except Exception as e:
                 error_msg = f"創建 API Worker 失敗: {e}"
-                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                logger.error(f"[CROSS-EVENT] {error_msg}")
                 import traceback
                 traceback.print_exc()
                 return False
@@ -1153,10 +1188,10 @@ class SpeedAnalysisModule(IAnalysisModule):
                 api_worker.success.connect(self._on_cross_event_data_loaded)
                 api_worker.failure.connect(self._on_cross_event_load_error)
                 api_worker.progress.connect(self._on_api_progress)
-                print(f"[CROSS-EVENT] ✅ 信號連接成功")
+                logger.info(f"[CROSS-EVENT] ✅ 信號連接成功")
             except Exception as e:
                 error_msg = f"連接 Worker 信號失敗: {e}"
-                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                logger.error(f"[CROSS-EVENT] {error_msg}")
                 import traceback
                 traceback.print_exc()
                 return False
@@ -1167,19 +1202,19 @@ class SpeedAnalysisModule(IAnalysisModule):
             # 啟動 Worker
             try:
                 api_worker.start()
-                print(f"[CROSS-EVENT] ✅ API Worker 已啟動")
+                logger.info(f"[CROSS-EVENT] ✅ API Worker 已啟動")
             except Exception as e:
                 error_msg = f"啟動 API Worker 失敗: {e}"
-                print(f"[ERROR] [CROSS-EVENT] {error_msg}")
+                logger.error(f"[CROSS-EVENT] {error_msg}")
                 import traceback
                 traceback.print_exc()
                 return False
             
-            print(f"[CROSS-EVENT] API 請求已啟動")
+            logger.debug(f"[CROSS-EVENT] API 請求已啟動")
             return True
                 
         except Exception as e:
-            print(f"[ERROR] [CROSS-EVENT] 跨賽事比較更新失敗: {e}")
+            logger.error(f"[CROSS-EVENT] 跨賽事比較更新失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1199,19 +1234,19 @@ class SpeedAnalysisModule(IAnalysisModule):
     def _on_cross_event_data_loaded(self, result: Dict[str, Any]) -> None:
         """處理跨賽事比較數據載入成功"""
         try:
-            print(f"[CROSS-EVENT] ✅ 數據載入成功")
+            logger.info(f"[CROSS-EVENT] ✅ 數據載入成功")
             
             # 提取數據
             data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[CROSS-EVENT] 數據鍵值: {list(data.keys())}")
-            print(f"[CROSS-EVENT] 元數據: {meta}")
+            logger.debug(f"[CROSS-EVENT] 數據鍵值: {list(data.keys())}")
+            logger.debug(f"[CROSS-EVENT] 元數據: {meta}")
             
             # 檢查是否有遙測比較數據
             if "telemetry_comparison" in data:
                 telemetry_comp = data["telemetry_comparison"]
-                print(f"[CROSS-EVENT] 遙測參數: {list(telemetry_comp.keys())}")
+                logger.debug(f"[CROSS-EVENT] 遙測參數: {list(telemetry_comp.keys())}")
                 
                 # 提取速度數據（如果存在）
                 if "Speed" in telemetry_comp:
@@ -1232,37 +1267,37 @@ class SpeedAnalysisModule(IAnalysisModule):
                         "use_time_axis": getattr(self, 'use_time_axis', False),  # 傳遞時間軸設定
                     }
                     
-                    print(f"[CROSS-EVENT] 構建圖表數據:")
-                    print(f"[CROSS-EVENT]   距離點數: {len(chart_data['speed_data']['distance'])}")
-                    print(f"[CROSS-EVENT]   車手1速度點數: {len(chart_data['speed_data']['driver1_speed'])}")
-                    print(f"[CROSS-EVENT]   車手2速度點數: {len(chart_data['speed_data']['driver2_speed'])}")
-                    print(f"[CROSS-EVENT]   車手1 時間點數: {len(chart_data['speed_data']['driver1_time_seconds'])}")
-                    print(f"[CROSS-EVENT]   車手2 時間點數: {len(chart_data['speed_data']['driver2_time_seconds'])}")
-                    print(f"[CROSS-EVENT]   🕒 時間軸模式: {chart_data['use_time_axis']}")
+                    logger.debug(f"[CROSS-EVENT] 構建圖表數據:")
+                    logger.debug(f"[CROSS-EVENT]   距離點數: {len(chart_data['speed_data']['distance'])}")
+                    logger.debug(f"[CROSS-EVENT]   車手1速度點數: {len(chart_data['speed_data']['driver1_speed'])}")
+                    logger.debug(f"[CROSS-EVENT]   車手2速度點數: {len(chart_data['speed_data']['driver2_speed'])}")
+                    logger.debug(f"[CROSS-EVENT]   車手1 時間點數: {len(chart_data['speed_data']['driver1_time_seconds'])}")
+                    logger.debug(f"[CROSS-EVENT]   車手2 時間點數: {len(chart_data['speed_data']['driver2_time_seconds'])}")
+                    logger.debug(f"[CROSS-EVENT]   🕒 時間軸模式: {chart_data['use_time_axis']}")
                     
                     # ⚠️ 關鍵：先設置時間軸模式，再更新圖表
                     use_time_axis = chart_data.get('use_time_axis', False)
                     if self.speed_chart_widget and hasattr(self.speed_chart_widget, 'set_time_axis_mode'):
-                        print(f"[CROSS-EVENT] 🕒 設置圖表時間軸模式: {use_time_axis}")
+                        logger.debug(f"[CROSS-EVENT] 🕒 設置圖表時間軸模式: {use_time_axis}")
                         self.speed_chart_widget.set_time_axis_mode(use_time_axis)
                     
                     # 直接調用圖表更新方法
-                    print(f"[CROSS-EVENT] 開始更新圖表...")
+                    logger.debug(f"[CROSS-EVENT] 開始更新圖表...")
                     self._update_chart(chart_data)
-                    print(f"[CROSS-EVENT] ✅ 跨賽事比較完成")
+                    logger.info(f"[CROSS-EVENT] ✅ 跨賽事比較完成")
                 else:
-                    print(f"[CROSS-EVENT] ⚠️ 數據中沒有 Speed 遙測")
+                    logger.warning(f"[CROSS-EVENT] ⚠️ 數據中沒有 Speed 遙測")
             else:
-                print(f"[CROSS-EVENT] ⚠️ 數據中沒有 telemetry_comparison")
+                logger.warning(f"[CROSS-EVENT] ⚠️ 數據中沒有 telemetry_comparison")
                 
         except Exception as e:
-            print(f"[ERROR] [CROSS-EVENT] 數據處理失敗: {e}")
+            logger.error(f"[CROSS-EVENT] 數據處理失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _on_cross_event_load_error(self, error_msg: str) -> None:
         """處理跨賽事比較數據載入錯誤"""
-        print(f"[CROSS-EVENT] ❌ 數據載入失敗: {error_msg}")
+        logger.error(f"[CROSS-EVENT] ❌ 數據載入失敗: {error_msg}")
         # 可選：顯示錯誤提示
         # self.module_error.emit(f"跨賽事比較失敗: {error_msg}")
     
@@ -1290,13 +1325,13 @@ class SpeedAnalysisModule(IAnalysisModule):
           }
         """
         if self._updating_from_shared:
-            print(f"[SPEED_MDI] [SHARED_PARAMS] ⚠️  正在更新中，防止遞迴")
+            logger.warning(f"[SPEED_MDI] [SHARED_PARAMS] ⚠️  正在更新中，防止遞迴")
             return
         
         self._updating_from_shared = True
         try:
-            print(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 從全域共享池更新參數")
-            print(f"[SPEED_MDI] [SHARED_PARAMS] 收到參數: {params}")
+            logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 從全域共享池更新參數")
+            logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 收到參數: {params}")
             
             # 更新所有參數
             year1 = params.get('year1', self.driver1_year)
@@ -1317,12 +1352,12 @@ class SpeedAnalysisModule(IAnalysisModule):
             is_cross_event = (year1 != year2 or session1 != session2)
             
             if is_cross_event:
-                print(f"[SPEED_MDI] [SHARED_PARAMS] 🌍 檢測到跨賽事比較:")
-                print(f"[SPEED_MDI] [SHARED_PARAMS]   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
-                print(f"[SPEED_MDI] [SHARED_PARAMS]   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 🌍 檢測到跨賽事比較:")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS]   車手 1: {year1} {race1} {session1} {driver1} 第{lap1}圈")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS]   車手 2: {year2} {race2} {session2} {driver2} 第{lap2}圈")
                 
                 # 調用跨賽事比較方法
-                print(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 調用 update_cross_event_comparison")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 調用 update_cross_event_comparison")
                 success = self.update_cross_event_comparison(
                     year1=year1, race1=race1, session1=session1, driver1=driver1, lap1=lap1,
                     year2=year2, race2=race2, session2=session2, driver2=driver2, lap2=lap2,
@@ -1331,21 +1366,21 @@ class SpeedAnalysisModule(IAnalysisModule):
                 )
                 
                 if success:
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 跨賽事比較更新成功")
+                    logger.info(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 跨賽事比較更新成功")
                     # ⚠️ [參數資訊標籤] 更新資訊標籤顯示
                     self._update_info_label()
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
+                    logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
                 else:
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] ❌ 跨賽事比較更新失敗")
+                    logger.error(f"[SPEED_MDI] [SHARED_PARAMS] ❌ 跨賽事比較更新失敗")
             else:
                 # 標準模式（同一賽事比較）
-                print(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 標準比較模式:")
-                print(f"[SPEED_MDI] [SHARED_PARAMS]   賽事: {year1} {race1} {session1}")
-                print(f"[SPEED_MDI] [SHARED_PARAMS]   車手: {driver1} vs {driver2}")
-                print(f"[SPEED_MDI] [SHARED_PARAMS]   圈數: 第{lap1}圈 vs 第{lap2}圈")
+                logger.info(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 標準比較模式:")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS]   賽事: {year1} {race1} {session1}")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS]   車手: {driver1} vs {driver2}")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS]   圈數: 第{lap1}圈 vs 第{lap2}圈")
                 
                 # 調用標準更新方法
-                print(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 調用 update_lap_parameters")
+                logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 🔄 調用 update_lap_parameters")
                 success = self.update_lap_parameters(
                     year=year1,
                     race=race1,
@@ -1359,15 +1394,15 @@ class SpeedAnalysisModule(IAnalysisModule):
                 )
                 
                 if success:
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 標準參數更新成功")
+                    logger.info(f"[SPEED_MDI] [SHARED_PARAMS] ✅ 標準參數更新成功")
                     # ⚠️ [參數資訊標籤] 更新資訊標籤顯示
                     self._update_info_label()
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
+                    logger.debug(f"[SPEED_MDI] [SHARED_PARAMS] 📋 已更新資訊標籤")
                 else:
-                    print(f"[SPEED_MDI] [SHARED_PARAMS] ❌ 標準參數更新失敗")
+                    logger.error(f"[SPEED_MDI] [SHARED_PARAMS] ❌ 標準參數更新失敗")
                 
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] [SHARED_PARAMS] 更新失敗: {e}")
+            logger.error(f"[SPEED_MDI] [SHARED_PARAMS] 更新失敗: {e}")
             import traceback
             traceback.print_exc()
         finally:
@@ -1393,7 +1428,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 parent.repaint()
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [SPEED_TITLE_DEBUG] 更新視窗標題失敗: {e}")
+            logger.error(f"[SPEED_TITLE_DEBUG] 更新視窗標題失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1404,7 +1439,7 @@ class SpeedAnalysisModule(IAnalysisModule):
             # 使用 parent_window 屬性而不是 parent() 方法
             parent = getattr(self, 'parent_window', None)
             if parent and hasattr(parent, 'setWindowTitle'):
-                print(f"[SPEED_TITLE_DEBUG] 🔄 延遲標題更新: '{title}'")
+                logger.debug(f"[SPEED_TITLE_DEBUG] 🔄 延遲標題更新: '{title}'")
                 parent.setWindowTitle(title)
                 parent.update()
                 parent.repaint()
@@ -1412,14 +1447,14 @@ class SpeedAnalysisModule(IAnalysisModule):
                 # 再次驗證
                 actual_title = parent.windowTitle()
                 success = (actual_title == title)
-                print(f"[SPEED_TITLE_DEBUG] 延遲更新結果: {success}, 實際標題: '{actual_title}'")
+                logger.debug(f"[SPEED_TITLE_DEBUG] 延遲更新結果: {success}, 實際標題: '{actual_title}'")
                 
                 if not success:
-                    print(f"[ERROR] [SPEED_TITLE_DEBUG] ❌ 延遲更新也失敗了！可能是視窗引用問題")
-                    print(f"[SPEED_TITLE_DEBUG] 視窗類型: {type(parent)}")
-                    print(f"[SPEED_TITLE_DEBUG] 視窗是否可見: {parent.isVisible()}")
+                    logger.error(f"[SPEED_TITLE_DEBUG] ❌ 延遲更新也失敗了！可能是視窗引用問題")
+                    logger.debug(f"[SPEED_TITLE_DEBUG] 視窗類型: {type(parent)}")
+                    logger.debug(f"[SPEED_TITLE_DEBUG] 視窗是否可見: {parent.isVisible()}")
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 延遲標題更新失敗: {e}")
+            logger.error(f"[SPEED_MDI] 延遲標題更新失敗: {e}")
     
     # 實現 IAnalysisModule 抽象方法
     @property
@@ -1469,12 +1504,12 @@ class SpeedAnalysisModule(IAnalysisModule):
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與 Show All Data 按鈕整合"""
-        print(f"[SPEED_MDI] 🔄 reset_chart_view() 被調用")
+        logger.debug(f"[SPEED_MDI] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
-            print(f"[SPEED_MDI] ✅ 找到 speed_chart_widget，調用 reset_chart_view()")
+            logger.info(f"[SPEED_MDI] ✅ 找到 speed_chart_widget，調用 reset_chart_view()")
             self.speed_chart_widget.reset_chart_view()
         else:
-            print(f"[SPEED_MDI] ❌ 未找到 speed_chart_widget 屬性")
+            logger.error(f"[SPEED_MDI] ❌ 未找到 speed_chart_widget 屬性")
     
     def cleanup(self):
         """清理資源 - 實現抽象方法
@@ -1483,7 +1518,7 @@ class SpeedAnalysisModule(IAnalysisModule):
         清理順序：analysis_manager → data_manager → linkage_manager → chart_widget → main_widget
         """
         try:
-            print(f"[SPEED_MDI] 🧹 開始清理資源...")
+            logger.debug(f"[SPEED_MDI] 🧹 開始清理資源...")
             
             # 從分析模組管理器解除註冊
             if hasattr(self, '_analysis_manager') and self._analysis_manager and hasattr(self, '_module_id'):
@@ -1494,14 +1529,14 @@ class SpeedAnalysisModule(IAnalysisModule):
                     
                     # 解除註冊模組
                     self._analysis_manager.unregister_module(self._module_id)
-                    print(f"[SPEED_MDI] ✅ 已從分析模組管理器解除註冊: {self._module_id}")
+                    logger.info(f"[SPEED_MDI] ✅ 已從分析模組管理器解除註冊: {self._module_id}")
                     
                 except Exception as e:
-                    print(f"[ERROR] [SPEED_MDI] 從分析模組管理器解除註冊失敗: {e}")
+                    logger.error(f"[SPEED_MDI] 從分析模組管理器解除註冊失敗: {e}")
 
             if hasattr(self, 'data_manager') and self.data_manager:
                 # 🔴 斷開循環引用：先清空 module_ref
-                print(f"[SPEED_MDI] 🔴 斷開循環引用：清理 data_manager.module_ref")
+                logger.debug(f"[SPEED_MDI] 🔴 斷開循環引用：清理 data_manager.module_ref")
                 if hasattr(self.data_manager, 'module_ref'):
                     self.data_manager.module_ref = None
                 
@@ -1516,23 +1551,24 @@ class SpeedAnalysisModule(IAnalysisModule):
             if hasattr(self, 'speed_chart_widget') and self.speed_chart_widget:
                 # 從連動管理器中取消註冊圖表組件（必須是內部的 chart_widget，不是容器）
                 try:
-                    print(f"[SPEED_MDI] [DEBUG] 嘗試導入 linkage_manager...")
+                    logger.debug(f"[SPEED_MDI] [DEBUG] 嘗試導入 linkage_manager...")
                     from modules.gui.lap_analysis.linkage import linkage_manager
-                    print(f"[SPEED_MDI] [DEBUG] linkage_manager 導入成功: {linkage_manager}")
+                    logger.debug(f"[SPEED_MDI] [DEBUG] linkage_manager 導入成功: {linkage_manager}")
                     
                     if linkage_manager:
                         # ✅ 關鍵修復：必須 unregister 內部的 SpeedChartWidget，不是外層的 SpeedAnalysisChartWidget
                         if hasattr(self.speed_chart_widget, 'chart_widget') and self.speed_chart_widget.chart_widget:
-                            print(f"[SPEED_MDI] [DEBUG] 調用 unregister_module({self.speed_chart_widget.chart_widget})")
+                            logger.debug(f"[SPEED_MDI] [DEBUG] 調用 unregister_module({self.speed_chart_widget.chart_widget})")
                             linkage_manager.unregister_module(self.speed_chart_widget.chart_widget)
-                            print(f"[SPEED_MDI] ✅ 已從連動管理器解除註冊圖表組件（內部 chart_widget）")
+                            logger.info(f"[SPEED_MDI] ✅ 已從連動管理器解除註冊圖表組件（內部 chart_widget）")
                         else:
-                            print(f"[SPEED_MDI] [DEBUG] ⚠️ chart_widget 不存在，跳過 unregister")
+                            logger.warning(f"[SPEED_MDI] [DEBUG] ⚠️ chart_widget 不存在，跳過 unregister")
                     else:
-                        print(f"[SPEED_MDI] [DEBUG] ⚠️ linkage_manager 為 False/None，跳過 unregister")
+                        logger.warning(f"[SPEED_MDI] [DEBUG] ⚠️ linkage_manager 為 False/None，跳過 unregister")
                 except Exception as e:
-                    print(f"[ERROR] [SPEED_MDI] 從連動管理器解除註冊失敗: {e}")
+                    logger.error(f"[SPEED_MDI] 從連動管理器解除註冊失敗: {e}")
                     import traceback
+
                     traceback.print_exc()
                 
                 # 清理圖表組件
@@ -1551,9 +1587,9 @@ class SpeedAnalysisModule(IAnalysisModule):
             if hasattr(self, 'speed_chart_widget'):
                 self.speed_chart_widget = None
                 
-            print(f"[CLEANUP] 速度分析模組資源清理完成")
+            logger.debug(f"[CLEANUP] 速度分析模組資源清理完成")
         except Exception as e:
-            print(f"[ERROR] 速度分析模組清理失敗: {e}")
+            logger.error(f"速度分析模組清理失敗: {e}")
     
     def load_data(self, **kwargs) -> bool:
         """載入數據 - 實現抽象方法"""
@@ -1572,7 +1608,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 lap2=kwargs.get('lap2', 1)
             )
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] load_data 失敗: {e}")
+            logger.error(f"[SPEED_MDI] load_data 失敗: {e}")
             return False
     
     def update_lap_parameters(self, year: str, race: str, session: str,
@@ -1581,17 +1617,17 @@ class SpeedAnalysisModule(IAnalysisModule):
                             is_fastest: bool = False, use_time_axis: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 供統一更新介面使用"""
         try:
-            print(f"[SPEED_MDI] 🔄 更新圈速參數...")
-            print(f"[SPEED_MDI]   📊 基本參數: {year} {race} {session}")
-            print(f"[SPEED_MDI]   🏎️ 車手參數: {driver1} vs {driver2}")
-            print(f"[SPEED_MDI]   🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
-            print(f"[SPEED_MDI]   ⚡ 最速圈: {is_fastest}")
-            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 4: SpeedAnalysisModule.update_lap_parameters 接收參數")
-            print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
+            logger.debug(f"[SPEED_MDI] 🔄 更新圈速參數...")
+            logger.debug(f"[SPEED_MDI] 📊 基本參數: {year} {race} {session}")
+            logger.debug(f"[SPEED_MDI] 🏎️ 車手參數: {driver1} vs {driver2}")
+            logger.debug(f"[SPEED_MDI] 🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[SPEED_MDI] ⚡ 最速圈: {is_fastest}")
+            logger.debug(f"[TIME_AXIS_DEBUG] 步驟 4: SpeedAnalysisModule.update_lap_parameters 接收參數")
+            logger.debug(f"[TIME_AXIS_DEBUG]   use_time_axis 參數值: {use_time_axis}")
             
             # 儲存時間軸設定
             self.use_time_axis = use_time_axis
-            print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   self.use_time_axis 已儲存: {self.use_time_axis}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -1606,7 +1642,7 @@ class SpeedAnalysisModule(IAnalysisModule):
             self.update_window_title()
             
             # 重新載入數據
-            print(f"[SPEED_MDI] 🚀 重新載入數據...")
+            logger.debug(f"[SPEED_MDI] 🚀 重新載入數據...")
             success = self.load_data(
                 year=year,
                 race=race,
@@ -1619,29 +1655,29 @@ class SpeedAnalysisModule(IAnalysisModule):
             )
             
             if success:
-                print(f"[SPEED_MDI] ✅ 圈速參數更新成功")
+                logger.info(f"[SPEED_MDI] ✅ 圈速參數更新成功")
                 
                 # 應用時間軸設定到圖表
-                print(f"🕒 [TIME_AXIS_DEBUG] 步驟 5: SpeedAnalysisModule 準備設置圖表時間軸模式")
-                print(f"🕒 [TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
+                logger.debug(f"[TIME_AXIS_DEBUG] 步驟 5: SpeedAnalysisModule 準備設置圖表時間軸模式")
+                logger.debug(f"[TIME_AXIS_DEBUG]   self.speed_chart_widget 存在: {self.speed_chart_widget is not None}")
                 if self.speed_chart_widget:
-                    print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
+                    logger.debug(f"[TIME_AXIS_DEBUG]   hasattr(speed_chart_widget, 'set_time_axis_mode'): {hasattr(self.speed_chart_widget, 'set_time_axis_mode')}")
                 
                 if self.speed_chart_widget and hasattr(self.speed_chart_widget, 'set_time_axis_mode'):
-                    print(f"🕒 [TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
+                    logger.debug(f"[TIME_AXIS_DEBUG]   調用 speed_chart_widget.set_time_axis_mode({use_time_axis})")
                     self.speed_chart_widget.set_time_axis_mode(use_time_axis)
-                    print(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
-                    print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
+                    logger.debug(f"[SPEED_MDI] ⏱️  已設置圖表時間軸模式: {use_time_axis}")
+                    logger.info(f"[TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 調用完成")
                 else:
-                    print(f"🕒 [TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
+                    logger.error(f"[TIME_AXIS_DEBUG]   ❌ 無法調用 set_time_axis_mode (widget不存在或方法不存在)")
             else:
-                print(f"[SPEED_MDI] ❌ 數據載入失敗")
+                logger.error(f"[SPEED_MDI] ❌ 數據載入失敗")
                 
             return success
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（包含 bound method 和 self）
-            print(f"[ERROR] [SPEED_MDI] update_lap_parameters 失敗: {e}")
+            logger.error(f"[SPEED_MDI] update_lap_parameters 失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1660,7 +1696,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 lap2=1
             )
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] refresh_analysis 失敗: {e}")
+            logger.error(f"[SPEED_MDI] refresh_analysis 失敗: {e}")
     
     def clear_data(self):
         """清除數據 - 實現抽象方法"""
@@ -1668,9 +1704,9 @@ class SpeedAnalysisModule(IAnalysisModule):
             if self.speed_chart_widget:
                 # 清除速度圖表數據
                 self.speed_chart_widget.reset_data()
-            print(f"[SPEED_MDI] 數據已清除")
+            logger.debug(f"[SPEED_MDI] 數據已清除")
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] clear_data 失敗: {e}")
+            logger.error(f"[SPEED_MDI] clear_data 失敗: {e}")
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
         """獲取當前數據 - 實建抽象方法"""
@@ -1684,7 +1720,7 @@ class SpeedAnalysisModule(IAnalysisModule):
                 'data_loaded': self.data_manager is not None
             }
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] get_current_data 失敗: {e}")
+            logger.error(f"[SPEED_MDI] get_current_data 失敗: {e}")
             return None
 
     
@@ -1701,7 +1737,7 @@ class SpeedAnalysisModule(IAnalysisModule):
             target_race = (race or self.current_race or "").strip()
             target_session = str(session or self.current_session or "").strip()
 
-            print(f"[speed_MDI] 🔍 [API-ONLY] 檢查遙測分析本地緩存: {{target_year}} {{target_race}} {{target_session}}")
+            logger.debug(f"[speed_MDI] 🔍 [API-ONLY] 檢查遙測分析本地緩存: {{target_year}} {{target_race}} {{target_session}}")
 
             # ✅ 允許：檢查本地 JSON 緩存
             telemetry_file = self._find_telemetry_analysis_file(
@@ -1710,18 +1746,18 @@ class SpeedAnalysisModule(IAnalysisModule):
                 session=target_session
             )
             if telemetry_file:
-                print(f"[speed_MDI] 📂 [API-ONLY] 找到本地遙測分析緩存: {{telemetry_file}}")
+                logger.debug(f"[speed_MDI] 📂 [API-ONLY] 找到本地遙測分析緩存: {{telemetry_file}}")
                 return True
 
             # ❌ 禁止：自動創建視窗或啟動 CLI
             # 改為僅提示用戶通過 API 或主視窗遙測模組獲取數據
-            print("⚠️ [speed_MDI] [API-ONLY] 遙測分析數據不存在於本地緩存")
-            print("💡 [speed_MDI] [API-ONLY] 提示：請先透過主視窗遙測模組或 REST API 獲取遙測數據")
-            print("💡 [speed_MDI] [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 8")
+            logger.warning("[speed_MDI] [API-ONLY] 遙測分析數據不存在於本地緩存")
+            logger.debug("💡 [speed_MDI] [API-ONLY] 提示：請先透過主視窗遙測模組或 REST API 獲取遙測數據")
+            logger.debug("💡 [speed_MDI] [API-ONLY] 或者手動執行 CLI: python f1_analysis_modular_main.py -f 8")
             return False
 
         except Exception as e:
-            print(f"[ERROR] [speed_MDI] _check_and_load_telemetry_if_needed 失敗: {{e}}")
+            logger.error(f"[speed_MDI] _check_and_load_telemetry_if_needed 失敗: {{e}}")
             return False
 
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
@@ -1731,30 +1767,30 @@ class SpeedAnalysisModule(IAnalysisModule):
             Dict[str, int]: 車手代碼到最速圈數的映射，例如 {'VER': 15, 'LEC': 23}
         """
         try:
-            print(f"[SPEED_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[SPEED_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
             
             # 檢查遙測分析JSON檔案是否存在
             telemetry_file = self._find_telemetry_analysis_file()
             
             if not telemetry_file:
-                print(f"[SPEED_MDI] 📡 遙測分析數據不存在，開始自動載入...")
+                logger.debug(f"[SPEED_MDI] 📡 遙測分析數據不存在，開始自動載入...")
                 success = self._trigger_telemetry_analysis()
                 if success:
                     # 重新檢查檔案
                     telemetry_file = self._find_telemetry_analysis_file()
                 else:
-                    print(f"[SPEED_MDI] ❌ 遙測分析載入失敗")
+                    logger.error(f"[SPEED_MDI] ❌ 遙測分析載入失敗")
                     return None
             
             if telemetry_file:
-                print(f"[SPEED_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
+                logger.debug(f"[SPEED_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
                 return self._extract_fastest_laps_from_telemetry(telemetry_file)
             else:
-                print(f"[SPEED_MDI] ❌ 無法獲取遙測分析數據")
+                logger.error(f"[SPEED_MDI] ❌ 無法獲取遙測分析數據")
                 return None
                 
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
+            logger.error(f"[SPEED_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
             return None
 
     def _find_telemetry_analysis_file(self) -> Optional[str]:
@@ -1773,27 +1809,27 @@ class SpeedAnalysisModule(IAnalysisModule):
             for pattern in search_patterns:
                 matching_files = glob.glob(pattern)
                 if matching_files:
-                    print(f"[SPEED_MDI] 🎯 找到遙測分析檔案: {matching_files[0]}")
+                    logger.debug(f"[SPEED_MDI] 🎯 找到遙測分析檔案: {matching_files[0]}")
                     return matching_files[0]
             
             # 如果沒找到精確匹配，嘗試模糊搜尋
             fuzzy_pattern = f"json*/telemetry_analysis*{self.current_year}*{self.current_race}*.json"
             matching_files = glob.glob(fuzzy_pattern)
             if matching_files:
-                print(f"[SPEED_MDI] 🔍 模糊搜尋找到遙測分析檔案: {matching_files[0]}")
+                logger.debug(f"[SPEED_MDI] 🔍 模糊搜尋找到遙測分析檔案: {matching_files[0]}")
                 return matching_files[0]
             
-            print(f"[SPEED_MDI] ❌ 未找到遙測分析檔案")
+            logger.error(f"[SPEED_MDI] ❌ 未找到遙測分析檔案")
             return None
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _find_telemetry_analysis_file 失敗: {e}")
+            logger.error(f"[SPEED_MDI] _find_telemetry_analysis_file 失敗: {e}")
             return None
 
     def _trigger_telemetry_analysis(self) -> bool:
         """觸發遙測分析載入/生成"""
         try:
-            print(f"[SPEED_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[SPEED_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
             
             # 方法1: 嘗試通過主視窗找到遙測分析模組
             if hasattr(self, 'parent_window') and self.parent_window:
@@ -1808,22 +1844,22 @@ class SpeedAnalysisModule(IAnalysisModule):
                     for sub_window in main_window.mdi_area.subWindowList():
                         window_title = sub_window.windowTitle()
                         if "遙測分析" in window_title:
-                            print(f"[SPEED_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
+                            logger.debug(f"[SPEED_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
                             # 激活並刷新遙測分析視窗
                             main_window.mdi_area.setActiveSubWindow(sub_window)
                             return True
                     
                     # API-ONLY 模式：不自動創建視窗
-                    print(f"[SPEED_MDI] � [API-ONLY] 未找到現有遙測分析視窗")
-                    print(f"[SPEED_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
+                    logger.debug(f"[SPEED_MDI] � [API-ONLY] 未找到現有遙測分析視窗")
+                    logger.debug(f"[SPEED_MDI] 💡 提示：請手動開啟遙測分析模組或通過 API 獲取數據")
                     return False
             
             # 方法2: 透過 API 直接生成遙測分析數據（Function 13）
-            print(f"[SPEED_MDI] 🔧 透過 API 生成遙測分析數據（Function 13）...")
+            logger.debug(f"[SPEED_MDI] 🔧 透過 API 生成遙測分析數據（Function 13）...")
             return self._generate_telemetry_via_api()
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _trigger_telemetry_analysis 失敗: {e}")
+            logger.error(f"[SPEED_MDI] _trigger_telemetry_analysis 失敗: {e}")
             return False
 
     def _generate_telemetry_via_api(self) -> bool:
@@ -1853,14 +1889,14 @@ class SpeedAnalysisModule(IAnalysisModule):
             )
 
             if success:
-                print("[SPEED_MDI] ✅ 遙測分析已透過 API 生成")
+                logger.info("[SPEED_MDI] ✅ 遙測分析已透過 API 生成")
                 return True
 
-            print(f"[SPEED_MDI] ❌ 遙測分析 API 生成失敗: {message}")
+            logger.error(f"[SPEED_MDI] ❌ 遙測分析 API 生成失敗: {message}")
             return False
 
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _generate_telemetry_via_api 失敗: {e}")
+            logger.error(f"[SPEED_MDI] _generate_telemetry_via_api 失敗: {e}")
             return False
 
     def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:
@@ -1868,7 +1904,7 @@ class SpeedAnalysisModule(IAnalysisModule):
         try:
             import json
             
-            print(f"[SPEED_MDI] 📊 讀取遙測分析檔案: {telemetry_file}")
+            logger.debug(f"[SPEED_MDI] 📊 讀取遙測分析檔案: {telemetry_file}")
             
             with open(telemetry_file, 'r', encoding='utf-8') as f:
                 telemetry_data = json.load(f)
@@ -1891,19 +1927,19 @@ class SpeedAnalysisModule(IAnalysisModule):
                     if lap_number and lap_number != 'N/A':
                         try:
                             fastest_laps[driver_code] = int(lap_number)
-                            print(f"[SPEED_MDI] 🏁 {driver_code} 最速圈: 第{lap_number}圈")
+                            logger.debug(f"[SPEED_MDI] 🏁 {driver_code} 最速圈: 第{lap_number}圈")
                         except (ValueError, TypeError):
-                            print(f"[SPEED_MDI] ⚠️ {driver_code} 最速圈數無效: {lap_number}")
+                            logger.warning(f"[SPEED_MDI] ⚠️ {driver_code} 最速圈數無效: {lap_number}")
             
             if fastest_laps:
-                print(f"[SPEED_MDI] ✅ 成功提取 {len(fastest_laps)} 個車手的最速圈數據")
+                logger.info(f"[SPEED_MDI] ✅ 成功提取 {len(fastest_laps)} 個車手的最速圈數據")
                 return fastest_laps
             else:
-                print(f"[SPEED_MDI] ❌ 未找到有效的最速圈數據")
+                logger.error(f"[SPEED_MDI] ❌ 未找到有效的最速圈數據")
                 return None
                 
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] _extract_fastest_laps_from_telemetry 失敗: {e}")
+            logger.error(f"[SPEED_MDI] _extract_fastest_laps_from_telemetry 失敗: {e}")
             return None
 
     def receive_main_window_update_notification(self, param_type, value):
@@ -1920,42 +1956,42 @@ class SpeedAnalysisModule(IAnalysisModule):
             **kwargs: 其他可能的參數
         """
         try:
-            print(f"[SPEED_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
-            print(f"[SPEED_NOTIFICATION_DEBUG] � 原始參數:")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - param_type: {param_type}")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - value: {value}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] � 原始參數:")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - param_type: {param_type}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - value: {value}")
             
             # 簡化的參數處理
             # 直接處理參數更新
             if param_type == 'year':
                 self.current_year = str(value)
-                print(f"[UPDATE] 年份更新為: {self.current_year}")
+                logger.debug(f"[UPDATE] 年份更新為: {self.current_year}")
             elif param_type == 'race':
                 self.current_race = str(value)
-                print(f"[UPDATE] 賽事更新為: {self.current_race}")
+                logger.debug(f"[UPDATE] 賽事更新為: {self.current_race}")
             elif param_type == 'session':
                 self.current_session = str(value)
-                print(f"[UPDATE] 場次更新為: {self.current_session}")
+                logger.debug(f"[UPDATE] 場次更新為: {self.current_session}")
             
-            print(f"[SPEED_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前年份: {self.current_year}")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前賽事: {self.current_race}")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前賽段: {self.current_session}")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前車手: {self.driver1} vs {self.driver2}")
-            print(f"[SPEED_NOTIFICATION_DEBUG]   - 當前圈數: 第{self.lap1}圈 vs 第{self.lap2}圈")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - 當前年份: {self.current_year}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - 當前賽事: {self.current_race}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - 當前賽段: {self.current_session}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - 當前車手: {self.driver1} vs {self.driver2}")
+            logger.debug(f"[SPEED_NOTIFICATION_DEBUG] - 當前圈數: 第{self.lap1}圈 vs 第{self.lap2}圈")
             
             # [TOOL] 更新窗口標題（如果有父窗口）- 使用統一的 get_window_title
             parent = getattr(self, 'parent_window', None)
             if parent and hasattr(parent, 'setWindowTitle'):
                 title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                 parent.setWindowTitle(title)
-                print(f"[TITLE] 窗口標題更新為: {title}")
+                logger.debug(f"[TITLE] 窗口標題更新為: {title}")
             else:
-                print(f"[WARNING] 無法更新視窗標題 - 父視窗引用未設置")
+                logger.warning(f"無法更新視窗標題 - 父視窗引用未設置")
             
             # 重新載入數據
             if self.data_manager:
-                print(f"[REFRESH] 重新載入速度數據...")
+                logger.debug(f"[REFRESH] 重新載入速度數據...")
                 self.data_manager.load_speed_data(
                     year=self.current_year,
                     race=self.current_race,
@@ -1965,11 +2001,11 @@ class SpeedAnalysisModule(IAnalysisModule):
                     lap1=self.lap1,
                     lap2=self.lap2
                 )
-            print(f"[OK] [NOTIFICATION] ⚡ 速度分析模組內容更新成功")
+            logger.info(f"[NOTIFICATION] ⚡ 速度分析模組內容更新成功")
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisModule 實例）
-            print(f"[ERROR] [NOTIFICATION] ⚡ 速度分析模組內容更新失敗: {e}")
+            logger.error(f"[NOTIFICATION] ⚡ 速度分析模組內容更新失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1977,16 +2013,16 @@ class SpeedAnalysisModule(IAnalysisModule):
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據 - 實現抽象方法"""
         try:
-            print(f"[SPEED_MDI] 匯出數據功能尚未實現 (路徑: {export_path}, 格式: {export_format})")
+            logger.debug(f"[SPEED_MDI] 匯出數據功能尚未實現 (路徑: {export_path}, 格式: {export_format})")
             return False
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] export_data 失敗: {e}")
+            logger.error(f"[SPEED_MDI] export_data 失敗: {e}")
             return False
 
 # 註冊速度分析模組到工廠
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.TELEMETRY_SPEED, SpeedAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] Speed analysis module registered")
+    logger.info(f"[MODULE_FACTORY] Speed analysis module registered")
 except ImportError as e:
-    print(f"[WARNING] [MODULE_FACTORY] 速度分析模組註冊失敗: {e}")
+    logger.warning(f"[MODULE_FACTORY] 速度分析模組註冊失敗: {e}")

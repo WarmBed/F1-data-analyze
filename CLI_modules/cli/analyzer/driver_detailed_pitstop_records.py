@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 車手進站詳細記錄模組 (功能5)
 Driver Detailed Pitstop Records Module
@@ -10,6 +11,14 @@ Driver Detailed Pitstop Records Module
 版本: 1.0
 作者: F1 Analysis Team
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import pickle

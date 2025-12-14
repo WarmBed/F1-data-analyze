@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (
     QGroupBox, QGridLayout, QTextEdit, QMessageBox, QFrame,
     QTabWidget, QScrollArea, QSplitter
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject, QMutex
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 import requests
@@ -39,8 +39,13 @@ from core.gui_i18n import tr
 # 導入分析模組介面
 from ..interfaces.analysis_module import IAnalysisModule
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入基礎類別
 # from f1t_gui_main import PopoutSubWindow  # 不再直接繼承PopoutSubWindow
+
+
 
 
 class PitstopAnalysisApiWorker(QThread):
@@ -68,6 +73,11 @@ class PitstopAnalysisApiWorker(QThread):
 
     def run(self) -> None:
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[PITSTOP_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(15, f"呼叫 API 取得{self.label}資料...")
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -79,6 +89,11 @@ class PitstopAnalysisApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[PITSTOP_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -86,6 +101,12 @@ class PitstopAnalysisApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
             )
+            
+            # 請求完成後檢查中斷（避免在 widget 已銷毀後發送信號）
+            if self.isInterruptionRequested():
+                logger.debug("[PITSTOP_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(60, f"API {self.label}回應解析中...")
             response.raise_for_status()
 
@@ -101,18 +122,24 @@ class PitstopAnalysisApiWorker(QThread):
             
             # 🔥 修復雙層嵌套問題：如果 data 包含 function_id 和內層 data，提取內層數據
             if "function_id" in data and "data" in data:
-                print(f"[API_WORKER] 檢測到雙層嵌套結構 (function_id={data.get('function_id')})")
+                logger.warning(
+                    "[API_WORKER] 檢測到雙層嵌套結構 (function_id=%s)",
+                    data.get("function_id")
+                )
                 inner_data = data.get("data")
                 # 保留外層的 metadata 但使用內層的實際數據
                 data["_original_structure"] = "nested"
                 if isinstance(inner_data, dict):
                     # 將內層數據提升到外層，保留其他元數據
                     data.update(inner_data)
-                    print(f"[API_WORKER] 已提取內層數據，鍵值數量: {len(inner_data)}")
+                    logger.info(
+                        "[API_WORKER] 已提取內層數據，鍵值數量: %s",
+                        len(inner_data)
+                    )
                 elif inner_data is None:
-                    print(f"[API_WORKER] ⚠️  內層 data 為 None，保留原始結構")
+                    logger.warning("[API_WORKER] ⚠️  內層 data 為 None，保留原始結構")
                 else:
-                    print(f"[API_WORKER] ⚠️  內層 data 類型異常: {type(inner_data)}")
+                    logger.warning("[API_WORKER] ⚠️  內層 data 類型異常: %s", type(inner_data))
 
             latency_ms = (time.perf_counter() - start_ts) * 1000.0
             meta = {
@@ -125,12 +152,21 @@ class PitstopAnalysisApiWorker(QThread):
                 "base_url": self.base_url,
             }
 
+            # 發送信號前最後檢查中斷（避免向已銷毀的 widget 發送信號）
+            if self.isInterruptionRequested():
+                logger.debug("[PITSTOP_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90, f"API {self.label}資料載入完成")
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100, f"API {self.label}任務結束")
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100, f"API {self.label}任務結束")
 
 
 class PitstopDataManager(QObject):
@@ -157,6 +193,9 @@ class PitstopDataManager(QObject):
         self._generation_params = None  # 生成參數
         self._team_is_loading = False
         self._detail_is_loading = False
+        self._is_active = True  # ✅ 追蹤管理器是否還在運作
+        self._cleanup_lock = QMutex()  # ✅ 防止並行 cleanup
+        self._cleanup_done = False  # ✅ 標記是否已清理
         self._driver_params: Dict[str, Any] = {}
         self._team_params: Dict[str, Any] = {}
         self._detail_params: Dict[str, Any] = {}
@@ -175,13 +214,16 @@ class PitstopDataManager(QObject):
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
 
         fallback_state = "啟用" if self._allow_local_fallback else "停用"
-        print(
-            f"[PITSTOP_MANAGER] 初始化完成，API 基底網址: {self._api_base_url}，本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
+        logger.info(
+            "[PITSTOP_MANAGER] 初始化完成，API 基底網址: %s，本地 JSON 後備已%s (策略: %s)",
+            self._api_base_url,
+            fallback_state,
+            self._fallback_policy_reason,
         )
         
     def _determine_api_base_url(self) -> str:
         return resolve_api_base_url(
-            event_logger=lambda message: print(f"[PITSTOP_MANAGER] {message}")
+            event_logger=lambda message: logger.info("[PITSTOP_MANAGER] %s", message)
         )
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
@@ -202,12 +244,16 @@ class PitstopDataManager(QObject):
         self._allow_local_fallback = bool(allowed)
         self._fallback_policy_reason = reason or "手動覆寫"
         state = "啟用" if self._allow_local_fallback else "停用"
-        print(f"[PITSTOP_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+        logger.info(
+            "[PITSTOP_MANAGER] 本地 JSON 後備手動設為%s (原因: %s)",
+            state,
+            self._fallback_policy_reason,
+        )
 
     def set_api_base_url(self, base_url: Optional[str]) -> None:
         if base_url:
             self._api_base_url = str(base_url).rstrip('/')
-            print(f"[PITSTOP_MANAGER] API 基底網址更新為 {self._api_base_url}")
+            logger.info("[PITSTOP_MANAGER] API 基底網址更新為 %s", self._api_base_url)
 
     def _cleanup_api_worker(self, kind: str) -> None:
         """
@@ -237,7 +283,10 @@ class PitstopDataManager(QObject):
                         # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
                         try:
                             if worker and worker.isRunning():
-                                print(f"[WARNING] pitstop_analysis API Worker ({kind}) 未在 1 秒內停止，強制終止")
+                                logger.warning(
+                                    "[WARNING] pitstop_analysis API Worker (%s) 未在 1 秒內停止，強制終止",
+                                    kind,
+                                )
                                 worker.terminate()
                         except (RuntimeError, AttributeError):
                             # Worker 已被刪除，無需處理
@@ -248,7 +297,7 @@ class PitstopDataManager(QObject):
                     # Worker 已停止，立即清理
                     worker.deleteLater()
             except Exception as e:
-                print(f"[ERROR] pitstop_analysis cleanup exception: {e}")
+                logger.exception("[ERROR] pitstop_analysis cleanup exception: %s", e)
 
     def _start_api_request(
         self,
@@ -341,7 +390,7 @@ class PitstopDataManager(QObject):
                 self._detail_is_loading = False
 
         except Exception as exc:
-            print(f"[PITSTOP_MANAGER] API 資料處理失敗 ({kind}): {exc}")
+            logger.exception("[PITSTOP_MANAGER] API 資料處理失敗 (%s): %s", kind, exc)
             if not self._fallback_to_local(kind, message=str(exc)):
                 self.error_occurred.emit(f"API 資料處理失敗: {exc}")
                 if kind == "driver":
@@ -353,7 +402,7 @@ class PitstopDataManager(QObject):
 
     def _on_api_error(self, message: str, *, kind: str) -> None:
         reason = self._stringify_error(message)
-        print(f"[PITSTOP_MANAGER] API 請求失敗 ({kind}): {reason}")
+        logger.error("[PITSTOP_MANAGER] API 請求失敗 (%s): %s", kind, reason)
         if not self._fallback_to_local(kind, message=reason):
             self.error_occurred.emit(f"API 請求失敗: {reason}")
             if kind == "driver":
@@ -373,7 +422,7 @@ class PitstopDataManager(QObject):
             params = dict(self._detail_params)
 
         if not self._allow_local_fallback:
-            print(
+            logger.warning(
                 "[PITSTOP_MANAGER] API 失敗且本地後備停用。如需啟用請設定 F1T_ALLOW_PITSTOP_JSON_FALLBACK=1"
             )
             return False
@@ -443,7 +492,7 @@ class PitstopDataManager(QObject):
     def _find_pitstop_data_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋進站數據檔案（類似賽道分析模組的 _find_track_data_file）"""
         try:
-            print(f"[FOLDER] [PITSTOP] 搜尋進站數據檔案: {year} {race} {session}")
+            logger.info("[FOLDER] [PITSTOP] 搜尋進站數據檔案: %s %s %s", year, race, session)
             
             # 修正：優先檢查 json/ 和 json_exports/ 目錄下的完整JSON檔案，使用正確的賽事名稱
             search_dirs = ["json", "json_exports"]  # 擴大搜尋範圍，與賽道分析一致
@@ -496,11 +545,11 @@ class PitstopDataManager(QObject):
                     search_path = os.path.join(search_dir, pattern)
                     files = glob.glob(search_path)
                     if files:
-                        print(f"[FOLDER] [PITSTOP] 找到檔案: {files[0]}")
+                        logger.info("[FOLDER] [PITSTOP] 找到檔案: %s", files[0])
                         return files[0]  # 返回第一個匹配的檔案
             
             # 如果精確匹配失敗，嘗試模糊搜尋（類似賽道分析）
-            print(f"[FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...")
+            logger.info("[FOLDER] [PITSTOP] 精確搜尋失敗，嘗試模糊搜尋...")
             
             for search_dir in search_dirs:
                 # 使用通配符搜尋
@@ -531,7 +580,7 @@ class PitstopDataManager(QObject):
                             race_full_lower.replace(' ', ''),
                         ])
                     
-                    print(f"[FOLDER] [PITSTOP] 模糊搜尋關鍵字: {race_keywords}")
+                    logger.debug("[FOLDER] [PITSTOP] 模糊搜尋關鍵字: %s", race_keywords)
                     
                     # 檢查檔案是否匹配賽事關鍵字
                     for file_path in files:
@@ -539,21 +588,21 @@ class PitstopDataManager(QObject):
                         
                         for keyword in race_keywords:
                             if keyword in file_name_lower:
-                                print(f"[FOLDER] [PITSTOP] 模糊搜尋找到: {file_path}")
+                                logger.info("[FOLDER] [PITSTOP] 模糊搜尋找到: %s", file_path)
                                 return file_path
             
             # 最後檢查cache目錄的PKL檔案
             cache_pattern = f"driver_fastest_pitstop_{year}_{race.replace(' ', '_')}_Grand_Prix.pkl"
             cache_path = os.path.join(self.cache_dir, cache_pattern)
             if os.path.exists(cache_path):
-                print(f"[FOLDER] [PITSTOP] 找到PKL緩存: {cache_path}")
+                logger.info("[FOLDER] [PITSTOP] 找到PKL緩存: %s", cache_path)
                 return cache_path
             
-            print(f"[FOLDER] [PITSTOP] 找不到檔案: {year} {race} {session}")
+            logger.warning("[FOLDER] [PITSTOP] 找不到檔案: %s %s %s", year, race, session)
             return None
                 
         except Exception as e:
-            print(f"[ERROR] [PITSTOP] 搜尋檔案時發生錯誤: {str(e)}")
+            logger.exception("[ERROR] [PITSTOP] 搜尋檔案時發生錯誤: %s", e)
             self.error_occurred.emit(f"搜尋檔案時發生錯誤: {str(e)}")
             return None
     
@@ -581,7 +630,7 @@ class PitstopDataManager(QObject):
                 self._is_loading = False
                 
         except Exception as e:
-            print(f"[ERROR] [CLI_GEN] 啟動生成時發生錯誤: {e}")
+            logger.exception("[ERROR] [CLI_GEN] 啟動生成時發生錯誤: %s", e)
             self.error_occurred.emit(f"啟動生成時發生錯誤: {str(e)}")
             self._is_loading = False
     
@@ -616,7 +665,7 @@ class PitstopDataManager(QObject):
             json_file = self._find_pitstop_data_file(year, race, session)
             
             if json_file:
-                print(f"[OK] [CLI_GEN] 檔案生成完成: {json_file}")
+                logger.info("[OK] [CLI_GEN] 檔案生成完成: %s", json_file)
                 
                 # 停止監控
                 self._stop_generation_monitoring()
@@ -624,11 +673,11 @@ class PitstopDataManager(QObject):
                 # 載入新生成的檔案
                 QTimer.singleShot(10, lambda: self._load_json_file(json_file))
             else:
-                print(f"⏳ [CLI_GEN] 繼續等待檔案生成...")
+                logger.info("⏳ [CLI_GEN] 繼續等待檔案生成...")
                 
     def _on_generation_timeout(self):
         """處理生成超時（類似賽道分析模組）"""
-        print(f"[TIME] [CLI_GEN] 檔案生成超時")
+        logger.error("[TIME] [CLI_GEN] 檔案生成超時")
         self._stop_generation_monitoring()
         self.error_occurred.emit("數據生成超時，請檢查網路連線或稍後重試")
         self._is_loading = False
@@ -646,8 +695,8 @@ class PitstopDataManager(QObject):
         
         ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
         """
-        print(f"[PITSTOP] ⚠️  [API-ONLY] CLI 調用已禁用")
-        print(f"[PITSTOP] 💡 提示: 請使用 API 獲取進站分析數據")
+        logger.warning("[PITSTOP] ⚠️  [API-ONLY] CLI 調用已禁用")
+        logger.info("[PITSTOP] 💡 提示: 請使用 API 獲取進站分析數據")
         return False
     
     def _load_json_file(self, file_path: str) -> None:
@@ -658,7 +707,7 @@ class PitstopDataManager(QObject):
             file_path: JSON 檔案路徑
         """
         try:
-            print(f"[LOAD] [JSON] 開始載入檔案: {file_path}")
+            logger.info("[LOAD] [JSON] 開始載入檔案: %s", file_path)
             self.loading_progress.emit(90)
             
             # 判斷檔案類型並載入
@@ -675,12 +724,12 @@ class PitstopDataManager(QObject):
                 self.loading_progress.emit(100)
                 self.status_changed.emit("數據載入完成")
                 self.data_loaded.emit(data)
-                print(f"[OK] [JSON] 檔案載入完成: {file_path}")
+                logger.info("[OK] [JSON] 檔案載入完成: %s", file_path)
             else:
                 self.error_occurred.emit("載入的數據格式無效")
                 
         except Exception as e:
-            print(f"[ERROR] [JSON] 檔案載入失敗: {e}")
+            logger.exception("[ERROR] [JSON] 檔案載入失敗: %s", e)
             self.error_occurred.emit(f"檔案載入失敗: {str(e)}")
         
         finally:
@@ -699,7 +748,7 @@ class PitstopDataManager(QObject):
         try:
             # 檢查基本結構
             if not isinstance(data, dict):
-                print(f"[ERROR] [VALIDATE] 數據不是字典格式")
+                logger.error("[ERROR] [VALIDATE] 數據不是字典格式")
                 return False
                 
             # 檢查不同可能的數據格式
@@ -708,15 +757,18 @@ class PitstopDataManager(QObject):
             # 格式1: 新的標準格式 - data 陣列
             if 'data' in data:
                 records_data = data['data']
-                print(f"[INFO] [VALIDATE] 檢測到標準格式：data 欄位")
+                logger.info("[INFO] [VALIDATE] 檢測到標準格式：data 欄位")
                 
                 # 檢查 data 是陣列還是物件
                 if isinstance(records_data, list):
                     records = records_data
-                    print(f"[INFO] [VALIDATE] data 是陣列格式")
+                    logger.info("[INFO] [VALIDATE] data 是陣列格式")
                 elif isinstance(records_data, dict):
                     # 新格式：data 是物件，車手代碼作為鍵值
-                    print(f"[INFO] [VALIDATE] data 是物件格式，車手鍵值：{list(records_data.keys())[:5]}...")
+                    logger.info(
+                        "[INFO] [VALIDATE] data 是物件格式，車手鍵值：%s",
+                        list(records_data.keys())[:5],
+                    )
                     # 將所有車手的進站記錄合併成一個陣列
                     records = []
                     for driver_code, driver_records in records_data.items():
@@ -726,37 +778,37 @@ class PitstopDataManager(QObject):
                                 if 'driver' not in record and 'driver_code' not in record:
                                     record['driver'] = driver_code
                                 records.append(record)
-                    print(f"[INFO] [VALIDATE] 合併後的進站記錄數量：{len(records)}")
+                    logger.info("[INFO] [VALIDATE] 合併後的進站記錄數量：%s", len(records))
                 else:
-                    print(f"[ERROR] [VALIDATE] data 欄位格式不支援：{type(records_data)}")
+                    logger.error("[ERROR] [VALIDATE] data 欄位格式不支援：%s", type(records_data))
                     return False
             # 格式2: 舊格式 - driver_fastest_pitstops
             elif 'driver_fastest_pitstops' in data:
                 records = data['driver_fastest_pitstops']
-                print(f"[INFO] [VALIDATE] 檢測到舊格式：driver_fastest_pitstops")
+                logger.info("[INFO] [VALIDATE] 檢測到舊格式：driver_fastest_pitstops")
             # 格式3: 其他格式 - pitstop_ranking
             elif 'pitstop_ranking' in data:
                 records = data['pitstop_ranking']
-                print(f"[INFO] [VALIDATE] 檢測到其他格式：pitstop_ranking")
+                logger.info("[INFO] [VALIDATE] 檢測到其他格式：pitstop_ranking")
             # 格式4: 直接是陣列
             elif isinstance(data, list):
                 records = data
-                print(f"[INFO] [VALIDATE] 檢測到直接陣列格式")
+                logger.info("[INFO] [VALIDATE] 檢測到直接陣列格式")
             else:
-                print(f"[ERROR] [VALIDATE] 找不到進站數據記錄，可用欄位：{list(data.keys())}")
+                logger.error("[ERROR] [VALIDATE] 找不到進站數據記錄，可用欄位：%s", list(data.keys()))
                 return False
                 
             if not records:
-                print(f"[ERROR] [VALIDATE] 進站數據記錄為空")
+                logger.error("[ERROR] [VALIDATE] 進站數據記錄為空")
                 return False
                 
             if not isinstance(records, list):
-                print(f"[ERROR] [VALIDATE] 進站數據不是陣列格式")
+                logger.error("[ERROR] [VALIDATE] 進站數據不是陣列格式")
                 return False
                 
             # 驗證第一筆記錄的欄位
             first_record = records[0]
-            print(f"[INFO] [VALIDATE] 第一筆記錄欄位：{list(first_record.keys())}")
+            logger.debug("[INFO] [VALIDATE] 第一筆記錄欄位：%s", list(first_record.keys()))
             
             # 檢查不同可能的欄位名稱
             driver_field = None
@@ -775,31 +827,150 @@ class PitstopDataManager(QObject):
                     break
             
             if not driver_field:
-                print(f"[ERROR] [VALIDATE] 找不到車手欄位，可用欄位：{list(first_record.keys())}")
+                logger.error("[ERROR] [VALIDATE] 找不到車手欄位，可用欄位：%s", list(first_record.keys()))
                 return False
                 
             if not time_field:
-                print(f"[ERROR] [VALIDATE] 找不到時間欄位，可用欄位：{list(first_record.keys())}")
+                logger.error("[ERROR] [VALIDATE] 找不到時間欄位，可用欄位：%s", list(first_record.keys()))
                 return False
                     
-            print(f"[OK] [VALIDATE] 進站數據驗證通過，記錄數量：{len(records)}")
-            print(f"[OK] [VALIDATE] 車手欄位：{driver_field}，時間欄位：{time_field}")
+            logger.info("[OK] [VALIDATE] 進站數據驗證通過，記錄數量：%s", len(records))
+            logger.info("[OK] [VALIDATE] 車手欄位：%s，時間欄位：%s", driver_field, time_field)
             return True
             
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] 數據驗證異常: {e}")
+            logger.exception("[ERROR] [VALIDATE] 數據驗證異常: %s", e)
             return False
     
     # 舊的統一CLI管理器方法已移除，改用檔案系統監控機制
     
+    def cleanup(self):
+        """清理資源，停止所有工作執行緒（線程安全）"""
+        # ✅ 使用鎖防止並行 cleanup
+        if not self._cleanup_lock.tryLock(100):  # 嘗試獲取鎖，最多等待 100ms
+            logger.warning("[CLEANUP] 另一個 cleanup 正在進行，跳過")
+            return
+            
+        try:
+            # ✅ 檢查是否已清理
+            if self._cleanup_done:
+                logger.debug("[CLEANUP] 已經清理過，跳過")
+                return
+                
+            logger.info("[CLEANUP] 開始清理 PitstopDataManager 資源...")
+            self._is_active = False
+            self._cleanup_done = True
+            
+            # ✅ 1. 停止所有計時器
+            if hasattr(self, '_generation_timer') and self._generation_timer:
+                if self._generation_timer.isActive():
+                    self._generation_timer.stop()
+                    logger.debug("[CLEANUP] 生成監控計時器已停止")
+                    
+            if hasattr(self, '_generation_timeout_timer') and self._generation_timeout_timer:
+                if self._generation_timeout_timer.isActive():
+                    self._generation_timeout_timer.stop()
+                    logger.debug("[CLEANUP] 生成超時計時器已停止")
+            
+            # ✅ 2. 斷開所有信號連接（防止在清理過程中觸發新操作）
+            try:
+                self.blockSignals(True)
+                logger.debug("[CLEANUP] 信號已阻擋")
+            except Exception as e:
+                logger.debug(f"[CLEANUP] 阻擋信號失敗: {e}")
+            
+            # ✅ 3. 停止所有進行中的工作執行緒
+            workers_to_stop = [
+                ('_api_workers', 'API'),
+                ('worker', '車手排行榜'),
+                ('team_worker', '車隊排行榜'),
+                ('driver_detailed_worker', '車手詳細記錄')
+            ]
+            
+            for worker_attr, worker_name in workers_to_stop:
+                if not hasattr(self, worker_attr):
+                    continue
+                    
+                worker = getattr(self, worker_attr)
+                
+                # 處理字典類型的 worker 容器（如 _api_workers）
+                if isinstance(worker, dict):
+                    for key, w in list(worker.items()):
+                        if w and hasattr(w, 'isRunning'):
+                            try:
+                                if w.isRunning():
+                                    logger.debug(f"[CLEANUP] 停止 {worker_name}[{key}] 執行緒...")
+                                    
+                                    # 先嘗試溫和停止
+                                    if hasattr(w, 'stop'):
+                                        w.stop()
+                                    
+                                    # 等待執行緒結束（縮短至 1 秒）
+                                    if not w.wait(1000):
+                                        logger.warning(f"[CLEANUP] {worker_name}[{key}] 超時，請求中斷...")
+                                        w.requestInterruption()
+                                        
+                                        # 再等 500ms
+                                        if not w.wait(500):
+                                            logger.warning(f"[CLEANUP] {worker_name}[{key}] 強制終止")
+                                            w.terminate()
+                                            w.wait(500)  # 最後等待
+                                    else:
+                                        logger.debug(f"[CLEANUP] {worker_name}[{key}] 已正常停止")
+                            except Exception as e:
+                                logger.error(f"[CLEANUP] 停止 {worker_name}[{key}] 時出錯: {e}")
+                    continue
+                    
+                # 處理單個 worker
+                if worker and hasattr(worker, 'isRunning'):
+                    try:
+                        if worker.isRunning():
+                            logger.debug(f"[CLEANUP] 停止 {worker_name} 執行緒...")
+                            
+                            # 先嘗試溫和停止
+                            if hasattr(worker, 'stop'):
+                                worker.stop()
+                            
+                            # 等待執行緒結束（縮短至 1 秒）
+                            if not worker.wait(1000):
+                                logger.warning(f"[CLEANUP] {worker_name} 超時，請求中斷...")
+                                worker.requestInterruption()
+                                
+                                # 再等 500ms
+                                if not worker.wait(500):
+                                    logger.warning(f"[CLEANUP] {worker_name} 強制終止")
+                                    worker.terminate()
+                                    worker.wait(500)
+                            else:
+                                logger.debug(f"[CLEANUP] {worker_name} 已正常停止")
+                    except Exception as e:
+                        logger.error(f"[CLEANUP] 停止 {worker_name} 時出錯: {e}")
+            
+            # ✅ 4. 調用父類的 cleanup() 清理計時器和信號
+            try:
+                super().cleanup()
+                logger.debug("[CLEANUP] 父類 UniversalDataLoader cleanup 已完成")
+            except Exception as e:
+                logger.debug(f"[CLEANUP] 父類 cleanup 失敗: {e}")
+            
+            logger.info("[CLEANUP] PitstopDataManager 資源清理完成")
+            
+        finally:
+            # ✅ 釋放鎖
+            self._cleanup_lock.unlock()
+    
     def load_data(self, year: str, race: str, session: str, force_refresh: bool = False):
         """載入車手進站數據 - API 優先"""
+        if not self._is_active:
+            logger.warning("[LOAD] DataManager 已停用，忽略載入請求")
+            return False
+            
         try:
-            print(f"[PITSTOP_MANAGER] 開始載入車手進站數據: {year} {race} {session}")
+            logger.info("[PITSTOP_MANAGER] 開始載入車手進站數據: %s %s %s", year, race, session)
 
             # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
             if session != 'R':
-                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                logger.warning("[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: %s", session)
                 self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
                 self._is_loading = False
                 return False
@@ -825,7 +996,7 @@ class PitstopDataManager(QObject):
             self.loading_progress.emit(15)
             self.status_changed.emit("正在透過 API 載入車手進站數據...")
             if not self._is_api_available():
-                print("[PITSTOP_MANAGER] API 健康檢查失敗，取消背景執行緒啟動")
+                logger.warning("[PITSTOP_MANAGER] API 健康檢查失敗，取消背景執行緒啟動")
                 self._is_loading = False
                 self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
                 if self._fallback_to_local("driver", message="API 不可用"):
@@ -842,7 +1013,7 @@ class PitstopDataManager(QObject):
             return True
 
         except Exception as exc:
-            print(f"[PITSTOP_MANAGER] 啟動車手進站 API 失敗: {exc}")
+            logger.exception("[PITSTOP_MANAGER] 啟動車手進站 API 失敗: %s", exc)
             if self._fallback_to_local("driver", message=str(exc)):
                 return True
             self.error_occurred.emit(f"載入進站數據失敗: {exc}")
@@ -852,7 +1023,7 @@ class PitstopDataManager(QObject):
     def _find_team_pitstop_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋車隊進站數據檔案"""
         try:
-            print(f"[FOLDER] [TEAM_PITSTOP] 搜尋車隊進站數據檔案: {year} {race} {session}")
+            logger.info("[FOLDER] [TEAM_PITSTOP] 搜尋車隊進站數據檔案: %s %s %s", year, race, session)
             
             # 搜尋目錄
             search_dirs = ["json", "json_exports", "cache"]
@@ -900,24 +1071,28 @@ class PitstopDataManager(QObject):
                 for pattern in patterns:
                     search_path = os.path.join(search_dir, pattern)
                     if os.path.exists(search_path):
-                        print(f"[FOLDER] [TEAM_PITSTOP] 找到車隊檔案: {search_path}")
+                        logger.info("[FOLDER] [TEAM_PITSTOP] 找到車隊檔案: %s", search_path)
                         return search_path
             
-            print(f"[FOLDER] [TEAM_PITSTOP] 找不到車隊檔案: {year} {race} {session}")
+            logger.warning("[FOLDER] [TEAM_PITSTOP] 找不到車隊檔案: %s %s %s", year, race, session)
             return None
                 
         except Exception as e:
-            print(f"[ERROR] [TEAM_PITSTOP] 搜尋車隊檔案時發生錯誤: {str(e)}")
+            logger.exception("[ERROR] [TEAM_PITSTOP] 搜尋車隊檔案時發生錯誤: %s", e)
             return None
     
     def load_team_data(self, year: str, race: str, session: str, force_refresh: bool = False):
         """載入車隊進站數據 - API 優先"""
+        if not self._is_active:
+            logger.warning("[LOAD] DataManager 已停用，忽略車隊載入請求")
+            return False
+            
         try:
-            print(f"[PITSTOP_MANAGER] 開始載入車隊進站數據: {year} {race} {session}")
+            logger.info("[PITSTOP_MANAGER] 開始載入車隊進站數據: %s %s %s", year, race, session)
 
             # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
             if session != 'R':
-                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                logger.warning("[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: %s", session)
                 self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
                 self._team_is_loading = False
                 return False
@@ -939,7 +1114,7 @@ class PitstopDataManager(QObject):
             self._api_base_url = self._determine_api_base_url()
             self.status_changed.emit("正在透過 API 載入車隊進站數據...")
             if not self._is_api_available():
-                print("[PITSTOP_MANAGER] API 健康檢查失敗 (team)")
+                logger.warning("[PITSTOP_MANAGER] API 健康檢查失敗 (team)")
                 self._team_is_loading = False
                 self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
                 if self._fallback_to_local("team", message="API 不可用"):
@@ -956,7 +1131,7 @@ class PitstopDataManager(QObject):
             return True
 
         except Exception as exc:
-            print(f"[PITSTOP_MANAGER] 啟動車隊進站 API 失敗: {exc}")
+            logger.exception("[PITSTOP_MANAGER] 啟動車隊進站 API 失敗: %s", exc)
             if self._fallback_to_local("team", message=str(exc)):
                 return True
             self.error_occurred.emit(f"車隊數據載入失敗: {exc}")
@@ -966,20 +1141,20 @@ class PitstopDataManager(QObject):
     def _load_team_json_file(self, file_path: str):
         """載入車隊 JSON 檔案"""
         try:
-            print(f"[LOAD] [TEAM_JSON] 載入車隊 JSON 檔案: {file_path}")
+            logger.info("[LOAD] [TEAM_JSON] 載入車隊 JSON 檔案: %s", file_path)
             
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
             # 驗證車隊數據
             if self._validate_team_pitstop_data(data):
-                print(f"[OK] [TEAM_JSON] 車隊 JSON 載入成功")
+                logger.info("[OK] [TEAM_JSON] 車隊 JSON 載入成功")
                 self.team_data_loaded.emit(data)
             else:
                 self.error_occurred.emit("車隊進站數據格式無效")
                 
         except Exception as e:
-            print(f"[ERROR] [TEAM_JSON] 車隊 JSON 載入失敗: {e}")
+            logger.exception("[ERROR] [TEAM_JSON] 車隊 JSON 載入失敗: %s", e)
             self.error_occurred.emit(f"車隊 JSON 載入失敗: {str(e)}")
         finally:
             self._team_is_loading = False
@@ -993,7 +1168,7 @@ class PitstopDataManager(QObject):
             
             # 檢查 function_id 是否為 4 (車隊進站分析)
             if data.get("function_id") != 4:
-                print(f"[ERROR] [VALIDATE] 車隊數據 function_id 不匹配: {data.get('function_id')}")
+                logger.error("[ERROR] [VALIDATE] 車隊數據 function_id 不匹配: %s", data.get('function_id'))
                 return False
             
             # 提取記錄
@@ -1007,14 +1182,14 @@ class PitstopDataManager(QObject):
             
             for field in required_fields:
                 if field not in first_record:
-                    print(f"[ERROR] [VALIDATE] 車隊數據缺少必要欄位: {field}")
+                    logger.error("[ERROR] [VALIDATE] 車隊數據缺少必要欄位: %s", field)
                     return False
                     
-            print(f"[OK] [VALIDATE] 車隊數據驗證通過，記錄數量：{len(records)}")
+            logger.info("[OK] [VALIDATE] 車隊數據驗證通過，記錄數量：%s", len(records))
             return True
             
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] 車隊數據驗證異常: {e}")
+            logger.exception("[ERROR] [VALIDATE] 車隊數據驗證異常: %s", e)
             return False
     
     def _generate_team_data_via_cli(self, year: str, race: str, session: str) -> bool:
@@ -1023,13 +1198,13 @@ class PitstopDataManager(QObject):
         
         ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
         """
-        print(f"[PITSTOP_TEAM] ⚠️  [API-ONLY] CLI 調用已禁用")
-        print(f"[PITSTOP_TEAM] 💡 提示: 請使用 API 獲取車隊進站數據")
+        logger.warning("[PITSTOP_TEAM] ⚠️  [API-ONLY] CLI 調用已禁用")
+        logger.info("[PITSTOP_TEAM] 💡 提示: 請使用 API 獲取車隊進站數據")
         return False
     
     def _trigger_reload_signal(self):
         """觸發重新載入信號給主模組"""
-        print(f"[SIGNAL] [TEAM_RELOAD] 發送車隊數據重新載入信號")
+        logger.debug("[SIGNAL] [TEAM_RELOAD] 發送車隊數據重新載入信號")
         self.team_data_reload_requested.emit()
 
     # === 車手進站詳細記錄支援 ===
@@ -1037,7 +1212,7 @@ class PitstopDataManager(QObject):
     def _find_driver_detailed_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋車手進站詳細數據檔案（支援多格式匹配）"""
         try:
-            print(f"[FOLDER] [DRIVER_DETAILED] 搜尋車手詳細檔案: {year} {race} {session}")
+            logger.info("[FOLDER] [DRIVER_DETAILED] 搜尋車手詳細檔案: %s %s %s", year, race, session)
             
             search_dirs = ["json", "json_exports", "cache"]
             
@@ -1086,24 +1261,28 @@ class PitstopDataManager(QObject):
                     search_path = os.path.join(search_dir, pattern)
                     files = glob.glob(search_path)
                     if files:
-                        print(f"[FOLDER] [DRIVER_DETAILED] 找到檔案: {files[0]}")
+                        logger.info("[FOLDER] [DRIVER_DETAILED] 找到檔案: %s", files[0])
                         return files[0]
             
-            print(f"[FOLDER] [DRIVER_DETAILED] 找不到檔案: {year} {race} {session}")
+            logger.warning("[FOLDER] [DRIVER_DETAILED] 找不到檔案: %s %s %s", year, race, session)
             return None
                 
         except Exception as e:
-            print(f"[ERROR] [DRIVER_DETAILED] 搜尋檔案時發生錯誤: {str(e)}")
+            logger.exception("[ERROR] [DRIVER_DETAILED] 搜尋檔案時發生錯誤: %s", e)
             return None
 
     def load_driver_detailed_data(self, year: str, race: str, session: str, force_refresh: bool = False):
         """載入車手進站詳細數據 - API 優先"""
+        if not self._is_active:
+            logger.warning("[LOAD] DataManager 已停用，忽略車手詳細記錄載入請求")
+            return False
+            
         try:
-            print(f"[PITSTOP_MANAGER] 開始載入車手詳細進站數據: {year} {race} {session}")
+            logger.info("[PITSTOP_MANAGER] 開始載入車手詳細進站數據: %s %s %s", year, race, session)
 
             # ⚠️ 進站數據僅支援正賽 (R)，其他賽段無進站數據
             if session != 'R':
-                print(f"[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: {session}")
+                logger.warning("[PITSTOP_MANAGER] ⚠️  進站分析僅支援正賽 (R)，當前賽段: %s", session)
                 self.error_occurred.emit(tr("進站分析僅適用於正賽 (Race)，練習賽和排位賽無進站數據"))
                 self._detail_is_loading = False
                 return False
@@ -1125,7 +1304,7 @@ class PitstopDataManager(QObject):
             self._api_base_url = self._determine_api_base_url()
             self.status_changed.emit("正在透過 API 載入車手詳細進站數據...")
             if not self._is_api_available():
-                print("[PITSTOP_MANAGER] API 健康檢查失敗 (driver-detail)")
+                logger.warning("[PITSTOP_MANAGER] API 健康檢查失敗 (driver-detail)")
                 self._detail_is_loading = False
                 self.status_changed.emit("API 服務不可用，請啟動 API 或使用本地資料")
                 if self._fallback_to_local("detail", message="API 不可用"):
@@ -1142,7 +1321,7 @@ class PitstopDataManager(QObject):
             return True
 
         except Exception as exc:
-            print(f"[PITSTOP_MANAGER] 啟動車手詳細進站 API 失敗: {exc}")
+            logger.exception("[PITSTOP_MANAGER] 啟動車手詳細進站 API 失敗: %s", exc)
             if self._fallback_to_local("detail", message=str(exc)):
                 return True
             self.error_occurred.emit(f"車手詳細數據載入失敗: {exc}")
@@ -1152,20 +1331,20 @@ class PitstopDataManager(QObject):
     def _load_driver_detailed_json(self, file_path: str):
         """載入車手詳細JSON檔案"""
         try:
-            print(f"[LOAD] [DRIVER_DETAILED_JSON] 載入車手詳細 JSON 檔案: {file_path}")
+            logger.info("[LOAD] [DRIVER_DETAILED_JSON] 載入車手詳細 JSON 檔案: %s", file_path)
             
             with open(file_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
             # 驗證車手詳細數據
             if self._validate_driver_detailed_data(data):
-                print(f"[OK] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入成功")
+                logger.info("[OK] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入成功")
                 self.driver_detailed_loaded.emit(data)
             else:
                 self.error_occurred.emit("車手詳細進站數據格式無效")
                 
         except Exception as e:
-            print(f"[ERROR] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入失敗: {e}")
+            logger.exception("[ERROR] [DRIVER_DETAILED_JSON] 車手詳細 JSON 載入失敗: %s", e)
             self.error_occurred.emit(f"車手詳細 JSON 載入失敗: {str(e)}")
         finally:
             self._detail_is_loading = False
@@ -1175,71 +1354,71 @@ class PitstopDataManager(QObject):
         try:
             # 檢查基本結構
             if not isinstance(data, dict):
-                print(f"[ERROR] [VALIDATE] 數據不是字典格式: {type(data)}")
+                logger.error("[ERROR] [VALIDATE] 數據不是字典格式: %s", type(data))
                 return False
             
             # 🔥 檢查是否是錯誤響應
             if 'detail' in data and 'success' not in data:
-                print(f"[ERROR] [VALIDATE] API 返回錯誤響應: {data.get('detail')}")
+                logger.error("[ERROR] [VALIDATE] API 返回錯誤響應: %s", data.get('detail'))
                 return False
             
             # 🔥 新的雙層嵌套處理：
             # 如果 Worker 已經提升了內層數據，跳過二次提取
             if data.get("_original_structure") == "nested":
-                print(f"[INFO] [VALIDATE] 檢測到已處理的雙層嵌套結構")
+                logger.info("[INFO] [VALIDATE] 檢測到已處理的雙層嵌套結構")
                 # 移除元數據標記，直接驗證車手記錄
                 records = {k: v for k, v in data.items() 
                           if k not in ["function_id", "function_name", "analysis_type", 
                                      "session_info", "timestamp", "file_info", 
                                      "cache_info", "_original_structure"]}
-                print(f"[INFO] [VALIDATE] 過濾後的車手代碼: {list(records.keys())[:5]}")
+                logger.debug("[INFO] [VALIDATE] 過濾後的車手代碼: %s", list(records.keys())[:5])
             # 檢查新格式：{ "success": true, "data": {...} }
             elif data.get("success") is True and "data" in data:
                 records = data["data"]
-                print(f"[INFO] [VALIDATE] 檢測到新格式車手詳細數據")
+                logger.info("[INFO] [VALIDATE] 檢測到新格式車手詳細數據")
                 
                 # 🔥 檢查是否是練習賽/排位賽無進站數據的情況
                 if records is None:
                     file_info = data.get("file_info", {})
                     file_name = file_info.get("file_name", "Unknown")
-                    print(f"[ERROR] [VALIDATE] ⚠️  數據為 null，可能是練習賽/排位賽無進站數據")
-                    print(f"[ERROR] [VALIDATE] 來源檔案: {file_name}")
+                    logger.error("[ERROR] [VALIDATE] ⚠️  數據為 null，可能是練習賽/排位賽無進站數據")
+                    logger.error("[ERROR] [VALIDATE] 來源檔案: %s", file_name)
                     if "FP" in file_name or "Q" in file_name:
-                        print(f"[ERROR] [VALIDATE] 確認：練習賽/排位賽不支援進站分析")
+                        logger.error("[ERROR] [VALIDATE] 確認：練習賽/排位賽不支援進站分析")
                     return False
                     
             # 檢查舊格式：{ "function_id": 5, "data": {...} }
             elif data.get("function_id") == 5 and "data" in data:
                 records = data.get("data", {})
-                print(f"[INFO] [VALIDATE] 檢測到舊格式車手詳細數據")
+                logger.info("[INFO] [VALIDATE] 檢測到舊格式車手詳細數據")
                 
                 # 🔥 檢查舊格式的 null 數據
                 if records is None:
-                    print(f"[ERROR] [VALIDATE] ⚠️  數據為 null (舊格式)")
+                    logger.error("[ERROR] [VALIDATE] ⚠️  數據為 null (舊格式)")
                     return False
             else:
-                print(f"[ERROR] [VALIDATE] 車手詳細數據格式不匹配")
-                print(f"[DEBUG] data keys: {list(data.keys())}")
+                logger.error("[ERROR] [VALIDATE] 車手詳細數據格式不匹配")
+                logger.debug("[DEBUG] data keys: %s", list(data.keys()))
                 return False
             
             # 🔥 添加調試信息
-            print(f"[DEBUG] [VALIDATE] records type: {type(records)}")
+            logger.debug("[DEBUG] [VALIDATE] records type: %s", type(records))
             if isinstance(records, dict):
-                print(f"[DEBUG] [VALIDATE] records keys (前5個): {list(records.keys())[:5]}")
+                logger.debug("[DEBUG] [VALIDATE] records keys (前5個): %s", list(records.keys())[:5])
             
             # 驗證 data 部分是否為物件（車手代碼為鍵值）
             if not records or not isinstance(records, dict):
-                print(f"[ERROR] [VALIDATE] 車手詳細數據不是物件格式，實際類型: {type(records)}")
+                logger.error("[ERROR] [VALIDATE] 車手詳細數據不是物件格式，實際類型: %s", type(records))
                 if isinstance(records, list):
-                    print(f"[ERROR] [VALIDATE] 收到陣列格式（長度 {len(records)}），但期待物件格式")
+                    logger.error("[ERROR] [VALIDATE] 收到陣列格式（長度 %s），但期待物件格式", len(records))
                 elif records is None:
-                    print(f"[ERROR] [VALIDATE] 數據為 None - 請確認賽段是否為正賽 (Race)")
+                    logger.error("[ERROR] [VALIDATE] 數據為 None - 請確認賽段是否為正賽 (Race)")
                 return False
                 
             # 驗證第一個車手記錄的欄位
             for driver, pitstops in records.items():
                 if not isinstance(pitstops, list) or not pitstops:
-                    print(f"[WARNING] [VALIDATE] 車手 {driver} 的進站數據格式錯誤或為空")
+                    logger.warning("[WARNING] [VALIDATE] 車手 %s 的進站數據格式錯誤或為空", driver)
                     continue
                     
                 first_pitstop = pitstops[0]
@@ -1247,19 +1426,17 @@ class PitstopDataManager(QObject):
                 
                 for field in required_fields:
                     if field not in first_pitstop:
-                        print(f"[ERROR] [VALIDATE] 車手詳細數據缺少必要欄位: {field}")
-                        print(f"[DEBUG] [VALIDATE] 實際欄位: {list(first_pitstop.keys())}")
+                        logger.error("[ERROR] [VALIDATE] 車手詳細數據缺少必要欄位: %s", field)
+                        logger.debug("[DEBUG] [VALIDATE] 實際欄位: %s", list(first_pitstop.keys()))
                         return False
                 
-                print(f"[OK] [VALIDATE] 車手詳細數據驗證通過，記錄數量：{len(records)}")
+                logger.info("[OK] [VALIDATE] 車手詳細數據驗證通過，記錄數量：%s", len(records))
                 return True
                 
             return True
             
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] 車手詳細數據驗證失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[ERROR] [VALIDATE] 車手詳細數據驗證失敗: %s", e)
             return False
 
     def _generate_driver_detailed_via_cli(self, year: str, race: str, session: str) -> bool:
@@ -1268,8 +1445,8 @@ class PitstopDataManager(QObject):
         
         ⚠️ API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
         """
-        print(f"[PITSTOP_DRIVER_DETAILED] ⚠️  [API-ONLY] CLI 調用已禁用")
-        print(f"[PITSTOP_DRIVER_DETAILED] 💡 提示: 請使用 API 獲取車手詳細進站數據")
+        logger.warning("[PITSTOP_DRIVER_DETAILED] ⚠️  [API-ONLY] CLI 調用已禁用")
+        logger.info("[PITSTOP_DRIVER_DETAILED] 💡 提示: 請使用 API 獲取車手詳細進站數據")
         return False
 
 class PitstopRankingWidget(QWidget):
@@ -1400,8 +1577,13 @@ class PitstopRankingWidget(QWidget):
     def update_ranking_data(self, data: Dict[str, Any]):
         """更新排行榜數據"""
         try:
-            print(f"[RANK] 開始更新排行榜數據...")
-            print(f"[DEBUG] 收到數據鍵: {list(data.keys()) if isinstance(data, dict) else 'not_dict'}")
+            # ✅ 檢查 Widget 是否還有效
+            if not self.table_widget or not hasattr(self.table_widget, 'setRowCount'):
+                logger.warning("[RANK] Widget 已被刪除，跳過數據更新")
+                return
+                
+            logger.debug("[RANK] 開始更新排行榜數據...")
+            logger.debug(f"[DEBUG] 收到數據鍵: {list(data.keys()) if isinstance(data, dict) else 'not_dict'}")
             
             # 儲存當前數據
             self.current_data = data
@@ -1411,23 +1593,23 @@ class PitstopRankingWidget(QWidget):
             
             # 檢查數據格式 - 添加更詳細的檢查
             if not data:
-                print(f"[WARNING] 數據為空")
+                logger.warning("數據為空")
                 self.show_no_data_message()
                 return
                 
             if not isinstance(data, dict):
-                print(f"[WARNING] 數據不是字典格式: {type(data)}")
+                logger.warning(f"數據不是字典格式: {type(data)}")
                 self.show_no_data_message()
                 return
             
             if 'data' not in data:
-                print(f"[WARNING] 數據中缺少 'data' 鍵，可用鍵: {list(data.keys())}")
+                logger.warning(f"數據中缺少 'data' 鍵，可用鍵: {list(data.keys())}")
                 self.show_no_data_message()
                 return
             
             ranking_data = data['data']
             if not ranking_data:
-                print(f"[WARNING] 無排行榜數據")
+                logger.warning("無排行榜數據")
                 self.show_no_data_message()
                 return
             
@@ -1438,10 +1620,10 @@ class PitstopRankingWidget(QWidget):
             # 更新狀態信息
             self.update_status_info(data)
             
-            print(f"[OK] 排行榜數據更新完成，共 {len(ranking_data)} 筆記錄")
+            logger.info(f"排行榜數據更新完成，共 {len(ranking_data)} 筆記錄")
             
         except Exception as e:
-            print(f"[ERROR] 更新排行榜數據失敗: {str(e)}")
+            logger.error(f"更新排行榜數據失敗: {str(e)}")
             self.show_error_message(f"數據更新失敗: {str(e)}")
     
     def populate_table(self, ranking_data: List[Dict[str, Any]]):
@@ -1531,7 +1713,7 @@ class PitstopRankingWidget(QWidget):
             self.table_widget.horizontalHeader().setStretchLastSection(True)
             
         except Exception as e:
-            print(f"[ERROR] 填充表格失敗: {str(e)}")
+            logger.error(f"填充表格失敗: {str(e)}")
             raise
     
     def update_status_info(self, data: Dict[str, Any]):
@@ -1543,7 +1725,7 @@ class PitstopRankingWidget(QWidget):
             driver_count = len(data.get('data', []))
             current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             
-            print(f"[STATUS] 數據來源: {source_text}, 車手數: {driver_count}, 更新時間: {current_time}")
+            logger.debug(f"[STATUS] 數據來源: {source_text}, 車手數: {driver_count}, 更新時間: {current_time}")
             
             # 原本的UI更新代碼已隱藏
             # self.data_source_label.setText(f"📄 數據來源: {source_text}")
@@ -1551,7 +1733,7 @@ class PitstopRankingWidget(QWidget):
             # self.update_time_label.setText(f"⏱️ 更新: {current_time}")
             
         except Exception as e:
-            print(f"[ERROR] 更新狀態信息失敗: {str(e)}")
+            logger.error(f"更新狀態信息失敗: {str(e)}")
     
     def show_no_data_message(self):
         """顯示無數據訊息"""
@@ -1566,13 +1748,19 @@ class PitstopRankingWidget(QWidget):
     
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
+        # ✅ 檢查 Widget 是否還有效
+        if not self.table_widget or not hasattr(self.table_widget, 'setRowCount'):
+            logger.warning("[RANK] Widget 已被刪除，跳過錯誤訊息顯示")
+            return
+            
         self.table_widget.setRowCount(1)
         error_item = QTableWidgetItem(f"{tr('load_failed')}: {message}")
         error_item.setTextAlignment(Qt.AlignCenter)
         self.table_widget.setItem(0, 0, error_item)
         self.table_widget.setSpan(0, 0, 1, self.table_widget.columnCount())
         
-        self.status_label.setText(f"📊 {tr('status')}: {tr('error')}")
+        if self.status_label and hasattr(self.status_label, 'setText'):
+            self.status_label.setText(f"📊 {tr('status')}: {tr('error')}")
     
     def show_loading_state(self):
         """顯示載入中狀態"""
@@ -1602,7 +1790,7 @@ class PitstopRankingWidget(QWidget):
         self.current_data = {}
         # 隱藏狀態標籤更新
         # self.status_label.setText("📊 狀態: 已清空")
-        print(f"[CLEAR] [RANKING_WIDGET] 表格數據已清空")
+        logger.debug("[RANKING_WIDGET] 表格數據已清空")
 
 class PitstopAnalysisModule(IAnalysisModule):
     """進站分析模組 - 實現IAnalysisModule介面，提供進站時間排行榜功能"""
@@ -1682,7 +1870,7 @@ class PitstopAnalysisModule(IAnalysisModule):
             # 修正：不立即載入數據，等待同步觸發
             # self.load_data()  # 移除立即載入
             
-            print(f"✅ [PITSTOP_MODULE] 模組已初始化，等待參數同步...")
+            logger.info("[PITSTOP_MODULE] 模組已初始化，等待參數同步...")
             
             self.set_initialized(True)
             return True
@@ -1744,14 +1932,14 @@ class PitstopAnalysisModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
-            print(f"[PITSTOP_MODULE] [DEBUG] update_parameters 被調用: year={year}, race={race}, session={session}")
-            print(f"[PITSTOP_MODULE] [DEBUG] 當前狀態: current_year={self.current_year}, current_race={self.current_race}, current_session={self.current_session}")
-            print(f"[PITSTOP_MODULE] [DEBUG] ranking_widget 狀態: {self.ranking_widget}")
+            logger.debug(f"[PITSTOP_MODULE] update_parameters 被調用: year={year}, race={race}, session={session}")
+            logger.debug(f"[PITSTOP_MODULE] 當前狀態: current_year={self.current_year}, current_race={self.current_race}, current_session={self.current_session}")
+            logger.debug(f"[PITSTOP_MODULE] ranking_widget 狀態: {self.ranking_widget}")
             
             # 驗證參數
             if not self.validate_parameters(year, race, session):
                 self.module_error.emit(f"無效的參數: {year}, {race}, {session}")
-                print(f"[PITSTOP_MODULE] [DEBUG] ❌ 參數驗證失敗")
+                logger.debug("[PITSTOP_MODULE] 參數驗證失敗")
                 return False
                 
             # 檢查參數是否有變化（處理初始 None 值）
@@ -1761,7 +1949,7 @@ class PitstopAnalysisModule(IAnalysisModule):
                 self.current_session is None or self.current_session != session
             )
             
-            print(f"[PITSTOP_MODULE] [DEBUG] params_changed={params_changed}")
+            logger.debug(f"[PITSTOP_MODULE] params_changed={params_changed}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -1770,7 +1958,7 @@ class PitstopAnalysisModule(IAnalysisModule):
             
             # 如果參數有變化，重新載入數據
             if params_changed:
-                print(f"🔄 [PITSTOP_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
+                logger.info(f"[PITSTOP_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
                 
                 # 發出參數更新信號
                 params = {
@@ -1785,10 +1973,10 @@ class PitstopAnalysisModule(IAnalysisModule):
                 if self.ranking_widget is not None:
                     # 立即載入數據，但有短暫延遲確保UI完全準備好
                     QTimer.singleShot(100, self.load_data)
-                    print(f"📅 [PITSTOP_MODULE] 已安排數據載入任務: {year} {race} {session}")
+                    logger.debug(f"[PITSTOP_MODULE] 已安排數據載入任務: {year} {race} {session}")
                 else:
                     # UI 還沒準備好，稍後再試
-                    print(f"🔄 [PITSTOP_MODULE] UI 未準備好，延遲載入: {year} {race} {session}")
+                    logger.debug(f"[PITSTOP_MODULE] UI 未準備好，延遲載入: {year} {race} {session}")
                     QTimer.singleShot(500, self.load_data)
                 
             return True
@@ -1803,12 +1991,12 @@ class PitstopAnalysisModule(IAnalysisModule):
             # 修正：檢查參數完整性，類似賽道分析模組
             if not all([self.current_year, self.current_race, self.current_session]):
                 error_msg = f"缺少必要參數，無法載入數據: year={self.current_year}, race={self.current_race}, session={self.current_session}"
-                print(f"[WARNING] [PITSTOP_MODULE] {error_msg}")
+                logger.warning(f"[PITSTOP_MODULE] {error_msg}")
                 # 不要發出錯誤信號，只是記錄警告，避免在初始化時阻斷流程
                 # self.emit_error(error_msg)
                 return False
                 
-            print(f"🔄 [PITSTOP_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.info(f"[PITSTOP_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
             self.data_manager.current_year = self.current_year
             self.data_manager.current_race = self.current_race
             self.data_manager.current_session = self.current_session
@@ -1825,7 +2013,7 @@ class PitstopAnalysisModule(IAnalysisModule):
             self.team_ranking_widget.clear_table()
         if self.detailed_widget:
             self.detailed_widget.clear_table()
-        print(f"[CLEAR] [PITSTOP_MODULE] 數據已清除")
+        logger.debug("[PITSTOP_MODULE] 數據已清除")
     
     def export_data(self, format_type: str = "json") -> bool:
         """導出數據 - IAnalysisModule 必需方法"""
@@ -1843,14 +2031,14 @@ class PitstopAnalysisModule(IAnalysisModule):
                         with open(filepath, 'w', encoding='utf-8') as f:
                             json.dump(data, f, ensure_ascii=False, indent=2)
                     
-                    print(f"[EXPORT] [PITSTOP_MODULE] 數據已導出: {filepath}")
+                    logger.info(f"[PITSTOP_MODULE] 數據已導出: {filepath}")
                     return True
             
-            print(f"[WARNING] [PITSTOP_MODULE] 無數據可導出")
+            logger.warning("[PITSTOP_MODULE] 無數據可導出")
             return False
             
         except Exception as e:
-            print(f"[ERROR] [PITSTOP_MODULE] 導出失敗: {e}")
+            logger.error(f"[PITSTOP_MODULE] 導出失敗: {e}")
             return False
     
     def get_current_data(self) -> dict:
@@ -1863,10 +2051,10 @@ class PitstopAnalysisModule(IAnalysisModule):
         """刷新分析 - IAnalysisModule 必需方法"""
         try:
             self.load_data()
-            print(f"[REFRESH] [PITSTOP_MODULE] 分析已刷新")
+            logger.info("[PITSTOP_MODULE] 分析已刷新")
             return True
         except Exception as e:
-            print(f"[ERROR] [PITSTOP_MODULE] 刷新失敗: {e}")
+            logger.error(f"[PITSTOP_MODULE] 刷新失敗: {e}")
             return False
     
     def setup_ui(self):
@@ -1896,11 +2084,11 @@ class PitstopAnalysisModule(IAnalysisModule):
         
         layout.addWidget(self.tab_widget)
         
-        print(f"[UI] [PITSTOP_MODULE] UI 設置完成，tab_widget已添加到主layout")
+        logger.debug("[PITSTOP_MODULE] UI 設置完成，tab_widget已添加到主layout")
         
         # UI設置完成後，檢查是否有有效參數需要載入數據
         if all([self.current_year, self.current_race, self.current_session]):
-            print(f"[UI] [PITSTOP_MODULE] UI設置完成，發現有效參數，開始載入數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[PITSTOP_MODULE] UI設置完成，發現有效參數，開始載入數據: {self.current_year} {self.current_race} {self.current_session}")
             QTimer.singleShot(200, self.load_data)
     
     def setup_connections(self):
@@ -1917,7 +2105,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def load_data(self):
         """載入數據"""
-        print(f"[LOAD] 載入進站分析數據: {self.current_year} {self.current_race} {self.current_session}")
+        logger.info(f"載入進站分析數據: {self.current_year} {self.current_race} {self.current_session}")
         
         # 顯示載入狀態
         if self.ranking_widget:
@@ -1934,7 +2122,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_data_loaded(self, data: Dict[str, Any]):
         """處理數據載入完成"""
-        print(f"[OK] 數據載入完成")
+        logger.info("數據載入完成")
         
         # 隱藏載入狀態
         if self.ranking_widget:
@@ -1944,7 +2132,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_team_data_loaded(self, data: Dict[str, Any]):
         """處理車隊數據載入完成"""
-        print(f"[OK] 車隊數據載入完成")
+        logger.info("車隊數據載入完成")
         
         # 隱藏載入狀態
         if self.team_ranking_widget:
@@ -1954,7 +2142,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_team_data_reload_requested(self):
         """處理車隊數據重新載入請求"""
-        print(f"[RELOAD] [MAIN_MODULE] 收到車隊數據重新載入請求")
+        logger.info("[MAIN_MODULE] 收到車隊數據重新載入請求")
         
         # 🔧 修正：使用整體刷新機制，確保車手和車隊數據同步載入
         # 延遲刷新，確保JSON檔案已完全生成
@@ -1962,7 +2150,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_driver_detailed_loaded(self, data: Dict[str, Any]):
         """處理車手詳細數據載入完成"""
-        print(f"[OK] 車手詳細數據載入完成")
+        logger.info("車手詳細數據載入完成")
         
         # 隱藏載入狀態
         if self.detailed_widget:
@@ -1972,7 +2160,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_driver_detailed_reload_requested(self):
         """處理車手詳細數據重新載入請求"""
-        print(f"[RELOAD] [MAIN_MODULE] 收到車手詳細數據重新載入請求")
+        logger.info("[MAIN_MODULE] 收到車手詳細數據重新載入請求")
         
         # 延遲刷新，確保JSON檔案已完全生成
         QTimer.singleShot(2000, lambda: self.data_manager.load_driver_detailed_data(
@@ -1980,7 +2168,7 @@ class PitstopAnalysisModule(IAnalysisModule):
     
     def on_error_occurred(self, error_message: str):
         """處理錯誤"""
-        print(f"[ERROR] 載入錯誤: {error_message}")
+        logger.error(f"載入錯誤: {error_message}")
         
         # 隱藏載入狀態
         if self.ranking_widget:
@@ -1999,25 +2187,25 @@ class PitstopAnalysisModule(IAnalysisModule):
     def on_loading_progress(self, progress: int):
         """處理載入進度"""
         # 隱藏進度條更新，只在控制台輸出
-        print(f"[PROGRESS] 載入進度: {progress}%")
+        logger.debug(f"載入進度: {progress}%")
         # if self.ranking_widget:
         #     self.ranking_widget.progress_bar.setValue(progress)
     
     def on_status_changed(self, status: str):
         """處理狀態變更"""
         # 隱藏狀態標籤更新，只在控制台輸出
-        print(f"[STATUS] 狀態變更: {status}")
+        logger.debug(f"狀態變更: {status}")
         # if self.ranking_widget:
         #     self.ranking_widget.status_label.setText(f"📊 狀態: {status}")
     
     def refresh_data(self):
         """刷新數據"""
-        print(f"[REFRESH] 手動刷新數據")
+        logger.debug("手動刷新數據")
         self.load_data()
     
     def receive_main_window_update_notification(self, param_type, value):
         """接收主視窗參數變更通知"""
-        print(f"[ANNOUNCE] [NOTIFICATION] 進站分析模組收到主視窗更新通知: {param_type}={value}")
+        logger.debug(f"[NOTIFICATION] 進站分析模組收到主視窗更新通知: {param_type}={value}")
         
         # 檢查同步狀態 - 假設總是啟用同步
         sync_enabled = True
@@ -2025,49 +2213,78 @@ class PitstopAnalysisModule(IAnalysisModule):
         # 方法1: 檢查 sync_enabled 屬性
         if hasattr(self, 'sync_enabled'):
             sync_enabled = self.sync_enabled
-            print(f"[SEARCH] [NOTIFICATION] 進站分析模組使用屬性檢查同步狀態: {sync_enabled}")
+            logger.debug(f"[NOTIFICATION] 進站分析模組使用屬性檢查同步狀態: {sync_enabled}")
         else:
-            print(f"[SEARCH] [NOTIFICATION] 進站分析模組預設啟用同步")
+            logger.debug("[NOTIFICATION] 進站分析模組預設啟用同步")
         
         # 如果未啟用同步，直接返回
         if not sync_enabled:
-            print(f"🔴 [NOTIFICATION] 進站分析模組同步已停用，忽略更新通知")
+            logger.debug("[NOTIFICATION] 進站分析模組同步已停用，忽略更新通知")
             return
         
-        print(f"[GREEN] [NOTIFICATION] 進站分析模組同步已啟用，處理參數更新")
+        logger.debug("[NOTIFICATION] 進站分析模組同步已啟用，處理參數更新")
         
         # [TOOL] 更新本地參數（同步模式）
         if param_type == 'year':
             self.current_year = str(value)
-            print(f"[UPDATE] 年份更新為: {self.current_year}")
+            logger.debug(f"年份更新為: {self.current_year}")
         elif param_type == 'race':
             self.current_race = str(value)
-            print(f"[UPDATE] 賽事更新為: {self.current_race}")
+            logger.debug(f"賽事更新為: {self.current_race}")
         elif param_type == 'session':
             self.current_session = str(value)
-            print(f"[UPDATE] 場次更新為: {self.current_session}")
+            logger.debug(f"場次更新為: {self.current_session}")
         
         # [TOOL] 更新窗口標題（如果有父窗口）
         if hasattr(self, 'parent') and hasattr(self.parent(), 'setWindowTitle'):
             title = f"進站分析 - {self.current_year} {self.current_race} {self.current_session}"
             self.parent().setWindowTitle(title)
-            print(f"[TITLE] 窗口標題更新為: {title}")
+            logger.debug(f"窗口標題更新為: {title}")
         
         # [TOOL] 立即刷新數據
         try:
             self.load_data()
-            print(f"[OK] [NOTIFICATION] 進站分析模組內容更新成功")
+            logger.info("[NOTIFICATION] 進站分析模組內容更新成功")
         except Exception as e:
-            print(f"[ERROR] [NOTIFICATION] 進站分析模組內容更新失敗: {e}")
+            logger.error(f"[NOTIFICATION] 進站分析模組內容更新失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def refresh_team_data(self):
         """刷新車隊數據 - 供車隊排行榜控件調用"""
-        print(f"[REFRESH] 手動刷新車隊數據")
+        logger.debug("手動刷新車隊數據")
         if self.team_ranking_widget:
             self.team_ranking_widget.show_loading_state()
         self.data_manager.load_team_data(self.current_year, self.current_race, self.current_session)
+    
+    def cleanup(self):
+        """
+        清理模組資源 - IAnalysisModule 必需方法
+        由主視窗的 PopoutSubWindow 在 closeEvent 時調用
+        """
+        logger.info("[PITSTOP_MODULE] 開始清理資源...")
+        
+        try:
+            # ✅ 停止所有數據載入操作
+            if hasattr(self, 'data_manager') and self.data_manager:
+                self.data_manager.cleanup()
+                logger.debug("[PITSTOP_MODULE] data_manager 已清理")
+            
+            logger.info("[PITSTOP_MODULE] 資源清理完成")
+            
+        except Exception as e:
+            logger.error(f"[PITSTOP_MODULE] 清理時發生錯誤: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def closeEvent(self, event):
+        """
+        處理視窗關閉事件
+        注意：cleanup() 已由 PopoutSubWindow.closeEvent() 調用，
+        這裡只需要接受事件即可
+        """
+        logger.debug("[CLOSE] 進站分析模組 closeEvent 被調用")
+        event.accept()
 
 class TeamPitstopRankingWidget(QWidget):
     """車隊進站排行榜 Widget - 顯示車隊進站統計與排行"""
@@ -2128,7 +2345,12 @@ class TeamPitstopRankingWidget(QWidget):
     def update_ranking_data(self, data: Dict[str, Any]):
         """更新車隊排行榜數據"""
         try:
-            print(f"[DEBUG] 開始更新車隊排行榜數據")
+            # ✅ 檢查 Widget 是否還有效
+            if not self.table_widget or not hasattr(self.table_widget, 'setRowCount'):
+                logger.warning("[TEAM_RANK] Widget 已被刪除，跳過數據更新")
+                return
+                
+            logger.debug("開始更新車隊排行榜數據")
             
             # 驗證數據格式
             if not self.validate_team_data(data):
@@ -2146,22 +2368,22 @@ class TeamPitstopRankingWidget(QWidget):
             
             # 🔧 修正：添加數據檢查
             if not self.ranking_data:
-                print("[WARNING] 車隊排行榜數據為空")
+                logger.warning("車隊排行榜數據為空")
                 return
             
             # 🔧 修正：按最快時間排序數據
             self.ranking_data = sorted(self.ranking_data, key=lambda x: x.get("fastest_time", float('inf')))
-            print(f"[OK] [TEAM_RANKING] 車隊數據已按最快時間排序，首位: {self.ranking_data[0].get('team', 'Unknown')} - {self.ranking_data[0].get('fastest_time', 0):.3f}s")
+            logger.info(f"[TEAM_RANKING] 車隊數據已按最快時間排序，首位: {self.ranking_data[0].get('team', 'Unknown')} - {self.ranking_data[0].get('fastest_time', 0):.3f}s")
             
             # 🔧 修正：延遲更新表格，確保UI準備完成
             from PyQt5.QtCore import QTimer
             QTimer.singleShot(100, self.populate_table)
             
-            print(f"[OK] [TEAM_RANKING] 車隊排行榜數據更新完成，{len(self.ranking_data)} 支車隊")
+            logger.info(f"[TEAM_RANKING] 車隊排行榜數據更新完成，{len(self.ranking_data)} 支車隊")
             
         except Exception as e:
             self.show_error_message(f"更新車隊排行榜數據失敗: {str(e)}")
-            print(f"[ERROR] [TEAM_RANKING] 數據更新失敗: {e}")
+            logger.error(f"[TEAM_RANKING] 數據更新失敗: {e}")
     
     def populate_table(self):
         """填充表格數據"""
@@ -2176,7 +2398,7 @@ class TeamPitstopRankingWidget(QWidget):
         
         # 🔧 修正：添加防護檢查
         if not self.ranking_data:
-            print("[WARNING] 車隊排行榜數據為空")
+            logger.warning("車隊排行榜數據為空")
             return
         
         for row, team_data in enumerate(self.ranking_data):
@@ -2258,18 +2480,23 @@ class TeamPitstopRankingWidget(QWidget):
             
             for field in required_fields:
                 if field not in first_record:
-                    print(f"[ERROR] [VALIDATE] 缺少必要欄位: {field}")
+                    logger.error(f"[VALIDATE] 缺少必要欄位: {field}")
                     return False
                     
-            print(f"[OK] [VALIDATE] 車隊數據驗證通過，記錄數量：{len(records)}")
+            logger.info(f"[VALIDATE] 車隊數據驗證通過，記錄數量：{len(records)}")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [VALIDATE] 車隊數據驗證異常: {e}")
+            logger.error(f"[VALIDATE] 車隊數據驗證異常: {e}")
             return False
     
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
+        # ✅ 檢查 Widget 是否還有效
+        if not self.table_widget or not hasattr(self.table_widget, 'setRowCount'):
+            logger.warning("[TEAM_RANK] Widget 已被刪除，跳過錯誤訊息顯示")
+            return
+            
         self.table_widget.setRowCount(1)
         error_item = QTableWidgetItem(f"❌ {tr('error')}: {message}")
         error_item.setTextAlignment(Qt.AlignCenter)
@@ -2293,7 +2520,7 @@ class TeamPitstopRankingWidget(QWidget):
         self.table_widget.setRowCount(0)
         self.ranking_data = []
         self.current_data = {}
-        print(f"[CLEAR] [TEAM_RANKING] 車隊表格數據已清空")
+        logger.debug("[TEAM_RANKING] 車隊表格數據已清空")
     
     def refresh_data(self):
         """刷新數據 - 委託給父模組"""
@@ -2302,7 +2529,7 @@ class TeamPitstopRankingWidget(QWidget):
     
     def export_to_csv(self):
         """匯出CSV功能 (預留實現)"""
-        print(f"[EXPORT] 車隊進站排行榜匯出功能 (開發中)")
+        logger.debug("車隊進站排行榜匯出功能 (開發中)")
         # TODO: 實現CSV匯出功能
 
 
@@ -2349,7 +2576,7 @@ class DriverDetailedPitstopWidget(QWidget):
         self.status_layout = QHBoxLayout()
         layout.addLayout(self.status_layout)
         
-        print(f"[UI_SETUP] 車手詳細記錄UI設置完成 - 滾動區域最小尺寸: 600x300")
+        logger.debug("車手詳細記錄UI設置完成 - 滾動區域最小尺寸: 600x300")
         
     def setup_summary_table(self):
         """設置統一匯總表格"""
@@ -2394,6 +2621,11 @@ class DriverDetailedPitstopWidget(QWidget):
     def update_detailed_data(self, data: Dict[str, Any]):
         """更新車手詳細記錄數據"""
         try:
+            # ✅ 檢查 Widget 是否還有效
+            if not self.summary_table or not hasattr(self.summary_table, 'setRowCount'):
+                logger.warning("[DETAIL] Widget 已被刪除，跳過數據更新")
+                return
+                
             # 儲存完整數據
             self.current_data = data
             
@@ -2405,14 +2637,19 @@ class DriverDetailedPitstopWidget(QWidget):
                 self.show_error_message("車手詳細數據格式無效")
                 
         except Exception as e:
-            print(f"[ERROR] 更新車手詳細數據失敗: {e}")
+            logger.error(f"更新車手詳細數據失敗: {e}")
             self.show_error_message(f"更新車手詳細數據失敗: {str(e)}")
         
     def populate_summary_table(self):
         """填充統一匯總表格"""
         try:
+            # ✅ 檢查 Widget 是否還有效
+            if not self.summary_table or not hasattr(self.summary_table, 'setRowCount'):
+                logger.warning("[DETAIL] Widget 已被刪除，跳過表格填充")
+                return
+                
             if not self.detailed_data:
-                print("[WARNING] 車手詳細數據為空")
+                logger.warning("車手詳細數據為空")
                 return
                 
             # 重新設置表格結構
@@ -2470,10 +2707,10 @@ class DriverDetailedPitstopWidget(QWidget):
             # 更新狀態列
             self.update_status_bar()
             
-            print(f"[OK] 車手詳細記錄表格更新完成: {len(sorted_drivers)} 位車手")
+            logger.info(f"車手詳細記錄表格更新完成: {len(sorted_drivers)} 位車手")
             
         except Exception as e:
-            print(f"[ERROR] 填充車手詳細表格失敗: {e}")
+            logger.error(f"填充車手詳細表格失敗: {e}")
             self.show_error_message(f"填充車手詳細表格失敗: {str(e)}")
         
     def calculate_driver_stats(self, pitstops):
@@ -2511,7 +2748,7 @@ class DriverDetailedPitstopWidget(QWidget):
         # 表格樣式設置
         self.summary_table.setAlternatingRowColors(True)
         self.summary_table.setSelectionBehavior(QTableWidget.SelectRows)
-        print(f"[TABLE_CONFIG] 表格配置完成 - 欄數:{self.summary_table.columnCount()} (自適應欄寬)")
+        logger.debug(f"表格配置完成 - 欄數:{self.summary_table.columnCount()} (自適應欄寬)")
         
     def adjust_table_size(self):
         """調整表格大小以適應內容和容器"""
@@ -2532,11 +2769,7 @@ class DriverDetailedPitstopWidget(QWidget):
         # 設置表格寬度以填滿滾動區域
         table_width = max(required_width, scroll_width - 20)  # 留20px邊距和滾動條
         
-        print(f"[TABLE_SIZE_DEBUG] 表格大小調整:")
-        print(f"[TABLE_SIZE_DEBUG] - 計算的欄位總寬度: {total_column_width}px")
-        print(f"[TABLE_SIZE_DEBUG] - 建議表格寬度: {required_width}px")
-        print(f"[TABLE_SIZE_DEBUG] - 滾動區域寬度: {scroll_width}px")
-        print(f"[TABLE_SIZE_DEBUG] - 最終設定表格寬度: {table_width}px")
+        logger.debug(f"[TABLE_SIZE] 表格大小調整: 欄位總寬={total_column_width}px, 建議寬={required_width}px, 滾動區域寬={scroll_width}px, 最終寬={table_width}px")
         
         # 設置表格大小策略為擴展
         from PyQt5.QtWidgets import QSizePolicy
@@ -2556,12 +2789,7 @@ class DriverDetailedPitstopWidget(QWidget):
         scroll_height = self.table_scroll.height()
         table_height = min(total_height, scroll_height - 20)  # 最大不超過滾動區域
         
-        print(f"[TABLE_SIZE_DEBUG] 高度計算:")
-        print(f"[TABLE_SIZE_DEBUG] - 表頭高度: {header_height}px")
-        print(f"[TABLE_SIZE_DEBUG] - 行數: {row_count}, 每行高度: {row_height}px")
-        print(f"[TABLE_SIZE_DEBUG] - 計算總高度: {total_height}px")
-        print(f"[TABLE_SIZE_DEBUG] - 滾動區域高度: {scroll_height}px")
-        print(f"[TABLE_SIZE_DEBUG] - 最終表格高度: {table_height}px")
+        logger.debug(f"[TABLE_SIZE] 高度計算: 表頭={header_height}px, 行數={row_count}, 行高={row_height}px, 總高={total_height}px, 滾動區域高={scroll_height}px, 最終高={table_height}px")
         
         # 設置表格高度
         self.summary_table.setFixedHeight(table_height)
@@ -2609,7 +2837,7 @@ class DriverDetailedPitstopWidget(QWidget):
             self.status_layout.addStretch()
             
         except Exception as e:
-            print(f"[ERROR] 更新狀態列失敗: {e}")
+            logger.error(f"更新狀態列失敗: {e}")
             
     def calculate_overall_stats(self):
         """計算全域最快/最慢進站時間"""
@@ -2645,6 +2873,11 @@ class DriverDetailedPitstopWidget(QWidget):
     
     def show_error_message(self, message: str):
         """顯示錯誤訊息"""
+        # ✅ 檢查 Widget 是否還有效
+        if not self.table_scroll or not hasattr(self.table_scroll, 'setWidget'):
+            logger.warning("[DETAIL] Widget 已被刪除，跳過錯誤訊息顯示")
+            return
+            
         error_widget = QLabel(f"❌ {message}")
         error_widget.setAlignment(Qt.AlignCenter)
         error_widget.setStyleSheet("color: #d32f2f; font-size: 14px; padding: 20px;")
@@ -2659,24 +2892,19 @@ class DriverDetailedPitstopWidget(QWidget):
         widget_width = new_size.width()
         widget_height = new_size.height()
         
-        print(f"[RESIZE_DEBUG] DriverDetailedPitstopWidget 視窗大小變化:")
-        print(f"[RESIZE_DEBUG] - Widget 寬度: {widget_width}px")
-        print(f"[RESIZE_DEBUG] - Widget 高度: {widget_height}px")
+        logger.debug(f"[RESIZE] DriverDetailedPitstopWidget 視窗大小變化: 寬={widget_width}px, 高={widget_height}px")
         
         # 如果存在滾動區域，也列印其大小
         if hasattr(self, 'table_scroll') and self._is_widget_alive(self.table_scroll):
             scroll_size = self.table_scroll.size()
-            print(f"[RESIZE_DEBUG] - QScrollArea 寬度: {scroll_size.width()}px")
-            print(f"[RESIZE_DEBUG] - QScrollArea 高度: {scroll_size.height()}px")
+            logger.debug(f"[RESIZE] QScrollArea 寬={scroll_size.width()}px, 高={scroll_size.height()}px")
             
             # 如果存在表格，也列印表格大小
             if hasattr(self, 'summary_table') and self._is_widget_alive(self.summary_table):
                 table_size = self.summary_table.size()
                 table_width = self.summary_table.width()
                 column_count = self.summary_table.columnCount()
-                print(f"[RESIZE_DEBUG] - QTableWidget 寬度: {table_width}px")
-                print(f"[RESIZE_DEBUG] - QTableWidget 高度: {table_size.height()}px")
-                print(f"[RESIZE_DEBUG] - 表格欄數: {column_count}")
+                logger.debug(f"[RESIZE] QTableWidget 寬={table_width}px, 高={table_size.height()}px, 欄數={column_count}")
                 
                 # 檢查每個欄位的寬度
                 if column_count > 0:
@@ -2686,16 +2914,15 @@ class DriverDetailedPitstopWidget(QWidget):
                         width = self.summary_table.columnWidth(i)
                         column_widths.append(width)
                         total_column_width += width
-                    print(f"[RESIZE_DEBUG] - 欄位寬度: {column_widths}")
-                    print(f"[RESIZE_DEBUG] - 總欄位寬度: {total_column_width}px")
+                    logger.debug(f"[RESIZE] 欄位寬度: {column_widths}, 總寬={total_column_width}px")
                 
                 # 重新調整表格大小以適應新的視窗大小
                 self.adjust_table_size()
             elif hasattr(self, 'summary_table') and not self._is_widget_alive(self.summary_table):
-                print("[RESIZE_DEBUG] - summary_table 已被釋放，重設為 None")
+                logger.debug("[RESIZE] summary_table 已被釋放，重設為 None")
                 self.summary_table = None
         
-        print(f"[RESIZE_DEBUG] ===== 視窗大小變化監控結束 =====")
+        logger.debug("[RESIZE] 視窗大小變化監控結束")
     
     def clear_table(self):
         """清空表格"""
@@ -2703,7 +2930,7 @@ class DriverDetailedPitstopWidget(QWidget):
             self.summary_table.setRowCount(0)
         self.detailed_data = {}
         self.current_data = {}
-        print(f"[CLEAR] 車手詳細記錄表格數據已清空")
+        logger.debug("車手詳細記錄表格數據已清空")
 
 # 導出模組的主要類別
 __all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager', 'TeamPitstopRankingWidget', 'DriverDetailedPitstopWidget']
@@ -2712,6 +2939,6 @@ __all__ = ['PitstopAnalysisModule', 'PitstopRankingWidget', 'PitstopDataManager'
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.PITSTOP_ANALYSIS, PitstopAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] 進站分析模組已註冊")
+    logger.info("[MODULE_FACTORY] 進站分析模組已註冊")
 except ImportError as e:
-    print(f"[WARNING] [MODULE_FACTORY] 進站分析模組註冊失敗: {e}")
+    logger.warning(f"[MODULE_FACTORY] 進站分析模組註冊失敗: {e}")

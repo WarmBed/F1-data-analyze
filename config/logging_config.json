@@ -1,7 +1,7 @@
 {
-  "enabled": false,
+  "enabled": true,
   "level": "INFO",
-  "console_level": "INFO",
-  "patch_print": true,
+  "console_level": null,
+  "patch_print": false,
   "comment": "Logger settings - Changes require restart"
 }

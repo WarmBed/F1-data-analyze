@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 """
 雙車手比較分析模組 - 完全復刻 f1_analysis_cli_new.py 選項 6
-完全復刻原始程式的「6. 🆚 雙車手比較分析 (Two Driver Comparison)」功能
+完全復刻原始程式的「6. 雙車手比較分析 (Two Driver Comparison)」功能
 
 版本: 完全復刻版 v1.0
 基於: f1_analysis_cli_new.py 的 _run_driver_comparison_analysis 功能
 """
 
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import os
 import traceback
 import numpy as np
@@ -2271,6 +2278,13 @@ def _save_driver_comparison_json(result_data, driver1, driver2):
     try:
         import json
         from datetime import datetime
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         
         # 創建json目錄
         json_dir = "json"

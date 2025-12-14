@@ -21,6 +21,9 @@ except ImportError:  # pragma: no cover - fallback for relative import during pa
     from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
     from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class AccidentAnalysisApiWorker(QThread):
     """Background worker responsible for fetching accident analysis data via REST API."""
@@ -46,6 +49,11 @@ class AccidentAnalysisApiWorker(QThread):
 
     def run(self) -> None:  # pragma: no cover - executed in worker thread
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[ACCIDENT_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(15)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -64,6 +72,11 @@ class AccidentAnalysisApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[ACCIDENT_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             self.progress.emit(45)
             response = requests.post(
                 endpoint,
@@ -71,6 +84,12 @@ class AccidentAnalysisApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
             )
+            
+            # 請求完成後檢查中斷（避免在 widget 已銷毀後發送信號）
+            if self.isInterruptionRequested():
+                logger.debug("[ACCIDENT_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             
             # ✅ 修復：優雅處理 HTTP 錯誤（特別是 429）
@@ -114,6 +133,11 @@ class AccidentAnalysisApiWorker(QThread):
                 "endpoint": endpoint,
             }
 
+            # 發送信號前最後檢查中斷（避免向已銷毀的 widget 發送信號）
+            if self.isInterruptionRequested():
+                logger.debug("[ACCIDENT_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(95)
             self.success.emit(
                 {
@@ -124,9 +148,13 @@ class AccidentAnalysisApiWorker(QThread):
                 }
             )
         except Exception as exc:  # pragma: no cover - reported to GUI
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class AccidentDataManager(UniversalDataLoader):
@@ -381,7 +409,7 @@ class AccidentDataManager(UniversalDataLoader):
                 # 429 錯誤：靜默處理，只發送狀態訊息
                 self.status_changed.emit("API 請求過於頻繁，請稍後手動重新載入")
                 # ❌ 不發送 error_occurred 信號，避免彈窗
-                print(f"[ACCIDENT_API] ⚠️ API 限流 (429): {message}")
+                logger.warning(f"[ACCIDENT_API] ⚠️ API 限流 (429): {message}")
             else:
                 # 其他錯誤：正常處理
                 self.status_changed.emit("API 請求失敗且未啟用本地 JSON 後備")
@@ -626,8 +654,46 @@ class AccidentDataManager(UniversalDataLoader):
 
     def _debug(self, message: str) -> None:
         prefix = getattr(self.config, "debug_prefix", "ACCIDENT")
-        print(f"[{prefix} DEBUG] {message}")
+        logger.debug(f"[{prefix} DEBUG] {message}")
 
     def _error(self, message: str) -> None:
         prefix = getattr(self.config, "debug_prefix", "ACCIDENT")
-        print(f"[ERROR] [{prefix}] {message}")
+        logger.error(f"[{prefix}] {message}")
+    
+    def cleanup(self) -> None:
+        """
+        清理資源並停止所有背景執行緒
+        
+        當 AccidentAnalysisModule 關閉時調用此方法。
+        確保 API worker 執行緒被正確終止，避免 QThread 警告。
+        """
+        logger.info("[ACCIDENT_DATA_MANAGER] 開始清理資源...")
+        try:
+            # 停止並清理 API worker
+            if self._api_worker and self._api_worker.isRunning():
+                logger.debug("[ACCIDENT_DATA_MANAGER] 正在停止 API worker 執行緒...")
+                
+                # 階段 1: 嘗試正常停止 (wait 1 秒)
+                if not self._api_worker.wait(1000):
+                    logger.debug("[ACCIDENT_DATA_MANAGER] wait() 超時，嘗試 requestInterruption()...")
+                    
+                    # 階段 2: 請求中斷並等待
+                    self._api_worker.requestInterruption()
+                    if not self._api_worker.wait(500):
+                        logger.warning("[ACCIDENT_DATA_MANAGER] requestInterruption() 失敗，強制 terminate()...")
+                        
+                        # 階段 3: 強制終止
+                        self._api_worker.terminate()
+                        self._api_worker.wait(500)
+                
+                logger.debug("[ACCIDENT_DATA_MANAGER] API worker 執行緒已停止")
+            
+            # 清理 worker 引用
+            self._cleanup_api_worker()
+            
+            # 調用父類的 cleanup() 清理計時器和信號
+            super().cleanup()
+            
+            logger.info("[ACCIDENT_DATA_MANAGER] 資源清理完成")
+        except Exception as e:
+            logger.error(f"[ACCIDENT_DATA_MANAGER] 清理時發生錯誤: {e}")

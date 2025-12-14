@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 Analysis Universal JSON Generator
 F1 分析通用 JSON 生成器
@@ -9,6 +10,14 @@ F1 分析通用 JSON 生成器
 作者: F1 Analysis Team
 版本: 1.0
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

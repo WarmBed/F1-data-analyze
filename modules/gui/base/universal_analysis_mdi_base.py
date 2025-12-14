@@ -45,6 +45,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QTimer
 from PyQt5.QtGui import QFont, QPalette, QColor
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面和基類
 try:
     from ..interfaces.analysis_module import IAnalysisModule
@@ -55,6 +58,21 @@ try:
     from .universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 except ImportError:
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+
+logger = get_logger(component="gui")
+
+
+def _log_to_logger(*args, sep=" ", end=""):
+    message = sep.join(str(arg) for arg in args)
+    if message.startswith("[ERROR]") or "❌" in message:
+        logger.error(message)
+    elif message.startswith("[WARNING]") or "⚠️" in message:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
+print = _log_to_logger
 
 
 class AnalysisMDIConfig:
@@ -136,9 +154,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
         super().__init__(parent)
         
         # 驗證分析類型
-        print(f"🚨 [MDI_INIT] 請求分析類型: {analysis_type}")
-        print(f"🚨 [MDI_INIT] 可用的MDI模組類型: {list(self.MDI_MODULE_TYPES.keys())}")
-        print(f"🚨 [MDI_INIT] laptime是否在MDI_MODULE_TYPES中: {'laptime' in self.MDI_MODULE_TYPES}")
+        logger.debug(f"🚨 [MDI_INIT] 請求分析類型: {analysis_type}")
+        logger.debug(f"🚨 [MDI_INIT] 可用的MDI模組類型: {list(self.MDI_MODULE_TYPES.keys())}")
+        logger.debug(f"🚨 [MDI_INIT] laptime是否在MDI_MODULE_TYPES中: {'laptime' in self.MDI_MODULE_TYPES}")
         
         if analysis_type not in self.MDI_MODULE_TYPES:
             raise ValueError(f"不支援的分析類型: {analysis_type}. 可用類型: {list(self.MDI_MODULE_TYPES.keys())}")
@@ -187,11 +205,11 @@ class UniversalAnalysisMDI(IAnalysisModule):
     
     def _debug(self, message: str):
         """統一的除錯輸出"""
-        print(f"[{self._debug_prefix}] {message}")
+        logger.debug(f"[{self._debug_prefix}] {message}")
     
     def _error(self, message: str):
         """統一的錯誤輸出"""
-        print(f"[ERROR] [{self._debug_prefix}] {message}")
+        logger.error(f"[{self._debug_prefix}] {message}")
     
     # ========== IAnalysisModule 介面實現 ==========
     
@@ -220,13 +238,13 @@ class UniversalAnalysisMDI(IAnalysisModule):
         # ✅ 環境變量檢查 - Workspace 載入時跳過完整初始化
         import os
         if os.environ.get('F1T_WORKSPACE_LOADING') == '1':
-            print(f"✅ [WORKSPACE_MODE] {self.config.display_name} 跳過 initialize_module（環境變量保護）")
+            logger.info(f"[WORKSPACE_MODE] {self.config.display_name} 跳過 initialize_module（環境變量保護）")
             # 🔧 修復：在 workspace 模式下也需要創建 main_widget 以支援 get_widget()
             try:
                 self._setup_ui()  # 創建最基本的 UI 結構
-                print(f"✅ [WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建完成")
+                logger.info(f"[WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建完成")
             except Exception as e:
-                print(f"❌ [WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建失敗: {e}")
+                logger.error(f"[WORKSPACE_MODE] {self.config.display_name} 最小化 UI 創建失敗: {e}")
                 return False
             # 最小化初始化：不創建 data_manager，不連接信號
             self._initialized = False  # 標記為未初始化
@@ -280,18 +298,18 @@ class UniversalAnalysisMDI(IAnalysisModule):
         """更新參數 - 通用參數更新邏輯"""
         try:
             self._debug(f"========== 更新參數 ==========")
-            print(f"🔍 [BASE_MDI] update_parameters 被調用: year={year}, race={race}, session={session}")
+            logger.debug(f"[BASE_MDI] update_parameters 被調用: year={year}, race={race}, session={session}")
             
             # 更新基本參數
             if year is not None:
                 self.current_year = str(year)
-                print(f"🔍 [BASE_MDI] current_year 更新為: {self.current_year}")
+                logger.debug(f"[BASE_MDI] current_year 更新為: {self.current_year}")
             if race is not None:
                 self.current_race = race
-                print(f"🔍 [BASE_MDI] current_race 更新為: {self.current_race}")
+                logger.debug(f"[BASE_MDI] current_race 更新為: {self.current_race}")
             if session is not None:
                 self.current_session = session
-                print(f"🔍 [BASE_MDI] current_session 更新為: {self.current_session}")
+                logger.debug(f"[BASE_MDI] current_session 更新為: {self.current_session}")
             
             # 更新車手參數（如果支援）
             if self.config.requires_driver_params:
@@ -340,9 +358,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.update_window_title()
             
             # 觸發數據載入
-            print(f"🔍 [BASE_MDI] 準備調用 _load_data_with_current_parameters()")
+            logger.debug(f"[BASE_MDI] 準備調用 _load_data_with_current_parameters()")
             self._load_data_with_current_parameters()
-            print(f"🔍 [BASE_MDI] _load_data_with_current_parameters() 調用完成")
+            logger.debug(f"[BASE_MDI] _load_data_with_current_parameters() 調用完成")
             
             return True
             
@@ -706,29 +724,29 @@ class UniversalAnalysisMDI(IAnalysisModule):
         # ✅ Workspace 載入模式檢查（環境變量方式 - 最可靠）
         import os
         workspace_env = os.environ.get('F1T_WORKSPACE_LOADING')
-        print(f"🔍 [BASE_DEBUG] _load_data_with_current_parameters 被調用")
-        print(f"🔍 [BASE_DEBUG] F1T_WORKSPACE_LOADING = {workspace_env}")
+        logger.debug(f"[BASE_DEBUG] _load_data_with_current_parameters 被調用")
+        logger.debug(f"[BASE_DEBUG] F1T_WORKSPACE_LOADING = {workspace_env}")
         
         if workspace_env == '1':
-            print(f"✅ [WORKSPACE_MODE] 環境變量保護生效！跳過數據載入")
+            logger.info(f"[WORKSPACE_MODE] 環境變量保護生效！跳過數據載入")
             return
         
         # ✅ Workspace 載入模式檢查（方案 A - 標誌方式）
         # 在 Workspace 重建期間，跳過自動數據載入以避免執行緒競爭
         if getattr(self, '_workspace_loading_mode', False):
-            print(f"✅ [WORKSPACE_MODE] 標誌保護生效！跳過數據載入")
+            logger.info(f"[WORKSPACE_MODE] 標誌保護生效！跳過數據載入")
             return
         
         if getattr(self, '_cleanup_performed', False):
             self._debug("🛑 模組已釋放，略過數據載入")
             return
 
-        print(f"🚨 [BASE_CRITICAL] _load_data_with_current_parameters 被調用")
-        print(f"🚨 [BASE_CRITICAL] self.data_manager = {self.data_manager}")
-        print(f"🚨 [BASE_CRITICAL] type(self.data_manager) = {type(self.data_manager)}")
+        logger.debug(f"🚨 [BASE_CRITICAL] _load_data_with_current_parameters 被調用")
+        logger.debug(f"🚨 [BASE_CRITICAL] self.data_manager = {self.data_manager}")
+        logger.debug(f"🚨 [BASE_CRITICAL] type(self.data_manager) = {type(self.data_manager)}")
         
         if not self.data_manager:
-            print(f"🚨 [BASE_CRITICAL] data_manager 為 None，返回")
+            logger.debug(f"🚨 [BASE_CRITICAL] data_manager 為 None，返回")
             return
 
         if not self._is_widget_valid(getattr(self, 'main_widget', None)):
@@ -743,40 +761,40 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 'session': self.current_session
             }
             
-            print(f"🚨 [BASE_CRITICAL] 載入參數: {load_params}")
+            logger.debug(f"🚨 [BASE_CRITICAL] 載入參數: {load_params}")
             
             if self.config.requires_driver_params:
                 load_params.update({
                     'driver1': getattr(self, 'driver1', 'VER'),
                     'driver2': getattr(self, 'driver2', 'VER')
                 })
-                print(f"🚨 [BASE_CRITICAL] 添加車手參數: {load_params}")
+                logger.debug(f"🚨 [BASE_CRITICAL] 添加車手參數: {load_params}")
             
             if self.config.requires_lap_params:
                 load_params.update({
                     'lap1': getattr(self, 'lap1', 1),
                     'lap2': getattr(self, 'lap2', 1)
                 })
-                print(f"🚨 [BASE_CRITICAL] 添加圈數參數: {load_params}")
+                logger.debug(f"🚨 [BASE_CRITICAL] 添加圈數參數: {load_params}")
             
             # 呼叫數據管理器的載入方法
             has_load_data = hasattr(self.data_manager, 'load_data')
-            print(f"🚨 [BASE_CRITICAL] data_manager 是否有 load_data 方法: {has_load_data}")
+            logger.debug(f"🚨 [BASE_CRITICAL] data_manager 是否有 load_data 方法: {has_load_data}")
             
             if has_load_data:
-                print(f"🚨 [BASE_CRITICAL] 調用 data_manager.load_data({load_params})")
+                logger.debug(f"🚨 [BASE_CRITICAL] 調用 data_manager.load_data({load_params})")
                 self.data_manager.load_data(**load_params)
-                print(f"🚨 [BASE_CRITICAL] data_manager.load_data 調用完成")
+                logger.debug(f"🚨 [BASE_CRITICAL] data_manager.load_data 調用完成")
             elif hasattr(self.data_manager, f'load_{self.analysis_type}_data'):
                 load_method = getattr(self.data_manager, f'load_{self.analysis_type}_data')
-                print(f"🚨 [BASE_CRITICAL] 調用 load_{self.analysis_type}_data 方法")
+                logger.debug(f"🚨 [BASE_CRITICAL] 調用 load_{self.analysis_type}_data 方法")
                 load_method(**load_params)
             else:
-                print(f"🚨 [BASE_CRITICAL] ⚠️ 數據管理器沒有合適的載入方法")
+                logger.warning(f"🚨 [BASE_CRITICAL] ⚠️ 數據管理器沒有合適的載入方法")
                 self._debug("⚠️  數據管理器沒有合適的載入方法")
             
         except Exception as e:
-            print(f"🚨 [BASE_CRITICAL] 異常: {e}")
+            logger.debug(f"🚨 [BASE_CRITICAL] 異常: {e}")
             import traceback
             traceback.print_exc()
             self._error(f"數據載入失敗: {e}")
@@ -884,16 +902,16 @@ class UniversalAnalysisMDI(IAnalysisModule):
         """更新視窗標題 - 確保完全替換，不累積舊標題"""
         try:
             # 🔍 調試：檢查 parent_window 狀態
-            print(f"[UPDATE_TITLE_DEBUG] ========== 開始更新視窗標題 ==========")
-            print(f"[UPDATE_TITLE_DEBUG] hasattr(self, 'parent_window'): {hasattr(self, 'parent_window')}")
+            logger.debug(f"[UPDATE_TITLE_DEBUG] ========== 開始更新視窗標題 ==========")
+            logger.debug(f"[UPDATE_TITLE_DEBUG] hasattr(self, 'parent_window'): {hasattr(self, 'parent_window')}")
             
             # 檢查 parent_window 屬性（MDI 子視窗引用）
             parent = getattr(self, 'parent_window', None)
-            print(f"[UPDATE_TITLE_DEBUG] parent_window 值: {parent}")
-            print(f"[UPDATE_TITLE_DEBUG] parent_window 類型: {type(parent).__name__ if parent else 'None'}")
+            logger.debug(f"[UPDATE_TITLE_DEBUG] parent_window 值: {parent}")
+            logger.debug(f"[UPDATE_TITLE_DEBUG] parent_window 類型: {type(parent).__name__ if parent else 'None'}")
             
             if parent:
-                print(f"[UPDATE_TITLE_DEBUG] hasattr(parent, 'setWindowTitle'): {hasattr(parent, 'setWindowTitle')}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] hasattr(parent, 'setWindowTitle'): {hasattr(parent, 'setWindowTitle')}")
             
             if parent and hasattr(parent, 'setWindowTitle'):
                 # 生成新標題（確保使用當前參數）
@@ -902,25 +920,25 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 # ✅ [FIX] 獲取舊標題以便調試
                 old_title = parent.windowTitle() if hasattr(parent, 'windowTitle') else "N/A"
                 
-                print(f"[UPDATE_TITLE_DEBUG] 舊標題: {old_title}")
-                print(f"[UPDATE_TITLE_DEBUG] 新標題: {new_title}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 舊標題: {old_title}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 新標題: {new_title}")
                 
                 # ✅ [FIX] 直接設置新標題（完全替換，不追加）
                 parent.setWindowTitle(new_title)
                 
                 # 🔥 **關鍵修正**: 同時更新自訂標題列（PopoutSubWindow 的 title_bar）
                 if hasattr(parent, 'title_bar') and parent.title_bar:
-                    print(f"[UPDATE_TITLE_DEBUG] 發現自訂標題列，更新標題...")
+                    logger.debug(f"[UPDATE_TITLE_DEBUG] 發現自訂標題列，更新標題...")
                     if hasattr(parent.title_bar, 'update_title'):
                         parent.title_bar.update_title(new_title)
-                        print(f"[UPDATE_TITLE_DEBUG] ✅ 自訂標題列已更新")
+                        logger.info(f"[UPDATE_TITLE_DEBUG] ✅ 自訂標題列已更新")
                     else:
-                        print(f"[UPDATE_TITLE_DEBUG] ⚠️  title_bar 沒有 update_title 方法")
+                        logger.warning(f"[UPDATE_TITLE_DEBUG] ⚠️  title_bar 沒有 update_title 方法")
                 else:
-                    print(f"[UPDATE_TITLE_DEBUG] 沒有自訂標題列，跳過")
+                    logger.debug(f"[UPDATE_TITLE_DEBUG] 沒有自訂標題列，跳過")
                 
                 # 🔥 強制刷新視窗標題顯示
-                print(f"[UPDATE_TITLE_DEBUG] 強制刷新視窗標題...")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 強制刷新視窗標題...")
                 
                 # 方法 1: 刷新子視窗
                 parent.update()
@@ -937,17 +955,17 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 
                 # 方法 4: 驗證標題確實已更改
                 current_title = parent.windowTitle()
-                print(f"[UPDATE_TITLE_DEBUG] 驗證當前標題: {current_title}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 驗證當前標題: {current_title}")
                 if current_title != new_title:
-                    print(f"[UPDATE_TITLE_DEBUG] ⚠️  標題未更新，重試...")
+                    logger.warning(f"[UPDATE_TITLE_DEBUG] ⚠️  標題未更新，重試...")
                     parent.setWindowTitle(new_title)
                     QApplication.processEvents()
                     # 再次驗證
                     final_title = parent.windowTitle()
-                    print(f"[UPDATE_TITLE_DEBUG] 重試後的標題: {final_title}")
+                    logger.debug(f"[UPDATE_TITLE_DEBUG] 重試後的標題: {final_title}")
                 
                 # 🔥 強制觸發標題列重繪
-                print(f"[UPDATE_TITLE_DEBUG] 強制觸發 MDI 子視窗標題列重繪...")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 強制觸發 MDI 子視窗標題列重繪...")
                 if hasattr(parent, 'setWindowState'):
                     # 保存當前狀態
                     current_state = parent.windowState()
@@ -958,17 +976,17 @@ class UniversalAnalysisMDI(IAnalysisModule):
                 
                 # 最終驗證
                 final_check_title = parent.windowTitle()
-                print(f"[UPDATE_TITLE_DEBUG] 最終檢查標題: {final_check_title}")
-                print(f"[UPDATE_TITLE_DEBUG] 標題是否正確: {final_check_title == new_title}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 最終檢查標題: {final_check_title}")
+                logger.debug(f"[UPDATE_TITLE_DEBUG] 標題是否正確: {final_check_title == new_title}")
                 
-                print(f"[UPDATE_TITLE_DEBUG] ✅ 視窗標題已更新")
+                logger.info(f"[UPDATE_TITLE_DEBUG] ✅ 視窗標題已更新")
                 self._debug(f"🏷️ 視窗標題已更新")
                 self._debug(f"   舊標題: {old_title}")
                 self._debug(f"   新標題: {new_title}")
             else:
-                print(f"[UPDATE_TITLE_DEBUG] ❌ 無法更新標題：parent_window={parent is not None}, hasattr={hasattr(parent, 'setWindowTitle') if parent else False}")
+                logger.error(f"[UPDATE_TITLE_DEBUG] ❌ 無法更新標題：parent_window={parent is not None}, hasattr={hasattr(parent, 'setWindowTitle') if parent else False}")
         except Exception as e:
-            print(f"[UPDATE_TITLE_DEBUG] ❌ 更新視窗標題時發生錯誤: {e}")
+            logger.error(f"[UPDATE_TITLE_DEBUG] ❌ 更新視窗標題時發生錯誤: {e}")
             self._error(f"更新視窗標題失敗: {e}")
             import traceback
             traceback.print_exc()
@@ -1036,9 +1054,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
             # 🔴 新增步驟 7: 徹底斷開所有 Qt 連接（修復洩漏）
             try:
                 self.disconnect()
-                print(f"[{self.config.display_name}] ✅ Qt 連接已斷開")
+                logger.info(f"[{self.config.display_name}] ✅ Qt 連接已斷開")
             except Exception as e:
-                print(f"[{self.config.display_name}] ⚠️ 斷開 Qt 連接警告: {e}")
+                logger.warning(f"[{self.config.display_name}] ⚠️ 斷開 Qt 連接警告: {e}")
             
             # 🔴 新增步驟 8: 徹底清理 __dict__（修復洩漏）
             try:
@@ -1054,16 +1072,16 @@ class UniversalAnalysisMDI(IAnalysisModule):
                         except Exception:
                             pass
                 
-                print(f"[{module_name}] ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
-                print(f"[{module_name}] ✅ 完整資源清理完成")
+                logger.info(f"[{module_name}] ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
+                logger.info(f"[{module_name}] ✅ 完整資源清理完成")
             except Exception as e:
-                print(f"[UniversalMDI] ⚠️ __dict__ 清理警告: {e}")
+                logger.warning(f"[UniversalMDI] ⚠️ __dict__ 清理警告: {e}")
             
         except Exception as e:
             if hasattr(self, '_error'):
                 self._error(f"資源清理失敗: {e}")
             else:
-                print(f"[UniversalMDI] ❌ 資源清理失敗: {e}")
+                logger.error(f"[UniversalMDI] ❌ 資源清理失敗: {e}")
     
     # ========== IAnalysisModule 額外方法實現 ==========
     

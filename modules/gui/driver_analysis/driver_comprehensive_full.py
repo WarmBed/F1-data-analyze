@@ -12,17 +12,33 @@ import matplotlib.cm as cm
 from matplotlib.collections import LineCollection
 from prettytable import PrettyTable
 import warnings
+from core.logger import get_logger
+
+logger = get_logger(component="gui")
+
+
+def _log_to_logger(*args, sep=" ", end=""):
+    message = sep.join(str(arg) for arg in args)
+    if message.startswith("[ERROR]") or "❌" in message:
+        logger.error(message)
+    elif message.startswith("[WARNING]") or "⚠️" in message:
+        logger.warning(message)
+    else:
+        logger.info(message)
+
+
+print = _log_to_logger
 
 def run_single_driver_comprehensive_analysis(data_loader, open_analyzer, f1_analysis_instance=None):
     """執行單一車手綜合分析 - 完全復刻原始程式功能"""
     try:
-        print("\n[DEBUG] 單一車手詳細遙測分析")
-        print("=" * 60)
+        logger.debug("\n[DEBUG] 單一車手詳細遙測分析")
+        logger.debug("=" * 60)
         
         # 獲取已載入的數據
         data = data_loader.get_loaded_data()
         if not data:
-            print("[ERROR] 沒有可用的數據，請先載入數據")
+            logger.error("沒有可用的數據，請先載入數據")
             return
         
         # 獲取必要的數據結構
@@ -33,11 +49,11 @@ def run_single_driver_comprehensive_analysis(data_loader, open_analyzer, f1_anal
         weather_data = data.get('weather_data')
         
         if not drivers_info or results is None or laps is None:
-            print("[ERROR] 缺少必要的數據結構")
+            logger.error("缺少必要的數據結構")
             return
         
         # 顯示車手列表 (按名次排序) - 完全復刻原始程式的顯示方式
-        print(f"\n[LIST] 可選擇的車手:")
+        logger.debug(f"\n[LIST] 可選擇的車手:")
         sorted_results = results.sort_values('Position')
         
         # 使用 PrettyTable 顯示車手列表
@@ -59,7 +75,7 @@ def run_single_driver_comprehensive_analysis(data_loader, open_analyzer, f1_anal
             ])
             driver_list.append(driver['Abbreviation'])
         
-        print(table)
+        logger.debug(f"{table}")
         
         # 讓用戶選擇車手
         while True:
@@ -70,16 +86,16 @@ def run_single_driver_comprehensive_analysis(data_loader, open_analyzer, f1_anal
                     selected_driver = driver_list[choice_idx]
                     break
                 else:
-                    print(f"[ERROR] 請輸入 1 到 {len(driver_list)} 之間的數字")
+                    logger.error(f"請輸入 1 到 {len(driver_list)} 之間的數字")
             except ValueError:
-                print("[ERROR] 請輸入有效的數字")
+                logger.error("請輸入有效的數字")
         
         # 執行詳細分析 - 完全復刻原始程式的流程
-        print(f"\n[DEBUG] 分析車手: {selected_driver}")
+        logger.debug(f"\n[DEBUG] 分析車手: {selected_driver}")
         _perform_detailed_driver_analysis_replica(selected_driver, data, f1_analysis_instance)
         
     except Exception as e:
-        print(f"[ERROR] 單一車手遙測分析執行失敗: {e}")
+        logger.error(f"單一車手遙測分析執行失敗: {e}")
         import traceback
         traceback.print_exc()
 
@@ -96,15 +112,15 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
         driver_laps = laps[laps['Driver'] == driver_abbr].copy()
         
         if driver_laps.empty:
-            print(f"[ERROR] 車手 {driver_abbr} 沒有圈次資料")
+            logger.error(f"車手 {driver_abbr} 沒有圈次資料")
             return
         
-        print(f"\n[INFO] {driver_info['name']} ({driver_abbr}) - {driver_info['team']}")
-        print("=" * 80)
+        logger.info(f"\n[INFO] {driver_info['name']} ({driver_abbr}) - {driver_info['team']}")
+        logger.debug("=" * 80)
         
         # 基本資訊
         total_laps = len(driver_laps)
-        print(f"總圈數: {total_laps}")
+        logger.debug(f"總圈數: {total_laps}")
         
         # 1. 詳細圈次分析 - 復刻 _display_complete_lap_analysis
         _display_complete_lap_analysis_replica(driver_laps, weather_data, driver_abbr, data)
@@ -116,7 +132,7 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
         _display_special_events_analysis_replica(driver_laps, session, data)
         
         # 4. 遙測圖表選項 - 完全復刻原始程式的選項
-        print(f"\n🏎️  遙測圖表選項:")
+        logger.debug(f"\n🏎️  遙測圖表選項:")
         telemetry_options = {
             '1': '[INFO] 最快圈遙測圖表',
             '2': '[INFO] 指定圈次遙測圖表', 
@@ -125,13 +141,13 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
         }
         
         for key, desc in telemetry_options.items():
-            print(f"   {key}. {desc}")
+            logger.debug(f"   {key}. {desc}")
         
         while True:
             telemetry_choice = input("請選擇遙測圖表類型 (1-4): ").strip()
             if telemetry_choice in telemetry_options:
                 break
-            print("[ERROR] 請輸入 1-4")
+            logger.error("請輸入 1-4")
         
         if telemetry_choice != '4':
             # 根據選擇獲取對應的圈次數據
@@ -144,16 +160,16 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
                     lap_to_analyze = driver_laps.loc[fastest_idx]
                     try:
                         lap_number = int(lap_to_analyze['LapNumber'])
-                        print(f"[INFO] 分析最快圈: 第{lap_number}圈")
+                        logger.info(f"分析最快圈: 第{lap_number}圈")
                     except (ValueError, TypeError) as e:
-                        print(f"[WARNING] 無法獲取最快圈圈次號碼: {e}")
+                        logger.warning(f"無法獲取最快圈圈次號碼: {e}")
                 else:
-                    print("[ERROR] 沒有有效的圈時數據")
+                    logger.error("沒有有效的圈時數據")
                     
             elif telemetry_choice == '2':
                 # 指定圈次
                 available_laps = sorted(driver_laps['LapNumber'].unique())
-                print(f"可用圈次: {available_laps}")
+                logger.debug(f"可用圈次: {available_laps}")
                 while True:
                     try:
                         lap_num = int(input("請輸入圈次號碼: "))
@@ -163,15 +179,15 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
                                 try:
                                     lap_to_analyze = lap_data.iloc[0] if hasattr(lap_data, 'iloc') and len(lap_data) > 0 else None
                                     if lap_to_analyze is not None:
-                                        print(f"[INFO] 分析第{lap_num}圈")
+                                        logger.info(f"分析第{lap_num}圈")
                                         break
                                     else:
-                                        print("[ERROR] 無法獲取圈次資料")
+                                        logger.error("無法獲取圈次資料")
                                 except:
-                                    print("[ERROR] 圈次資料格式錯誤")
-                        print("[ERROR] 圈次不存在，請重新輸入")
+                                    logger.error("圈次資料格式錯誤")
+                        logger.error("圈次不存在，請重新輸入")
                     except ValueError:
-                        print("[ERROR] 請輸入有效的圈次號碼")
+                        logger.error("請輸入有效的圈次號碼")
                         
             elif telemetry_choice == '3':
                 # 平均圈（中間圈次）
@@ -180,21 +196,21 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
                     lap_to_analyze = driver_laps.iloc[mid_idx]
                     try:
                         lap_number = int(lap_to_analyze['LapNumber'])
-                        print(f"[INFO] 分析中間圈次: 第{lap_number}圈")
+                        logger.info(f"分析中間圈次: 第{lap_number}圈")
                     except (ValueError, TypeError) as e:
-                        print(f"[WARNING] 無法獲取中間圈次號碼: {e}")
+                        logger.warning(f"無法獲取中間圈次號碼: {e}")
             
             # 生成單一車手遙測圖表 - 復刻 plot_single_driver_telemetry
             if lap_to_analyze is not None:
                 try:
                     _plot_single_driver_telemetry_replica(session, lap_to_analyze, driver_abbr, driver_info, data)
                 except Exception as e:
-                    print(f"[WARNING] 遙測圖表生成失敗: {e}")
+                    logger.warning(f"遙測圖表生成失敗: {e}")
             else:
-                print("[ERROR] 無法獲取圈次數據")
+                logger.error("無法獲取圈次數據")
         
         # 5. 彎道速度分析選項 - 復刻原始程式的彎道分析
-        print(f"\n[FINISH] 彎道速度分析選項:")
+        logger.debug(f"\n[FINISH] 彎道速度分析選項:")
         corner_options = {
             '1': '[INFO] 分析指定圈次的彎道速度',
             '2': '[INFO] 分析最快圈的彎道速度', 
@@ -202,27 +218,27 @@ def _perform_detailed_driver_analysis_replica(driver_abbr, data, f1_analysis_ins
         }
         
         for key, desc in corner_options.items():
-            print(f"   {key}. {desc}")
+            logger.debug(f"   {key}. {desc}")
         
         while True:
             corner_choice = input("請選擇彎道速度分析類型 (1-3): ").strip()
             if corner_choice in corner_options:
                 break
-            print("[ERROR] 請輸入 1-3")
+            logger.error("請輸入 1-3")
         
         if corner_choice != '3':
-            print(f"[INFO] 彎道速度分析功能已跳過（原始程式中的功能）")
+            logger.info(f"彎道速度分析功能已跳過（原始程式中的功能）")
             # 這裡可以加入彎道速度分析的具體實現
         
     except Exception as e:
-        print(f"[ERROR] 詳細車手分析失敗: {e}")
+        logger.error(f"詳細車手分析失敗: {e}")
         import traceback
         traceback.print_exc()
 
 def _display_complete_lap_analysis_replica(driver_laps, weather_data, driver_abbr, data):
     """顯示詳細圈次分析 - 完全復刻原始程式的功能"""
     try:
-        print(f"\n[STATS] 詳細圈次分析 - 完整圈速記錄")
+        logger.debug(f"\n[STATS] 詳細圈次分析 - 完整圈速記錄")
         
         # 按圈數排序
         sorted_laps = driver_laps.sort_values('LapNumber')
@@ -282,7 +298,7 @@ def _display_complete_lap_analysis_replica(driver_laps, weather_data, driver_abb
                 weather_info, speed_i1, speed_i2, speed_fl, note
             ])
         
-        print(lap_table)
+        logger.debug(f"{lap_table}")
         
         # 使用 PrettyTable 顯示圈速統計
         if not valid_times.empty:
@@ -296,30 +312,30 @@ def _display_complete_lap_analysis_replica(driver_laps, weather_data, driver_abb
             stats_table.add_row(["平均圈速", _format_time(valid_times.mean())])
             stats_table.add_row(["最慢圈速", _format_time(valid_times.max())])
             
-            print(f"\n[INFO] 圈速統計:")
-            print(stats_table)
+            logger.info(f"\n[INFO] 圈速統計:")
+            logger.debug(f"{stats_table}")
         
         # 生成圈速趨勢圖（輪胎配方分段顯示，包含賽事事件標注）
         _create_lap_time_trend_chart_replica(sorted_laps, driver_abbr, track_status, race_control_messages, data)
         
     except Exception as e:
-        print(f"[ERROR] 詳細圈次分析失敗: {e}")
+        logger.error(f"詳細圈次分析失敗: {e}")
 
 def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
     """顯示詳細輪胎策略 - 完全復刻原始程式"""
     try:
         if 'Compound' not in driver_laps.columns:
-            print(f"\n[ERROR] 沒有輪胎資料")
+            logger.error(f"\n[ERROR] 沒有輪胎資料")
             return
         
-        print(f"\n[FINISH] 詳細輪胎策略分析")
-        print("=" * 120)
+        logger.debug(f"\n[FINISH] 詳細輪胎策略分析")
+        logger.debug("=" * 120)
         
         # 輪胎使用統計
         compound_stats = _analyze_tire_strategy_replica(driver_laps)
         
         if not compound_stats:
-            print("[ERROR] 無法分析輪胎策略")
+            logger.error("無法分析輪胎策略")
             return
         
         # 生成輪胎使用摘要表
@@ -351,20 +367,20 @@ def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
             
             tire_table.add_row([compound, laps_count, percentage, avg_time, best_time, fastest_lap, stint_text])
         
-        print(tire_table)
+        logger.debug(f"{tire_table}")
         
         # 詳細性能分析表格
-        print(f"\n[INFO] 輪胎性能詳細分析")
-        print("=" * 140)
+        logger.info(f"\n[INFO] 輪胎性能詳細分析")
+        logger.debug("=" * 140)
         
         for compound, stats in compound_stats.items():
-            print(f"\n🔸 {compound} 輪胎詳細性能:")
-            print("-" * 100)
+            logger.debug(f"\n🔸 {compound} 輪胎詳細性能:")
+            logger.debug("-" * 100)
             
             # 速度表現表格
             if stats.get('speed_stats'):
                 speed_stats = stats['speed_stats']
-                print(f"\n[START] 速度表現:")
+                logger.debug(f"\n[START] 速度表現:")
                 
                 # 使用 PrettyTable 顯示速度表現
                 speed_table = PrettyTable()
@@ -379,13 +395,13 @@ def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
                         lap_num = f"第{data_item['lap_num']}圈" if data_item['lap_num'] else 'N/A'
                         speed_table.add_row([sector, max_speed, avg_speed, lap_num])
                 
-                print(speed_table)
+                logger.debug(f"{speed_table}")
             
             # 區段時間表現
             if stats.get('speed_stats') and 'sector_times' in stats['speed_stats']:
                 sector_times = stats['speed_stats']['sector_times']
                 if sector_times:
-                    print(f"\n⏱️ 區段時間表現:")
+                    logger.debug(f"\n⏱️ 區段時間表現:")
                     
                     # 使用 PrettyTable 顯示區段時間
                     sector_table = PrettyTable()
@@ -400,12 +416,12 @@ def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
                             lap_num = f"第{data_item['lap_num']}圈" if data_item['lap_num'] else 'N/A'
                             sector_table.add_row([sector, best_time, avg_time, lap_num])
                     
-                    print(sector_table)
+                    logger.debug(f"{sector_table}")
             
             # 最快圈詳細資訊
             if stats.get('fastest_lap_data') is not None and stats['fastest_lap_num']:
                 fastest_lap = stats['fastest_lap_data']
-                print(f"\n🏆 最快圈 (第{stats['fastest_lap_num']}圈) 詳細資訊:")
+                logger.debug(f"\n🏆 最快圈 (第{stats['fastest_lap_num']}圈) 詳細資訊:")
                 
                 # 使用 PrettyTable 顯示最快圈詳細資訊
                 fastest_table = PrettyTable()
@@ -427,13 +443,13 @@ def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
                 if pd.notna(fastest_lap.get('Sector3Time')):
                     fastest_table.add_row(["第3區段時間", _format_time(fastest_lap['Sector3Time'])])
                 
-                print(fastest_table)
+                logger.debug(f"{fastest_table}")
         
         # 進站記錄表格
         session = data.get('session')
         pitstop_records = _analyze_pitstop_records_replica(driver_laps, session, driver_abbr)
         if pitstop_records['total_pitstops'] > 0:
-            print(f"\n⛽ 進站記錄")
+            logger.debug(f"\n⛽ 進站記錄")
             
             # 使用 PrettyTable 顯示進站記錄
             pit_table = PrettyTable()
@@ -450,15 +466,15 @@ def _display_detailed_tire_strategy_replica(driver_laps, driver_abbr, data):
                 
                 pit_table.add_row([pit_num, lap_num, tire_change, pit_time, duration])
             
-            print(pit_table)
+            logger.debug(f"{pit_table}")
         
     except Exception as e:
-        print(f"[ERROR] 詳細輪胎策略分析失敗: {e}")
+        logger.error(f"詳細輪胎策略分析失敗: {e}")
 
 def _display_tire_usage_summary(compound_stats, driver_laps):
     """顯示輪胎使用摘要 - 復刻用戶看到的輸出格式"""
     try:
-        print(f"\n[FINISH] 輪胎使用摘要:")
+        logger.debug(f"\n[FINISH] 輪胎使用摘要:")
         
         # 輪胎顏色對應
         tire_colors = {
@@ -483,21 +499,21 @@ def _display_tire_usage_summary(compound_stats, driver_laps):
                 color
             ])
         
-        print(summary_table)
+        logger.debug(f"{summary_table}")
         
     except Exception as e:
-        print(f"[ERROR] 輪胎使用摘要顯示失敗: {e}")
+        logger.error(f"輪胎使用摘要顯示失敗: {e}")
 
 def _display_special_events_analysis_replica(driver_laps, session, data):
     """顯示特殊事件分析 - 復刻原始程式"""
     try:
-        print(f"\n[CRITICAL] 特殊事件分析")
-        print("-" * 80)
+        logger.warning(f"\n[CRITICAL] 特殊事件分析")
+        logger.debug("-" * 80)
         
         # 更精確的進站圈次分析
         pit_laps_detail = _analyze_detailed_pitstops_replica(driver_laps)
         if pit_laps_detail:
-            print(f"進站圈次詳情:")
+            logger.debug(f"進站圈次詳情:")
             for pit_info in pit_laps_detail:
                 base_info = f"  第{pit_info['lap']}圈: {pit_info['type']} (輪胎: {pit_info['compound']})"
                 
@@ -511,15 +527,15 @@ def _display_special_events_analysis_replica(driver_laps, session, data):
                 if pit_info.get('pit_out_time'):
                     base_info += f" - 出站: {pit_info['pit_out_time']}"
                 
-                print(base_info)
+                logger.debug(f"{base_info}")
         else:
-            print("進站圈次詳情: 無")
+            logger.debug("進站圈次詳情: 無")
         
         # 分析異常圈速並推測原因
-        print("異常慢圈: 無")
+        logger.debug("異常慢圈: 無")
         
     except Exception as e:
-        print(f"[ERROR] 特殊事件分析失敗: {e}")
+        logger.error(f"特殊事件分析失敗: {e}")
 
 def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver_info, data):
     """繪製單一車手的詳細遙測圖 - 完全復刻原始程式的 plot_single_driver_telemetry 功能"""
@@ -532,13 +548,13 @@ def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver
             if hasattr(lap_data, '__getitem__') and 'LapNumber' in lap_data:
                 lap_number = int(lap_data['LapNumber'])
             else:
-                print("[ERROR] 無法從資料中獲取圈次號碼")
+                logger.error("無法從資料中獲取圈次號碼")
                 return
         except (ValueError, TypeError, KeyError) as e:
-            print(f"[ERROR] 無法獲取圈次號碼: {e}")
+            logger.error(f"無法獲取圈次號碼: {e}")
             return
 
-        print(f"\n🏎️ 正在生成 {driver_abbr} 第{lap_number}圈 遙測圖表...")
+        logger.debug(f"\n🏎️ 正在生成 {driver_abbr} 第{lap_number}圈 遙測圖表...")
 
         # 取得圈次的車輛遙測數據
         lap_session_data = session.laps[
@@ -547,17 +563,17 @@ def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver
         ]
         
         if lap_session_data.empty:
-            print("[ERROR] 無法獲取圈次數據")
+            logger.error("無法獲取圈次數據")
             return
 
         # 使用安全方法獲取車輛資料
         car_data, error_msg = _safe_get_lap_data(lap_session_data, 'get_car_data', add_distance=True)
         if car_data is None:
-            print(f"[ERROR] 無法獲取遙測數據: {error_msg}")
+            logger.error(f"無法獲取遙測數據: {error_msg}")
             return
             
         if car_data.empty:
-            print("[ERROR] 遙測數據為空")
+            logger.error("遙測數據為空")
             return
 
         # 設定白色主題 (單車手遙測圖使用白色背景)
@@ -633,7 +649,7 @@ def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver
                 ax.set_title(f'{driver_abbr} - 賽道地圖', fontweight='bold', fontsize=14)
                 ax.legend(fontsize=10)
                 
-                print(f"   [SUCCESS] Track Map 已添加")
+                logger.info(f"   [SUCCESS] Track Map 已添加")
             else:
                 ax.text(0.5, 0.5, '位置數據不可用\n無法生成賽道地圖', 
                        ha='center', va='center', transform=ax.transAxes, fontsize=12)
@@ -707,7 +723,7 @@ def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver
                 # 添加彎道標記
                 _add_corner_markers_to_speed_chart(ax, session, lap_session_data, speeds, x_indices)
                 
-                print(f"   [SUCCESS] 彎道速度對比圖已添加")
+                logger.info(f"   [SUCCESS] 彎道速度對比圖已添加")
             else:
                 ax.text(0.5, 0.5, '速度數據不可用\n無法生成彎道速度圖', 
                        ha='center', va='center', transform=ax.transAxes, fontsize=12)
@@ -782,10 +798,10 @@ def _plot_single_driver_telemetry_replica(session, lap_data, driver_abbr, driver
         # 顯示圖表
         # plt.show()  # 圖表顯示已禁用
 
-        print("[SUCCESS] 單一車手遙測圖表生成已完成（顯示已禁用）")
+        logger.info("單一車手遙測圖表生成已完成（顯示已禁用）")
 
     except Exception as e:
-        print(f"[ERROR] 遙測圖表生成失敗: {e}")
+        logger.error(f"遙測圖表生成失敗: {e}")
         import traceback
         traceback.print_exc()
 
@@ -845,9 +861,9 @@ def _get_race_events_for_lap(lap_number, track_status, race_control_messages):
 def _create_lap_time_trend_chart_replica(sorted_laps, driver_abbr, track_status, race_control_messages, data):
     """生成圈速趨勢圖 - 復刻原始程式"""
     try:
-        print("[SUCCESS] 圈速趨勢圖已生成完成")
+        logger.info("圈速趨勢圖已生成完成")
     except Exception as e:
-        print(f"[ERROR] 圈速趨勢圖生成失敗: {e}")
+        logger.error(f"圈速趨勢圖生成失敗: {e}")
 
 def _analyze_tire_strategy_replica(driver_laps):
     """分析輪胎策略 - 復刻原始程式"""
@@ -925,7 +941,7 @@ def _analyze_tire_strategy_replica(driver_laps):
         
         return compound_stats
     except Exception as e:
-        print(f"[ERROR] 輪胎策略分析失敗: {e}")
+        logger.error(f"輪胎策略分析失敗: {e}")
         return {}
 
 def _analyze_tire_stint(compound_laps, compound):
@@ -978,7 +994,7 @@ def _analyze_pitstop_records_replica(driver_laps, session, driver_abbr):
             'changes': changes
         }
     except Exception as e:
-        print(f"[ERROR] 進站記錄分析失敗: {e}")
+        logger.error(f"進站記錄分析失敗: {e}")
         return {'total_pitstops': 0, 'changes': []}
 
 def _analyze_detailed_pitstops_replica(driver_laps):
@@ -1014,7 +1030,7 @@ def _analyze_detailed_pitstops_replica(driver_laps):
         
         return pit_laps
     except Exception as e:
-        print(f"[ERROR] 詳細進站分析失敗: {e}")
+        logger.error(f"詳細進站分析失敗: {e}")
         return []
 
 def _setup_chinese_font(dark_theme=False):
@@ -1060,7 +1076,7 @@ def _add_corner_markers_to_speed_chart(ax, session, lap_session_data, speeds, x_
     """添加彎道標記到速度圖表"""
     try:
         # 載入FastF1官方彎道號碼
-        print(f"   [FINISH] 載入FastF1官方彎道號碼...")
+        logger.debug(f"   [FINISH] 載入FastF1官方彎道號碼...")
         
         circuit_info = session.get_circuit_info()
         if hasattr(circuit_info, 'corners') and circuit_info.corners is not None:
@@ -1104,7 +1120,7 @@ def _add_corner_markers_to_speed_chart(ax, session, lap_session_data, speeds, x_
                             corner_count += 1
                 
                 if corner_count > 0:
-                    print(f"   [SUCCESS] 已添加 {corner_count} 個官方彎道標記")
-                    print(f"   [SUCCESS] 彎道速度圖已添加 {corner_count} 個彎道標記")
+                    logger.info(f"   [SUCCESS] 已添加 {corner_count} 個官方彎道標記")
+                    logger.info(f"   [SUCCESS] 彎道速度圖已添加 {corner_count} 個彎道標記")
     except Exception as e:
-        print(f"   [WARNING]  彎道標記添加失敗: {e}")
+        logger.warning(f"   [WARNING]  彎道標記添加失敗: {e}")

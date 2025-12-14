@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Season calendar utilities backed by FastF1."""
 
 from __future__ import annotations
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import math
@@ -303,6 +312,14 @@ def _check_post_race_refresh_needed(calendar_path: Path) -> Dict[str, Any]:
     except Exception as e:
         print(f"[CALENDAR] ❌ 賽後檢查失敗: {e}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return {
             'needs_refresh': False,

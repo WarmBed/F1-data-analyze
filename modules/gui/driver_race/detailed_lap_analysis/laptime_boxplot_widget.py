@@ -65,6 +65,9 @@ except ImportError:
 from core.gui_settings_manager import gui_settings_manager
 from .lap_filter_utils import extract_caution_laps, extract_red_flag_laps, lap_is_under_caution, lap_is_under_red_flag
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class BoxPlotCanvas(QWidget):
     """使用 QPainter 自行繪製箱型圖的畫布"""
@@ -507,11 +510,11 @@ class LapTimeBoxPlotWidget(QWidget):
         if year and race and session:
             self.load_data(year=year, race=race, session=session)
         
-        print(f"[BOXPLOT] LapTimeBoxPlotWidget 已初始化: {year} {race} {session}")
+        logger.debug(f"[BOXPLOT] LapTimeBoxPlotWidget 已初始化: {year} {race} {session}")
     
     def _debug(self, message: str):
         """除錯輸出"""
-        print(f"[BOXPLOT] {message}")
+        logger.debug(f"[BOXPLOT] {message}")
     
     def init_ui(self):
         """初始化使用者介面 - 優化版（移除空白區域）"""
@@ -917,6 +920,7 @@ class LapTimeBoxPlotWidget(QWidget):
             return
 
         from PyQt5.QtWidgets import QFileDialog
+
 
         filename, _ = QFileDialog.getSaveFileName(
             self,

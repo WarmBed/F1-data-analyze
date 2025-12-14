@@ -22,6 +22,12 @@ from PyQt5.QtGui import QColor
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("live_timing.race_control_messages", component="gui")
+
 
 class RaceControlMessagesWidget(QWidget):
     """
@@ -38,7 +44,7 @@ class RaceControlMessagesWidget(QWidget):
         
         self._init_ui()
         
-        print("[RaceControlMessagesWidget] initialized")
+        logger.info("[RaceControlMessagesWidget] initialized")
     
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -82,14 +88,16 @@ class RaceControlMessagesWidget(QWidget):
             }
         """)
         
-        print("[RaceControlMessagesWidget] Column widths: 0:Lap=35, 1:Type=70, 2:Message=stretch")
+        logger.debug(
+            "[RaceControlMessagesWidget] Column widths: 0:Lap=35, 1:Type=70, 2:Message=stretch"
+        )
         
         layout.addWidget(self.message_list)
     
     def set_messages(self, messages: List[Dict[str, Any]]):
         """設置所有訊息"""
         self._all_messages = messages
-        print(f"[RaceControlMessagesWidget] Loaded {len(messages)} messages")
+        logger.info("[RaceControlMessagesWidget] Loaded %d messages", len(messages))
     
     def _get_message_type_and_color(self, msg: Dict) -> tuple:
         """
@@ -203,19 +211,25 @@ class LiveTimingRaceControlMessages(BaseLiveTimingMDI):
     """
     Live Timing Race Control Messages MDI Window
     
-    顯示比賽控制訊息 - 黃旗、處罰、調查等。
+    顯示賽事控制訊息。
+    
+    性能優化: 只在有新訊息或圈數變化時更新
     """
     
     def __init__(self, parent=None, data_manager=None):
         super().__init__(parent, data_manager)
         
         self.setWindowTitle(tr("race_control_messages", "Race Control Messages"))
-        self.setMinimumSize(300, 200)
-        self.resize(400, 300)
+        # 最小高度約 4 行訊息 (每行約 28px + 標題列 + 邊框)
+        self.setMinimumSize(300, 160)
+        self.resize(450, 300)
         
         self._messages_loaded = False
         
-        print("[RACE_CONTROL_MDI] LiveTimingRaceControlMessages initialized")
+        # 性能優化: 追蹤上次的圈數
+        self._last_lap: int = 0
+        
+        logger.info("[RACE_CONTROL_MDI] LiveTimingRaceControlMessages initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -224,7 +238,11 @@ class LiveTimingRaceControlMessages(BaseLiveTimingMDI):
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """Race loaded - 載入比賽控制訊息"""
-        print(f"[RACE_CONTROL_MDI] Race loaded: {race_info.get('year')} {race_info.get('race')}")
+        logger.info(
+            "[RACE_CONTROL_MDI] Race loaded: %s %s",
+            race_info.get("year"),
+            race_info.get("race"),
+        )
         
         # 從 DataManager 獲取比賽控制訊息
         if self._data_manager:
@@ -236,9 +254,13 @@ class LiveTimingRaceControlMessages(BaseLiveTimingMDI):
                 formatted_messages = self._format_messages(raw_messages)
                 self.messages_widget.set_messages(formatted_messages)
                 self._messages_loaded = True
-                print(f"[RACE_CONTROL_MDI] Loaded {len(formatted_messages)} race control messages (from {len(raw_messages)} raw records)")
+                logger.info(
+                    "[RACE_CONTROL_MDI] Loaded %d race control messages (from %d raw records)",
+                    len(formatted_messages),
+                    len(raw_messages),
+                )
             else:
-                print("[RACE_CONTROL_MDI] No race control messages available")
+                logger.info("[RACE_CONTROL_MDI] No race control messages available")
     
     def _format_messages(self, raw_messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
@@ -277,13 +299,17 @@ class LiveTimingRaceControlMessages(BaseLiveTimingMDI):
     
     def _on_race_unloaded(self):
         """Race unloaded"""
-        print("[RACE_CONTROL_MDI] Race unloaded")
+        logger.info("[RACE_CONTROL_MDI] Race unloaded")
         self.messages_widget._all_messages = []
         self.messages_widget.message_list.setRowCount(0)
         self._messages_loaded = False
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """Snapshot updated - 根據當前圈數更新顯示"""
+        """
+        Snapshot updated - 根據當前圈數更新顯示
+        
+        性能優化: 只在圈數變化時更新
+        """
         if not self._messages_loaded:
             return
         
@@ -294,6 +320,12 @@ class LiveTimingRaceControlMessages(BaseLiveTimingMDI):
             lap = driver_data.get('lap', 0)
             if lap and lap > current_lap:
                 current_lap = lap
+        
+        # 性能優化: 圈數沒變則跳過
+        if current_lap == self._last_lap and self._last_lap > 0:
+            return
+        
+        self._last_lap = current_lap
         
         # 更新顯示
         if current_lap > 0:

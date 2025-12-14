@@ -14,6 +14,9 @@ from typing import Any
 import pandas as pd
 from prettytable import PrettyTable
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 def _sanitize_token(value: Any, *, default: str = "Unknown", upper: bool = False) -> str:
     """Normalize text so it is safe for filenames."""
 
@@ -169,15 +172,15 @@ def analyze_accident_statistics(session):
         return statistics
         
     except Exception as e:
-        print(f"[ERROR] 分析事故統計時發生錯誤: {e}")
+        logger.error(f"分析事故統計時發生錯誤: {e}")
         return statistics
 
 def display_accident_statistics(data):
     """顯示事故統計摘要表格"""
-    print(f"\n📊 事故統計摘要 (Function 6):")
+    logger.debug(f"\n📊 事故統計摘要 (Function 6):")
     
     if data['total_incidents'] == 0:
-        print("✅ 本場比賽未發現任何事故記錄，比賽進行順利！")
+        logger.info("本場比賽未發現任何事故記錄，比賽進行順利！")
         return
     
     # 主要統計表格
@@ -189,7 +192,7 @@ def display_accident_statistics(data):
     main_table.add_row(["事故頻率", f"{data['incident_frequency']['per_10_laps']}/10圈", "每10圈平均事故數"])
     main_table.add_row(["高峰時段", data['incident_frequency']['peak_incident_period'], "事故最集中的時段"])
     
-    print(main_table)
+    logger.debug(f"{main_table}")
     
     # 事故類型分佈表格
     type_table = PrettyTable()
@@ -210,8 +213,8 @@ def display_accident_statistics(data):
             description = type_descriptions.get(incident_type, '其他事件')
             type_table.add_row([incident_type.title(), count, percentage, description])
     
-    print(f"\n📋 事故類型分佈:")
-    print(type_table)
+    logger.debug(f"\n📋 事故類型分佈:")
+    logger.debug(f"{type_table}")
     
     # 圈數分佈表格 (顯示前5個高峰圈數)
     if data['incident_distribution_by_lap']:
@@ -227,8 +230,8 @@ def display_accident_statistics(data):
             percentage = f"{(cumulative/total)*100:.1f}%"
             lap_table.add_row([f"第{lap}圈", count, percentage])
         
-        print(f"\n🏁 事故高峰圈數 (前5名):")
-        print(lap_table)
+        logger.debug(f"\n🏁 事故高峰圈數 (前5名):")
+        logger.debug(f"{lap_table}")
 
 def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
@@ -270,34 +273,34 @@ def save_json_results(data, session_info):
             json.dump(json_result, f, ensure_ascii=False, indent=2)
         
         abs_filepath = os.path.abspath(filepath)
-        print(f"💾 JSON結果已保存到: file:///{abs_filepath}")
+        logger.debug(f"💾 JSON結果已保存到: file:///{abs_filepath}")
         return True
     except Exception as e:
-        print(f"❌ JSON保存失敗: {e}")
+        logger.error(f"JSON保存失敗: {e}")
         return False
 
 def report_analysis_results(data, analysis_type="事故統計摘要"):
     """報告分析結果狀態"""
     if not data:
-        print(f"❌ {analysis_type}失敗：無可用數據")
+        logger.error(f"{analysis_type}失敗：無可用數據")
         return False
     
     total_incidents = data.get('total_incidents', 0)
     affected_drivers = data.get('affected_drivers', 0)
     incident_types = len([k for k, v in data.get('incident_types', {}).items() if v > 0])
     
-    print(f"📊 {analysis_type}結果摘要：")
-    print(f"   • 總事故數量: {total_incidents}")
-    print(f"   • 涉及車手數量: {affected_drivers}")
-    print(f"   • 事故類型數量: {incident_types}")
-    print(f"   • 數據完整性: {'✅ 良好' if total_incidents >= 0 else '❌ 異常'}")
+    logger.debug(f"{analysis_type}結果摘要：")
+    logger.debug(f"   • 總事故數量: {total_incidents}")
+    logger.debug(f"   • 涉及車手數量: {affected_drivers}")
+    logger.debug(f"   • 事故類型數量: {incident_types}")
+    logger.error(f"   • 數據完整性: {'✅ 良好' if total_incidents >= 0 else '❌ 異常'}")
     
-    print(f"✅ {analysis_type}分析完成！")
+    logger.info(f"{analysis_type}分析完成！")
     return True
 
 def run_accident_statistics_summary(data_loader, year=None, race=None, session='R'):
     """執行事故統計摘要分析 - Function 6"""
-    print("🚀 開始執行事故統計摘要分析...")
+    logger.debug("開始執行事故統計摘要分析...")
     
     # 1. 獲取賽事資訊
     session_info = {
@@ -320,22 +323,22 @@ def run_accident_statistics_summary(data_loader, year=None, race=None, session='
     cached_data = check_cache(cache_key)
     
     if cached_data:
-        print("📦 使用緩存數據")
+        logger.debug("使用緩存數據")
         statistics_data = cached_data
     else:
-        print("🔄 重新計算 - 開始數據分析...")
+        logger.debug("重新計算 - 開始數據分析...")
         
         # 3. 執行分析
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             statistics_data = analyze_accident_statistics(data_loader.session)
         else:
-            print("❌ 無法獲取賽事數據")
+            logger.error("無法獲取賽事數據")
             return None
         
         if statistics_data:
             # 4. 保存快取
             if save_cache(statistics_data, cache_key):
-                print("💾 分析結果已緩存")
+                logger.debug("💾 分析結果已緩存")
     
     # 5. 結果驗證和反饋
     if not report_analysis_results(statistics_data, "事故統計摘要"):
@@ -347,7 +350,7 @@ def run_accident_statistics_summary(data_loader, year=None, race=None, session='
     # 7. 保存 JSON 結果
     save_json_results(statistics_data, session_info)
     
-    print("\n✅ 事故統計摘要分析完成！")
+    logger.info("\n✅ 事故統計摘要分析完成！")
     return statistics_data
 
 def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
@@ -364,7 +367,7 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
         session: 賽段類型（可選，優先於 data_loader 中的賽段）
     """
     if enable_debug:
-        print(f"\n[NEW_MODULE] 執行事故統計摘要分析模組 (JSON輸出版)...")
+        logger.debug(f"\n[NEW_MODULE] 執行事故統計摘要分析模組 (JSON輸出版)...")
     
     try:
         # 🔧 修復：優先使用傳入的參數，然後才使用 data_loader 的資訊
@@ -392,7 +395,7 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
         
         if cached_data and not show_detailed_output:
             if enable_debug:
-                print("📦 使用緩存數據")
+                logger.debug("使用緩存數據")
             
             # 🔧 修復：確保使用緩存數據時也生成 JSON 檔案
             save_json_results(cached_data, session_info)
@@ -413,7 +416,7 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
             }
         elif cached_data and show_detailed_output:
             if enable_debug:
-                print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
+                logger.debug("使用緩存數據 + 📊 顯示詳細分析結果")
             
             # 顯示詳細輸出 - 即使使用緩存也顯示完整表格
             _display_cached_detailed_output(cached_data, session_info)
@@ -437,7 +440,7 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
             }
         else:
             if enable_debug:
-                print("🔄 重新計算 - 開始數據分析...")
+                logger.debug("重新計算 - 開始數據分析...")
         
         # 執行分析
         statistics_data = run_accident_statistics_summary(
@@ -451,7 +454,7 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
         if statistics_data:
             save_cache(statistics_data, cache_key)
             if enable_debug:
-                print("💾 分析結果已緩存")
+                logger.debug("💾 分析結果已緩存")
         
         if statistics_data:
             return {
@@ -478,8 +481,9 @@ def run_accident_statistics_summary_json(data_loader, dynamic_team_mapping=None,
             
     except Exception as e:
         if enable_debug:
-            print(f"[ERROR] 事故統計摘要分析模組執行錯誤: {e}")
+            logger.error(f"事故統計摘要分析模組執行錯誤: {e}")
             import traceback
+
             traceback.print_exc()
         return {
             "success": False,
@@ -496,24 +500,24 @@ def _display_cached_detailed_output(cached_data, session_info):
         cached_data: 事故統計摘要數據
         session_info: 賽事基本信息
     """
-    print("\n📊 詳細事故統計摘要 (緩存數據)")
-    print("=" * 80)
+    logger.debug("\n📊 詳細事故統計摘要 (緩存數據)")
+    logger.debug("=" * 80)
     
     if not cached_data:
-        print("❌ 緩存數據為空")
+        logger.error("緩存數據為空")
         return
     
-    print(f"🏆 賽事: {session_info.get('year', 'Unknown')} {session_info.get('event_name', 'Unknown')}")
-    print(f"🏁 賽段: {session_info.get('session_type', 'Unknown')}")
-    print(f"🏟️ 賽道: {session_info.get('circuit_name', 'Unknown')}")
+    logger.debug(f"🏆 賽事: {session_info.get('year', 'Unknown')} {session_info.get('event_name', 'Unknown')}")
+    logger.debug(f"賽段: {session_info.get('session_type', 'Unknown')}")
+    logger.debug(f"🏟️ 賽道: {session_info.get('circuit_name', 'Unknown')}")
     
     # 使用原有的顯示函數
     display_accident_statistics(cached_data)
     
-    print("\n💾 數據來源: 緩存檔案")
-    print("✅ 緩存數據詳細輸出完成")
+    logger.debug("\n💾 數據來源: 緩存檔案")
+    logger.info("緩存數據詳細輸出完成")
 
 
 if __name__ == "__main__":
-    print("F1 事故統計摘要模組 - 獨立測試模式")
-    print("此模組需要配合 F1 數據載入器使用")
+    logger.debug("F1 事故統計摘要模組 - 獨立測試模式")
+    logger.debug("此模組需要配合 F1 數據載入器使用")

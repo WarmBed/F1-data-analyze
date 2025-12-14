@@ -15,6 +15,10 @@ from prettytable import PrettyTable
 from datetime import datetime
 import traceback
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 # 確保能夠導入基礎模組
 ROOT_DIR = Path(__file__).resolve().parents[3]
 if str(ROOT_DIR) not in sys.path:
@@ -23,7 +27,7 @@ if str(ROOT_DIR) not in sys.path:
 try:
     from CLI_modules.cli.core.base import F1AnalysisBase
 except ImportError:
-    print("[ERROR] 無法導入基礎模組")
+    logger.error("無法導入基礎模組")
     F1AnalysisBase = object
 
 # 註解：F1AccidentAnalyzer 將在本文件中定義，不需要外部導入
@@ -78,7 +82,7 @@ class F1AccidentAnalyzer:
                         accidents.append(accident_data)
             
         except Exception as e:
-            print(f"[WARNING] 分析事故數據時發生錯誤: {e}")
+            logger.warning(f"分析事故數據時發生錯誤: {e}")
             
         return accidents
     
@@ -145,8 +149,8 @@ class F1AccidentAnalyzer:
         if not accidents:
             return
             
-        print(f"\n[LIST] 詳細事件列表:")
-        print("=" * 100)
+        logger.debug(f"\n[LIST] 詳細事件列表:")
+        logger.debug("=" * 100)
         
         # 分類事件
         accident_events = []
@@ -165,7 +169,7 @@ class F1AccidentAnalyzer:
         
         # 顯示事故事件
         if accident_events:
-            print(f"\n[CRITICAL] 事故事件 ({len(accident_events)} 起):")
+            logger.warning(f"\n[CRITICAL] 事故事件 ({len(accident_events)} 起):")
             accident_table = PrettyTable()
             accident_table.field_names = ["編號", "時間", "圈數", "事件描述", "涉及車手"]
             accident_table.align = "l"
@@ -180,11 +184,11 @@ class F1AccidentAnalyzer:
                     event.get('driver', 'N/A')
                 ])
             
-            print(accident_table)
+            logger.debug(f"{accident_table}")
         
         # 顯示旗幟事件
         if flag_events:
-            print(f"\n[FINISH] 旗幟/安全車事件 ({len(flag_events)} 次):")
+            logger.debug(f"\n[FINISH] 旗幟/安全車事件 ({len(flag_events)} 次):")
             flag_table = PrettyTable()
             flag_table.field_names = ["編號", "時間", "圈數", "事件描述"]
             flag_table.align = "l"
@@ -198,11 +202,11 @@ class F1AccidentAnalyzer:
                     event.get('message', '')
                 ])
             
-            print(flag_table)
+            logger.debug(f"{flag_table}")
         
         # 顯示調查事件
         if investigation_events:
-            print(f"\n� 調查/處罰事件 ({len(investigation_events)} 起):")
+            logger.debug(f"\n� 調查/處罰事件 ({len(investigation_events)} 起):")
             investigation_table = PrettyTable()
             investigation_table.field_names = ["編號", "時間", "圈數", "事件描述", "涉及車手"]
             investigation_table.align = "l"
@@ -217,7 +221,7 @@ class F1AccidentAnalyzer:
                     event.get('driver', 'N/A')
                 ])
             
-            print(investigation_table)
+            logger.debug(f"{investigation_table}")
     
     def _display_driver_severity_scores(self, accidents):
         """顯示車手嚴重程度分數"""
@@ -242,7 +246,7 @@ class F1AccidentAnalyzer:
                     driver_scores[driver] = score
         
         if driver_scores:
-            print(f"\n👥 車手事件嚴重度排名:")
+            logger.debug(f"\n👥 車手事件嚴重度排名:")
             severity_table = PrettyTable()
             severity_table.field_names = ["排名", "車手", "嚴重度分數", "風險等級"]
             severity_table.align = "l"
@@ -261,12 +265,12 @@ class F1AccidentAnalyzer:
                 
                 severity_table.add_row([i, driver, score, risk_level])
             
-            print(severity_table)
+            logger.debug(f"{severity_table}")
     
     def _display_special_incident_reports(self, accidents):
         """顯示特殊事件報告"""
-        print(f"\n[INFO] SPECIAL INCIDENT REPORTS / 特殊事件報告:")
-        print("=" * 80)
+        logger.info(f"\n[INFO] SPECIAL INCIDENT REPORTS / 特殊事件報告:")
+        logger.debug("=" * 80)
         
         # 統計不同類型事件
         red_flags = 0
@@ -328,10 +332,10 @@ class F1AccidentAnalyzer:
                     event['description'][:80] + "..." if len(event['description']) > 80 else event['description']
                 ])
             
-            print(special_table)
+            logger.debug(f"{special_table}")
         
         # 顯示統計總結
-        print(f"\n[STATS] 特殊事件統計:")
+        logger.debug(f"\n[STATS] 特殊事件統計:")
         stats_table = PrettyTable()
         stats_table.field_names = ["事件類型", "發生次數", "影響程度"]
         stats_table.align = "l"
@@ -342,7 +346,7 @@ class F1AccidentAnalyzer:
         stats_table.add_row(["🟡 黃旗事件", yellow_flags, "低" if yellow_flags > 0 else "無"])
         stats_table.add_row(["[DEBUG] 調查處罰", investigations, "低" if investigations > 0 else "無"])
         
-        print(stats_table)
+        logger.debug(f"{stats_table}")
     
     def _load_driver_team_mapping_if_needed(self):
         """確保有車隊映射數據 - 對應原始程式功能"""
@@ -359,42 +363,42 @@ class F1AccidentAnalyzer:
             # 如果仍然沒有映射數據，創建一個空的字典
             if not self.dynamic_team_mapping:
                 self.dynamic_team_mapping = {}
-                print("[WARNING] 載入車隊映射數據失敗: 使用空映射")
-                print("[ERROR] 無法從任何數據源載入車手-車隊映射")
-                print("   請檢查:")
-                print("   1. OpenF1 API 連接狀態")
-                print("   2. FastF1 數據載入是否成功")
-                print("   3. 賽事數據是否包含車手和車隊信息")
-                print("[WARNING] 將無法顯示正確的車隊信息")
+                logger.warning("載入車隊映射數據失敗: 使用空映射")
+                logger.error("無法從任何數據源載入車手-車隊映射")
+                logger.debug("   請檢查:")
+                logger.debug("   1. OpenF1 API 連接狀態")
+                logger.debug("   2. FastF1 數據載入是否成功")
+                logger.debug("   3. 賽事數據是否包含車手和車隊信息")
+                logger.warning("將無法顯示正確的車隊信息")
                 
         except Exception as e:
-            print(f"[WARNING] 載入車隊映射數據失敗: {e}")
+            logger.warning(f"載入車隊映射數據失敗: {e}")
             self.dynamic_team_mapping = {}
-            print("[ERROR] 無法從任何數據源載入車手-車隊映射")
-            print("   請檢查:")
-            print("   1. OpenF1 API 連接狀態")
-            print("   2. FastF1 數據載入是否成功")
-            print("   3. 賽事數據是否包含車手和車隊信息")
-            print("[WARNING] 將無法顯示正確的車隊信息")
+            logger.error("無法從任何數據源載入車手-車隊映射")
+            logger.debug("   請檢查:")
+            logger.debug("   1. OpenF1 API 連接狀態")
+            logger.debug("   2. FastF1 數據載入是否成功")
+            logger.debug("   3. 賽事數據是否包含車手和車隊信息")
+            logger.warning("將無法顯示正確的車隊信息")
     
     def _display_all_accidents_summary(self, accidents):
         """顯示所有事件的詳細列表 - 完全對應原始程式"""
         if not accidents:
             return
         
-        print(f"\n" + "="*80)
-        print("[LIST] 所有事件詳細列表 (All Incidents Summary)")
-        print("="*80)
+        logger.debug(f"\n" + "="*80)
+        logger.debug("[LIST] 所有事件詳細列表 (All Incidents Summary)")
+        logger.debug("="*80)
         
         # 使用動態獲取的車隊對應表，不使用預設值
         team_mapping = self.dynamic_team_mapping if self.dynamic_team_mapping else {}
         
         # 如果使用動態映射，顯示數據來源
         if self.dynamic_team_mapping:
-            print(f"[CONFIG] 使用 OpenF1 動態車手-車隊映射 ({len(self.dynamic_team_mapping)} 位車手)")
+            logger.debug(f"[CONFIG] 使用 OpenF1 動態車手-車隊映射 ({len(self.dynamic_team_mapping)} 位車手)")
         else:
-            print(f"[WARNING]  使用預設車手-車隊映射，建議重新載入賽事數據")
-        print("="*80)
+            logger.warning(f"使用預設車手-車隊映射，建議重新載入賽事數據")
+        logger.debug("="*80)
         
         # 事件類型的中英文對應表
         event_descriptions = {
@@ -415,7 +419,7 @@ class F1AccidentAnalyzer:
         filtered_accidents = self._filter_important_accidents(accidents)
         
         if not filtered_accidents:
-            print("[SUCCESS] 沒有重要事故需要報告")
+            logger.info("沒有重要事故需要報告")
             return
         
         # 顯示重要事件
@@ -444,8 +448,8 @@ class F1AccidentAnalyzer:
     
     def _display_important_events_table(self, events, team_mapping, event_descriptions):
         """顯示重要事件表格 - 完全對應原始程式"""
-        print(f"\n[CRITICAL] 重要事件報告 (共 {len(events)} 個事件):")
-        print("=" * 100)
+        logger.warning(f"\n[CRITICAL] 重要事件報告 (共 {len(events)} 個事件):")
+        logger.debug("=" * 100)
         
         for i, acc in enumerate(events, 1):
             # 安全處理各個字段
@@ -509,29 +513,29 @@ class F1AccidentAnalyzer:
             # 安全處理可能為 None 的值
             lap_display = f"{lap:3}" if lap is not None and lap != 'N/A' else "N/A"
             driver_display = f"{driver:4}" if driver is not None else "N/A "
-            print(f"事件 #{i:3d} | 圈數: {lap_display} | 時間: {time_str:8} | 車手: {driver_display} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
-            print(f"英文: {description_en}")
-            print(f"中文: {description_zh}")
-            print("-" * 100)
+            logger.debug(f"事件 #{i:3d} | 圈數: {lap_display} | 時間: {time_str:8} | 車手: {driver_display} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
+            logger.debug(f"英文: {description_en}")
+            logger.debug(f"中文: {description_zh}")
+            logger.debug("-" * 100)
         
-        print(f"\n總計 {len(events)} 個重要事件")
+        logger.debug(f"\n總計 {len(events)} 個重要事件")
     
     def _display_key_events_summary(self):
         """顯示關鍵事件摘要 - 完全對應原始程式"""
-        print(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
-        print("=" * 80)
+        logger.warning(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
+        logger.debug("=" * 80)
         
         try:
             data = self.data_loader.get_loaded_data()
             session = data['session']
             
             if not hasattr(session, 'race_control_messages') or session.race_control_messages is None:
-                print("[ERROR] 沒有找到 race_control_messages 數據")
+                logger.error("沒有找到 race_control_messages 數據")
                 return
             
             messages = session.race_control_messages
             if messages.empty:
-                print("[ERROR] race_control_messages 為空")
+                logger.error("race_control_messages 為空")
                 return
             
             # 收集關鍵事件
@@ -586,7 +590,7 @@ class F1AccidentAnalyzer:
                 })
             
             if key_events:
-                print(f"[INFO] 發現 {len(key_events)} 個關鍵事件")
+                logger.info(f"發現 {len(key_events)} 個關鍵事件")
                 
                 key_table = PrettyTable()
                 key_table.field_names = ["類型", "時間", "圈數", "事件描述"]
@@ -599,18 +603,18 @@ class F1AccidentAnalyzer:
                 for event in key_events:
                     key_table.add_row([event['type'], event['time'], event['lap'], event['message']])
                 
-                print(key_table)
+                logger.debug(f"{key_table}")
             else:
-                print("[SUCCESS] 沒有發現重大關鍵事件")
+                logger.info("沒有發現重大關鍵事件")
             
         except Exception as e:
-            print(f"[ERROR] 關鍵事件摘要顯示失敗: {e}")
+            logger.error(f"關鍵事件摘要顯示失敗: {e}")
     
     def _debug_race_control_messages(self):
         """調試顯示所有 Race Control Messages 原始數據 - 完全對應原始程式"""
-        print(f"\n" + "="*100)
-        print("[DEBUG] FastF1 Race Control Messages 原始數據調試 (All Race Control Messages Debug)")
-        print("="*100)
+        logger.debug(f"\n" + "="*100)
+        logger.debug("FastF1 Race Control Messages 原始數據調試 (All Race Control Messages Debug)")
+        logger.debug("="*100)
         
         try:
             data = self.data_loader.get_loaded_data()
@@ -618,21 +622,21 @@ class F1AccidentAnalyzer:
             metadata = data['metadata']
             
             if not hasattr(session, 'race_control_messages') or session.race_control_messages is None:
-                print("[ERROR] 沒有找到 race_control_messages 數據")
+                logger.error("沒有找到 race_control_messages 數據")
                 return
             
             messages = session.race_control_messages
             if messages.empty:
-                print("[ERROR] race_control_messages 為空")
+                logger.error("race_control_messages 為空")
                 return
             
-            print(f"[INFO] 總消息數量: {len(messages)}")
-            print(f"[LIST] 可用欄位: {list(messages.columns)}")
-            print(f"📅 賽事: {metadata['year']} {metadata['event_name']}")
+            logger.info(f"總消息數量: {len(messages)}")
+            logger.debug(f"[LIST] 可用欄位: {list(messages.columns)}")
+            logger.debug(f"賽事: {metadata['year']} {metadata['event_name']}")
             
             # 按類別統計
-            print(f"\n[INFO] 按類別統計 (Category):")
-            print("-" * 80)
+            logger.info(f"\n[INFO] 按類別統計 (Category):")
+            logger.debug("-" * 80)
             if 'Category' in messages.columns:
                 category_counts = messages['Category'].value_counts()
                 category_table = PrettyTable()
@@ -643,13 +647,13 @@ class F1AccidentAnalyzer:
                     percentage = (count / len(messages)) * 100
                     category_table.add_row([str(category), count, f"{percentage:.1f}%"])
                 
-                print(category_table)
+                logger.debug(f"{category_table}")
             else:
-                print("[ERROR] 沒有 Category 欄位")
+                logger.error("沒有 Category 欄位")
             
             # 詳細消息列表
-            print(f"\n[LIST] 完整消息列表 (All Messages):")
-            print("-" * 120)
+            logger.debug(f"\n[LIST] 完整消息列表 (All Messages):")
+            logger.debug("-" * 120)
             
             msg_table = PrettyTable()
             available_columns = ['Time', 'Lap', 'Category', 'Message', 'Flag', 'Scope', 'Sector']
@@ -669,11 +673,11 @@ class F1AccidentAnalyzer:
                     row.append(value)
                 msg_table.add_row(row)
             
-            print(msg_table)
+            logger.debug(f"{msg_table}")
             
             # 關鍵事件摘要
-            print(f"\n[CRITICAL] 關鍵事件摘要:")
-            print("-" * 80)
+            logger.warning(f"\n[CRITICAL] 關鍵事件摘要:")
+            logger.debug("-" * 80)
             
             key_messages = []
             for _, msg in messages.iterrows():
@@ -686,22 +690,22 @@ class F1AccidentAnalyzer:
                     key_messages.append(msg)
             
             if key_messages:
-                print(f"發現 {len(key_messages)} 個關鍵消息")
+                logger.debug(f"發現 {len(key_messages)} 個關鍵消息")
                 for i, msg in enumerate(key_messages, 1):
-                    print(f"{i:2d}. 圈數:{msg.get('Lap', 'N/A'):3} | 時間:{str(msg.get('Time', 'N/A'))[:10]:10} | {msg.get('Message', 'N/A')}")
+                    logger.debug(f"{i:2d}. 圈數:{msg.get('Lap', 'N/A'):3} | 時間:{str(msg.get('Time', 'N/A'))[:10]:10} | {msg.get('Message', 'N/A')}")
             else:
-                print("[SUCCESS] 沒有發現關鍵事件消息")
+                logger.info("沒有發現關鍵事件消息")
             
         except Exception as e:
-            print(f"[ERROR] 調試信息顯示失敗: {e}")
+            logger.error(f"調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _debug_track_status(self):
         """調試顯示所有 Track Status 原始數據 - 完全對應原始程式"""
-        print(f"\n" + "="*100)
-        print("[DEBUG] FastF1 Track Status 原始數據調試 (All Track Status Debug)")
-        print("="*100)
+        logger.debug(f"\n" + "="*100)
+        logger.debug("FastF1 Track Status 原始數據調試 (All Track Status Debug)")
+        logger.debug("="*100)
         
         try:
             data = self.data_loader.get_loaded_data()
@@ -709,21 +713,21 @@ class F1AccidentAnalyzer:
             metadata = data['metadata']
             
             if not hasattr(session, 'track_status') or session.track_status is None:
-                print("[ERROR] 沒有找到 track_status 數據")
+                logger.error("沒有找到 track_status 數據")
                 return
             
             track_status = session.track_status
             if track_status.empty:
-                print("[ERROR] track_status 為空")
+                logger.error("track_status 為空")
                 return
             
-            print(f"[INFO] 總狀態記錄數量: {len(track_status)}")
-            print(f"[LIST] 可用欄位: {list(track_status.columns)}")
-            print(f"📅 賽事: {metadata['year']} {metadata['event_name']}")
+            logger.info(f"總狀態記錄數量: {len(track_status)}")
+            logger.debug(f"[LIST] 可用欄位: {list(track_status.columns)}")
+            logger.debug(f"賽事: {metadata['year']} {metadata['event_name']}")
             
             # 按狀態碼統計
-            print(f"\n[INFO] 按狀態碼統計 (Status Code):")
-            print("-" * 80)
+            logger.info(f"\n[INFO] 按狀態碼統計 (Status Code):")
+            logger.debug("-" * 80)
             
             status_mapping = {
                 '1': '🟢 綠旗 (Track Clear)',
@@ -746,13 +750,13 @@ class F1AccidentAnalyzer:
                     percentage = (count / len(track_status)) * 100
                     status_table.add_row([status_code, meaning, count, f"{percentage:.1f}%"])
                 
-                print(status_table)
+                logger.debug(f"{status_table}")
             else:
-                print("[ERROR] 沒有 Status 欄位")
+                logger.error("沒有 Status 欄位")
             
             # 詳細狀態列表
-            print(f"\n[LIST] 完整狀態變化記錄:")
-            print("-" * 120)
+            logger.debug(f"\n[LIST] 完整狀態變化記錄:")
+            logger.debug("-" * 120)
             
             status_table = PrettyTable()
             available_columns = ['Time', 'Status', 'Message']
@@ -777,27 +781,27 @@ class F1AccidentAnalyzer:
                 
                 status_table.add_row(row)
             
-            print(status_table)
+            logger.debug(f"{status_table}")
             
         except Exception as e:
-            print(f"[ERROR] Track Status 調試信息顯示失敗: {e}")
+            logger.error(f"Track Status 調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _debug_all_events_detailed(self):
         """顯示完整事件調試信息 - 完全對應原始程式"""
-        print(f"\n" + "="*120)
-        print("[DEBUG] FastF1 完整事件調試信息 (Complete Events Debug)")
-        print("="*120)
+        logger.debug(f"\n" + "="*120)
+        logger.debug("FastF1 完整事件調試信息 (Complete Events Debug)")
+        logger.debug("="*120)
         
         try:
             data = self.data_loader.get_loaded_data()
             session = data['session']
             metadata = data['metadata']
             
-            print(f"📅 賽事資訊: {metadata['year']} {metadata['event_name']} ({metadata['session_type']})")
-            print(f"📍 地點: {metadata['location']}")
-            print(f"[INFO] 已載入數據摘要:")
+            logger.debug(f"賽事資訊: {metadata['year']} {metadata['event_name']} ({metadata['session_type']})")
+            logger.debug(f"📍 地點: {metadata['location']}")
+            logger.info(f"已載入數據摘要:")
             
             # 數據源檢查
             data_sources = {
@@ -824,59 +828,59 @@ class F1AccidentAnalyzer:
                         count = 1 if is_available else 0
                     
                     status = "[SUCCESS]" if is_available else "[ERROR]"
-                    print(f"   {status} {name}: {count} 筆記錄")
+                    logger.debug(f"   {status} {name}: {count} 筆記錄")
                     
                     if is_available:
                         available_sources.append(source)
                 else:
-                    print(f"   [ERROR] {name}: 未載入")
+                    logger.error(f"   [ERROR] {name}: 未載入")
             
             # 1. 賽事控制消息詳細分析
             if 'race_control_messages' in available_sources:
-                print(f"\n[DEBUG] 1. 賽事控制消息詳細分析:")
-                print("-" * 100)
+                logger.debug(f"\n[DEBUG] 1. 賽事控制消息詳細分析:")
+                logger.debug("-" * 100)
                 
                 messages = data['race_control_messages']
-                print(f"   [LIST] 總消息數: {len(messages)}")
-                print(f"   [INFO] 欄位結構: {list(messages.columns)}")
+                logger.debug(f"   [LIST] 總消息數: {len(messages)}")
+                logger.info(f"   [INFO] 欄位結構: {list(messages.columns)}")
                 
                 # 消息類型分析
                 if 'Category' in messages.columns:
                     categories = messages['Category'].value_counts()
-                    print(f"   📂 消息類別分布:")
+                    logger.debug(f"   📂 消息類別分布:")
                     for category, count in categories.items():
-                        print(f"      • {category}: {count} 筆")
+                        logger.debug(f"      • {category}: {count} 筆")
                 
                 # 關鍵字分析
-                print(f"   🔤 關鍵字出現頻率:")
+                logger.debug(f"   🔤 關鍵字出現頻率:")
                 keywords = ['ACCIDENT', 'INCIDENT', 'YELLOW', 'RED', 'SAFETY CAR', 'VSC', 'PENALTY', 'FLAG']
                 for keyword in keywords:
                     count = messages['Message'].str.contains(keyword, case=False, na=False).sum()
                     if count > 0:
-                        print(f"      • {keyword}: {count} 次")
+                        logger.debug(f"      • {keyword}: {count} 次")
             
             # 2. 賽道狀態分析
             if 'track_status' in available_sources:
-                print(f"\n[DEBUG] 2. 賽道狀態詳細分析:")
-                print("-" * 100)
+                logger.debug(f"\n[DEBUG] 2. 賽道狀態詳細分析:")
+                logger.debug("-" * 100)
                 
                 track_status = data['track_status']
-                print(f"   [LIST] 總狀態記錄: {len(track_status)}")
+                logger.debug(f"   [LIST] 總狀態記錄: {len(track_status)}")
                 
                 if 'Status' in track_status.columns:
                     status_counts = track_status['Status'].value_counts()
-                    print(f"   [INFO] 狀態分布:")
+                    logger.info(f"   [INFO] 狀態分布:")
                     status_mapping = {
                         '1': '綠旗', '2': '黃旗', '3': '紅旗', 
                         '4': 'VSC', '5': '安全車', '6': '起跑', '7': '結束'
                     }
                     for status, count in status_counts.items():
                         meaning = status_mapping.get(str(status), f'未知({status})')
-                        print(f"      • {meaning}: {count} 次")
+                        logger.debug(f"      • {meaning}: {count} 次")
             
             # 3. 事故分析總結
-            print(f"\n[DEBUG] 3. 事故分析總結:")
-            print("-" * 100)
+            logger.debug(f"\n[DEBUG] 3. 事故分析總結:")
+            logger.debug("-" * 100)
             
             accident_keywords = ['ACCIDENT', 'COLLISION', 'CRASH', 'INCIDENT', 'CONTACT']
             safety_keywords = ['SAFETY CAR', 'VSC', 'VIRTUAL SAFETY CAR']
@@ -899,19 +903,19 @@ class F1AccidentAnalyzer:
                     if any(keyword in msg_text for keyword in flag_keywords):
                         flag_count += 1
                 
-                print(f"   [CRITICAL] 事故相關事件: {accident_count} 起")
-                print(f"   🚗 安全車相關: {safety_count} 次")
-                print(f"   [FINISH] 旗幟事件: {flag_count} 次")
+                logger.warning(f"   [CRITICAL] 事故相關事件: {accident_count} 起")
+                logger.debug(f"   🚗 安全車相關: {safety_count} 次")
+                logger.debug(f"   [FINISH] 旗幟事件: {flag_count} 次")
                 
                 total_incidents = accident_count + safety_count + flag_count
                 if total_incidents == 0:
-                    print(f"   [SUCCESS] 比賽進行順利，無重大安全事件")
+                    logger.info(f"   [SUCCESS] 比賽進行順利，無重大安全事件")
                 else:
                     risk_level = "低" if total_incidents <= 3 else "中" if total_incidents <= 8 else "高"
-                    print(f"   [WARNING]  總體風險評估: {risk_level} (共 {total_incidents} 個安全事件)")
+                    logger.warning(f"   [WARNING]  總體風險評估: {risk_level} (共 {total_incidents} 個安全事件)")
             
         except Exception as e:
-            print(f"[ERROR] 完整事件調試信息顯示失敗: {e}")
+            logger.error(f"完整事件調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -995,7 +999,7 @@ class F1AccidentAnalysisComplete:
     
     def run_analysis(self):
         """執行完整事故分析 - 主要入口點 - 完全復刻 f1_analysis_cli_new.py 實現"""
-        print("[CRITICAL] 執行事故分析...")
+        logger.warning("[CRITICAL] 執行事故分析...")
         
         try:
             # 載入車隊映射數據
@@ -1003,7 +1007,7 @@ class F1AccidentAnalysisComplete:
             
             # 確保數據已載入
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             # 獲取載入的數據
@@ -1011,7 +1015,7 @@ class F1AccidentAnalysisComplete:
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
             # 分析所有訊息並分類
@@ -1058,12 +1062,12 @@ class F1AccidentAnalysisComplete:
                     all_incidents.append(incident_info)
             
             # 顯示事故統計概覽
-            print(f"\n[INFO] 事故統計概覽:")
-            print(f"   [CRITICAL] 總事件數: {len(all_incidents)}")
-            print(f"   🏎️  涉及車手數: {len(involved_drivers)}")
-            print(f"   [FINISH] 黃旗事件: {yellow_flags}")
-            print(f"   🔴 紅旗事件: {red_flags}")
-            print(f"   🚗 安全車: {safety_cars}")
+            logger.info(f"\n[INFO] 事故統計概覽:")
+            logger.warning(f"   [CRITICAL] 總事件數: {len(all_incidents)}")
+            logger.debug(f"   🏎️  涉及車手數: {len(involved_drivers)}")
+            logger.debug(f"   [FINISH] 黃旗事件: {yellow_flags}")
+            logger.debug(f"   🔴 紅旗事件: {red_flags}")
+            logger.debug(f"   🚗 安全車: {safety_cars}")
             
             # 顯示所有事件詳細列表
             self._display_all_incidents_summary(all_incidents)
@@ -1077,20 +1081,20 @@ class F1AccidentAnalysisComplete:
             # 顯示特殊事件報告
             self._display_special_incident_reports(all_incidents)
                 
-            print(f"\n[SUCCESS] 事故分析完成!")
+            logger.info(f"\n[SUCCESS] 事故分析完成!")
             
             # 顯示調試資訊
             self._debug_race_control_messages()
             
         except Exception as e:
-            print(f"[ERROR] 事故分析系統執行錯誤: {e}")
+            logger.error(f"事故分析系統執行錯誤: {e}")
             import traceback
             traceback.print_exc()
     
     def _display_key_events_summary(self):
         """顯示關鍵事件摘要"""
-        print(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
-        print("=" * 80)
+        logger.warning(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
+        logger.debug("=" * 80)
         
         try:
             data = self.data_loader.get_loaded_data()
@@ -1098,42 +1102,42 @@ class F1AccidentAnalysisComplete:
             metadata = data['metadata']
             
             # 顯示資料驗證檢查
-            print(f"\n[DEBUG] 資料驗證檢查:")
-            print("-" * 50)
-            print(f"[SUCCESS] 比賽資料: {metadata.get('event_name', 'Unknown')} - {metadata.get('session_type', 'Unknown')}")
+            logger.debug(f"\n[DEBUG] 資料驗證檢查:")
+            logger.debug("-" * 50)
+            logger.info(f"比賽資料: {metadata.get('event_name', 'Unknown')} - {metadata.get('session_type', 'Unknown')}")
             
             # 檢查比賽時間
             if 'date' in metadata:
-                print(f"   比賽時間: {metadata['date']}")
+                logger.debug(f"   比賽時間: {metadata['date']}")
             
             # 檢查圈速資料
             if 'laps' in data and data['laps'] is not None:
                 laps = data['laps']
                 total_laps = len(laps)
                 unique_drivers = len(laps['Driver'].unique()) if 'Driver' in laps.columns else 0
-                print(f"[SUCCESS] 圈速資料: {total_laps} 筆記錄")
-                print(f"   涉及車手數: {unique_drivers}")
-                print(f"[SUCCESS] 關鍵欄位完整")
-                print(f"   有效圈速: {total_laps}/{total_laps} (100.0%)")
+                logger.info(f"圈速資料: {total_laps} 筆記錄")
+                logger.debug(f"   涉及車手數: {unique_drivers}")
+                logger.info(f"關鍵欄位完整")
+                logger.debug(f"   有效圈速: {total_laps}/{total_laps} (100.0%)")
             
             # 檢查車手資訊
             if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping:
-                print(f"[SUCCESS] 車手資訊: {len(self.dynamic_team_mapping)} 位車手")
+                logger.info(f"車手資訊: {len(self.dynamic_team_mapping)} 位車手")
             
             # 檢查遙測資料
             if 'car_data' in data or ('laps' in data and data['laps'] is not None):
-                print(f"[SUCCESS] 遙測資料: {unique_drivers if 'unique_drivers' in locals() else 'N/A'} 位車手有資料")
+                logger.info(f"遙測資料: {unique_drivers if 'unique_drivers' in locals() else 'N/A'} 位車手有資料")
             
             # 檢查天氣資料
             if 'weather_data' in data and data['weather_data'] is not None:
                 weather_count = len(data['weather_data'])
-                print(f"[SUCCESS] 天氣資料: {weather_count} 筆記錄")
+                logger.info(f"天氣資料: {weather_count} 筆記錄")
             
             # 檢查賽事控制訊息
             if hasattr(session, 'race_control_messages') and session.race_control_messages is not None:
                 messages = session.race_control_messages
-                print(f"[SUCCESS] 賽事控制訊息: {len(messages)} 筆記錄")
-                print("-" * 50)
+                logger.info(f"賽事控制訊息: {len(messages)} 筆記錄")
+                logger.debug("-" * 50)
                 
                 # 收集關鍵事件
                 key_events = []
@@ -1186,7 +1190,7 @@ class F1AccidentAnalysisComplete:
                     })
                 
                 if key_events:
-                    print(f"[INFO] 發現 {len(key_events)} 個關鍵事件")
+                    logger.info(f"發現 {len(key_events)} 個關鍵事件")
                     
                     key_table = PrettyTable()
                     key_table.field_names = ["類型", "時間", "圈數", "事件描述"]
@@ -1199,32 +1203,32 @@ class F1AccidentAnalysisComplete:
                     for event in key_events:
                         key_table.add_row([event['type'], event['time'], event['lap'], event['message']])
                     
-                    print(key_table)
+                    logger.debug(f"{key_table}")
                 else:
-                    print("[SUCCESS] 沒有發現重大關鍵事件")
+                    logger.info("沒有發現重大關鍵事件")
             else:
-                print("[ERROR] 沒有找到 race_control_messages 數據")
+                logger.error("沒有找到 race_control_messages 數據")
                 return
             
         except Exception as e:
-            print(f"[ERROR] 關鍵事件摘要顯示失敗: {e}")
+            logger.error(f"關鍵事件摘要顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _debug_race_control_messages(self):
         """調試賽會控制訊息"""
-        print(f"\n======================================================================")
-        print(f"[DEBUG] DEBUG INFORMATION / 調試資訊")
-        print(f"======================================================================")
+        logger.debug(f"\n======================================================================")
+        logger.debug(f"DEBUG INFORMATION / 調試資訊")
+        logger.debug(f"======================================================================")
         
         try:
             data = self._get_race_control_data()
             
             if not data:
-                print("[WARNING] 沒有賽會控制資料可供調試")
+                logger.warning("沒有賽會控制資料可供調試")
                 return
             
-            print(f"[INFO] 總資料筆數: {len(data)}")
+            logger.info(f"總資料筆數: {len(data)}")
             
             # 統計不同類別的訊息數量
             categories = {}
@@ -1233,12 +1237,12 @@ class F1AccidentAnalysisComplete:
                 categories[category] = categories.get(category, 0) + 1
             
             if categories:
-                print(f"[INFO] 類別統計:")
+                logger.info(f"類別統計:")
                 for category, count in sorted(categories.items()):
-                    print(f"   {category}: {count}")
+                    logger.debug(f"   {category}: {count}")
         
         except Exception as e:
-            print(f"[ERROR] 調試資訊顯示錯誤: {e}")
+            logger.error(f"調試資訊顯示錯誤: {e}")
 
     def _is_important_incident(self, message, category):
         """判斷是否為重要事件"""
@@ -1288,25 +1292,25 @@ class F1AccidentAnalysisComplete:
         if not incidents:
             return
             
-        print(f"\n" + "="*80)
-        print("[LIST] 所有事件詳細列表 (All Incidents Summary)")
-        print("="*80)
+        logger.debug(f"\n" + "="*80)
+        logger.debug("[LIST] 所有事件詳細列表 (All Incidents Summary)")
+        logger.debug("="*80)
         
         # 車隊映射 - 僅使用已載入的動態映射，不使用預設值
         team_mapping = self.dynamic_team_mapping if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping else {}
         
         if not team_mapping:
-            print("[WARNING] 沒有可用的車手-車隊映射數據")
-            print("   車隊信息將顯示為 'Unknown Team'")
+            logger.warning("沒有可用的車手-車隊映射數據")
+            logger.debug("   車隊信息將顯示為 'Unknown Team'")
         else:
-            print(f"[CONFIG] 使用動態車手-車隊映射 ({len(team_mapping)} 位車手)")
-        print("="*80)
+            logger.debug(f"[CONFIG] 使用動態車手-車隊映射 ({len(team_mapping)} 位車手)")
+        logger.debug("="*80)
         
-        print(f"\n事件格式說明: 每個事件分三行顯示")
-        print(f"第一行: 基本信息 (編號、圈數、時間、車手、車隊、嚴重度)")
-        print(f"第二行: 英文描述")
-        print(f"第三行: 中文描述")
-        print("-" * 100)
+        logger.debug(f"\n事件格式說明: 每個事件分三行顯示")
+        logger.debug(f"第一行: 基本信息 (編號、圈數、時間、車手、車隊、嚴重度)")
+        logger.debug(f"第二行: 英文描述")
+        logger.debug(f"第三行: 中文描述")
+        logger.debug("-" * 100)
         
         important_count = 0
         filtered_count = 0
@@ -1333,12 +1337,12 @@ class F1AccidentAnalysisComplete:
             important_count += 1
             
             # 三行格式輸出
-            print(f"事件 #{important_count:3d} | 圈數: {lap:3} | 時間: {time_str:8} | 車手: {driver:4} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
-            print(f"英文: {message}")
-            print(f"中文: {self._translate_to_chinese(message)}")
-            print("-" * 100)
+            logger.debug(f"事件 #{important_count:3d} | 圈數: {lap:3} | 時間: {time_str:8} | 車手: {driver:4} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
+            logger.debug(f"英文: {message}")
+            logger.debug(f"中文: {self._translate_to_chinese(message)}")
+            logger.debug("-" * 100)
         
-        print(f"\n總計 {important_count} 個重要事件 (已過濾 {filtered_count} 個非重要事件)")
+        logger.debug(f"\n總計 {important_count} 個重要事件 (已過濾 {filtered_count} 個非重要事件)")
     
     def _should_filter_event(self, message):
         """判斷是否應該過濾此事件"""
@@ -1420,16 +1424,16 @@ class F1AccidentAnalysisComplete:
             return data
             
         except Exception as e:
-            print(f"[ERROR] 獲取賽會控制數據時發生錯誤: {e}")
+            logger.error(f"獲取賽會控制數據時發生錯誤: {e}")
             return []
     def _display_driver_severity_scores(self, incidents):
         """顯示車手嚴重程度分數"""
         if not incidents:
             return
             
-        print(f"\n======================================================================")
-        print(f"🏆 DRIVER SEVERITY SCORES / 車手嚴重程度分數統計")
-        print(f"======================================================================")
+        logger.debug(f"\n======================================================================")
+        logger.debug(f"🏆 DRIVER SEVERITY SCORES / 車手嚴重程度分數統計")
+        logger.debug(f"======================================================================")
         
         # 計算車手分數
         driver_scores = {}
@@ -1461,7 +1465,7 @@ class F1AccidentAnalysisComplete:
                 driver_scores[driver] += score
         
         if not driver_scores:
-            print("[SUCCESS] 沒有車手相關事件記錄")
+            logger.info("沒有車手相關事件記錄")
             return
         
         # 車隊映射 - 僅使用已載入的動態映射
@@ -1470,7 +1474,7 @@ class F1AccidentAnalysisComplete:
         # 按分數排序
         sorted_drivers = sorted(driver_scores.items(), key=lambda x: x[1], reverse=True)
         
-        print(f"\n[INFO] 車手風險分數排行榜:")
+        logger.info(f"\n[INFO] 車手風險分數排行榜:")
         severity_table = PrettyTable()
         severity_table.field_names = ["排名", "車手", "車隊", "高風險", "中風險", "低風險", "總分"]
         severity_table.align = "l"
@@ -1485,7 +1489,7 @@ class F1AccidentAnalysisComplete:
                 total_score
             ])
         
-        print(severity_table)
+        logger.debug(f"{severity_table}")
         
         # 車隊統計
         team_scores = {}
@@ -1496,7 +1500,7 @@ class F1AccidentAnalysisComplete:
             team_scores[team] += score
         
         if team_scores:
-            print(f"\n[FINISH] 車隊風險分數統計:")
+            logger.debug(f"\n[FINISH] 車隊風險分數統計:")
             team_table = PrettyTable()
             team_table.field_names = ["車隊", "總分"]
             team_table.align = "l"
@@ -1505,13 +1509,13 @@ class F1AccidentAnalysisComplete:
             for team, score in sorted_teams:
                 team_table.add_row([team, score])
             
-            print(team_table)
+            logger.debug(f"{team_table}")
     
     def _display_special_incident_reports(self, incidents):
         """顯示特殊事件報告"""
-        print(f"\n======================================================================")
-        print(f"[CRITICAL] SPECIAL INCIDENT REPORTS / 特殊事件報告")
-        print(f"======================================================================")
+        logger.debug(f"\n======================================================================")
+        logger.warning(f"[CRITICAL] SPECIAL INCIDENT REPORTS / 特殊事件報告")
+        logger.debug(f"======================================================================")
         
         # 分類統計
         collision_events = []
@@ -1529,42 +1533,42 @@ class F1AccidentAnalysisComplete:
                 safety_car_events.append(incident)
         
         # 顯示各類事件
-        print(f"\n💥 碰撞事件報告: {'[SUCCESS] 無碰撞事件記錄' if not collision_events else f'發現 {len(collision_events)} 次碰撞'}")
+        logger.info(f"\n💥 碰撞事件報告: {'[SUCCESS] 無碰撞事件記錄' if not collision_events else f'發現 {len(collision_events)} 次碰撞'}")
         
-        print(f"\n⚖️ 罰秒事件報告: {'[SUCCESS] 無處罰事件記錄' if not penalty_events else f'發現 {len(penalty_events)} 次處罰'}")
+        logger.info(f"\n⚖️ 罰秒事件報告: {'[SUCCESS] 無處罰事件記錄' if not penalty_events else f'發現 {len(penalty_events)} 次處罰'}")
         
-        print(f"\n🟡 安全車事件報告: {'[SUCCESS] 無安全車事件記錄' if not safety_car_events else f'發現 {len(safety_car_events)} 次安全車'}")
+        logger.info(f"\n🟡 安全車事件報告: {'[SUCCESS] 無安全車事件記錄' if not safety_car_events else f'發現 {len(safety_car_events)} 次安全車'}")
         
         return len(collision_events) + len(penalty_events) + len(safety_car_events) > 0
     
     def _load_driver_team_mapping_if_needed(self):
         """載入車隊映射數據 - 優先使用 OpenF1，再使用 FastF1 確認"""
         try:
-            print("🔄 載入車手-車隊映射數據...")
+            logger.debug("載入車手-車隊映射數據...")
             
             # 初始化動態映射
             self.dynamic_team_mapping = {}
             
             # 1. 優先嘗試從 F1 分析實例獲取 OpenF1 數據
             if self.f1_analysis_instance and hasattr(self.f1_analysis_instance, 'dynamic_team_mapping'):
-                print("[INFO] 使用 F1 分析實例的動態車隊映射")
+                logger.info("使用 F1 分析實例的動態車隊映射")
                 self.dynamic_team_mapping = self.f1_analysis_instance.dynamic_team_mapping.copy()
-                print(f"[SUCCESS] 從 F1 分析實例載入 {len(self.dynamic_team_mapping)} 位車手")
+                logger.info(f"從 F1 分析實例載入 {len(self.dynamic_team_mapping)} 位車手")
             
             # 2. 嘗試從 data_loader 獲取動態映射
             elif self.data_loader and hasattr(self.data_loader, 'dynamic_team_mapping'):
-                print("[INFO] 使用 data_loader 的動態車隊映射")
+                logger.info("使用 data_loader 的動態車隊映射")
                 self.dynamic_team_mapping = self.data_loader.dynamic_team_mapping.copy()
-                print(f"[SUCCESS] 從 data_loader 載入 {len(self.dynamic_team_mapping)} 位車手")
+                logger.info(f"從 data_loader 載入 {len(self.dynamic_team_mapping)} 位車手")
             
             # 3. 嘗試從載入的數據中建立映射（FastF1 results）
             elif self.data_loader and hasattr(self.data_loader, 'loaded_data'):
-                print("[INFO] 從 FastF1 results 建立車隊映射")
+                logger.info("從 FastF1 results 建立車隊映射")
                 loaded_data = self.data_loader.loaded_data
                 
                 if 'results' in loaded_data and loaded_data['results'] is not None:
                     results = loaded_data['results']
-                    print(f"[DEBUG] 分析 FastF1 results 數據: {len(results)} 筆記錄")
+                    logger.debug(f"分析 FastF1 results 數據: {len(results)} 筆記錄")
                     
                     for _, driver_row in results.iterrows():
                         abbr = driver_row.get('Abbreviation', '')
@@ -1572,30 +1576,30 @@ class F1AccidentAnalysisComplete:
                         
                         if abbr and team_name:
                             self.dynamic_team_mapping[abbr] = team_name
-                            print(f"   [LIST] {abbr} -> {team_name}")
+                            logger.debug(f"   [LIST] {abbr} -> {team_name}")
                     
-                    print(f"[SUCCESS] 從 FastF1 results 建立 {len(self.dynamic_team_mapping)} 位車手映射")
+                    logger.info(f"從 FastF1 results 建立 {len(self.dynamic_team_mapping)} 位車手映射")
                 else:
-                    print("[WARNING] 未找到 FastF1 results 數據")
+                    logger.warning("未找到 FastF1 results 數據")
             
             # 4. 如果沒有任何數據源，報告錯誤而不使用預設
             if not self.dynamic_team_mapping:
-                print("[ERROR] 無法載入車手-車隊映射數據")
-                print("   • 請檢查 OpenF1 API 連接")
-                print("   • 請檢查 FastF1 數據載入")
-                print("   • 請檢查賽事數據是否正確載入")
-                print("   • 不使用預設映射以確保數據準確性")
+                logger.error("無法載入車手-車隊映射數據")
+                logger.debug("   • 請檢查 OpenF1 API 連接")
+                logger.debug("   • 請檢查 FastF1 數據載入")
+                logger.debug("   • 請檢查賽事數據是否正確載入")
+                logger.debug("   • 不使用預設映射以確保數據準確性")
                 
                 # 嘗試從其他可能的數據源獲取
                 if self._try_load_from_alternative_sources():
-                    print("[SUCCESS] 從替代數據源成功載入車隊映射")
+                    logger.info("從替代數據源成功載入車隊映射")
                 else:
-                    print("[ERROR] 所有數據源都無法提供車手-車隊映射")
-                    print("[WARNING] 事故分析將無法正確顯示車隊信息")
+                    logger.error("所有數據源都無法提供車手-車隊映射")
+                    logger.warning("事故分析將無法正確顯示車隊信息")
                     return  # 直接返回，不繼續執行
             
             # 5. 驗證並顯示最終映射
-            print(f"\n[CONFIG] 最終車手-車隊映射驗證:")
+            logger.debug(f"\n[CONFIG] 最終車手-車隊映射驗證:")
             teams = {}
             for driver, team in sorted(self.dynamic_team_mapping.items()):
                 if team not in teams:
@@ -1603,13 +1607,13 @@ class F1AccidentAnalysisComplete:
                 teams[team].append(driver)
             
             for team, drivers in sorted(teams.items()):
-                print(f"   [FINISH] {team}: {', '.join(drivers)}")
+                logger.debug(f"   [FINISH] {team}: {', '.join(drivers)}")
             
             # 6. 同時載入車手號碼映射
             self.driver_numbers = {}
             if hasattr(self.f1_analysis_instance, 'driver_numbers'):
                 self.driver_numbers = self.f1_analysis_instance.driver_numbers
-                print(f"📞 載入車手號碼映射: {len(self.driver_numbers)} 位車手")
+                logger.debug(f"📞 載入車手號碼映射: {len(self.driver_numbers)} 位車手")
             elif self.data_loader and hasattr(self.data_loader, 'loaded_data'):
                 loaded_data = self.data_loader.loaded_data
                 if 'results' in loaded_data and loaded_data['results'] is not None:
@@ -1619,38 +1623,38 @@ class F1AccidentAnalysisComplete:
                         number = driver.get('DriverNumber', '')
                         if abbr and number:
                             self.driver_numbers[abbr] = str(number)
-                    print(f"📞 從 FastF1 載入車手號碼: {len(self.driver_numbers)} 位車手")
+                    logger.debug(f"📞 從 FastF1 載入車手號碼: {len(self.driver_numbers)} 位車手")
             
             # 7. 將映射傳遞給分析器
             if hasattr(self, 'analyzer'):
                 self.analyzer.dynamic_team_mapping = self.dynamic_team_mapping
                 self.analyzer.f1_analysis_instance = self.f1_analysis_instance
-                print("[SUCCESS] 車隊映射已同步到分析器")
+                logger.info("車隊映射已同步到分析器")
             
-            print(f"[SUCCESS] 車隊映射載入完成: {len(self.dynamic_team_mapping)} 位車手")
+            logger.info(f"車隊映射載入完成: {len(self.dynamic_team_mapping)} 位車手")
             
         except Exception as e:
-            print(f"[WARNING] 載入車隊映射數據失敗: {e}")
-            print("[ERROR] 無法從任何數據源載入車手-車隊映射")
-            print("   請檢查:")
-            print("   1. OpenF1 API 連接狀態")
-            print("   2. FastF1 數據載入是否成功")
-            print("   3. 賽事數據是否包含車手和車隊信息")
-            print("[WARNING] 將無法顯示正確的車隊信息")
+            logger.warning(f"載入車隊映射數據失敗: {e}")
+            logger.error("無法從任何數據源載入車手-車隊映射")
+            logger.debug("   請檢查:")
+            logger.debug("   1. OpenF1 API 連接狀態")
+            logger.debug("   2. FastF1 數據載入是否成功")
+            logger.debug("   3. 賽事數據是否包含車手和車隊信息")
+            logger.warning("將無法顯示正確的車隊信息")
             
             # 不設置任何預設映射，保持為空
             self.dynamic_team_mapping = {}
             
             # 嘗試最後一次從替代數據源載入
             if self._try_load_from_alternative_sources():
-                print("[SUCCESS] 從替代數據源成功載入")
+                logger.info("從替代數據源成功載入")
             else:
-                print("[ERROR] 所有數據源載入失敗，無法提供車隊映射")
+                logger.error("所有數據源載入失敗，無法提供車隊映射")
     
     def _try_load_from_alternative_sources(self):
         """嘗試從替代數據源載入車手-車隊映射"""
         try:
-            print("[DEBUG] 嘗試從替代數據源載入...")
+            logger.debug("嘗試從替代數據源載入...")
             
             # 1. 嘗試從 session.results 載入（如果有的話）
             if self.data_loader and hasattr(self.data_loader, 'loaded_data'):
@@ -1662,7 +1666,7 @@ class F1AccidentAnalysisComplete:
                     
                     # 嘗試從 session.results 載入
                     if hasattr(session, 'results') and session.results is not None:
-                        print("[INFO] 從 session.results 載入車隊映射")
+                        logger.info("從 session.results 載入車隊映射")
                         results = session.results
                         
                         for _, driver_row in results.iterrows():
@@ -1671,25 +1675,25 @@ class F1AccidentAnalysisComplete:
                             
                             if abbr and team_name:
                                 self.dynamic_team_mapping[abbr] = team_name
-                                print(f"   [LIST] {abbr} -> {team_name}")
+                                logger.debug(f"   [LIST] {abbr} -> {team_name}")
                         
                         if self.dynamic_team_mapping:
-                            print(f"[SUCCESS] 從 session.results 載入 {len(self.dynamic_team_mapping)} 位車手")
+                            logger.info(f"從 session.results 載入 {len(self.dynamic_team_mapping)} 位車手")
                             return True
                     
                     # 嘗試從 session.laps 中的車手信息載入
                     if hasattr(session, 'laps') and session.laps is not None and not session.laps.empty:
-                        print("[INFO] 從 session.laps 提取車手信息")
+                        logger.info("從 session.laps 提取車手信息")
                         laps = session.laps
                         
                         # 獲取獨特的車手列表
                         if 'Driver' in laps.columns:
                             unique_drivers = laps['Driver'].unique()
-                            print(f"[DEBUG] 在 laps 數據中找到車手: {list(unique_drivers)}")
+                            logger.debug(f"在 laps 數據中找到車手: {list(unique_drivers)}")
                             
                             # 這裡我們無法從 laps 直接獲取車隊信息
                             # 但至少我們知道有哪些車手參與了比賽
-                            print("[WARNING] laps 數據中沒有車隊信息，需要其他數據源")
+                            logger.warning("laps 數據中沒有車隊信息，需要其他數據源")
             
             # 2. 嘗試從快取檔案載入（如果存在的話）
             cache_paths = [
@@ -1704,29 +1708,29 @@ class F1AccidentAnalysisComplete:
                     import os
                     
                     if os.path.exists(cache_path):
-                        print(f"[DEBUG] 嘗試從快取檔案載入: {cache_path}")
+                        logger.debug(f"嘗試從快取檔案載入: {cache_path}")
                         with open(cache_path, 'r', encoding='utf-8') as f:
                             cached_mapping = json.load(f)
                         
                         if cached_mapping and isinstance(cached_mapping, dict):
                             self.dynamic_team_mapping = cached_mapping
-                            print(f"[SUCCESS] 從快取檔案載入 {len(self.dynamic_team_mapping)} 位車手")
+                            logger.info(f"從快取檔案載入 {len(self.dynamic_team_mapping)} 位車手")
                             return True
                 except Exception as e:
-                    print(f"   [ERROR] 快取檔案讀取失敗: {e}")
+                    logger.error(f"   [ERROR] 快取檔案讀取失敗: {e}")
                     continue
             
             # 3. 如果所有方法都失敗，報告詳細錯誤
-            print("[ERROR] 所有替代數據源都無法提供車手-車隊映射")
-            print("   建議:")
-            print("   1. 檢查網路連接，確保可以存取 OpenF1 API")
-            print("   2. 重新載入 FastF1 賽事數據")
-            print("   3. 確認賽事數據包含完整的車手和車隊信息")
+            logger.error("所有替代數據源都無法提供車手-車隊映射")
+            logger.debug("   建議:")
+            logger.debug("   1. 檢查網路連接，確保可以存取 OpenF1 API")
+            logger.debug("   2. 重新載入 FastF1 賽事數據")
+            logger.debug("   3. 確認賽事數據包含完整的車手和車隊信息")
             
             return False
             
         except Exception as e:
-            print(f"[ERROR] 替代數據源載入失敗: {e}")
+            logger.error(f"替代數據源載入失敗: {e}")
             return False
     
     def _classify_incident_type_and_severity(self, message, category):
@@ -1874,7 +1878,7 @@ class F1AccidentAnalysisComplete:
             return False
             
         except Exception as e:
-            print(f"[WARNING] 檢查車手責任時發生錯誤: {e}")
+            logger.warning(f"檢查車手責任時發生錯誤: {e}")
             return False
     
     def _calculate_driver_match_confidence(self, driver_abbr, driver_number, message):
@@ -1902,7 +1906,7 @@ class F1AccidentAnalysisComplete:
             return min(confidence, 100.0)  # 最大100%
             
         except Exception as e:
-            print(f"[WARNING] 計算信心度時發生錯誤: {e}")
+            logger.warning(f"計算信心度時發生錯誤: {e}")
             return 0.0
     
     def _get_team_name(self, driver_abbr):
@@ -1915,14 +1919,14 @@ class F1AccidentAnalysisComplete:
                 return f"未知車隊 ({driver_abbr})"
                 
         except Exception as e:
-            print(f"[WARNING] 獲取車隊名稱時發生錯誤: {e}")
+            logger.warning(f"獲取車隊名稱時發生錯誤: {e}")
             return f"未知車隊 ({driver_abbr})"
     
     def _display_all_accidents_summary(self):
         """顯示所有事件的詳細列表 - 完全復刻 f1_analysis_cli_new.py 實現"""
-        print(f"\n" + "="*80)
-        print("[LIST] 所有事件詳細列表 (All Race Control Messages)")
-        print("="*80)
+        logger.debug(f"\n" + "="*80)
+        logger.debug("[LIST] 所有事件詳細列表 (All Race Control Messages)")
+        logger.debug("="*80)
         
         try:
             # 獲取已載入的數據
@@ -1930,14 +1934,14 @@ class F1AccidentAnalysisComplete:
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有可用的賽事控制消息")
+                logger.error("沒有可用的賽事控制消息")
                 return
             
             # 使用動態獲取的車隊對應表，不使用預設值
             team_mapping = self.dynamic_team_mapping if hasattr(self, 'dynamic_team_mapping') and self.dynamic_team_mapping else {}
             
-            print(f"[INFO] 總消息數量: {len(race_control_messages)}")
-            print(f"[LIST] 消息欄位: {list(race_control_messages.columns)}")
+            logger.info(f"總消息數量: {len(race_control_messages)}")
+            logger.debug(f"[LIST] 消息欄位: {list(race_control_messages.columns)}")
             
             # 創建表格顯示所有消息
             table = PrettyTable()
@@ -1966,25 +1970,25 @@ class F1AccidentAnalysisComplete:
                 
                 table.add_row([idx, time, category, message, related_drivers_str])
             
-            print(table)
+            logger.debug(f"{table}")
             
             # 統計消息類型
             if 'Category' in race_control_messages.columns:
-                print(f"\n[INFO] 消息類型統計:")
+                logger.info(f"\n[INFO] 消息類型統計:")
                 category_counts = race_control_messages['Category'].value_counts()
                 for category, count in category_counts.items():
                     percentage = (count / len(race_control_messages)) * 100
-                    print(f"   {category}: {count} 條 ({percentage:.1f}%)")
+                    logger.debug(f"   {category}: {count} 條 ({percentage:.1f}%)")
             
         except Exception as e:
-            print(f"[ERROR] 顯示事件摘要時發生錯誤: {e}")
+            logger.error(f"顯示事件摘要時發生錯誤: {e}")
             import traceback
             traceback.print_exc()
         if self.dynamic_team_mapping:
-            print(f"[CONFIG] 使用 OpenF1 動態車手-車隊映射 ({len(self.dynamic_team_mapping)} 位車手)")
+            logger.debug(f"[CONFIG] 使用 OpenF1 動態車手-車隊映射 ({len(self.dynamic_team_mapping)} 位車手)")
         else:
-            print(f"[WARNING]  使用預設車手-車隊映射，建議重新載入賽事數據")
-        print("="*80)
+            logger.warning(f"使用預設車手-車隊映射，建議重新載入賽事數據")
+        logger.debug("="*80)
         
         # 事件類型的中英文對應表 - 完全對應原始實現
         event_descriptions = {
@@ -2015,7 +2019,7 @@ class F1AccidentAnalysisComplete:
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[SUCCESS] 沒有賽事控制消息")
+                logger.info("沒有賽事控制消息")
                 return
             
             # 將消息轉換為事故格式
@@ -2033,14 +2037,14 @@ class F1AccidentAnalysisComplete:
             filtered_accidents = self._filter_important_accidents(all_messages)
         
             if not filtered_accidents:
-                print("[SUCCESS] 沒有重要事故需要報告")
+                logger.info("沒有重要事故需要報告")
                 return
         
             # 顯示重要事件 - 完全對應原始實現
             self._display_important_events_table(filtered_accidents, team_mapping, event_descriptions)
             
         except Exception as e:
-            print(f"[ERROR] 獲取關鍵事件時發生錯誤: {e}")
+            logger.error(f"獲取關鍵事件時發生錯誤: {e}")
     
     def _filter_important_accidents(self, accidents):
         """過濾重要的事故事件 - 完全對應 f1_analysis_cli_new.py 實現"""
@@ -2065,8 +2069,8 @@ class F1AccidentAnalysisComplete:
     
     def _display_important_events_table(self, events, team_mapping, event_descriptions):
         """顯示重要事件表格 - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"\n[CRITICAL] 重要事件報告 (共 {len(events)} 個事件):")
-        print("=" * 100)
+        logger.warning(f"\n[CRITICAL] 重要事件報告 (共 {len(events)} 個事件):")
+        logger.debug("=" * 100)
         
         for i, acc in enumerate(events, 1):
             # 安全處理各個字段
@@ -2130,29 +2134,29 @@ class F1AccidentAnalysisComplete:
             # 安全處理可能為 None 的值
             lap_display = f"{lap:3}" if lap is not None and lap != 'N/A' else "N/A"
             driver_display = f"{driver:4}" if driver is not None else "N/A "
-            print(f"事件 #{i:3d} | 圈數: {lap_display} | 時間: {time_str:8} | 車手: {driver_display} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
-            print(f"英文: {description_en}")
-            print(f"中文: {description_zh}")
-            print("-" * 100)
+            logger.debug(f"事件 #{i:3d} | 圈數: {lap_display} | 時間: {time_str:8} | 車手: {driver_display} | 車隊: {team[:20]:20} | 嚴重度: {severity}")
+            logger.debug(f"英文: {description_en}")
+            logger.debug(f"中文: {description_zh}")
+            logger.debug("-" * 100)
         
-        print(f"\n總計 {len(events)} 個重要事件")
+        logger.debug(f"\n總計 {len(events)} 個重要事件")
     
     def _display_key_events_summary(self):
         """顯示關鍵事件摘要 - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
-        print("=" * 80)
+        logger.warning(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
+        logger.debug("=" * 80)
         
         try:
             data = self.data_loader.get_loaded_data()
             session = data['session']
             
             if not hasattr(session, 'race_control_messages') or session.race_control_messages is None:
-                print("[ERROR] 沒有找到 race_control_messages 數據")
+                logger.error("沒有找到 race_control_messages 數據")
                 return
             
             messages = session.race_control_messages
             if messages.empty:
-                print("[ERROR] race_control_messages 為空")
+                logger.error("race_control_messages 為空")
                 return
             
             # 收集關鍵事件 - 完全對應原始實現
@@ -2207,7 +2211,7 @@ class F1AccidentAnalysisComplete:
                 })
             
             if key_events:
-                print(f"[INFO] 發現 {len(key_events)} 個關鍵事件")
+                logger.info(f"發現 {len(key_events)} 個關鍵事件")
                 
                 key_table = PrettyTable()
                 key_table.field_names = ["類型", "時間", "圈數", "事件描述"]
@@ -2220,16 +2224,16 @@ class F1AccidentAnalysisComplete:
                 for event in key_events:
                     key_table.add_row([event['type'], event['time'], event['lap'], event['message']])
                 
-                print(key_table)
+                logger.debug(f"{key_table}")
             else:
-                print("[SUCCESS] 沒有發現重大關鍵事件")
+                logger.info("沒有發現重大關鍵事件")
             
         except Exception as e:
-            print(f"[ERROR] 關鍵事件摘要顯示失敗: {e}")
+            logger.error(f"關鍵事件摘要顯示失敗: {e}")
     
     def _fallback_accident_analysis(self):
         """簡化的事故分析（後備方案） - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"🔄 執行簡化事故分析...")
+        logger.debug(f"執行簡化事故分析...")
         
         try:
             # 獲取已載入的數據
@@ -2238,7 +2242,7 @@ class F1AccidentAnalysisComplete:
             metadata = loaded_data.get('metadata', {})
             
             if not session:
-                print("[ERROR] 無法獲取賽事數據")
+                logger.error("無法獲取賽事數據")
                 return
             
             # 獲取賽事控制消息
@@ -2246,11 +2250,11 @@ class F1AccidentAnalysisComplete:
                 messages = session.race_control_messages
                 
                 if messages.empty:
-                    print("[ERROR] 沒有找到賽事控制消息")
+                    logger.error("沒有找到賽事控制消息")
                     return
                 
-                print(f"\n[LIST] {metadata.get('year', 'N/A')} {metadata.get('event_name', 'N/A')} 賽事事件分析")
-                print("=" * 80)
+                logger.debug(f"\n[LIST] {metadata.get('year', 'N/A')} {metadata.get('event_name', 'N/A')} 賽事事件分析")
+                logger.debug("=" * 80)
                 
                 # 分類事件 - 完全對應原始實現
                 accidents = []
@@ -2271,7 +2275,7 @@ class F1AccidentAnalysisComplete:
                 
                 # 顯示事故 - 完全對應原始實現
                 if accidents:
-                    print(f"\n[CRITICAL] 事故事件 ({len(accidents)} 起):")
+                    logger.warning(f"\n[CRITICAL] 事故事件 ({len(accidents)} 起):")
                     accident_table = PrettyTable()
                     accident_table.field_names = ["編號", "時間", "圈數", "事件描述", "涉及車手"]
                     accident_table.align = "l"
@@ -2288,11 +2292,11 @@ class F1AccidentAnalysisComplete:
                         driver = accident.get('Driver', 'N/A')
                         accident_table.add_row([i, time_info, lap_info, message, driver])
                     
-                    print(accident_table)
+                    logger.debug(f"{accident_table}")
                 
                 # 顯示旗幟事件 - 完全對應原始實現
                 if flags:
-                    print(f"\n[FINISH] 旗幟/安全車事件 ({len(flags)} 次):")
+                    logger.debug(f"\n[FINISH] 旗幟/安全車事件 ({len(flags)} 次):")
                     flag_table = PrettyTable()
                     flag_table.field_names = ["編號", "時間", "圈數", "事件描述"]
                     flag_table.align = "l"
@@ -2309,11 +2313,11 @@ class F1AccidentAnalysisComplete:
                         message = flag.get('Message', '')
                         flag_table.add_row([i, time_info, lap_info, message])
                     
-                    print(flag_table)
+                    logger.debug(f"{flag_table}")
                 
                 # 顯示調查事件 - 完全對應原始實現
                 if investigations:
-                    print(f"\n[DEBUG] 調查/處罰事件 ({len(investigations)} 起):")
+                    logger.debug(f"\n[DEBUG] 調查/處罰事件 ({len(investigations)} 起):")
                     investigation_table = PrettyTable()
                     investigation_table.field_names = ["編號", "時間", "圈數", "事件描述", "涉及車手"]
                     investigation_table.align = "l"
@@ -2326,11 +2330,11 @@ class F1AccidentAnalysisComplete:
                         driver = inv.get('Driver', 'N/A')
                         investigation_table.add_row([i, time_info, lap_info, message, driver])
                     
-                    print(investigation_table)
+                    logger.debug(f"{investigation_table}")
                 
                 # 統計摘要 - 完全對應原始實現
                 total_events = len(accidents) + len(flags) + len(investigations)
-                print(f"\n[INFO] ACCIDENT ANALYSIS SUMMARY / 事故分析摘要:")
+                logger.info(f"\n[INFO] ACCIDENT ANALYSIS SUMMARY / 事故分析摘要:")
                 
                 # 使用 PrettyTable 顯示統計摘要
                 summary_table = PrettyTable()
@@ -2340,40 +2344,40 @@ class F1AccidentAnalysisComplete:
                 summary_table.add_row(["事故", f"{len(accidents)} 起"])
                 summary_table.add_row(["旗幟/安全車", f"{len(flags)} 次"])
                 summary_table.add_row(["調查/處罰", f"{len(investigations)} 起"])
-                print(summary_table)
+                logger.debug(f"{summary_table}")
                 
                 # 評估事故嚴重程度 - 完全對應原始實現
                 severity_assessment = self._assess_accident_severity(accidents, flags, investigations)
                 
-                print(f"\n[WARNING] 嚴重程度評估: {severity_assessment['level']}")
-                print(f"   風險指數: {severity_assessment['risk_score']}/10")
-                print(f"   描述: {severity_assessment['description']}")
+                logger.warning(f"\n[WARNING] 嚴重程度評估: {severity_assessment['level']}")
+                logger.debug(f"   風險指數: {severity_assessment['risk_score']}/10")
+                logger.debug(f"   描述: {severity_assessment['description']}")
                 
                 # 顯示嚴重程度說明 - 完全對應原始實現
-                print(f"\n[INFO] 嚴重程度等級說明:")
-                print(f"   🔴 極高風險 (CRITICAL): 15+ 分")
-                print(f"      • 多起嚴重事故或紅旗中斷")
-                print(f"      • 比賽安全風險極高")
-                print(f"   🟠 高風險 (HIGH): 10-14 分")
-                print(f"      • 重大事故或安全車出動")
-                print(f"      • 比賽進行受到影響")
-                print(f"   🟡 中等風險 (MODERATE): 5-9 分")
-                print(f"      • 輕微事故或黃旗事件")
-                print(f"      • 局部影響比賽進行")
-                print(f"   🟢 低風險 (LOW): 1-4 分")
-                print(f"      • 少數輕微事件或調查")
-                print(f"      • 對比賽影響有限")
-                print(f"   ⚪ 無風險 (NONE): 0 分")
-                print(f"      • 比賽進行順利，無重大安全事件")
+                logger.info(f"\n[INFO] 嚴重程度等級說明:")
+                logger.debug(f"   🔴 極高風險 (CRITICAL): 15+ 分")
+                logger.debug(f"      • 多起嚴重事故或紅旗中斷")
+                logger.debug(f"      • 比賽安全風險極高")
+                logger.debug(f"   🟠 高風險 (HIGH): 10-14 分")
+                logger.debug(f"      • 重大事故或安全車出動")
+                logger.debug(f"      • 比賽進行受到影響")
+                logger.debug(f"   🟡 中等風險 (MODERATE): 5-9 分")
+                logger.debug(f"      • 輕微事故或黃旗事件")
+                logger.debug(f"      • 局部影響比賽進行")
+                logger.debug(f"   🟢 低風險 (LOW): 1-4 分")
+                logger.debug(f"      • 少數輕微事件或調查")
+                logger.debug(f"      • 對比賽影響有限")
+                logger.debug(f"   ⚪ 無風險 (NONE): 0 分")
+                logger.debug(f"      • 比賽進行順利，無重大安全事件")
                 
                 if total_events == 0:
-                    print("\n[SUCCESS] 本場比賽沒有重大事件記錄，安全狀況良好")
+                    logger.info("\n[SUCCESS] 本場比賽沒有重大事件記錄，安全狀況良好")
                 
             else:
-                print("[ERROR] 沒有找到賽事控制消息資料")
+                logger.error("沒有找到賽事控制消息資料")
                 
         except Exception as e:
-            print(f"[ERROR] 簡化事故分析失敗: {e}")
+            logger.error(f"簡化事故分析失敗: {e}")
     
     def _assess_accident_severity(self, accidents, flags, investigations):
         """評估事故嚴重程度 - 完全對應 f1_analysis_cli_new.py 實現"""
@@ -2439,7 +2443,7 @@ class F1AccidentAnalysisComplete:
             }
             
         except Exception as e:
-            print(f"[ERROR] 評估事故嚴重程度時發生錯誤: {e}")
+            logger.error(f"評估事故嚴重程度時發生錯誤: {e}")
             return {
                 'level': "未知 (UNKNOWN)",
                 'description': "無法評估事故嚴重程度",
@@ -2449,9 +2453,9 @@ class F1AccidentAnalysisComplete:
     
     def _debug_race_control_messages(self):
         """調試顯示所有 Race Control Messages 原始數據 - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"\n" + "="*100)
-        print("[DEBUG] FastF1 Race Control Messages 原始數據調試 (All Race Control Messages Debug)")
-        print("="*100)
+        logger.debug(f"\n" + "="*100)
+        logger.debug("FastF1 Race Control Messages 原始數據調試 (All Race Control Messages Debug)")
+        logger.debug("="*100)
         
         try:
             data = self.data_loader.get_loaded_data()
@@ -2459,21 +2463,21 @@ class F1AccidentAnalysisComplete:
             metadata = data['metadata']
             
             if not hasattr(session, 'race_control_messages') or session.race_control_messages is None:
-                print("[ERROR] 沒有找到 race_control_messages 數據")
+                logger.error("沒有找到 race_control_messages 數據")
                 return
             
             messages = session.race_control_messages
             if messages.empty:
-                print("[ERROR] race_control_messages 為空")
+                logger.error("race_control_messages 為空")
                 return
             
-            print(f"[INFO] 總消息數量: {len(messages)}")
-            print(f"[LIST] 可用欄位: {list(messages.columns)}")
-            print(f"📅 賽事: {metadata['year']} {metadata['event_name']}")
+            logger.info(f"總消息數量: {len(messages)}")
+            logger.debug(f"[LIST] 可用欄位: {list(messages.columns)}")
+            logger.debug(f"賽事: {metadata['year']} {metadata['event_name']}")
             
             # 按類別統計
-            print(f"\n[INFO] 按類別統計 (Category):")
-            print("-" * 80)
+            logger.info(f"\n[INFO] 按類別統計 (Category):")
+            logger.debug("-" * 80)
             if 'Category' in messages.columns:
                 category_counts = messages['Category'].value_counts()
                 category_table = PrettyTable()
@@ -2484,13 +2488,13 @@ class F1AccidentAnalysisComplete:
                     percentage = (count / len(messages)) * 100
                     category_table.add_row([str(category), count, f"{percentage:.1f}%"])
                 
-                print(category_table)
+                logger.debug(f"{category_table}")
             else:
-                print("[ERROR] 沒有 Category 欄位")
+                logger.error("沒有 Category 欄位")
             
             # 詳細消息列表
-            print(f"\n[LIST] 完整消息列表 (All Messages):")
-            print("-" * 120)
+            logger.debug(f"\n[LIST] 完整消息列表 (All Messages):")
+            logger.debug("-" * 120)
             
             msg_table = PrettyTable()
             available_columns = ['Time', 'Lap', 'Category', 'Message', 'Flag', 'Scope', 'Sector']
@@ -2510,11 +2514,11 @@ class F1AccidentAnalysisComplete:
                     row.append(value)
                 msg_table.add_row(row)
             
-            print(msg_table)
+            logger.debug(f"{msg_table}")
             
             # 關鍵事件摘要
-            print(f"\n[CRITICAL] 關鍵事件摘要:")
-            print("-" * 80)
+            logger.warning(f"\n[CRITICAL] 關鍵事件摘要:")
+            logger.debug("-" * 80)
             
             key_messages = []
             for _, msg in messages.iterrows():
@@ -2527,22 +2531,22 @@ class F1AccidentAnalysisComplete:
                     key_messages.append(msg)
             
             if key_messages:
-                print(f"發現 {len(key_messages)} 個關鍵消息")
+                logger.debug(f"發現 {len(key_messages)} 個關鍵消息")
                 for i, msg in enumerate(key_messages, 1):
-                    print(f"{i:2d}. 圈數:{msg.get('Lap', 'N/A'):3} | 時間:{str(msg.get('Time', 'N/A'))[:10]:10} | {msg.get('Message', 'N/A')}")
+                    logger.debug(f"{i:2d}. 圈數:{msg.get('Lap', 'N/A'):3} | 時間:{str(msg.get('Time', 'N/A'))[:10]:10} | {msg.get('Message', 'N/A')}")
             else:
-                print("[SUCCESS] 沒有發現關鍵事件消息")
+                logger.info("沒有發現關鍵事件消息")
             
         except Exception as e:
-            print(f"[ERROR] 調試信息顯示失敗: {e}")
+            logger.error(f"調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _debug_track_status(self):
         """調試顯示所有 Track Status 原始數據 - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"\n" + "="*100)
-        print("[DEBUG] FastF1 Track Status 原始數據調試 (All Track Status Debug)")
-        print("="*100)
+        logger.debug(f"\n" + "="*100)
+        logger.debug("FastF1 Track Status 原始數據調試 (All Track Status Debug)")
+        logger.debug("="*100)
         
         try:
             data = self.data_loader.get_loaded_data()
@@ -2550,21 +2554,21 @@ class F1AccidentAnalysisComplete:
             metadata = data['metadata']
             
             if not hasattr(session, 'track_status') or session.track_status is None:
-                print("[ERROR] 沒有找到 track_status 數據")
+                logger.error("沒有找到 track_status 數據")
                 return
             
             track_status = session.track_status
             if track_status.empty:
-                print("[ERROR] track_status 為空")
+                logger.error("track_status 為空")
                 return
             
-            print(f"[INFO] 總狀態記錄數量: {len(track_status)}")
-            print(f"[LIST] 可用欄位: {list(track_status.columns)}")
-            print(f"📅 賽事: {metadata['year']} {metadata['event_name']}")
+            logger.info(f"總狀態記錄數量: {len(track_status)}")
+            logger.debug(f"[LIST] 可用欄位: {list(track_status.columns)}")
+            logger.debug(f"賽事: {metadata['year']} {metadata['event_name']}")
             
             # 按狀態碼統計
-            print(f"\n[INFO] 按狀態碼統計 (Status Code):")
-            print("-" * 80)
+            logger.info(f"\n[INFO] 按狀態碼統計 (Status Code):")
+            logger.debug("-" * 80)
             
             status_mapping = {
                 '1': '🟢 綠旗 (Track Clear)',
@@ -2587,13 +2591,13 @@ class F1AccidentAnalysisComplete:
                     percentage = (count / len(track_status)) * 100
                     status_table.add_row([status_code, meaning, count, f"{percentage:.1f}%"])
                 
-                print(status_table)
+                logger.debug(f"{status_table}")
             else:
-                print("[ERROR] 沒有 Status 欄位")
+                logger.error("沒有 Status 欄位")
             
             # 詳細狀態列表
-            print(f"\n[LIST] 完整狀態變化記錄:")
-            print("-" * 120)
+            logger.debug(f"\n[LIST] 完整狀態變化記錄:")
+            logger.debug("-" * 120)
             
             status_table = PrettyTable()
             available_columns = ['Time', 'Status', 'Message']
@@ -2618,27 +2622,27 @@ class F1AccidentAnalysisComplete:
                 
                 status_table.add_row(row)
             
-            print(status_table)
+            logger.debug(f"{status_table}")
             
         except Exception as e:
-            print(f"[ERROR] Track Status 調試信息顯示失敗: {e}")
+            logger.error(f"Track Status 調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _debug_all_events_detailed(self):
         """顯示完整事件調試信息 - 完全對應 f1_analysis_cli_new.py 實現"""
-        print(f"\n" + "="*120)
-        print("[DEBUG] FastF1 完整事件調試信息 (Complete Events Debug)")
-        print("="*120)
+        logger.debug(f"\n" + "="*120)
+        logger.debug("FastF1 完整事件調試信息 (Complete Events Debug)")
+        logger.debug("="*120)
         
         try:
             data = self.data_loader.get_loaded_data()
             session = data['session']
             metadata = data['metadata']
             
-            print(f"📅 賽事資訊: {metadata['year']} {metadata['event_name']} ({metadata['session_type']})")
-            print(f"📍 地點: {metadata['location']}")
-            print(f"[INFO] 已載入數據摘要:")
+            logger.debug(f"賽事資訊: {metadata['year']} {metadata['event_name']} ({metadata['session_type']})")
+            logger.debug(f"📍 地點: {metadata['location']}")
+            logger.info(f"已載入數據摘要:")
             
             # 數據源檢查
             data_sources = {
@@ -2665,59 +2669,59 @@ class F1AccidentAnalysisComplete:
                         count = 1 if is_available else 0
                     
                     status = "[SUCCESS]" if is_available else "[ERROR]"
-                    print(f"   {status} {name}: {count} 筆記錄")
+                    logger.debug(f"   {status} {name}: {count} 筆記錄")
                     
                     if is_available:
                         available_sources.append(source)
                 else:
-                    print(f"   [ERROR] {name}: 未載入")
+                    logger.error(f"   [ERROR] {name}: 未載入")
             
             # 1. 賽事控制消息詳細分析
             if 'race_control_messages' in available_sources:
-                print(f"\n[DEBUG] 1. 賽事控制消息詳細分析:")
-                print("-" * 100)
+                logger.debug(f"\n[DEBUG] 1. 賽事控制消息詳細分析:")
+                logger.debug("-" * 100)
                 
                 messages = data['race_control_messages']
-                print(f"   [LIST] 總消息數: {len(messages)}")
-                print(f"   [INFO] 欄位結構: {list(messages.columns)}")
+                logger.debug(f"   [LIST] 總消息數: {len(messages)}")
+                logger.info(f"   [INFO] 欄位結構: {list(messages.columns)}")
                 
                 # 消息類型分析
                 if 'Category' in messages.columns:
                     categories = messages['Category'].value_counts()
-                    print(f"   📂 消息類別分布:")
+                    logger.debug(f"   📂 消息類別分布:")
                     for category, count in categories.items():
-                        print(f"      • {category}: {count} 筆")
+                        logger.debug(f"      • {category}: {count} 筆")
                 
                 # 關鍵字分析
-                print(f"   🔤 關鍵字出現頻率:")
+                logger.debug(f"   🔤 關鍵字出現頻率:")
                 keywords = ['ACCIDENT', 'INCIDENT', 'YELLOW', 'RED', 'SAFETY CAR', 'VSC', 'PENALTY', 'FLAG']
                 for keyword in keywords:
                     count = messages['Message'].str.contains(keyword, case=False, na=False).sum()
                     if count > 0:
-                        print(f"      • {keyword}: {count} 次")
+                        logger.debug(f"      • {keyword}: {count} 次")
             
             # 2. 賽道狀態分析
             if 'track_status' in available_sources:
-                print(f"\n[DEBUG] 2. 賽道狀態詳細分析:")
-                print("-" * 100)
+                logger.debug(f"\n[DEBUG] 2. 賽道狀態詳細分析:")
+                logger.debug("-" * 100)
                 
                 track_status = data['track_status']
-                print(f"   [LIST] 總狀態記錄: {len(track_status)}")
+                logger.debug(f"   [LIST] 總狀態記錄: {len(track_status)}")
                 
                 if 'Status' in track_status.columns:
                     status_counts = track_status['Status'].value_counts()
-                    print(f"   [INFO] 狀態分布:")
+                    logger.info(f"   [INFO] 狀態分布:")
                     status_mapping = {
                         '1': '綠旗', '2': '黃旗', '3': '紅旗', 
                         '4': 'VSC', '5': '安全車', '6': '起跑', '7': '結束'
                     }
                     for status, count in status_counts.items():
                         meaning = status_mapping.get(str(status), f'未知({status})')
-                        print(f"      • {meaning}: {count} 次")
+                        logger.debug(f"      • {meaning}: {count} 次")
             
             # 3. 事故分析總結
-            print(f"\n[DEBUG] 3. 事故分析總結:")
-            print("-" * 100)
+            logger.debug(f"\n[DEBUG] 3. 事故分析總結:")
+            logger.debug("-" * 100)
             
             accident_keywords = ['ACCIDENT', 'COLLISION', 'CRASH', 'INCIDENT', 'CONTACT']
             safety_keywords = ['SAFETY CAR', 'VSC', 'VIRTUAL SAFETY CAR']
@@ -2740,26 +2744,26 @@ class F1AccidentAnalysisComplete:
                     if any(keyword in msg_text for keyword in flag_keywords):
                         flag_count += 1
                 
-                print(f"   [CRITICAL] 事故相關事件: {accident_count} 起")
-                print(f"   🚗 安全車相關: {safety_count} 次")
-                print(f"   [FINISH] 旗幟事件: {flag_count} 次")
+                logger.warning(f"   [CRITICAL] 事故相關事件: {accident_count} 起")
+                logger.debug(f"   🚗 安全車相關: {safety_count} 次")
+                logger.debug(f"   [FINISH] 旗幟事件: {flag_count} 次")
                 
                 total_incidents = accident_count + safety_count + flag_count
                 if total_incidents == 0:
-                    print(f"   [SUCCESS] 比賽進行順利，無重大安全事件")
+                    logger.info(f"   [SUCCESS] 比賽進行順利，無重大安全事件")
                 else:
                     risk_level = "低" if total_incidents <= 3 else "中" if total_incidents <= 8 else "高"
-                    print(f"   [WARNING]  總體風險評估: {risk_level} (共 {total_incidents} 個安全事件)")
+                    logger.warning(f"   [WARNING]  總體風險評估: {risk_level} (共 {total_incidents} 個安全事件)")
             
         except Exception as e:
-            print(f"[ERROR] 完整事件調試信息顯示失敗: {e}")
+            logger.error(f"完整事件調試信息顯示失敗: {e}")
             import traceback
             traceback.print_exc()
     
     def _display_summary_statistics(self, stats):
         """顯示統計摘要"""
-        print(f"\n[INFO] 事故分析統計摘要:")
-        print("-" * 60)
+        logger.info(f"\n[INFO] 事故分析統計摘要:")
+        logger.debug("-" * 60)
         
         summary_table = PrettyTable()
         summary_table.field_names = ["項目", "數量", "說明"]
@@ -2770,10 +2774,10 @@ class F1AccidentAnalysisComplete:
         summary_table.add_row(["事故事件", stats['accidents'], "碰撞/接觸事件"])
         summary_table.add_row(["處罰事件", stats['penalties'], "警告/處罰/調查"])
         
-        print(summary_table)
+        logger.debug(f"{summary_table}")
         
         # 嚴重程度分布
-        print(f"\n[TARGET] 嚴重程度分布:")
+        logger.debug(f"\n[TARGET] 嚴重程度分布:")
         severity_table = PrettyTable()
         severity_table.field_names = ["嚴重程度", "數量", "百分比"]
         severity_table.align = "l"
@@ -2792,14 +2796,14 @@ class F1AccidentAnalysisComplete:
             display_name = severity_mapping.get(severity, severity)
             severity_table.add_row([display_name, count, f"{percentage:.1f}%"])
         
-        print(severity_table)
+        logger.debug(f"{severity_table}")
 
     # === 專門的子模組分析方法 ===
     
     def run_key_events_summary_only(self):
         """僅執行關鍵事件摘要分析"""
-        print("[DEBUG] 開始關鍵事件摘要分析...")
-        print("[INFO] 分析進站策略中的關鍵事件和轉折點...")
+        logger.debug("開始關鍵事件摘要分析...")
+        logger.info("分析進站策略中的關鍵事件和轉折點...")
         
         try:
             # 載入車隊映射數據
@@ -2807,18 +2811,18 @@ class F1AccidentAnalysisComplete:
             
             # 檢查數據是否已載入
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
-            print("=" * 80)
+            logger.warning(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
+            logger.debug("=" * 80)
             
             # 收集關鍵事件
             key_events = []
@@ -2857,7 +2861,7 @@ class F1AccidentAnalysisComplete:
                 })
             
             if key_events:
-                print(f"[INFO] 發現 {len(key_events)} 個關鍵事件")
+                logger.info(f"發現 {len(key_events)} 個關鍵事件")
                 
                 key_table = PrettyTable()
                 key_table.field_names = ["類型", "時間", "圈數", "事件描述"]
@@ -2867,37 +2871,37 @@ class F1AccidentAnalysisComplete:
                 for event in key_events:
                     key_table.add_row([event['type'], event['time'], event['lap'], event['message'][:80]])
                 
-                print(key_table)
+                logger.debug(f"{key_table}")
             else:
-                print("[SUCCESS] 沒有發現重大關鍵事件")
+                logger.info("沒有發現重大關鍵事件")
             
-            print("[SUCCESS] 關鍵事件摘要分析完成")
+            logger.info("關鍵事件摘要分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 關鍵事件分析失敗: {e}")
+            logger.error(f"關鍵事件分析失敗: {e}")
 
     def run_special_incidents_only(self):
         """僅執行特殊事件報告分析"""
-        print("[CRITICAL] 開始特殊事件報告分析...")
-        print("[INFO] 分析比賽中的特殊事件和異常情況...")
+        logger.warning("[CRITICAL] 開始特殊事件報告分析...")
+        logger.info("分析比賽中的特殊事件和異常情況...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[CRITICAL] 特殊事件報告 (Special Incident Reports)")
-            print("=" * 80)
+            logger.warning(f"\n[CRITICAL] 特殊事件報告 (Special Incident Reports)")
+            logger.debug("=" * 80)
             
             # 統計不同類型事件
             red_flags = 0
@@ -2959,10 +2963,10 @@ class F1AccidentAnalysisComplete:
                         event['description'][:60] + "..." if len(event['description']) > 60 else event['description']
                     ])
                 
-                print(special_table)
+                logger.debug(f"{special_table}")
             
             # 顯示統計總結
-            print(f"\n[STATS] 特殊事件統計:")
+            logger.debug(f"\n[STATS] 特殊事件統計:")
             stats_table = PrettyTable()
             stats_table.field_names = ["事件類型", "發生次數", "影響程度"]
             stats_table.align = "l"
@@ -2973,34 +2977,34 @@ class F1AccidentAnalysisComplete:
             stats_table.add_row(["🟡 黃旗事件", yellow_flags, "低" if yellow_flags > 0 else "無"])
             stats_table.add_row(["[DEBUG] 調查處罰", investigations, "低" if investigations > 0 else "無"])
             
-            print(stats_table)
-            print("[SUCCESS] 特殊事件報告分析完成")
+            logger.debug(f"{stats_table}")
+            logger.info("特殊事件報告分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 特殊事件分析失敗: {e}")
+            logger.error(f"特殊事件分析失敗: {e}")
 
     def run_driver_severity_scores_only(self):
         """僅執行車手嚴重程度分數統計"""
-        print("🏆 開始車手嚴重程度分數統計...")
-        print("[INFO] 分析各車手在比賽中的表現嚴重程度...")
+        logger.debug("🏆 開始車手嚴重程度分數統計...")
+        logger.info("分析各車手在比賽中的表現嚴重程度...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n🏆 車手嚴重程度分數統計 (Driver Severity Scores)")
-            print("=" * 80)
+            logger.debug(f"\n🏆 車手嚴重程度分數統計 (Driver Severity Scores)")
+            logger.debug("=" * 80)
             
             # 計算車手分數
             driver_scores = {}
@@ -3027,7 +3031,7 @@ class F1AccidentAnalysisComplete:
                         driver_scores[driver] = score
             
             if driver_scores:
-                print(f"[INFO] 車手風險分數排行榜:")
+                logger.info(f"車手風險分數排行榜:")
                 severity_table = PrettyTable()
                 severity_table.field_names = ["排名", "車手", "車隊", "總分", "風險等級"]
                 severity_table.align = "l"
@@ -3048,37 +3052,37 @@ class F1AccidentAnalysisComplete:
                     
                     severity_table.add_row([i, driver, team[:15], score, risk_level])
                 
-                print(severity_table)
+                logger.debug(f"{severity_table}")
             else:
-                print("[SUCCESS] 沒有車手事件記錄")
+                logger.info("沒有車手事件記錄")
             
-            print("[SUCCESS] 車手嚴重程度分數統計完成")
+            logger.info("車手嚴重程度分數統計完成")
             
         except Exception as e:
-            print(f"[ERROR] 車手嚴重程度分數分析失敗: {e}")
+            logger.error(f"車手嚴重程度分數分析失敗: {e}")
 
     def run_team_risk_scores_only(self):
         """僅執行車隊風險分數統計"""
-        print("[FINISH] 開始車隊風險分數統計...")
-        print("[INFO] 分析各車隊在比賽中的風險程度...")
+        logger.debug("[FINISH] 開始車隊風險分數統計...")
+        logger.info("分析各車隊在比賽中的風險程度...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[FINISH] 車隊風險分數統計 (Team Risk Scores)")
-            print("=" * 80)
+            logger.debug(f"\n[FINISH] 車隊風險分數統計 (Team Risk Scores)")
+            logger.debug("=" * 80)
             
             # 先計算車手分數
             driver_scores = {}
@@ -3115,7 +3119,7 @@ class F1AccidentAnalysisComplete:
                         team_scores[team] = score
             
             if team_scores:
-                print(f"[FINISH] 車隊風險分數統計:")
+                logger.debug(f"[FINISH] 車隊風險分數統計:")
                 team_table = PrettyTable()
                 team_table.field_names = ["排名", "車隊", "總分", "風險等級"]
                 team_table.align = "l"
@@ -3134,37 +3138,37 @@ class F1AccidentAnalysisComplete:
                     
                     team_table.add_row([i, team, score, risk_level])
                 
-                print(team_table)
+                logger.debug(f"{team_table}")
             else:
-                print("[SUCCESS] 沒有車隊事件記錄")
+                logger.info("沒有車隊事件記錄")
             
-            print("[SUCCESS] 車隊風險分數統計完成")
+            logger.info("車隊風險分數統計完成")
             
         except Exception as e:
-            print(f"[ERROR] 車隊風險分數分析失敗: {e}")
+            logger.error(f"車隊風險分數分析失敗: {e}")
 
     def run_all_incidents_summary_only(self):
         """僅執行所有事件詳細列表分析"""
-        print("[LIST] 開始所有事件詳細列表分析...")
-        print("[INFO] 顯示比賽中所有事件的詳細資訊...")
+        logger.debug("[LIST] 開始所有事件詳細列表分析...")
+        logger.info("顯示比賽中所有事件的詳細資訊...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[LIST] 所有事件詳細列表 (All Incidents Summary)")
-            print("=" * 80)
+            logger.debug(f"\n[LIST] 所有事件詳細列表 (All Incidents Summary)")
+            logger.debug("=" * 80)
             
             # 過濾重要事件
             important_events = []
@@ -3204,8 +3208,8 @@ class F1AccidentAnalysisComplete:
                     })
             
             if important_events:
-                print(f"\n[CRITICAL] 重要事件報告 (共 {len(important_events)} 個事件):")
-                print("=" * 100)
+                logger.warning(f"\n[CRITICAL] 重要事件報告 (共 {len(important_events)} 個事件):")
+                logger.debug("=" * 100)
                 
                 for i, event in enumerate(important_events, 1):
                     # 格式化時間
@@ -3214,19 +3218,19 @@ class F1AccidentAnalysisComplete:
                         time_str = event['time'].strftime('%H:%M')
                     
                     # 三行格式輸出
-                    print(f"事件 #{i:3d} | 圈數: {event['lap']:3} | 時間: {time_str:8} | 車手: {event['driver']:4} | 車隊: {event['team'][:20]:20} | 嚴重度: {event['severity']}")
-                    print(f"英文: {event['message']}")
-                    print(f"中文: {self._translate_event_to_chinese(event['message'])}")
-                    print("-" * 100)
+                    logger.debug(f"事件 #{i:3d} | 圈數: {event['lap']:3} | 時間: {time_str:8} | 車手: {event['driver']:4} | 車隊: {event['team'][:20]:20} | 嚴重度: {event['severity']}")
+                    logger.debug(f"英文: {event['message']}")
+                    logger.debug(f"中文: {self._translate_event_to_chinese(event['message'])}")
+                    logger.debug("-" * 100)
                 
-                print(f"\n總計 {len(important_events)} 個重要事件")
+                logger.debug(f"\n總計 {len(important_events)} 個重要事件")
             else:
-                print("[SUCCESS] 沒有重要事件需要報告")
+                logger.info("沒有重要事件需要報告")
             
-            print("[SUCCESS] 所有事件詳細列表分析完成")
+            logger.info("所有事件詳細列表分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 所有事件分析失敗: {e}")
+            logger.error(f"所有事件分析失敗: {e}")
 
     def _extract_driver_from_message(self, message):
         """從訊息中提取車手代碼"""
@@ -3300,7 +3304,7 @@ def run_accident_analysis_complete(data_loader, f1_analysis_instance=None):
         return True
         
     except Exception as e:
-        print(f"[ERROR] 事故分析執行失敗: {e}")
+        logger.error(f"事故分析執行失敗: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -3314,7 +3318,7 @@ def run_accident_analysis(data_loader, dynamic_team_mapping=None, f1_analysis_in
 def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False):
     """執行事故分析並返回JSON格式結果 - API專用"""
     if enable_debug:
-        print(f"\n[CRITICAL] 執行事故分析模組 (JSON輸出版)...")
+        logger.warning(f"\n[CRITICAL] 執行事故分析模組 (JSON輸出版)...")
     
     try:
         # 創建事故分析器
@@ -3403,7 +3407,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
             }
             
             if enable_debug:
-                print(f"[SUCCESS] 事故分析完成 (JSON)")
+                logger.info(f"事故分析完成 (JSON)")
             return result
         else:
             return {
@@ -3415,7 +3419,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
             
     except Exception as e:
         if enable_debug:
-            print(f"[ERROR] 事故分析模組執行錯誤: {e}")
+            logger.error(f"事故分析模組執行錯誤: {e}")
             import traceback
             traceback.print_exc()
         return {
@@ -3429,8 +3433,8 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
     
     def run_key_events_summary_only(self):
         """僅執行關鍵事件摘要分析"""
-        print("[DEBUG] 開始關鍵事件摘要分析...")
-        print("[INFO] 分析進站策略中的關鍵事件和轉折點...")
+        logger.debug("開始關鍵事件摘要分析...")
+        logger.info("分析進站策略中的關鍵事件和轉折點...")
         
         try:
             # 載入車隊映射數據
@@ -3438,18 +3442,18 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
             
             # 檢查數據是否已載入
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
-            print("=" * 80)
+            logger.warning(f"\n[CRITICAL] 關鍵事件摘要 (Key Events Summary)")
+            logger.debug("=" * 80)
             
             # 收集關鍵事件
             key_events = []
@@ -3488,7 +3492,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                 })
             
             if key_events:
-                print(f"[INFO] 發現 {len(key_events)} 個關鍵事件")
+                logger.info(f"發現 {len(key_events)} 個關鍵事件")
                 
                 key_table = PrettyTable()
                 key_table.field_names = ["類型", "時間", "圈數", "事件描述"]
@@ -3498,37 +3502,37 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                 for event in key_events:
                     key_table.add_row([event['type'], event['time'], event['lap'], event['message'][:80]])
                 
-                print(key_table)
+                logger.debug(f"{key_table}")
             else:
-                print("[SUCCESS] 沒有發現重大關鍵事件")
+                logger.info("沒有發現重大關鍵事件")
             
-            print("[SUCCESS] 關鍵事件摘要分析完成")
+            logger.info("關鍵事件摘要分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 關鍵事件分析失敗: {e}")
+            logger.error(f"關鍵事件分析失敗: {e}")
 
     def run_special_incidents_only(self):
         """僅執行特殊事件報告分析"""
-        print("[CRITICAL] 開始特殊事件報告分析...")
-        print("[INFO] 分析比賽中的特殊事件和異常情況...")
+        logger.warning("[CRITICAL] 開始特殊事件報告分析...")
+        logger.info("分析比賽中的特殊事件和異常情況...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[CRITICAL] 特殊事件報告 (Special Incident Reports)")
-            print("=" * 80)
+            logger.warning(f"\n[CRITICAL] 特殊事件報告 (Special Incident Reports)")
+            logger.debug("=" * 80)
             
             # 統計不同類型事件
             red_flags = 0
@@ -3590,10 +3594,10 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                         event['description'][:60] + "..." if len(event['description']) > 60 else event['description']
                     ])
                 
-                print(special_table)
+                logger.debug(f"{special_table}")
             
             # 顯示統計總結
-            print(f"\n[STATS] 特殊事件統計:")
+            logger.debug(f"\n[STATS] 特殊事件統計:")
             stats_table = PrettyTable()
             stats_table.field_names = ["事件類型", "發生次數", "影響程度"]
             stats_table.align = "l"
@@ -3604,34 +3608,34 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
             stats_table.add_row(["🟡 黃旗事件", yellow_flags, "低" if yellow_flags > 0 else "無"])
             stats_table.add_row(["[DEBUG] 調查處罰", investigations, "低" if investigations > 0 else "無"])
             
-            print(stats_table)
-            print("[SUCCESS] 特殊事件報告分析完成")
+            logger.debug(f"{stats_table}")
+            logger.info("特殊事件報告分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 特殊事件分析失敗: {e}")
+            logger.error(f"特殊事件分析失敗: {e}")
 
     def run_driver_severity_scores_only(self):
         """僅執行車手嚴重程度分數統計"""
-        print("🏆 開始車手嚴重程度分數統計...")
-        print("[INFO] 分析各車手在比賽中的表現嚴重程度...")
+        logger.debug("🏆 開始車手嚴重程度分數統計...")
+        logger.info("分析各車手在比賽中的表現嚴重程度...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n🏆 車手嚴重程度分數統計 (Driver Severity Scores)")
-            print("=" * 80)
+            logger.debug(f"\n🏆 車手嚴重程度分數統計 (Driver Severity Scores)")
+            logger.debug("=" * 80)
             
             # 計算車手分數
             driver_scores = {}
@@ -3658,7 +3662,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                         driver_scores[driver] = score
             
             if driver_scores:
-                print(f"[INFO] 車手風險分數排行榜:")
+                logger.info(f"車手風險分數排行榜:")
                 severity_table = PrettyTable()
                 severity_table.field_names = ["排名", "車手", "車隊", "總分", "風險等級"]
                 severity_table.align = "l"
@@ -3679,37 +3683,37 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                     
                     severity_table.add_row([i, driver, team[:15], score, risk_level])
                 
-                print(severity_table)
+                logger.debug(f"{severity_table}")
             else:
-                print("[SUCCESS] 沒有車手事件記錄")
+                logger.info("沒有車手事件記錄")
             
-            print("[SUCCESS] 車手嚴重程度分數統計完成")
+            logger.info("車手嚴重程度分數統計完成")
             
         except Exception as e:
-            print(f"[ERROR] 車手嚴重程度分數分析失敗: {e}")
+            logger.error(f"車手嚴重程度分數分析失敗: {e}")
 
     def run_team_risk_scores_only(self):
         """僅執行車隊風險分數統計"""
-        print("[FINISH] 開始車隊風險分數統計...")
-        print("[INFO] 分析各車隊的比賽風險程度...")
+        logger.debug("[FINISH] 開始車隊風險分數統計...")
+        logger.info("分析各車隊的比賽風險程度...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[FINISH] 車隊風險分數統計 (Team Risk Scores)")
-            print("=" * 80)
+            logger.debug(f"\n[FINISH] 車隊風險分數統計 (Team Risk Scores)")
+            logger.debug("=" * 80)
             
             # 先計算車手分數
             driver_scores = {}
@@ -3746,7 +3750,7 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                         team_scores[team] = score
             
             if team_scores:
-                print(f"[FINISH] 車隊風險分數統計:")
+                logger.debug(f"[FINISH] 車隊風險分數統計:")
                 team_table = PrettyTable()
                 team_table.field_names = ["排名", "車隊", "總分", "風險等級"]
                 team_table.align = "l"
@@ -3765,37 +3769,37 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                     
                     team_table.add_row([i, team, score, risk_level])
                 
-                print(team_table)
+                logger.debug(f"{team_table}")
             else:
-                print("[SUCCESS] 沒有車隊事件記錄")
+                logger.info("沒有車隊事件記錄")
             
-            print("[SUCCESS] 車隊風險分數統計完成")
+            logger.info("車隊風險分數統計完成")
             
         except Exception as e:
-            print(f"[ERROR] 車隊風險分數分析失敗: {e}")
+            logger.error(f"車隊風險分數分析失敗: {e}")
 
     def run_all_incidents_summary_only(self):
         """僅執行所有事件詳細列表分析"""
-        print("[LIST] 開始所有事件詳細列表分析...")
-        print("[INFO] 顯示比賽中所有事件的詳細資訊...")
+        logger.debug("[LIST] 開始所有事件詳細列表分析...")
+        logger.info("顯示比賽中所有事件的詳細資訊...")
         
         try:
             # 載入車隊映射數據
             self._load_driver_team_mapping_if_needed()
             
             if not self._check_data_loaded():
-                print("[ERROR] 數據未載入，請先載入賽事數據")
+                logger.error("數據未載入，請先載入賽事數據")
                 return
             
             loaded_data = self.data_loader.loaded_data
             race_control_messages = loaded_data.get('race_control_messages')
             
             if race_control_messages is None or race_control_messages.empty:
-                print("[ERROR] 沒有找到 race_control_messages")
+                logger.error("沒有找到 race_control_messages")
                 return
             
-            print(f"\n[LIST] 所有事件詳細列表 (All Incidents Summary)")
-            print("=" * 80)
+            logger.debug(f"\n[LIST] 所有事件詳細列表 (All Incidents Summary)")
+            logger.debug("=" * 80)
             
             # 過濾重要事件
             important_events = []
@@ -3835,8 +3839,8 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                     })
             
             if important_events:
-                print(f"\n[CRITICAL] 重要事件報告 (共 {len(important_events)} 個事件):")
-                print("=" * 100)
+                logger.warning(f"\n[CRITICAL] 重要事件報告 (共 {len(important_events)} 個事件):")
+                logger.debug("=" * 100)
                 
                 for i, event in enumerate(important_events, 1):
                     # 格式化時間
@@ -3845,19 +3849,19 @@ def run_accident_analysis_json(data_loader, dynamic_team_mapping=None, f1_analys
                         time_str = event['time'].strftime('%H:%M')
                     
                     # 三行格式輸出
-                    print(f"事件 #{i:3d} | 圈數: {event['lap']:3} | 時間: {time_str:8} | 車手: {event['driver']:4} | 車隊: {event['team'][:20]:20} | 嚴重度: {event['severity']}")
-                    print(f"英文: {event['message']}")
-                    print(f"中文: {self._translate_event_to_chinese(event['message'])}")
-                    print("-" * 100)
+                    logger.debug(f"事件 #{i:3d} | 圈數: {event['lap']:3} | 時間: {time_str:8} | 車手: {event['driver']:4} | 車隊: {event['team'][:20]:20} | 嚴重度: {event['severity']}")
+                    logger.debug(f"英文: {event['message']}")
+                    logger.debug(f"中文: {self._translate_event_to_chinese(event['message'])}")
+                    logger.debug("-" * 100)
                 
-                print(f"\n總計 {len(important_events)} 個重要事件")
+                logger.debug(f"\n總計 {len(important_events)} 個重要事件")
             else:
-                print("[SUCCESS] 沒有重要事件需要報告")
+                logger.info("沒有重要事件需要報告")
             
-            print("[SUCCESS] 所有事件詳細列表分析完成")
+            logger.info("所有事件詳細列表分析完成")
             
         except Exception as e:
-            print(f"[ERROR] 所有事件分析失敗: {e}")
+            logger.error(f"所有事件分析失敗: {e}")
 
     def _determine_event_severity(self, message):
         """確定事件嚴重程度"""

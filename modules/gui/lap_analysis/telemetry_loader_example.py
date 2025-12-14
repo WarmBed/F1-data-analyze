@@ -10,6 +10,9 @@ from PyQt5.QtCore import QObject, pyqtSignal
 
 from .telemetry_data_loader_base import TelemetryDataLoader, create_telemetry_loader
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 class ExampleUsage(QObject):
     """使用示例類"""
     
@@ -44,7 +47,7 @@ class ExampleUsage(QObject):
     
     def load_speed_comparison(self):
         """載入速度比較數據示例"""
-        print("開始載入速度比較數據...")
+        logger.debug("開始載入速度比較數據...")
         success = self.speed_loader.load_telemetry_data(
             year=2025,
             race="Japan", 
@@ -54,11 +57,11 @@ class ExampleUsage(QObject):
             lap1=1,
             lap2=1
         )
-        print(f"速度載入啟動: {success}")
+        logger.debug(f"速度載入啟動: {success}")
     
     def load_rpm_analysis(self):
         """載入RPM分析數據示例"""
-        print("開始載入RPM分析數據...")
+        logger.debug("開始載入RPM分析數據...")
         success = self.rpm_loader.load_telemetry_data(
             year=2025,
             race="Japan",
@@ -66,11 +69,11 @@ class ExampleUsage(QObject):
             driver1="HAM",
             lap1=1
         )
-        print(f"RPM載入啟動: {success}")
+        logger.debug(f"RPM載入啟動: {success}")
     
     def load_gear_analysis(self):
         """載入檔位分析數據示例"""
-        print("開始載入檔位分析數據...")
+        logger.debug("開始載入檔位分析數據...")
         success = self.gear_loader.load_telemetry_data(
             year=2025,
             race="Japan",
@@ -80,48 +83,49 @@ class ExampleUsage(QObject):
             lap1=1,
             lap2=1
         )
-        print(f"檔位載入啟動: {success}")
+        logger.debug(f"檔位載入啟動: {success}")
     
     def on_speed_data_loaded(self, data):
         """處理速度數據載入完成"""
-        print("✅ 速度數據載入完成!")
-        print(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
-        print(f"顯示名稱: {data.get('metadata', {}).get('display_name')}")
+        logger.info("速度數據載入完成!")
+        logger.debug(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
+        logger.debug(f"顯示名稱: {data.get('metadata', {}).get('display_name')}")
         
         speed_data = data.get('speed_data', {})
         distance_count = len(speed_data.get('distance', []))
-        print(f"距離數據點數: {distance_count}")
+        logger.debug(f"距離數據點數: {distance_count}")
     
     def on_rpm_data_loaded(self, data):
         """處理RPM數據載入完成"""
-        print("✅ RPM數據載入完成!")
-        print(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
+        logger.info("RPM數據載入完成!")
+        logger.debug(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
         
         rpm_data = data.get('rpm_data', {})
         distance_count = len(rpm_data.get('distance', []))
-        print(f"距離數據點數: {distance_count}")
+        logger.debug(f"距離數據點數: {distance_count}")
     
     def on_gear_data_loaded(self, data):
         """處理檔位數據載入完成"""
-        print("✅ 檔位數據載入完成!")
-        print(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
+        logger.info("檔位數據載入完成!")
+        logger.debug(f"數據類型: {data.get('metadata', {}).get('telemetry_type')}")
         
         gear_data = data.get('gear_data', {})
         distance_count = len(gear_data.get('distance', []))
-        print(f"距離數據點數: {distance_count}")
+        logger.debug(f"距離數據點數: {distance_count}")
     
     def on_load_error(self, error_msg):
         """處理載入錯誤"""
-        print(f"❌ 載入錯誤: {error_msg}")
+        logger.error(f"載入錯誤: {error_msg}")
     
     def on_status_changed(self, status):
         """處理狀態變更"""
-        print(f"📊 狀態: {status}")
+        logger.debug(f"狀態: {status}")
 
 
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QTimer
+
     
     app = QApplication(sys.argv)
     
@@ -136,10 +140,10 @@ if __name__ == "__main__":
     # 5秒後退出
     QTimer.singleShot(5000, app.quit)
     
-    print("=== TelemetryDataLoader 基類使用示例 ===")
-    print("支援的遙測類型:")
+    logger.debug("=== TelemetryDataLoader 基類使用示例 ===")
+    logger.debug("支援的遙測類型:")
     for telemetry_type, config in TelemetryDataLoader.TELEMETRY_TYPES.items():
-        print(f"  - {telemetry_type}: {config['display_name']} ({config['unit']})")
-    print()
+        logger.debug(f"  - {telemetry_type}: {config['display_name']} ({config['unit']})")
+    logger.debug("")
     
     sys.exit(app.exec_())

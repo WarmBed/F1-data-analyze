@@ -19,6 +19,9 @@ from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWhe
 # 導入國際化模組
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -32,13 +35,13 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+    logger.warning("連動管理器導入失敗，將使用舊版連動功能")
 
 # 導入統一圖表基類的主題配置
 try:
     from modules.gui.base.universal_chart_widget_base import ChartTheme
 except ImportError:
-    print("[WARNING] 統一圖表基類導入失敗，將使用預設配置")
+    logger.warning("統一圖表基類導入失敗，將使用預設配置")
     class ChartTheme:
         AXIS_TITLE_FONT = QFont("Microsoft YaHei", 7)
         TEXT_COLOR = QColor(50, 50, 50)
@@ -199,7 +202,7 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
                     # ✅ 使用 tr() 進行國際化 - vs 格式（單行標籤）
                     lap_vs_format = tr('lap_vs_lap_format', '{driver} 第{lap1}圈 vs 第{lap2}圈')
                     driver1_name = lap_vs_format.format(driver=original_driver, lap1=lap1, lap2=lap2)
-                    print(f"[SPEEDDIFF_CHART] 🔄 雙圈比較模式: {driver1_name}")
+                    logger.debug(f"[SPEEDDIFF_CHART] 🔄 雙圈比較模式: {driver1_name}")
         
         self.speed_data = speed
         self.driver1_speeddiff = driver1_speeddiff
@@ -242,7 +245,7 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             self.min_speeddiff = min(self.min_speeddiff, -100)
             self.max_speeddiff = max(self.max_speeddiff, 100)
             
-            print(f"[speeddiff_CHART] 動態Y軸範圍: {self.min_speeddiff:.1f} 到 {self.max_speeddiff:.1f}")
+            logger.debug(f"[speeddiff_CHART] 動態Y軸範圍: {self.min_speeddiff:.1f} 到 {self.max_speeddiff:.1f}")
         else:
             # 沒有數據時使用預設範圍
             self.min_speeddiff = -100
@@ -262,12 +265,12 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         - Speed Analysis: self.distance_data (原始距離), self.speed_data (原始速度)
         - Speed Diff: self.speed_data (實際是距離/時間), self.driver1_speeddiff (速度差)
         """
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 6: SpeeddiffChartWidget.set_time_axis_mode 被調用")
-        print(f"🕒 [TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
-        print(f"[SPEEDDIFF_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 6: SpeeddiffChartWidget.set_time_axis_mode 被調用")
+        logger.debug(f"[TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[SPEEDDIFF_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
         self.use_time_axis = use_time_axis
-        print(f"🕒 [TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
         
         # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
         if use_time_axis and self.driver1_time:
@@ -278,13 +281,13 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
             
             self.min_distance = min(all_time_values)
             self.max_distance = max(all_time_values)
-            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+            logger.debug(f"[TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
         elif self.speed_data:
             # ✅ 修復：使用 self.speed_data (實際存儲距離)，不是 self.distance_data
             # Speed Diff 的 speed_data 變數實際存儲的是距離或時間軸數據
             self.min_distance = min(self.speed_data)
             self.max_distance = max(self.speed_data)
-            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+            logger.debug(f"[TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
         
         # 重置視圖狀態
         self.view_min_distance = None
@@ -294,17 +297,17 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         self.show_fixed_line = False
         self.fixed_distance_value = None
         
-        print(f"🕒 [TIME_AXIS_DEBUG]   視圖狀態已重置")
-        print(f"🕒 [TIME_AXIS_DEBUG]   調用 update() 和 repaint()")
+        logger.debug(f"[TIME_AXIS_DEBUG]   視圖狀態已重置")
+        logger.debug(f"[TIME_AXIS_DEBUG]   調用 update() 和 repaint()")
         
         # 強制重繪
         self.update()
         self.repaint()
-        print(f"🕒 [TIME_AXIS_DEBUG] ✅ set_time_axis_mode 完成")
+        logger.info(f"[TIME_AXIS_DEBUG] ✅ set_time_axis_mode 完成")
     
     def reset_view(self):
         """重置視圖到原始範圍"""
-        print(f"[SPEEDDIFF_CHART] 🔄 reset_view() 被調用")
+        logger.debug(f"[SPEEDDIFF_CHART] 🔄 reset_view() 被調用")
         self.view_min_speed = None
         self.view_max_speed = None
         self.view_min_speeddiff = None
@@ -312,9 +315,9 @@ class speeddiffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageD
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
-        print(f"[SPEEDDIFF_CHART] ✅ 視圖範圍已重置，調用 repaint()")
+        logger.info(f"[SPEEDDIFF_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()
-        print(f"[SPEEDDIFF_CHART] ✅ reset_view() 完成")
+        logger.info(f"[SPEEDDIFF_CHART] ✅ reset_view() 完成")
     
     def reset_data(self):
         """重置所有數據和視圖"""
@@ -1321,7 +1324,7 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
     def set_statistics_visibility(self, visible: bool) -> bool:
         """設置統計面板顯示狀態 - 供分析模組管理器調用"""
         try:
-            print(f"[speeddiff_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            logger.debug(f"[speeddiff_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
             
             if visible:
                 # 顯示統計面板
@@ -1333,11 +1336,11 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 # 隱藏整個統計容器
                 self.stats_container.setVisible(False)
             
-            print(f"[speeddiff_CHART] ✅ 統計面板顯示狀態設置完成")
+            logger.info(f"[speeddiff_CHART] ✅ 統計面板顯示狀態設置完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [speeddiff_CHART] 設置統計面板顯示狀態失敗: {e}")
+            logger.error(f"[speeddiff_CHART] 設置統計面板顯示狀態失敗: {e}")
             return False
     
     def set_time_axis_mode(self, use_time_axis: bool):
@@ -1433,7 +1436,7 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
-            print(f"[ERROR] 更新狀態資訊失敗: {e}")
+            logger.error(f"更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
             self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
             self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
@@ -1443,11 +1446,11 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
         self.current_data = data
         
         try:
-            print(f"[speeddiff_CHART] ========== 更新速度差數據 ==========")
-            print(f"[speeddiff_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
+            logger.debug(f"[speeddiff_CHART] ========== 更新速度差數據 ==========")
+            logger.debug(f"[speeddiff_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
             
             if not data:
-                print(f"[ERROR] [speeddiff_CHART] 數據為空")
+                logger.error(f"[speeddiff_CHART] 數據為空")
                 return
             
             # 提取元數據
@@ -1455,18 +1458,18 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
             speeddiff_data = data.get('speeddiff_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[speeddiff_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
-            print(f"[speeddiff_CHART] speeddiff_data 鍵: {list(speeddiff_data.keys()) if speeddiff_data else 'None'}")
-            print(f"[speeddiff_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
+            logger.debug(f"[speeddiff_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
+            logger.debug(f"[speeddiff_CHART] speeddiff_data 鍵: {list(speeddiff_data.keys()) if speeddiff_data else 'None'}")
+            logger.debug(f"[speeddiff_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
             
             # 提取車手信息和賽道信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
             reference_info = metadata.get('reference_info', '')
             
-            print(f"[speeddiff_CHART] 車手數量: {len(drivers)}")
-            print(f"[speeddiff_CHART] 賽道區段: {len(sectors)}")
-            print(f"[speeddiff_CHART] 參考信息: {reference_info}")
+            logger.debug(f"[speeddiff_CHART] 車手數量: {len(drivers)}")
+            logger.debug(f"[speeddiff_CHART] 賽道區段: {len(sectors)}")
+            logger.debug(f"[speeddiff_CHART] 參考信息: {reference_info}")
             
             # 提取速度差數據 - 單一速度差曲線
             speed = speeddiff_data.get('speed', [])
@@ -1478,11 +1481,11 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
             driver1_time = speeddiff_data.get('driver1_time_seconds', [])
             driver2_time = speeddiff_data.get('driver2_time_seconds', [])
             
-            print(f"[speeddiff_CHART] 距離數據點: {len(speed)}")
-            print(f"[speeddiff_CHART] 速度差數據點: {len(cumulative_diff)}")
-            print(f"[speeddiff_CHART] 參考: {reference}")
-            print(f"[speeddiff_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
-            print(f"[speeddiff_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
+            logger.debug(f"[speeddiff_CHART] 距離數據點: {len(speed)}")
+            logger.debug(f"[speeddiff_CHART] 速度差數據點: {len(cumulative_diff)}")
+            logger.debug(f"[speeddiff_CHART] 參考: {reference}")
+            logger.debug(f"[speeddiff_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
+            logger.debug(f"[speeddiff_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
             
             # 設置車手名稱（速度差分析為單一曲線）
             lap1 = None
@@ -1492,30 +1495,30 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 lap1 = drivers[0].get('lap_number')
                 lap2 = drivers[1].get('lap_number')
                 driver1_name = f"{drivers[0].get('code', 'Driver1')} vs {drivers[1].get('code', 'Driver2')}"
-                print(f"[speeddiff_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
-                print(f"[speeddiff_CHART] 速度差標籤: {driver1_name}")
+                logger.debug(f"[speeddiff_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
+                logger.debug(f"[speeddiff_CHART] 速度差標籤: {driver1_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
                 lap1 = drivers[0].get('lap_number')
-                print(f"[speeddiff_CHART] 單車手模式: {driver1_name}")
+                logger.debug(f"[speeddiff_CHART] 單車手模式: {driver1_name}")
             
             # 速度差分析總是單一速度差曲線模式
-            print(f"[speeddiff_CHART] 🎯 使用單一速度差曲線模式")
+            logger.debug(f"[speeddiff_CHART] 🎯 使用單一速度差曲線模式")
             
             # 檢查數據完整性
             # 🔴 防御性檢查：chart_widget 可能在 cleanup() 後被設為 None
             if self.chart_widget is None:
-                print(f"[WARNING] [speeddiff_CHART] ⚠️ chart_widget 已被清理，跳過數據更新")
+                logger.warning(f"[speeddiff_CHART] ⚠️ chart_widget 已被清理，跳過數據更新")
                 return
             
             if not speed or not cumulative_diff:
-                print(f"[ERROR] [speeddiff_CHART] 關鍵數據缺失")
-                print(f"[speeddiff_CHART] speed: {len(speed) if speed else 0} 點")
-                print(f"[speeddiff_CHART] cumulative_diff: {len(cumulative_diff) if cumulative_diff else 0} 點")
+                logger.error(f"[speeddiff_CHART] 關鍵數據缺失")
+                logger.debug(f"[speeddiff_CHART] speed: {len(speed) if speed else 0} 點")
+                logger.debug(f"[speeddiff_CHART] cumulative_diff: {len(cumulative_diff) if cumulative_diff else 0} 點")
                 return
             
             # 更新圖表 - 使用單一速度差曲線
-            print(f"[speeddiff_CHART] 📊 更新速度差圖表...")
+            logger.debug(f"[speeddiff_CHART] 📊 更新速度差圖表...")
             self.chart_widget.set_speeddiff_data(
                 speed=speed,
                 driver1_speeddiff=cumulative_diff,  # 速度差作為主要曲線
@@ -1528,21 +1531,21 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 driver1_time=driver1_time,  # 🆕 時間軸數據
                 driver2_time=driver2_time   # 🆕 時間軸數據
             )
-            print(f"[speeddiff_CHART] ✅ 圖表更新完成")
+            logger.info(f"[speeddiff_CHART] ✅ 圖表更新完成")
             
             # 更新統計表格
-            print(f"[speeddiff_CHART] 📋 更新統計表格...")
+            logger.debug(f"[speeddiff_CHART] 📋 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, "")
             
             # 更新狀態資訊顯示
-            print(f"[speeddiff_CHART] 📋 更新狀態資訊...")
+            logger.debug(f"[speeddiff_CHART] 📋 更新狀態資訊...")
             self._update_status_info(data)
             
             self.chart_updated.emit()
-            print(f"[speeddiff_CHART] ✅ 全部更新完成")
+            logger.info(f"[speeddiff_CHART] ✅ 全部更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [speeddiff CHART WIDGET] 更新數據失敗: {e}")
+            logger.error(f"[speeddiff CHART WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1562,7 +1565,7 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 return self._generate_mock_speeddiff_data()
                 
         except Exception as e:
-            print(f"[ERROR] [speeddiff_CHART_WIDGET] 準備圖表數據失敗: {e}")
+            logger.error(f"[speeddiff_CHART_WIDGET] 準備圖表數據失敗: {e}")
             return self._generate_mock_speeddiff_data()
     
     def _parse_speeddiff_telemetry(self, speeddiff_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1595,10 +1598,10 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
         """更新統計表格 - 採用速度分析的表格風格"""
-        print(f"[speeddiff_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
+        logger.debug(f"[speeddiff_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
         
         if not statistics:
-            print(f"[speeddiff_CHART] ⚠️  statistics 為空")
+            logger.warning(f"[speeddiff_CHART] ⚠️  statistics 為空")
             return
             
         try:
@@ -1606,9 +1609,9 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
             driver2_stats = statistics.get('driver2_stats', {})
             comparison = statistics.get('comparison', {})
             
-            print(f"[speeddiff_CHART] driver1_stats: {driver1_stats}")
-            print(f"[speeddiff_CHART] driver2_stats: {driver2_stats}")
-            print(f"[speeddiff_CHART] comparison: {comparison}")
+            logger.debug(f"[speeddiff_CHART] driver1_stats: {driver1_stats}")
+            logger.debug(f"[speeddiff_CHART] driver2_stats: {driver2_stats}")
+            logger.debug(f"[speeddiff_CHART] comparison: {comparison}")
             
             # 準備表格數據
             rows = [
@@ -1626,7 +1629,7 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                  f"{comparison.get('min_speeddiff_diff', 0):.1f}")
             ]
             
-            print(f"[speeddiff_CHART] 表格數據行: {rows}")
+            logger.debug(f"[speeddiff_CHART] 表格數據行: {rows}")
             
             # 設置表格行數和數據
             self.stats_table.setRowCount(len(rows))
@@ -1653,10 +1656,10 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
             # 自動調整表格高度
             self._adjust_table_height()
             
-            print(f"[speeddiff CHART WIDGET] ✅ 統計表格更新完成")
+            logger.info(f"[speeddiff CHART WIDGET] ✅ 統計表格更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [speeddiff CHART WIDGET] 更新統計表格失敗: {e}")
+            logger.error(f"[speeddiff CHART WIDGET] 更新統計表格失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1670,15 +1673,15 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                              lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 與速度分析模組保持一致"""
         try:
-            print(f"[speeddiff_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
-            print(f"[speeddiff_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            logger.debug(f"[speeddiff_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
+            logger.debug(f"[speeddiff_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
             
             # 更新圈數顯示
             self.set_lap_numbers(lap1, lap2)
             
             # 如果有數據載入器，重新載入數據
             if hasattr(self, 'speeddiff_loader'):
-                print(f"[speeddiff_CHART_WIDGET] 📦 找到speeddiff數據載入器，準備重新載入...")
+                logger.debug(f"[speeddiff_CHART_WIDGET] 📦 找到speeddiff數據載入器，準備重新載入...")
                 
                 session_info = {
                     'year': int(year) if year.isdigit() else year,
@@ -1692,14 +1695,14 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                 }
                 
                 self.speeddiff_loader.load_speeddiff_analysis_data(session_info)
-                print(f"[speeddiff_CHART_WIDGET] ✅ 數據重新載入請求已發送")
+                logger.info(f"[speeddiff_CHART_WIDGET] ✅ 數據重新載入請求已發送")
                 return True
             else:
-                print(f"[speeddiff_CHART_WIDGET] ⚠️ 未找到speeddiff數據載入器，僅更新顯示")
+                logger.warning(f"[speeddiff_CHART_WIDGET] ⚠️ 未找到speeddiff數據載入器，僅更新顯示")
                 return True
                 
         except Exception as e:
-            print(f"[ERROR] [speeddiff_CHART_WIDGET] 更新圈速參數失敗: {e}")
+            logger.error(f"[speeddiff_CHART_WIDGET] 更新圈速參數失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1724,12 +1727,12 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
-        print(f"[SPEEDDIFF_ANALYSIS] 🔄 reset_chart_view() 被調用")
+        logger.debug(f"[SPEEDDIFF_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
-            print(f"[SPEEDDIFF_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
+            logger.info(f"[SPEEDDIFF_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
         else:
-            print(f"[SPEEDDIFF_ANALYSIS] ❌ 未找到 chart_widget 屬性")
+            logger.error(f"[SPEEDDIFF_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""
@@ -1740,7 +1743,7 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
     def cleanup(self):
         """清理 Chart Widget 資源 - 防止記憶體洩漏"""
         try:
-            print(f"[SPEEDDIFF_CHART] 🧹 開始清理資源...")
+            logger.debug(f"[SPEEDDIFF_CHART] 🧹 開始清理資源...")
             
             # 1. 清理 Matplotlib 圖表
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -1750,17 +1753,17 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                         import matplotlib.pyplot as plt
                         plt.close(self.chart_widget.figure)
                         self.chart_widget.figure = None
-                        print(f"[SPEEDDIFF_CHART]   ✅ Matplotlib 圖表已清理")
+                        logger.info(f"[SPEEDDIFF_CHART] ✅ Matplotlib 圖表已清理")
                     except Exception as e:
-                        print(f"[SPEEDDIFF_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                        logger.warning(f"[SPEEDDIFF_CHART] ⚠️ Matplotlib 清理警告: {e}")
                 
                 if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
                     try:
                         self.chart_widget.canvas.deleteLater()
                         self.chart_widget.canvas = None
-                        print(f"[SPEEDDIFF_CHART]   ✅ Canvas 已清理")
+                        logger.info(f"[SPEEDDIFF_CHART] ✅ Canvas 已清理")
                     except Exception as e:
-                        print(f"[SPEEDDIFF_CHART]   ⚠️ Canvas 清理警告: {e}")
+                        logger.warning(f"[SPEEDDIFF_CHART] ⚠️ Canvas 清理警告: {e}")
             
             # 2. 清理 QTableWidget 中的所有 Item
             if hasattr(self, 'stats_table') and self.stats_table:
@@ -1774,44 +1777,44 @@ class SpeeddiffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysis
                     self.stats_table.clear()
                     self.stats_table.deleteLater()
                     self.stats_table = None
-                    print(f"[SPEEDDIFF_CHART]   ✅ QTableWidget 已完全清理")
+                    logger.info(f"[SPEEDDIFF_CHART] ✅ QTableWidget 已完全清理")
                 except Exception as e:
-                    print(f"[SPEEDDIFF_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+                    logger.warning(f"[SPEEDDIFF_CHART] ⚠️ QTableWidget 清理警告: {e}")
             
             # 3. 斷開 Signal 連接
             if hasattr(self, 'receiver') and self.receiver:
                 try:
                     self.receiver.deleteLater()
                     self.receiver = None
-                    print(f"[SPEEDDIFF_CHART]   ✅ Signal Receiver 已清理")
+                    logger.info(f"[SPEEDDIFF_CHART] ✅ Signal Receiver 已清理")
                 except Exception as e:
-                    print(f"[SPEEDDIFF_CHART]   ⚠️ Receiver 清理警告: {e}")
+                    logger.warning(f"[SPEEDDIFF_CHART] ⚠️ Receiver 清理警告: {e}")
             
             # 4. 清理數據引用
             data_attrs = ['telemetry_data', 'lap_data', 'speeddiff_data', 'driver1_data', 'driver2_data', 'cached_data']
             for attr in data_attrs:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
-            print(f"[SPEEDDIFF_CHART]   ✅ 數據引用已清空")
+            logger.info(f"[SPEEDDIFF_CHART] ✅ 數據引用已清空")
             
             # 5. 清理 ChartWidget
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 try:
                     self.chart_widget.deleteLater()
                     self.chart_widget = None
-                    print(f"[SPEEDDIFF_CHART]   ✅ ChartWidget 已清理")
+                    logger.info(f"[SPEEDDIFF_CHART] ✅ ChartWidget 已清理")
                 except Exception as e:
-                    print(f"[SPEEDDIFF_CHART]   ⚠️ ChartWidget 清理警告: {e}")
+                    logger.warning(f"[SPEEDDIFF_CHART] ⚠️ ChartWidget 清理警告: {e}")
             
             # 6. 清理資料載入器引用
             if hasattr(self, 'speeddiff_loader'):
                 self.speeddiff_loader = None
-                print(f"[SPEEDDIFF_CHART]   ✅ 資料載入器引用已清空")
+                logger.info(f"[SPEEDDIFF_CHART] ✅ 資料載入器引用已清空")
             
-            print(f"[SPEEDDIFF_CHART] ✅ 資源清理完成")
+            logger.info(f"[SPEEDDIFF_CHART] ✅ 資源清理完成")
             
         except Exception as e:
-            print(f"[ERROR] [SPEEDDIFF_CHART] cleanup 失敗: {e}")
+            logger.error(f"[SPEEDDIFF_CHART] cleanup 失敗: {e}")
             import traceback
             traceback.print_exc()
 
@@ -1820,6 +1823,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QTimer
     import sys
+
     
     app = QApplication(sys.argv)
     

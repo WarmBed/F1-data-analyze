@@ -12,6 +12,7 @@ from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url
 from core.gui_settings_manager import gui_settings_manager
+from core.logger import get_logger
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
 from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
     extract_caution_laps,
@@ -23,6 +24,7 @@ from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
 
 
 _ANALYSIS_KEY = "throttle_line_chart_single_driver"
+logger = get_logger(component="ThrottleLineChartDataLoader")
 
 
 # ========================================================================
@@ -43,6 +45,11 @@ class ThrottleLineChartApiWorker(QThread):
 
     def run(self) -> None:  # pragma: no cover - thread run
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_LINE_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(15)
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -54,6 +61,11 @@ class ThrottleLineChartApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_LINE_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -61,6 +73,12 @@ class ThrottleLineChartApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_LINE_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(65)
             response.raise_for_status()
 
@@ -85,12 +103,21 @@ class ThrottleLineChartApiWorker(QThread):
                 "base_url": self.base_url,
             }
 
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[THROTTLE_LINE_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:  # pragma: no cover - network errors
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class ThrottleLineChartDataLoader(UniversalDataLoader):
@@ -143,8 +170,16 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
 
         # 🔍 DEBUG: 讀取初始過濾設定
         initial_filters = self.settings_manager.get_boxplot_settings()
-        print(f"🔍🔍🔍 [DataLoader.__init__] Initial filters from settings_manager: {initial_filters}")
-        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes BEFORE update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
+        logger.debug(
+            "[DataLoader.__init__] Initial filters from settings_manager: %s", initial_filters
+        )
+        logger.debug(
+            "[DataLoader.__init__] Current filter attributes BEFORE update: pit=%s, yellow=%s, red=%s, first_laps=%s",
+            self._filter_pit_laps,
+            self._filter_yellow_flags,
+            self._filter_red_flags,
+            self._filter_first_laps,
+        )
         
         self.update_filter_settings(
             filter_pit_laps=initial_filters.get("filter_pit_laps", True),
@@ -154,16 +189,22 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             reprocess=False,
         )
         
-        print(f"🔍🔍🔍 [DataLoader.__init__] Current filter attributes AFTER update: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
+        logger.debug(
+            "[DataLoader.__init__] Current filter attributes AFTER update: pit=%s, yellow=%s, red=%s, first_laps=%s",
+            self._filter_pit_laps,
+            self._filter_yellow_flags,
+            self._filter_red_flags,
+            self._filter_first_laps,
+        )
 
         try:
             self.settings_manager.boxplot_settings_changed.connect(
                 self._on_global_filter_settings_changed
             )
-            print(f"🔍🔍🔍 [DataLoader.__init__] Successfully connected to boxplot_settings_changed signal")
+            logger.debug("[DataLoader.__init__] Successfully connected to boxplot_settings_changed signal")
         except Exception as exc:  # pragma: no cover - defensive logging
             self._debug(f"無法連接系統設定信號: {exc}")
-            print(f"❌❌❌ [DataLoader.__init__] Failed to connect signal: {exc}")
+            logger.exception("[DataLoader.__init__] Failed to connect signal", exc_info=exc)
 
     # ========================================================================
     # API 支援方法 (仿照 ThrottleBoxPlot)
@@ -482,10 +523,19 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         driver_payload: Dict[str, Any],
         helper_sets: Optional[Dict[str, Any]] = None,
     ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-        print(f"🔍🔍🔍 [_apply_filters] Starting filtering process...")
-        print(f"🔍🔍🔍 [_apply_filters] Input lap_records count: {len(lap_records) if lap_records else 0}")
-        print(f"🔍🔍🔍 [_apply_filters] Filter settings: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
-        print(f"🔍🔍🔍 [_apply_filters] helper_sets provided: {helper_sets is not None}")
+        logger.debug("[_apply_filters] Starting filtering process...")
+        logger.debug(
+            "[_apply_filters] Input lap_records count: %s",
+            len(lap_records) if lap_records else 0,
+        )
+        logger.debug(
+            "[_apply_filters] Filter settings: pit=%s, yellow=%s, red=%s, first_laps=%s",
+            self._filter_pit_laps,
+            self._filter_yellow_flags,
+            self._filter_red_flags,
+            self._filter_first_laps,
+        )
+        logger.debug("[_apply_filters] helper_sets provided: %s", helper_sets is not None)
         
         if not lap_records:
             return list(lap_records), {
@@ -520,12 +570,14 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             flag_labels = helper_sets.get("flag_labels", {})
             red_flag_laps = {lap for lap, label in flag_labels.items() if label == 'R'} if self._filter_red_flags else set()
             
-            print(f"✅✅✅ [_apply_filters] Using helper_sets data:")
-            print(f"  - Caution laps (Yellow Flag): {caution_laps}")
-            print(f"  - Red flag laps: {red_flag_laps}")
+            logger.info("[_apply_filters] Using helper_sets data")
+            logger.debug("[_apply_filters] Caution laps (Yellow Flag): %s", caution_laps)
+            logger.debug("[_apply_filters] Red flag laps: %s", red_flag_laps)
         else:
             # 舊方法：從 driver_payload 提取（可能會失敗）
-            print(f"⚠️⚠️⚠️ [_apply_filters] No helper_sets, falling back to extract_caution_laps/extract_red_flag_laps")
+            logger.warning(
+                "[_apply_filters] No helper_sets, falling back to extract_caution_laps/extract_red_flag_laps"
+            )
             caution_laps = (
                 extract_caution_laps(driver_payload)
                 if self._filter_yellow_flags
@@ -536,8 +588,14 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
                 if self._filter_red_flags
                 else set()
             )
-            print(f"🔍🔍🔍 [_apply_filters] Caution laps (Yellow Flag): {caution_laps if caution_laps else 'EMPTY SET (extracted nothing!)'}")
-            print(f"🔍🔍🔍 [_apply_filters] Red flag laps: {red_flag_laps if red_flag_laps else 'EMPTY SET (extracted nothing!)'}")
+            logger.debug(
+                "[_apply_filters] Caution laps (Yellow Flag): %s",
+                caution_laps if caution_laps else "EMPTY SET (extracted nothing!)",
+            )
+            logger.debug(
+                "[_apply_filters] Red flag laps: %s",
+                red_flag_laps if red_flag_laps else "EMPTY SET (extracted nothing!)",
+            )
         smart_summary = driver_payload.get("smart_markers_summary") or {}
 
         for record in lap_records:
@@ -546,22 +604,22 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             # 過濾前兩圈 (Lap 1 & 2)
             if self._filter_first_laps and lap_number in (1, 2):
                 removed_first_laps += 1
-                print(f"🚫 [_apply_filters] Removed First Lap: {lap_number}")
+                logger.debug("[_apply_filters] Removed First Lap: %s", lap_number)
                 continue
 
             if self._filter_yellow_flags and lap_is_under_caution(lap_number, record, caution_laps):
                 removed_caution += 1
-                print(f"🚫 [_apply_filters] Removed Yellow Flag lap: {lap_number}")
+                logger.debug("[_apply_filters] Removed Yellow Flag lap: %s", lap_number)
                 continue
 
             if self._filter_red_flags and lap_is_under_red_flag(lap_number, record, red_flag_laps):
                 removed_red_flag += 1
-                print(f"🚫 [_apply_filters] Removed Red Flag lap: {lap_number}")
+                logger.debug("[_apply_filters] Removed Red Flag lap: %s", lap_number)
                 continue
 
             if self._filter_pit_laps and lap_is_pit_stop(record, smart_summary):
                 removed_pit += 1
-                print(f"🚫 [_apply_filters] Removed Pit Stop lap: {lap_number}")
+                logger.debug("[_apply_filters] Removed Pit Stop lap: %s", lap_number)
                 continue
 
             filtered.append(record)
@@ -579,10 +637,15 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             "original_laps": len(lap_records),
         }
         self._debug(f"🔍 [Filter Stats] {stats}")
-        print(f"✅✅✅ [_apply_filters] Filtering completed:")
-        print(f"  - Original laps: {len(lap_records)}")
-        print(f"  - Removed Pit: {removed_pit}, Yellow: {removed_caution}, Red: {removed_red_flag}")
-        print(f"  - Remaining laps: {len(filtered)}")
+        logger.info("[_apply_filters] Filtering completed")
+        logger.debug(
+            "[_apply_filters] Original laps: %s; Removed Pit: %s, Yellow: %s, Red: %s; Remaining: %s",
+            len(lap_records),
+            removed_pit,
+            removed_caution,
+            removed_red_flag,
+            len(filtered),
+        )
         return filtered, stats
 
     # ------------------------------------------------------------------
@@ -914,8 +977,21 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         filter_first_laps: Optional[bool] = None,
         reprocess: bool = True,
     ) -> bool:
-        print(f"🔍🔍🔍 [update_filter_settings] Called with: pit={filter_pit_laps}, yellow={filter_yellow_flags}, red={filter_red_flags}, first_laps={filter_first_laps}, reprocess={reprocess}")
-        print(f"🔍🔍🔍 [update_filter_settings] Current values BEFORE: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
+        logger.debug(
+            "[update_filter_settings] Called with: pit=%s, yellow=%s, red=%s, first_laps=%s, reprocess=%s",
+            filter_pit_laps,
+            filter_yellow_flags,
+            filter_red_flags,
+            filter_first_laps,
+            reprocess,
+        )
+        logger.debug(
+            "[update_filter_settings] Current values BEFORE: pit=%s, yellow=%s, red=%s, first_laps=%s",
+            self._filter_pit_laps,
+            self._filter_yellow_flags,
+            self._filter_red_flags,
+            self._filter_first_laps,
+        )
         
         changed = False
 
@@ -923,66 +999,104 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
             new_value = bool(filter_pit_laps)
             if new_value != self._filter_pit_laps:
                 self._debug(f"⚙️ [Settings] filter_pit_laps changed: {self._filter_pit_laps} → {new_value}")
-                print(f"✅✅✅ [update_filter_settings] filter_pit_laps changed: {self._filter_pit_laps} → {new_value}")
+                logger.info(
+                    "[update_filter_settings] filter_pit_laps changed: %s → %s",
+                    self._filter_pit_laps,
+                    new_value,
+                )
                 self._filter_pit_laps = new_value
                 changed = True
             else:
-                print(f"ℹ️ [update_filter_settings] filter_pit_laps unchanged: {self._filter_pit_laps}")
+                logger.debug(
+                    "[update_filter_settings] filter_pit_laps unchanged: %s", self._filter_pit_laps
+                )
 
         if filter_yellow_flags is not None:
             new_value = bool(filter_yellow_flags)
             if new_value != self._filter_yellow_flags:
                 self._debug(f"⚙️ [Settings] filter_yellow_flags changed: {self._filter_yellow_flags} → {new_value}")
-                print(f"✅✅✅ [update_filter_settings] filter_yellow_flags changed: {self._filter_yellow_flags} → {new_value}")
+                logger.info(
+                    "[update_filter_settings] filter_yellow_flags changed: %s → %s",
+                    self._filter_yellow_flags,
+                    new_value,
+                )
                 self._filter_yellow_flags = new_value
                 changed = True
             else:
-                print(f"ℹ️ [update_filter_settings] filter_yellow_flags unchanged: {self._filter_yellow_flags}")
+                logger.debug(
+                    "[update_filter_settings] filter_yellow_flags unchanged: %s", self._filter_yellow_flags
+                )
 
         if filter_red_flags is not None:
             new_value = bool(filter_red_flags)
             if new_value != self._filter_red_flags:
                 self._debug(f"⚙️ [Settings] filter_red_flags changed: {self._filter_red_flags} → {new_value}")
-                print(f"✅✅✅ [update_filter_settings] filter_red_flags changed: {self._filter_red_flags} → {new_value}")
+                logger.info(
+                    "[update_filter_settings] filter_red_flags changed: %s → %s",
+                    self._filter_red_flags,
+                    new_value,
+                )
                 self._filter_red_flags = new_value
                 changed = True
             else:
-                print(f"ℹ️ [update_filter_settings] filter_red_flags unchanged: {self._filter_red_flags}")
+                logger.debug(
+                    "[update_filter_settings] filter_red_flags unchanged: %s", self._filter_red_flags
+                )
 
         if filter_first_laps is not None:
             new_value = bool(filter_first_laps)
             if new_value != self._filter_first_laps:
                 self._debug(f"⚙️ [Settings] filter_first_laps changed: {self._filter_first_laps} → {new_value}")
-                print(f"✅✅✅ [update_filter_settings] filter_first_laps changed: {self._filter_first_laps} → {new_value}")
+                logger.info(
+                    "[update_filter_settings] filter_first_laps changed: %s → %s",
+                    self._filter_first_laps,
+                    new_value,
+                )
                 self._filter_first_laps = new_value
                 changed = True
             else:
-                print(f"ℹ️ [update_filter_settings] filter_first_laps unchanged: {self._filter_first_laps}")
+                logger.debug(
+                    "[update_filter_settings] filter_first_laps unchanged: %s", self._filter_first_laps
+                )
 
         if not changed:
             self._debug(f"⚙️ [Settings] No changes detected (pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps})")
-            print(f"ℹ️ℹ️ℹ️ [update_filter_settings] No changes detected, reprocess={reprocess}")
-            print(f"🔍🔍🔍 [update_filter_settings] Final values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
+            logger.info(
+                "[update_filter_settings] No changes detected, reprocess=%s", reprocess
+            )
+            logger.debug(
+                "[update_filter_settings] Final values: pit=%s, yellow=%s, red=%s, first_laps=%s",
+                self._filter_pit_laps,
+                self._filter_yellow_flags,
+                self._filter_red_flags,
+                self._filter_first_laps,
+            )
             return False
 
-        print(f"✅✅✅ [update_filter_settings] Settings changed! New values: pit={self._filter_pit_laps}, yellow={self._filter_yellow_flags}, red={self._filter_red_flags}, first_laps={self._filter_first_laps}")
+        logger.info(
+            "[update_filter_settings] Settings changed! New values: pit=%s, yellow=%s, red=%s, first_laps=%s",
+            self._filter_pit_laps,
+            self._filter_yellow_flags,
+            self._filter_red_flags,
+            self._filter_first_laps,
+        )
         
         if reprocess and self._last_raw_data is not None:
             try:
                 self._debug(f"🔄 [Reprocess] Rebuilding data with new filter settings...")
-                print(f"🔄🔄🔄 [update_filter_settings] Reprocessing data with new filters...")
+                logger.info("[update_filter_settings] Reprocessing data with new filters...")
                 rebuilt = self._process_data(copy.deepcopy(self._last_raw_data))
-                print(f"✅✅✅ [update_filter_settings] Reprocessing completed successfully")
+                logger.info("[update_filter_settings] Reprocessing completed successfully")
             except Exception as exc:  # pragma: no cover - defensive
                 self._debug(f"重新套用過濾器失敗: {exc}")
-                print(f"❌❌❌ [update_filter_settings] Reprocessing failed: {exc}")
+                logger.exception("[update_filter_settings] Reprocessing failed", exc_info=exc)
                 return False
             self._current_data = rebuilt
             self.data_loaded.emit(rebuilt)
         elif reprocess:
-            print(f"⚠️⚠️⚠️ [update_filter_settings] Reprocess requested but no _last_raw_data available")
+            logger.warning("[update_filter_settings] Reprocess requested but no _last_raw_data available")
         else:
-            print(f"ℹ️ℹ️ℹ️ [update_filter_settings] Reprocess=False, skipping data rebuild")
+            logger.info("[update_filter_settings] Reprocess=False, skipping data rebuild")
 
         return True
 

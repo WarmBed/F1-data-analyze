@@ -35,6 +35,12 @@ from PyQt5.QtWidgets import (
 
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("live_timing.driver_strategy", component="gui")
+
 
 # =============================================================================
 # Throttle Baseline Database Loader (API-ONLY Mode)
@@ -71,7 +77,7 @@ def _load_throttle_baseline_database() -> Dict:
         return _THROTTLE_BASELINE_DATABASE
     
     # API 未設定時使用預設值
-    print("[driver_strategy] Throttle baseline not loaded from API, using defaults")
+    logger.warning("[driver_strategy] Throttle baseline not loaded from API, using defaults")
     return {
         "global_baseline": {
             "full_throttle_ratio": {"mean": 0.35, "std": 0.05},
@@ -563,7 +569,7 @@ class DriverStrategyWidget(QWidget):
             return
         
         # API 失敗，顯示錯誤（禁止本地回退）
-        print("[DRIVER_STRATEGY] API 獲取配置失敗，請確認 API 服務器已啟動")
+        logger.error("[DRIVER_STRATEGY] API 獲取配置失敗，請確認 API 服務器已啟動")
     
     def _load_databases_via_api(self) -> bool:
         """通過 API 獲取所有配置數據庫"""
@@ -588,17 +594,19 @@ class DriverStrategyWidget(QWidget):
                 else:
                     circuits_count = 0
                 
-                print(f"[DRIVER_STRATEGY] 配置載入成功 (API): "
-                      f"track_features={len(self._strategy_database)}, "
-                      f"tire_deg={len(self._tyre_deg_database)}, "
-                      f"fuel_coeff={len(self._fuel_coeff_database)}, "
-                      f"throttle_baseline={circuits_count} circuits")
+                logger.info(
+                    "[DRIVER_STRATEGY] 配置載入成功 (API): track_features=%d, tire_deg=%d, fuel_coeff=%d, throttle_baseline=%d circuits",
+                    len(self._strategy_database),
+                    len(self._tyre_deg_database),
+                    len(self._fuel_coeff_database),
+                    circuits_count,
+                )
                 return True
             
             return False
             
         except Exception as e:
-            print(f"[DRIVER_STRATEGY] API 獲取配置失敗: {e}")
+            logger.exception("[DRIVER_STRATEGY] API 獲取配置失敗: %s", e)
             return False
     
     # =========================================================================
@@ -768,7 +776,14 @@ class DriverStrategyWidget(QWidget):
         self.update()
         self.data_updated.emit()
         
-        print(f"[DRIVER_STRATEGY] load_driver_history: loaded {len(actual_lap_times)} laps, sc={len(sc_laps or set())} laps, current={current_lap}, correction_factor={self._correction_factor:.4f}, tire_saving={self._tire_saving_level}")
+        logger.info(
+            "[DRIVER_STRATEGY] load_driver_history: loaded %d laps, sc=%d laps, current=%s, correction_factor=%.4f, tire_saving=%s",
+            len(actual_lap_times),
+            len(sc_laps or set()),
+            current_lap,
+            self._correction_factor,
+            self._tire_saving_level,
+        )
         
     # =========================================================================
     # Lap Data Update
@@ -788,7 +803,14 @@ class DriverStrategyWidget(QWidget):
             is_sc_lap: Whether SC was deployed
             is_vsc_lap: Whether VSC was deployed
         """
-        print(f"[DRIVER_STRATEGY] update_lap_data: lap={lap_number}, time={lap_time}, compound={compound}, SC={is_sc_lap}, VSC={is_vsc_lap}")
+        logger.debug(
+            "[DRIVER_STRATEGY] update_lap_data: lap=%s, time=%s, compound=%s, SC=%s, VSC=%s",
+            lap_number,
+            lap_time,
+            compound,
+            is_sc_lap,
+            is_vsc_lap,
+        )
         
         self._current_lap = lap_number
         
@@ -804,7 +826,7 @@ class DriverStrategyWidget(QWidget):
         if is_sc_lap or is_vsc_lap:
             self._update_sc_zone(lap_number)
             self._sc_laps.add(lap_number)
-            print(f"[DRIVER_STRATEGY] SC/VSC lap {lap_number} excluded from display and prediction")
+            logger.info("[DRIVER_STRATEGY] SC/VSC lap %s excluded from display and prediction", lap_number)
             # Don't store SC lap time, just update UI and return
             self._update_lap_counter()
             self.update()
@@ -814,7 +836,7 @@ class DriverStrategyWidget(QWidget):
         # Check if this is a SC restart lap (previous lap was SC)
         if (lap_number - 1) in self._sc_laps:
             self._sc_restart_laps.add(lap_number)
-            print(f"[DRIVER_STRATEGY] SC restart lap {lap_number} excluded from display and prediction")
+            logger.info("[DRIVER_STRATEGY] SC restart lap %s excluded from display and prediction", lap_number)
             # Don't store SC restart lap time, but still update predictions and UI
             self._calculate_all_predictions()
             self._calculate_y_range()
@@ -826,7 +848,7 @@ class DriverStrategyWidget(QWidget):
         # Check if this is a PIT out lap (previous lap was pit)
         if (lap_number - 1) in self._pit_laps:
             self._pit_out_laps.add(lap_number)
-            print(f"[DRIVER_STRATEGY] PIT out lap {lap_number} - not used for prediction")
+            logger.info("[DRIVER_STRATEGY] PIT out lap %s - not used for prediction", lap_number)
             # Store the time but mark for exclusion in prediction
             
         # Check if this is a PIT lap
@@ -835,9 +857,18 @@ class DriverStrategyWidget(QWidget):
         # Store actual lap time (excluding SC, SC restart, PIT, PIT out laps)
         if lap_time is not None and lap_time > 0 and not is_excluded_pit:
             self._actual_lap_times[lap_number] = lap_time
-            print(f"[DRIVER_STRATEGY] Stored lap time: lap {lap_number} = {lap_time:.3f}s, total points: {len(self._actual_lap_times)}")
+            logger.debug(
+                "[DRIVER_STRATEGY] Stored lap time: lap %s = %.3fs, total points: %d",
+                lap_number,
+                lap_time,
+                len(self._actual_lap_times),
+            )
         elif lap_time is not None and lap_time > 0 and is_excluded_pit:
-            print(f"[DRIVER_STRATEGY] PIT/PIT-out lap {lap_number} time={lap_time:.3f}s excluded from prediction")
+            logger.info(
+                "[DRIVER_STRATEGY] PIT/PIT-out lap %s time=%.3fs excluded from prediction",
+                lap_number,
+                lap_time,
+            )
             
         # Track pit stops
         if is_pit_lap and lap_number not in self._pit_laps:
@@ -846,7 +877,11 @@ class DriverStrategyWidget(QWidget):
             self._pit_out_laps.add(lap_number + 1)
             # Reset stint start lap for new tyres
             self._stint_start_lap = lap_number + 1
-            print(f"[DRIVER_STRATEGY] PIT at lap {lap_number}, new stint starts at lap {self._stint_start_lap}")
+            logger.info(
+                "[DRIVER_STRATEGY] PIT at lap %s, new stint starts at lap %s",
+                lap_number,
+                self._stint_start_lap,
+            )
             
         # Calculate predictions
         self._calculate_all_predictions()
@@ -907,7 +942,7 @@ class DriverStrategyWidget(QWidget):
         
         # Don't forget the last zone
         self._sc_zones.append((zone_start, zone_end))
-        print(f"[DRIVER_STRATEGY] Generated SC zones: {self._sc_zones}")
+        logger.debug("[DRIVER_STRATEGY] Generated SC zones: %s", self._sc_zones)
                 
     def _update_lap_counter(self):
         """Update the lap counter label."""
@@ -1007,10 +1042,15 @@ class DriverStrategyWidget(QWidget):
         When loading historical data, we need to calculate what the predicted
         pit lap would have been for each past stint based on optimal stint length.
         """
-        print(f"[DRIVER_STRATEGY] _backfill called: circuit={self._circuit_key}, pit_laps={pit_laps}, lap_compounds keys={list(lap_compounds.keys())[:5]}")
+        logger.debug(
+            "[DRIVER_STRATEGY] _backfill called: circuit=%s, pit_laps=%s, lap_compounds keys=%s",
+            self._circuit_key,
+            pit_laps,
+            list(lap_compounds.keys())[:5],
+        )
         
         if not self._circuit_key:
-            print(f"[DRIVER_STRATEGY] Backfill skipped: no circuit_key")
+            logger.info("[DRIVER_STRATEGY] Backfill skipped: no circuit_key")
             return
             
         # Get circuit data for optimal stint calculation
@@ -1019,10 +1059,10 @@ class DriverStrategyWidget(QWidget):
         
         # 調試: 輸出可用的賽道列表
         if not circuits:
-            print(f"[DRIVER_STRATEGY] Backfill: _tyre_deg_database is empty or has no 'circuits' key")
-            print(f"[DRIVER_STRATEGY] Backfill: _tyre_deg_database keys = {list(self._tyre_deg_database.keys())[:5]}")
+            logger.debug("[DRIVER_STRATEGY] Backfill: _tyre_deg_database is empty or has no 'circuits' key")
+            logger.debug("[DRIVER_STRATEGY] Backfill: _tyre_deg_database keys = %s", list(self._tyre_deg_database.keys())[:5])
         else:
-            print(f"[DRIVER_STRATEGY] Backfill: Available circuits = {list(circuits.keys())}")
+            logger.debug("[DRIVER_STRATEGY] Backfill: Available circuits = %s", list(circuits.keys()))
         
         circuit_data = circuits.get(circuit_db_key, {})
         
@@ -1033,14 +1073,14 @@ class DriverStrategyWidget(QWidget):
                     break
         
         if not circuit_data:
-            print(f"[DRIVER_STRATEGY] Backfill skipped: no circuit_data for {circuit_db_key}")
+            logger.info("[DRIVER_STRATEGY] Backfill skipped: no circuit_data for %s", circuit_db_key)
             return
             
         optimal_stint = circuit_data.get('optimal_stint_length', {})
         
         # Sort pit laps - handle both Set and List
         sorted_pits = sorted(list(pit_laps)) if pit_laps else []
-        print(f"[DRIVER_STRATEGY] Backfill sorted_pits={sorted_pits}")
+        logger.debug("[DRIVER_STRATEGY] Backfill sorted_pits=%s", sorted_pits)
         
         # Calculate stint boundaries: [(stint_start, stint_end, compound), ...]
         stint_boundaries = []
@@ -1054,7 +1094,7 @@ class DriverStrategyWidget(QWidget):
                 compound = lap_compounds.get(lap, '')
                 if compound:
                     break
-            print(f"[DRIVER_STRATEGY] Backfill stint: start={prev_stint_start}, pit={pit_lap}, compound={compound}")
+            logger.debug("[DRIVER_STRATEGY] Backfill stint: start=%s, pit=%s, compound=%s", prev_stint_start, pit_lap, compound)
             if compound:
                 stint_boundaries.append((prev_stint_start, pit_lap, compound))
             prev_stint_start = pit_lap + 1
@@ -1085,7 +1125,14 @@ class DriverStrategyWidget(QWidget):
                 existing = [p for p, a in self._predicted_pit_laps if p == predicted_lap]
                 if not existing:
                     self._predicted_pit_laps.append((predicted_lap, actual_pit))
-                    print(f"[DRIVER_STRATEGY] Backfilled historical PIT prediction: lap {predicted_lap}, actual={actual_pit} (stint {stint_start}-{actual_pit}, {compound_key})")
+                    logger.debug(
+                        "[DRIVER_STRATEGY] Backfilled historical PIT prediction: lap %s, actual=%s (stint %s-%s, %s)",
+                        predicted_lap,
+                        actual_pit,
+                        stint_start,
+                        actual_pit,
+                        compound_key,
+                    )
     
     def _update_predicted_pit_lap(self):
         """
@@ -1098,7 +1145,11 @@ class DriverStrategyWidget(QWidget):
         """
         if not self._circuit_key or not self._current_compound:
             self._current_predicted_pit = 0
-            print(f"[DRIVER_STRATEGY] PIT prediction skipped: circuit={self._circuit_key}, compound={self._current_compound}")
+            logger.info(
+                "[DRIVER_STRATEGY] PIT prediction skipped: circuit=%s, compound=%s",
+                self._circuit_key,
+                self._current_compound,
+            )
             return
         
         # 將賽事名稱映射到資料庫中的賽道 key
@@ -1109,8 +1160,8 @@ class DriverStrategyWidget(QWidget):
         
         # 調試輸出
         if not circuits:
-            print(f"[DRIVER_STRATEGY] PIT: _tyre_deg_database has no 'circuits' key")
-            print(f"[DRIVER_STRATEGY] PIT: _tyre_deg_database keys = {list(self._tyre_deg_database.keys())}")
+            logger.warning("[DRIVER_STRATEGY] PIT: _tyre_deg_database has no 'circuits' key")
+            logger.warning("[DRIVER_STRATEGY] PIT: _tyre_deg_database keys = %s", list(self._tyre_deg_database.keys()))
         
         circuit_data = circuits.get(circuit_db_key, {})
         
@@ -1119,12 +1170,16 @@ class DriverStrategyWidget(QWidget):
             for key, data in circuits.items():
                 if circuit_db_key.lower() in key.lower() or key.lower() in circuit_db_key.lower():
                     circuit_data = data
-                    print(f"[DRIVER_STRATEGY] Circuit matched: {self._circuit_key} -> {key}")
+                    logger.info("[DRIVER_STRATEGY] Circuit matched: %s -> %s", self._circuit_key, key)
                     break
         
         if not circuit_data:
             self._current_predicted_pit = 0
-            print(f"[DRIVER_STRATEGY] PIT prediction skipped: no circuit data for '{self._circuit_key}' (mapped: {circuit_db_key})")
+            logger.info(
+                "[DRIVER_STRATEGY] PIT prediction skipped: no circuit data for '%s' (mapped: %s)",
+                self._circuit_key,
+                circuit_db_key,
+            )
             return
             
         # Get optimal stint length for current compound
@@ -1163,16 +1218,29 @@ class DriverStrategyWidget(QWidget):
         # Don't predict beyond total laps
         if predicted_lap >= self._total_laps:
             self._current_predicted_pit = 0  # No pit needed - can finish on current tyres
-            print(f"[DRIVER_STRATEGY] No PIT needed - predicted {predicted_lap} >= total {self._total_laps} "
-                  f"(base: {base_stint}, F87 adj: +{self._tire_saving_adjustment:.0%} = {adjusted_stint} laps for {compound_key})")
+            logger.info(
+                "[DRIVER_STRATEGY] No PIT needed - predicted %s >= total %s (base: %s, F87 adj: +%s = %s laps for %s)",
+                predicted_lap,
+                self._total_laps,
+                base_stint,
+                f"{self._tire_saving_adjustment:.0%}",
+                adjusted_stint,
+                compound_key,
+            )
         else:
             self._current_predicted_pit = predicted_lap
             # Add to history if not already there (0 means not yet pitted)
             existing = [p for p, a in self._predicted_pit_laps if p == predicted_lap]
             if not existing:
                 self._predicted_pit_laps.append((predicted_lap, 0))
-                print(f"[DRIVER_STRATEGY] Predicted PIT at lap {predicted_lap} "
-                      f"(base: {base_stint}, F87 adj: +{self._tire_saving_adjustment:.0%} = {adjusted_stint} laps, {self._tire_saving_level})")
+                logger.info(
+                    "[DRIVER_STRATEGY] Predicted PIT at lap %s (base: %s, F87 adj: +%s = %s laps, %s)",
+                    predicted_lap,
+                    base_stint,
+                    f"{self._tire_saving_adjustment:.0%}",
+                    adjusted_stint,
+                    self._tire_saving_level,
+                )
         
     # =========================================================================
     # Prediction Calculations - Stint-Based Model
@@ -1306,7 +1374,7 @@ class DriverStrategyWidget(QWidget):
             compound = self._current_compound or 'MEDIUM'
         stints.append((stint_start, self._total_laps, compound))
         
-        print(f"[DRIVER_STRATEGY] Built {len(stints)} stints: {stints}")
+        logger.debug("[DRIVER_STRATEGY] Built %s stints: %s", len(stints), stints)
         return stints
     
     def _get_compound_for_stint(self, stint_start: int, stint_end: int) -> str:
@@ -1337,11 +1405,11 @@ class DriverStrategyWidget(QWidget):
             n = len(sorted_times)
             
             # 🔍 調試輸出：Driver Strategy 基準計算
-            print(f"\n[BASE_TIME_DEBUG] Driver Strategy 基準計算:")
-            print(f"  總圈數: {n}")
-            print(f"  最快圈: {min(sorted_times):.3f}s")
-            print(f"  最慢圈: {max(sorted_times):.3f}s")
-            print(f"  圈速範圍: {sorted_times[:3]} ... {sorted_times[-3:]}")
+            logger.debug("[BASE_TIME_DEBUG] Driver Strategy 基準計算:")
+            logger.debug("  總圈數: %s", n)
+            logger.debug("  最快圈: %.3fs", min(sorted_times))
+            logger.debug("  最慢圈: %.3fs", max(sorted_times))
+            logger.debug("  圈速範圍: %s ... %s", sorted_times[:3], sorted_times[-3:])
             
             if n > 5:
                 # 取第 5-25 百分位的平均作為基準
@@ -1350,21 +1418,24 @@ class DriverStrategyWidget(QWidget):
                 selected_times = sorted_times[start_idx:end_idx]
                 base_time = sum(selected_times) / len(selected_times)
                 
-                print(f"  使用百分位平均:")
-                print(f"    - 索引範圍: [{start_idx}:{end_idx}] ({len(selected_times)} 圈)")
-                print(f"    - 選中圈速: {selected_times}")
-                print(f"    - 平均值: {base_time:.3f}s")
+                logger.debug(
+                    "  使用百分位平均: [%s:%s] (%s 圈), 選中圈速: %s, 平均值: %.3fs",
+                    start_idx,
+                    end_idx,
+                    len(selected_times),
+                    selected_times,
+                    base_time,
+                )
                 return base_time
             elif n == 5:
                 # ✅ 5 圈特殊處理：取中間 3 圈平均（排除極端值）
                 selected_times = sorted_times[1:4]  # 去除最快和最慢
                 base_time = sum(selected_times) / len(selected_times)
-                print(f"  5 圈數據，使用中間 3 圈平均: {base_time:.3f}s")
-                print(f"    - 選中圈速: {selected_times}")
+                logger.debug("  5 圈數據，使用中間 3 圈平均: %.3fs, 選中圈速: %s", base_time, selected_times)
                 return base_time
             else:
                 base_time = min(sorted_times)
-                print(f"  圈數不足 ({n} 圈)，使用最快圈: {base_time:.3f}s")
+                logger.debug("  圈數不足 (%s 圈)，使用最快圈: %.3fs", n, base_time)
                 return base_time
         return 0.0
     
@@ -1548,7 +1619,7 @@ class DriverStrategyWidget(QWidget):
         # Temporary storage to simulate incremental data arrival
         simulated_lap_times: Dict[int, float] = {}
         
-        print(f"[DRIVER_STRATEGY] Simulating Realtime corrections for {len(sorted_laps)} laps...")
+        logger.debug("[DRIVER_STRATEGY] Simulating Realtime corrections for %s laps...", len(sorted_laps))
         
         # Process each lap sequentially, simulating Realtime behavior
         for lap_num in sorted_laps:
@@ -1572,7 +1643,7 @@ class DriverStrategyWidget(QWidget):
         # Final prediction calculation with full data and accumulated correction
         self._calculate_all_predictions()
         
-        print(f"[DRIVER_STRATEGY] Simulation complete: correction_factor={self._correction_factor:.4f}")
+        logger.debug("[DRIVER_STRATEGY] Simulation complete: correction_factor=%.4f", self._correction_factor)
     
     def _calculate_predictions_with_data(self, lap_times: Dict[int, float], excluded_laps: set):
         """
@@ -2383,6 +2454,8 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
     - _all_drivers_lap_data: Dict[str, DriverLapData] stores all driver data
     - Widget only displays the currently selected driver
     - Switching drivers loads from _all_drivers_lap_data (no reset)
+    
+    性能優化: 只在車手完成圈數時更新 (檢測 max lap 變化)
     """
     
     MODULE_ID = "live_timing_driver_strategy"
@@ -2402,6 +2475,9 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         self._sc_zones: List[Tuple[int, int]] = []
         self._sc_restart_laps: set = set()
         
+        # 性能優化: 追蹤上次的最大圈數
+        self._last_max_lap: int = 0
+        
         super().__init__(parent, data_manager)
         
         self.setWindowTitle(self.DEFAULT_TITLE)
@@ -2411,7 +2487,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         if self._data_manager:
             self._data_manager.driver_selected.connect(self._on_driver_selected)
         
-        print("[DRIVER_STRATEGY_MDI] LiveTimingDriverStrategy initialized (multi-driver tracking)")
+        logger.info("[DRIVER_STRATEGY_MDI] LiveTimingDriverStrategy initialized (multi-driver tracking)")
         
     def _setup_ui(self):
         """Setup the UI layout."""
@@ -2424,12 +2500,12 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
     
     def _on_driver_change_requested(self, driver_num: str):
         """處理車手切換請求"""
-        print(f"[DRIVER_STRATEGY_MDI] Driver change requested: {driver_num}")
+        logger.info("[DRIVER_STRATEGY_MDI] Driver change requested: %s", driver_num)
         self.select_driver(driver_num)
         
     def _on_driver_selected(self, driver_num: str):
         """處理車手選擇信號"""
-        print(f"[DRIVER_STRATEGY_MDI] Driver selected from external: {driver_num}")
+        logger.info("[DRIVER_STRATEGY_MDI] Driver selected from external: %s", driver_num)
         if hasattr(self, '_strategy_widget'):
             self.select_driver(driver_num)
     
@@ -2478,12 +2554,27 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
         """
         處理快照更新 - 更新 ALL 車手資料，不只當前車手。
+        
+        性能優化: 只在車手完成圈數時才更新
         """
         if not hasattr(self, '_strategy_widget'):
             return
             
         # 從快照提取資料
         drivers = snapshot.get('drivers', {})
+        
+        # 性能優化: 檢查是否有圈數變化
+        current_max_lap = 0
+        for driver_data in drivers.values():
+            lap = driver_data.get('lap', 0)
+            if lap and lap > current_max_lap:
+                current_max_lap = lap
+        
+        # 如果圈數沒變且已經有數據，跳過更新
+        if current_max_lap == self._last_max_lap and self._last_max_lap > 0:
+            return
+        
+        self._last_max_lap = current_max_lap
         
         # 儲存當前 snapshot 的 race_time（用於查詢 track_status）
         self._current_race_time = snapshot.get('race_time', '')
@@ -2492,7 +2583,10 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         if drivers and not self._current_driver:
             sample_driver = next(iter(drivers.keys()))
             sample_data = drivers[sample_driver]
-            print(f"[DRIVER_STRATEGY_MDI] Sample driver data keys: {list(sample_data.keys()) if isinstance(sample_data, dict) else 'N/A'}")
+            logger.debug(
+                "[DRIVER_STRATEGY_MDI] Sample driver data keys: %s",
+                list(sample_data.keys()) if isinstance(sample_data, dict) else 'N/A',
+            )
         
         # 儲存車手資料
         self._drivers_data = drivers
@@ -2536,12 +2630,12 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
                     if is_sc_lap or is_vsc_lap:
                         if lap_num not in self._sc_laps:
                             self._sc_laps.add(lap_num)
-                            print(f"[DRIVER_STRATEGY_MDI] SC lap recorded: {lap_num}")
+                            logger.debug("[DRIVER_STRATEGY_MDI] SC lap recorded: %s", lap_num)
                     # 檢查是否為 SC restart 圈 (前一圈是 SC)
                     elif (lap_num - 1) in self._sc_laps:
                         if lap_num not in self._sc_restart_laps:
                             self._sc_restart_laps.add(lap_num)
-                            print(f"[DRIVER_STRATEGY_MDI] SC restart lap recorded: {lap_num}")
+                            logger.debug("[DRIVER_STRATEGY_MDI] SC restart lap recorded: %s", lap_num)
                 except (ValueError, TypeError):
                     pass
             self._update_single_driver_data(driver_num, driver_info, tyre_state, is_sc_lap, is_vsc_lap)
@@ -2601,8 +2695,12 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
                         
                         # 只在當前車手時輸出調試信息
                         if driver_num == self._current_driver:
-                            print(f"[DRIVER_STRATEGY_MDI] Lap {driver_data.current_lap_being_tracked} throttle: "
-                                  f"{len(samples)} samples, full_throttle_ratio={ratio:.3f}")
+                            logger.debug(
+                                "[DRIVER_STRATEGY_MDI] Lap %s throttle: %s samples, full_throttle_ratio=%.3f",
+                                driver_data.current_lap_being_tracked,
+                                len(samples),
+                                ratio,
+                            )
                     
                     # 重置為新圈
                     driver_data.current_lap_throttle_samples = [throttle_val]
@@ -2703,7 +2801,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """賽事載入完成"""
-        print(f"[DRIVER_STRATEGY_MDI] Race loaded: {race_info.get('name', 'Unknown')}")
+        logger.info("[DRIVER_STRATEGY_MDI] Race loaded: %s", race_info.get('name', 'Unknown'))
         
         # 設定賽道
         circuit = race_info.get('circuit', '')
@@ -2718,7 +2816,7 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             
     def _on_race_unloaded(self):
         """賽事卸載 - 清除所有車手資料"""
-        print("[DRIVER_STRATEGY_MDI] Race unloaded - clearing all driver data")
+        logger.info("[DRIVER_STRATEGY_MDI] Race unloaded - clearing all driver data")
         self._current_driver = ""
         self._drivers_data.clear()
         
@@ -2775,7 +2873,12 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             driver_name = driver_info.get("name", driver_code)
             team_color = driver_info.get("team_color", "FFFFFF")
             
-            print(f"[DRIVER_STRATEGY] select_driver: {driver_num} -> TLA={driver_code}, color={team_color}")
+            logger.info(
+                "[DRIVER_STRATEGY] select_driver: %s -> TLA=%s, color=%s",
+                driver_num,
+                driver_code,
+                team_color,
+            )
             
             # 設定車手基本資訊
             self._strategy_widget.select_driver(driver_code, driver_name, team_color)

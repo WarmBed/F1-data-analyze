@@ -23,6 +23,9 @@ from typing import List, Dict, Optional, Any
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapSectorComparisonWidget(QWidget):
     """
@@ -89,7 +92,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [SECTOR_COMPARISON_V2] 無效的數據格式")
+                logger.warning("[SECTOR_COMPARISON_V2] 無效的數據格式")
                 return
             
             self.current_data = data
@@ -105,18 +108,18 @@ class IdealLapSectorComparisonWidget(QWidget):
             self._ensure_palette_for_data(data)
             
             if not self.comparison_data:
-                print("[WARNING] [SECTOR_COMPARISON_V2] 沒有對比數據")
+                logger.warning("[SECTOR_COMPARISON_V2] 沒有對比數據")
                 self.update()
                 return
             
             # 計算領先者的分段時間
             self._calculate_leader_times()
             
-            print(f"[SECTOR_COMPARISON_V2] 更新數據: {len(self.comparison_data)} 位車手")
+            logger.debug(f"[SECTOR_COMPARISON_V2] 更新數據: {len(self.comparison_data)} 位車手")
             self.update()  # 觸發重繪
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON_V2] 更新數據失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_V2] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -162,7 +165,7 @@ class IdealLapSectorComparisonWidget(QWidget):
                 max_cumulative = cumulative
         
         self.max_cumulative = max_cumulative
-        print(f"[SECTOR_COMPARISON_V2] 最大累積差異: {self.max_cumulative:.3f}s")
+        logger.debug(f"[SECTOR_COMPARISON_V2] 最大累積差異: {self.max_cumulative:.3f}s")
     
     def _extract_sector_deltas(self, driver_data: Dict[str, Any]) -> tuple:
         """
@@ -536,7 +539,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         """處理滑鼠點擊事件"""
         if event.button() == Qt.LeftButton and self.hover_driver:
             self.bar_clicked.emit(self.hover_driver)
-            print(f"[SECTOR_COMPARISON_V2] 點擊車手: {self.hover_driver}")
+            logger.debug(f"[SECTOR_COMPARISON_V2] 點擊車手: {self.hover_driver}")
     
     def leaveEvent(self, event):
         """滑鼠離開事件"""
@@ -550,7 +553,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         if not self.comparison_data:
             return
         
-        print(f"[SECTOR_COMPARISON_V2] 依據 {sort_key} 排序")
+        logger.debug(f"[SECTOR_COMPARISON_V2] 依據 {sort_key} 排序")
         
         # 排序邏輯
         if sort_key == "position":
@@ -575,7 +578,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         self._calculate_leader_times()  # 重新計算領先者時間
         self.update()
         
-        print(f"[SECTOR_COMPARISON_V2] ✅ 排序完成")
+        logger.info(f"[SECTOR_COMPARISON_V2] ✅ 排序完成")
     
     def clear_chart(self):
         """清空圖表"""
@@ -585,7 +588,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         self.hover_row = -1
         self.hover_driver = None
         self.update()
-        print("[SECTOR_COMPARISON_V2] 圖表已清空")
+        logger.debug("[SECTOR_COMPARISON_V2] 圖表已清空")
     
     def export_chart(self, file_path: str) -> bool:
         """匯出圖表為圖片"""
@@ -603,14 +606,15 @@ class IdealLapSectorComparisonWidget(QWidget):
             success = image.save(file_path)
             
             if success:
-                print(f"[SECTOR_COMPARISON_V2] ✅ 圖表已匯出: {file_path}")
+                logger.info(f"[SECTOR_COMPARISON_V2] ✅ 圖表已匯出: {file_path}")
             else:
-                print(f"[ERROR] [SECTOR_COMPARISON_V2] 匯出失敗: {file_path}")
+                logger.error(f"[SECTOR_COMPARISON_V2] 匯出失敗: {file_path}")
             
             return success
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON_V2] 匯出圖表失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_V2] 匯出圖表失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False

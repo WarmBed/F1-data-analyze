@@ -5,10 +5,10 @@ F1 單一車手超車分析模組 (功能16)
 Single Driver Overtaking Analysis Module (Function 16)
 
 本模組提供單一車手超車分析功能，包含：
-- 🏁 車手超車表現統計
-- 📊 超車時機和位置分析
-- 🎯 超車成功率分析
-- 📈 超車趨勢分析
+- 車手超車表現統計
+- 超車時機和位置分析
+- 超車成功率分析
+- 超車趨勢分析
 - JSON格式完整輸出
 - 符合 copilot-instructions 開發核心要求
 
@@ -16,6 +16,14 @@ Single Driver Overtaking Analysis Module (Function 16)
 作者: F1 Analysis Team
 日期: 2025-08-09
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import pickle
@@ -84,6 +92,14 @@ def format_time(time_obj):
             # 解析並重新格式化
             try:
                 import re
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
                 time_match = re.search(r'(\d+):(\d+):(\d+)\.(\d+)', time_obj)
                 if time_match:
                     hours, minutes, seconds, milliseconds = time_match.groups()

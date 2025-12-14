@@ -17,8 +17,12 @@ from pathlib import Path
 from typing import Optional
 import sys
 
+from core.logger import get_logger
+
 # ✅ 導入集中管理的版本號
 from config.version import APP_VERSION
+
+logger = get_logger("splash_screen", component="gui")
 
 # EXE 模式檢測和資源路徑處理
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
@@ -529,16 +533,15 @@ if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
     
-    print("=" * 60)
-    print("F1T 預載畫面示範 - 5 種風格版本")
-    print("=" * 60)
-    print("\n可用版本:")
-    print("  1. 經典賽車風格 (F1 Red Racing)")
-    print("  2. 現代極簡風格 (Minimal Light - 白底黑字)")
-    print("  3. 科技未來風格 (Cyber Tech)")
-    print("  4. 優雅專業風格 (Professional)")
-    print("  5. 動態賽道風格 (Dynamic Track)")
-    print()
+    logger.info("=" * 60)
+    logger.info("F1T 預載畫面示範 - 5 種風格版本")
+    logger.info("=" * 60)
+    logger.info("可用版本:")
+    logger.info("  1. 經典賽車風格 (F1 Red Racing)")
+    logger.info("  2. 現代極簡風格 (Minimal Light - 白底黑字)")
+    logger.info("  3. 科技未來風格 (Cyber Tech)")
+    logger.info("  4. 優雅專業風格 (Professional)")
+    logger.info("  5. 動態賽道風格 (Dynamic Track)")
     
     # 讓使用者選擇版本
     try:
@@ -549,7 +552,7 @@ if __name__ == "__main__":
     except ValueError:
         version = 1
     
-    print(f"\n正在啟動版本 {version}...")
+    logger.info("正在啟動版本 %s...", version)
     
     app = QApplication(sys.argv)
     
@@ -581,8 +584,8 @@ if __name__ == "__main__":
             splash.finish(splash)  # 3 秒後自動關閉
             
             # 顯示完成訊息
-            print(f"\n✅ 預載畫面示範完成！")
-            print(f"使用的版本: {version}")
+            logger.info("✅ 預載畫面示範完成！")
+            logger.info("使用的版本: %s", version)
             QTimer.singleShot(1000, app.quit)
     
     # 使用定時器模擬進度更新

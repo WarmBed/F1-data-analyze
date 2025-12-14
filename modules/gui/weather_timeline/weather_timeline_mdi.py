@@ -22,7 +22,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
+
 from core.logger import get_logger
+logger = get_logger(__name__)
 
 logger = get_logger("weather_timeline.mdi", component="gui")
 
@@ -57,6 +59,11 @@ class WeatherTimelineApiWorker(QThread):
     def run(self):
         """Execute API request"""
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[WEATHER_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             
             # Build API endpoint
@@ -78,6 +85,11 @@ class WeatherTimelineApiWorker(QThread):
                 logger.debug("[API_WORKER] Calling API: %s", endpoint)
                 logger.debug("[API_WORKER] Parameters: %s", query_params)
             
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[WEATHER_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             # Send POST request
             start_ts = time.perf_counter()
             response = requests.post(
@@ -86,6 +98,12 @@ class WeatherTimelineApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[WEATHER_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             
             # Check HTTP status
@@ -114,6 +132,11 @@ class WeatherTimelineApiWorker(QThread):
             # Calculate latency
             latency_ms = (time.perf_counter() - start_ts) * 1000.0
             
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[WEATHER_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(100)
             logger.info("[API_WORKER] Success in %.0fms", latency_ms)
             
@@ -121,16 +144,25 @@ class WeatherTimelineApiWorker(QThread):
             self.success.emit(data)
             
         except requests.Timeout:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = tr("weather_api_timeout", "API 請求超時 ({timeout}s)").format(timeout=self.timeout)
             logger.error("[API_WORKER] Timeout: %s", error_msg)
             self.failure.emit(error_msg)
             
         except requests.RequestException as e:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = tr("weather_api_network_error", "網路錯誤: {error}").format(error=str(e))
             logger.error("[API_WORKER] Network error: %s", e)
             self.failure.emit(error_msg)
             
         except Exception as e:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = tr("weather_api_general_error", "API 錯誤: {error}").format(error=str(e))
             logger.error("[API_WORKER] General error: %s", e)
             self.failure.emit(error_msg)

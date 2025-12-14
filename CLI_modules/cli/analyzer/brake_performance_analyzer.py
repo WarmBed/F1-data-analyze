@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """All drivers brake performance analysis module - Based on F48 straight-line speed architecture."""
 
 from __future__ import annotations
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import math
 import warnings

@@ -16,6 +16,7 @@ from functools import lru_cache
 from threading import Lock
 
 from core.api_base_url import resolve_api_base_url, PUBLIC_API_BASE_URL
+from core.logger import get_logger
 
 
 class LiveTimingAPIClient:
@@ -54,7 +55,8 @@ class LiveTimingAPIClient:
         self._cache: Dict[str, Any] = {}
         self._initialized = True
         
-        print(f"[LiveTimingAPIClient] 初始化完成，API 網域: {self._api_base_url}")
+        self._logger = get_logger("live_timing.api_client", component="gui")
+        self._logger.info("[LiveTimingAPIClient] 初始化完成，API 網域: %s", self._api_base_url)
     
     @classmethod
     def instance(cls) -> 'LiveTimingAPIClient':
@@ -124,21 +126,21 @@ class LiveTimingAPIClient:
                 if not data.get("success"):
                     errors = data.get("errors", [])
                     if errors:
-                        print(f"[LiveTimingAPIClient] 部分配置載入失敗: {errors}")
+                        self._logger.warning("[LiveTimingAPIClient] 部分配置載入失敗: %s", errors)
                 self._cache[cache_key] = result
                 return result
             else:
-                print(f"[LiveTimingAPIClient] 配置獲取失敗: {data.get('message')}")
+                self._logger.error("[LiveTimingAPIClient] 配置獲取失敗: %s", data.get('message'))
                 return None
                 
         except requests.exceptions.Timeout:
-            print(f"[LiveTimingAPIClient] 請求超時: {url}")
+            self._logger.warning("[LiveTimingAPIClient] 請求超時: %s", url)
             return None
         except requests.exceptions.RequestException as e:
-            print(f"[LiveTimingAPIClient] 請求失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] 請求失敗: %s", e)
             return None
         except json.JSONDecodeError as e:
-            print(f"[LiveTimingAPIClient] JSON 解析失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] JSON 解析失敗: %s", e)
             return None
     
     # ===========================================
@@ -189,17 +191,17 @@ class LiveTimingAPIClient:
                 self._cache[cache_key] = result
                 return result
             else:
-                print(f"[LiveTimingAPIClient] 賽道分析失敗: {data.get('message')}")
+                self._logger.error("[LiveTimingAPIClient] 賽道分析失敗: %s", data.get('message'))
                 return None
                 
         except requests.exceptions.Timeout:
-            print(f"[LiveTimingAPIClient] 請求超時: {url}")
+            self._logger.warning("[LiveTimingAPIClient] 請求超時: %s", url)
             return None
         except requests.exceptions.RequestException as e:
-            print(f"[LiveTimingAPIClient] 請求失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] 請求失敗: %s", e)
             return None
         except json.JSONDecodeError as e:
-            print(f"[LiveTimingAPIClient] JSON 解析失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] JSON 解析失敗: %s", e)
             return None
     
     def get_season_calendar(
@@ -242,17 +244,17 @@ class LiveTimingAPIClient:
                 self._cache[cache_key] = result
                 return result
             else:
-                print(f"[LiveTimingAPIClient] 賽季日曆獲取失敗: {data.get('message')}")
+                self._logger.error("[LiveTimingAPIClient] 賽季日曆獲取失敗: %s", data.get('message'))
                 return None
                 
         except requests.exceptions.Timeout:
-            print(f"[LiveTimingAPIClient] 請求超時: {url}")
+            self._logger.warning("[LiveTimingAPIClient] 請求超時: %s", url)
             return None
         except requests.exceptions.RequestException as e:
-            print(f"[LiveTimingAPIClient] 請求失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] 請求失敗: %s", e)
             return None
         except json.JSONDecodeError as e:
-            print(f"[LiveTimingAPIClient] JSON 解析失敗: {e}")
+            self._logger.error("[LiveTimingAPIClient] JSON 解析失敗: %s", e)
             return None
     
     # ===========================================
@@ -261,7 +263,7 @@ class LiveTimingAPIClient:
     def clear_cache(self):
         """清除所有緩存"""
         self._cache.clear()
-        print("[LiveTimingAPIClient] 緩存已清除")
+        self._logger.info("[LiveTimingAPIClient] 緩存已清除")
     
     def get_api_base_url(self) -> str:
         """獲取當前 API 基礎網址"""

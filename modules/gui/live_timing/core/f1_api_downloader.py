@@ -29,6 +29,11 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Callable
 from datetime import datetime
 
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.f1_api_downloader", component="gui")
+
 
 class F1APIDownloader:
     """
@@ -114,12 +119,16 @@ class F1APIDownloader:
             
         Returns:
             PKL 快取檔案路徑
+            
+        格式: {cache_dir}/{year}/{year}_{race}_{session}.pkl
+        例如: live_timing_cache/2025/2025_Abu_Dhabi_Race.pkl
         """
         # 標準化名稱
         race_normalized = self._normalize_race_name(race)
         session_normalized = self._normalize_session_name(session)
         
-        return self.cache_dir / str(year) / f"{race_normalized}_{session_normalized}.pkl"
+        # ✅ 檔案名稱包含年份，避免跨年度衝突
+        return self.cache_dir / str(year) / f"{year}_{race_normalized}_{session_normalized}.pkl"
     
     def is_cache_valid(self, year: int, race: str, session: str = "Race") -> bool:
         """
@@ -144,18 +153,18 @@ class F1APIDownloader:
             
             # 檢查版本
             if data.get('version') != self.CACHE_VERSION:
-                print(f"[F1API] 快取版本不匹配: {data.get('version')}")
+                logger.warning("[F1API] 快取版本不匹配: %s", data.get('version'))
                 return False
             
             # 檢查快照數量
             if len(data.get('snapshots', [])) == 0:
-                print("[F1API] 快取中無快照數據")
+                logger.warning("[F1API] 快取中無快照數據")
                 return False
             
             return True
             
         except Exception as e:
-            print(f"[F1API] 驗證快取失敗: {e}")
+            logger.exception("[F1API] 驗證快取失敗: %s", e)
             return False
     
     def load_cache(self, year: int, race: str, session: str = "Race") -> Optional[Dict[str, Any]]:
@@ -184,12 +193,12 @@ class F1APIDownloader:
             load_time = time.time() - start_time
             snapshot_count = len(data.get('snapshots', []))
             
-            print(f"[F1API] PKL 快取載入完成: {snapshot_count} 個快照, {load_time:.2f} 秒")
+            logger.info("[F1API] PKL 快取載入完成: %d 個快照, %.2f 秒", snapshot_count, load_time)
             
             return data
             
         except Exception as e:
-            print(f"[F1API] 載入快取失敗: {e}")
+            logger.exception("[F1API] 載入快取失敗: %s", e)
             return None
     
     def download_and_cache(
@@ -227,10 +236,10 @@ class F1APIDownloader:
         # 獲取會話路徑
         session_path = self._find_session_path(year, race, session)
         if not session_path:
-            print(f"[F1API] 找不到賽事路徑: {year} {race} {session}")
+            logger.error("[F1API] 找不到賽事路徑: %s %s %s", year, race, session)
             return None
         
-        print(f"[F1API] 會話路徑: {session_path}")
+        logger.info("[F1API] 會話路徑: %s", session_path)
         
         _report(10, "Downloading data streams...")
         
@@ -238,7 +247,7 @@ class F1APIDownloader:
         raw_data = self._download_all_streams(session_path, progress_callback)
         
         if not raw_data.get('position') or not raw_data.get('timing'):
-            print("[F1API] 核心數據下載失敗")
+            logger.error("[F1API] 核心數據下載失敗")
             return None
         
         _report(60, "Processing data...")
@@ -247,7 +256,7 @@ class F1APIDownloader:
         processed_data = self._process_raw_data(raw_data, year, race, session, progress_callback)
         
         if not processed_data:
-            print("[F1API] 數據處理失敗")
+            logger.error("[F1API] 數據處理失敗")
             return None
         
         _report(90, "Saving cache...")
@@ -272,10 +281,10 @@ class F1APIDownloader:
                 content = resp.content.decode('utf-8-sig')
                 return json.loads(content)
             else:
-                print(f"[F1API] 無法取得 {year} 年索引: HTTP {resp.status_code}")
+                logger.warning("[F1API] 無法取得 %s 年索引: HTTP %s", year, resp.status_code)
                 return None
         except Exception as e:
-            print(f"[F1API] 取得 {year} 年索引失敗: {e}")
+            logger.exception("[F1API] 取得 %s 年索引失敗: %s", year, e)
             return None
     
     def list_meetings(self, year: int) -> List[Dict]:
@@ -321,7 +330,7 @@ class F1APIDownloader:
                 break
         
         if not target_meeting:
-            print(f"[F1API] 找不到賽事: {race}")
+            logger.warning("[F1API] 找不到賽事: %s", race)
             return None
         
         # 查找匹配的會話
@@ -372,12 +381,12 @@ class F1APIDownloader:
         
         # ===== 新增：Index.json 中 Path 為 None 時，嘗試猜測路徑 =====
         # 這通常發生在賽事剛結束、Index.json 尚未更新的情況
-        print(f"[F1API] Index.json 中找不到 {session}，嘗試猜測路徑...")
+        logger.info("[F1API] Index.json 中找不到 %s，嘗試猜測路徑...", session)
         guessed_path = self._guess_session_path(target_meeting, session_upper, year)
         if guessed_path:
             return guessed_path
         
-        print(f"[F1API] 找不到會話: {session}")
+        logger.warning("[F1API] 找不到會話: %s", session)
         return None
     
     def _guess_session_path(self, meeting: Dict, session_code: str, year: int) -> Optional[str]:
@@ -403,7 +412,7 @@ class F1APIDownloader:
                 break
         
         if not reference_path:
-            print("[F1API] 無參考路徑可用於猜測")
+            logger.warning("[F1API] 無參考路徑可用於猜測")
             return None
         
         # 解析參考路徑以獲取賽事目錄
@@ -439,12 +448,12 @@ class F1APIDownloader:
         try:
             resp = self.session.head(test_url, timeout=10)
             if resp.status_code == 200:
-                print(f"[F1API] 猜測路徑成功: {guessed_path}")
+                logger.info("[F1API] 猜測路徑成功: %s", guessed_path)
                 return guessed_path
             else:
-                print(f"[F1API] 猜測路徑 {guessed_path} 不可訪問 (HTTP {resp.status_code})")
+                logger.warning("[F1API] 猜測路徑 %s 不可訪問 (HTTP %s)", guessed_path, resp.status_code)
         except Exception as e:
-            print(f"[F1API] 驗證猜測路徑失敗: {e}")
+            logger.exception("[F1API] 驗證猜測路徑失敗: %s", e)
         
         return None
     
@@ -497,7 +506,7 @@ class F1APIDownloader:
             if key:
                 raw_data[key] = records
                 if records:
-                    print(f"[F1API] {stream_name}: {len(records)} records")
+                    logger.info("[F1API] %s: %d records", stream_name, len(records))
             
             # 短暫延遲避免請求過快
             time.sleep(0.1)
@@ -515,7 +524,7 @@ class F1APIDownloader:
             return self._parse_stream(content, compressed)
             
         except Exception as e:
-            print(f"[F1API] 下載失敗 {url}: {e}")
+            logger.warning("[F1API] 下載失敗 %s: %s", url, e)
             return []
     
     def _parse_stream(self, stream_text: str, compressed: bool) -> List[Dict]:
@@ -601,11 +610,16 @@ class F1APIDownloader:
                 def get_lap_count(self): return self._lap_count
                 
                 def load_driver_list(self):
+                    # 導入安全車編號常數
+                    from .local_source import NON_RACE_CAR_NUMBERS
                     driver_map = {}
                     for record in self._driver_list_data:
                         data = record.get('data', {})
                         if isinstance(data, dict):
                             for driver_num, driver_info in data.items():
+                                # 排除 Safety Car / Medical Car (241, 242, 243)
+                                if driver_num in NON_RACE_CAR_NUMBERS:
+                                    continue
                                 if isinstance(driver_info, dict) and driver_info:
                                     if 'Tla' in driver_info or 'TeamColour' in driver_info:
                                         driver_map[driver_num] = {
@@ -635,10 +649,10 @@ class F1APIDownloader:
             snapshots = processor.get_aligned_snapshots()
             
             if not snapshots:
-                print("[F1API] 無可用快照")
+                logger.warning("[F1API] 無可用快照")
                 return None
             
-            print(f"[F1API] 處理完成: {len(snapshots)} 個快照")
+            logger.info("[F1API] 處理完成: %d 個快照", len(snapshots))
             
             # 計算總圈數
             total_laps = 0
@@ -679,9 +693,7 @@ class F1APIDownloader:
             return result
             
         except Exception as e:
-            print(f"[F1API] 處理數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[F1API] 處理數據失敗: %s", e)
             return None
     
     def _save_cache(self, data: Dict[str, Any], year: int, race: str, session: str) -> bool:
@@ -698,13 +710,13 @@ class F1APIDownloader:
             save_time = time.time() - start_time
             cache_size = cache_path.stat().st_size / (1024 * 1024)
             
-            print(f"[F1API] PKL 快取已儲存: {cache_path}")
-            print(f"[F1API] 檔案大小: {cache_size:.2f} MB, 耗時: {save_time:.2f} 秒")
+            logger.info("[F1API] PKL 快取已儲存: %s", cache_path)
+            logger.info("[F1API] 檔案大小: %.2f MB, 耗時: %.2f 秒", cache_size, save_time)
             
             return True
             
         except Exception as e:
-            print(f"[F1API] 儲存快取失敗: {e}")
+            logger.exception("[F1API] 儲存快取失敗: %s", e)
             return False
     
     # ===========================================

@@ -23,6 +23,9 @@ from typing import List, Dict, Optional, Any
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapSectorComparisonWidget(QWidget):
     """
@@ -84,7 +87,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         # ✅ 參考 lap_box_plot_analysis: 設置最小尺寸
         self.setMinimumSize(200, 100)
         
-        print("[SECTOR_COMPARISON] 圖表元件初始化完成 (QPainter 版本)")
+        logger.debug("[SECTOR_COMPARISON] 圖表元件初始化完成 (QPainter 版本)")
     
     def draw_comparison_bars(self, comparison_data: List[Dict], statistics: Dict = None):
         """
@@ -181,6 +184,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         except Exception as e:
             self._debug(f"[DRAW] ❌ 繪製失敗: {e}")
             import traceback
+
             traceback.print_exc()
             self._draw_error_message(str(e))
     
@@ -327,7 +331,7 @@ class IdealLapSectorComparisonWidget(QWidget):
             if hasattr(self, 'canvas') and self.canvas:
                 self.canvas.draw()
         
-        print("[SECTOR_COMPARISON_WIDGET] ✅ 圖表已清空")
+        logger.info("[SECTOR_COMPARISON_WIDGET] ✅ 圖表已清空")
     
     def update_statistics_panel(self, statistics: Dict):
         """
@@ -341,15 +345,15 @@ class IdealLapSectorComparisonWidget(QWidget):
         # 內部使用 ControlPanel 的 update_statistics 方法
         # 此方法提供與 ranking_table 一致的介面
         self.statistics = statistics
-        print(f"[SECTOR_COMPARISON_WIDGET] ✅ 統計資料已更新")
+        logger.info(f"[SECTOR_COMPARISON_WIDGET] ✅ 統計資料已更新")
     
     def _debug(self, message: str):
         """除錯訊息輸出"""
         if hasattr(self, '_debug_enabled') and self._debug_enabled:
-            print(message)
+            logger.debug(f"{message}")
         else:
             # 預設輸出
-            print(message)
+            logger.debug(f"{message}")
 
 
 class SectorComparisonControlPanel(QWidget):

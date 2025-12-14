@@ -11,6 +11,14 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import pandas as pd
 import numpy as np
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 def run_fastf1_tire_strategy_analysis(f1_data, year: int, race: str, session: str, driver: str = None) -> Dict[str, Any]:
     """執行純 FastF1 輪胎策略分析的主要函數"""

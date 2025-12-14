@@ -13,8 +13,12 @@ except ImportError:  # pragma: no cover
     from modules.gui.interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
 
 from core.gui_i18n import tr
+from core.logger import get_logger
 
 from .throttle_line_chart_mdi import ThrottleLineChartMDI
+
+
+logger = get_logger(component="ThrottleLineChartModule")
 
 
 class ThrottleLineChartModule(IAnalysisModule):
@@ -83,10 +87,7 @@ class ThrottleLineChartModule(IAnalysisModule):
             self._is_initialized = True
             return True
         except Exception as exc:  # pragma: no cover - 初始化失敗需記錄
-            print(f"❌ [ThrottleLineChartModule] 初始化失敗: {exc}")
-            import traceback
-
-            traceback.print_exc()
+            logger.exception("[ThrottleLineChartModule] 初始化失敗", exc_info=exc)
             self._mdi = None
             self._main_widget = None
             return False
@@ -178,7 +179,7 @@ class ThrottleLineChartModule(IAnalysisModule):
             try:
                 self._mdi.cleanup()
             except Exception as exc:  # pragma: no cover
-                print(f"⚠️ [ThrottleLineChartModule] cleanup 失敗: {exc}")
+                logger.warning("[ThrottleLineChartModule] cleanup 失敗: %s", exc)
             self._mdi = None
         if self._main_widget:
             self._main_widget.deleteLater()

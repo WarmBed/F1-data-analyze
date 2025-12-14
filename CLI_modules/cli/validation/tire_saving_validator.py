@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F86 Tire Saving Behavior Validator
 
@@ -13,6 +15,14 @@ F86 Tire Saving Behavior Validator
 Author: F1T Team
 Version: 1.0.0
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 from dataclasses import dataclass, field, asdict
 from datetime import datetime

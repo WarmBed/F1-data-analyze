@@ -13,6 +13,11 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QMessageBox
 from PyQt5.QtCore import pyqtSlot, Qt
 from typing import Dict, Any, Optional
 
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.base_live_mdi", component="gui")
+
 
 class BaseLiveTimingMDI(QWidget):
     """
@@ -81,7 +86,7 @@ class BaseLiveTimingMDI(QWidget):
         # 訂閱信號
         self._subscribe_signals()
         
-        print(f"[{self.__class__.__name__}] 初始化完成")
+        logger.info("[%s] 初始化完成", self.__class__.__name__)
     
     def _setup_ui(self):
         """
@@ -111,10 +116,10 @@ class BaseLiveTimingMDI(QWidget):
             dm.progress_changed.connect(self._handle_progress_changed)
             
             self._is_subscribed = True
-            print(f"[{self.__class__.__name__}] 已訂閱 DataManager 信號")
+            logger.info("[%s] 已訂閱 DataManager 信號", self.__class__.__name__)
             
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 訂閱信號失敗: {e}")
+            logger.exception("[%s] 訂閱信號失敗", self.__class__.__name__)
     
     def _unsubscribe_signals(self):
         """取消訂閱信號"""
@@ -133,10 +138,10 @@ class BaseLiveTimingMDI(QWidget):
             dm.progress_changed.disconnect(self._handle_progress_changed)
             
             self._is_subscribed = False
-            print(f"[{self.__class__.__name__}] 已取消訂閱 DataManager 信號")
+            logger.info("[%s] 已取消訂閱 DataManager 信號", self.__class__.__name__)
             
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 取消訂閱信號失敗: {e}")
+            logger.exception("[%s] 取消訂閱信號失敗", self.__class__.__name__)
     
     # ===========================================
     # 信號處理器 - 內部包裝
@@ -147,7 +152,7 @@ class BaseLiveTimingMDI(QWidget):
         try:
             self._on_snapshot_updated(snapshot)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理快照更新失敗: {e}")
+            logger.exception("[%s] 處理快照更新失敗", self.__class__.__name__)
     
     @pyqtSlot(dict)
     def _handle_race_loaded(self, race_info: Dict[str, Any]):
@@ -156,7 +161,7 @@ class BaseLiveTimingMDI(QWidget):
             self._race_loaded = True
             self._on_race_loaded(race_info)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理賽事載入失敗: {e}")
+            logger.exception("[%s] 處理賽事載入失敗", self.__class__.__name__)
     
     @pyqtSlot()
     def _handle_race_unloaded(self):
@@ -165,7 +170,7 @@ class BaseLiveTimingMDI(QWidget):
             self._race_loaded = False
             self._on_race_unloaded()
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理賽事卸載失敗: {e}")
+            logger.exception("[%s] 處理賽事卸載失敗", self.__class__.__name__)
     
     @pyqtSlot(str)
     def _handle_playback_state_changed(self, state: str):
@@ -173,7 +178,7 @@ class BaseLiveTimingMDI(QWidget):
         try:
             self._on_playback_state_changed(state)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理播放狀態改變失敗: {e}")
+            logger.exception("[%s] 處理播放狀態改變失敗", self.__class__.__name__)
     
     @pyqtSlot(float)
     def _handle_time_changed(self, time_seconds: float):
@@ -181,7 +186,7 @@ class BaseLiveTimingMDI(QWidget):
         try:
             self._on_time_changed(time_seconds)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理時間改變失敗: {e}")
+            logger.exception("[%s] 處理時間改變失敗", self.__class__.__name__)
     
     @pyqtSlot(float)
     def _handle_progress_changed(self, progress: float):
@@ -189,7 +194,7 @@ class BaseLiveTimingMDI(QWidget):
         try:
             self._on_progress_changed(progress)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理進度改變失敗: {e}")
+            logger.exception("[%s] 處理進度改變失敗", self.__class__.__name__)
     
     @pyqtSlot(dict, dict, float, float)
     def _handle_interpolation_updated(self, current_snap: dict, next_snap: dict, 
@@ -198,7 +203,7 @@ class BaseLiveTimingMDI(QWidget):
         try:
             self._on_interpolation_updated(current_snap, next_snap, alpha, race_time_seconds)
         except Exception as e:
-            print(f"[{self.__class__.__name__}] 處理插值更新失敗: {e}")
+            logger.exception("[%s] 處理插值更新失敗", self.__class__.__name__)
     
     # ===========================================
     # 虛擬方法 - 子類應覆寫
@@ -296,7 +301,7 @@ class BaseLiveTimingMDI(QWidget):
     # ===========================================
     def closeEvent(self, event):
         """視窗關閉時清理資源"""
-        print(f"[{self.__class__.__name__}] 關閉視窗，清理資源...")
+        logger.info("[%s] 關閉視窗，清理資源...", self.__class__.__name__)
         
         # 取消訂閱信號
         self._unsubscribe_signals()

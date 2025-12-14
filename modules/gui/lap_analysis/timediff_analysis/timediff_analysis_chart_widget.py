@@ -19,6 +19,9 @@ from PyQt5.QtGui import QFont, QPen, QColor, QPainter, QBrush, QMouseEvent, QWhe
 # 導入國際化模組
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -32,13 +35,13 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+    logger.warning("連動管理器導入失敗，將使用舊版連動功能")
 
 # 導入統一圖表基類的主題配置
 try:
     from modules.gui.base.universal_chart_widget_base import ChartTheme
 except ImportError:
-    print("[WARNING] 統一圖表基類導入失敗，將使用預設配置")
+    logger.warning("統一圖表基類導入失敗，將使用預設配置")
     class ChartTheme:
         AXIS_TITLE_FONT = QFont("Microsoft YaHei", 7)
         TEXT_COLOR = QColor(50, 50, 50)
@@ -158,7 +161,7 @@ class timediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
                     # ✅ 使用 tr() 進行國際化 - vs 格式（單行標籤）
                     lap_vs_format = tr('lap_vs_lap_format', '{driver} 第{lap1}圈 vs 第{lap2}圈')
                     driver1_name = lap_vs_format.format(driver=original_driver, lap1=lap1, lap2=lap2)
-                    print(f"[timediff_CHART] 🔄 雙圈比較模式: {driver1_name}")
+                    logger.debug(f"[timediff_CHART] 🔄 雙圈比較模式: {driver1_name}")
         
         self.distance_data = distance
         self.driver1_timediff = driver1_timediff
@@ -203,7 +206,7 @@ class timediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
             self.min_timediff = data_min - margin
             self.max_timediff = data_max + margin
             
-            print(f"[timediff_CHART] 動態Y軸範圍: {self.min_timediff:.3f}s 到 {self.max_timediff:.3f}s (數據: {data_min:.3f}s ~ {data_max:.3f}s, 邊距: {margin:.3f}s)")
+            logger.debug(f"[timediff_CHART] 動態Y軸範圍: {self.min_timediff:.3f}s 到 {self.max_timediff:.3f}s (數據: {data_min:.3f}s ~ {data_max:.3f}s, 邊距: {margin:.3f}s)")
         else:
             # 沒有數據時使用預設範圍
             self.min_timediff = -1
@@ -241,7 +244,7 @@ class timediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
     
     def reset_view(self):
         """重置視圖到原始範圍"""
-        print(f"[timediff_CHART] 🔄 reset_view() 被調用")
+        logger.debug(f"[timediff_CHART] 🔄 reset_view() 被調用")
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_timediff = None
@@ -249,9 +252,9 @@ class timediffChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDr
         # 清除固定線 - 與速度分析保持一致
         self.show_fixed_line = False
         self.fixed_distance_value = None
-        print(f"[timediff_CHART] ✅ 視圖範圍已重置，調用 repaint()")
+        logger.info(f"[timediff_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()
-        print(f"[timediff_CHART] ✅ reset_view() 完成")
+        logger.info(f"[timediff_CHART] ✅ reset_view() 完成")
     
     def reset_data(self):
         """重置所有數據和視圖"""
@@ -1255,7 +1258,7 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
     def set_statistics_visibility(self, visible: bool) -> bool:
         """設置統計面板顯示狀態 - 供分析模組管理器調用"""
         try:
-            print(f"[timediff_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            logger.debug(f"[timediff_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
             
             if visible:
                 # 顯示統計面板
@@ -1267,11 +1270,11 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 # 隱藏整個統計容器
                 self.stats_container.setVisible(False)
             
-            print(f"[timediff_CHART] ✅ 統計面板顯示狀態設置完成")
+            logger.info(f"[timediff_CHART] ✅ 統計面板顯示狀態設置完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [timediff_CHART] 設置統計面板顯示狀態失敗: {e}")
+            logger.error(f"[timediff_CHART] 設置統計面板顯示狀態失敗: {e}")
             return False
             
     def _adjust_table_height(self):
@@ -1362,7 +1365,7 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
-            print(f"[ERROR] 更新狀態資訊失敗: {e}")
+            logger.error(f"更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
             self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
             self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
@@ -1372,11 +1375,11 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
         self.current_data = data
         
         try:
-            print(f"[timediff_CHART] ========== 更新時間差數據 ==========")
-            print(f"[timediff_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
+            logger.debug(f"[timediff_CHART] ========== 更新時間差數據 ==========")
+            logger.debug(f"[timediff_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
             
             if not data:
-                print(f"[ERROR] [timediff_CHART] 數據為空")
+                logger.error(f"[timediff_CHART] 數據為空")
                 return
             
             # 提取元數據
@@ -1384,18 +1387,18 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
             timediff_data = data.get('timediff_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[timediff_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
-            print(f"[timediff_CHART] timediff_data 鍵: {list(timediff_data.keys()) if timediff_data else 'None'}")
-            print(f"[timediff_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
+            logger.debug(f"[timediff_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
+            logger.debug(f"[timediff_CHART] timediff_data 鍵: {list(timediff_data.keys()) if timediff_data else 'None'}")
+            logger.debug(f"[timediff_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
             
             # 提取車手信息和賽道信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
             reference_info = metadata.get('reference_info', '')
             
-            print(f"[timediff_CHART] 車手數量: {len(drivers)}")
-            print(f"[timediff_CHART] 賽道區段: {len(sectors)}")
-            print(f"[timediff_CHART] 參考信息: {reference_info}")
+            logger.debug(f"[timediff_CHART] 車手數量: {len(drivers)}")
+            logger.debug(f"[timediff_CHART] 賽道區段: {len(sectors)}")
+            logger.debug(f"[timediff_CHART] 參考信息: {reference_info}")
             
             # 提取時間差數據 - 單一累積時間差曲線
             # ⚠️ 原則1驗證：timediff 使用 'time' 作為 X 軸，不是 'distance'
@@ -1408,13 +1411,13 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
             # 不需要 driver1_time_seconds，因為 time_data 已經是時間序列
             driver1_time = time_data  # 使用 reference_time 作為時間軸 X 軸數據
             driver2_time = []  # Time Diff 不需要第二個時間序列
-            print(f"[timediff_CHART] 🕒 driver1_time 數據點 (使用 reference_time): {len(driver1_time)}")
-            print(f"[timediff_CHART] 🕒 driver2_time 數據點: {len(driver2_time)}")
+            logger.debug(f"[timediff_CHART] 🕒 driver1_time 數據點 (使用 reference_time): {len(driver1_time)}")
+            logger.debug(f"[timediff_CHART] 🕒 driver2_time 數據點: {len(driver2_time)}")
             driver1_name = timediff_data.get('driver1_name', 'Time Difference')
             
-            print(f"[timediff_CHART] 時間數據點 (X軸): {len(time_data)}")  # 修正：time_data 不是 distance
-            print(f"[timediff_CHART] 累積時間差數據點: {len(cumulative_diff)}")
-            print(f"[timediff_CHART] 參考: {reference}")
+            logger.debug(f"[timediff_CHART] 時間數據點 (X軸): {len(time_data)}")  # 修正：time_data 不是 distance
+            logger.debug(f"[timediff_CHART] 累積時間差數據點: {len(cumulative_diff)}")
+            logger.debug(f"[timediff_CHART] 參考: {reference}")
             
             # 設置車手名稱（時間差分析為單一曲線）
             lap1 = None
@@ -1424,30 +1427,30 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 lap1 = drivers[0].get('lap_number')
                 lap2 = drivers[1].get('lap_number')
                 driver1_name = f"{drivers[0].get('code', 'Driver1')} vs {drivers[1].get('code', 'Driver2')}"
-                print(f"[timediff_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
-                print(f"[timediff_CHART] 時間差標籤: {driver1_name}")
+                logger.debug(f"[timediff_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
+                logger.debug(f"[timediff_CHART] 時間差標籤: {driver1_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
                 lap1 = drivers[0].get('lap_number')
-                print(f"[timediff_CHART] 單車手模式: {driver1_name}")
+                logger.debug(f"[timediff_CHART] 單車手模式: {driver1_name}")
             
             # 時間差分析總是單一累積時間差曲線模式
-            print(f"[timediff_CHART] 🎯 使用單一累積時間差曲線模式")
+            logger.debug(f"[timediff_CHART] 🎯 使用單一累積時間差曲線模式")
             
             # 檢查數據完整性（原則1：驗證 time_data 而非 distance）
             # 🔴 防御性檢查：chart_widget 可能在 cleanup() 後被設為 None
             if self.chart_widget is None:
-                print(f"[WARNING] [timediff_CHART] ⚠️ chart_widget 已被清理，跳過數據更新")
+                logger.warning(f"[timediff_CHART] ⚠️ chart_widget 已被清理，跳過數據更新")
                 return
             
             if not time_data or not cumulative_diff:
-                print(f"[ERROR] [timediff_CHART] 關鍵數據缺失")
-                print(f"[timediff_CHART] time_data (X軸): {len(time_data) if time_data else 0} 點")
-                print(f"[timediff_CHART] cumulative_diff (Y軸): {len(cumulative_diff) if cumulative_diff else 0} 點")
+                logger.error(f"[timediff_CHART] 關鍵數據缺失")
+                logger.debug(f"[timediff_CHART] time_data (X軸): {len(time_data) if time_data else 0} 點")
+                logger.debug(f"[timediff_CHART] cumulative_diff (Y軸): {len(cumulative_diff) if cumulative_diff else 0} 點")
                 return
             
             # 更新圖表 - 使用單一累積時間差曲線（原則1：使用 time_data 作為 X 軸）
-            print(f"[timediff_CHART] 📊 更新時間差圖表...")
+            logger.debug(f"[timediff_CHART] 📊 更新時間差圖表...")
             self.chart_widget.set_timediff_data(
                 distance=time_data,  # ⚠️ 參數名為 'distance' 但實際傳遞時間數據（保持接口兼容性）
                 driver1_timediff=cumulative_diff,  # 累積時間差作為主要曲線
@@ -1460,21 +1463,21 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 driver1_time=driver1_time,  # 🆕 時間軸數據
                 driver2_time=driver2_time   # 🆕 時間軸數據
             )
-            print(f"[timediff_CHART] ✅ 圖表更新完成")
+            logger.info(f"[timediff_CHART] ✅ 圖表更新完成")
             
             # 更新統計表格
-            print(f"[timediff_CHART] 📋 更新統計表格...")
+            logger.debug(f"[timediff_CHART] 📋 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, "")
             
             # 更新狀態資訊顯示
-            print(f"[timediff_CHART] 📋 更新狀態資訊...")
+            logger.debug(f"[timediff_CHART] 📋 更新狀態資訊...")
             self._update_status_info(data)
             
             self.chart_updated.emit()
-            print(f"[timediff_CHART] ✅ 全部更新完成")
+            logger.info(f"[timediff_CHART] ✅ 全部更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [timediff CHART WIDGET] 更新數據失敗: {e}")
+            logger.error(f"[timediff CHART WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1494,7 +1497,7 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 return self._generate_mock_timediff_data()
                 
         except Exception as e:
-            print(f"[ERROR] [timediff_CHART_WIDGET] 準備圖表數據失敗: {e}")
+            logger.error(f"[timediff_CHART_WIDGET] 準備圖表數據失敗: {e}")
             return self._generate_mock_timediff_data()
     
     def _parse_timediff_telemetry(self, timediff_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1527,10 +1530,10 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
         """更新統計表格 - 時間差分析專用（單一累積時間差曲線）"""
-        print(f"[timediff_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
+        logger.debug(f"[timediff_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
         
         if not statistics:
-            print(f"[timediff_CHART] ⚠️  statistics 為空")
+            logger.warning(f"[timediff_CHART] ⚠️  statistics 為空")
             return
             
         try:
@@ -1542,8 +1545,8 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
             difference_stats = statistics.get('difference', {})
             time_stats = statistics.get('time', {})
             
-            print(f"[timediff_CHART] difference_stats: {difference_stats}")
-            print(f"[timediff_CHART] time_stats: {time_stats}")
+            logger.debug(f"[timediff_CHART] difference_stats: {difference_stats}")
+            logger.debug(f"[timediff_CHART] time_stats: {time_stats}")
             
             # 準備表格數據 - 時間差分析專用（原則2：參考 rain_analysis 單曲線模式）
             rows = [
@@ -1569,7 +1572,7 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                  "")
             ]
             
-            print(f"[timediff_CHART] 表格數據行: {rows}")
+            logger.debug(f"[timediff_CHART] 表格數據行: {rows}")
             
             # 設置表格行數和數據
             self.stats_table.setRowCount(len(rows))
@@ -1600,10 +1603,10 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
             self.stats_table.viewport().update()
             self.stats_table.repaint()
             
-            print(f"[timediff CHART WIDGET] ✅ 統計表格更新完成")
+            logger.info(f"[timediff CHART WIDGET] ✅ 統計表格更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [timediff CHART WIDGET] 更新統計表格失敗: {e}")
+            logger.error(f"[timediff CHART WIDGET] 更新統計表格失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1622,15 +1625,15 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                              lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 與速度分析模組保持一致"""
         try:
-            print(f"[timediff_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
-            print(f"[timediff_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            logger.debug(f"[timediff_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
+            logger.debug(f"[timediff_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
             
             # 更新圈數顯示
             self.set_lap_numbers(lap1, lap2)
             
             # 如果有數據載入器，重新載入數據
             if hasattr(self, 'timediff_loader'):
-                print(f"[timediff_CHART_WIDGET] 📦 找到timediff數據載入器，準備重新載入...")
+                logger.debug(f"[timediff_CHART_WIDGET] 📦 找到timediff數據載入器，準備重新載入...")
                 
                 session_info = {
                     'year': int(year) if year.isdigit() else year,
@@ -1644,14 +1647,14 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                 }
                 
                 self.timediff_loader.load_timediff_analysis_data(session_info)
-                print(f"[timediff_CHART_WIDGET] ✅ 數據重新載入請求已發送")
+                logger.info(f"[timediff_CHART_WIDGET] ✅ 數據重新載入請求已發送")
                 return True
             else:
-                print(f"[timediff_CHART_WIDGET] ⚠️ 未找到timediff數據載入器，僅更新顯示")
+                logger.warning(f"[timediff_CHART_WIDGET] ⚠️ 未找到timediff數據載入器，僅更新顯示")
                 return True
                 
         except Exception as e:
-            print(f"[ERROR] [timediff_CHART_WIDGET] 更新圈速參數失敗: {e}")
+            logger.error(f"[timediff_CHART_WIDGET] 更新圈速參數失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1676,12 +1679,12 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
-        print(f"[timediff_ANALYSIS] 🔄 reset_chart_view() 被調用")
+        logger.debug(f"[timediff_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
-            print(f"[timediff_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
+            logger.info(f"[timediff_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
         else:
-            print(f"[timediff_ANALYSIS] ❌ 未找到 chart_widget 屬性")
+            logger.error(f"[timediff_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""
@@ -1692,7 +1695,7 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
     def cleanup(self):
         """清理 Chart Widget 資源 - 防止記憶體洩漏"""
         try:
-            print(f"[TIMEDIFF_CHART] 🧹 開始清理資源...")
+            logger.debug(f"[TIMEDIFF_CHART] 🧹 開始清理資源...")
             
             # 1. 清理 Matplotlib 圖表
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -1702,17 +1705,17 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                         import matplotlib.pyplot as plt
                         plt.close(self.chart_widget.figure)
                         self.chart_widget.figure = None
-                        print(f"[TIMEDIFF_CHART]   ✅ Matplotlib 圖表已清理")
+                        logger.info(f"[TIMEDIFF_CHART] ✅ Matplotlib 圖表已清理")
                     except Exception as e:
-                        print(f"[TIMEDIFF_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                        logger.warning(f"[TIMEDIFF_CHART] ⚠️ Matplotlib 清理警告: {e}")
                 
                 if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
                     try:
                         self.chart_widget.canvas.deleteLater()
                         self.chart_widget.canvas = None
-                        print(f"[TIMEDIFF_CHART]   ✅ Canvas 已清理")
+                        logger.info(f"[TIMEDIFF_CHART] ✅ Canvas 已清理")
                     except Exception as e:
-                        print(f"[TIMEDIFF_CHART]   ⚠️ Canvas 清理警告: {e}")
+                        logger.warning(f"[TIMEDIFF_CHART] ⚠️ Canvas 清理警告: {e}")
             
             # 2. 清理 QTableWidget 中的所有 Item
             if hasattr(self, 'stats_table') and self.stats_table:
@@ -1726,44 +1729,44 @@ class timediffAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisL
                     self.stats_table.clear()
                     self.stats_table.deleteLater()
                     self.stats_table = None
-                    print(f"[TIMEDIFF_CHART]   ✅ QTableWidget 已完全清理")
+                    logger.info(f"[TIMEDIFF_CHART] ✅ QTableWidget 已完全清理")
                 except Exception as e:
-                    print(f"[TIMEDIFF_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+                    logger.warning(f"[TIMEDIFF_CHART] ⚠️ QTableWidget 清理警告: {e}")
             
             # 3. 斷開 Signal 連接
             if hasattr(self, 'receiver') and self.receiver:
                 try:
                     self.receiver.deleteLater()
                     self.receiver = None
-                    print(f"[TIMEDIFF_CHART]   ✅ Signal Receiver 已清理")
+                    logger.info(f"[TIMEDIFF_CHART] ✅ Signal Receiver 已清理")
                 except Exception as e:
-                    print(f"[TIMEDIFF_CHART]   ⚠️ Receiver 清理警告: {e}")
+                    logger.warning(f"[TIMEDIFF_CHART] ⚠️ Receiver 清理警告: {e}")
             
             # 4. 清理數據引用
             data_attrs = ['telemetry_data', 'lap_data', 'timediff_data', 'driver1_data', 'driver2_data', 'cached_data']
             for attr in data_attrs:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
-            print(f"[TIMEDIFF_CHART]   ✅ 數據引用已清空")
+            logger.info(f"[TIMEDIFF_CHART] ✅ 數據引用已清空")
             
             # 5. 清理 ChartWidget
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 try:
                     self.chart_widget.deleteLater()
                     self.chart_widget = None
-                    print(f"[TIMEDIFF_CHART]   ✅ ChartWidget 已清理")
+                    logger.info(f"[TIMEDIFF_CHART] ✅ ChartWidget 已清理")
                 except Exception as e:
-                    print(f"[TIMEDIFF_CHART]   ⚠️ ChartWidget 清理警告: {e}")
+                    logger.warning(f"[TIMEDIFF_CHART] ⚠️ ChartWidget 清理警告: {e}")
             
             # 6. 清理資料載入器引用
             if hasattr(self, 'timediff_loader'):
                 self.timediff_loader = None
-                print(f"[TIMEDIFF_CHART]   ✅ 資料載入器引用已清空")
+                logger.info(f"[TIMEDIFF_CHART] ✅ 資料載入器引用已清空")
             
-            print(f"[TIMEDIFF_CHART] ✅ 資源清理完成")
+            logger.info(f"[TIMEDIFF_CHART] ✅ 資源清理完成")
             
         except Exception as e:
-            print(f"[ERROR] [TIMEDIFF_CHART] cleanup 失敗: {e}")
+            logger.error(f"[TIMEDIFF_CHART] cleanup 失敗: {e}")
             import traceback
             traceback.print_exc()
 
@@ -1772,6 +1775,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QTimer
     import sys
+
     
     app = QApplication(sys.argv)
     

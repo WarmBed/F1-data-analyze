@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 賽道特定模型訓練器 - Function 77
 為每個賽道訓練獨立的排位時間預測模型
@@ -17,6 +18,14 @@ F1 賽道特定模型訓練器 - Function 77
 - 原則 3：所有字串使用 tr()（未來）
 - 原則 4：print 輸出會導向 logger
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

@@ -13,7 +13,10 @@ from PyQt5.QtCore import QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
+from core.logger import get_logger
 from modules.gui.base.universal_data_loader_base import AnalysisConfig, UniversalDataLoader
+
+logger = get_logger(__name__)
 
 
 class StraightLineSpeedApiWorker(QThread):
@@ -46,14 +49,24 @@ class StraightLineSpeedApiWorker(QThread):
     def run(self):
         """✅ 在背景執行緒執行 API 請求"""
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SPEED_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             
             # 構建 API 端點
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             
-            print(f"[SPEED_API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[SPEED_API_WORKER] 📋 參數: {self.params}")
+            logger.debug(f"[SPEED_API_WORKER] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[SPEED_API_WORKER] 📋 參數: {self.params}")
             
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[SPEED_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             # ✅ 在背景執行緒發送 POST 請求（不阻塞主 GUI）
             start_ts = time.perf_counter()
             response = requests.post(
@@ -62,6 +75,12 @@ class StraightLineSpeedApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SPEED_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             
             # 檢查 HTTP 狀態
@@ -89,23 +108,32 @@ class StraightLineSpeedApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[SPEED_API_WORKER] ✅ API 調用成功")
-            print(f"[SPEED_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[SPEED_API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info(f"[SPEED_API_WORKER] ✅ API 調用成功")
+            logger.debug(f"[SPEED_API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[SPEED_API_WORKER] 📊 數據源: {meta['source']}")
             
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SPEED_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             # ✅ 通過信號將結果返回主線程
             self.success.emit({"payload": payload, "meta": meta})
             
         except Exception as exc:
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[SPEED_API_WORKER] ❌ {error_msg}")
+            logger.error(f"[SPEED_API_WORKER] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
-            # ✅ 通過信號發送錯誤訊息
-            self.failure.emit(error_msg)
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                # ✅ 通過信號發送錯誤訊息
+                self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class StraightLineSpeedDataLoader(UniversalDataLoader):

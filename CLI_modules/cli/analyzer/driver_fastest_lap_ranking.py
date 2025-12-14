@@ -5,7 +5,7 @@ F1 Analysis - 車手最速圈排名分析模組 (功能 14.4)
 Driver Fastest Lap Ranking Analysis Module (Function 14.4)
 
 本模組提供車手最速圈排名分析功能，包含：
-- 🏆 最速圈排名分析 - 含區間時間
+- 最速圈排名分析 - 含區間時間
 - 輪胎策略與最速圈的關聯分析
 - 各區間時間詳細對比
 - JSON格式完整輸出
@@ -14,6 +14,14 @@ Driver Fastest Lap Ranking Analysis Module (Function 14.4)
 作者: F1 Analysis Team
 日期: 2025-08-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import os
@@ -329,6 +337,14 @@ def run_driver_fastest_lap_ranking(data_loader, dynamic_team_mapping=None, f1_an
     except Exception as e:
         print(f"[ERROR] 車手最速圈排名分析執行失敗: {e}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return False
 

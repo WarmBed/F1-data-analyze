@@ -1,11 +1,19 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Function 18 - 指定彎道詳細分析模組
 符合開發核心原則的彎道分析實現
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import pickle
 import json
 import time
@@ -951,6 +959,13 @@ class CornerDetailedAnalysis:
     def _detect_corners_by_direction(self, telemetry, min_angle_change=30):
         """基於 X/Y 座標方向角變化檢測彎道"""
         from math import atan2, degrees
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         corners = []
         
         if not all(col in telemetry.columns for col in ['X', 'Y', 'Distance']):

@@ -9,6 +9,9 @@ from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
 
 from .ideal_lap_sector_heatmap_module import IdealLapSectorHeatmapModule
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 def register() -> bool:
     try:
@@ -16,10 +19,10 @@ def register() -> bool:
             ModuleTypes.IDEAL_LAP_SECTOR_HEATMAP,
             IdealLapSectorHeatmapModule,
         )
-        print("[SECTOR_HEATMAP] Module registered")
+        logger.debug("[SECTOR_HEATMAP] Module registered")
         return True
     except Exception as exc:  # pragma: no cover - defensive
-        print(f"[SECTOR_HEATMAP] Module registration failed: {exc}")
+        logger.debug(f"[SECTOR_HEATMAP] Module registration failed: {exc}")
         return False
 
 

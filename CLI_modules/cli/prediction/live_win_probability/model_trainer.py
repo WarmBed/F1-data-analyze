@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Live Win Probability - XGBoost Model Trainer
 
@@ -18,6 +20,14 @@ Live Win Probability - XGBoost Model Trainer
 作者: F1T Dev Team
 日期: 2025-01
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

@@ -923,6 +923,13 @@ class F1AnalysisModularCLI:
             elif function_id == 9:
                 try:
                     from modules.special_incidents_analysis import run_special_incidents_analysis_json
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
                     print("\n🚨 執行特殊事件報告分析 (JSON輸出版)...")
                     
                     # 執行JSON版本的特殊事件報告分析

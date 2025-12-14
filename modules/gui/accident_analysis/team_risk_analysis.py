@@ -19,6 +19,9 @@ from typing import Dict, List, Any, Optional
 from prettytable import PrettyTable
 import re
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 def clean_for_json(obj):
     """清理數據以便JSON序列化"""
@@ -65,7 +68,7 @@ def analyze_team_risk_data(data_loader):
     """分析車隊風險數據"""
     try:
         if not data_loader or not hasattr(data_loader, 'loaded_data') or not data_loader.loaded_data:
-            print("[ERROR] 無法獲取已載入的數據")
+            logger.error("無法獲取已載入的數據")
             return None
             
         loaded_data = data_loader.loaded_data
@@ -93,7 +96,7 @@ def analyze_team_risk_data(data_loader):
         }
         
     except Exception as e:
-        print(f"[ERROR] 分析車隊風險數據時發生錯誤: {e}")
+        logger.error(f"分析車隊風險數據時發生錯誤: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -115,7 +118,7 @@ def extract_race_control_messages(loaded_data):
         return []
         
     except Exception as e:
-        print(f"[WARNING] 提取賽事控制消息失敗: {e}")
+        logger.warning(f"提取賽事控制消息失敗: {e}")
         return []
 
 
@@ -165,7 +168,7 @@ def extract_driver_incidents(race_control_messages):
                     driver_incidents[driver].append(incident)
             
         except Exception as e:
-            print(f"[WARNING] 處理消息時發生錯誤: {e}")
+            logger.warning(f"處理消息時發生錯誤: {e}")
             continue
     
     return driver_incidents
@@ -325,19 +328,19 @@ def generate_team_ranking(team_risks):
 def display_team_risk_table(analysis_result):
     """顯示車隊風險表格"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可顯示")
+        logger.error("無分析結果可顯示")
         return
     
     session_info = analysis_result.get("session_info", {})
     team_risks = analysis_result.get("team_risks", {})
     team_ranking = analysis_result.get("team_ranking", [])
     
-    print(f"\n[FINISH] 車隊風險分數統計 (功能 4.4)")
-    print("=" * 80)
-    print(f"📅 賽事: {session_info.get('year')} {session_info.get('track_name')}")
-    print(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
-    print(f"🏎️ 涉事車隊數: {analysis_result.get('total_teams_involved', 0)}")
-    print("=" * 80)
+    logger.debug(f"\n[FINISH] 車隊風險分數統計 (功能 4.4)")
+    logger.debug("=" * 80)
+    logger.debug(f"賽事: {session_info.get('year')} {session_info.get('track_name')}")
+    logger.debug(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
+    logger.debug(f"🏎️ 涉事車隊數: {analysis_result.get('total_teams_involved', 0)}")
+    logger.debug("=" * 80)
     
     if team_ranking:
         # 車隊安全排名表格
@@ -369,41 +372,41 @@ def display_team_risk_table(analysis_result):
                 team_data.get('average_score_per_driver', 0)
             ])
         
-        print(f"\n🏆 車隊安全排名 (按安全評級排序):")
-        print(ranking_table)
+        logger.debug(f"\n🏆 車隊安全排名 (按安全評級排序):")
+        logger.debug(f"{ranking_table}")
         
         # 詳細車隊分析（前5名最高風險車隊）
         high_risk_teams = [team for team in team_ranking if team['risk_level'] in ['HIGH', 'MEDIUM']][:5]
         
         if high_risk_teams:
-            print(f"\n[DEBUG] 高風險車隊詳細分析:")
+            logger.debug(f"\n[DEBUG] 高風險車隊詳細分析:")
             
             for team_rank in high_risk_teams:
                 team_name = team_rank['team']
                 team_data = team_risks.get(team_name, {})
                 
-                print(f"\n{team_rank['rank']}. {team_name} - 安全評級: {team_rank['safety_rating']}/100 | 風險等級: {team_rank['risk_level']}")
-                print(f"   總分數: {team_rank['total_score']} | 總事件數: {team_rank['total_incidents']}")
+                logger.debug(f"\n{team_rank['rank']}. {team_name} - 安全評級: {team_rank['safety_rating']}/100 | 風險等級: {team_rank['risk_level']}")
+                logger.debug(f"   總分數: {team_rank['total_score']} | 總事件數: {team_rank['total_incidents']}")
                 
                 # 車手明細
                 drivers_data = team_data.get('drivers', {})
                 if drivers_data:
-                    print(f"   車手明細:")
+                    logger.debug(f"   車手明細:")
                     for driver, driver_data in drivers_data.items():
-                        print(f"     - {driver}: 分數 {driver_data['score']}, 事件數 {driver_data['incident_count']}")
+                        logger.debug(f"     - {driver}: 分數 {driver_data['score']}, 事件數 {driver_data['incident_count']}")
                 
                 # 事件類型分析
                 incident_breakdown = team_data.get('incident_breakdown', {})
                 main_incidents = [(k, v) for k, v in incident_breakdown.items() if v > 0]
                 if main_incidents:
                     incident_text = ', '.join([f'{k.replace("_", " ")}: {v}' for k, v in main_incidents])
-                    print(f"   主要事件類型: {incident_text}")
+                    logger.debug(f"   主要事件類型: {incident_text}")
 
 
 def save_team_risk_raw_data(analysis_result, data_loader):
     """保存車隊風險原始數據為JSON格式"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可保存")
+        logger.error("無分析結果可保存")
         return
     
     try:
@@ -445,28 +448,28 @@ def save_team_risk_raw_data(analysis_result, data_loader):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-        print(f"\n💾 原始數據已保存至: {filename}")
-        print(f"[INFO] JSON包含 {len(json_data.get('team_risks', {}))} 個車隊的詳細風險分析")
+        logger.debug(f"\n💾 原始數據已保存至: {filename}")
+        logger.info(f"JSON包含 {len(json_data.get('team_risks', {}))} 個車隊的詳細風險分析")
         
     except Exception as e:
-        print(f"[ERROR] 保存JSON文件失敗: {e}")
+        logger.error(f"保存JSON文件失敗: {e}")
 
 
 def run_team_risk_analysis(data_loader):
     """執行車隊風險分數統計的主函數"""
     try:
-        print("\n[FINISH] 開始車隊風險分數統計...")
+        logger.debug("\n[FINISH] 開始車隊風險分數統計...")
         
         # 檢查數據載入器
         if not data_loader:
-            print("[ERROR] 數據載入器未初始化")
+            logger.error("數據載入器未初始化")
             return False
         
         # 分析車隊風險數據
         analysis_result = analyze_team_risk_data(data_loader)
         
         if not analysis_result:
-            print("[ERROR] 車隊風險分析失敗")
+            logger.error("車隊風險分析失敗")
             return False
         
         # 顯示分析結果
@@ -475,16 +478,17 @@ def run_team_risk_analysis(data_loader):
         # 保存原始數據
         save_team_risk_raw_data(analysis_result, data_loader)
         
-        print("\n[SUCCESS] 車隊風險分數統計完成")
+        logger.info("\n[SUCCESS] 車隊風險分數統計完成")
         return True
         
     except Exception as e:
-        print(f"[ERROR] 執行車隊風險分數統計時發生錯誤: {e}")
+        logger.error(f"執行車隊風險分數統計時發生錯誤: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 if __name__ == "__main__":
-    print("[WARNING] 此模組需要通過主程式調用")
-    print("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.4")
+    logger.warning("此模組需要通過主程式調用")
+    logger.debug("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.4")

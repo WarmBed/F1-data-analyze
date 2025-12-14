@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """Lap Throttle Ratio Analysis (Function 54).
 
 Computes per-lap throttle usage metrics for every driver in a loaded
@@ -6,19 +7,27 @@ FastF1 session. The output is saved as structured JSON so that GUI
 modules operating under the API-ONLY policy can consume identical data.
 
 Key metrics (per lap):
-    • full_throttle_duration_s  – total seconds with throttle ≥ threshold.
-    • full_throttle_ratio       – share of lap spent above threshold.
-    • average_throttle          – time-weighted average throttle (0-1).
-    • throttle_variability      – weighted standard deviation (0-1).
-    • coasting_duration_s       – total seconds with throttle ≤ coast threshold.
-    • drs_usage_ratio           – share of lap with DRS active (if data exists).
-    • speed_avg_kmh / top_speed_kmh – from telemetry Speed channel when present.
+    - full_throttle_duration_s  - total seconds with throttle >= threshold.
+    - full_throttle_ratio       - share of lap spent above threshold.
+    - average_throttle          - time-weighted average throttle (0-1).
+    - throttle_variability      - weighted standard deviation (0-1).
+    - coasting_duration_s       - total seconds with throttle <= coast threshold.
+    - drs_usage_ratio           - share of lap with DRS active (if data exists).
+    - speed_avg_kmh / top_speed_kmh - from telemetry Speed channel when present.
 
 The analyser returns a dictionary that matches the CLI unified response
 format used across the project and persists JSON to ``json/``.
 """
 
 from __future__ import annotations
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import math
@@ -30,6 +39,14 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import pandas as pd
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 # 抑制 FastF1 的 FutureWarning (pick_driver 棄用警告)
 warnings.filterwarnings('ignore', category=FutureWarning, module='fastf1')

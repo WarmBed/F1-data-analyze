@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 部件變更類型分類器 V3.0
 版本：v3.0 (2025-11-08)
@@ -7,8 +8,17 @@
   2. 精簡為 6 類（REPAIR, CHANGE, MAJOR_UPDATE, PARAM_ADJUST, SAFETY_STD, NOISE）
   3. 動態信心度評分（0.60-0.95+）
   4. 關鍵字權重表
-  5. ✨ 新增：15 個主分類 (Main Category) + 61 個子分類 (Sub Category) 層級系統
+  5. 新增：15 個主分類 (Main Category) + 61 個子分類 (Sub Category) 層級系統
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import re
 from typing import Dict, List, Tuple
 

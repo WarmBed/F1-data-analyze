@@ -17,6 +17,8 @@ Date: 2025-12-07
 from typing import Dict, Any, Optional
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
+from core.logger import get_logger
+
 from .realtime_database import get_realtime_db, RealtimeDatabase
 
 
@@ -54,6 +56,8 @@ class DatabaseReader(QObject):
         # 計數器
         self._read_count = 0
         self._last_driver_count = 0
+
+        self._logger = get_logger("live_timing.database_reader", component="gui")
         
     def start_reading(self):
         """開始定時讀取"""
@@ -63,7 +67,7 @@ class DatabaseReader(QObject):
         self._db.connect()
         self._is_reading = True
         self._timer.start(self._interval_ms)
-        print(f"[DB_READER] Started reading every {self._interval_ms}ms")
+        self._logger.info("Started reading every %sms", self._interval_ms)
     
     def stop_reading(self):
         """停止定時讀取"""
@@ -72,7 +76,7 @@ class DatabaseReader(QObject):
         
         self._timer.stop()
         self._is_reading = False
-        print(f"[DB_READER] Stopped reading (total reads: {self._read_count})")
+        self._logger.info("Stopped reading (total reads: %s)", self._read_count)
     
     def is_reading(self) -> bool:
         """是否正在讀取"""
@@ -93,13 +97,18 @@ class DatabaseReader(QObject):
             driver_count = len(snapshot.get('drivers', {}))
             if self._read_count % 100 == 1 or driver_count != self._last_driver_count:
                 lap_info = f"Lap {snapshot.get('current_lap', 0)}/{snapshot.get('total_laps', 0)}"
-                print(f"[DB_READER] Read #{self._read_count}: {driver_count} drivers | {lap_info}")
+                self._logger.debug(
+                    "Read #%s: %s drivers | %s",
+                    self._read_count,
+                    driver_count,
+                    lap_info,
+                )
                 self._last_driver_count = driver_count
             
             self.snapshot_updated.emit(snapshot)
             
         except Exception as e:
-            print(f"[DB_READER] Read error: {e}")
+            self._logger.error("Read error: %s", e)
     
     def set_interval(self, interval_ms: int):
         """設置讀取間隔"""

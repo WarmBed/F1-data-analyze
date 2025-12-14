@@ -25,6 +25,11 @@ from typing import Dict, List, Any, Optional
 from core.gui_i18n import tr
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+# 導入 logger
+
 
 class AllDriversBrakePerformanceWidget(QWidget):
     """
@@ -101,7 +106,7 @@ class AllDriversBrakePerformanceWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [BRAKE_WIDGET] 無效的數據格式")
+                logger.warning("[BRAKE_WIDGET] 無效的數據格式")
                 return
             
             self.current_data = data
@@ -112,10 +117,10 @@ class AllDriversBrakePerformanceWidget(QWidget):
             else:
                 self.draw_deceleration_chart()
                 
-            print(f"[BRAKE_WIDGET] 數據更新完成，圖表類型: {self.current_chart_type}")
+            logger.info(f"[BRAKE_WIDGET] 數據更新完成，圖表類型: {self.current_chart_type}")
             
         except Exception as e:
-            print(f"[ERROR] [BRAKE_WIDGET] 更新數據失敗: {e}")
+            logger.error(f"[BRAKE_WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -127,13 +132,13 @@ class AllDriversBrakePerformanceWidget(QWidget):
         """
         try:
             if not self.current_data:
-                print("[WARNING] [BRAKE_WIDGET] 無數據可繪製")
+                logger.warning("[BRAKE_WIDGET] 無數據可繪製")
                 return
             
             # 提取原始車手數據（從 driver_brakes）
             driver_brakes = self.current_data.get("driver_brakes", [])
             if not driver_brakes:
-                print("[WARNING] [BRAKE_WIDGET] 缺少 driver_brakes 數據")
+                logger.warning("[BRAKE_WIDGET] 缺少 driver_brakes 數據")
                 return
             
             # 提取煞車時間數據
@@ -151,7 +156,7 @@ class AllDriversBrakePerformanceWidget(QWidget):
                 brake_times.append(brake_time)
             
             if not drivers:
-                print("[WARNING] [BRAKE_WIDGET] 計算後無有效數據")
+                logger.warning("[BRAKE_WIDGET] 計算後無有效數據")
                 return
             
             # 清除舊圖
@@ -210,10 +215,10 @@ class AllDriversBrakePerformanceWidget(QWidget):
             # 刷新畫布
             self.canvas.draw()
             
-            print(f"[BRAKE_WIDGET] 煞車時間圖表繪製完成：{len(drivers)} 位車手")
+            logger.info(f"[BRAKE_WIDGET] 煤車時間圖表繪製完成：{len(drivers)} 位車手")
             
         except Exception as e:
-            print(f"[ERROR] [BRAKE_WIDGET] 繪製煞車時間圖表失敗: {e}")
+            logger.error(f"[BRAKE_WIDGET] 繪製煤車時間圖表失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -221,13 +226,13 @@ class AllDriversBrakePerformanceWidget(QWidget):
         """繪製垂直長條圖（最大減速度）"""
         try:
             if not self.current_data:
-                print("[WARNING] [BRAKE_WIDGET] 無數據可繪製")
+                logger.warning("[BRAKE_WIDGET] 無數據可繪製")
                 return
             
-            # 提取車手煞車數據
+            # 提取車手煤車數據
             driver_brakes = self.current_data.get("driver_brakes", [])
             if not driver_brakes:
-                print("[WARNING] [BRAKE_WIDGET] 缺少 driver_brakes 數據")
+                logger.warning("[BRAKE_WIDGET] 缺少 driver_brakes 數據")
                 return
             
             drivers = []
@@ -244,7 +249,7 @@ class AllDriversBrakePerformanceWidget(QWidget):
                 decelerations.append(decel_g)
             
             if not drivers:
-                print("[WARNING] [BRAKE_WIDGET] 減速度數據為空")
+                logger.warning("[BRAKE_WIDGET] 減速度數據為空")
                 return
             
             # 清除舊圖
@@ -298,10 +303,10 @@ class AllDriversBrakePerformanceWidget(QWidget):
             # 刷新畫布
             self.canvas.draw()
             
-            print(f"[BRAKE_WIDGET] 減速度圖表繪製完成：{len(drivers)} 位車手")
+            logger.info(f"[BRAKE_WIDGET] 減速度圖表繪製完成：{len(drivers)} 位車手")
             
         except Exception as e:
-            print(f"[ERROR] [BRAKE_WIDGET] 繪製減速度圖表失敗: {e}")
+            logger.error(f"[BRAKE_WIDGET] 繪製減速度圖表失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -371,10 +376,10 @@ class AllDriversBrakePerformanceWidget(QWidget):
             
             if file_path:
                 self.figure.savefig(file_path, dpi=300, bbox_inches='tight')
-                print(f"[BRAKE_WIDGET] 圖表已匯出: {file_path}")
+                logger.info(f"[BRAKE_WIDGET] 圖表已匯出: {file_path}")
                 
         except Exception as e:
-            print(f"[ERROR] [BRAKE_WIDGET] 匯出圖表失敗: {e}")
+            logger.error(f"[BRAKE_WIDGET] 匯出圖表失敗: {e}")
 
 
 __all__ = ["AllDriversBrakePerformanceWidget"]

@@ -23,6 +23,11 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.snapshot_cache", component="gui")
+
 
 class SnapshotCache:
     """
@@ -69,8 +74,8 @@ class SnapshotCache:
                 'race_info': data.get('race_info'),
                 'cache_size_mb': self.cache_path.stat().st_size / (1024 * 1024)
             }
-        except Exception as e:
-            print(f"[CACHE] 讀取快取資訊失敗: {e}")
+        except Exception:
+            logger.exception("[CACHE] 讀取快取資訊失敗")
             return None
     
     def is_cache_valid(self) -> bool:
@@ -83,7 +88,7 @@ class SnapshotCache:
         3. 源檔案未變更（通過 hash 檢查）
         """
         if not self.cache_path.exists():
-            print("[CACHE] 快取不存在")
+            logger.info("[CACHE] 快取不存在")
             return False
         
         try:
@@ -92,7 +97,11 @@ class SnapshotCache:
             
             # 檢查版本
             if data.get('version') != self.CACHE_VERSION:
-                print(f"[CACHE] 版本不匹配: {data.get('version')} != {self.CACHE_VERSION}")
+                logger.warning(
+                    "[CACHE] 版本不匹配: %s != %s",
+                    data.get('version'),
+                    self.CACHE_VERSION,
+                )
                 return False
             
             # 檢查源檔案 hash
@@ -100,14 +109,14 @@ class SnapshotCache:
             cached_hash = data.get('source_hash')
             
             if current_hash != cached_hash:
-                print("[CACHE] 源檔案已變更，快取失效")
+                logger.warning("[CACHE] 源檔案已變更，快取失效")
                 return False
             
-            print(f"[CACHE] 快取有效 (建立於 {data.get('created_at')})")
+            logger.info("[CACHE] 快取有效 (建立於 %s)", data.get('created_at'))
             return True
             
-        except Exception as e:
-            print(f"[CACHE] 驗證快取失敗: {e}")
+        except Exception:
+            logger.exception("[CACHE] 驗證快取失敗")
             return False
     
     def load_cache(self) -> Optional[Dict[str, Any]]:
@@ -138,12 +147,12 @@ class SnapshotCache:
             load_time = time.time() - start_time
             snapshot_count = len(data.get('snapshots', []))
             
-            print(f"[CACHE] 快取載入完成: {snapshot_count} 個快照, {load_time:.2f} 秒")
+            logger.info("[CACHE] 快取載入完成: %s 個快照, %.2f 秒", snapshot_count, load_time)
             
             return data
             
-        except Exception as e:
-            print(f"[CACHE] 載入快取失敗: {e}")
+        except Exception:
+            logger.exception("[CACHE] 載入快取失敗")
             return None
     
     def save_cache(self, 
@@ -197,13 +206,13 @@ class SnapshotCache:
             save_time = time.time() - start_time
             cache_size = self.cache_path.stat().st_size / (1024 * 1024)
             
-            print(f"[CACHE] 快取儲存完成: {len(snapshots)} 個快照")
-            print(f"[CACHE] 檔案大小: {cache_size:.2f} MB, 耗時: {save_time:.2f} 秒")
+            logger.info("[CACHE] 快取儲存完成: %s 個快照", len(snapshots))
+            logger.info("[CACHE] 檔案大小: %.2f MB, 耗時: %.2f 秒", cache_size, save_time)
             
             return True
             
-        except Exception as e:
-            print(f"[CACHE] 儲存快取失敗: {e}")
+        except Exception:
+            logger.exception("[CACHE] 儲存快取失敗")
             return False
     
     def invalidate_cache(self) -> bool:
@@ -216,10 +225,10 @@ class SnapshotCache:
         try:
             if self.cache_path.exists():
                 self.cache_path.unlink()
-                print("[CACHE] 快取已刪除")
+                logger.info("[CACHE] 快取已刪除")
             return True
-        except Exception as e:
-            print(f"[CACHE] 刪除快取失敗: {e}")
+        except Exception:
+            logger.exception("[CACHE] 刪除快取失敗")
             return False
     
     def _calculate_source_hash(self) -> str:
@@ -263,9 +272,9 @@ def preprocess_race_data(year: int, race: str, force: bool = False) -> bool:
     from .local_source import LocalLiveF1DataSource
     from .position_processor import LivePositionDataProcessor
     
-    print(f"\n{'='*70}")
-    print(f"預處理賽事數據: {year} {race}")
-    print(f"{'='*70}")
+    logger.info("%s", "=" * 70)
+    logger.info("預處理賽事數據: %s %s", year, race)
+    logger.info("%s", "=" * 70)
     
     # 初始化數據源
     data_source = LocalLiveF1DataSource(year, race)
@@ -273,35 +282,35 @@ def preprocess_race_data(year: int, race: str, force: bool = False) -> bool:
     
     # 檢查快取
     if not force and cache.is_cache_valid():
-        print("[PREPROCESS] 快取已存在且有效，跳過處理")
+        logger.info("[PREPROCESS] 快取已存在且有效，跳過處理")
         return True
     
     # 載入原始數據
-    print("[PREPROCESS] 載入原始數據...")
+    logger.info("[PREPROCESS] 載入原始數據...")
     start_time = time.time()
     
     if not data_source.load_all_data():
-        print("[PREPROCESS] 數據載入失敗")
+        logger.error("[PREPROCESS] 數據載入失敗")
         return False
     
     load_time = time.time() - start_time
-    print(f"[PREPROCESS] 數據載入完成: {load_time:.2f} 秒")
+    logger.info("[PREPROCESS] 數據載入完成: %.2f 秒", load_time)
     
     # 處理數據
-    print("[PREPROCESS] 處理並對齊數據...")
+    logger.info("[PREPROCESS] 處理並對齊數據...")
     process_start = time.time()
     
     processor = LivePositionDataProcessor(data_source)
     processor.process_and_align_data()
     
     process_time = time.time() - process_start
-    print(f"[PREPROCESS] 數據處理完成: {process_time:.2f} 秒")
+    logger.info("[PREPROCESS] 數據處理完成: %.2f 秒", process_time)
     
     # 獲取處理結果
     snapshots = processor.get_aligned_snapshots()
     
     if not snapshots:
-        print("[PREPROCESS] 無可用快照")
+        logger.warning("[PREPROCESS] 無可用快照")
         return False
     
     # 建立賽事資訊
@@ -317,7 +326,7 @@ def preprocess_race_data(year: int, race: str, force: bool = False) -> bool:
     }
     
     # 儲存快取
-    print("[PREPROCESS] 儲存快取...")
+    logger.info("[PREPROCESS] 儲存快取...")
     
     success = cache.save_cache(
         snapshots=snapshots,
@@ -331,6 +340,6 @@ def preprocess_race_data(year: int, race: str, force: bool = False) -> bool:
     )
     
     total_time = time.time() - start_time
-    print(f"\n[PREPROCESS] 總耗時: {total_time:.2f} 秒")
+    logger.info("[PREPROCESS] 總耗時: %.2f 秒", total_time)
     
     return success

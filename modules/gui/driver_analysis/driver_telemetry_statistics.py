@@ -12,6 +12,9 @@ import os
 from prettytable import PrettyTable
 from datetime import datetime
 import json
+from core.logger import get_logger
+
+logger = get_logger(component="gui")
 
 def _make_serializable(obj):
     """確保對象可以序列化為JSON"""
@@ -57,12 +60,12 @@ def _make_serializable(obj):
 def run_driver_telemetry_statistics(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None):
     """執行車手遙測資料統計分析 - 功能 14.2"""
     try:
-        print("\n[CONFIG] 執行車手遙測資料統計分析...")
+        logger.info("[CONFIG] 執行車手遙測資料統計分析...")
         
         # 獲取已載入的數據
         data = data_loader.get_loaded_data()
         if not data:
-            print("[ERROR] 沒有可用的數據，請先載入數據")
+            logger.error("[ERROR] 沒有可用的數據，請先載入數據")
             return
         
         laps = data['laps']
@@ -71,7 +74,7 @@ def run_driver_telemetry_statistics(data_loader, dynamic_team_mapping=None, f1_a
         car_data = data.get('car_data', {})
         results = data.get('results', None)
         
-        print(f"[CONFIG] 分析 {len(drivers_info) if drivers_info else len(laps['Driver'].unique())} 位車手的遙測統計...")
+        logger.info(f"[CONFIG] 分析 {len(drivers_info) if drivers_info else len(laps['Driver'].unique())} 位車手的遙測統計...")
         
         # 導入輔助函數
         from modules.driver_comprehensive import (_create_basic_drivers_info, 
@@ -93,20 +96,20 @@ def run_driver_telemetry_statistics(data_loader, dynamic_team_mapping=None, f1_a
                 all_driver_data[abbr] = driver_data
         
         if not all_driver_data:
-            print("[ERROR] 無法獲取任何車手數據")
+            logger.error("[ERROR] 無法獲取任何車手數據")
             return
         
         # 按比賽名次排序車手
         sorted_drivers = _sort_drivers_by_position(all_driver_data, results, laps)
         
         # 遙測資料統計（按名次排序）
-        print(f"\n[CONFIG] 車手遙測資料統計 (按比賽名次排序)")
-        print("[INFO] 數據說明:")
-        print("   • 平均油門: 整場比賽的油門開度平均值 (0-100%，100表示全油門)")
-        print("   • 平均煞車: 整場比賽的煞車力度平均值 (0-100%，100表示全力煞車)")
-        print("   • 最高速度: 整場比賽記錄到的最高速度 (km/h)")
-        print("   • 平均速度: 整場比賽的平均速度 (km/h)")
-        print("   • 最高轉速: 整場比賽記錄到的最高引擎轉速 (RPM)")
+        logger.info("[CONFIG] 車手遙測資料統計 (按比賽名次排序)")
+        logger.info("[INFO] 數據說明:")
+        logger.info("   • 平均油門: 整場比賽的油門開度平均值 (0-100%，100表示全油門)")
+        logger.info("   • 平均煞車: 整場比賽的煞車力度平均值 (0-100%，100表示全力煞車)")
+        logger.info("   • 最高速度: 整場比賽記錄到的最高速度 (km/h)")
+        logger.info("   • 平均速度: 整場比賽的平均速度 (km/h)")
+        logger.info("   • 最高轉速: 整場比賽記錄到的最高引擎轉速 (RPM)")
         
         _display_telemetry_table(sorted_drivers, all_driver_data)
         
@@ -155,21 +158,21 @@ def run_driver_telemetry_statistics(data_loader, dynamic_team_mapping=None, f1_a
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(json_output, f, ensure_ascii=False, indent=2, default=str)
         
-        print(f"\n[SUCCESS] 車手遙測資料統計分析完成！JSON輸出已保存到: {filename}")
+        logger.info(f"[SUCCESS] 車手遙測資料統計分析完成！JSON輸出已保存到: {filename}")
         return True
         
     except Exception as e:
-        print(f"[ERROR] 車手遙測統計分析執行失敗: {e}")
+        logger.error(f"[ERROR] 車手遙測統計分析執行失敗: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 def main():
     """主函數"""
-    print("[CONFIG] 車手遙測資料統計分析 - 功能 14.2")
-    print("="*60)
-    print("[WARNING] 此模組需要配合 f1_analysis_modular_main.py 使用")
-    print("請執行: python f1_analysis_modular_main.py -f 14.2")
+    logger.info("[CONFIG] 車手遙測資料統計分析 - 功能 14.2")
+    logger.info("=" * 60)
+    logger.warning("[WARNING] 此模組需要配合 f1_analysis_modular_main.py 使用")
+    logger.info("請執行: python f1_analysis_modular_main.py -f 14.2")
 
 if __name__ == "__main__":
     main()

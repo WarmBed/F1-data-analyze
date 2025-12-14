@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 OpenF1 API 數據分析器
 F1 OpenF1 API Data Analyzer
@@ -9,6 +10,14 @@ F1 OpenF1 API Data Analyzer
 版本: 1.0
 作者: F1 Analysis Team
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import requests
 import json
@@ -161,7 +170,7 @@ class F1OpenDataAnalyzer:
             'usa': ['austin', 'cota', 'united states', 'american', 'miami', 'florida'],
             'mexico': ['mexico city', 'mexican'],
             'brazil': ['interlagos', 'sao paulo', 'brazilian'],
-            'abu dhabi': ['yas marina', 'uae'],
+            'abu dhabi': ['yas island', 'yas marina', 'uae', 'united arab emirates'],
             'bahrain': ['sakhir', 'bahraini'],
             'saudi arabia': ['jeddah', 'saudi'],
         }
@@ -178,12 +187,16 @@ class F1OpenDataAnalyzer:
         
         # 使用映射表匹配
         for key, aliases in race_name_mapping.items():
-            if race_name_lower in aliases or any(alias in race_name_lower for alias in aliases):
+            # 檢查搜尋名稱是否匹配 key 或任何 alias
+            if race_name_lower == key or race_name_lower in aliases or any(alias in race_name_lower for alias in aliases):
+                # 在所有會話中搜尋匹配的 location 或 country
                 for session in race_sessions:
                     location = session.get('location', '').lower()
                     country = session.get('country_name', '').lower()
                     
-                    if key in location or key in country or any(alias in location or alias in country for alias in aliases):
+                    # 檢查 key 或任何 alias 是否出現在 location 或 country 中
+                    if (key in location or key in country or 
+                        any(alias in location or alias in country for alias in aliases)):
                         return session
         
         print(f"[WARNING] 找不到匹配的比賽會話: {race_name}")

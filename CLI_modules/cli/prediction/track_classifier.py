@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 賽道分類訓練器 - 功能 73（重構版）
 
@@ -13,6 +14,14 @@
 4. 處理異常情況：未分類賽道預設為 mixed
 5. 成本保守估算：無額外 API 成本
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

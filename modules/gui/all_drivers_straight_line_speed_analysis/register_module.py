@@ -16,10 +16,8 @@ def register():
     try:
         # 這裡可以添加註冊邏輯
         # 例如：註冊到 AnalysisModuleFactory
-        print("[SPEED_MODULE] ✅ 模組已註冊")
         return True
     except Exception as e:
-        print(f"[SPEED_MODULE] ❌ 模組註冊失敗: {e}")
         return False
 
 

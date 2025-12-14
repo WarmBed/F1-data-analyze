@@ -17,6 +17,10 @@ from PyQt5.QtWidgets import QWidget
 # 導入 i18n
 from core.gui_i18n import tr
 
+# 導入 logger
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -74,7 +78,7 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
         # 狀態
         self._is_initialized = False
         
-        print(f"[BRAKE_MODULE] 模組已創建: {year} {race} {session}")
+        logger.debug(f"[BRAKE_MODULE] 模組已創建: {year} {race} {session}")
     
     # ========== IAnalysisModule 屬性實作 ==========
     
@@ -112,20 +116,20 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
             bool: 初始化是否成功
         """
         try:
-            print("[BRAKE_MODULE] 開始初始化模組...")
+            logger.debug("[BRAKE_MODULE] 開始初始化模組...")
             
             if self._is_initialized:
-                print("[BRAKE_MODULE] 模組已初始化，跳過")
+                logger.debug("[BRAKE_MODULE] 模組已初始化，跳過")
                 return True
             
             # 檢查參數
             if not self.current_year or not self.current_race or not self.current_session:
-                print("[BRAKE_MODULE] 缺少必要參數 (year/race/session)")
+                logger.debug("[BRAKE_MODULE] 缺少必要參數 (year/race/session)")
                 return False
             
             # 創建 MDI 核心實例
             if not self._brake_core:
-                print("[BRAKE_MODULE] 創建 MDI 核心（延遲初始化模式）")
+                logger.debug("[BRAKE_MODULE] 創建 MDI 核心（延遲初始化模式）")
                 self._brake_core = AllDriversBrakePerformanceMDI(parent=parent_widget)
                 
                 # 設置參數
@@ -133,28 +137,28 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
                 self._brake_core.current_race = self.current_race
                 self._brake_core.current_session = self.current_session
                 
-                print(f"[BRAKE_MODULE] 已設置參數: {self.current_year} {self.current_race} {self.current_session}")
+                logger.debug(f"[BRAKE_MODULE] 已設置參數: {self.current_year} {self.current_race} {self.current_session}")
                 
                 # 初始化 MDI 核心
-                print("[BRAKE_MODULE] 初始化 MDI 核心...")
+                logger.debug("[BRAKE_MODULE] 初始化 MDI 核心...")
                 if not self._brake_core.initialize_module():
-                    print("[BRAKE_MODULE] MDI 核心初始化失敗")
+                    logger.debug("[BRAKE_MODULE] MDI 核心初始化失敗")
                     return False
-                print("[BRAKE_MODULE] MDI 核心初始化成功")
+                logger.debug("[BRAKE_MODULE] MDI 核心初始化成功")
             
             # 獲取主要元件
             self._main_widget = self._brake_core.get_widget()
             
             if not self._main_widget:
-                print("[BRAKE_MODULE] 無法獲取主要元件")
+                logger.debug("[BRAKE_MODULE] 無法獲取主要元件")
                 return False
             
             self._is_initialized = True
-            print("[BRAKE_MODULE] 模組初始化成功")
+            logger.debug("[BRAKE_MODULE] 模組初始化成功")
             return True
             
         except Exception as e:
-            print(f"[BRAKE_MODULE] 模組初始化失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 模組初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -167,7 +171,7 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
             QWidget: 主要顯示元件
         """
         if not self._is_initialized:
-            print("[BRAKE_MODULE] 模組未初始化")
+            logger.debug("[BRAKE_MODULE] 模組未初始化")
             return None
         return self._main_widget
     
@@ -185,7 +189,7 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
-            print("[BRAKE_MODULE] 更新參數...")
+            logger.debug("[BRAKE_MODULE] 更新參數...")
             
             # 更新參數
             if year is not None:
@@ -205,11 +209,11 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
                 if hasattr(self._brake_core, 'load_initial_data'):
                     self._brake_core.load_initial_data()
             
-            print(f"[BRAKE_MODULE] 參數已更新: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[BRAKE_MODULE] 參數已更新: {self.current_year} {self.current_race} {self.current_session}")
             return True
             
         except Exception as e:
-            print(f"[BRAKE_MODULE] 更新參數失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 更新參數失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -226,14 +230,14 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
         """
         try:
             if not self._brake_core or not hasattr(self._brake_core, 'load_initial_data'):
-                print("[BRAKE_MODULE] 核心未初始化或不支援數據載入")
+                logger.debug("[BRAKE_MODULE] 核心未初始化或不支援數據載入")
                 return False
             
             self._brake_core.load_initial_data()
             return True
             
         except Exception as e:
-            print(f"[BRAKE_MODULE] 載入數據失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 載入數據失敗: {e}")
             return False
     
     def refresh_analysis(self) -> None:
@@ -241,9 +245,9 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
         try:
             if self._brake_core and hasattr(self._brake_core, 'load_initial_data'):
                 self._brake_core.load_initial_data()
-                print("[BRAKE_MODULE] 分析已刷新")
+                logger.debug("[BRAKE_MODULE] 分析已刷新")
         except Exception as e:
-            print(f"[BRAKE_MODULE] 刷新分析失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 刷新分析失敗: {e}")
     
     def clear_data(self) -> None:
         """清除所有數據"""
@@ -251,9 +255,9 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
             if self._brake_core:
                 self._brake_core._current_data = None
                 self._brake_core._is_data_loaded = False
-                print("[BRAKE_MODULE] 數據已清除")
+                logger.debug("[BRAKE_MODULE] 數據已清除")
         except Exception as e:
-            print(f"[BRAKE_MODULE] 清除數據失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 清除數據失敗: {e}")
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """
@@ -268,18 +272,18 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
         """
         try:
             if not self._brake_core or not self._brake_core._current_data:
-                print("[BRAKE_MODULE] 無數據可匯出")
+                logger.debug("[BRAKE_MODULE] 無數據可匯出")
                 return False
             
             import json
             with open(export_path, 'w', encoding='utf-8') as f:
                 json.dump(self._brake_core._current_data, f, ensure_ascii=False, indent=2, default=str)
             
-            print(f"[BRAKE_MODULE] 數據已匯出至: {export_path}")
+            logger.debug(f"[BRAKE_MODULE] 數據已匯出至: {export_path}")
             return True
             
         except Exception as e:
-            print(f"[BRAKE_MODULE] 匯出數據失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 匯出數據失敗: {e}")
             return False
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -296,7 +300,7 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
     def cleanup(self):
         """清理資源"""
         try:
-            print("[BRAKE_MODULE] 清理資源...")
+            logger.debug("[BRAKE_MODULE] 清理資源...")
             
             if self._brake_core:
                 # 清理 MDI 核心
@@ -307,10 +311,10 @@ class AllDriversBrakePerformanceModule(IAnalysisModule):
             self._main_widget = None
             self._is_initialized = False
             
-            print("[BRAKE_MODULE] 資源清理完成")
+            logger.debug("[BRAKE_MODULE] 資源清理完成")
             
         except Exception as e:
-            print(f"[BRAKE_MODULE] 清理資源失敗: {e}")
+            logger.debug(f"[BRAKE_MODULE] 清理資源失敗: {e}")
             import traceback
             traceback.print_exc()
 

@@ -21,6 +21,9 @@ from PyQt5.QtGui import QColor, QFont
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入車手顏色
 try:
     from modules.gui.themes.color_palette_provider import color_palette_provider
@@ -34,6 +37,7 @@ RuleBasedExplainer = None
 EXPLAINER_AVAILABLE = False
 
 
+
 def _lazy_import_explainer():
     """延遲導入 F84 規則引擎"""
     global EXPLAINER_AVAILABLE, RuleBasedExplainer
@@ -43,10 +47,10 @@ def _lazy_import_explainer():
         from CLI_modules.cli.prediction.overtake_prediction.explainer import RuleBasedExplainer as _Explainer
         RuleBasedExplainer = _Explainer
         EXPLAINER_AVAILABLE = True
-        print("[BATTLE_INSIGHT] F84 RuleBasedExplainer loaded")
+        logger.info("[BATTLE_INSIGHT] F84 RuleBasedExplainer loaded")
         return True
     except Exception as e:
-        print(f"[BATTLE_INSIGHT] F84 explainer not available: {e}")
+        logger.exception("[BATTLE_INSIGHT] F84 explainer not available: %s", e)
         return False
 
 
@@ -97,7 +101,7 @@ class BattleInsightWidget(QWidget):
         
         self._init_ui()
         
-        print("[BattleInsightWidget] initialized")
+        logger.info("[BattleInsightWidget] initialized")
     
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -602,7 +606,7 @@ class BattleInsightMDI(BaseLiveTimingMDI):
         self.setMinimumSize(400, 200)
         self.resize(500, 300)
         
-        print(f"[BATTLE_INSIGHT_MDI] initialized")
+        logger.info("[BATTLE_INSIGHT_MDI] initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -620,7 +624,7 @@ class BattleInsightMDI(BaseLiveTimingMDI):
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """處理賽事載入"""
-        print(f"[BATTLE_INSIGHT_MDI] Race loaded: {race_info.get('race', 'Unknown')}")
+        logger.info("[BATTLE_INSIGHT_MDI] Race loaded: %s", race_info.get('race', 'Unknown'))
         # 清除連續追近記錄
         self._widget.clear_catching_history()
     

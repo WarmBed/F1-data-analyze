@@ -16,6 +16,12 @@ from PyQt5.QtGui import QColor, QBrush
 
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="championship_standings")
+
 
 def tr(key: str, fallback: str) -> str:
     """簡化的翻譯函數"""
@@ -102,7 +108,7 @@ class ConstructorStandingsWidget(QWidget):
         try:
             color_palette_provider.ensure_loaded(year=season_year)
         except Exception as e:
-            print(f"[CONSTRUCTOR_WIDGET] 顏色系統載入失敗: {e}")
+            logger.exception("[CONSTRUCTOR_WIDGET] 顏色系統載入失敗", exc_info=e)
         
         constructors = data.get("data", {}).get("constructors", [])
         self.table.setRowCount(len(constructors))
@@ -237,7 +243,7 @@ class DriverStandingsWidget(QWidget):
         try:
             color_palette_provider.ensure_loaded(year=season_year)
         except Exception as e:
-            print(f"[DRIVER_WIDGET] 顏色系統載入失敗: {e}")
+            logger.exception("[DRIVER_WIDGET] 顏色系統載入失敗", exc_info=e)
         
         drivers = data.get("data", {}).get("drivers", [])
         self.table.setRowCount(len(drivers))

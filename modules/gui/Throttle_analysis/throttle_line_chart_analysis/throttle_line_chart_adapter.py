@@ -21,11 +21,16 @@ Version: 1.0.0
 
 from typing import Optional
 
+from core.logger import get_logger
+
 # 導入 Module 類別
 try:
     from .throttle_line_chart_module import ThrottleLineChartModule
 except ImportError:
     from modules.gui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_module import ThrottleLineChartModule
+
+
+logger = get_logger(component="ThrottleLineChartAdapter")
 
 
 class ThrottleLineChartAdapter(ThrottleLineChartModule):
@@ -51,7 +56,12 @@ class ThrottleLineChartAdapter(ThrottleLineChartModule):
         race = kwargs.get('race')
         session = kwargs.get('session')
         
-        print(f"🚀 [THROTTLE_LINE_ADAPTER] 初始化 Adapter: year={year}, race={race}, session={session}")
+        logger.info(
+            "[THROTTLE_LINE_ADAPTER] 初始化 Adapter: year=%s, race=%s, session=%s",
+            year,
+            race,
+            session,
+        )
         
         # 呼叫父類建構函數（ThrottleLineChartModule）
         super().__init__(parent, year, race, session)
@@ -59,7 +69,7 @@ class ThrottleLineChartAdapter(ThrottleLineChartModule):
         # 適配器版本
         self.adapter_version = "1.0.0"
         
-        print(f"✅ [THROTTLE_LINE_ADAPTER] Adapter 初始化完成")
+        logger.info("[THROTTLE_LINE_ADAPTER] Adapter 初始化完成")
 
 
 # 導出

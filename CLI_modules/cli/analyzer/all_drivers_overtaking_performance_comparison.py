@@ -5,7 +5,7 @@ F1 Analysis - 全部車手超車表現對比模組 (功能 16.2)
 All Drivers Overtaking Performance Comparison Module (Function 16.2)
 
 本模組提供全部車手超車表現對比功能，包含：
-- 🆚 車手間超車表現對比
+- 車手間超車表現對比
 - [INFO] 車隊超車效率分析
 - [FINISH] 賽道超車難易度評估
 - JSON格式完整輸出
@@ -14,6 +14,14 @@ All Drivers Overtaking Performance Comparison Module (Function 16.2)
 作者: F1 Analysis Team
 日期: 2025-08-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import os
@@ -112,6 +120,14 @@ def run_all_drivers_overtaking_performance_comparison(data_loader, dynamic_team_
     except Exception as e:
         print(f"[ERROR] 全部車手超車表現對比分析執行失敗: {e}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return False
 

@@ -22,6 +22,13 @@ import json
 import pickle
 from driver_selection_utils import get_user_driver_selection
 
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+
 # 設定中文字體和忽略警告
 matplotlib.rcParams['font.sans-serif'] = ['Microsoft JhengHei']
 matplotlib.rcParams['axes.unicode_minus'] = False

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Function 76: Ensemble Learning Trainer
 集成學習訓練器 - XGBoost + LightGBM + CatBoost
@@ -8,6 +10,14 @@ Function 76: Ensemble Learning Trainer
 3. 自動選擇最佳集成策略
 4. 目標：MAE < 0.80s
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import pickle
 import json

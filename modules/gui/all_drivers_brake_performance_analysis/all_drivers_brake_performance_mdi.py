@@ -40,8 +40,14 @@ except ImportError:
         AllDriversBrakePerformanceTableWidget
     )
 
-# 導入國際化
+# 導入國際化與日誌
 from core.gui_i18n import tr
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="AllDriversBrakePerformanceMDI")
 
 
 class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
@@ -70,7 +76,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("all_drivers_brake_performance", config)
             cls._REGISTERED = True
-            print("[BRAKE_MDI] 模組類型已註冊")
+            logger.debug("[BRAKE_MDI] 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -79,7 +85,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print("[BRAKE_MDI] AllDriversBrakePerformanceMDI 開始初始化...")
+        logger.info("[BRAKE_MDI] AllDriversBrakePerformanceMDI 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -96,7 +102,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         self._current_data = None
         self._is_data_loaded = False
         
-        print("[BRAKE_MDI] 基類初始化完成，等待參數設置...")
+        logger.debug("[BRAKE_MDI] 基類初始化完成，等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -110,19 +116,19 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print("[BRAKE_MDI] 開始初始化模組...")
+            logger.info("[BRAKE_MDI] 開始初始化模組...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print("[BRAKE_MDI] 缺少 current_year 屬性")
+                logger.error("[BRAKE_MDI] 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print("[BRAKE_MDI] 缺少 current_race 屬性")
+                logger.error("[BRAKE_MDI] 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print("[BRAKE_MDI] 缺少 current_session 屬性")
+                logger.error("[BRAKE_MDI] 缺少 current_session 屬性")
                 return False
             
             # 設置參數
@@ -130,34 +136,32 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[BRAKE_MDI] 參數已設置: {self.year} {self.race} {self.session}")
+            logger.info("[BRAKE_MDI] 參數已設置: %s %s %s", self.year, self.race, self.session)
             
             # 調用基類的 initialize_module
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print("[BRAKE_MDI] 基類初始化失敗")
+                logger.error("[BRAKE_MDI] 基類初始化失敗")
                 return False
             
             # 驗證組件已創建
             if not self.chart_widget:
-                print("[BRAKE_MDI] chart_widget 未創建")
+                logger.error("[BRAKE_MDI] chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print("[BRAKE_MDI] data_manager 未創建")
+                logger.error("[BRAKE_MDI] data_manager 未創建")
                 return False
             
-            print(f"[BRAKE_MDI] 組件創建成功")
+            logger.info("[BRAKE_MDI] 組件創建成功")
             
             # 自動載入初始數據
-            print("[BRAKE_MDI] 準備載入初始數據...")
+            logger.info("[BRAKE_MDI] 準備載入初始數據...")
             self.load_initial_data()
             
             return True
             
         except Exception as e:
-            print(f"[BRAKE_MDI] 初始化失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[BRAKE_MDI] 初始化失敗", exc_info=e)
             return False
     
     # ========== 基類抽象方法實作 ==========
@@ -169,7 +173,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         Returns:
             BrakePerformanceDataLoader: 資料載入器實例
         """
-        print("[BRAKE_MDI] 創建資料管理器...")
+        logger.debug("[BRAKE_MDI] 創建資料管理器...")
         
         # ✅ 使用 BrakePerformanceDataLoader
         loader = BrakePerformanceDataLoader(parent=self)
@@ -179,7 +183,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("[BRAKE_MDI] 資料管理器已創建")
+        logger.debug("[BRAKE_MDI] 資料管理器已創建")
         return loader
     
     def create_chart_widget(self):
@@ -189,11 +193,11 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         Returns:
             AllDriversBrakePerformanceTableWidget: 表格元件實例
         """
-        print("[BRAKE_MDI] 創建表格元件（QTableWidget 版本）...")
+        logger.debug("[BRAKE_MDI] 創建表格元件（QTableWidget 版本）...")
         
         widget = AllDriversBrakePerformanceTableWidget(parent=None)
         
-        print("[BRAKE_MDI] 表格元件已創建")
+        logger.debug("[BRAKE_MDI] 表格元件已創建")
         return widget
     
     def create_additional_widgets(self) -> list:
@@ -203,7 +207,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         Returns:
             list: 額外的 Widget 列表（空）
         """
-        print("[BRAKE_MDI] 不創建額外組件")
+        logger.debug("[BRAKE_MDI] 不創建額外組件")
         
         # ✅ 不創建統計面板，返回空列表
         return []
@@ -219,7 +223,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             data: 載入的資料
         """
         try:
-            print("[BRAKE_MDI] 收到資料載入完成信號")
+            logger.info("[BRAKE_MDI] 收到資料載入完成信號")
             
             if not data:
                 self._on_load_error(tr("data_empty", "資料為空"))
@@ -232,12 +236,10 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             if self.chart_widget:
                 self.chart_widget.update_data(data)
             
-            print("[BRAKE_MDI] 資料處理完成")
+            logger.info("[BRAKE_MDI] 資料處理完成")
             
         except Exception as e:
-            print(f"[BRAKE_MDI] 資料處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[BRAKE_MDI] 資料處理失敗", exc_info=e)
             self._on_load_error(f"{tr('data_processing_error', '資料處理錯誤')}: {str(e)}")
     
     @pyqtSlot(str)
@@ -248,21 +250,21 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"[BRAKE_MDI] 資料載入錯誤: {error_msg}")
+        logger.error("[BRAKE_MDI] 資料載入錯誤: %s", error_msg)
         QMessageBox.critical(None, tr("load_error", "載入錯誤"), error_msg)
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):
         """狀態變更回調"""
-        print(f"[BRAKE_MDI] 狀態: {status}")
+        logger.info("[BRAKE_MDI] 狀態: %s", status)
     
     def load_initial_data(self):
         """載入初始數據"""
         try:
-            print("[BRAKE_MDI] 開始載入初始數據...")
+            logger.info("[BRAKE_MDI] 開始載入初始數據...")
             
             if not self.data_manager:
-                print("[BRAKE_MDI] data_manager 不存在")
+                logger.error("[BRAKE_MDI] data_manager 不存在")
                 return
             
             # 呼叫資料載入器
@@ -273,12 +275,10 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
             )
             
             if not success:
-                print("[BRAKE_MDI] 資料載入失敗")
+                logger.error("[BRAKE_MDI] 資料載入失敗")
                 
         except Exception as e:
-            print(f"[BRAKE_MDI] 載入初始數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[BRAKE_MDI] 載入初始數據失敗", exc_info=e)
     
     # ========== 覆寫基類方法 ==========
     
@@ -303,7 +303,7 @@ class AllDriversBrakePerformanceMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_driver_clicked(self, driver_code: str):
         """車手點擊事件"""
-        print(f"[BRAKE_MDI] 車手被點擊: {driver_code}")
+        logger.info("[BRAKE_MDI] 車手被點擊: %s", driver_code)
 
 
 __all__ = ["AllDriversBrakePerformanceMDI"]

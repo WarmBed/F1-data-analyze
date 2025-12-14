@@ -9,6 +9,14 @@ Function 47: 全車手彎道速度分析（多彎道模式）
 日期：2025-10-26
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Any

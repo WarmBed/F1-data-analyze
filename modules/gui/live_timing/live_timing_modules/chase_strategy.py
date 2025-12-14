@@ -23,6 +23,7 @@ import math
 import json
 from pathlib import Path
 
+import logging
 from PyQt5.QtCore import Qt, pyqtSignal, QRectF, QPointF
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -53,6 +54,9 @@ COLOR_PIT_MARKER = '#FFD700'   # 黃色 - Pit 標記 (與 Driver Strategy 一致
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入車手顏色
 try:
     from modules.gui.themes.color_palette_provider import color_palette_provider
@@ -67,6 +71,8 @@ COLOR_TYRE_MEDIUM = '#FFCC00'    # Yellow
 COLOR_TYRE_HARD = '#FFFFFF'      # White
 COLOR_TYRE_INTERMEDIATE = '#00CC00'  # Green
 COLOR_TYRE_WET = '#0066FF'       # Blue
+
+logger = get_logger("live_timing.chase_strategy", component="gui")
 
 
 # =============================================================================
@@ -131,7 +137,7 @@ def load_pit_loss_database() -> Dict[str, Any]:
         with open(db_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     except Exception as e:
-        print(f"[CHASE_STRATEGY] [WARNING] 無法載入 pit_loss_database.json: {e}")
+        logger.warning("Unable to load pit_loss_database.json: %s", e)
         return {}
 
 def get_pit_loss_for_circuit(circuit_name: str = None) -> Dict[str, float]:
@@ -182,7 +188,7 @@ def get_pit_loss_for_circuit(circuit_name: str = None) -> Dict[str, float]:
             }
     
     # 找不到賽道，使用預設值
-    print(f"[CHASE_STRATEGY] [WARNING] 找不到賽道 '{circuit_name}' 的 pit_loss 資料，使用預設值")
+    logger.warning("Pit loss data missing for circuit '%s', using defaults", circuit_name)
     return {
         'green_flag': 22.0,
         'safety_car': 11.0,
@@ -232,12 +238,12 @@ class StrategyCalculator:
         #  載入輪胎衰退資料庫（與 Driver Strategy 完全一致）
         self._tyre_deg_database = self._load_tyre_degradation_database()
         
-        print(f"[CHASE_STRATEGY] [CIRCUIT] 賽道: {circuit_name or '預設'}")
-        print(f"[CHASE_STRATEGY] [PIT_LOSS] Green: {self._pit_loss_green}s, SC: {self._pit_loss_sc}s, VSC: {self._pit_loss_vsc}s")
+        logger.debug("Circuit: %s", circuit_name or 'default')
+        logger.debug("Pit loss (green/SC/VSC): %.1fs / %.1fs / %.1fs", self._pit_loss_green, self._pit_loss_sc, self._pit_loss_vsc)
         
         # 調試輪胎衰退資料庫載入
         circuits_count = len(self._tyre_deg_database.get('circuits', {}))
-        print(f"[CHASE_STRATEGY] [TYRE_DEG] Loaded {circuits_count} circuits from database")
+        logger.debug("Tyre degradation DB circuits: %s", circuits_count)
     
     def _load_tyre_degradation_database(self) -> Dict[str, Any]:
         """載入輪胎衰退資料庫（與 Driver Strategy 完全一致）"""
@@ -246,7 +252,7 @@ class StrategyCalculator:
             with open(db_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"[CHASE_STRATEGY] [WARNING] 無法載入 tire_degradation_database.json: {e}")
+            logger.warning("Unable to load tire_degradation_database.json: %s", e)
             return {}
     
     def set_total_laps(self, total_laps: int):
@@ -344,8 +350,14 @@ class StrategyCalculator:
         self._pit_loss_sc = pit_loss_data['safety_car']
         self._pit_loss_vsc = pit_loss_data['virtual_safety_car']
         
-        print(f"[CHASE_STRATEGY] [UPDATE_CIRCUIT] 更新賽道: {circuit_name}")
-        print(f"[CHASE_STRATEGY] [PIT_LOSS] Green: {self._pit_loss_green}s, SC: {self._pit_loss_sc}s, VSC: {self._pit_loss_vsc}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[UPDATE_CIRCUIT] 更新賽道: %s", circuit_name)
+            logger.debug(
+                "[PIT_LOSS] Green: %.1fs, SC: %.1fs, VSC: %.1fs",
+                self._pit_loss_green,
+                self._pit_loss_sc,
+                self._pit_loss_vsc,
+            )
     
     def calculate_all_strategies(
         self,
@@ -470,15 +482,15 @@ class StrategyCalculator:
         # ========== 加權計算 ==========
         weighted_advantage = weight_trend * trend_advantage + weight_theory * theoretical_advantage
         
-        # 調試輸出
-        print(f"[CHASE_STRATEGY] [STRATEGY_1] === 加權計算 ===")
-        print(f"  Theory: P1 {p1_compound}({p1_age}) → {p1_deg_rate:.4f} s/lap")
-        print(f"  Theory: P2 {p2_compound}({p2_age}) → {p2_deg_rate:.4f} s/lap")
-        print(f"  Theory Advantage: {theoretical_advantage:+.4f} s/lap")
-        print(f"  Trend: gap_trend = {p2_gap_trend:+.4f} → advantage = {trend_advantage:+.4f} s/lap")
-        print(f"  Trend Level: {trend_level} (|trend| = {abs_trend:.3f})")
-        print(f"  Weights: Trend {weight_trend:.0%}, Theory {weight_theory:.0%}")
-        print(f"  Weighted Advantage: {weighted_advantage:+.4f} s/lap")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[STRATEGY_1] weighted calc")
+            logger.debug("  Theory P1 %s(%s) -> %.4f s/lap", p1_compound, p1_age, p1_deg_rate)
+            logger.debug("  Theory P2 %s(%s) -> %.4f s/lap", p2_compound, p2_age, p2_deg_rate)
+            logger.debug("  Theory advantage: %+0.4f s/lap", theoretical_advantage)
+            logger.debug("  Trend: gap_trend=%+0.4f -> advantage=%+0.4f s/lap", p2_gap_trend, trend_advantage)
+            logger.debug("  Trend level: %s (|trend|=%0.3f)", trend_level, abs_trend)
+            logger.debug("  Weights: trend %.0f%%, theory %.0f%%", weight_trend * 100, weight_theory * 100)
+            logger.debug("  Weighted advantage: %+0.4f s/lap", weighted_advantage)
         
         # 使用加權優勢判斷可行性
         if weighted_advantage <= 0:
@@ -596,9 +608,15 @@ class StrategyCalculator:
         # 計算總優勢（扣除進站損失）
         total_adv = new_tyre_adv * (remaining - 1) - self._pit_loss_green
         
-        # 調試輸出
-        print(f"[CHASE_STRATEGY] [STRATEGY_2] New {new_compound} vs Old {p1_compound}(age={p1_age})")
-        print(f"[CHASE_STRATEGY] [STRATEGY_2] Advantage: {new_tyre_adv:.4f} s/lap, Total: {total_adv:.2f}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[STRATEGY_2] New %s vs Old %s(age=%s) adv=%.4f s/lap total=%.2f",
+                new_compound,
+                p1_compound,
+                p1_age,
+                new_tyre_adv,
+                total_adv,
+            )
         
         if catchup_lap > self._total_laps:
             return StrategyResult(
@@ -668,7 +686,12 @@ class StrategyCalculator:
         
         rating = 3 if gap > 10 else 2  # 大差距時 SC 策略更有價值
         
-        print(f"[CHASE_STRATEGY] [STRATEGY_3] SC Strategy: advantage={new_tyre_adv:.4f} s/lap, saving={pit_saving:.1f}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[STRATEGY_3] SC Strategy: advantage=%.4f s/lap, saving=%.1fs",
+                new_tyre_adv,
+                pit_saving,
+            )
         
         return StrategyResult(
             strategy_id=3,
@@ -711,7 +734,13 @@ class StrategyCalculator:
         total_adv = new_tyre_adv * laps_on_new - self._pit_loss_green
         rating = 3 if feasible and total_adv > 10 else (2 if total_adv > 0 else 1)
         
-        print(f"[CHASE_STRATEGY] [STRATEGY_4] Pit at lap {pit_lap}, {compound}: advantage={new_tyre_adv:.4f} s/lap")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[STRATEGY_4] Pit at lap %d, %s: advantage=%.4f s/lap",
+                pit_lap,
+                compound,
+                new_tyre_adv,
+            )
         
         return StrategyResult(
             strategy_id=4,
@@ -772,7 +801,12 @@ class StrategyCalculator:
             
             advantage = p1_advantage * remaining - gap_after_p1_pit
         
-        print(f"[CHASE_STRATEGY] [STRATEGY_5] P1 pits first: gap_after={gap_after_p1_pit:.2f}s, advantage={advantage:.2f}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[STRATEGY_5] P1 pits first: gap_after=%.2fs, advantage=%.2fs",
+                gap_after_p1_pit,
+                advantage,
+            )
         
         return StrategyResult(
             strategy_id=5,
@@ -913,7 +947,8 @@ class ChaseStrategyWidget(QWidget):
         from PyQt5.QtWidgets import QSizePolicy
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
-        print("[ChaseStrategyWidget] initialized")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[ChaseStrategyWidget] initialized")
     
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -1198,7 +1233,16 @@ class ChaseStrategyWidget(QWidget):
                 p1_tla = p1_info.get('driver_tla', p1_info.get('tla', p1_number)) if isinstance(p1_info, dict) else p1_number
                 p2_tla = p2_info.get('driver_tla', p2_info.get('tla', p2_number)) if isinstance(p2_info, dict) else p2_number
                 
-                print(f"[CHASE_STRATEGY]  自動追蹤: P1={p1_tla} (#{p1_number}, Pos {p1_pos}), P2={p2_tla} (#{p2_number}, Pos {p2_pos})")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "自動追蹤: P1=%s (#%s, Pos %s), P2=%s (#%s, Pos %s)",
+                        p1_tla,
+                        p1_number,
+                        p1_pos,
+                        p2_tla,
+                        p2_number,
+                        p2_pos,
+                    )
                 
                 #  通知所有 Gap Evolution 視窗更新車手信息
                 if prev_p1 is not None or prev_p2 is not None:
@@ -1213,7 +1257,8 @@ class ChaseStrategyWidget(QWidget):
         p1_color = p1_info.get('team_color', '3671C6') if isinstance(p1_info, dict) else '3671C6'
         p2_color = p2_info.get('team_color', 'FF8800') if isinstance(p2_info, dict) else 'FF8800'
         
-        print(f"[CHASE_STRATEGY]  通知 {len(self._gap_evolution_widgets)} 個 Gap Evolution 視窗更新車手")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("通知 %d 個 Gap Evolution 視窗更新車手", len(self._gap_evolution_widgets))
         
         for widget in self._gap_evolution_widgets:
             if widget and not widget.isHidden():
@@ -1262,7 +1307,8 @@ class ChaseStrategyWidget(QWidget):
             if idx >= 0:
                 self.p1_combo.setCurrentIndex(idx)
             else:
-                print(f"[CHASE_STRATEGY]  P1={target_p1} not found in combo box")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("P1=%s not found in combo box", target_p1)
         elif self.p1_combo.count() > 0:
             self.p1_combo.setCurrentIndex(0)  # P1
             self._selected_p1 = self.p1_combo.currentData()
@@ -1272,7 +1318,8 @@ class ChaseStrategyWidget(QWidget):
             if idx >= 0:
                 self.p2_combo.setCurrentIndex(idx)
             else:
-                print(f"[CHASE_STRATEGY]  P2={target_p2} not found in combo box")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("P2=%s not found in combo box", target_p2)
         elif self.p2_combo.count() > 1:
             self.p2_combo.setCurrentIndex(1)  # P2
             self._selected_p2 = self.p2_combo.currentData()
@@ -1285,7 +1332,8 @@ class ChaseStrategyWidget(QWidget):
         self._selected_p1 = self.p1_combo.currentData()
         #  用戶手動選擇 → 關閉自動追蹤
         self._auto_track_leaders = False
-        print(f"[CHASE_STRATEGY]  用戶手動選擇 P1={self._selected_p1}，自動追蹤已關閉")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("用戶手動選擇 P1=%s，自動追蹤已關閉", self._selected_p1)
         self._on_driver_selection_changed()
         self._refresh_strategies()
     
@@ -1294,7 +1342,8 @@ class ChaseStrategyWidget(QWidget):
         self._selected_p2 = self.p2_combo.currentData()
         #  用戶手動選擇 → 關閉自動追蹤
         self._auto_track_leaders = False
-        print(f"[CHASE_STRATEGY]  用戶手動選擇 P2={self._selected_p2}，自動追蹤已關閉")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("用戶手動選擇 P2=%s，自動追蹤已關閉", self._selected_p2)
         self._on_driver_selection_changed()
         self._refresh_strategies()
     
@@ -1303,7 +1352,8 @@ class ChaseStrategyWidget(QWidget):
         self._auto_track_leaders = True
         self._selected_p1 = None
         self._selected_p2 = None
-        print(f"[CHASE_STRATEGY]  恢復自動追蹤模式，將追蹤排名前兩名車手")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("恢復自動追蹤模式，將追蹤排名前兩名車手")
         
         # 重新應用當前快照以更新車手選擇
         if self._current_snapshot:
@@ -1319,7 +1369,8 @@ class ChaseStrategyWidget(QWidget):
         
         #  獲取新的車手信息
         if not self._selected_p1 or not self._selected_p2:
-            print("[CHASE_STRATEGY]  車手選擇不完整，跳過 Gap Evolution 更新")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("車手選擇不完整，跳過 Gap Evolution 更新")
             return
         
         p1_info = self._available_drivers.get(self._selected_p1, {})
@@ -1330,8 +1381,17 @@ class ChaseStrategyWidget(QWidget):
         p1_color = p1_info.get('team_color', '3671C6') if isinstance(p1_info, dict) else '3671C6'
         p2_color = p2_info.get('team_color', 'FF8800') if isinstance(p2_info, dict) else 'FF8800'
         
-        print(f"[CHASE_STRATEGY]  車手選擇變更，更新 {len(self._gap_evolution_widgets)} 個 Gap Evolution 視窗")
-        print(f"[CHASE_STRATEGY]    新車手: P1={p1_tla} (#{self._selected_p1}), P2={p2_tla} (#{self._selected_p2})")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "車手選擇變更，更新 %d 個 Gap Evolution 視窗", len(self._gap_evolution_widgets)
+            )
+            logger.debug(
+                "新車手: P1=%s (#%s), P2=%s (#%s)",
+                p1_tla,
+                self._selected_p1,
+                p2_tla,
+                self._selected_p2,
+            )
         
         #  更新所有 Gap Evolution 視窗的車手信息和數據
         for widget in self._gap_evolution_widgets[:]:
@@ -1343,13 +1403,15 @@ class ChaseStrategyWidget(QWidget):
                 widget.current_lap = 0
                 widget.current_gap = 0.0
                 
-                print(f"[CHASE_STRATEGY]  已更新 Gap Evolution widget: {p1_tla} vs {p2_tla}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("已更新 Gap Evolution widget: %s vs %s", p1_tla, p2_tla)
             except Exception as e:
-                print(f"[CHASE_STRATEGY]  更新 Gap Evolution widget 失敗: {e}")
+                logger.error("更新 Gap Evolution widget 失敗: %s", e)
                 import traceback
                 traceback.print_exc()
         
-        print(f"[CHASE_STRATEGY] 車手選擇變更完成，Gap Evolution 視窗將自動更新新車手數據")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("車手選擇變更完成，Gap Evolution 視窗將自動更新新車手數據")
     
     def update_snapshot(self, snapshot: Dict[str, Any], tyre_state: Dict[str, Dict] = None):
         """更新快照數據"""
@@ -1359,7 +1421,8 @@ class ChaseStrategyWidget(QWidget):
         #  從快照中提取賽道名稱並更新 StrategyCalculator
         circuit_name = snapshot.get('circuit', None)  # 例如 "Suzuka", "Monaco"
         if circuit_name and circuit_name != getattr(self._calculator, '_circuit_name', None):
-            print(f"[CHASE_STRATEGY]  從 Snapshot 偵測到賽道: {circuit_name}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("從 Snapshot 偵測到賽道: %s", circuit_name)
             self._calculator.set_circuit(circuit_name)
         
         # 更新車手列表
@@ -1400,7 +1463,8 @@ class ChaseStrategyWidget(QWidget):
         current_lap = self._current_snapshot.get('current_lap', 0)
         
         # 調試：顯示當前圈數
-        print(f"[CHASE_STRATEGY]  Snapshot current_lap: {current_lap}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Snapshot current_lap: %s", current_lap)
         
         # 計算差距 (P2 落後 P1 多少秒)
         # 使用 gap_to_leader_raw 獲取精確數值
@@ -1421,9 +1485,20 @@ class ChaseStrategyWidget(QWidget):
             gap_seconds = p2_gap_raw
         
         # 調試輸出
-        print(f"[CHASE_STRATEGY] P1 {self._selected_p1}: gap_raw={p1_gap_raw}, pos={p1_data.get('position')}")
-        print(f"[CHASE_STRATEGY] P2 {self._selected_p2}: gap_raw={p2_gap_raw}, pos={p2_data.get('position')}")
-        print(f"[CHASE_STRATEGY] Calculated gap_seconds: {gap_seconds:.3f}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "P1 %s: gap_raw=%.3f, pos=%s",
+                self._selected_p1,
+                p1_gap_raw,
+                p1_data.get('position'),
+            )
+            logger.debug(
+                "P2 %s: gap_raw=%.3f, pos=%s",
+                self._selected_p2,
+                p2_gap_raw,
+                p2_data.get('position'),
+            )
+            logger.debug("Calculated gap_seconds: %.3fs", gap_seconds)
         
         # 獲取輪胎資訊 - 優先從 snapshot 的 driver data 中獲取
         p1_tyre = {}
@@ -1433,28 +1508,44 @@ class ChaseStrategyWidget(QWidget):
         if self._tyre_state:
             p1_tyre = self._tyre_state.get(self._selected_p1, {})
             p2_tyre = self._tyre_state.get(self._selected_p2, {})
-            print(f"[CHASE_STRATEGY]  Widget received tyre_state: {len(self._tyre_state)} drivers")
-            print(f"[CHASE_STRATEGY]  Method 1 - From tyre_state:")
-            print(f"   P1 ({self._selected_p1}): {p1_tyre}")
-            print(f"   P2 ({self._selected_p2}): {p2_tyre}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Widget received tyre_state: %d drivers", len(self._tyre_state))
+                logger.debug("Method 1 - From tyre_state:")
+                logger.debug("   P1 (%s): %s", self._selected_p1, p1_tyre)
+                logger.debug("   P2 (%s): %s", self._selected_p2, p2_tyre)
         else:
-            print(f"[CHASE_STRATEGY]  Widget._tyre_state is EMPTY!")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Widget._tyre_state is EMPTY!")
         
         # 方法 2: 直接從 driver data 中獲取 (備用)
         if not p1_tyre or not p1_tyre.get('compound'):
-            print(f"[CHASE_STRATEGY]  Method 1 failed for P1, trying Method 2 (driver_data)...")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Method 1 failed for P1, trying Method 2 (driver_data)...")
             p1_tyre = {
                 'compound': p1_data.get('compound', 'MEDIUM'),
                 'tyre_age': p1_data.get('tyre_age', 0)  # 改為 'tyre_age' 鍵
             }
-            print(f"[CHASE_STRATEGY]  Method 2 - P1 from driver_data: compound={p1_data.get('compound')}, tyre_age={p1_data.get('tyre_age')} → {p1_tyre}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Method 2 - P1 from driver_data: compound=%s, tyre_age=%s → %s",
+                    p1_data.get('compound'),
+                    p1_data.get('tyre_age'),
+                    p1_tyre,
+                )
         if not p2_tyre or not p2_tyre.get('compound'):
-            print(f"[CHASE_STRATEGY]  Method 1 failed for P2, trying Method 2 (driver_data)...")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Method 1 failed for P2, trying Method 2 (driver_data)...")
             p2_tyre = {
                 'compound': p2_data.get('compound', 'MEDIUM'),
                 'tyre_age': p2_data.get('tyre_age', 0)  # 改為 'tyre_age' 鍵
             }
-            print(f"[CHASE_STRATEGY]  Method 2 - P2 from driver_data: compound={p2_data.get('compound')}, tyre_age={p2_data.get('tyre_age')} → {p2_tyre}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "Method 2 - P2 from driver_data: compound=%s, tyre_age=%s → %s",
+                    p2_data.get('compound'),
+                    p2_data.get('tyre_age'),
+                    p2_tyre,
+                )
         
         p1_age = p1_tyre.get('tyre_age', 0)  # 改為讀取 'tyre_age' 鍵
         p2_age = p2_tyre.get('tyre_age', 0)  # 改為讀取 'tyre_age' 鍵
@@ -1462,9 +1553,22 @@ class ChaseStrategyWidget(QWidget):
         p2_compound = p2_tyre.get('compound', 'MEDIUM')
         
         # 調試輸出最終使用的輪胎資訊
-        print(f"[CHASE_STRATEGY]  Final values for display:")
-        print(f"   P1 ({self._selected_p1}): {p1_compound}({p1_age}) - 'tyre_age' key value = {p1_tyre.get('tyre_age', 'KEY_NOT_FOUND')}")
-        print(f"   P2 ({self._selected_p2}): {p2_compound}({p2_age}) - 'tyre_age' key value = {p2_tyre.get('tyre_age', 'KEY_NOT_FOUND')}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Final values for display:")
+            logger.debug(
+                "   P1 (%s): %s(%s) - 'tyre_age' key value = %s",
+                self._selected_p1,
+                p1_compound,
+                p1_age,
+                p1_tyre.get('tyre_age', 'KEY_NOT_FOUND'),
+            )
+            logger.debug(
+                "   P2 (%s): %s(%s) - 'tyre_age' key value = %s",
+                self._selected_p2,
+                p2_compound,
+                p2_age,
+                p2_tyre.get('tyre_age', 'KEY_NOT_FOUND'),
+            )
         
         # 更新資訊標籤 (使用車手和輪胎顏色，與 Ranking Tower 一致)
         p1_tla = p1_data.get('driver_tla', self._selected_p1)
@@ -1498,7 +1602,8 @@ class ChaseStrategyWidget(QWidget):
         
         # 檢查圈數是否有效
         if current_lap == 0:
-            print(f"[CHASE_STRATEGY]  current_lap is 0 - API data not yet available")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("current_lap is 0 - API data not yet available")
             # 清除任何現有的合併儲存格
             self.strategy_table.clearSpans()
             self.strategy_table.setRowCount(1)
@@ -1511,7 +1616,8 @@ class ChaseStrategyWidget(QWidget):
         
         # 前兩圈不計算策略（Lap 1-2）
         if current_lap <= 2:
-            print(f"[CHASE_STRATEGY]  current_lap={current_lap} - Too early for strategy analysis")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("current_lap=%s - Too early for strategy analysis", current_lap)
             # 清除任何現有的合併儲存格
             self.strategy_table.clearSpans()
             self.strategy_table.setRowCount(1)
@@ -1522,14 +1628,16 @@ class ChaseStrategyWidget(QWidget):
             self.strategy_table.setSpan(0, 0, 1, 5)  # 合併所有欄位
             return
         
-        print(f"[CHASE_STRATEGY]  current_lap={current_lap} - Calculating strategies...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("current_lap=%s - Calculating strategies...", current_lap)
         
         # 獲取 P2 的 gap_trend（P2 相對 P1 的單圈變化）
         # 注意：DataManager 計算的是對前車的 trend，所以直接讀取 P2 的 gap_trend
         p2_gap_trend = p2_data.get('gap_trend', 0.0)
         
         # 調試輸出
-        print(f"[CHASE_STRATEGY]  P2 gap_trend from snapshot: {p2_gap_trend:+.4f} s/lap")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("P2 gap_trend from snapshot: %+0.4f s/lap", p2_gap_trend)
         
         # 計算策略
         results = self._calculator.calculate_all_strategies(
@@ -1673,18 +1781,22 @@ class ChaseStrategyWidget(QWidget):
     
     def _show_strategy_chart_menu(self, pos):
         """顯示策略 Gap 曲線圖右鍵選單"""
-        print(f"[CHASE_STRATEGY] Right-click menu triggered at pos: {pos}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Right-click menu triggered at pos: %s", pos)
         
         # 獲取點擊的行
         row = self.strategy_table.rowAt(pos.y())
-        print(f"[CHASE_STRATEGY] Clicked row: {row}, total results: {len(self._current_results)}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Clicked row: %s, total results: %d", row, len(self._current_results))
         
         if row < 0 or row >= len(self._current_results):
-            print(f"[CHASE_STRATEGY] Invalid row, returning")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("Invalid row, returning")
             return
         
         strategy_result = self._current_results[row]
-        print(f"[CHASE_STRATEGY] Strategy selected: {strategy_result.name}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Strategy selected: %s", strategy_result.name)
         
         menu = QMenu(self)
         menu.setStyleSheet("""
@@ -1702,7 +1814,8 @@ class ChaseStrategyWidget(QWidget):
         show_chart_action = menu.addAction(tr("show_gap_chart", "Show Gap Evolution Chart"))
         show_chart_action.triggered.connect(lambda: self._show_gap_chart(strategy_result))
         
-        print(f"[CHASE_STRATEGY] Showing menu...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Showing context menu")
         menu.exec_(self.strategy_table.mapToGlobal(pos))
     
     def _on_gap_widget_closed(self, widget):
@@ -1710,20 +1823,23 @@ class ChaseStrategyWidget(QWidget):
         try:
             if widget in self._gap_evolution_widgets:
                 self._gap_evolution_widgets.remove(widget)
-                print(f"[CHASE_STRATEGY]  Gap Evolution widget closed, remaining: {len(self._gap_evolution_widgets)}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("Gap Evolution widget closed, remaining: %d", len(self._gap_evolution_widgets))
         except (ValueError, RuntimeError) as e:
             # 忽略 widget 已被刪除或不在列表中的錯誤
-            print(f"[CHASE_STRATEGY] Gap widget cleanup: {e}")
+            logger.error("Gap widget cleanup: %s", e)
     
     def _show_gap_chart(self, strategy: StrategyResult):
         """在 MDI 子視窗中顯示 Gap 變化曲線圖"""
-        print(f"[CHASE_STRATEGY] _show_gap_chart called for strategy: {strategy.name}")
-        print(f"[CHASE_STRATEGY] Strategy feasible: {strategy.feasible}, ID: {strategy.strategy_id}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("_show_gap_chart called for strategy: %s", strategy.name)
+            logger.debug("Strategy feasible: %s, ID: %s", strategy.feasible, strategy.strategy_id)
         
         # 移除 feasibility 檢查 - 允許顯示所有策略的 Gap 圖表
         # 即使策略不可行，用戶也可能想看到假設性的演變
         
-        print(f"[CHASE_STRATEGY] Creating Gap Evolution MDI window...")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Creating Gap Evolution MDI window...")
         
         # 獲取父級 MDI Area
         from PyQt5.QtWidgets import QMdiArea
@@ -1732,7 +1848,7 @@ class ChaseStrategyWidget(QWidget):
             parent_widget = parent_widget.parent()
         
         if not parent_widget:
-            print(f"[CHASE_STRATEGY] Cannot find MDI area, fallback to dialog")
+            logger.warning("Cannot find MDI area, fallback to dialog")
             return
         
         # 獲取 P1 和 P2 的車手顏色
@@ -1747,13 +1863,27 @@ class ChaseStrategyWidget(QWidget):
         p1_color = p1_color.lstrip('#') if p1_color else "3671C6"
         p2_color = p2_color.lstrip('#') if p2_color else "FF8800"
         
-        print(f"[CHASE_STRATEGY] P1 {self._p1_tla} color: #{p1_color}, P2 {self._p2_tla} color: #{p2_color}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "P1 %s color: #%s, P2 %s color: #%s",
+                self._p1_tla,
+                p1_color,
+                self._p2_tla,
+                p2_color,
+            )
         
         # 獲取輪胎資訊（修正：使用 'compound'，不是 'tyre_compound'）
         p1_compound = p1_data.get('compound', '--') if p1_data else '--'
         p2_compound = p2_data.get('compound', '--') if p2_data else '--'
         
-        print(f"[CHASE_STRATEGY] P1 {self._p1_tla} compound: {p1_compound}, P2 {self._p2_tla} compound: {p2_compound}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "P1 %s compound: %s, P2 %s compound: %s",
+                self._p1_tla,
+                p1_compound,
+                self._p2_tla,
+                p2_compound,
+            )
         
         # 創建自繪圖表 Widget
         chart_widget = GapEvolutionChartWidget(
@@ -1790,7 +1920,7 @@ class ChaseStrategyWidget(QWidget):
             PopoutSubWindow = main_module.PopoutSubWindow
         else:
             # 備用：如果無法導入，回退到 QMdiSubWindow
-            print(f"[CHASE_STRATEGY]  無法導入 PopoutSubWindow，回退到 QMdiSubWindow")
+            logger.warning("無法導入 PopoutSubWindow，回退到 QMdiSubWindow")
             from PyQt5.QtWidgets import QMdiSubWindow
             sub_window = QMdiSubWindow()
             sub_window.setWidget(chart_widget)
@@ -1816,7 +1946,8 @@ class ChaseStrategyWidget(QWidget):
         parent_widget.addSubWindow(sub_window)
         sub_window.show()
         
-        print(f"[CHASE_STRATEGY]  Gap Evolution PopoutSubWindow 創建成功")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Gap Evolution PopoutSubWindow 創建成功")
     
     def _open_simulation_dialog(self):
         """開啟主動模擬對話框"""
@@ -1980,7 +2111,8 @@ class GapEvolutionChartWidget(QWidget):
         """
         self._strategy_calculator = calculator
         self._calculator_ready = True
-        print(f"[GAP_EVO]  StrategyCalculator 已設定，觸發重繪")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[GAP_EVO] StrategyCalculator 已設定，觸發重繪")
         # 觸發重繪以顯示預測曲線
         self.update()
     
@@ -2016,7 +2148,14 @@ class GapEvolutionChartWidget(QWidget):
         self.p1_stint_start_lap = 1
         self.p2_stint_start_lap = 1
         
-        print(f"[GAP_EVOLUTION]  更新車手: P1={p1_tla} ({self.p1_color}), P2={p2_tla} ({self.p2_color})")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[GAP_EVOLUTION] 更新車手: P1=%s (%s), P2=%s (%s)",
+                p1_tla,
+                self.p1_color,
+                p2_tla,
+                self.p2_color,
+            )
         
         # 重繪
         self.update()
@@ -2038,30 +2177,39 @@ class GapEvolutionChartWidget(QWidget):
             p1_tyre_age: P1 輪胎齡（可選）
             p2_tyre_age: P2 輪胎齡（可選）
         """
-        print(f"\n[UPDATE_DATA_DEBUG] 更新數據:")
-        print(f"  當前圈: {current_lap}, Gap: {current_gap}")
-        print(f"  P1 圈速: {p1_lap_time}, P2 圈速: {p2_lap_time}")
-        print(f"  P1 數據量: {len(self.p1_lap_times)}, P2 數據量: {len(self.p2_lap_times)}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[UPDATE_DATA_DEBUG] 更新數據:")
+            logger.debug("  當前圈: %s, Gap: %s", current_lap, current_gap)
+            logger.debug("  P1 圈速: %s, P2 圈速: %s", p1_lap_time, p2_lap_time)
+            logger.debug("  P1 數據量: %d, P2 數據量: %d", len(self.p1_lap_times), len(self.p2_lap_times))
         
         # ✅ 倒帶檢測：如果圈數倒退，清空未來圈的數據
         if current_lap < self.current_lap:
-            print(f"[GAP_EVO] ⏪ 倒帶檢測: {self.current_lap} → {current_lap}，清空未來圈數據")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[GAP_EVO] 倒帶檢測: %s → %s，清空未來圈數據", self.current_lap, current_lap)
             # 移除所有大於 current_lap 的圈數數據
             self.p1_lap_times = {lap: time for lap, time in self.p1_lap_times.items() if lap <= current_lap}
             self.p2_lap_times = {lap: time for lap, time in self.p2_lap_times.items() if lap <= current_lap}
-            print(f"[GAP_EVO]  清空後 P1 數據量: {len(self.p1_lap_times)}, P2 數據量: {len(self.p2_lap_times)}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "[GAP_EVO] 清空後 P1 數據量: %d, P2 數據量: %d",
+                    len(self.p1_lap_times),
+                    len(self.p2_lap_times),
+                )
         
         self.current_lap = current_lap
         self.current_gap = current_gap
         
         #  輪胎更換偵測（重置 stint 起始圈數）
         if p1_compound and p1_compound != self.p1_last_compound:
-            print(f"[GAP_EVO] P1 輪胎更換: {self.p1_last_compound} → {p1_compound}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[GAP_EVO] P1 輪胎更換: %s → %s", self.p1_last_compound, p1_compound)
             self.p1_last_compound = p1_compound
             self.p1_stint_start_lap = current_lap  # 重置起始圈
         
         if p2_compound and p2_compound != self.p2_last_compound:
-            print(f"[GAP_EVO] P2 輪胎更換: {self.p2_last_compound} → {p2_compound}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[GAP_EVO] P2 輪胎更換: %s → %s", self.p2_last_compound, p2_compound)
             self.p2_last_compound = p2_compound
             self.p2_stint_start_lap = current_lap  # 重置起始圈
         
@@ -2077,7 +2225,11 @@ class GapEvolutionChartWidget(QWidget):
                 if current_lap not in self.p1_pit_laps:
                     self.p1_pit_laps.append(current_lap)
                     self.p1_pit_out_laps.add(current_lap + 1)  # 標記下一圈為出站圈
-                    print(f"[GAP_EVO] ⚠️  P1 進站偵測: Lap {current_lap}, 圈速 {p1_lap_time:.3f}s")
+                    logger.warning(
+                        "[GAP_EVO] P1 進站偵測: Lap %s, 圈速 %.3fs",
+                        current_lap,
+                        p1_lap_time,
+                    )
         
         if p2_lap_time is not None and len(self.p2_lap_times) > 0:
             avg_time = sum(self.p2_lap_times.values()) / len(self.p2_lap_times)
@@ -2086,7 +2238,11 @@ class GapEvolutionChartWidget(QWidget):
                 if current_lap not in self.p2_pit_laps:
                     self.p2_pit_laps.append(current_lap)
                     self.p2_pit_out_laps.add(current_lap + 1)
-                    print(f"[GAP_EVO] ⚠️  P2 進站偵測: Lap {current_lap}, 圈速 {p2_lap_time:.3f}s")
+                    logger.warning(
+                        "[GAP_EVO] P2 進站偵測: Lap %s, 圈速 %.3fs",
+                        current_lap,
+                        p2_lap_time,
+                    )
         
         #  記錄圈速歷史（排除進站圈和出站圈）
         p1_is_pit_out = current_lap in self.p1_pit_out_laps
@@ -2094,15 +2250,19 @@ class GapEvolutionChartWidget(QWidget):
         
         if p1_lap_time is not None and not p1_is_pit_lap and not p1_is_pit_out:
             self.p1_lap_times[current_lap] = p1_lap_time
-            print(f"[LAP_TIME] ✅ P1 Lap {current_lap}: {p1_lap_time:.3f}s (正常圈速)")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[LAP_TIME] P1 Lap %s: %.3fs (正常圈速)", current_lap, p1_lap_time)
         elif p1_lap_time is not None:
-            print(f"[LAP_TIME] ❌ P1 Lap {current_lap}: {p1_lap_time:.3f}s (進站/出站，已排除)")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[LAP_TIME] P1 Lap %s: %.3fs (進站/出站，已排除)", current_lap, p1_lap_time)
         
         if p2_lap_time is not None and not p2_is_pit_lap and not p2_is_pit_out:
             self.p2_lap_times[current_lap] = p2_lap_time
-            print(f"[LAP_TIME] ✅ P2 Lap {current_lap}: {p2_lap_time:.3f}s (正常圈速)")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[LAP_TIME] P2 Lap %s: %.3fs (正常圈速)", current_lap, p2_lap_time)
         elif p2_lap_time is not None:
-            print(f"[LAP_TIME] ❌ P2 Lap {current_lap}: {p2_lap_time:.3f}s (進站/出站，已排除)")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[LAP_TIME] P2 Lap %s: %.3fs (進站/出站，已排除)", current_lap, p2_lap_time)
         
         #  新增：記錄輪胎齡（用於預測計算）
         if p1_tyre_age is not None:
@@ -2155,7 +2315,7 @@ class GapEvolutionChartWidget(QWidget):
     
     def _calculate_laptime_range(self):
         """動態計算 Y 軸圈速範圍（帶防禦性檢查）"""
-        print(f"\n[LAPTIME_RANGE_DEBUG] 計算圈速範圍:")
+        logger.debug("Calculating dynamic laptime range")
         # 收集所有真實圈速數據
         all_lap_times = []
         
@@ -2173,7 +2333,7 @@ class GapEvolutionChartWidget(QWidget):
             if future_p2_times:
                 all_lap_times.extend([t for t in future_p2_times if t > 0])
         except Exception as e:
-            print(f"[WARNING] _calculate_future_lap_times() failed: {e}")
+            logger.warning("_calculate_future_lap_times() failed: %s", e)
             # 繼續使用真實數據，忽略預測
         
         if not all_lap_times:
@@ -2192,72 +2352,56 @@ class GapEvolutionChartWidget(QWidget):
         
         self._laptime_min = min_time - margin
         self._laptime_max = max_time + margin
-        
-        print(f"[LAP_TIME_CHART] Dynamic Y-axis range: {self._laptime_min:.1f}s to {self._laptime_max:.1f}s")
+        logger.debug("Dynamic Y-axis range: %.1fs to %.1fs", self._laptime_min, self._laptime_max)
     
     def paintEvent(self, event):
         """主要繪製事件（帶異常處理防止白屏）"""
-        print(f"\n[PAINT_EVENT_DEBUG] paintEvent 開始")
-        print(f"  Widget 大小: {self.width()}x{self.height()}")
-        print(f"  P1 數據: {len(self.p1_lap_times)} 圈, P2 數據: {len(self.p2_lap_times)} 圈")
-        print(f"  當前圈: {self.current_lap}/{self.total_laps}")
+        debug_enabled = logger.isEnabledFor(logging.DEBUG)
+        if debug_enabled:
+            logger.debug(
+                "paintEvent start size=%sx%s p1=%s p2=%s lap=%s/%s",
+                self.width(),
+                self.height(),
+                len(self.p1_lap_times),
+                len(self.p2_lap_times),
+                self.current_lap,
+                self.total_laps,
+            )
         
         painter = QPainter(self)
-        print(f"  QPainter 創建成功: {painter.isActive()}")
         painter.setRenderHint(QPainter.Antialiasing)
         painter.setRenderHint(QPainter.TextAntialiasing)
         
         try:
-            # 繪製背景
-            print(f"  [1/8] 繪製背景...")
             painter.fillRect(self.rect(), QColor(COLOR_BG))
             
-            # 計算圖表區域
-            print(f"  [2/8] 計算圖表區域...")
             chart_rect = QRectF(
                 self._margin_left,
                 self._margin_top,
                 self.width() - self._margin_left - self._margin_right,
                 self.height() - self._margin_top - self._margin_bottom
             )
-            print(f"    圖表區域: {chart_rect.width():.0f}x{chart_rect.height():.0f}")
             
             if chart_rect.width() <= 0 or chart_rect.height() <= 0:
-                print(f"   圖表區域無效，結束繪製")
                 return
             
-            # 繪製圖表背景
-            print(f"  [3/8] 繪製圖表背景...")
             painter.fillRect(chart_rect, QColor(COLOR_CHART_BG))
             
             #  防禦性檢查：數據為空時顯示等待訊息
             if not self.p1_lap_times and not self.p2_lap_times:
-                print(f"   數據為空，顯示等待訊息")
                 self._draw_no_data_message(painter, chart_rect)
                 return  # painter.end() 由 finally 處理
             
-            # 繪製網格
-            print(f"  [4/8] 繪製網格...")
             self._draw_grid(painter, chart_rect)
             
-            # 繪製曲線
-            print(f"  [5/8] 繪製曲線...")
             self._draw_gap_lines(painter, chart_rect)
             
-            #  改進 2: 繪製當前圈垂直線（參考 Driver Strategy）
-            print(f"  [6/9] 繪製當前圈指示器...")
             self._draw_current_lap_indicator(painter, chart_rect)
             
-            #  繪製進站標記（參考 Driver Strategy）
-            print(f"  [7/9] 繪製進站標記...")
             self._draw_pit_markers(painter, chart_rect)
             
-            # 繪製標記
-            print(f"  [8/9] 繪製標記...")
             self._draw_markers(painter, chart_rect)
             
-            # 繪製座標軸
-            print(f"  [9/9] 繪製座標軸...")
             self._draw_axes(painter, chart_rect)
             
             #  資訊欄已改用 QLabel，不需要在 paintEvent 中繪製
@@ -2267,20 +2411,13 @@ class GapEvolutionChartWidget(QWidget):
             
         except Exception as e:
             #  異常處理：避免白屏崩潰
-            print(f"\n [PAINT_ERROR] paintEvent 發生異常: {e}")
-            import traceback
-            traceback.print_exc()
-            print(f"  Painter 狀態: {painter.isActive()}")
-            if 'chart_rect' in locals():
-                print(f"  Chart Rect: {chart_rect}")
+            logger.exception("paintEvent encountered an error: %s", e)
             self._draw_error_message(painter, chart_rect if 'chart_rect' in locals() else self.rect())
         finally:
             if painter.isActive():
-                print(f"   painter.end() 執行")
                 painter.end()
-            else:
-                print(f"   painter 已結束，跳過 end()")
-            print(f"[PAINT_EVENT_DEBUG] paintEvent 完成\n")
+            if debug_enabled:
+                logger.debug("paintEvent finished (active=%s)", painter.isActive())
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRectF):
         """繪製網格線（圈速軸）"""
@@ -2580,14 +2717,23 @@ class GapEvolutionChartWidget(QWidget):
         advantage_per_lap = self.strategy.advantage_per_lap  # 加權後的每圈優勢
         pit_loss = self.strategy.pit_loss
         
-        print(f"[LAP_TIME_PRED] ✅ 使用加權優勢值: {advantage_per_lap:+.4f} s/lap")
-        print(f"  P1 base: {p1_base_time:.3f}s (stint from Lap {self.p1_stint_start_lap})")
-        print(f"  P2 base: {p2_base_time:.3f}s (stint from Lap {self.p2_stint_start_lap})")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[LAP_TIME_PRED] 使用加權優勢值: %+0.4f s/lap", advantage_per_lap)
+            logger.debug(
+                "  P1 base: %.3fs (stint from Lap %s)",
+                p1_base_time,
+                self.p1_stint_start_lap,
+            )
+            logger.debug(
+                "  P2 base: %.3fs (stint from Lap %s)",
+                p2_base_time,
+                self.p2_stint_start_lap,
+            )
         
         #  強制要求 StrategyCalculator（無降級機制）
         strategy_calc = getattr(self, '_strategy_calculator', None)
         if not strategy_calc:
-            print("[LAP_TIME_PRED]  StrategyCalculator 未載入，等待初始化完成...")
+            logger.warning("[LAP_TIME_PRED] StrategyCalculator 未載入，等待初始化完成...")
             return [], [], []  # 返回空列表，等待 calculator 設定完成
         
         # ✅ 簡化邏輯：只針對策略 1 使用加權優勢
@@ -2657,7 +2803,14 @@ class GapEvolutionChartWidget(QWidget):
         p1_compound = self.p1_compound if hasattr(self, 'p1_compound') else 'MEDIUM'
         p2_compound = self.p2_compound if hasattr(self, 'p2_compound') else 'MEDIUM'
         
-        print(f"[LAP_TIME_PRED] P1: age={p1_current_tyre_age}, {p1_compound} | P2: age={p2_current_tyre_age}, {p2_compound}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[LAP_TIME_PRED] P1: age=%s, %s | P2: age=%s, %s",
+                p1_current_tyre_age,
+                p1_compound,
+                p2_current_tyre_age,
+                p2_compound,
+            )
         
         for lap in future_laps:
             laps_ahead = lap - self.current_lap
@@ -2980,10 +3133,14 @@ class GapEvolutionChartWidget(QWidget):
         n = len(sorted_times)
         
         #  調試輸出：基準圈速計算細節
-        print(f"\n[BASE_TIME_DEBUG] Gap Evolution 基準計算 (Stint from Lap {stint_start_lap}):")
-        print(f"  Stint 圈數: {n}")
-        print(f"  最快圈: {min(sorted_times):.3f}s")
-        print(f"  最慢圈: {max(sorted_times):.3f}s")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[BASE_TIME_DEBUG] Gap Evolution 基準計算 (Stint from Lap %s):",
+                stint_start_lap,
+            )
+            logger.debug("  Stint 圈數: %d", n)
+            logger.debug("  最快圈: %.3fs", min(sorted_times))
+            logger.debug("  最慢圈: %.3fs", max(sorted_times))
         
         if n > 5:
             # 取第 5-25 百分位的平均（與 Driver Strategy 一致）
@@ -2992,21 +3149,29 @@ class GapEvolutionChartWidget(QWidget):
             selected_times = sorted_times[start_idx:end_idx]
             base_time = sum(selected_times) / len(selected_times)
             
-            print(f"  使用百分位平均:")
-            print(f"    - 索引範圍: [{start_idx}:{end_idx}] ({len(selected_times)} 圈)")
-            print(f"    - 選中圈速: {selected_times}")
-            print(f"    - 平均值: {base_time:.3f}s")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("  使用百分位平均:")
+                logger.debug(
+                    "    - 索引範圍: [%s:%s] (%d 圈)",
+                    start_idx,
+                    end_idx,
+                    len(selected_times),
+                )
+                logger.debug("    - 選中圈速: %s", selected_times)
+                logger.debug("    - 平均值: %.3fs", base_time)
             return base_time
         elif n == 5:
             #  5 圈特殊處理：取中間 3 圈平均（排除極端值）
             selected_times = sorted_times[1:4]  # 去除最快和最慢
             base_time = sum(selected_times) / len(selected_times)
-            print(f"  5 圈數據，使用中間 3 圈平均: {base_time:.3f}s")
-            print(f"    - 選中圈速: {selected_times}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("  5 圈數據，使用中間 3 圈平均: %.3fs", base_time)
+                logger.debug("    - 選中圈速: %s", selected_times)
             return base_time
         else:
             base_time = min(sorted_times)
-            print(f"  圈數不足 ({n} 圈)，使用最快圈: {base_time:.3f}s")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("  圈數不足 (%d 圈)，使用最快圈: %.3fs", n, base_time)
             return base_time
     
     def _calculate_recent_avg_lap_time(self, lap_times_dict: dict, window: int = 3) -> float:
@@ -3069,7 +3234,7 @@ class GapEvolutionChartWidget(QWidget):
             else:
                 return float(lap_time_str)
         except (ValueError, IndexError) as e:
-            print(f"[LAP_TIME_PARSE]  無法解析圈速: {lap_time_str}, error: {e}")
+            logger.warning("[LAP_TIME_PARSE] 無法解析圈速: %s, error: %s", lap_time_str, e)
             return None
     
     def _calculate_future_gap(self):
@@ -3454,10 +3619,15 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
     Chase Strategy MDI
     
     Live Timing MDI for P2 to P1 strategy analysis.
+    
+    性能優化: 每 30 幀更新一次
     """
     
     _window_title_key = "chase_strategy"
     _default_title = "Chase Strategy"
+    
+    # 性能優化: 更新間隔 (幀數)
+    _update_frame_interval: int = 30
     
     def __init__(self, parent=None, data_manager=None):
         super().__init__(parent, data_manager)
@@ -3477,7 +3647,8 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
             }
         """)
         
-        print("[CHASE_STRATEGY_MDI] initialized")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[CHASE_STRATEGY_MDI] initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -3485,7 +3656,16 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         self._main_layout.addWidget(self._widget)
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """Handle snapshot update"""
+        """
+        Handle snapshot update
+        
+        性能優化: 每 30 幀更新一次
+        """
+        # 性能優化: 檢查幀數
+        frame_counter = snapshot.get('frame_counter', 0)
+        if frame_counter % self._update_frame_interval != 0:
+            return
+        
         # 獲取輪胎狀態 - 與 Ranking Tower 一致的邏輯
         # 1. 優先從 snapshot drivers 中提取（即時模式）
         # 2. 備用從 DataManager 獲取（歷史模式）
@@ -3493,15 +3673,25 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         drivers = snapshot.get('drivers', {})
         
         # 調試：檢查 snapshot.drivers 的內容
-        if drivers:
+        if drivers and logger.isEnabledFor(logging.DEBUG):
             sample_num = next(iter(drivers.keys()))
             sample = drivers[sample_num]
-            print(f"[CHASE_STRATEGY]  Snapshot has {len(drivers)} drivers")
-            print(f"[CHASE_STRATEGY] Sample driver {sample_num}: pos={sample.get('position')}, tla={sample.get('tla')}")
-            print(f"[CHASE_STRATEGY] Sample has compound={sample.get('compound')}, tyre_age={sample.get('tyre_age')}")
+            logger.debug("[CHASE_STRATEGY] Snapshot has %d drivers", len(drivers))
+            logger.debug(
+                "[CHASE_STRATEGY] Sample driver %s: pos=%s, tla=%s",
+                sample_num,
+                sample.get('position'),
+                sample.get('tla'),
+            )
+            logger.debug(
+                "[CHASE_STRATEGY] Sample has compound=%s, tyre_age=%s",
+                sample.get('compound'),
+                sample.get('tyre_age'),
+            )
         
         # 優先從 snapshot 的 drivers 中提取
-        print(f"[CHASE_STRATEGY]  Extracting tyre data from snapshot.drivers: {len(drivers)} drivers")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[CHASE_STRATEGY] Extracting tyre data from snapshot.drivers: %d drivers", len(drivers))
         for driver_num, driver_data in drivers.items():
             compound = driver_data.get('compound')
             tyre_age_raw = driver_data.get('tyre_age')
@@ -3515,30 +3705,52 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
                     'stint_count': driver_data.get('pit_count', 0) + 1,
                     'stints': driver_data.get('stints', []),
                 }
-                print(f"[CHASE_STRATEGY]  Driver {driver_num} ({driver_tla}): compound={compound}, tyre_age={tyre_age_raw} → stored as 'tyre_age'={tyre_state[driver_num]['tyre_age']}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "[CHASE_STRATEGY] Driver %s (%s): compound=%s, tyre_age=%s → stored as 'tyre_age'=%s",
+                        driver_num,
+                        driver_tla,
+                        compound,
+                        tyre_age_raw,
+                        tyre_state[driver_num]['tyre_age'],
+                    )
             else:
-                print(f"[CHASE_STRATEGY]  Driver {driver_num} ({driver_tla}): NO tyre data (compound={compound}, tyre_age={tyre_age_raw})")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug(
+                        "[CHASE_STRATEGY] Driver %s (%s): NO tyre data (compound=%s, tyre_age=%s)",
+                        driver_num,
+                        driver_tla,
+                        compound,
+                        tyre_age_raw,
+                    )
         
         # 如果 snapshot 沒有輪胎數據，嘗試從 DataManager 獲取
         if not tyre_state:
-            print(f"[CHASE_STRATEGY]  No tyre data in snapshot, trying DataManager...")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[CHASE_STRATEGY] No tyre data in snapshot, trying DataManager...")
             if self._data_manager and hasattr(self._data_manager, 'get_tyre_state'):
                 tyre_state = self._data_manager.get_tyre_state()
-                print(f"[CHASE_STRATEGY] DataManager returned {len(tyre_state)} drivers")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[CHASE_STRATEGY] DataManager returned %d drivers", len(tyre_state))
         else:
-            print(f"[CHASE_STRATEGY]  Total tyre_state extracted: {len(tyre_state)} drivers")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[CHASE_STRATEGY] Total tyre_state extracted: %d drivers", len(tyre_state))
         
         # 調試：顯示傳遞給 widget 的 tyre_state（只顯示前3個）
-        if tyre_state:
+        if tyre_state and logger.isEnabledFor(logging.DEBUG):
             sample_drivers = list(tyre_state.items())[:3]
-            print(f"[CHASE_STRATEGY]  Passing to widget: {len(tyre_state)} drivers, sample: {sample_drivers}")
+            logger.debug("[CHASE_STRATEGY] Passing to widget: %d drivers, sample: %s", len(tyre_state), sample_drivers)
         
         self._widget.update_snapshot(snapshot, tyre_state)
         
         #  更新所有打開的 Gap Evolution 視窗
         # 注意：追蹤列表在 self._widget 中，需要通過 _widget 訪問
         gap_widgets = getattr(self._widget, '_gap_evolution_widgets', [])
-        print(f"[CHASE_STRATEGY_MDI]  Calling _update_gap_evolution_widgets, tracked widgets: {len(gap_widgets)}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "[CHASE_STRATEGY_MDI] Calling _update_gap_evolution_widgets, tracked widgets: %d",
+                len(gap_widgets),
+            )
         self._update_gap_evolution_widgets(snapshot)
     
     def _update_gap_evolution_widgets(self, snapshot: Dict[str, Any]):
@@ -3556,7 +3768,8 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         if not gap_widgets:
             return  # 沒有打開的視窗
         
-        print(f"[GAP_EVOLUTION_UPDATE]  Updating {len(gap_widgets)} widgets")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[GAP_EVOLUTION_UPDATE] Updating %d widgets", len(gap_widgets))
         
         # 從 widget 獲取當前選擇的車手和數據
         selected_p1 = getattr(self._widget, '_selected_p1', None)
@@ -3570,9 +3783,10 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         tyre_state = getattr(self._widget, '_tyre_state', {})
         
         drivers = snapshot.get('drivers', {})
-        print(f"[GAP_EVOLUTION_UPDATE]  Snapshot drivers: {list(drivers.keys())[:5]}...")
-        print(f"[GAP_EVOLUTION_UPDATE]  Tyre state: {len(tyre_state)} drivers")
-        print(f"[GAP_EVOLUTION_UPDATE]  Selected P1={selected_p1}, P2={selected_p2}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[GAP_EVOLUTION_UPDATE] Snapshot drivers: %s...", list(drivers.keys())[:5])
+            logger.debug("[GAP_EVOLUTION_UPDATE] Tyre state: %d drivers", len(tyre_state))
+            logger.debug("[GAP_EVOLUTION_UPDATE] Selected P1=%s, P2=%s", selected_p1, selected_p2)
         
         # 方法 1: 從 tyre_state 獲取（優先）
         p1_tyre = tyre_state.get(selected_p1, {})
@@ -3585,12 +3799,20 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         if not p1_compound:
             p1_data = drivers.get(selected_p1, {})
             p1_compound = p1_data.get('compound', None)
-            print(f"[GAP_EVOLUTION_UPDATE]  P1 compound not in tyre_state, trying driver_data: {p1_compound}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "[GAP_EVOLUTION_UPDATE] P1 compound not in tyre_state, trying driver_data: %s",
+                    p1_compound,
+                )
         
         if not p2_compound:
             p2_data = drivers.get(selected_p2, {})
             p2_compound = p2_data.get('compound', None)
-            print(f"[GAP_EVOLUTION_UPDATE]  P2 compound not in tyre_state, trying driver_data: {p2_compound}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug(
+                    "[GAP_EVOLUTION_UPDATE] P2 compound not in tyre_state, trying driver_data: %s",
+                    p2_compound,
+                )
         
         #  新增：提取圈速數據和輪胎齡
         p1_data = drivers.get(selected_p1, {})
@@ -3608,10 +3830,11 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
         p1_tyre_age = p1_tyre.get('tyre_age', 0)
         p2_tyre_age = p2_tyre.get('tyre_age', 0)
         
-        print(f"[GAP_EVOLUTION_UPDATE]  P1 compound={p1_compound}, P2 compound={p2_compound}")
-        print(f"[GAP_EVOLUTION_UPDATE]  Current lap={current_lap}, gap={current_gap:.3f}s")
-        print(f"[GAP_EVOLUTION_UPDATE]   P1 lap time={p1_lap_time}s, P2 lap time={p2_lap_time}s")
-        print(f"[GAP_EVOLUTION_UPDATE]  P1 tyre age={p1_tyre_age}, P2 tyre age={p2_tyre_age}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[GAP_EVOLUTION_UPDATE] P1 compound=%s, P2 compound=%s", p1_compound, p2_compound)
+            logger.debug("[GAP_EVOLUTION_UPDATE] Current lap=%s, gap=%.3fs", current_lap, current_gap)
+            logger.debug("[GAP_EVOLUTION_UPDATE] P1 lap time=%ss, P2 lap time=%ss", p1_lap_time, p2_lap_time)
+            logger.debug("[GAP_EVOLUTION_UPDATE] P1 tyre age=%s, P2 tyre age=%s", p1_tyre_age, p2_tyre_age)
         
         # 更新每個 widget
         for widget in gap_widgets:
@@ -3627,7 +3850,7 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
                     p2_tyre_age=p2_tyre_age
                 )
             except Exception as e:
-                print(f"[CHASE_STRATEGY]  更新 Gap Evolution widget 失敗: {e}")
+                logger.error("[CHASE_STRATEGY] 更新 Gap Evolution widget 失敗: %s", e)
     
     def _parse_lap_time_to_seconds(self, lap_time_str: str) -> float:
         """
@@ -3653,7 +3876,7 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
             else:
                 return float(lap_time_str)
         except (ValueError, IndexError) as e:
-            print(f"[LAP_TIME_PARSE]  無法解析圈速: {lap_time_str}, error: {e}")
+            logger.warning("[LAP_TIME_PARSE] 無法解析圈速: %s, error: %s", lap_time_str, e)
             return None
     
     def _on_gap_widget_closed(self, widget: GapEvolutionChartWidget):
@@ -3663,11 +3886,12 @@ class ChaseStrategyMDI(BaseLiveTimingMDI):
             gap_widgets = getattr(self._widget, '_gap_evolution_widgets', [])
             if widget in gap_widgets:
                 gap_widgets.remove(widget)
-                print(f"[CHASE_STRATEGY] Gap Evolution widget closed, remaining: {len(gap_widgets)}")
+                if logger.isEnabledFor(logging.DEBUG):
+                    logger.debug("[CHASE_STRATEGY] Gap Evolution widget closed, remaining: %d", len(gap_widgets))
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """Handle race loaded"""
-        print(f"[CHASE_STRATEGY_MDI] Race loaded: {race_info.get('race', 'Unknown')}")
+        logger.info("[CHASE_STRATEGY_MDI] Race loaded: %s", race_info.get('race', 'Unknown'))
     
     def _on_race_unloaded(self):
         """Handle race unloaded"""

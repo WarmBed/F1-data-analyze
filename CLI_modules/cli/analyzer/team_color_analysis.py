@@ -18,6 +18,14 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 
 from fastf1.ergast import Ergast
 from fastf1.plotting._constants import Constants as SEASON_CONSTANTS
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 
 __all__ = ["generate_team_color_report", "check_color_freshness", "load_driver_overrides"]

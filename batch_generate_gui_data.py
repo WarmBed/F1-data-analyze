@@ -37,6 +37,9 @@ F1T GUI 批次數據生成器
     F80 - Race Prediction Q->R (正賽預測)
     F81 - Overtake Data Collection (超車數據收集)
     F100 - Historical Track Map (歷年旗幟統計)
+    F120 - FP2 Corner All Laps (FP2 彎道全圈數分析)
+    F121 - FP2 Straight Line All Laps (FP2 直線全圈數分析)
+    F122 - Brake All Laps Analysis (煞車全圈數分析)
 
 作者: F1T Team
 日期: 2025-12-01
@@ -105,6 +108,11 @@ FUNCTION_CONFIGS: Dict[int, FunctionConfig] = {
     
     # Multi-Season (不需要 session)
     100: FunctionConfig(100, "Historical Track Map", "historical_flags", set()),
+    
+    # FP2 All Laps Analysis (全圈數分析 - 大數據量)
+    120: FunctionConfig(120, "FP2 Corner All Laps", "fp2_corner_all_laps_analysis", {"FP2"}),
+    121: FunctionConfig(121, "FP2 Straight Line All Laps", "fp2_straight_line_all_laps_analysis", {"FP2"}),
+    122: FunctionConfig(122, "Brake All Laps Analysis", "brake_all_laps_analysis", {"FP2"}),
 }
 
 # 所有可能的 Session 類型

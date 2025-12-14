@@ -231,20 +231,38 @@ class TireAnalysisModule(IAnalysisModule):
                 self.data_manager is not None)
                 
     def cleanup(self):
-        """Clean up module resources"""
+        """
+        Clean up module resources - IAnalysisModule required method
+        
+        Properly cleans up API workers to prevent QThread crash.
+        """
         try:
-            # Stop any running operations
-            if self.data_manager:
-                self.data_manager.stop_loading()
+            # Clean up core analysis component and its API worker
+            if hasattr(self, '_tire_analysis_core') and self._tire_analysis_core:
+                # Try to stop any ongoing operations
+                if hasattr(self._tire_analysis_core, 'stop_loading'):
+                    self._tire_analysis_core.stop_loading()
+                
+                # Clean up data_manager's API worker (critical!)
+                if hasattr(self._tire_analysis_core, 'data_manager'):
+                    core_manager = self._tire_analysis_core.data_manager
+                    if core_manager:
+                        # Call _cleanup_api_worker directly with sync_wait
+                        if hasattr(core_manager, '_cleanup_api_worker'):
+                            core_manager._cleanup_api_worker(sync_wait=True)
+                        elif hasattr(core_manager, 'cleanup'):
+                            core_manager.cleanup()
+                
+                # Try to clear cache
+                if hasattr(self._tire_analysis_core, 'clear_cache'):
+                    self._tire_analysis_core.clear_cache()
+                
+                self._tire_analysis_core = None
                 
             # Clean up UI components
             if hasattr(self, '_main_widget') and self._main_widget:
                 self._main_widget.deleteLater()
                 self._main_widget = None
-                
-            # Clean up data
-            if self.data_manager:
-                self.data_manager.clear_cache()
                 
             self._debug("Tire analysis module cleanup completed")
             

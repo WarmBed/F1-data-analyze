@@ -13,6 +13,14 @@ import pandas as pd
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from prettytable import PrettyTable
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 class SingleDriverLaptimeAnalysis:
     """單一車手圈速分析器"""

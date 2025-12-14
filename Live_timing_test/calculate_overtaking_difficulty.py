@@ -25,6 +25,11 @@ from typing import Dict, List, Tuple, Optional
 from collections import defaultdict
 import statistics
 
+from core.logger import get_logger
+
+
+logger = get_logger(component="gui")
+
 
 class OvertakingDifficultyCalculator:
     """賽道超車難度計算器"""
@@ -99,7 +104,7 @@ class OvertakingDifficultyCalculator:
         for year in years:
             year_path = os.path.join(self.base_path, year)
             if not os.path.exists(year_path):
-                print(f"[WARN] 找不到 {year} 數據")
+                logger.warning(f"找不到 {year} 數據")
                 continue
                 
             races = [r for r in os.listdir(year_path) if "_Race" in r]
@@ -108,7 +113,7 @@ class OvertakingDifficultyCalculator:
                 track_name = race.replace("_Race", "")
                 race_path = os.path.join(year_path, race)
                 
-                print(f"[INFO] 處理 {year} {track_name}...")
+                logger.info(f"處理 {year} {track_name}...")
                 
                 # 計算超車次數
                 overtakes, position_changes = self._analyze_race(race_path)
@@ -196,7 +201,7 @@ class OvertakingDifficultyCalculator:
                             total_position_changes += 1
                 
             except Exception as e:
-                print(f"  [ERROR] Position.json 解析錯誤: {e}")
+                logger.error(f"Position.json 解析錯誤: {e}")
         
         # 方法 2: 從 TimingData.json 補充
         if os.path.exists(timing_path) and total_overtakes == 0:
@@ -224,9 +229,9 @@ class OvertakingDifficultyCalculator:
                                 driver_last_pos[driver] = pos
                 
             except Exception as e:
-                print(f"  [ERROR] TimingData.json 解析錯誤: {e}")
+                logger.error(f"TimingData.json 解析錯誤: {e}")
         
-        print(f"  超車次數: {total_overtakes}, 位置變化: {total_position_changes}")
+        logger.info(f"  超車次數: {total_overtakes}, 位置變化: {total_position_changes}")
         
         return total_overtakes if total_overtakes > 0 else None, \
                total_position_changes if total_position_changes > 0 else None
@@ -299,16 +304,16 @@ class OvertakingDifficultyCalculator:
         with open(output_path, 'w', encoding='utf-8') as f:
             json.dump(output, f, indent=2, ensure_ascii=False)
         
-        print(f"\n[SUCCESS] 結果已保存到: {output_path}")
+        logger.info(f"\n[SUCCESS] 結果已保存到: {output_path}")
         
         return output_path
     
     def print_summary(self):
         """打印摘要"""
         
-        print("\n" + "=" * 60)
-        print("賽道超車難度指數 (2023-2024 統計)")
-        print("=" * 60)
+        logger.info("\n" + "=" * 60)
+        logger.info("賽道超車難度指數 (2023-2024 統計)")
+        logger.info("=" * 60)
         
         # 按難度排序
         sorted_tracks = sorted(
@@ -317,22 +322,24 @@ class OvertakingDifficultyCalculator:
             reverse=True
         )
         
-        print(f"{'賽道':<20} {'難度指數':<10} {'等級':<12} {'平均超車':<10} {'DRS區':<6}")
-        print("-" * 60)
+        logger.info(f"{'賽道':<20} {'難度指數':<10} {'等級':<12} {'平均超車':<10} {'DRS區':<6}")
+        logger.info("-" * 60)
         
         for track, data in sorted_tracks:
-            print(f"{track:<20} {data.get('difficulty_index', 0):<10.3f} "
-                  f"{data.get('difficulty_category', 'N/A'):<12} "
-                  f"{data.get('avg_overtakes', 0):<10.1f} "
-                  f"{data.get('drs_zones', 0):<6}")
+            logger.info(
+                f"{track:<20} {data.get('difficulty_index', 0):<10.3f} "
+                f"{data.get('difficulty_category', 'N/A'):<12} "
+                f"{data.get('avg_overtakes', 0):<10.1f} "
+                f"{data.get('drs_zones', 0):<6}"
+            )
 
 
 def main():
     """主函數"""
     
-    print("=" * 60)
-    print("F1 賽道超車難度計算器")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("F1 賽道超車難度計算器")
+    logger.info("=" * 60)
     
     # 設定路徑
     base_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "json", "LiveF1")

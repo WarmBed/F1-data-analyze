@@ -19,7 +19,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 
 from core.gui_i18n import tr
+
 from core.logger import get_logger
+logger = get_logger(__name__)
 
 logger = get_logger("season_progress.widget", component="gui")
 

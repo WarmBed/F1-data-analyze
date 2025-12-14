@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 所有事件詳細列表模組 - Function 8
 All Incidents Summary Module - Following Core Development Standards
 提供完整的事故事件詳細列表，包含時間、圈數、車手、詳細描述等
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

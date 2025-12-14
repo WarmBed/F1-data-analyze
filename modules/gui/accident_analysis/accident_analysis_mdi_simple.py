@@ -26,6 +26,9 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 # 導入國際化模組
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入分析模組介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -55,7 +58,7 @@ class AccidentDataManager(QObject):
         
     def loadAccidentStatistics(self, year: str, race: str, session: str):
         """載入事故統計數據 (JSON優先，CLI備援)"""
-        print(f"🔄 [AccidentDataManager] 載入事故統計: {year} {race} {session}")
+        logger.debug(f"[AccidentDataManager] 載入事故統計: {year} {race} {session}")
         
         # 模擬數據載入 (實際實現時應連接後端)
         mock_data = {
@@ -186,7 +189,7 @@ class AccidentStatisticsWidget(QWidget):
         
     def update_statistics_data(self, data: dict):
         """更新統計數據顯示"""
-        print(f"📊 [AccidentStatisticsWidget] 更新統計數據")
+        logger.debug(f"[AccidentStatisticsWidget] 更新統計數據")
         
         # 更新統計卡片
         self.total_card.value_label.setText(str(data.get('total_incidents', 0)))
@@ -353,13 +356,13 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def reload_statistics_data(self):
         """重新載入統計數據"""
-        print(f"[AccidentAnalysisModule] 重新載入統計數據")
+        logger.debug(f"[AccidentAnalysisModule] 重新載入統計數據")
         QTimer.singleShot(2000, lambda: self.data_manager.loadAccidentStatistics(
             self.current_year, self.current_race, self.current_session))
     
     def on_error_occurred(self, error_message):
         """錯誤處理"""
-        print(f"[AccidentAnalysisModule] 錯誤: {error_message}")
+        logger.debug(f"[AccidentAnalysisModule] 錯誤: {error_message}")
         QMessageBox.warning(self, tr('accident_analysis_error', 'Accident Analysis Error'), error_message)
     
     # ===========================================
@@ -398,10 +401,10 @@ class AccidentAnalysisModule(IAnalysisModule):
             # 設置初始化狀態
             self.set_initialized(True)
             
-            print(f"✅ [ACCIDENT_MODULE] 模組已初始化，等待參數同步...")
+            logger.info(f"[ACCIDENT_MODULE] 模組已初始化，等待參數同步...")
             return True
         except Exception as e:
-            print(f"[ERROR] [ACCIDENT_MODULE] 模組初始化失敗: {str(e)}")
+            logger.error(f"[ACCIDENT_MODULE] 模組初始化失敗: {str(e)}")
             return False
     
     def get_widget(self):
@@ -415,6 +418,7 @@ class AccidentAnalysisModule(IAnalysisModule):
     def get_window_title(self, year: str, race: str, session: str) -> str:
         """Generate window title - 只顯示模組名稱，不包含年份/賽事/賽段"""
         from core.gui_i18n import tr, get_gui_language
+
         language = get_gui_language()
         if language == 'zh':
             return f"{tr('accident_analysis')}"
@@ -444,20 +448,20 @@ class AccidentAnalysisModule(IAnalysisModule):
             
             # 如果參數有變化，重新載入數據
             if params_changed:
-                print(f"🔄 [ACCIDENT_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
+                logger.debug(f"[ACCIDENT_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
                 self.load_data()
                 
         except Exception as e:
-            print(f"[ERROR] [ACCIDENT_MODULE] 更新參數失敗: {str(e)}")
+            logger.error(f"[ACCIDENT_MODULE] 更新參數失敗: {str(e)}")
             self.emit_error(f"更新參數失敗: {str(e)}")
     
     def load_data(self, **kwargs) -> bool:
         """載入數據"""
         if not all([self.current_year, self.current_race, self.current_session]):
-            print(f"[WARNING] [ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
+            logger.warning(f"[ACCIDENT_MODULE] 缺少必要參數，無法載入數據")
             return False
             
-        print(f"🔄 [ACCIDENT_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
+        logger.debug(f"[ACCIDENT_MODULE] 載入數據: {self.current_year} {self.current_race} {self.current_session}")
         
         # 載入當前分頁數據
         if hasattr(self, 'tab_widget'):
@@ -470,18 +474,18 @@ class AccidentAnalysisModule(IAnalysisModule):
     
     def refresh_analysis(self) -> None:
         """刷新分析"""
-        print(f"🔄 [ACCIDENT_MODULE] 刷新分析")
+        logger.debug(f"[ACCIDENT_MODULE] 刷新分析")
         self.load_data()
     
     def clear_data(self) -> None:
         """清除數據"""
         if hasattr(self, 'statistics_widget'):
             self.statistics_widget.clear_table()
-        print(f"🧹 [ACCIDENT_MODULE] 數據已清除")
+        logger.debug(f"[ACCIDENT_MODULE] 數據已清除")
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據"""
-        print(f"📤 [ACCIDENT_MODULE] 匯出數據到 {export_path} (格式: {export_format}) - 功能開發中")
+        logger.debug(f"📤 [ACCIDENT_MODULE] 匯出數據到 {export_path} (格式: {export_format}) - 功能開發中")
         return True
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -505,5 +509,5 @@ class AccidentAnalysisModule(IAnalysisModule):
 
 
 if __name__ == "__main__":
-    print("F1T 事故綜合分析模組 (簡化版) - 獨立測試模式")
-    print("此模組需要在F1T GUI主程式中使用")
+    logger.debug("F1T 事故綜合分析模組 (簡化版) - 獨立測試模式")
+    logger.debug("此模組需要在F1T GUI主程式中使用")

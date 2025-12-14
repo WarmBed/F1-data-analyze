@@ -248,7 +248,6 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             )
         
         self.info_label.setText(info_text)
-        print(f"[SPEED_TABLE] 資訊標籤更新: {info_text}")
     
     def _get_column_visibility(self) -> Dict[str, bool]:
         """
@@ -376,10 +375,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             data: 包含 driver_speeds 和 metadata 的字典
         """
         try:
-            print(f"[SPEED_TABLE] update_data 被調用，data keys: {list(data.keys()) if isinstance(data, dict) else 'not a dict'}")
-            
-            if not data or not isinstance(data, dict):
-                print("[WARNING] [SPEED_TABLE] 無效的數據格式")
+            if not isinstance(data, dict):
                 return
             
             # ✅ 提取 metadata 並讀取統一速度範圍
@@ -389,9 +385,8 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             if unified_speed_range:
                 self.unified_start_speed = unified_speed_range.get("start_speed_kmh", 100.0)
                 self.unified_end_speed = unified_speed_range.get("end_speed_kmh", 300.0)
-                print(f"[SPEED_TABLE] 統一速度範圍: {self.unified_start_speed:.0f}→{self.unified_end_speed:.0f} km/h")
             else:
-                print("[WARNING] [SPEED_TABLE] 未找到 unified_speed_range，使用預設值 100→300 km/h")
+                pass
             
             # ✅ 提取 reference_segment 距離範圍資訊
             reference_segment = data.get("reference_segment", {})
@@ -400,19 +395,14 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
                 self.segment_distance_end = reference_segment.get("segment_distance_end")
                 self.segment_length = reference_segment.get("segment_length")
                 self.reference_driver = reference_segment.get("driver", "")
-                print(f"[SPEED_TABLE] 距離範圍: {self.segment_distance_start:.1f}m → {self.segment_distance_end:.1f}m (長度: {self.segment_length:.1f}m)")
                 
                 # ✅ 更新資訊標籤
                 self._update_info_label()
-            else:
-                print("[WARNING] [SPEED_TABLE] 未找到 reference_segment 資訊")
             
             # 提取車手數據
             self.driver_speeds_data = data.get("driver_speeds", [])
-            print(f"[SPEED_TABLE] driver_speeds 數量: {len(self.driver_speeds_data)}")
             
             if not self.driver_speeds_data:
-                print("[WARNING] [SPEED_TABLE] 無 driver_speeds 數據")
                 return
             
             # ✅ 學習 Ideal Lap Ranking：只更新內容，不重建表格
@@ -422,10 +412,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             # 填充表格（_populate_table 內部會處理排序和行數）
             self._populate_table()
             
-            print(f"[SPEED_TABLE] 表格更新完成：{len(self.driver_speeds_data)} 位車手")
-            
         except Exception as e:
-            print(f"[ERROR] [SPEED_TABLE] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -445,8 +432,6 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         # 儲存時間範圍
         self.min_time_to_max = min_time if min_time != float('inf') else 0.0
         self.max_time_to_max = max_time if max_time > 0 else 10.0
-        
-        print(f"[SPEED_TABLE] 時間範圍: {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
     
     def _calculate_time_to_max_speed(self, max_speed: float, accel_100_300_time: float) -> float:
         """
@@ -494,9 +479,6 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         if bar_col_index is not None:
             bar_delegate = AccelerationBarDelegate(self.min_time_to_max, self.max_time_to_max, self.table)
             self.table.setItemDelegateForColumn(bar_col_index, bar_delegate)
-            print(f"[SPEED_TABLE] 委託已設置，欄位 {bar_col_index}（加速性能視覺化），時間範圍 {self.min_time_to_max:.3f}s ~ {self.max_time_to_max:.3f}s")
-        else:
-            print("[WARNING] [SPEED_TABLE] Performance Bar 欄位不可見，跳過委託設置")
         
         self.table.setSortingEnabled(True)
     
@@ -543,11 +525,6 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         max_speed_time_display = float(max_speed_time_display) if max_speed_time_display is not None else 0.0
         segment_avg_accel = float(segment_avg_accel) if segment_avg_accel is not None else 0.0
         segment_speed_gain = float(segment_speed_gain) if segment_speed_gain is not None else 0.0
-        
-        # 調試輸出
-        if row == 0:  # 只輸出第一行
-            print(f"[DEBUG] 第一行數據: driver={driver}, max_speed={max_speed}")
-            print(f"[DEBUG] accel_time_display={accel_time_display}, max_speed_time_display={max_speed_time_display}")
         
         # ❌ 移除：0. 排名（Qt 動態排序會改變順序，固定排名會誤導用戶）
         
@@ -727,7 +704,7 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
             self._show_driver_details(driver_data)
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_TABLE] 點擊處理失敗: {e}")
+            pass
     
     def _show_driver_details(self, driver_data: Dict):
         """顯示車手詳細資訊彈窗"""
@@ -797,8 +774,6 @@ class AllDriversStraightLineSpeedTableWidget(QWidget):
         """
         try:
             # TODO: 實現表格截圖功能
-            print(f"[SPEED_TABLE] 匯出功能開發中: {file_path}")
             return False
         except Exception as e:
-            print(f"[ERROR] [SPEED_TABLE] 匯出失敗: {e}")
             return False

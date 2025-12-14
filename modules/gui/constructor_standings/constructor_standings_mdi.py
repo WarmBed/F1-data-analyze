@@ -22,6 +22,9 @@ from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class ChampionshipStandingsApiWorker(QThread):
     """
@@ -53,6 +56,9 @@ class ChampionshipStandingsApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -68,8 +74,12 @@ class ChampionshipStandingsApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[API_WORKER] 📋 參數: {query_params}")
+            logger.debug(f"[API_WORKER] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[API_WORKER] 📋 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -80,6 +90,10 @@ class ChampionshipStandingsApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -110,21 +124,29 @@ class ChampionshipStandingsApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[API_WORKER] ✅ API 調用成功")
-            print(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info(f"[API_WORKER] ✅ API 調用成功")
+            logger.debug(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[API_WORKER] 📊 數據源: {meta['source']}")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[API_WORKER] ❌ {error_msg}")
+            logger.error(f"[API_WORKER] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 try:
@@ -204,7 +226,7 @@ class ConstructorStandingsMDI(QWidget):
         1. API 調用 (https://api.f1telemetrystationpro.org)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
-        print(f"[CONSTRUCTOR_MDI] 🚀 觸發初始載入: year={self.year}")
+        logger.debug(f"[CONSTRUCTOR_MDI] 🚀 觸發初始載入: year={self.year}")
         self.status_label.setText(tr("loading_status", "正在從 API 載入車隊積分資料..."))
         self.progress_bar.setValue(10)
         self.progress_bar.show()
@@ -215,7 +237,7 @@ class ConstructorStandingsMDI(QWidget):
             "force_refresh": False  # 可選：強制刷新
         }
         
-        print("[CONSTRUCTOR_MDI] 🌐 創建 API Worker...")
+        logger.debug("[CONSTRUCTOR_MDI] 🌐 創建 API Worker...")
         self.api_worker = ChampionshipStandingsApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -228,13 +250,13 @@ class ConstructorStandingsMDI(QWidget):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[CONSTRUCTOR_MDI] ▶️  啟動 API 請求...")
+        logger.debug("[CONSTRUCTOR_MDI] ▶️  啟動 API 請求...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[CONSTRUCTOR_MDI] 📊 API 進度: {progress}%")
+        logger.debug(f"[CONSTRUCTOR_MDI] 📊 API 進度: {progress}%")
         self.progress_bar.setValue(progress)
         self.status_label.setText(f"API 載入中... {progress}%")
     
@@ -242,14 +264,14 @@ class ConstructorStandingsMDI(QWidget):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[CONSTRUCTOR_MDI] ✅ API 調用成功")
+            logger.info("[CONSTRUCTOR_MDI] ✅ API 調用成功")
             
             # API 返回的 data 是完整的 JSON 內容（可能有雙層嵌套）
             api_response = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[CONSTRUCTOR_MDI] 📦 數據源: {meta.get('source')}")
-            print(f"[CONSTRUCTOR_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
+            logger.debug(f"[CONSTRUCTOR_MDI] 📦 數據源: {meta.get('source')}")
+            logger.debug(f"[CONSTRUCTOR_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
             
             # 處理雙層嵌套：API 返回的 data 可能包含完整的 CLI JSON 輸出
             if "data" in api_response and isinstance(api_response.get("data"), dict):
@@ -257,19 +279,19 @@ class ConstructorStandingsMDI(QWidget):
                 metadata = api_response.get("metadata", {})
                 inner_data = api_response.get("data", {})
                 constructors = inner_data.get("constructors", [])
-                print("[CONSTRUCTOR_MDI] 📋 檢測到雙層嵌套結構 (CLI JSON)")
+                logger.debug("[CONSTRUCTOR_MDI] 📋 檢測到雙層嵌套結構 (CLI JSON)")
             else:
                 # 單層：data.constructors
                 metadata = api_response.get("metadata", {})
                 constructors = api_response.get("constructors", [])
-                print("[CONSTRUCTOR_MDI] 📋 檢測到單層結構")
+                logger.debug("[CONSTRUCTOR_MDI] 📋 檢測到單層結構")
             
             # 驗證數據
             if not isinstance(constructors, list):
                 raise ValueError(f"API 數據缺少 'constructors' 列表，實際類型: {type(constructors)}")
             
-            print(f"[CONSTRUCTOR_MDI] 📋 載入 {len(constructors)} 支車隊")
-            print(f"[CONSTRUCTOR_MDI] 📋 Metadata: season_year={metadata.get('season_year')}, round={metadata.get('resolved_round')}")
+            logger.debug(f"[CONSTRUCTOR_MDI] 📋 載入 {len(constructors)} 支車隊")
+            logger.debug(f"[CONSTRUCTOR_MDI] 📋 Metadata: season_year={metadata.get('season_year')}, round={metadata.get('resolved_round')}")
             
             # ✅ 正確：調用 DataLoader 的轉換方法（包含 team_slug 映射）
             raw_data = {
@@ -282,7 +304,7 @@ class ConstructorStandingsMDI(QWidget):
             
             display_data = self.data_loader._transform_data_for_display(raw_data)
             
-            print(f"[CONSTRUCTOR_MDI] 📊 轉換後數據: {len(display_data['standings'])} 支車隊, 年份={display_data.get('season_year')}, 輪次={display_data.get('round')}")
+            logger.debug(f"[CONSTRUCTOR_MDI] 📊 轉換後數據: {len(display_data['standings'])} 支車隊, 年份={display_data.get('season_year')}, 輪次={display_data.get('round')}")
             
             # 觸發載入完成處理
             self._on_data_loaded(display_data)
@@ -292,19 +314,20 @@ class ConstructorStandingsMDI(QWidget):
             self.status_label.setText(f"✅ 已從 {source_label} 載入資料")
             
         except Exception as e:
-            print(f"❌ [CONSTRUCTOR_MDI] API 數據處理失敗: {e}")
+            logger.error(f"[CONSTRUCTOR_MDI] API 數據處理失敗: {e}")
             import traceback
+
             traceback.print_exc()
             self._on_api_failure(str(e))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - 嘗試本地 JSON 備援"""
-        print(f"❌ [CONSTRUCTOR_MDI] API 調用失敗: {error_msg}")
+        logger.error(f"[CONSTRUCTOR_MDI] API 調用失敗: {error_msg}")
         self.status_label.setText(tr("api_failure_status", "API 失敗，嘗試本地檔案..."))
         
         # 備援：嘗試本地 JSON
-        print("[CONSTRUCTOR_MDI] 🔄 嘗試本地 JSON 備援...")
+        logger.debug("[CONSTRUCTOR_MDI] 🔄 嘗試本地 JSON 備援...")
         self.data_loader.load_data(force_refresh=False)
     
     @pyqtSlot(str)
@@ -330,7 +353,7 @@ class ConstructorStandingsMDI(QWidget):
         Args:
             data: 轉換後的積分資料
         """
-        print(f"[CONSTRUCTOR_MDI] 數據載入完成")
+        logger.debug(f"[CONSTRUCTOR_MDI] 數據載入完成")
         
         # 填充表格
         self.standings_widget.populate_table(data)
@@ -349,7 +372,7 @@ class ConstructorStandingsMDI(QWidget):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"[CONSTRUCTOR_MDI] ❌ 載入錯誤: {error_msg}")
+        logger.error(f"[CONSTRUCTOR_MDI] ❌ 載入錯誤: {error_msg}")
         self.status_label.setText(tr("load_error_status", "載入失敗: {error}").format(error=error_msg))
         self.progress_bar.setValue(0)
         self.progress_bar.hide()

@@ -6,7 +6,7 @@ All Drivers Annual Overtaking Statistics Module (Function 16.1)
 
 本模組提供全部車手年度超車統計功能，包含：
 - [INFO] 年度超車次數統計
-- 🏆 車手超車排名分析
+- 車手超車排名分析
 - [STATS] 超車成功率統計
 - JSON格式完整輸出
 
@@ -14,6 +14,14 @@ All Drivers Annual Overtaking Statistics Module (Function 16.1)
 作者: F1 Analysis Team
 日期: 2025-08-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import json
 import os
@@ -499,6 +507,13 @@ def run_multi_year_overtaking_statistics(start_year, end_year, race_name, sessio
     # 現在可以正確導入 F1DataLoader
     try:
         from core.data_loader import F1DataLoader
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     except ImportError:
         print("[WARNING] 無法導入 F1DataLoader，使用 fastf1 直接載入")
         F1DataLoader = None

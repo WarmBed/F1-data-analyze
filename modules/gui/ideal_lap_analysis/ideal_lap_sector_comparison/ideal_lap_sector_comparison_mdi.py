@@ -21,6 +21,9 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入基類
 try:
     from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
@@ -68,6 +71,9 @@ class IdealLapSectorComparisonApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -85,8 +91,12 @@ class IdealLapSectorComparisonApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[SECTOR_COMPARISON_API] 🌐 調用 API: {endpoint}")
-            print(f"[SECTOR_COMPARISON_API] 📋 參數: {query_params}")
+            logger.debug(f"[SECTOR_COMPARISON_API] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[SECTOR_COMPARISON_API] 📋 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -97,6 +107,10 @@ class IdealLapSectorComparisonApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -111,9 +125,13 @@ class IdealLapSectorComparisonApiWorker(QThread):
                 raise RuntimeError(f"API 返回錯誤: {error}")
             
             elapsed_ms = int((time.perf_counter() - start_ts) * 1000)
-            print(f"[SECTOR_COMPARISON_API] ✅ API 調用成功 (耗時: {elapsed_ms}ms)")
+            logger.info(f"[SECTOR_COMPARISON_API] ✅ API 調用成功 (耗時: {elapsed_ms}ms)")
             
             self.progress.emit(100)
+            
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             
             # 發送成功信號
             result = {
@@ -127,23 +145,35 @@ class IdealLapSectorComparisonApiWorker(QThread):
             self.success.emit(result)
             
         except requests.exceptions.Timeout:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求超時 (>{self.timeout}秒)"
-            print(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
+            logger.error(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except requests.exceptions.ConnectionError as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"無法連接到 API 服務器: {str(e)}"
-            print(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
+            logger.error(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except requests.exceptions.HTTPError as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"HTTP 錯誤 {e.response.status_code}: {e.response.reason}"
-            print(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
+            logger.error(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
             self.failure.emit(error_msg)
             
         except Exception as e:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(e)}"
-            print(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
+            logger.error(f"[SECTOR_COMPARISON_API] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
@@ -175,7 +205,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("ideal_lap_sector_comparison", config)
             cls._REGISTERED = True
-            print("[SECTOR_COMPARISON_MDI] ✅ 模組類型已註冊")
+            logger.info("[SECTOR_COMPARISON_MDI] ✅ 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -184,7 +214,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[SECTOR_COMPARISON_MDI] IdealLapSectorComparisonMDI 開始初始化...")
+        logger.debug(f"[SECTOR_COMPARISON_MDI] IdealLapSectorComparisonMDI 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -210,7 +240,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         # 狀態標籤
         self.lbl_control_status: Optional[QLabel] = None
         
-        print(f"[SECTOR_COMPARISON_MDI] 基類初始化完成，等待參數設置...")
+        logger.debug(f"[SECTOR_COMPARISON_MDI] 基類初始化完成，等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -224,19 +254,19 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print(f"[SECTOR_COMPARISON_MDI] 開始初始化模組...")
+            logger.debug(f"[SECTOR_COMPARISON_MDI] 開始初始化模組...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_year 屬性")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_race 屬性")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_session 屬性")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ 缺少 current_session 屬性")
                 return False
             
             # 設置參數
@@ -244,32 +274,32 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[SECTOR_COMPARISON_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
+            logger.info(f"[SECTOR_COMPARISON_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
             
             # ⚠️ 關鍵：調用基類的 initialize_module 來創建 chart_widget 和 data_manager
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print(f"[SECTOR_COMPARISON_MDI] ❌ 基類初始化失敗")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ 基類初始化失敗")
                 return False
             
             # 驗證組件已創建
             if not self.chart_widget:
-                print(f"[SECTOR_COMPARISON_MDI] ❌ chart_widget 未創建")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print(f"[SECTOR_COMPARISON_MDI] ❌ data_manager 未創建")
+                logger.error(f"[SECTOR_COMPARISON_MDI] ❌ data_manager 未創建")
                 return False
             
-            print(f"[SECTOR_COMPARISON_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__}, data_manager={type(self.data_manager).__name__})")
+            logger.info(f"[SECTOR_COMPARISON_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__}, data_manager={type(self.data_manager).__name__})")
             
             # 自動載入初始數據
-            print(f"[SECTOR_COMPARISON_MDI] 🚀 準備載入初始數據...")
+            logger.debug(f"[SECTOR_COMPARISON_MDI] 🚀 準備載入初始數據...")
             self.load_initial_data()
             
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MDI] 初始化失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MDI] 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -304,10 +334,10 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Returns:
             IdealLapSectorComparisonDataLoader: 資料載入器實例
         """
-        print("[SECTOR_COMPARISON_MDI] 創建資料管理器...")
+        logger.debug("[SECTOR_COMPARISON_MDI] 創建資料管理器...")
         
         if not all([self.year, self.race, self.session]):
-            print("❌ [SECTOR_COMPARISON_MDI] 參數不完整，無法創建資料管理器")
+            logger.error("[SECTOR_COMPARISON_MDI] 參數不完整，無法創建資料管理器")
             return None
         
         loader = IdealLapSectorComparisonDataLoader(
@@ -321,7 +351,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         loader.data_loaded.connect(self._on_data_loaded)
         loader.load_error.connect(self._on_load_error)
         
-        print("✅ [SECTOR_COMPARISON_MDI] 資料管理器已創建")
+        logger.info("[SECTOR_COMPARISON_MDI] 資料管理器已創建")
         return loader
     
     def create_chart_widget(self):
@@ -331,19 +361,19 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Returns:
             IdealLapSectorComparisonTableWidget: 表格元件實例
         """
-        print("[SECTOR_COMPARISON_MDI] 創建表格元件（新版本）...")
+        logger.debug("[SECTOR_COMPARISON_MDI] 創建表格元件（新版本）...")
         
         # ⚠️ parent 必須傳 None，因為 UniversalAnalysisMDI 不是 QWidget
         widget = IdealLapSectorComparisonWidget(parent=None)
         
         # ✅ 表格版本不需要 bar_clicked 信號（使用 QTableWidget 自帶的選擇機制）
         
-        print("✅ [SECTOR_COMPARISON_MDI] 表格元件已創建")
+        logger.info("[SECTOR_COMPARISON_MDI] 表格元件已創建")
         return widget
     
     def _setup_ui_components(self):
         """設置額外的 UI 組件"""
-        print("[SECTOR_COMPARISON_MDI] 設置 UI 組件...")
+        logger.debug("[SECTOR_COMPARISON_MDI] 設置 UI 組件...")
         
         # 創建控制面板
         self.control_panel = SectorComparisonControlPanel(parent=self)
@@ -378,7 +408,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         layout.addWidget(splitter)
         layout.setContentsMargins(5, 5, 5, 5)
         
-        print("✅ [SECTOR_COMPARISON_MDI] UI 組件設置完成（含狀態標籤引用）")
+        logger.info("[SECTOR_COMPARISON_MDI] UI 組件設置完成（含狀態標籤引用）")
     
     # ========== 數據處理回調 ==========
     
@@ -391,7 +421,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             data: 載入的資料
         """
         try:
-            print("[SECTOR_COMPARISON_MDI] 收到資料載入完成信號")
+            logger.debug("[SECTOR_COMPARISON_MDI] 收到資料載入完成信號")
             
             if not data or not data.get("success"):
                 error_msg = data.get("error", "未知錯誤") if data else "資料為空"
@@ -402,15 +432,15 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             self._is_data_loaded = True
             
             # ✅ 正確：使用 update_data() 方法（參考 lap_box_plot_analysis_mdi）
-            print(f"[SECTOR_COMPARISON_MDI] 更新圖表數據...")
+            logger.debug(f"[SECTOR_COMPARISON_MDI] 更新圖表數據...")
             
             if self.chart_widget:
                 self.chart_widget.update_data(data)
             
-            print("✅ [SECTOR_COMPARISON_MDI] 資料處理完成")
+            logger.info("[SECTOR_COMPARISON_MDI] 資料處理完成")
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MDI] 資料處理失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MDI] 資料處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_load_error(f"資料處理錯誤: {str(e)}")
@@ -423,7 +453,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"❌ [SECTOR_COMPARISON_MDI] 載入錯誤: {error_msg}")
+        logger.error(f"[SECTOR_COMPARISON_MDI] 載入錯誤: {error_msg}")
         
         # ✅ 只在控制台記錄錯誤，不彈出對話框（API-ONLY 模式）
         # 用戶應該通過 API 獲取數據，找不到本地 JSON 不應該彈窗
@@ -437,8 +467,8 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         
         ⚠️ API-ONLY 模式: 優先使用 API，失敗時回退到本地 JSON
         """
-        print(f"🌐 [SECTOR_COMPARISON_MDI] 開始載入數據 (API-ONLY 模式)")
-        print(f"   參數: {self.year} {self.race} {self.session}")
+        logger.debug(f"🌐 [SECTOR_COMPARISON_MDI] 開始載入數據 (API-ONLY 模式)")
+        logger.debug(f"   參數: {self.year} {self.race} {self.session}")
         
         # 更新狀態標籤
         if hasattr(self, 'lbl_control_status') and self.lbl_control_status:
@@ -468,7 +498,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         
         # 啟動異步請求
         self.api_worker.start()
-        print("✅ [SECTOR_COMPARISON_MDI] API Worker 已啟動（使用 Qt.QueuedConnection）")
+        logger.info("[SECTOR_COMPARISON_MDI] API Worker 已啟動（使用 Qt.QueuedConnection）")
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
@@ -478,7 +508,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             progress: 進度百分比 (0-100)
         """
-        print(f"📊 [SECTOR_COMPARISON_API] 進度: {progress}%")
+        logger.debug(f"[SECTOR_COMPARISON_API] 進度: {progress}%")
         
         if hasattr(self, 'lbl_control_status') and self.lbl_control_status:
             self.lbl_control_status.setText(f"API 載入中... {progress}%")
@@ -494,14 +524,14 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             result: API 返回的數據
         """
         try:
-            print("✅ [SECTOR_COMPARISON_API] API 請求成功")
-            print(f"[DEBUG] API 返回數據鍵: {list(result.keys())}")
+            logger.info("[SECTOR_COMPARISON_API] API 請求成功")
+            logger.debug(f"API 返回數據鍵: {list(result.keys())}")
             
             # 提取實際數據（處理 API Worker 的包裝格式）
             api_data = result.get('data', result)
             meta = result.get('meta', {})
             
-            print(f"[DEBUG] 實際數據鍵: {list(api_data.keys()) if isinstance(api_data, dict) else type(api_data)}")
+            logger.debug(f"實際數據鍵: {list(api_data.keys()) if isinstance(api_data, dict) else type(api_data)}")
             
             # 驗證數據格式
             if not self._validate_api_data(api_data):
@@ -509,7 +539,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             
             # ✅ 修正: 調用 _on_data_loaded() 處理數據（複製 ranking_table 模式）
             # 而非調用不存在的 update_chart()
-            print("[SECTOR_COMPARISON_API] 🔄 在 UI 線程更新數據...")
+            logger.debug("[SECTOR_COMPARISON_API] 🔄 在 UI 線程更新數據...")
             self._on_data_loaded(api_data)
             
             # 更新狀態
@@ -519,10 +549,10 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             
             # 保存當前數據
             self._current_data = api_data
-            print("✅ [SECTOR_COMPARISON_API] UI 更新完成")
+            logger.info("[SECTOR_COMPARISON_API] UI 更新完成")
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_API] 數據處理失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_API] 數據處理失敗: {e}")
             traceback.print_exc()
             self._on_api_failure(f"數據處理錯誤: {str(e)}")
     
@@ -534,8 +564,8 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"⚠️ [SECTOR_COMPARISON_API] API 請求失敗: {error_msg}")
-        print("🔄 [SECTOR_COMPARISON_MDI] 嘗試回退到本地 JSON 檔案...")
+        logger.warning(f"[SECTOR_COMPARISON_API] API 請求失敗: {error_msg}")
+        logger.debug("[SECTOR_COMPARISON_MDI] 嘗試回退到本地 JSON 檔案...")
         
         # 更新狀態
         if hasattr(self, 'lbl_control_status') and self.lbl_control_status:
@@ -549,13 +579,13 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
                     race=self.race,
                     session=self.session
                 )
-                print("✅ [SECTOR_COMPARISON_MDI] 本地 JSON 載入成功（回退模式）")
+                logger.info("[SECTOR_COMPARISON_MDI] 本地 JSON 載入成功（回退模式）")
                 
                 if hasattr(self, 'lbl_control_status') and self.lbl_control_status:
                     self.lbl_control_status.setText("已載入本地 JSON（API 失敗回退）")
                     
             except Exception as fallback_error:
-                print(f"❌ [SECTOR_COMPARISON_MDI] 本地 JSON 載入也失敗: {fallback_error}")
+                logger.error(f"[SECTOR_COMPARISON_MDI] 本地 JSON 載入也失敗: {fallback_error}")
                 
                 # ✅ 修正: 使用 _show_error() 方法（複製 ranking_table 模式）
                 self._show_error(
@@ -583,11 +613,11 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             bool: 數據格式是否有效
         """
         try:
-            print(f"[API_VALIDATION] 開始驗證數據: {list(data.keys()) if isinstance(data, dict) else type(data)}")
+            logger.debug(f"[API_VALIDATION] 開始驗證數據: {list(data.keys()) if isinstance(data, dict) else type(data)}")
             
             # 檢查基本格式
             if not isinstance(data, dict):
-                print(f"❌ [API_VALIDATION] 數據不是字典，而是: {type(data)}")
+                logger.error(f"[API_VALIDATION] 數據不是字典，而是: {type(data)}")
                 return False
             
             # CLI Function 53 的標準輸出格式包含：
@@ -598,27 +628,27 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             # 檢查是否有 sector_comparison 鍵
             if 'sector_comparison' in data:
                 sector_data = data['sector_comparison']
-                print(f"[API_VALIDATION] 找到 sector_comparison 鍵")
+                logger.debug(f"[API_VALIDATION] 找到 sector_comparison 鍵")
             else:
                 # 可能直接就是分段數據（頂層就是車手字典）
-                print(f"[API_VALIDATION] 未找到 sector_comparison 鍵，假設頂層就是數據")
+                logger.debug(f"[API_VALIDATION] 未找到 sector_comparison 鍵，假設頂層就是數據")
                 sector_data = data
             
             # 驗證分段數據
             if not isinstance(sector_data, dict):
-                print(f"❌ [API_VALIDATION] 分段數據不是字典")
+                logger.error(f"[API_VALIDATION] 分段數據不是字典")
                 return False
             
             # 檢查至少有一個車手數據
             if len(sector_data) == 0:
-                print(f"❌ [API_VALIDATION] 分段數據為空")
+                logger.error(f"[API_VALIDATION] 分段數據為空")
                 return False
             
-            print(f"✅ [API_VALIDATION] 數據格式驗證通過，包含 {len(sector_data)} 個車手")
+            logger.info(f"[API_VALIDATION] 數據格式驗證通過，包含 {len(sector_data)} 個車手")
             return True
             
         except Exception as e:
-            print(f"❌ [API_VALIDATION] 驗證異常: {e}")
+            logger.error(f"[API_VALIDATION] 驗證異常: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -639,7 +669,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             return api_data
             
         except Exception as e:
-            print(f"❌ [API_TRANSFORM] 轉換失敗: {e}")
+            logger.error(f"[API_TRANSFORM] 轉換失敗: {e}")
             raise
     
     # ========== 信號處理 ==========
@@ -652,7 +682,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             driver_code: 車手代碼
         """
-        print(f"[SECTOR_COMPARISON_MDI] 車手棒狀圖被點擊: {driver_code}")
+        logger.debug(f"[SECTOR_COMPARISON_MDI] 車手棒狀圖被點擊: {driver_code}")
         
         # ✅ MDI 不是 QWidget，需要使用 chart_widget 作為 parent
         # 參考: ideal_lap_ranking_table_mdi.py line 617
@@ -677,7 +707,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         Args:
             sort_key: 排序鍵
         """
-        print(f"[SECTOR_COMPARISON_MDI] 排序請求: {sort_key}")
+        logger.debug(f"[SECTOR_COMPARISON_MDI] 排序請求: {sort_key}")
         
         if self.chart_widget:
             self.chart_widget.sort_data(sort_key)
@@ -710,16 +740,16 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             # ✅ 正確：使用 export_chart() 方法（參考 lap_box_plot_analysis）
             success = self.chart_widget.export_chart(file_path)
             if success:
-                print(f"✅ [SECTOR_COMPARISON_MDI] 圖表已匯出至: {file_path}")
+                logger.info(f"[SECTOR_COMPARISON_MDI] 圖表已匯出至: {file_path}")
             return success
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MDI] 匯出失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MDI] 匯出失敗: {e}")
             return False
     
     def reload_data(self):
         """重新載入數據"""
-        print("[SECTOR_COMPARISON_MDI] 重新載入數據...")
+        logger.debug("[SECTOR_COMPARISON_MDI] 重新載入數據...")
         
         if self.data_loader:
             self.data_loader.load_data(
@@ -728,7 +758,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
                 session=self.session
             )
         else:
-            print("❌ [SECTOR_COMPARISON_MDI] 資料載入器未初始化")
+            logger.error("[SECTOR_COMPARISON_MDI] 資料載入器未初始化")
     
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
         """
@@ -745,7 +775,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[SECTOR_COMPARISON_MDI] 🔄 更新參數: {year} {race} {session}")
+            logger.debug(f"[SECTOR_COMPARISON_MDI] 🔄 更新參數: {year} {race} {session}")
             
             # 更新內部參數
             self.year = str(year)
@@ -757,19 +787,20 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
                 self.data_manager.session = session
-                print(f"[SECTOR_COMPARISON_MDI] ✅ DataManager 參數已同步")
+                logger.info(f"[SECTOR_COMPARISON_MDI] ✅ DataManager 參數已同步")
             
             # 🔑 重點：調用 load_initial_data() 觸發 API 請求
             # 這個方法會啟動 API Worker 並更新 UI
-            print(f"[SECTOR_COMPARISON_MDI] 🌐 觸發資料重新載入...")
+            logger.debug(f"[SECTOR_COMPARISON_MDI] 🌐 觸發資料重新載入...")
             self.load_initial_data()
             
             # 異步載入，返回 True 表示啟動成功
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MDI] 參數更新失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MDI] 參數更新失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -788,7 +819,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
     
     def cleanup(self):
         """清理資源"""
-        print("[SECTOR_COMPARISON_MDI] 清理資源...")
+        logger.debug("[SECTOR_COMPARISON_MDI] 清理資源...")
         
         try:
             # 清理資料載入器
@@ -809,10 +840,10 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
             self._current_data = None
             self._is_data_loaded = False
             
-            print("✅ [SECTOR_COMPARISON_MDI] 資源清理完成")
+            logger.info("[SECTOR_COMPARISON_MDI] 資源清理完成")
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MDI] 清理失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MDI] 清理失敗: {e}")
     
     # ========== 輔助方法 ==========
     

@@ -14,6 +14,9 @@ from typing import Any
 import pandas as pd
 from prettytable import PrettyTable
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 def generate_cache_key(session_info):
     """生成快取鍵值"""
     return f"severity_distribution_{session_info.get('year', 2025)}_{session_info.get('event_name', 'Unknown')}_{session_info.get('session_type', 'R')}"
@@ -212,7 +215,7 @@ def analyze_severity_distribution(session):
         return severity_data
         
     except Exception as e:
-        print(f"[ERROR] 分析嚴重程度分佈時發生錯誤: {e}")
+        logger.error(f"分析嚴重程度分佈時發生錯誤: {e}")
         return severity_data
 
 def categorize_incident(message):
@@ -274,12 +277,12 @@ def analyze_incident_progression(incidents):
 
 def display_severity_distribution(data):
     """顯示嚴重程度分佈分析表格"""
-    print(f"\n⚠️ 事故嚴重程度分佈分析 (Function 7):")
+    logger.warning(f"\n⚠️ 事故嚴重程度分佈分析 (Function 7):")
     
     total_incidents = sum(data['severity_distribution'].values())
     
     if total_incidents == 0:
-        print("✅ 本場比賽未發現任何事故記錄，安全狀況優良！")
+        logger.info("本場比賽未發現任何事故記錄，安全狀況優良！")
         return
     
     # 風險評估摘要
@@ -292,8 +295,8 @@ def display_severity_distribution(data):
     summary_table.add_row(["主要風險類型", risk_info['most_common_severity'], "最常見的事故嚴重程度"])
     summary_table.add_row(["關鍵事件數量", risk_info['critical_incidents_count'], "需特別關注的嚴重事故"])
     
-    print("\n📊 風險評估摘要:")
-    print(summary_table)
+    logger.debug("\n📊 風險評估摘要:")
+    logger.debug(f"{summary_table}")
     
     # 嚴重程度分佈表格
     severity_table = PrettyTable()
@@ -312,8 +315,8 @@ def display_severity_distribution(data):
             risk_level, description = severity_descriptions.get(severity, ('❓ 未知', '未分類事件'))
             severity_table.add_row([severity, count, percentage, risk_level, description])
     
-    print("\n⚠️ 嚴重程度詳細分佈:")
-    print(severity_table)
+    logger.warning("\n⚠️ 嚴重程度詳細分佈:")
+    logger.debug(f"{severity_table}")
     
     # 安全建議表格
     if risk_info['safety_recommendations']:
@@ -323,8 +326,8 @@ def display_severity_distribution(data):
         for i, recommendation in enumerate(risk_info['safety_recommendations'], 1):
             rec_table.add_row([f"建議{i}", recommendation])
         
-        print(f"\n💡 安全改善建議:")
-        print(rec_table)
+        logger.debug(f"\n💡 安全改善建議:")
+        logger.debug(f"{rec_table}")
     
     # 事故升級趨勢 (顯示前5個事件)
     if data['incident_progression']:
@@ -341,8 +344,8 @@ def display_severity_distribution(data):
                 "需關注" if incident['trend'] == 'ESCALATING' else "正常"
             ])
         
-        print(f"\n📈 事故升級趨勢 (前5個事件):")
-        print(trend_table)
+        logger.debug(f"\n📈 事故升級趨勢 (前5個事件):")
+        logger.debug(f"{trend_table}")
 
 def save_json_results(data, session_info):
     """保存分析結果為 JSON 檔案"""
@@ -380,34 +383,34 @@ def save_json_results(data, session_info):
             json.dump(json_result, f, ensure_ascii=False, indent=2)
 
         abs_filepath = os.path.abspath(filepath)
-        print(f"💾 JSON結果已保存到: file:///{abs_filepath}")
+        logger.debug(f"💾 JSON結果已保存到: file:///{abs_filepath}")
         return True
     except Exception as e:
-        print(f"❌ JSON保存失敗: {e}")
+        logger.error(f"JSON保存失敗: {e}")
         return False
 
 def report_analysis_results(data, analysis_type="嚴重程度分佈分析"):
     """報告分析結果狀態"""
     if not data:
-        print(f"❌ {analysis_type}失敗：無可用數據")
+        logger.error(f"{analysis_type}失敗：無可用數據")
         return False
     
     total_incidents = sum(data.get('severity_distribution', {}).values())
     risk_score = data.get('risk_assessment', {}).get('overall_risk_score', 0)
     critical_count = data.get('severity_distribution', {}).get('CRITICAL', 0)
     
-    print(f"📊 {analysis_type}結果摘要：")
-    print(f"   • 總事故數量: {total_incidents}")
-    print(f"   • 風險評分: {risk_score}/100")
-    print(f"   • 關鍵事件數量: {critical_count}")
-    print(f"   • 數據完整性: {'✅ 良好' if total_incidents >= 0 else '❌ 異常'}")
+    logger.debug(f"{analysis_type}結果摘要：")
+    logger.debug(f"   • 總事故數量: {total_incidents}")
+    logger.debug(f"   • 風險評分: {risk_score}/100")
+    logger.debug(f"   • 關鍵事件數量: {critical_count}")
+    logger.error(f"   • 數據完整性: {'✅ 良好' if total_incidents >= 0 else '❌ 異常'}")
     
-    print(f"✅ {analysis_type}分析完成！")
+    logger.info(f"{analysis_type}分析完成！")
     return True
 
 def run_severity_distribution_analysis(data_loader, year=None, race=None, session='R'):
     """執行嚴重程度分佈分析 - Function 7"""
-    print("🚀 開始執行嚴重程度分佈分析...")
+    logger.debug("開始執行嚴重程度分佈分析...")
     
     # 1. 獲取賽事資訊
     session_info = {
@@ -430,22 +433,22 @@ def run_severity_distribution_analysis(data_loader, year=None, race=None, sessio
     cached_data = check_cache(cache_key)
     
     if cached_data:
-        print("📦 使用緩存數據")
+        logger.debug("使用緩存數據")
         severity_data = cached_data
     else:
-        print("🔄 重新計算 - 開始數據分析...")
+        logger.debug("重新計算 - 開始數據分析...")
         
         # 3. 執行分析
         if hasattr(data_loader, 'session') and data_loader.session is not None:
             severity_data = analyze_severity_distribution(data_loader.session)
         else:
-            print("❌ 無法獲取賽事數據")
+            logger.error("無法獲取賽事數據")
             return None
         
         if severity_data:
             # 4. 保存快取
             if save_cache(severity_data, cache_key):
-                print("💾 分析結果已緩存")
+                logger.debug("💾 分析結果已緩存")
     
     # 5. 結果驗證和反饋
     if not report_analysis_results(severity_data, "嚴重程度分佈分析"):
@@ -457,7 +460,7 @@ def run_severity_distribution_analysis(data_loader, year=None, race=None, sessio
     # 7. 保存 JSON 結果
     save_json_results(severity_data, session_info)
     
-    print("\n✅ 嚴重程度分佈分析完成！")
+    logger.info("\n✅ 嚴重程度分佈分析完成！")
     return severity_data
 
 def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None, enable_debug=False, show_detailed_output=True, year=None, race=None, session=None):
@@ -474,9 +477,9 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
         session: 用戶指定的賽段（覆蓋data_loader中的賽段）
     """
     if enable_debug:
-        print(f"\n[NEW_MODULE] 執行嚴重程度分佈分析模組 (JSON輸出版)...")
+        logger.debug(f"\n[NEW_MODULE] 執行嚴重程度分佈分析模組 (JSON輸出版)...")
         if year or race or session:
-            print(f"[OVERRIDE] 使用者指定參數: 年份={year}, 賽事={race}, 賽段={session}")
+            logger.debug(f"[OVERRIDE] 使用者指定參數: 年份={year}, 賽事={race}, 賽段={session}")
     
     try:
         # 獲取賽事資訊 - 優先使用用戶指定的參數
@@ -504,7 +507,7 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
         
         if cached_data and not show_detailed_output:
             if enable_debug:
-                print("📦 使用緩存數據")
+                logger.debug("使用緩存數據")
             # 確保即使使用緩存也保存JSON結果
             save_json_results(cached_data, session_info)
             return {
@@ -523,7 +526,7 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
             }
         elif cached_data and show_detailed_output:
             if enable_debug:
-                print("📦 使用緩存數據 + 📊 顯示詳細分析結果")
+                logger.debug("使用緩存數據 + 📊 顯示詳細分析結果")
             
             # 顯示詳細輸出 - 即使使用緩存也顯示完整表格
             _display_cached_detailed_output(cached_data, session_info)
@@ -546,7 +549,7 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
             }
         else:
             if enable_debug:
-                print("🔄 重新計算 - 開始數據分析...")
+                logger.debug("重新計算 - 開始數據分析...")
         
         # 執行分析
         severity_data = run_severity_distribution_analysis(
@@ -560,7 +563,7 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
         if severity_data:
             save_cache(severity_data, cache_key)
             if enable_debug:
-                print("💾 分析結果已緩存")
+                logger.debug("💾 分析結果已緩存")
         
         if severity_data:
             return {
@@ -587,8 +590,9 @@ def run_severity_distribution_analysis_json(data_loader, dynamic_team_mapping=No
             
     except Exception as e:
         if enable_debug:
-            print(f"[ERROR] 嚴重程度分佈分析模組執行錯誤: {e}")
+            logger.error(f"嚴重程度分佈分析模組執行錯誤: {e}")
             import traceback
+
             traceback.print_exc()
         return {
             "success": False,
@@ -605,24 +609,24 @@ def _display_cached_detailed_output(cached_data, session_info):
         cached_data: 嚴重程度分佈分析數據
         session_info: 賽事基本信息
     """
-    print("\n📊 詳細嚴重程度分佈分析 (緩存數據)")
-    print("=" * 80)
+    logger.debug("\n📊 詳細嚴重程度分佈分析 (緩存數據)")
+    logger.debug("=" * 80)
     
     if not cached_data:
-        print("❌ 緩存數據為空")
+        logger.error("緩存數據為空")
         return
     
-    print(f"🏆 賽事: {session_info.get('year', 'Unknown')} {session_info.get('event_name', 'Unknown')}")
-    print(f"🏁 賽段: {session_info.get('session_type', 'Unknown')}")
-    print(f"🏟️ 賽道: {session_info.get('circuit_name', 'Unknown')}")
+    logger.debug(f"🏆 賽事: {session_info.get('year', 'Unknown')} {session_info.get('event_name', 'Unknown')}")
+    logger.debug(f"賽段: {session_info.get('session_type', 'Unknown')}")
+    logger.debug(f"🏟️ 賽道: {session_info.get('circuit_name', 'Unknown')}")
     
     # 使用原有的顯示函數
     display_severity_distribution(cached_data)
     
-    print("\n💾 數據來源: 緩存檔案")
-    print("✅ 緩存數據詳細輸出完成")
+    logger.debug("\n💾 數據來源: 緩存檔案")
+    logger.info("緩存數據詳細輸出完成")
 
 
 if __name__ == "__main__":
-    print("F1 嚴重程度分佈分析模組 - 獨立測試模式")
-    print("此模組需要配合 F1 數據載入器使用")
+    logger.debug("F1 嚴重程度分佈分析模組 - 獨立測試模式")
+    logger.debug("此模組需要配合 F1 數據載入器使用")

@@ -59,7 +59,7 @@ class LogLoadWorker(QThread):
         self.tail = tail
     
     def run(self):
-        """背景執行緒主函數 - 載入日誌"""
+        """背景執行緒主函數 - 載入日誌（優化版：反向讀取避免阻塞）"""
         try:
             if not os.path.exists(self.log_file):
                 self.loading_failed.emit(f"日誌檔案不存在: {self.log_file}")
@@ -67,21 +67,32 @@ class LogLoadWorker(QThread):
             
             # 獲取檔案大小
             file_size_kb = os.path.getsize(self.log_file) / 1024
+            print(f"[LOG_WORKER] 日誌檔案大小: {file_size_kb:.2f} KB")
             
-            # 嘗試多種編碼讀取日誌
+            # 智能編碼檢測 - 只檢測前 1KB
+            detected_encoding = self._detect_encoding_fast()
+            if detected_encoding:
+                encodings = [detected_encoding, 'utf-8', 'cp950', 'gbk']
+            else:
+                encodings = ['utf-8', 'cp950', 'gbk', 'big5', 'latin1']
+            
             logs = None
-            encodings = ['utf-8', 'cp950', 'gbk', 'big5', 'latin1']
-            
             for encoding in encodings:
                 try:
                     print(f"[LOG_WORKER] 嘗試使用編碼: {encoding}")
-                    with open(self.log_file, 'r', encoding=encoding, errors='replace') as f:
-                        lines = f.readlines()
-                        logs = [line.rstrip() for line in lines[-self.tail:]]
-                    print(f"[LOG_WORKER] 成功使用 {encoding} 讀取 {len(logs)} 行")
-                    break
+                    
+                    # ✅ 優化：使用反向讀取，只讀取最後 N 行
+                    if file_size_kb > 1024:  # 大於 1MB 使用反向讀取
+                        logs = self._read_tail_efficient(encoding)
+                    else:
+                        logs = self._read_all_lines(encoding)
+                    
+                    if logs is not None:
+                        print(f"[LOG_WORKER] ✓ 成功使用 {encoding} 讀取 {len(logs)} 行")
+                        break
+                        
                 except Exception as e:
-                    print(f"[LOG_WORKER] 使用 {encoding} 讀取失敗: {e}")
+                    print(f"[LOG_WORKER] ✗ 使用 {encoding} 讀取失敗: {e}")
                     continue
             
             if logs:
@@ -94,6 +105,105 @@ class LogLoadWorker(QThread):
             import traceback
             print(f"[LOG_WORKER] 詳細錯誤:\n{traceback.format_exc()}")
             self.loading_failed.emit(f"載入日誌時發生錯誤: {str(e)}")
+    
+    def _detect_encoding_fast(self) -> Optional[str]:
+        """快速檢測檔案編碼（只讀前 1KB）"""
+        try:
+            with open(self.log_file, 'rb') as f:
+                sample = f.read(1024)
+            
+            # 簡單檢測 UTF-8 BOM
+            if sample.startswith(b'\xef\xbb\xbf'):
+                return 'utf-8-sig'
+            
+            # 嘗試解碼為 UTF-8
+            try:
+                sample.decode('utf-8')
+                return 'utf-8'
+            except UnicodeDecodeError:
+                pass
+            
+            # Windows 繁體中文
+            try:
+                sample.decode('cp950')
+                return 'cp950'
+            except UnicodeDecodeError:
+                pass
+                
+        except Exception as e:
+            print(f"[LOG_WORKER] 編碼檢測失敗: {e}")
+        
+        return None
+    
+    def _read_tail_efficient(self, encoding: str) -> Optional[list]:
+        """高效讀取檔案尾部 N 行（大檔案優化）"""
+        try:
+            buffer_size = 8192  # 8KB 緩衝區
+            lines_found = []
+            
+            with open(self.log_file, 'rb') as f:
+                # 移動到檔案末尾
+                f.seek(0, os.SEEK_END)
+                file_size = f.tell()
+                
+                if file_size == 0:
+                    return []
+                
+                # 反向讀取
+                remaining_bytes = file_size
+                buffer = b''
+                
+                while remaining_bytes > 0 and len(lines_found) < self.tail:
+                    # 計算本次讀取位置
+                    read_size = min(buffer_size, remaining_bytes)
+                    remaining_bytes -= read_size
+                    
+                    # 移動到讀取位置
+                    f.seek(remaining_bytes)
+                    chunk = f.read(read_size)
+                    
+                    # 合併緩衝區
+                    buffer = chunk + buffer
+                    
+                    # 解碼並分割行
+                    try:
+                        text = buffer.decode(encoding, errors='replace')
+                        lines = text.split('\n')
+                        
+                        # 保留不完整的第一行作為下次的緩衝
+                        if remaining_bytes > 0:
+                            buffer = lines[0].encode(encoding, errors='replace')
+                            lines = lines[1:]
+                        else:
+                            buffer = b''
+                        
+                        # 反向添加行
+                        for line in reversed(lines):
+                            if len(lines_found) >= self.tail:
+                                break
+                            if line.strip():  # 跳過空行
+                                lines_found.insert(0, line.rstrip())
+                    
+                    except Exception as e:
+                        print(f"[LOG_WORKER] 解碼區塊失敗: {e}")
+                        raise
+            
+            return lines_found
+            
+        except Exception as e:
+            print(f"[LOG_WORKER] 反向讀取失敗: {e}")
+            return None
+    
+    def _read_all_lines(self, encoding: str) -> Optional[list]:
+        """讀取所有行（小檔案）"""
+        try:
+            with open(self.log_file, 'r', encoding=encoding, errors='replace') as f:
+                lines = f.readlines()
+                # 只取最後 N 行
+                return [line.rstrip() for line in lines[-self.tail:]]
+        except Exception as e:
+            print(f"[LOG_WORKER] 讀取所有行失敗: {e}")
+            return None
 
 
 class BatchServiceWorker(QThread):
@@ -514,10 +624,10 @@ class LogViewerWidget(QWidget):
         # 創建並啟動背景載入執行緒
         self.log_worker = LogLoadWorker(log_file, tail=500, parent=self)
         
-        # 連接信號
-        self.log_worker.logs_loaded.connect(self._on_logs_loaded)
-        self.log_worker.loading_failed.connect(self._on_loading_failed)
-        self.log_worker.finished.connect(self._on_loading_finished)
+        # ✅ 連接信號（使用 Qt.UniqueConnection 避免重複）
+        self.log_worker.logs_loaded.connect(self._on_logs_loaded, Qt.UniqueConnection)
+        self.log_worker.loading_failed.connect(self._on_loading_failed, Qt.UniqueConnection)
+        self.log_worker.finished.connect(self._on_loading_finished, Qt.UniqueConnection)
         
         # 啟動執行緒
         print("[LOG_VIEWER] 啟動日誌載入執行緒")

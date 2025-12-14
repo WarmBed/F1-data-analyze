@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F86 - Tire Saving Behavior Analyzer (省輪胎行為分析器)
 
@@ -30,6 +31,14 @@ F86 - Tire Saving Behavior Analyzer (省輪胎行為分析器)
 作者: F1T Team
 日期: 2025-12-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

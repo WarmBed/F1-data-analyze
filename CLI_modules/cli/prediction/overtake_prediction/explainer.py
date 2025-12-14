@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F84: 超車預測 LLM 解說器
 Overtake Prediction LLM Explainer
@@ -6,6 +7,14 @@ Overtake Prediction LLM Explainer
 使用規則引擎或 LLM 生成超車預測的自然語言解說。
 預設使用規則引擎，可選擇使用 OpenAI/Anthropic/Ollama。
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 from dataclasses import dataclass
 from typing import Dict, Any, Optional, List

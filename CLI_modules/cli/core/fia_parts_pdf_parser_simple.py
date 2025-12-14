@@ -1,31 +1,41 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 FIA Parts Changes PDF 解析器 - 簡化版
 僅處理 "Parts and parameters been replaced and or changed" PDF
 
-🔐 開發原則遵循狀態：
-- ✅ 原則 0: 反幻覺編碼 - 使用 PyPDF2 實際驗證的 API
-- ✅ 原則 1: 禁止幻覺編碼 - 所有 PDF 解析邏輯經過實測驗證
-- ✅ 原則 2: 模組資料夾優先 - 新模組放置於 CLI_modules/cli/core/
-- ✅ 原則 3: 通用模組優先 - 輸出格式與 UpgradeClassifierV2 整合
-- ✅ 原則 4: 模組多國語言化 - 輸出欄位使用中文，支援 UTF-8
-- ⚠️  原則 5: Logger 導出 - 使用 print() 輸出，由主程式 Logger 捕獲
+開發原則遵循狀態：
+- 原則 0: 反幻覺編碼 - 使用 PyPDF2 實際驗證的 API
+- 原則 1: 禁止幻覺編碼 - 所有 PDF 解析邏輯經過實測驗證
+- 原則 2: 模組資料夾優先 - 新模組放置於 CLI_modules/cli/core/
+- 原則 3: 通用模組優先 - 輸出格式與 UpgradeClassifierV2 整合
+- 原則 4: 模組多國語言化 - 輸出欄位使用中文，支援 UTF-8
+- 原則 5: Logger 導出 - 使用 print() 輸出，由主程式 Logger 捕獲
 
-✅ 提取資訊：
+提取資訊：
 - 車隊
 - 車號 → 車手（映射）
 - 部件名稱
 - 賽事日期
 
-❌ 不提取：
+不提取：
 - Type（PDF 沒有）
 - Description（PDF 沒有）
 
-📦 模組化狀態：
+模組化狀態：
 - CLI: Function 29 整合 (function_mapper.py Line 2996-3040)
 - API: 支援 (refactored_api.py 自動調用 CLI)
 - JSON: {year}_f1_parts_changes_classified.json
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import PyPDF2
 import re
 from pathlib import Path

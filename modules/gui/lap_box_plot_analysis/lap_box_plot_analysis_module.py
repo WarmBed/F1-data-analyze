@@ -22,6 +22,9 @@ from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面和基類
 try:
     from ..interfaces.analysis_module import IAnalysisModule
@@ -113,11 +116,11 @@ class RainAnalysisModule(IAnalysisModule):
                 self._main_widget = self._rain_analysis_core.get_widget()
             
             self._is_initialized = True
-            print(f"✅ [RAIN_MODULE] 模組已初始化")
+            logger.info(f"[RAIN_MODULE] 模組已初始化")
             return True
             
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] 初始化失敗: {e}")
+            logger.error(f"[RAIN_MODULE] 初始化失敗: {e}")
             return False
         
     def get_widget(self):
@@ -129,7 +132,7 @@ class RainAnalysisModule(IAnalysisModule):
     def update_parameters(self, year: int, race: str, session: str) -> bool:
         """更新分析參數"""
         try:
-            print(f"🔄 [RAIN_MODULE] update_parameters 被調用: {year}, {race}, {session}")
+            logger.debug(f"[RAIN_MODULE] update_parameters 被調用: {year}, {race}, {session}")
             
             self.current_year = str(year)
             self.current_race = race
@@ -141,14 +144,14 @@ class RainAnalysisModule(IAnalysisModule):
                     year=str(year), race=race, session=session
                 )
                 if success:
-                    print(f"✅ [RAIN_MODULE] 參數更新成功")
+                    logger.info(f"[RAIN_MODULE] 參數更新成功")
                     return True
             
-            print(f"⚠️ [RAIN_MODULE] 參數更新失敗")
+            logger.warning(f"[RAIN_MODULE] 參數更新失敗")
             return False
             
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] 參數更新錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] 參數更新錯誤: {e}")
             return False
             
     def validate_parameters(self, year: int, race: str, session: str) -> bool:
@@ -307,15 +310,15 @@ class RainAnalysisModule(IAnalysisModule):
                         year=str(year), race=race, session=session
                     )
                     if success:
-                        print(f"✅ [RAIN_MODULE] load_data 成功: {year} {race} {session}")
+                        logger.info(f"[RAIN_MODULE] load_data 成功: {year} {race} {session}")
                         self.data_loaded.emit({'year': year, 'race': race, 'session': session})
                         return True
             
-            print(f"⚠️ [RAIN_MODULE] load_data 失敗")
+            logger.warning(f"[RAIN_MODULE] load_data 失敗")
             return False
             
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] load_data 錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] load_data 錯誤: {e}")
             return False
     
     def refresh_analysis(self) -> None:
@@ -323,7 +326,7 @@ class RainAnalysisModule(IAnalysisModule):
         try:
             if self._rain_analysis_core and hasattr(self._rain_analysis_core, 'refresh_data'):
                 self._rain_analysis_core.refresh_data()
-                print(f"✅ [RAIN_MODULE] refresh_analysis 完成")
+                logger.info(f"[RAIN_MODULE] refresh_analysis 完成")
             elif self.current_year and self.current_race and self.current_session:
                 # 重新載入當前參數的數據
                 self.load_data(
@@ -331,12 +334,12 @@ class RainAnalysisModule(IAnalysisModule):
                     race=self.current_race,
                     session=self.current_session
                 )
-                print(f"✅ [RAIN_MODULE] refresh_analysis 通過重新載入完成")
+                logger.info(f"[RAIN_MODULE] refresh_analysis 通過重新載入完成")
             else:
-                print(f"⚠️ [RAIN_MODULE] refresh_analysis 無法執行：缺少參數")
+                logger.warning(f"[RAIN_MODULE] refresh_analysis 無法執行：缺少參數")
                 
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] refresh_analysis 錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] refresh_analysis 錯誤: {e}")
     
     def clear_data(self) -> None:
         """清除所有數據"""
@@ -349,10 +352,10 @@ class RainAnalysisModule(IAnalysisModule):
             self.current_race = None
             self.current_session = None
             
-            print(f"✅ [RAIN_MODULE] clear_data 完成")
+            logger.info(f"[RAIN_MODULE] clear_data 完成")
             
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] clear_data 錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] clear_data 錯誤: {e}")
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """
@@ -369,11 +372,11 @@ class RainAnalysisModule(IAnalysisModule):
             if export_format.lower() == "json":
                 return self.export_analysis_data(export_path)
             else:
-                print(f"⚠️ [RAIN_MODULE] 不支援的匯出格式: {export_format}")
+                logger.warning(f"[RAIN_MODULE] 不支援的匯出格式: {export_format}")
                 return False
                 
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] export_data 錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] export_data 錯誤: {e}")
             return False
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -400,7 +403,7 @@ class RainAnalysisModule(IAnalysisModule):
             return None
             
         except Exception as e:
-            print(f"❌ [RAIN_MODULE] get_current_data 錯誤: {e}")
+            logger.error(f"[RAIN_MODULE] get_current_data 錯誤: {e}")
             return None
 
     def get_analysis_summary(self) -> Dict[str, Any]:
@@ -428,11 +431,12 @@ class RainAnalysisModule(IAnalysisModule):
     
     def _debug(self, message: str):
         """調試訊息輸出"""
-        print(f"[RAIN_MODULE] {message}")
+        logger.debug(f"[RAIN_MODULE] {message}")
         
     def get_current_timestamp(self) -> str:
         """獲取當前時間戳"""
         from datetime import datetime
+
         return datetime.now().strftime("%Y%m%d_%H%M%S")
 
 
@@ -498,19 +502,19 @@ def test_rain_analysis_module():
         module = create_rain_analysis_module()
         
         # 測試基本屬性
-        print(f"模組名稱: {module.get_display_name()}")
-        print(f"模組類型: {module.get_module_type()}")
-        print(f"是否準備就緒: {module.is_ready()}")
+        logger.debug(f"模組名稱: {module.get_display_name()}")
+        logger.debug(f"模組類型: {module.get_module_type()}")
+        logger.debug(f"是否準備就緒: {module.is_ready()}")
         
         # 測試模組信息
         info = module.get_module_info()
-        print(f"支援的圖表類型: {info.get('chart_types', [])}")
+        logger.debug(f"支援的圖表類型: {info.get('chart_types', [])}")
         
-        print("下雨分析模組測試通過!")
+        logger.debug("下雨分析模組測試通過!")
         return True
         
     except Exception as e:
-        print(f"下雨分析模組測試失敗: {str(e)}")
+        logger.debug(f"下雨分析模組測試失敗: {str(e)}")
         return False
 
 

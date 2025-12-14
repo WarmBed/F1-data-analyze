@@ -18,8 +18,12 @@ import time
 
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QTimer
 
+from core.logger import get_logger
 from .signalr_client import RealTimeLiveF1Worker, WEBSOCKETS_AVAILABLE
 from .realtime_database import get_realtime_db, RealtimeDatabase
+
+
+logger = get_logger("live_timing.realtime_source", component="gui")
 
 
 class RealTimeLiveF1DataSource(QObject):
@@ -90,15 +94,15 @@ class RealTimeLiveF1DataSource(QObject):
             return False
         
         if self._worker is not None and self._worker.isRunning():
-            print("[REALTIME_SOURCE] Connection already running")
+            logger.info("[REALTIME_SOURCE] Connection already running")
             return False
         
-        print("[REALTIME_SOURCE] Starting realtime connection...")
+        logger.info("[REALTIME_SOURCE] Starting realtime connection...")
         
         # 清除舊數據並初始化資料庫
         self._db.connect()
         self._db.clear_session()
-        print("[REALTIME_SOURCE] Database initialized and cleared")
+        logger.info("[REALTIME_SOURCE] Database initialized and cleared")
         
         self._worker = RealTimeLiveF1Worker(parent=self)
         self._worker.data_received.connect(self._on_data_received)
@@ -111,7 +115,7 @@ class RealTimeLiveF1DataSource(QObject):
     def stop_connection(self):
         """停止即時連接"""
         if self._worker is not None:
-            print("[REALTIME_SOURCE] Stopping realtime connection...")
+            logger.info("[REALTIME_SOURCE] Stopping realtime connection...")
             self._worker.stop()
             self._worker = None
         self._is_connected = False
@@ -273,7 +277,7 @@ class RealTimeLiveF1DataSource(QObject):
         # 每 100 次輸出一次統計
         total_count = sum(self._topic_counts.values())
         if total_count % 100 == 1:
-            print(f"[REALTIME_SOURCE] Topic stats: {self._topic_counts}")
+            logger.debug("[REALTIME_SOURCE] Topic stats: %s", self._topic_counts)
         
         if not isinstance(data_list, list):
             data_list = [data_list]
@@ -354,30 +358,43 @@ class RealTimeLiveF1DataSource(QObject):
             if snapshot.get("drivers"):
                 self._db.batch_update_drivers(snapshot["drivers"])
         except Exception as e:
-            print(f"[REALTIME_SOURCE] Database write error: {e}")
+            logger.exception("[REALTIME_SOURCE] Database write error")
         
         # 詳細調試輸出（每 50 次輸出一次）
         if self._snapshot_emit_count % 50 == 1:
             driver_count = len(snapshot.get('drivers', {}))
             lap_info = f"Lap {snapshot.get('current_lap', 0)}/{snapshot.get('total_laps', 0)}"
-            print(f"[REALTIME_SOURCE] Emit #{self._snapshot_emit_count}: {driver_count} drivers | {lap_info}")
+            logger.debug(
+                "[REALTIME_SOURCE] Emit #%d: %d drivers | %s",
+                self._snapshot_emit_count,
+                driver_count,
+                lap_info,
+            )
             
             # 輸出一個範例車手的數據
             drivers = snapshot.get('drivers', {})
             if drivers:
                 sample_num = next(iter(drivers.keys()))
                 sample = drivers[sample_num]
-                print(f"[REALTIME_SOURCE] Sample driver {sample_num}: pos={sample.get('position')}, "
-                      f"tla={sample.get('tla')}, gap={sample.get('gap_to_leader_raw')}, "
-                      f"last_lap={sample.get('last_lap_time')}, compound={sample.get('compound')}, "
-                      f"s1={sample.get('sector_1')}, s2={sample.get('sector_2')}, s3={sample.get('sector_3')}")
+                logger.debug(
+                    "[REALTIME_SOURCE] Sample driver %s: pos=%s, tla=%s, gap=%s, last_lap=%s, compound=%s, s1=%s, s2=%s, s3=%s",
+                    sample_num,
+                    sample.get("position"),
+                    sample.get("tla"),
+                    sample.get("gap_to_leader_raw"),
+                    sample.get("last_lap_time"),
+                    sample.get("compound"),
+                    sample.get("sector_1"),
+                    sample.get("sector_2"),
+                    sample.get("sector_3"),
+                )
         
         self.snapshot_updated.emit(snapshot)
     
     @pyqtSlot(str)
     def _on_connection_status(self, status: str):
         """處理連接狀態變更"""
-        print(f"[REALTIME_SOURCE] Connection status: {status}")
+        logger.info("[REALTIME_SOURCE] Connection status: %s", status)
         
         if "connected" in status.lower() or "established" in status.lower():
             self._is_connected = True
@@ -389,7 +406,7 @@ class RealTimeLiveF1DataSource(QObject):
     @pyqtSlot(str)
     def _on_error(self, error: str):
         """處理錯誤"""
-        print(f"[REALTIME_SOURCE] Error: {error}")
+        logger.error("[REALTIME_SOURCE] Error: %s", error)
         self.error_occurred.emit(error)
     
     def _process_position_record(self, record: dict):
@@ -410,7 +427,13 @@ class RealTimeLiveF1DataSource(QObject):
             self._position_debug_count = 0
         self._position_debug_count += 1
         if self._position_debug_count <= 3:
-            print(f"[REALTIME_SOURCE] Position record: driver={driver_num}, X={x_val}, Y={y_val}, Z={z_val}")
+            logger.debug(
+                "[REALTIME_SOURCE] Position record: driver=%s, X=%s, Y=%s, Z=%s",
+                driver_num,
+                x_val,
+                y_val,
+                z_val,
+            )
         
         self._position_data[driver_num].update({
             "X": x_val,
@@ -434,8 +457,12 @@ class RealTimeLiveF1DataSource(QObject):
             self._cardata_debug_count = 0
         self._cardata_debug_count += 1
         if self._cardata_debug_count <= 3:
-            print(f"[REALTIME_SOURCE] CarData record: driver={driver_num}, keys={list(record.keys())}")
-            print(f"[REALTIME_SOURCE] CarData values: {record}")
+            logger.debug(
+                "[REALTIME_SOURCE] CarData record: driver=%s, keys=%s",
+                driver_num,
+                list(record.keys()),
+            )
+            logger.debug("[REALTIME_SOURCE] CarData values: %s", record)
         
         # 支援大小寫欄位名
         self._car_data[driver_num].update({

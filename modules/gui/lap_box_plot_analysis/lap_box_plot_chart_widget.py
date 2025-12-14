@@ -35,6 +35,9 @@ from typing import Dict, List, Any, Optional, Tuple
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class LapTimeBoxPlotChartWidget(QWidget):
     """圈速箱型圖圖表組件 (純 PyQt5 QPainter 實現)"""
@@ -76,7 +79,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         # 設置最小尺寸（與其他通用模組一致：Rain, Tire, Driver Lap 都是 200x100）
         self.setMinimumSize(200, 100)  # 統一為 200x100，提供更高的佈局靈活性
         
-        print("[BOXPLOT_CHART] 圖表組件初始化完成 (QPainter 版本)")
+        logger.debug("[BOXPLOT_CHART] 圖表組件初始化完成 (QPainter 版本)")
         
     def update_data(self, data: Dict[str, Any]):
         """
@@ -90,7 +93,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [BOXPLOT_CHART] 無效的數據格式")
+                logger.warning("[BOXPLOT_CHART] 無效的數據格式")
                 return
                 
             self.current_data = data
@@ -99,18 +102,18 @@ class LapTimeBoxPlotChartWidget(QWidget):
             self._ensure_palette_for_data(data)
             
             if not self.driver_laptimes:
-                print("[WARNING] [BOXPLOT_CHART] 沒有圈速數據")
+                logger.warning("[BOXPLOT_CHART] 沒有圈速數據")
                 self.update()
                 return
                 
             # 計算 Y 軸範圍
             self._calculate_y_range()
             
-            print(f"[BOXPLOT_CHART] 更新數據: {len(self.driver_laptimes)} 位車手")
+            logger.debug(f"[BOXPLOT_CHART] 更新數據: {len(self.driver_laptimes)} 位車手")
             self.update()  # 觸發重繪
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 更新數據失敗: {e}")
+            logger.error(f"[BOXPLOT_CHART] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
             
@@ -461,7 +464,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
             )
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 繪製箱型圖失敗 ({driver}): {e}")
+            logger.error(f"[BOXPLOT_CHART] 繪製箱型圖失敗 ({driver}): {e}")
             
     def _draw_title(self, painter: QPainter):
         """繪製標題"""
@@ -647,7 +650,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         """
         try:
             if not self.current_data or not self.driver_laptimes:
-                print("[WARNING] [BOXPLOT_CHART] 無數據可匯出")
+                logger.warning("[BOXPLOT_CHART] 無數據可匯出")
                 return False
                 
             # 創建高解析度圖像
@@ -667,15 +670,16 @@ class LapTimeBoxPlotChartWidget(QWidget):
             success = image.save(filepath)
             
             if success:
-                print(f"[BOXPLOT_CHART] 圖表已匯出: {filepath}")
+                logger.debug(f"[BOXPLOT_CHART] 圖表已匯出: {filepath}")
             else:
-                print(f"[ERROR] [BOXPLOT_CHART] 圖表匯出失敗")
+                logger.error(f"[BOXPLOT_CHART] 圖表匯出失敗")
                 
             return success
             
         except Exception as e:
-            print(f"[ERROR] [BOXPLOT_CHART] 匯出圖表失敗: {e}")
+            logger.error(f"[BOXPLOT_CHART] 匯出圖表失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False
             
@@ -687,7 +691,7 @@ class LapTimeBoxPlotChartWidget(QWidget):
         self.hover_driver = None
         self.hover_position = None
         self.update()
-        print("[BOXPLOT_CHART] 圖表已清空")
+        logger.debug("[BOXPLOT_CHART] 圖表已清空")
         
     def get_current_data(self) -> Optional[Dict]:
         """獲取當前數據"""

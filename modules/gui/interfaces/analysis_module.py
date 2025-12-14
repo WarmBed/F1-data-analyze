@@ -20,6 +20,9 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, Optional, List
 from PyQt5.QtCore import QObject, pyqtSignal, QMetaObject
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class AnalysisModuleMeta(type(QObject), type(ABC)):
     """解決 QObject 和 ABC 的 metaclass 衝突"""
@@ -183,11 +186,11 @@ class IAnalysisModule(QObject, ABC, metaclass=AnalysisModuleMeta):
                 if hasattr(child, 'set_statistics_visibility'):
                     return child.set_statistics_visibility(visible)
             
-            print(f"[ANALYSIS_MODULE] ⚠️ {self.display_name} 不支援統計面板控制")
+            logger.warning(f"[ANALYSIS_MODULE] ⚠️ {self.display_name} 不支援統計面板控制")
             return False
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MODULE] 設置統計面板顯示狀態失敗: {e}")
+            logger.error(f"[ANALYSIS_MODULE] 設置統計面板顯示狀態失敗: {e}")
             return False
         
     def validate_parameters(self, year: int, race: str, session: str) -> bool:

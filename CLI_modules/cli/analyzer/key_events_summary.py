@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 關鍵事件摘要模組 - Function 10
 Key Events Summary Module - Following Core Development Standards
 專注於比賽轉捩點、關鍵決策時刻和影響比賽結果的重要事件分析
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -799,6 +808,14 @@ def run_key_events_summary_json(data_loader, dynamic_team_mapping=None, f1_analy
         if enable_debug:
             print(f"[ERROR] 關鍵事件摘要分析模組執行錯誤: {e}")
             import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             traceback.print_exc()
         return {
             "success": False,

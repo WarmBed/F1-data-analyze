@@ -11,6 +11,9 @@ Ideal Lap Sector Comparison Module Registration
 from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
 from .ideal_lap_sector_comparison_module import IdealLapSectorComparisonModule
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 def register():
     """註冊理想圈分段對比模組到工廠"""
@@ -19,11 +22,12 @@ def register():
             ModuleTypes.IDEAL_LAP_SECTOR_COMPARISON,
             IdealLapSectorComparisonModule
         )
-        print("✅ IdealLapSectorComparisonModule 已註冊到 ModuleFactory")
+        logger.info("IdealLapSectorComparisonModule 已註冊到 ModuleFactory")
         return True
     except Exception as e:
-        print(f"❌ 模組註冊失敗: {e}")
+        logger.error(f"模組註冊失敗: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 

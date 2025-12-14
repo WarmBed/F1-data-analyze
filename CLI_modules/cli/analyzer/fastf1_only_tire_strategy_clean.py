@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 純 FastF1 輪胎策略分析模組 (CLI -f26 FastF1-Only 版本)
-FastF1-Only Tire Strategy Ana        print(f"📂 載入快取: {cache_file}")
+FastF1-Only Tire Strategy Ana        print(f"[CACHE] 載入快取: {cache_file}")
         
         if not os.path.exists(cache_file):
-            print(f"❌ 快取檔案不存在: {cache_file}")
+            print(f"[ERROR] 快取檔案不存在: {cache_file}")
             return None
         
         with open(cache_file, 'rb') as f:
             data = pickle.load(f)
         
         file_size = os.path.getsize(cache_file)
-        print(f"✅ 快取載入成功 ({file_size:,} bytes)")e
+        print(f"[OK] 快取載入成功 ({file_size:,} bytes)")e
 
 不依賴 OpenF1，僅使用 FastF1 快取資料進行輪胎策略分析
 基於 test_italy_tire_detailed.py 的成功分析邏輯
@@ -20,6 +21,14 @@ FastF1-Only Tire Strategy Ana        print(f"📂 載入快取: {cache_file}")
 版本: 2.0 - 純 FastF1 專用版
 作者: F1 Analysis Team  
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -101,6 +110,14 @@ def run_fastf1_tire_strategy_analysis(f1_data, year: int, race: str, session: st
         if verbose:
             print(f"❌ 輪胎策略分析發生錯誤: {str(e)}")
             import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             traceback.print_exc()
         return {
             "success": False,

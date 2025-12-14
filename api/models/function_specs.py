@@ -457,8 +457,8 @@ _make_spec(
     ),
     _make_spec(
         "74",
-        name="Qualifying Prediction Generator (v3.8)",
-        description="Generates qualifying predictions using trained v3.8 models. Loads FP3 data, extracts features, predicts Q times, and outputs JSON file to json/qualifying_prediction_{year}_{race}.json",
+        name="Qualifying Prediction Generator (v3.10 FP3→Q)",
+        description="Generates qualifying predictions using trained v3.10 models. Loads FP3 data, extracts features, predicts Q times, and outputs JSON file to json/qualifying_prediction_{year}_{race}.json",
         required_params=["year", "race"],
         optional_params=[],
         cli_flag_map={
@@ -466,7 +466,37 @@ _make_spec(
             "race": "-r"
         },
         cache_patterns=["qualifying_prediction"],
-        notes="CLI function -f 74 generates qualifying predictions JSON. Session is fixed to 'Q'. Requires pre-trained v3.8 model for the specified track (run -f 73 first). GUI module reads the generated JSON for display.",
+        notes="CLI function -f 74 generates FP3→Q predictions JSON. Session is fixed to 'Q'. Requires pre-trained v3.10 model for the specified track (run -f 73 first). GUI module reads the generated JSON for display.",
+    ),
+    _make_spec(
+        "75",
+        name="FP2→Q Batch Trainer (XGBoost Model Training)",
+        description="Trains XGBoost qualifying prediction models using FP2 data (v3.10 architecture, 16 features). Predicts qualifying results based on Friday FP2 practice sessions. Supports single track or all-track batch training.",
+        required_params=[],
+        optional_params=["trials", "cv_folds", "workers", "track", "start_year", "end_year"],
+        cli_flag_map={
+            "trials": "--trials",
+            "cv_folds": "--cv-folds",
+            "workers": "--workers",
+            "track": "--track",
+            "start_year": "--start-year",
+            "end_year": "--end-year"
+        },
+        cache_patterns=["fp2_q_v3.10_training_results", "fp2_q_specific_v3.10"],
+        notes="CLI function -f 75 trains FP2→Q prediction models. Expected accuracy is 5-10% lower than FP3→Q due to earlier prediction time. Returns training metrics (R², MAE, CV scores). Models saved to models/fp2_q_specific_v3.10/",
+    ),
+    _make_spec(
+        "76",
+        name="FP2→Q Qualifying Prediction Generator",
+        description="Generates early qualifying predictions using FP2 data and trained v3.10 FP2→Q models. Provides Friday evening predictions before FP3. Outputs JSON file to json/fp2_qualifying_prediction_{year}_{race}.json",
+        required_params=["year", "race"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r"
+        },
+        cache_patterns=["fp2_qualifying_prediction"],
+        notes="CLI function -f 76 generates FP2→Q predictions JSON. Requires pre-trained FP2→Q model for the specified track (run -f 75 first). Useful for early predictions on Friday evening before FP3 and qualifying.",
     ),
     _make_spec(
         "80",
@@ -500,6 +530,48 @@ _make_spec(
         cli_flag_map={"year": "-y", "race": "-r", "session": "-s", "start_year": "--start-year", "end_year": "--end-year"},
         cache_patterns=["historical_flags_{race}"],
         notes="CLI function -f 100. Outputs historical_flags_{race}_{start_year}-{end_year}.json (FIXED FILENAME, no timestamp). Only requires race parameter. Year range defaults to 2022-2025, session defaults to 'R' (Race). Used by GUI Historical Track Map module for multi-season flag visualization. Simplified API: -f 100 -r [race]",
+    ),
+    _make_spec(
+        "120",
+        name="Corner All Laps Analysis",
+        description="Analyzes all drivers' cornering performance across all laps with dual mode analysis (unified + grouped). Includes entry/apex/exit speeds with median-based outlier filtering. Returns entry_filtered and exit_filtered flags for GUI purple marker visualization.",
+        required_params=["year", "race", "session"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r",
+            "session": "-s"
+        },
+        cache_patterns=["F120_corner_all_laps_analysis"],
+        notes="CLI function -f 120. Outputs F120_corner_all_laps_analysis_{year}_{race}_{session}.json. Replaces deprecated function 47 for GUI corner analysis modules. Contains mode_a_unified (all laps) and mode_b_grouped (long_run/quali_sim). GUI uses entry_filtered/exit_filtered boolean flags to display filtered data points in purple (#D8BFD8).",
+    ),
+    _make_spec(
+        "121",
+        name="Straight Line All Laps Analysis",
+        description="Analyzes all drivers' straight line speed performance across all valid laps using official API car_data. Replicates F48 acceleration logic (100→300 km/h + linear extrapolation to max speed) with unified analysis mode. Supports all session types (FP1/FP2/FP3/Q/R). Provides comprehensive statistics (median/mean/std_dev/min/max/q1/q3/iqr/cv) for speed, acceleration, and time-to-max calculations.",
+        required_params=["year", "race", "session"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r",
+            "session": "-s"
+        },
+        cache_patterns=["fp2_straight_line_all_laps_analysis"],
+        notes="CLI function -f 121. Outputs fp2_straight_line_all_laps_analysis_{year}_{race}_{session}.json. Unified analysis mode (Mode B removed 2025-12-14). Each driver entry includes: speed_stats, acceleration_100_300_stats, time_to_max_speed_stats, absolute_max_speed_kmh, absolute_max_speed_lap, speeds_raw, acceleration_times_raw, times_to_max_raw. Uses official API to avoid FastF1 interpolation issues.",
+    ),
+    _make_spec(
+        "122",
+        name="All Drivers Brake All Laps Analysis",
+        description="Analyzes brake zone deceleration performance for all drivers across all valid laps. Uses voting-based brake zone detection to identify the main brake zone, then calculates per-driver max deceleration statistics (median/mean/std_dev/min/max/cv). Supports all session types (FP1/FP2/FP3/Q/R). Provides outlier detection and per-lap raw deceleration trends.",
+        required_params=["year", "race", "session"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y",
+            "race": "-r",
+            "session": "-s"
+        },
+        cache_patterns=["brake_all_laps_analysis"],
+        notes="CLI function -f 122. Outputs brake_all_laps_analysis_{year}_{race}_{session}.json. Each driver entry includes: brake_decel_stats (median/mean/std_dev/cv/min/max), raw_decel_trend (per-lap max_decel), valid_laps_count, outlier_count. Also includes main_brake_zone info (distance/avg_max_decel/detection_threshold/voter_count).",
     ),
 ]
 

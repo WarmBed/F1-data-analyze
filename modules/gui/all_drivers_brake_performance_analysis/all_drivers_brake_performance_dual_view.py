@@ -18,8 +18,12 @@ from typing import Dict, Any, Optional
 from .all_drivers_brake_performance_table_widget import AllDriversBrakePerformanceTableWidget
 from .all_drivers_brake_performance_widget import AllDriversBrakePerformanceWidget
 
-# 導入國際化
+# 導入國際化與日誌
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger(component="BrakePerformanceDualView")
 
 
 class AllDriversBrakePerformanceDualView(QWidget):
@@ -88,7 +92,7 @@ class AllDriversBrakePerformanceDualView(QWidget):
             data: 包含 driver_brakes 的字典
         """
         try:
-            print(f"[BRAKE_DUAL_VIEW] 接收數據，準備更新視圖")
+            logger.info("[BRAKE_DUAL_VIEW] 接收數據，準備更新視圖")
             
             # 儲存數據
             self.current_data = data
@@ -99,19 +103,17 @@ class AllDriversBrakePerformanceDualView(QWidget):
             # 更新圖表視圖（只在已創建時更新）
             if self.chart_view is not None:
                 self.chart_view.update_data(data)
-                print("[BRAKE_DUAL_VIEW] 圖表視圖已更新")
+                logger.info("[BRAKE_DUAL_VIEW] 圖表視圖已更新")
             else:
-                print("[BRAKE_DUAL_VIEW] 圖表視圖尚未創建，將在切換時延遲載入")
+                logger.debug("[BRAKE_DUAL_VIEW] 圖表視圖尚未創建，將在切換時延遲載入")
             
             # 發射信號
             self.data_loaded.emit(data)
             
-            print(f"[BRAKE_DUAL_VIEW] 視圖更新完成")
+            logger.info("[BRAKE_DUAL_VIEW] 視圖更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [BRAKE_DUAL_VIEW] 更新數據失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[ERROR] [BRAKE_DUAL_VIEW] 更新數據失敗", exc_info=e)
     
     def _on_tab_changed(self, index: int):
         """
@@ -120,13 +122,13 @@ class AllDriversBrakePerformanceDualView(QWidget):
         當切換到圖表 tab 時，延遲創建 Matplotlib widget 並載入數據
         """
         if index == 0:
-            print("[BRAKE_DUAL_VIEW] 切換到表格視圖")
+            logger.debug("[BRAKE_DUAL_VIEW] 切換到表格視圖")
         elif index == 1:
-            print("[BRAKE_DUAL_VIEW] 切換到圖表視圖")
+            logger.debug("[BRAKE_DUAL_VIEW] 切換到圖表視圖")
             
             # 延遲載入：第一次切換時才創建 Matplotlib widget
             if self.chart_view is None:
-                print("[BRAKE_DUAL_VIEW] 首次切換，創建 Matplotlib widget...")
+                logger.debug("[BRAKE_DUAL_VIEW] 首次切換，創建 Matplotlib widget...")
                 self.chart_view = AllDriversBrakePerformanceWidget()
                 
                 # 替換佔位符
@@ -138,7 +140,7 @@ class AllDriversBrakePerformanceDualView(QWidget):
                 )
                 self.tab_widget.setCurrentIndex(1)  # 確保顯示正確的 tab
                 
-                print("[BRAKE_DUAL_VIEW] Matplotlib widget 創建完成")
+                logger.debug("[BRAKE_DUAL_VIEW] Matplotlib widget 創建完成")
             
             # 確保圖表視圖有數據
             if self.current_data:
@@ -184,7 +186,7 @@ class AllDriversBrakePerformanceDualView(QWidget):
                 return self.chart_view.export_chart(file_path)
                 
         except Exception as e:
-            print(f"[ERROR] [BRAKE_DUAL_VIEW] 匯出失敗: {e}")
+            logger.exception("[ERROR] [BRAKE_DUAL_VIEW] 匯出失敗", exc_info=e)
             return False
 
 

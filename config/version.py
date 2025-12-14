@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.10.0"
+APP_VERSION = "V0.11.1"
 
 # 完整版本資訊
 APP_NAME = "F1 TelemetryStation Pro"
@@ -15,6 +15,32 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.11.1": {
+        "date": "2025-12-12",
+        "features": [
+            "Live Timing 性能優化：分層更新策略",
+            "Ranking Tower 分層更新（Gap/DRS 30FPS，其他 10FPS）",
+            "Tyre Strategy 改為圈數變化觸發更新",
+            "Lap Time Distribution 改為 best_lap_time 變化觸發更新",
+            "Race Control Messages 視窗尺寸優化（最小 4 行）",
+            "Track Weather 降雨狀態顯示（Dry/Wet）",
+            "安全車過濾（241/242/243 不顯示於排名）",
+            "修復 P1 gap_leader 顯示問題",
+        ]
+    },
+    "V0.11.0": {
+        "date": "2025-12-11",
+        "features": [
+            "修復 Live Timing DRS 顯示 Bug（DRS=0 被 falsy 判斷過濾）",
+            "修復 PKL 檔案命名加入年份（格式：{year}_{race}_{session}.pkl）",
+            "修復多個 GUI 模組語法錯誤（import 語句、縮排、缺少引用）",
+            "修復 OpenF1 Abu Dhabi 映射錯誤（Yas Island 匹配失敗）",
+            "移除 Performance Monitor 模組",
+            "EXE 建置優化：禁用 console、log 和 print 輸出",
+            "PyInstaller 翻譯檔案過濾（僅保留英文和中文）",
+            "Abu Dhabi 2025 進站數據完整支援（Function 3/4 生成成功）",
+        ]
+    },
     "V0.10.0": {
         "date": "2025-12-09",
         "features": [

@@ -144,7 +144,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 api_endpoint="/api/v2/analysis/execute"
             )
             UniversalDataLoader.register_analysis_type("laptime", laptime_config)
-            print(f"[F28_DATA] 已註冊 laptime 分析類型")
+            logger.debug(f"[F28_DATA] 已註冊 laptime 分析類型")
         
         # 初始化基類
         super().__init__(analysis_type="laptime", parent=parent)
@@ -195,7 +195,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         # 整合架構：直接繼承 UniversalDataLoader 功能
         # self.data_loader = driverLapUniversalDataLoader(parent=self)  # 分離架構（已廢棄）
         
-        print(f"[LAPTIME_DATA_MANAGER] 詳細圈速分析數據管理器初始化完成")
+        logger.debug(f"[LAPTIME_DATA_MANAGER] 詳細圈速分析數據管理器初始化完成")
 
         try:
             self._apply_global_settings(self.settings_manager.get_boxplot_settings())
@@ -630,27 +630,27 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         
     def set_parameters(self, year: str, race: str, session: str):
         """設置分析參數"""
-        print(f"🔧 [PARAMS] 設置分析參數: {year} {race} {session}")
+        logger.debug(f"🔧 [PARAMS] 設置分析參數: {year} {race} {session}")
         
         # 設置本地參數
         self.current_year = year
         self.current_race = race
         self.current_session = session
-        print(f"🔧 [PARAMS] 本地參數設置完成: {year} {race} {session}")
+        logger.debug(f"🔧 [PARAMS] 本地參數設置完成: {year} {race} {session}")
         return True
         
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
         """更新分析參數（與 set_parameters 相同功能，提供不同的介面名稱）"""
         try:
-            print(f"🔄 [UPDATE_PARAMS] 更新分析參數: {year} {race} {session}")
+            logger.debug(f"[UPDATE_PARAMS] 更新分析參數: {year} {race} {session}")
             result = self.set_parameters(year, race, session)
             if result:
-                print(f"✅ [UPDATE_PARAMS] 更新分析參數成功: {year} {race} {session}")
+                logger.info(f"[UPDATE_PARAMS] 更新分析參數成功: {year} {race} {session}")
             else:
-                print(f"❌ [UPDATE_PARAMS] 更新分析參數失敗: {year} {race} {session}")
+                logger.error(f"[UPDATE_PARAMS] 更新分析參數失敗: {year} {race} {session}")
             return result
         except Exception as e:
-            print(f"❌ [UPDATE_PARAMS] 更新分析參數失敗: {e}")
+            logger.error(f"[UPDATE_PARAMS] 更新分析參數失敗: {e}")
             return False
         
     def get_expected_file_patterns(self, year: int, race: str, session: str) -> List[str]:
@@ -664,7 +664,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
     def _validate_data_format(self, data: Any) -> bool:
         """驗證數據格式 - 支援 Function 28 JSON 格式"""
         if not isinstance(data, dict):
-            print("數據格式錯誤：必須是字典格式")
+            logger.debug("數據格式錯誤：必須是字典格式")
             return False
         
         # 支援 Function 28 JSON 格式
@@ -675,8 +675,8 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         
         has_valid_format = any(key in data for key in valid_formats)
         if not has_valid_format:
-            print(f"數據格式錯誤：缺少必要欄位，支援格式: {valid_formats}")
-            print(f"實際數據鍵值: {list(data.keys())}")
+            logger.debug(f"數據格式錯誤：缺少必要欄位，支援格式: {valid_formats}")
+            logger.debug(f"實際數據鍵值: {list(data.keys())}")
             return False
             
         return True
@@ -711,7 +711,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             self.available_drivers = filtered_driver_codes
 
             if filtered_driver_codes:
-                print(f"使用 {len(filtered_driver_codes)} 位車手詳細圈速數據：{filtered_driver_codes}")
+                logger.debug(f"使用 {len(filtered_driver_codes)} 位車手詳細圈速數據：{filtered_driver_codes}")
 
             preferred_driver = None
             if isinstance(self._current_api_params, dict):
@@ -729,7 +729,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 self.analysis_stats = normalized_data["analysis_info"]
             elif "metadata" in normalized_data:
                 self.analysis_stats = normalized_data["metadata"]
-                print("使用 metadata 作為摘要數據")
+                logger.debug("使用 metadata 作為摘要數據")
             else:
                 self.analysis_stats = {}
                 
@@ -746,7 +746,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 "filter_statistics": copy.deepcopy(self._filter_statistics),
             }
             
-            print(f"成功處理 {len(self.detailed_laptime_data)} 車手詳細圈速數據")
+            logger.debug(f"成功處理 {len(self.detailed_laptime_data)} 車手詳細圈速數據")
             
             self._cached_data = processed_data
             self._current_data = processed_data
@@ -760,7 +760,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             return processed_data
             
         except Exception as e:
-            print(f"數據處理失敗: {e}")
+            logger.debug(f"數據處理失敗: {e}")
             self._pending_data_source = None
             return {"error": str(e), "raw_data": data}
 
@@ -1064,7 +1064,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
                 'total_rain_laps': len(rain_lap_numbers),
                 'rain_percentage': (len(rain_lap_numbers) / len(detailed_laps)) * 100 if detailed_laps else 0
             }
-            print(f"[F28_DATA] 檢測到 {len(rain_lap_numbers)} 圈降雨 (圈數: {rain_lap_numbers})")
+            logger.debug(f"[F28_DATA] 檢測到 {len(rain_lap_numbers)} 圈降雨 (圈數: {rain_lap_numbers})")
         else:
             enhanced_markers['rain_detection'] = {
                 'rain_lap_numbers': [],
@@ -1106,7 +1106,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
             "filter_statistics": copy.deepcopy(self._filter_statistics),
         }
         
-        print(f"圖表數據已準備：{len(chart_data['drivers_analyzed'])} 個車手")
+        logger.debug(f"圖表數據已準備：{len(chart_data['drivers_analyzed'])} 個車手")
         
         return chart_data
         
@@ -1204,7 +1204,7 @@ class driverLapAnalysisDataManager(UniversalDataLoader):
         detailed_laptime_data = raw_data.get('all_drivers_detailed_laptime', {})
         drivers_analyzed = raw_data.get('drivers_analyzed', list(detailed_laptime_data.keys()))
         
-        print(f"[F28_DATA] 處理 Function 28 格式數據：{len(drivers_analyzed)} 個車手")
+        logger.debug(f"[F28_DATA] 處理 Function 28 格式數據：{len(drivers_analyzed)} 個車手")
         
         return {
             'metadata': combined_metadata,
@@ -1225,22 +1225,22 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
     def __init__(self, parent=None):
         """初始化詳細圈速分析 MDI"""
         super().__init__(analysis_type='laptime', parent=parent)
-        print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 基類初始化完成")
+        logger.debug(f"[LAPTIME_MDI] 詳細圈速分析 MDI 基類初始化完成")
         
         # 創建控制面板
         self.control_panel = None
         
         # 調用模組初始化來創建數據管理器和圖表組件
         if self.initialize_module(parent_widget=parent):
-            print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 完整初始化成功")
+            logger.debug(f"[LAPTIME_MDI] 詳細圈速分析 MDI 完整初始化成功")
             # 初始化後創建控制面板
             self._setup_control_panel()
         else:
-            print(f"[LAPTIME_MDI] 詳細圈速分析 MDI 初始化失敗")
+            logger.debug(f"[LAPTIME_MDI] 詳細圈速分析 MDI 初始化失敗")
         
     def create_data_manager(self):
         """創建數據管理器"""
-        print(f"[LAPTIME_MDI] 創建詳細圈速分析數據管理器")
+        logger.debug(f"[LAPTIME_MDI] 創建詳細圈速分析數據管理器")
         manager = driverLapAnalysisDataManager(parent=self)
         manager.filter_settings_changed.connect(self._on_filter_settings_changed)
         return manager
@@ -1248,7 +1248,7 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
     def _setup_control_panel(self):
         """設置車手控制面板"""
         try:
-            print(f"[LAPTIME_MDI] 創建車手控制面板...")
+            logger.debug(f"[LAPTIME_MDI] 創建車手控制面板...")
             self.control_panel = DetailedLapDriverControlPanel(parent=self.main_widget)
             
             # 連接信號
@@ -1262,16 +1262,16 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
                 if main_layout and main_layout.count() > 0:
                     # 插入到頂部（索引 0）
                     main_layout.insertWidget(0, self.control_panel)
-                    print(f"[LAPTIME_MDI] ✅ 控制面板已插入主界面")
+                    logger.info(f"[LAPTIME_MDI] ✅ 控制面板已插入主界面")
                 else:
-                    print(f"[LAPTIME_MDI] ⚠️  主界面佈局不可用")
+                    logger.warning(f"[LAPTIME_MDI] ⚠️  主界面佈局不可用")
             
             # 從主視窗獲取車手列表
             self._update_driver_list()
             
-            print(f"[LAPTIME_MDI] ✅ 車手控制面板設置完成")
+            logger.info(f"[LAPTIME_MDI] ✅ 車手控制面板設置完成")
         except Exception as e:
-            print(f"[LAPTIME_MDI] ❌ 控制面板設置失敗: {e}")
+            logger.error(f"[LAPTIME_MDI] ❌ 控制面板設置失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1304,36 +1304,36 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
                 drivers = parent_window.get_drivers_for_year(year)
                 if drivers:
                     self.control_panel.set_available_drivers(drivers)
-                    print(f"[LAPTIME_MDI] ✅ 已載入 {len(drivers)} 位車手")
+                    logger.info(f"[LAPTIME_MDI] ✅ 已載入 {len(drivers)} 位車手")
                 else:
-                    print(f"[LAPTIME_MDI] ⚠️  無車手數據")
+                    logger.warning(f"[LAPTIME_MDI] ⚠️  無車手數據")
             else:
-                print(f"[LAPTIME_MDI] ⚠️  無法獲取主視窗引用")
+                logger.warning(f"[LAPTIME_MDI] ⚠️  無法獲取主視窗引用")
         except Exception as e:
-            print(f"[LAPTIME_MDI] ❌ 更新車手列表失敗: {e}")
+            logger.error(f"[LAPTIME_MDI] ❌ 更新車手列表失敗: {e}")
     
     def _on_driver_changed(self, driver: str):
         """處理 Driver 1 變更"""
         try:
-            print(f"[LAPTIME_MDI] Driver 1 變更為: {driver}")
+            logger.debug(f"[LAPTIME_MDI] Driver 1 變更為: {driver}")
             self.driver1 = driver
             self.driverChanged.emit(driver)
             # 重新載入數據
             self._reload_data_with_current_params()
         except Exception as e:
-            print(f"[LAPTIME_MDI] ❌ Driver 1 變更處理失敗: {e}")
+            logger.error(f"[LAPTIME_MDI] ❌ Driver 1 變更處理失敗: {e}")
     
     def _on_driver2_changed(self, driver: str):
         """處理 Driver 2 變更"""
         try:
             driver2 = driver if driver else None
-            print(f"[LAPTIME_MDI] Driver 2 變更為: {driver2 if driver2 else 'None'}")
+            logger.debug(f"[LAPTIME_MDI] Driver 2 變更為: {driver2 if driver2 else 'None'}")
             self.driver2 = driver2
             self.driver2Changed.emit(driver if driver else "")
             # 重新載入數據
             self._reload_data_with_current_params()
         except Exception as e:
-            print(f"[LAPTIME_MDI] ❌ Driver 2 變更處理失敗: {e}")
+            logger.error(f"[LAPTIME_MDI] ❌ Driver 2 變更處理失敗: {e}")
     
     def _reload_data_with_current_params(self):
         """使用當前參數重新載入數據"""
@@ -1350,10 +1350,10 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
                 "force_refresh": False
             }
             
-            print(f"[LAPTIME_MDI] 重新載入數據: {params}")
+            logger.debug(f"[LAPTIME_MDI] 重新載入數據: {params}")
             self.data_manager.load_data(**params)
         except Exception as e:
-            print(f"[LAPTIME_MDI] ❌ 重新載入數據失敗: {e}")
+            logger.error(f"[LAPTIME_MDI] ❌ 重新載入數據失敗: {e}")
     
     def set_parent_window(self, parent_window):
         """設置父視窗引用"""
@@ -1373,10 +1373,10 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
             from .driverlap_analysis_chart_widget import driverLapAnalysisChartWidget
             # 修正：不要傳遞 self 作為 parent，讓圖表組件自己處理父子關係
             chart_widget = driverLapAnalysisChartWidget()
-            print(f"[LAPTIME_MDI] 詳細圈速分析圖表組件創建成功")
+            logger.debug(f"[LAPTIME_MDI] 詳細圈速分析圖表組件創建成功")
             return chart_widget
         except ImportError as e:
-            print(f"[LAPTIME_MDI] 圖表組件導入失敗: {e}")
+            logger.debug(f"[LAPTIME_MDI] 圖表組件導入失敗: {e}")
             # 創建一個簡單的替代組件
             from PyQt5.QtWidgets import QLabel, QVBoxLayout, QWidget
             from PyQt5.QtCore import Qt
@@ -1407,7 +1407,7 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
             
             return widget
         except Exception as e:
-            print(f"[LAPTIME_MDI] 創建詳細圈速分析圖表組件失敗: {e}")
+            logger.debug(f"[LAPTIME_MDI] 創建詳細圈速分析圖表組件失敗: {e}")
             # 返回一個簡單的佔位符
             from PyQt5.QtWidgets import QLabel
             from PyQt5.QtCore import Qt
@@ -1423,6 +1423,10 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
 
 # 導入專用圖表組件
 from .driverlap_analysis_chart_widget import driverLapAnalysisChartWidget
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 
 class DetailedLapDriverControlPanel(QWidget):
@@ -1561,7 +1565,7 @@ class DetailedLapDriverControlPanel(QWidget):
         if driver == self._selected_driver:
             return
         self._selected_driver = driver
-        print(f"[DETAILED_LAP_CTRL] Driver 1 變更: {driver}")
+        logger.debug(f"[DETAILED_LAP_CTRL] Driver 1 變更: {driver}")
         self.driverChanged.emit(driver)
     
     def _emit_driver2_change(self, value: str) -> None:
@@ -1571,7 +1575,7 @@ class DetailedLapDriverControlPanel(QWidget):
         if driver == self._selected_driver2:
             return
         self._selected_driver2 = driver if driver else None
-        print(f"[DETAILED_LAP_CTRL] Driver 2 變更: {driver if driver else 'None'}")
+        logger.debug(f"[DETAILED_LAP_CTRL] Driver 2 變更: {driver if driver else 'None'}")
         self.driver2Changed.emit(driver if driver else "")
     
     def get_selected_driver(self) -> Optional[str]:
@@ -1653,7 +1657,7 @@ def register_detailed_laptime_analysis_module():
         # 這裡可以添加到全局模組註冊表
         pass
     except Exception as e:
-        print(f"[WARNING] 詳細圈速分析模組註冊失敗: {str(e)}")
+        logger.warning(f"詳細圈速分析模組註冊失敗: {str(e)}")
 
 # 執行註冊
 register_detailed_laptime_analysis_module()

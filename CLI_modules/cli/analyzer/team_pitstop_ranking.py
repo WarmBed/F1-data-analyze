@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 車隊進站時間排行榜模組 (功能4)
 Team Pitstop Ranking Module
@@ -10,6 +11,14 @@ Team Pitstop Ranking Module
 版本: 1.0
 作者: F1 Analysis Team
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import pickle
@@ -259,7 +268,7 @@ def get_session_info(data_loader):
         
         # 調試信息：檢查獲取的年份是否正確
         print(f"[DEBUG] Session info: year={session_info['year']}, event_name={session_info['event_name']}")
-        
+    
     return session_info
 
 

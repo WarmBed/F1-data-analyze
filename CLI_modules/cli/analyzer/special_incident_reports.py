@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 特殊事件報告模組 - Function 9
 Special Incident Reports Module - Following Core Development Standards
 專注於關鍵和特殊事故的深度分析，包含高影響事件、處罰決定、安全介入等
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -1397,6 +1406,14 @@ def _display_cached_detailed_output(special_data, session_info):
     
     # 詳細特殊事件表格
     from prettytable import PrettyTable
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
     incidents_table = PrettyTable()
     incidents_table.field_names = [
         "序號", "嚴重程度", "事件類型", "車手", "圈數", "描述"

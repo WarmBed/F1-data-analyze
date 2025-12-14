@@ -18,6 +18,10 @@ from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QFont
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.lap_time_distribution", component="gui")
 
 # 嘗試導入通用顏色系統
 COLOR_PALETTE_AVAILABLE = False
@@ -25,9 +29,9 @@ color_palette_provider = None
 try:
     from modules.gui.themes import color_palette_provider
     COLOR_PALETTE_AVAILABLE = True
-    print("[LAP_TIME_DIST] color_palette_provider 導入成功")
+    logger.info("[LAP_TIME_DIST] color_palette_provider 導入成功")
 except ImportError as e:
-    print(f"[LAP_TIME_DIST] color_palette_provider 不可用: {e}")
+    logger.warning("[LAP_TIME_DIST] color_palette_provider 不可用: %s", e)
 
 
 class LapTimeDistributionWidget(QWidget):
@@ -76,7 +80,7 @@ class LapTimeDistributionWidget(QWidget):
             'UNKNOWN': '#888888'
         }
         
-        print("[LAP_TIME_DIST] LapTimeDistributionWidget initialized")
+        logger.info("[LAP_TIME_DIST] LapTimeDistributionWidget initialized")
     
     def _get_driver_color(self, data: Dict[str, Any]) -> QColor:
         """
@@ -372,6 +376,8 @@ class LiveTimingLapDistribution(BaseLiveTimingMDI):
     Live Timing Lap Time Distribution MDI Window
     
     顯示所有車手的圈速差距分佈視覺化。
+    
+    性能優化: 只在車手完成圈數時更新 (檢測 max lap 變化)
     """
     
     def __init__(self, parent=None, data_manager=None):
@@ -381,7 +387,10 @@ class LiveTimingLapDistribution(BaseLiveTimingMDI):
         self.setMinimumSize(250, 400)
         self.resize(280, 500)
         
-        print("[LAP_DIST_MDI] LiveTimingLapDistribution initialized")
+        # 性能優化: 追蹤每位車手的 best_lap_time 以檢測最速圈變化
+        self._last_driver_laps: Dict[str, Any] = {}  # {driver_num: best_lap_time}
+        
+        logger.info("[LAP_DIST_MDI] LiveTimingLapDistribution initialized")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -390,17 +399,41 @@ class LiveTimingLapDistribution(BaseLiveTimingMDI):
     
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """Race loaded"""
-        print(f"[LAP_DIST_MDI] Race loaded: {race_info.get('year')} {race_info.get('race')}")
+        logger.info(
+            "[LAP_DIST_MDI] Race loaded: %s %s",
+            race_info.get('year'),
+            race_info.get('race'),
+        )
     
     def _on_race_unloaded(self):
         """Race unloaded"""
-        print("[LAP_DIST_MDI] Race unloaded")
+        logger.info("[LAP_DIST_MDI] Race unloaded")
         self.distribution_widget._driver_data = {}
         self.distribution_widget.update()
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """Snapshot updated - 合併 drivers 數據和輪胎狀態"""
+        """
+        Snapshot updated - 合併 drivers 數據和輪胎狀態
+        
+        性能優化: 當車手 best_lap_time 變化時更新
+        (最速圈分布 - 比較所有車手的最佳圈速)
+        """
         drivers = snapshot.get('drivers', {})
+        
+        # 性能優化: 檢查是否有 best_lap_time 變化
+        has_best_lap_change = False
+        for driver_num, driver_data in drivers.items():
+            current_best = driver_data.get('best_lap_time')
+            last_best = self._last_driver_laps.get(driver_num)
+            
+            # 檢測 best_lap_time 變化 (新的最速圈)
+            if current_best != last_best:
+                has_best_lap_change = True
+                self._last_driver_laps[driver_num] = current_best
+        
+        # 如果沒有 best_lap_time 變化，跳過更新
+        if not has_best_lap_change and len(self._last_driver_laps) > 0:
+            return
         
         # 從 DataManager 獲取輪胎狀態（參考 ranking_tower 的實現）
         tyre_state = {}

@@ -15,6 +15,9 @@ import sys
 from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -70,7 +73,7 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
         # 狀態
         self._is_initialized = False
         
-        print(f"[SECTOR_COMPARISON_MODULE] 模組已創建: {year} {race} {session}")
+        logger.debug(f"[SECTOR_COMPARISON_MODULE] 模組已創建: {year} {race} {session}")
     
     # ========== IAnalysisModule 屬性實作 ==========
     
@@ -108,20 +111,20 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 初始化是否成功
         """
         try:
-            print("[SECTOR_COMPARISON_MODULE] 開始初始化模組...")
+            logger.debug("[SECTOR_COMPARISON_MODULE] 開始初始化模組...")
             
             if self._is_initialized:
-                print("[SECTOR_COMPARISON_MODULE] 模組已初始化，跳過")
+                logger.debug("[SECTOR_COMPARISON_MODULE] 模組已初始化，跳過")
                 return True
             
             # 檢查參數
             if not self.current_year or not self.current_race or not self.current_session:
-                print("❌ [SECTOR_COMPARISON_MODULE] 缺少必要參數 (year/race/session)")
+                logger.error("[SECTOR_COMPARISON_MODULE] 缺少必要參數 (year/race/session)")
                 return False
             
             # 創建 MDI 核心實例（不傳遞參數，使用延遲初始化）
             if not self._comparison_core:
-                print(f"[SECTOR_COMPARISON_MODULE] 創建 MDI 核心（延遲初始化模式）")
+                logger.debug(f"[SECTOR_COMPARISON_MODULE] 創建 MDI 核心（延遲初始化模式）")
                 self._comparison_core = IdealLapSectorComparisonMDI(parent=parent_widget)
                 
                 # 設置參數（通過基類屬性）
@@ -129,28 +132,28 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
                 self._comparison_core.current_race = self.current_race
                 self._comparison_core.current_session = self.current_session
                 
-                print(f"[SECTOR_COMPARISON_MODULE] 已設置參數: {self.current_year} {self.current_race} {self.current_session}")
+                logger.debug(f"[SECTOR_COMPARISON_MODULE] 已設置參數: {self.current_year} {self.current_race} {self.current_session}")
                 
                 # ✅ 初始化 MDI 核心（觸發參數讀取和組件創建）
-                print("[SECTOR_COMPARISON_MODULE] 初始化 MDI 核心...")
+                logger.debug("[SECTOR_COMPARISON_MODULE] 初始化 MDI 核心...")
                 if not self._comparison_core.initialize_module():
-                    print("❌ [SECTOR_COMPARISON_MODULE] MDI 核心初始化失敗")
+                    logger.error("[SECTOR_COMPARISON_MODULE] MDI 核心初始化失敗")
                     return False
-                print("✅ [SECTOR_COMPARISON_MODULE] MDI 核心初始化成功")
+                logger.info("[SECTOR_COMPARISON_MODULE] MDI 核心初始化成功")
             
             # 獲取主要元件
             self._main_widget = self._comparison_core.get_widget()
             
             if not self._main_widget:
-                print("❌ [SECTOR_COMPARISON_MODULE] 無法獲取主要元件")
+                logger.error("[SECTOR_COMPARISON_MODULE] 無法獲取主要元件")
                 return False
             
             self._is_initialized = True
-            print("✅ [SECTOR_COMPARISON_MODULE] 模組初始化成功")
+            logger.info("[SECTOR_COMPARISON_MODULE] 模組初始化成功")
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 初始化失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -163,7 +166,7 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             Optional[QWidget]: 主要元件，若未初始化則返回 None
         """
         if not self._is_initialized:
-            print("⚠️  [SECTOR_COMPARISON_MODULE] 模組尚未初始化")
+            logger.warning("[SECTOR_COMPARISON_MODULE] 模組尚未初始化")
             return None
         
         return self._main_widget
@@ -179,19 +182,19 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 刷新是否成功
         """
         try:
-            print("[SECTOR_COMPARISON_MODULE] 刷新數據...")
+            logger.debug("[SECTOR_COMPARISON_MODULE] 刷新數據...")
             
             if not self._is_initialized or not self._comparison_core:
-                print("❌ [SECTOR_COMPARISON_MODULE] 模組未初始化，無法刷新")
+                logger.error("[SECTOR_COMPARISON_MODULE] 模組未初始化，無法刷新")
                 return False
             
             # 委派給 MDI 核心
             self._comparison_core.reload_data()
-            print("✅ [SECTOR_COMPARISON_MODULE] 數據刷新成功")
+            logger.info("[SECTOR_COMPARISON_MODULE] 數據刷新成功")
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 刷新失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 刷新失敗: {e}")
             return False
     
     def load_data(self, **kwargs) -> bool:
@@ -205,25 +208,26 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 載入是否成功
         """
         try:
-            print("[SECTOR_COMPARISON_MODULE] 載入資料...")
+            logger.debug("[SECTOR_COMPARISON_MODULE] 載入資料...")
             
             if not self._is_initialized:
-                print("❌ [SECTOR_COMPARISON_MODULE] 模組未初始化")
+                logger.error("[SECTOR_COMPARISON_MODULE] 模組未初始化")
                 return False
             
             if not self._comparison_core:
-                print("❌ [SECTOR_COMPARISON_MODULE] MDI 核心未創建")
+                logger.error("[SECTOR_COMPARISON_MODULE] MDI 核心未創建")
                 return False
             
             # 觸發 MDI 載入資料
             self._comparison_core.load_initial_data()
             
-            print("✅ [SECTOR_COMPARISON_MODULE] 資料載入已觸發")
+            logger.info("[SECTOR_COMPARISON_MODULE] 資料載入已觸發")
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 載入資料失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 載入資料失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -245,19 +249,19 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 清空是否成功
         """
         try:
-            print("[SECTOR_COMPARISON_MODULE] 清空資料...")
+            logger.debug("[SECTOR_COMPARISON_MODULE] 清空資料...")
             
             if self._comparison_core and hasattr(self._comparison_core, 'chart_widget'):
                 # 清空圖表
                 if hasattr(self._comparison_core.chart_widget, 'clear'):
                     self._comparison_core.chart_widget.clear()
-                print("✅ [SECTOR_COMPARISON_MODULE] 資料已清空")
+                logger.info("[SECTOR_COMPARISON_MODULE] 資料已清空")
                 return True
             
             return False
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 清空資料失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 清空資料失敗: {e}")
             return False
     
     def export_data(self, export_path: str, export_format: str = "csv") -> bool:
@@ -272,18 +276,18 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 匯出是否成功
         """
         try:
-            print(f"[SECTOR_COMPARISON_MODULE] 匯出資料到: {export_path} (格式: {export_format})")
+            logger.debug(f"[SECTOR_COMPARISON_MODULE] 匯出資料到: {export_path} (格式: {export_format})")
             
             # 委派給圖表匯出方法
             if export_format in ["png", "jpg", "svg"]:
                 return self.export_chart(export_path)
             
             # TODO: 實作 CSV/JSON 匯出功能
-            print("⚠️ [SECTOR_COMPARISON_MODULE] CSV/JSON 匯出功能尚未實作")
+            logger.warning("[SECTOR_COMPARISON_MODULE] CSV/JSON 匯出功能尚未實作")
             return False
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 匯出失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 匯出失敗: {e}")
             return False
     
     def update_parameters(self, **params) -> bool:
@@ -297,7 +301,7 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
-            print(f"[SECTOR_COMPARISON_MODULE] 更新參數: {params}")
+            logger.debug(f"[SECTOR_COMPARISON_MODULE] 更新參數: {params}")
             
             # 更新內部參數
             if 'year' in params:
@@ -311,17 +315,17 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             if self._comparison_core:
                 self._comparison_core.update_parameters(**params)
             
-            print("✅ [SECTOR_COMPARISON_MODULE] 參數更新成功")
+            logger.info("[SECTOR_COMPARISON_MODULE] 參數更新成功")
             return True
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 參數更新失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 參數更新失敗: {e}")
             return False
     
     def cleanup(self):
         """清理資源"""
         try:
-            print("[SECTOR_COMPARISON_MODULE] 開始清理資源...")
+            logger.debug("[SECTOR_COMPARISON_MODULE] 開始清理資源...")
             
             # 清理 MDI 核心
             if self._comparison_core:
@@ -335,10 +339,10 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             # 重置狀態
             self._is_initialized = False
             
-            print("✅ [SECTOR_COMPARISON_MODULE] 資源清理完成")
+            logger.info("[SECTOR_COMPARISON_MODULE] 資源清理完成")
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 清理失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 清理失敗: {e}")
     
     def get_module_info(self) -> Dict[str, Any]:
         """
@@ -400,5 +404,5 @@ class IdealLapSectorComparisonModule(IAnalysisModule):
             return self._comparison_core.export_chart(file_path)
             
         except Exception as e:
-            print(f"❌ [SECTOR_COMPARISON_MODULE] 匯出失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON_MODULE] 匯出失敗: {e}")
             return False

@@ -19,6 +19,10 @@ from .all_drivers_brake_performance_module import AllDriversBrakePerformanceModu
 from .all_drivers_brake_performance_mdi import AllDriversBrakePerformanceMDI
 from .all_drivers_brake_performance_table_widget import AllDriversBrakePerformanceTableWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 __all__ = [
     "AllDriversBrakePerformanceModule",
     "AllDriversBrakePerformanceMDI",
@@ -31,5 +35,5 @@ try:
     from .register_module import register
     register()
 except Exception as e:
-    print(f"AllDriversBrakePerformance 自動註冊失敗: {e}")
+    logger.debug(f"AllDriversBrakePerformance 自動註冊失敗: {e}")
 

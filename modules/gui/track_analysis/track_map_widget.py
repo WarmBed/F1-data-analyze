@@ -19,6 +19,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, Tuple
 from bisect import bisect_left
 
+from core.logger import get_logger
 from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize, QPoint, QTimer, QRectF
 from PyQt5.QtGui import (
     QBrush,
@@ -36,6 +37,9 @@ try:
     from modules.gui.lap_analysis.linkage import linkage_manager
 except ImportError:
     linkage_manager = None
+
+
+logger = get_logger(component="gui.track_map")
 
 
 class CornerTooltipLabel(QLabel):
@@ -198,11 +202,11 @@ class TrackMapWidget(QWidget):
     def load_track_data(self, track_data: Dict[str, Any]) -> bool:
         """供 Universal MDI 呼叫的資料載入接口。"""
         try:
-            print(f"[TRACK_MAP] ==================== load_track_data 開始 ====================")
+            logger.info("[TRACK_MAP] load_track_data 開始")
             session_info = track_data.get("session_info", {})
             track_name = session_info.get("track_name") or session_info.get("event_name") or "Unknown"
-            print(f"[TRACK_MAP] 賽道名稱: {track_name}")
-            print(f"[TRACK_MAP] track_data keys: {list(track_data.keys())}")
+            logger.info("[TRACK_MAP] 賽道名稱: %s", track_name)
+            logger.debug("[TRACK_MAP] track_data keys: %s", list(track_data.keys()))
             
             self.track_data = track_data or {}
             records = track_data.get("detailed_position_records") or track_data.get("position_records") or []
@@ -217,29 +221,37 @@ class TrackMapWidget(QWidget):
             self.track_bounds = bounds if isinstance(bounds, dict) else None
             
             # 載入 FastF1 官方彎道數據
-            print(f"[TRACK_MAP] ==================== 載入 official_corners ====================")
+            logger.info("[TRACK_MAP] 載入 official_corners")
             official_corners_data = track_data.get("official_corners", {})
-            print(f"[TRACK_MAP] official_corners_data 類型: {type(official_corners_data)}")
-            print(f"[TRACK_MAP] official_corners_data 內容: {official_corners_data if isinstance(official_corners_data, dict) else 'NOT A DICT'}")
+            logger.debug("[TRACK_MAP] official_corners_data 類型: %s", type(official_corners_data))
+            if isinstance(official_corners_data, dict):
+                logger.debug("[TRACK_MAP] official_corners_data 內容: %s", official_corners_data)
+            else:
+                logger.warning("[TRACK_MAP] official_corners_data 不是 dict: %s", type(official_corners_data))
             
             if official_corners_data.get("available") and official_corners_data.get("corners"):
                 self.official_corners = official_corners_data.get("corners", [])
-                print(f"[TRACK_MAP] ✅ 成功載入 {len(self.official_corners)} 個官方彎道")
+                logger.info("[TRACK_MAP] 成功載入 %d 個官方彎道", len(self.official_corners))
                 if self.official_corners:
                     first = self.official_corners[0]
-                    print(f"[TRACK_MAP]    第一個彎道: number={first.get('number')}, x={first.get('x')}, y={first.get('y')}")
+                    logger.debug(
+                        "[TRACK_MAP] 第一個彎道: number=%s, x=%s, y=%s",
+                        first.get("number"),
+                        first.get("x"),
+                        first.get("y"),
+                    )
             else:
                 self.official_corners = []
-                print(f"[TRACK_MAP] ❌ 未載入官方彎道")
-                print(f"[TRACK_MAP]    available: {official_corners_data.get('available')}")
-                print(f"[TRACK_MAP]    corners 存在: {'corners' in official_corners_data}")
-                print(f"[TRACK_MAP]    corners 數量: {len(official_corners_data.get('corners', []))}")
+                logger.warning("[TRACK_MAP] 未載入官方彎道")
+                logger.debug("[TRACK_MAP] available: %s", official_corners_data.get("available"))
+                logger.debug("[TRACK_MAP] corners 存在: %s", "corners" in official_corners_data)
+                logger.debug("[TRACK_MAP] corners 數量: %d", len(official_corners_data.get("corners", [])))
             
-            print(f"[TRACK_MAP] self.official_corners 最終狀態: 長度={len(self.official_corners)}")
-            print(f"[TRACK_MAP] self.show_official_corners 狀態: {self.show_official_corners}")
+            logger.debug("[TRACK_MAP] self.official_corners 最終狀態: 長度=%d", len(self.official_corners))
+            logger.debug("[TRACK_MAP] self.show_official_corners 狀態: %s", self.show_official_corners)
             
             # 🏁 載入 Sector 邊界數據
-            print(f"[TRACK_MAP] ==================== 載入 sector_boundaries ====================")
+            logger.info("[TRACK_MAP] 載入 sector_boundaries")
             
             # 🚨 檢測賽道變更（用於智能保護邏輯）
             current_track = track_name  # 從上方 session_info 已取得
@@ -248,9 +260,9 @@ class TrackMapWidget(QWidget):
                            self._last_track_name != current_track)
             
             if track_changed:
-                print(f"[TRACK_MAP] 🔄 檢測到賽道變更: {self._last_track_name} → {current_track}")
+                logger.info("[TRACK_MAP] 檢測到賽道變更: %s → %s", self._last_track_name, current_track)
             else:
-                print(f"[TRACK_MAP] ✅ 同一賽道: {current_track}")
+                logger.info("[TRACK_MAP] 同一賽道: %s", current_track)
             
             # ⚠️ 關鍵問題：API 響應中 sector_boundaries 可能不存在
             # 原因：CLI Function 100 在 Line 1440-1441 只在有數據時才添加到 result
@@ -259,36 +271,48 @@ class TrackMapWidget(QWidget):
             # 這導致：API 響應可能完全沒有 "sector_boundaries" 欄位
             
             sector_boundaries_data = track_data.get("sector_boundaries", None)  # 改用 None 作為預設值
-            print(f"[TRACK_MAP] sector_boundaries_data 類型: {type(sector_boundaries_data)}")
-            print(f"[TRACK_MAP] sector_boundaries_data: {sector_boundaries_data if sector_boundaries_data is not None else '欄位不存在'}")
-            print(f"[TRACK_MAP] 當前 self.sector_boundaries 數量: {len(self.sector_boundaries)}")
+            logger.debug("[TRACK_MAP] sector_boundaries_data 類型: %s", type(sector_boundaries_data))
+            logger.debug(
+                "[TRACK_MAP] sector_boundaries_data: %s",
+                sector_boundaries_data if sector_boundaries_data is not None else "欄位不存在",
+            )
+            logger.debug("[TRACK_MAP] 當前 self.sector_boundaries 數量: %d", len(self.sector_boundaries))
             
             if sector_boundaries_data and isinstance(sector_boundaries_data, list):
                 # ✅ 有新數據：直接載入
                 self.sector_boundaries = sector_boundaries_data
-                print(f"[TRACK_MAP] ✅ 成功載入 {len(self.sector_boundaries)} 個 Sector 邊界")
+                logger.info("[TRACK_MAP] 成功載入 %d 個 Sector 邊界", len(self.sector_boundaries))
                 for boundary in self.sector_boundaries:
-                    print(f"[TRACK_MAP]    - {boundary.get('name')}: distance={boundary.get('distance_m'):.1f}m, pos=({boundary.get('position_x'):.1f}, {boundary.get('position_y'):.1f})")
+                    logger.debug(
+                        "[TRACK_MAP] - %s: distance=%s m, pos=(%s, %s)",
+                        boundary.get("name"),
+                        boundary.get("distance_m"),
+                        boundary.get("position_x"),
+                        boundary.get("position_y"),
+                    )
             else:
                 # 🛡️ 智能保護邏輯：區分「欄位不存在」vs「空列表」
                 if track_changed:
                     # ✅ 賽道變更且無新數據：清空（避免座標錯位）
                     self.sector_boundaries = []
-                    print(f"[TRACK_MAP] 🧹 賽道變更且無新 Sector 數據，清空避免座標錯位")
+                    logger.info("[TRACK_MAP] 賽道變更且無新 Sector 數據，清空避免座標錯位")
                 elif self.sector_boundaries:
                     # ✅ 同一賽道且無新數據：保留（避免消失）
-                    print(f"[TRACK_MAP] 🛡️ 同一賽道，保留現有 {len(self.sector_boundaries)} 個 Sector 邊界（API 未返回數據）")
+                    logger.info(
+                        "[TRACK_MAP] 同一賽道，保留現有 %d 個 Sector 邊界（API 未返回數據）",
+                        len(self.sector_boundaries),
+                    )
                     # 不修改 self.sector_boundaries - 保留現有數據
                 else:
                     self.sector_boundaries = []
-                    print(f"[TRACK_MAP] ⚠️ 無 Sector 邊界數據且當前為空，設置為空列表")
+                    logger.warning("[TRACK_MAP] 無 Sector 邊界數據且當前為空，設置為空列表")
             
             # 更新記錄的賽道名稱
             if current_track != "Unknown":
                 self._last_track_name = current_track
             
-            print(f"[TRACK_MAP] self.sector_boundaries 最終狀態: 長度={len(self.sector_boundaries)}")
-            print(f"[TRACK_MAP] self.show_sector_boundaries 狀態: {self.show_sector_boundaries}")
+            logger.debug("[TRACK_MAP] self.sector_boundaries 最終狀態: 長度=%d", len(self.sector_boundaries))
+            logger.debug("[TRACK_MAP] self.show_sector_boundaries 狀態: %s", self.show_sector_boundaries)
             
             self._build_distance_lookup()
             self._clear_dynamic_marker()
@@ -306,20 +330,25 @@ class TrackMapWidget(QWidget):
 
             info = track_data.get("session_info", {})
             track_name = info.get("track_name") or info.get("event_name") or "Unknown"
-            print(f"[TRACK_MAP] Data loaded: {track_name}, points={len(self.position_data)} bounds={self.track_bounds}")
+            logger.info("[TRACK_MAP] Data loaded: %s, points=%d bounds=%s", track_name, len(self.position_data), self.track_bounds)
             
             # ✅ 載入速度分布數據
             speed_dist = track_data.get("speed_distribution")
             if speed_dist:
                 self.speed_distribution_data = speed_dist
-                print(f"[TRACK_MAP] ✅ 已載入速度分布數據: Low={speed_dist.get('low_speed_percentage', 0):.1f}%, Mid={speed_dist.get('mid_speed_percentage', 0):.1f}%, High={speed_dist.get('high_speed_percentage', 0):.1f}%")
+                logger.info(
+                    "[TRACK_MAP] 已載入速度分布數據: Low=%.1f%%, Mid=%.1f%%, High=%.1f%%",
+                    speed_dist.get("low_speed_percentage", 0),
+                    speed_dist.get("mid_speed_percentage", 0),
+                    speed_dist.get("high_speed_percentage", 0),
+                )
             else:
                 self.speed_distribution_data = None
-                print(f"[TRACK_MAP] ⚠️  未找到速度分布數據")
+                logger.warning("[TRACK_MAP] 未找到速度分布數據")
             
             return bool(self.position_data)
         except Exception as exc:
-            print(f"[TRACK_MAP] Failed to load data: {exc}")
+            logger.exception("[TRACK_MAP] Failed to load data")
             return False
 
     def set_corner_flags(self, corner_flags_data: Dict[str, Dict[str, Any]]) -> None:
@@ -330,7 +359,7 @@ class TrackMapWidget(QWidget):
             corner_flags_data: {"T1": {corner_analysis_data}, "T2": {...}, ...}
         """
         self.corner_flags = corner_flags_data
-        print(f"[TRACK_MAP] 🚩 已載入 {len(corner_flags_data)} 個彎道的旗幟數據")
+        logger.info("[TRACK_MAP] 已載入 %d 個彎道的旗幟數據", len(corner_flags_data))
         self.update()  # 觸發重繪
 
     def set_sector_boundaries(self, sector_boundaries_data: List[Dict[str, Any]]) -> None:
@@ -345,10 +374,10 @@ class TrackMapWidget(QWidget):
             ]
         """
         self.sector_boundaries = sector_boundaries_data or []
-        print(f"[TRACK_MAP] 🏁 已載入 {len(self.sector_boundaries)} 個 Sector 邊界")
+        logger.info("[TRACK_MAP] 已載入 %d 個 Sector 邊界", len(self.sector_boundaries))
         if self.sector_boundaries:
             for boundary in self.sector_boundaries:
-                print(f"  - {boundary.get('name', 'Unknown')}: {boundary.get('distance_m', 0):.1f}m")
+                logger.debug("[TRACK_MAP] Sector 邊界: %s 距離=%s", boundary.get("name", "Unknown"), boundary.get("distance_m", 0))
         self.update()  # 觸發重繪
 
     def set_track_data(self, position_data: List[Dict[str, Any]], track_bounds: Dict[str, float]) -> None:
@@ -506,23 +535,29 @@ class TrackMapWidget(QWidget):
         
         # 繪製 FastF1 官方彎道標記
         if self.show_official_corners and self.official_corners:
-            print(f"[TRACK_MAP] paintEvent: 準備繪製 {len(self.official_corners)} 個彎道")
+            logger.debug("[TRACK_MAP] paintEvent: 準備繪製 %d 個彎道", len(self.official_corners))
             self._draw_official_corners(painter)
         else:
             if not self.show_official_corners:
-                print(f"[TRACK_MAP] paintEvent: show_official_corners={self.show_official_corners} (未啟用)")
+                logger.debug("[TRACK_MAP] paintEvent: show_official_corners=%s (未啟用)", self.show_official_corners)
             if not self.official_corners:
-                print(f"[TRACK_MAP] paintEvent: official_corners 為空 (長度={len(self.official_corners)})")
+                logger.debug("[TRACK_MAP] paintEvent: official_corners 為空 (長度=%d)", len(self.official_corners))
         
         # 繪製 Sector 邊界分隔線
         if self.show_sector_boundaries and self.sector_boundaries:
-            print(f"[TRACK_MAP] paintEvent: 準備繪製 {len(self.sector_boundaries)} 個 Sector 邊界")
+            logger.debug("[TRACK_MAP] paintEvent: 準備繪製 %d 個 Sector 邊界", len(self.sector_boundaries))
             self._draw_sector_boundaries(painter)
         else:
             if not self.show_sector_boundaries:
-                print(f"[TRACK_MAP] paintEvent: show_sector_boundaries={self.show_sector_boundaries} (未啟用)")
+                logger.debug(
+                    "[TRACK_MAP] paintEvent: show_sector_boundaries=%s (未啟用)",
+                    self.show_sector_boundaries,
+                )
             if not self.sector_boundaries:
-                print(f"[TRACK_MAP] paintEvent: sector_boundaries 為空 (長度={len(self.sector_boundaries)})")
+                logger.debug(
+                    "[TRACK_MAP] paintEvent: sector_boundaries 為空 (長度=%d)",
+                    len(self.sector_boundaries),
+                )
 
         # 在路徑繪製後呈現同步標記
         self._draw_markers(painter)
@@ -532,9 +567,9 @@ class TrackMapWidget(QWidget):
             self._draw_speed_distribution_pie(painter)
         else:
             if not self.show_speed_distribution:
-                print(f"[DEBUG] ⚠️  show_speed_distribution = False（未啟用）")
+                logger.debug("[TRACK_MAP] show_speed_distribution = False（未啟用）")
             if not self.speed_distribution_data:
-                print(f"[DEBUG] ⚠️  無 speed_distribution 數據")
+                logger.debug("[TRACK_MAP] 無 speed_distribution 數據")
 
     def _draw_speed_colored_path(self, painter: QPainter, points: List[QPointF]) -> None:
         """使用逐段繪製根據速度繪製漸層色賽道
@@ -755,17 +790,16 @@ class TrackMapWidget(QWidget):
     def _draw_official_corners(self, painter: QPainter) -> None:
         """繪製 FastF1 官方彎道標記 - 根據旗幟數據顯示危險度"""
         
-        print(f"\n[DEBUG] === _draw_official_corners() 執行 ===")
-        print(f"[DEBUG] self.official_corners 數量: {len(self.official_corners)}")
+        logger.debug("[TRACK_MAP] _draw_official_corners() 執行，數量=%d", len(self.official_corners))
         
         if not self.official_corners:
-            print(f"[DEBUG] ❌ self.official_corners 為空，跳過繪製")
+            logger.debug("[TRACK_MAP] self.official_corners 為空，跳過繪製")
             return
         
-        print(f"[DEBUG] ✅ 準備繪製 {len(self.official_corners)} 個彎道標記")
+        logger.debug("[TRACK_MAP] 準備繪製 %d 個彎道標記", len(self.official_corners))
         if len(self.official_corners) > 0:
             first = self.official_corners[0]
-            print(f"[DEBUG]    第 1 個彎道: {first}")
+            logger.debug("[TRACK_MAP] 第 1 個彎道: %s", first)
         
         # 預設樣式 - 白底黑字
         default_bg_color = QColor(255, 255, 255, 240)
@@ -872,7 +906,10 @@ class TrackMapWidget(QWidget):
             drawn_count += 1
         
         if drawn_count == 0:
-            print(f"[TRACK_MAP] ⚠️ 警告：0 個彎道在視口內（共 {len(self.official_corners)} 個彎道）")
+            logger.warning(
+                "[TRACK_MAP] 0 個彎道在視口內（共 %d 個彎道）",
+                len(self.official_corners),
+            )
     
     def _calculate_corner_offset(self, corner_x: float, corner_y: float, offset_dist: float) -> Tuple[float, float]:
         """
@@ -928,7 +965,7 @@ class TrackMapWidget(QWidget):
         import math
         import numpy as np
         
-        print(f"[TRACK_MAP] 🏁 準備繪製 {len(self.sector_boundaries)} 個 Sector 邊界")
+        logger.debug("[TRACK_MAP] 準備繪製 %d 個 Sector 邊界", len(self.sector_boundaries))
         
         for boundary in self.sector_boundaries:
             sector_num = boundary.get('sector', 0)
@@ -980,8 +1017,22 @@ class TrackMapWidget(QWidget):
             painter.setPen(pen)
             painter.drawLine(int(start_screen_x), int(start_screen_y), int(end_screen_x), int(end_screen_y))
             
-            print(f"  🖊️  繪製 {sector_name} 線條: 世界座標 ({start_x:.1f},{start_y:.1f})->({end_x:.1f},{end_y:.1f})")
-            print(f"       屏幕座標 ({int(start_screen_x)},{int(start_screen_y)})->({int(end_screen_x)},{int(end_screen_y)})")
+            logger.debug(
+                "[TRACK_MAP] 繪製 %s 線條: 世界座標 (%.1f,%.1f)->(%.1f,%.1f)",
+                sector_name,
+                start_x,
+                start_y,
+                end_x,
+                end_y,
+            )
+            logger.debug(
+                "[TRACK_MAP] %s 線條屏幕座標 (%d,%d)->(%d,%d)",
+                sector_name,
+                int(start_screen_x),
+                int(start_screen_y),
+                int(end_screen_x),
+                int(end_screen_y),
+            )
             
             # 🎨 繪製 Sector 標籤文字（例如 "S1", "S2", "S3"）
             # 決定標籤簡稱
@@ -1033,7 +1084,12 @@ class TrackMapWidget(QWidget):
             )
             painter.drawText(text_draw_rect, Qt.AlignCenter, label_text)
             
-            print(f"  ✅ 已繪製 {sector_name} at ({position_x:.1f}, {position_y:.1f})")
+            logger.debug(
+                "[TRACK_MAP] 已繪製 %s at (%.1f, %.1f)",
+                sector_name,
+                position_x,
+                position_y,
+            )
     
     def _get_track_tangent_at_position(self, target_x: float, target_y: float) -> Optional[Tuple[float, float]]:
         """
@@ -1173,7 +1229,7 @@ class TrackMapWidget(QWidget):
                     self.dragging_tooltip_index = i
                     self.tooltip_drag_offset = event.pos() - label.pos()
                     self.setCursor(Qt.ClosedHandCursor)
-                    print(f"[TRACK_MAP] 🎯 開始拖動標籤 #{i}: {tooltip_info['corner_key']}")
+                    logger.debug("[TRACK_MAP] 開始拖動標籤 #%d: %s", i, tooltip_info['corner_key'])
                     event.accept()
                     return
             
@@ -1186,14 +1242,14 @@ class TrackMapWidget(QWidget):
                 # 檢查是否已固定該彎道
                 for tooltip_info in self.pinned_tooltips:
                     if tooltip_info['corner_key'] == clicked_corner:
-                        print(f"[TRACK_MAP] 彎道 {clicked_corner} 的標籤已固定")
+                        logger.debug("[TRACK_MAP] 彎道 %s 的標籤已固定", clicked_corner)
                         event.accept()
                         return
                 
                 # 生成 HTML 內容（只生成一次）
                 html_content = self._format_corner_tooltip(clicked_corner)
                 if not html_content:
-                    print(f"[TRACK_MAP] 彎道 {clicked_corner} 沒有旗幟數據")
+                    logger.warning("[TRACK_MAP] 彎道 %s 沒有旗幟數據", clicked_corner)
                     return
                 
                 # 獲取彎道世界座標
@@ -1210,7 +1266,7 @@ class TrackMapWidget(QWidget):
                         break
                 
                 if not corner_world_pos:
-                    print(f"[TRACK_MAP] 找不到彎道 {clicked_corner} 的座標")
+                    logger.warning("[TRACK_MAP] 找不到彎道 %s 的座標", clicked_corner)
                     return
                 
                 # 計算智能偏移量
@@ -1232,8 +1288,8 @@ class TrackMapWidget(QWidget):
                     'offset': offset,
                     'custom_pos': None  # 初始化自訂位置
                 })
-                
-                print(f"[TRACK_MAP] 已固定標籤: {clicked_corner}")
+
+                logger.info("[TRACK_MAP] 已固定標籤: %s", clicked_corner)
                 event.accept()
                 return
             
@@ -1254,7 +1310,7 @@ class TrackMapWidget(QWidget):
                     tooltip_info['label'].hide()
                     tooltip_info['label'].deleteLater()
                 self.pinned_tooltips.clear()
-                print("[TRACK_MAP] 🗑️ 右鍵清除所有固定標籤")
+                logger.info("[TRACK_MAP] 右鍵清除所有固定標籤")
                 self.update()
                 event.accept()
                 return
@@ -1266,7 +1322,7 @@ class TrackMapWidget(QWidget):
         if event.button() == Qt.LeftButton:
             if self.dragging_tooltip:
                 # 結束拖動
-                print(f"[TRACK_MAP] ✅ 結束拖動標籤 (索引: {self.dragging_tooltip_index})")
+                logger.debug("[TRACK_MAP] 結束拖動標籤 (索引: %d)", self.dragging_tooltip_index)
                 self.dragging_tooltip = False
                 self.dragging_tooltip_index = -1
                 self.tooltip_drag_offset = QPoint(0, 0)  # 重置偏移量
@@ -1327,12 +1383,15 @@ class TrackMapWidget(QWidget):
             bool: 是否成功設置（如果沒有時間數據則失敗）
         """
         if use_time_axis and not self._time_available:
-            print("[TRACK_MAP] ⚠️ 無法切換至時間軸：缺少時間數據")
+            logger.warning("[TRACK_MAP] 無法切換至時間軸：缺少時間數據")
             return False
         
         if self._use_time_axis != use_time_axis:
             self._use_time_axis = use_time_axis
-            print(f"[TRACK_MAP] 🕒 時間軸模式: {'啟用' if use_time_axis else '停用（使用距離軸）'}")
+            logger.info(
+                "[TRACK_MAP] 時間軸模式: %s",
+                "啟用" if use_time_axis else "停用（使用距離軸）",
+            )
             
             # 清除現有標記（避免錯誤的單位混淆）
             self._clear_dynamic_marker(update_view=False)
@@ -1362,20 +1421,20 @@ class TrackMapWidget(QWidget):
                 current_time_axis_mode = linkage_manager.is_time_axis_mode()
                 if current_time_axis_mode and self._time_available:
                     self._use_time_axis = True
-                    print(f"[TRACK_MAP] 🕒 已同步時間軸模式: 啟用")
+                    logger.info("[TRACK_MAP] 已同步時間軸模式: 啟用")
                 elif current_time_axis_mode and not self._time_available:
-                    print(f"[TRACK_MAP] ⚠️ LinkageManager 啟用時間軸，但本模組缺少時間數據")
+                    logger.warning("[TRACK_MAP] LinkageManager 啟用時間軸，但本模組缺少時間數據")
                 
                 self._linkage_registered = True
-                print("[TRACK_MAP] 已註冊至 linkage_manager，主連動狀態:", self._master_linkage_enabled)
+                logger.info("[TRACK_MAP] 已註冊至 linkage_manager，主連動狀態: %s", self._master_linkage_enabled)
             except Exception as exc:
-                print(f"[TRACK_MAP] linkage 註冊失敗: {exc}")
+                logger.exception("[TRACK_MAP] linkage 註冊失敗")
 
     def _unregister_linkage(self) -> None:
         if linkage_manager is not None and self._linkage_registered:
             try:
                 linkage_manager.unregister_module(self)
-                print("[TRACK_MAP] 已自 linkage_manager 解除註冊")
+                logger.info("[TRACK_MAP] 已自 linkage_manager 解除註冊")
             finally:
                 self._linkage_registered = False
 
@@ -1627,22 +1686,31 @@ class TrackMapWidget(QWidget):
 
         # 日誌輸出
         if skipped and distance_entries:
-            print(f"[TRACK_MAP] 索引建立完成: {len(distance_entries)} 筆距離資料，忽略 {skipped} 筆缺失或不合法資料")
+            logger.info(
+                "[TRACK_MAP] 索引建立完成: %d 筆距離資料，忽略 %d 筆缺失或不合法資料",
+                len(distance_entries),
+                skipped,
+            )
         elif not distance_entries:
-            print("[TRACK_MAP] ⚠️ 無法建立距離索引：缺少 distance 資料")
+            logger.warning("[TRACK_MAP] 無法建立距離索引：缺少 distance 資料")
         else:
-            print(f"[TRACK_MAP] 建立距離索引: {len(distance_entries)} 筆有效資料")
+            logger.info("[TRACK_MAP] 建立距離索引: %d 筆有效資料", len(distance_entries))
             
         if self._time_available:
-            print(f"[TRACK_MAP] ✅ 時間軸支援: 建立 {len(time_entries)} 筆時間索引")
-            print(f"[TRACK_MAP]    時間範圍: {self._time_values[0]:.2f}s ~ {self._time_values[-1]:.2f}s")
+            logger.info("[TRACK_MAP] 時間軸支援: 建立 %d 筆時間索引", len(time_entries))
+            logger.debug(
+                "[TRACK_MAP] 時間範圍: %.2fs ~ %.2fs",
+                self._time_values[0],
+                self._time_values[-1],
+            )
         else:
-            print("[TRACK_MAP] ⚠️ 時間軸不可用：缺少 time_seconds 資料")
+            logger.warning("[TRACK_MAP] 時間軸不可用：缺少 time_seconds 資料")
             
         if distance_entries and self._distance_scale != 1.0:
-            print(
-                "[TRACK_MAP] ⚙️ 自動距離縮放：原始最大距離 "
-                f"{self._raw_distance_range[1]:.2f} → 正規化 {self._distance_values[-1]:.2f} 公尺"
+            logger.info(
+                "[TRACK_MAP] 自動距離縮放：原始最大距離 %.2f → 正規化 %.2f 公尺",
+                self._raw_distance_range[1],
+                self._distance_values[-1],
             )
 
     def _extract_distance(self, record: Dict[str, Any]) -> Optional[float]:
@@ -1970,7 +2038,7 @@ class TrackMapWidget(QWidget):
                 label.hide()
                 label.deleteLater()
                 self.pinned_tooltips.remove(tooltip_info)
-                print(f"[TRACK_MAP] 已移除標籤: {tooltip_info['corner_key']}")
+                logger.info("[TRACK_MAP] 已移除標籤: %s", tooltip_info['corner_key'])
                 break
 
 

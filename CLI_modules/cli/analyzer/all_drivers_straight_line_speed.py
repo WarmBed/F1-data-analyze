@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """All drivers straight-line speed analysis module."""
 
 from __future__ import annotations
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import math
 import warnings
@@ -2699,6 +2708,14 @@ class AllDriversStraightLineSpeedAnalysis:
             
             # 計算統計值
             import numpy as np
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             return {
                 "avg_speed_kmh": round(float(speeds.mean()), 3),
                 "min_speed_kmh": round(float(speeds.min()), 3),

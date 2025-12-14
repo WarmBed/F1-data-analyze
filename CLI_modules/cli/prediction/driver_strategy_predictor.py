@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F87 - Driver Strategy Predictor (車手策略預測器)
 
@@ -6,7 +7,7 @@ F87 - Driver Strategy Predictor (車手策略預測器)
     根據車手的 Tire Saving 行為模式，個人化調整進站圈數預測
     
 核心邏輯:
-    個人化進站圈數 = 大數據預估圈數 × (1 + Tire Saving Adjustment Factor)
+    個人化進站圈數 = 大數據預估圈數 x (1 + Tire Saving Adjustment Factor)
     
 補償係數對照表:
     - NONE (0-20):     +0%      維持原始預估
@@ -27,6 +28,14 @@ F87 - Driver Strategy Predictor (車手策略預測器)
 作者: F1T Team
 日期: 2025-12-05
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

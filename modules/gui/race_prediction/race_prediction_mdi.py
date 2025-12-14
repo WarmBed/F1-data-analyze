@@ -18,7 +18,11 @@ from PyQt5.QtWidgets import QGroupBox, QPushButton, QLabel, QHBoxLayout, QMessag
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 
 from core.gui_i18n import tr
+from core.logger import get_logger
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
+
+
+logger = get_logger(component="race_prediction_mdi")
 
 
 class RacePredictionApiWorker(QThread):
@@ -51,6 +55,11 @@ class RacePredictionApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RACE_PRED_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -67,9 +76,14 @@ class RacePredictionApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[RACE_PRED_API_WORKER] Calling API: {endpoint}")
-            print(f"[RACE_PRED_API_WORKER] Parameters: {query_params}")
+            logger.info("[RACE_PRED_API_WORKER] Calling API: %s", endpoint)
+            logger.debug("[RACE_PRED_API_WORKER] Parameters: %s", query_params)
             
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[RACE_PRED_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             # 發送 POST 請求
             start_ts = time.perf_counter()
             response = requests.post(
@@ -78,6 +92,12 @@ class RacePredictionApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RACE_PRED_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             
             # 檢查 HTTP 狀態
@@ -110,21 +130,30 @@ class RacePredictionApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[RACE_PRED_API_WORKER] API call successful")
-            print(f"[RACE_PRED_API_WORKER] Latency: {meta['latency_ms']}ms")
-            print(f"[RACE_PRED_API_WORKER] Source: {meta['source']}")
+            logger.info("[RACE_PRED_API_WORKER] API call successful")
+            logger.info("[RACE_PRED_API_WORKER] Latency: %sms", meta["latency_ms"])
+            logger.debug("[RACE_PRED_API_WORKER] Source: %s", meta["source"])
             
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[RACE_PRED_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90)
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
             error_msg = f"API request failed: {str(exc)}"
-            print(f"[RACE_PRED_API_WORKER] {error_msg}")
+            logger.error("[RACE_PRED_API_WORKER] %s", error_msg)
             import traceback
             traceback.print_exc()
-            self.failure.emit(error_msg)
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 # 導入資料載入器和元件
@@ -161,7 +190,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("race_prediction", config)
             cls._REGISTERED = True
-            print("[RACE_PRED_MDI] Module type registered")
+            logger.debug("[RACE_PRED_MDI] Module type registered")
     
     def __init__(self, parent=None):
         """
@@ -170,7 +199,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[RACE_PRED_MDI] Initializing...")
+        logger.info("[RACE_PRED_MDI] Initializing...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -189,7 +218,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         # API Worker 引用（防止 GC）
         self.api_worker = None
         
-        print(f"[RACE_PRED_MDI] Base initialization complete")
+        logger.debug("[RACE_PRED_MDI] Base initialization complete")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -203,56 +232,54 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print(f"[RACE_PRED_MDI] Starting module initialization...")
+            logger.info("[RACE_PRED_MDI] Starting module initialization...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[RACE_PRED_MDI] Missing current_year")
+                logger.error("[RACE_PRED_MDI] Missing current_year")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[RACE_PRED_MDI] Missing current_race")
+                logger.error("[RACE_PRED_MDI] Missing current_race")
                 return False
             
             # 設置參數
             self.year = str(self.current_year)
             self.race = self.current_race
             
-            print(f"[RACE_PRED_MDI] Parameters: {self.year} {self.race}")
+            logger.info("[RACE_PRED_MDI] Parameters: %s %s", self.year, self.race)
             
             # 調用基類初始化
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print(f"[RACE_PRED_MDI] Base initialization failed")
+                logger.error("[RACE_PRED_MDI] Base initialization failed")
                 return False
             
             # 驗證組件
             if not self.chart_widget:
-                print(f"[RACE_PRED_MDI] chart_widget not created")
+                logger.error("[RACE_PRED_MDI] chart_widget not created")
                 return False
             
             if not self.data_manager:
-                print(f"[RACE_PRED_MDI] data_manager not created")
+                logger.error("[RACE_PRED_MDI] data_manager not created")
                 return False
             
-            print(f"[RACE_PRED_MDI] Components created successfully")
+            logger.info("[RACE_PRED_MDI] Components created successfully")
             
             # 載入初始數據
             self.load_initial_data()
             
-            print(f"[RACE_PRED_MDI] Module initialization complete")
+            logger.info("[RACE_PRED_MDI] Module initialization complete")
             return True
             
         except Exception as e:
-            print(f"[RACE_PRED_MDI] Initialization failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_MDI] Initialization failed", exc_info=e)
             return False
     
     # ========== 基類抽象方法實作 ==========
     
     def create_data_manager(self) -> RacePredictionDataLoader:
         """創建資料載入器"""
-        print("[RACE_PRED_MDI] Creating data loader...")
+        logger.debug("[RACE_PRED_MDI] Creating data loader...")
         loader = RacePredictionDataLoader(
             year=self.year,
             race=self.race,
@@ -264,19 +291,19 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("[RACE_PRED_MDI] Data loader created")
+        logger.debug("[RACE_PRED_MDI] Data loader created")
         return loader
     
     def create_chart_widget(self) -> RacePredictionWidget:
         """創建表格元件"""
-        print("[RACE_PRED_MDI] Creating widget...")
+        logger.debug("[RACE_PRED_MDI] Creating widget...")
         widget = RacePredictionWidget(parent=None)
-        print("[RACE_PRED_MDI] Widget created")
+        logger.debug("[RACE_PRED_MDI] Widget created")
         return widget
     
     def _setup_control_panel(self):
         """設置控制面板"""
-        print("[RACE_PRED_MDI] Setting up control panel...")
+        logger.debug("[RACE_PRED_MDI] Setting up control panel...")
         
         # 創建控制面板容器
         control_panel = QGroupBox(tr("control_panel", "Control Panel"))
@@ -299,7 +326,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         if hasattr(self, 'main_layout'):
             self.main_layout.addWidget(control_panel)
         
-        print("[RACE_PRED_MDI] Control panel setup complete")
+        logger.debug("[RACE_PRED_MDI] Control panel setup complete")
     
     # ========== 數據流處理 ==========
     
@@ -307,7 +334,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
     def _on_data_loaded(self, data: Dict[str, Any]):
         """資料載入完成回調"""
         try:
-            print("[RACE_PRED_MDI] Data loaded, processing...")
+            logger.info("[RACE_PRED_MDI] Data loaded, processing...")
             
             # 驗證資料結構
             if not isinstance(data, dict):
@@ -328,7 +355,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             
             # 更新 Widget
             predictions = data["predictions"]
-            print(f"[RACE_PRED_MDI] Updating display ({len(predictions)} drivers)...")
+            logger.info("[RACE_PRED_MDI] Updating display (%s drivers)...", len(predictions))
             self.chart_widget.update_display(data)
             
             # 更新狀態
@@ -337,25 +364,23 @@ class RacePredictionMDI(UniversalAnalysisMDI):
                     tr("data_loaded_status", "Loaded {count} drivers").format(count=len(predictions))
                 )
             
-            print("[RACE_PRED_MDI] Data processing complete")
+            logger.info("[RACE_PRED_MDI] Data processing complete")
             
         except Exception as e:
-            print(f"[RACE_PRED_MDI] Data processing failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_MDI] Data processing failed", exc_info=e)
             self._show_error(tr("data_processing_error", "Data processing failed"), str(e))
     
     @pyqtSlot(str)
     def _on_load_error(self, error_msg: str):
         """資料載入錯誤回調"""
-        print(f"[RACE_PRED_MDI] Load error: {error_msg}")
+        logger.error("[RACE_PRED_MDI] Load error: %s", error_msg)
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('error', 'Error')}: {error_msg}")
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):
         """狀態變更回調"""
-        print(f"[RACE_PRED_MDI] Status: {status}")
+        logger.info("[RACE_PRED_MDI] Status: %s", status)
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(status)
     
@@ -363,7 +388,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
     
     def _on_reload_clicked(self):
         """處理重新載入按鈕點擊"""
-        print("[RACE_PRED_MDI] Reloading data...")
+        logger.info("[RACE_PRED_MDI] Reloading data...")
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("reloading", "Reloading..."))
         
@@ -383,8 +408,8 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         1. API 調用 (https://api.f1telemetrystationpro.org)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
-        print("[RACE_PRED_MDI] Starting data load...")
-        print(f"[RACE_PRED_MDI] Parameters: {self.year} {self.race}")
+        logger.info("[RACE_PRED_MDI] Starting data load...")
+        logger.info("[RACE_PRED_MDI] Parameters: %s %s", self.year, self.race)
         
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
@@ -397,7 +422,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             "force_refresh": False
         }
         
-        print("[RACE_PRED_MDI] Creating API Worker...")
+        logger.debug("[RACE_PRED_MDI] Creating API Worker...")
         self.api_worker = RacePredictionApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -410,13 +435,13 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[RACE_PRED_MDI] Starting API request...")
+        logger.info("[RACE_PRED_MDI] Starting API request...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[RACE_PRED_MDI] API progress: {progress}%")
+        logger.debug("[RACE_PRED_MDI] API progress: %s%%", progress)
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('api_loading', 'API Loading')}... {progress}%")
     
@@ -424,14 +449,14 @@ class RacePredictionMDI(UniversalAnalysisMDI):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[RACE_PRED_MDI] API call successful")
+            logger.info("[RACE_PRED_MDI] API call successful")
             
             # 提取數據和元數據
             data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[RACE_PRED_MDI] Source: {meta.get('source')}")
-            print(f"[RACE_PRED_MDI] Latency: {meta.get('latency_ms')}ms")
+            logger.debug("[RACE_PRED_MDI] Source: %s", meta.get('source'))
+            logger.info("[RACE_PRED_MDI] Latency: %sms", meta.get('latency_ms'))
             
             # 使用 DataLoader 轉換數據
             if hasattr(self, 'data_manager') and self.data_manager:
@@ -454,15 +479,13 @@ class RacePredictionMDI(UniversalAnalysisMDI):
                 )
             
         except Exception as e:
-            print(f"[RACE_PRED_MDI] API data processing failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_MDI] API data processing failed", exc_info=e)
             self._on_api_failure(str(e))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - API-ONLY 模式，不使用本地 JSON 備援"""
-        print(f"[RACE_PRED_MDI] API call failed: {error_msg}")
+        logger.error("[RACE_PRED_MDI] API call failed: %s", error_msg)
         
         # API-ONLY 模式：不嘗試本地 JSON 備援
         # 根據專案政策，GUI 只能通過 API 獲取數據
@@ -481,12 +504,12 @@ class RacePredictionMDI(UniversalAnalysisMDI):
                 "Race prediction data can only be loaded via API. Please ensure API service is available.\n\nError:\n{error}"
             ).format(error=error_msg)
         )
-        print("[RACE_PRED_MDI] All fallback options exhausted")
+        logger.error("[RACE_PRED_MDI] All fallback options exhausted")
     
     def update_analysis_parameters(self, year: str, race: str) -> bool:
         """更新分析參數並重新載入資料"""
         try:
-            print(f"[RACE_PRED_MDI] Updating parameters: {year} {race}")
+            logger.info("[RACE_PRED_MDI] Updating parameters: %s %s", year, race)
             
             self.current_year = str(year)
             self.current_race = race
@@ -497,42 +520,43 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             if hasattr(self, 'data_manager') and self.data_manager:
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
-                print("[RACE_PRED_MDI] DataManager parameters synced")
+                logger.debug("[RACE_PRED_MDI] DataManager parameters synced")
             elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
-                print("[RACE_PRED_MDI] DataLoader parameters synced")
+                logger.debug("[RACE_PRED_MDI] DataLoader parameters synced")
             
             # 重新載入
-            print("[RACE_PRED_MDI] Triggering data reload...")
+            logger.info("[RACE_PRED_MDI] Triggering data reload...")
             self.load_initial_data()
             return True
             
         except Exception as e:
-            print(f"[RACE_PRED_MDI] Parameter update failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_MDI] Parameter update failed", exc_info=e)
             return False
     
     def update_parameters(self, year: int = None, race: str = None, session: str = None, **kwargs) -> bool:
         """覆寫通用參數更新邏輯"""
         try:
-            print(f"[RACE_PRED_MDI] update_parameters called")
-            print(f"   Received: year={year}, race={race}, session={session}")
-            print(f"   Current: year={self.year if hasattr(self, 'year') else 'N/A'}, "
-                  f"race={self.race if hasattr(self, 'race') else 'N/A'}")
+            logger.debug("[RACE_PRED_MDI] update_parameters called")
+            logger.debug("   Received: year=%s, race=%s, session=%s", year, race, session)
+            logger.debug(
+                "   Current: year=%s, race=%s",
+                self.year if hasattr(self, 'year') else 'N/A',
+                self.race if hasattr(self, 'race') else 'N/A',
+            )
             
             target_year = year if year is not None else (self.year or getattr(self, 'current_year', None))
             target_race = race if race is not None else (self.race or getattr(self, 'current_race', None))
             
             if not all([target_year, target_race]):
-                print(f"[RACE_PRED_MDI] Missing required parameters")
+                logger.error("[RACE_PRED_MDI] Missing required parameters")
                 return False
             
             normalized_year = str(target_year)
             normalized_race = target_race
             
-            print(f"[RACE_PRED_MDI] Normalized: year={normalized_year}, race={normalized_race}")
+            logger.debug("[RACE_PRED_MDI] Normalized: year=%s, race=%s", normalized_year, normalized_race)
             
             self.current_year = normalized_year
             self.current_race = normalized_race
@@ -544,13 +568,11 @@ class RacePredictionMDI(UniversalAnalysisMDI):
             self.parameters_updated.emit(params_payload)
             self.update_window_title()
             
-            print(f"[RACE_PRED_MDI] Calling update_analysis_parameters...")
+            logger.info("[RACE_PRED_MDI] Calling update_analysis_parameters...")
             return self.update_analysis_parameters(self.current_year, self.current_race)
             
         except Exception as exc:
-            print(f"[RACE_PRED_MDI] update_parameters failed: {exc}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[RACE_PRED_MDI] update_parameters failed", exc_info=exc)
             return False
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
@@ -576,9 +598,9 @@ if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
     
-    print("=" * 60)
-    print("Race Prediction MDI - Standalone Test")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Race Prediction MDI - Standalone Test")
+    logger.info("=" * 60)
     
     app = QApplication(sys.argv)
     
@@ -591,7 +613,7 @@ if __name__ == "__main__":
     
     # 初始化模組
     if mdi.initialize_module():
-        print("\nModule initialization successful")
+        logger.info("\nModule initialization successful")
         
         # 獲取主要元件
         widget = mdi.get_widget()
@@ -602,9 +624,9 @@ if __name__ == "__main__":
         if widget and hasattr(widget, 'show'):
             widget.show()
         
-        print("Test window displayed")
+        logger.info("Test window displayed")
     else:
-        print("\nModule initialization failed")
+        logger.error("\nModule initialization failed")
         sys.exit(1)
     
     sys.exit(app.exec_())

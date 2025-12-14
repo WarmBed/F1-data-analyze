@@ -15,6 +15,14 @@ All Drivers Overtaking Visualization Analysis Module (Function 16.3)
 日期: 2025-08-05
 """
 
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import json
 import os
 import pandas as pd
@@ -114,6 +122,14 @@ def run_all_drivers_overtaking_visualization_analysis(data_loader, dynamic_team_
     except Exception as e:
         print(f"[ERROR] 全部車手超車視覺化分析執行失敗: {e}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return False
 

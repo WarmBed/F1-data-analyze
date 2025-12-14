@@ -23,6 +23,9 @@ from typing import List, Dict, Optional, Any
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapSectorComparisonWidget(QWidget):
     """
@@ -84,7 +87,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         # ✅ 參考 lap_box_plot_analysis: 設置最小尺寸
         self.setMinimumSize(200, 100)
         
-        print("[SECTOR_COMPARISON] 圖表元件初始化完成 (QPainter 版本)")
+        logger.debug("[SECTOR_COMPARISON] 圖表元件初始化完成 (QPainter 版本)")
     
     def update_data(self, data: Dict[str, Any]):
         """
@@ -100,7 +103,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         """
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [SECTOR_COMPARISON] 無效的數據格式")
+                logger.warning("[SECTOR_COMPARISON] 無效的數據格式")
                 return
             
             self.current_data = data
@@ -119,18 +122,18 @@ class IdealLapSectorComparisonWidget(QWidget):
             self._ensure_palette_for_data(data)
             
             if not self.comparison_data:
-                print("[WARNING] [SECTOR_COMPARISON] 沒有對比數據")
+                logger.warning("[SECTOR_COMPARISON] 沒有對比數據")
                 self.update()  # ✅ 觸發 paintEvent
                 return
             
             # 計算 X 軸範圍（時間軸）
             self._calculate_x_range()
             
-            print(f"[SECTOR_COMPARISON] 更新數據: {len(self.comparison_data)} 位車手")
+            logger.debug(f"[SECTOR_COMPARISON] 更新數據: {len(self.comparison_data)} 位車手")
             self.update()  # ✅ 參考 lap_box_plot_analysis: 觸發重繪
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON] 更新數據失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -445,7 +448,7 @@ class IdealLapSectorComparisonWidget(QWidget):
             self._draw_delta_marker(painter, driver_data, y_center, time_to_x)
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON] 繪製車手棒狀圖失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON] 繪製車手棒狀圖失敗: {e}")
     
     def _draw_stacked_bar(
         self,
@@ -521,7 +524,7 @@ class IdealLapSectorComparisonWidget(QWidget):
             painter.drawText(int(marker_x), int(y_center + 4), marker_text)
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON] 繪製時間差標記失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON] 繪製時間差標記失敗: {e}")
     
     def _draw_no_data_message(self, painter: QPainter):
         """✅ 參考 lap_box_plot_analysis: 繪製無數據訊息"""
@@ -651,7 +654,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         if not self.comparison_data:
             return
         
-        print(f"[SECTOR_COMPARISON] 依據 {sort_key} 排序")
+        logger.debug(f"[SECTOR_COMPARISON] 依據 {sort_key} 排序")
         
         # 定義排序鍵提取函數
         def get_ideal_time(x):
@@ -695,7 +698,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         """
         try:
             if not self.current_data or not self.comparison_data:
-                print("[WARNING] [SECTOR_COMPARISON] 無數據可匯出")
+                logger.warning("[SECTOR_COMPARISON] 無數據可匯出")
                 return False
             
             # 創建高解析度圖像
@@ -715,15 +718,16 @@ class IdealLapSectorComparisonWidget(QWidget):
             success = image.save(filepath)
             
             if success:
-                print(f"[SECTOR_COMPARISON] 圖表已匯出: {filepath}")
+                logger.debug(f"[SECTOR_COMPARISON] 圖表已匯出: {filepath}")
             else:
-                print(f"[ERROR] [SECTOR_COMPARISON] 圖表匯出失敗")
+                logger.error(f"[SECTOR_COMPARISON] 圖表匯出失敗")
             
             return success
             
         except Exception as e:
-            print(f"[ERROR] [SECTOR_COMPARISON] 匯出圖表失敗: {e}")
+            logger.error(f"[SECTOR_COMPARISON] 匯出圖表失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -735,7 +739,7 @@ class IdealLapSectorComparisonWidget(QWidget):
         self.hover_driver = None
         self.hover_position = None
         self.update()  # ✅ 觸發 paintEvent 重繪
-        print("[SECTOR_COMPARISON] 圖表已清空")
+        logger.debug("[SECTOR_COMPARISON] 圖表已清空")
     
     def get_current_data(self) -> Optional[Dict]:
         """✅ 參考 lap_box_plot_analysis: 獲取當前數據"""

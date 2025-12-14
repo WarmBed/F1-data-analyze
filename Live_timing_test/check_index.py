@@ -2,6 +2,10 @@
 檢查索引建立的正確性
 """
 import sys
+from core.logger import get_logger
+
+logger = get_logger("live_timing_test.check_index", component="gui")
+
 sys.path.insert(0, '.')
 
 if sys.platform == 'win32':
@@ -16,7 +20,7 @@ data_source = LiveF1DataSource(
     session="2025-04-06_Race"
 )
 
-print("載入資料...")
+logger.info("載入資料...")
 data_source.load_all_data()
 
 processor = LivePositionDataProcessor(data_source)
@@ -29,26 +33,32 @@ processor._build_timing_index(timing_data)
 timing_timestamps = processor._timing_timestamps
 timing_index = processor._timing_index_full
 
-print(f"\nTiming 索引大小: {len(timing_timestamps)}")
-print(f"\n檢查前5個時間戳的車手 #1 的狀態:")
+logger.info("Timing 索引大小: %s", len(timing_timestamps))
+logger.info("檢查前5個時間戳的車手 #1 的狀態:")
 
 for i, ts in enumerate(timing_timestamps[:5]):
     driver_1_state = timing_index[ts].get('1', {})
     lap = driver_1_state.get('lap')
     position = driver_1_state.get('position')
-    print(f"  [{i}] {ts}: 圈數={lap}, 排名={position}")
+    logger.info("  [%s] %s: 圈數=%s, 排名=%s", i, ts, lap, position)
 
-print(f"\n檢查中段5個時間戳的車手 #1 的狀態:")
+logger.info("檢查中段5個時間戳的車手 #1 的狀態:")
 mid = len(timing_timestamps) // 2
 for i, ts in enumerate(timing_timestamps[mid:mid+5]):
     driver_1_state = timing_index[ts].get('1', {})
     lap = driver_1_state.get('lap')
     position = driver_1_state.get('position')
-    print(f"  [{mid+i}] {ts}: 圈數={lap}, 排名={position}")
+    logger.info("  [%s] %s: 圈數=%s, 排名=%s", mid + i, ts, lap, position)
 
-print(f"\n檢查最後5個時間戳的車手 #1 的狀態:")
+logger.info("檢查最後5個時間戳的車手 #1 的狀態:")
 for i, ts in enumerate(timing_timestamps[-5:]):
     driver_1_state = timing_index[ts].get('1', {})
     lap = driver_1_state.get('lap')
     position = driver_1_state.get('position')
-    print(f"  [{len(timing_timestamps)-5+i}] {ts}: 圈數={lap}, 排名={position}")
+    logger.info(
+        "  [%s] %s: 圈數=%s, 排名=%s",
+        len(timing_timestamps) - 5 + i,
+        ts,
+        lap,
+        position,
+    )

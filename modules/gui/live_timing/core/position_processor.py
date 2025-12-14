@@ -13,6 +13,9 @@ import re
 import copy
 from typing import List, Dict, Any, Optional, Tuple, Union
 
+from core.logger import get_logger
+from .local_source import NON_RACE_CAR_NUMBERS
+
 # CarData.z Channels 定義
 CAR_DATA_CHANNELS = {
     "0": "rpm",
@@ -22,6 +25,9 @@ CAR_DATA_CHANNELS = {
     "5": "brake",
     "45": "drs"
 }
+
+
+logger = get_logger("live_timing.position_processor", component="gui")
 
 class LivePositionDataProcessor:
     """
@@ -90,21 +96,21 @@ class LivePositionDataProcessor:
             if progress_callback:
                 progress_callback(percent, msg)
         
-        print("\n")
-        print("=" * 70)
-        print("[PROCESSOR] 開始數據處理 (展開內層數據模式)...")
-        print("=" * 70)
+        logger.info("")
+        logger.info("=" * 70)
+        logger.info("[PROCESSOR] 開始數據處理 (展開內層數據模式)...")
+        logger.info("=" * 70)
 
         position_data = self.data_source.get_position_data()
         timing_data = self.data_source.get_timing_data()
         cardata = self.data_source.get_cardata()
         
-        print(f"[PROCESSOR] Position 外層記錄: {len(position_data)}")
-        print(f"[PROCESSOR] Timing 記錄: {len(timing_data)}")
-        print(f"[PROCESSOR] CarData 外層記錄: {len(cardata)}")
+        logger.info("[PROCESSOR] Position 外層記錄: %s", len(position_data))
+        logger.info("[PROCESSOR] Timing 記錄: %s", len(timing_data))
+        logger.info("[PROCESSOR] CarData 外層記錄: %s", len(cardata))
 
         if not position_data:
-            print("[PROCESSOR] Position 數據為空！")
+            logger.warning("[PROCESSOR] Position 數據為空！")
             return
 
         _report(0, "Building timing index...")
@@ -121,14 +127,14 @@ class LivePositionDataProcessor:
 
         # 展開 Position 數據
         expanded_positions = self._expand_position_data(position_data)
-        print(f"[PROCESSOR] Position 展開後: {len(expanded_positions)} 個時間點")
+        logger.info("[PROCESSOR] Position 展開後: %s 個時間點", len(expanded_positions))
 
         aligned_count = 0
         skipped_no_lap = 0
         total_positions = len(expanded_positions)
         
-        print(f"[PROCESSOR] 過濾並對齊資料...")
-        print(f"[PROCESSOR] 策略: 只保留至少有一位車手有圈數的時間點")
+        logger.info("[PROCESSOR] 過濾並對齊資料...")
+        logger.info("[PROCESSOR] 策略: 只保留至少有一位車手有圈數的時間點")
         
         _report(25, f"Aligning {total_positions} snapshots...")
         last_report_percent = 25
@@ -172,6 +178,10 @@ class LivePositionDataProcessor:
             }
 
             for driver_num, driver_pos in entries.items():
+                # 排除 Safety Car / Medical Car (241, 242, 243)
+                if driver_num in NON_RACE_CAR_NUMBERS:
+                    continue
+                
                 driver_info = {
                     'driver_number': driver_num,
                     'status': driver_pos.get('Status', 'Unknown'),
@@ -195,7 +205,11 @@ class LivePositionDataProcessor:
                         # 調試：檢查 27 號車的 status
                         if driver_num == '27' and 'status' in timing_state:
                             if timing_state['status'] in ('STOPPED', 'RETIRED'):
-                                print(f"[PROCESSOR_DEBUG] Snapshot {timestamp}: Driver 27 timing_state has status={timing_state['status']}")
+                                logger.debug(
+                                    "[PROCESSOR_DEBUG] Snapshot %s: Driver 27 timing_state has status=%s",
+                                    timestamp,
+                                    timing_state['status'],
+                                )
                         driver_info.update(timing_state)
 
                 # 使用展開的 CarData（包含所有遙測數據）
@@ -213,17 +227,25 @@ class LivePositionDataProcessor:
 
         _report(90, "Calculating rankings...")
         
-        print(f"[PROCESSOR] 對齊完成！")
-        print(f"[PROCESSOR]    保留快照: {aligned_count} 個")
-        print(f"[PROCESSOR]    跳過記錄: {skipped_no_lap} 個 (無圈數資料)")
+        logger.info("[PROCESSOR] 對齊完成！")
+        logger.info("[PROCESSOR]    保留快照: %s 個", aligned_count)
+        logger.info("[PROCESSOR]    跳過記錄: %s 個 (無圈數資料)", skipped_no_lap)
         
         if self._aligned_snapshots:
             first_time = self._aligned_snapshots[0]['race_time']
             last_time = self._aligned_snapshots[-1]['race_time']
             duration = self._aligned_snapshots[-1]['race_time_seconds'] - self._aligned_snapshots[0]['race_time_seconds']
             freq = aligned_count / duration if duration > 0 else 0
-            print(f"[PROCESSOR]    時間範圍: {first_time} ~ {last_time}")
-            print(f"[PROCESSOR]    更新頻率: {freq:.2f} Hz (每秒 {freq:.1f} 次更新)")
+            logger.info(
+                "[PROCESSOR]    時間範圍: %s ~ %s",
+                first_time,
+                last_time,
+            )
+            logger.info(
+                "[PROCESSOR]    更新頻率: %.2f Hz (每秒 %.1f 次更新)",
+                freq,
+                freq,
+            )
         
         self._calculate_rankings_and_gaps()
         
@@ -292,7 +314,7 @@ class LivePositionDataProcessor:
         """
         track_status_data = self.data_source.get_track_status()
         if not track_status_data:
-            print(f"[PROCESSOR] No track_status_data available")
+            logger.warning("[PROCESSOR] No track_status_data available")
             return "1"  # 預設綠旗
         
         target_seconds = self._time_str_to_seconds(timestamp)
@@ -302,9 +324,9 @@ class LivePositionDataProcessor:
         # Debug: 顯示資料內容 (只在第一次)
         if not hasattr(self, '_track_status_debug_shown'):
             self._track_status_debug_shown = True
-            print(f"[PROCESSOR] TrackStatus records count: {len(track_status_data)}")
+            logger.debug("[PROCESSOR] TrackStatus records count: %s", len(track_status_data))
             for i, rec in enumerate(track_status_data[:5]):
-                print(f"[PROCESSOR] TrackStatus[{i}]: {rec}")
+                logger.debug("[PROCESSOR] TrackStatus[%s]: %s", i, rec)
         
         # 找到最接近的狀態（小於等於目標時間）
         current_status = "1"
@@ -405,7 +427,7 @@ class LivePositionDataProcessor:
         """建立展開的 CarData 索引，使用內層 UTC 時間戳"""
         from datetime import datetime
         
-        print(f"[PROCESSOR] 展開 CarData 內層數據...")
+        logger.info("[PROCESSOR] 展開 CarData 內層數據...")
         
         expanded_entries = []
         base_utc = None
@@ -464,6 +486,9 @@ class LivePositionDataProcessor:
         expanded_entries.sort(key=lambda x: x.get('race_time_seconds', 0))
         
         # 建立累積狀態索引
+        # ⚠️ 重要：對於 CarData，我們不應該累積狀態
+        # DRS/Speed/RPM 等遙測數據應該只反映當前時間點的值
+        # 如果某個 Channel 沒有更新，應該清空舊值，而不是保留
         latest_driver_state = {}
         self._expanded_cardata_index = {}
         self._expanded_cardata_timestamps = []
@@ -472,25 +497,38 @@ class LivePositionDataProcessor:
             timestamp = entry['timestamp']
             cars = entry['cars']
             
+            # 為這個時間點創建新的狀態（不累積）
+            current_state = {}
+            
             for driver_num, car_data in cars.items():
                 channels = car_data.get('Channels', {})
                 
-                if driver_num not in latest_driver_state:
-                    latest_driver_state[driver_num] = {}
+                if driver_num not in current_state:
+                    current_state[driver_num] = {}
                 
-                # 解析所有 Channels
+                # 只記錄當前時間點有值的 Channels
                 for channel_id, field_name in CAR_DATA_CHANNELS.items():
-                    value = channels.get(channel_id) or channels.get(int(channel_id))
-                    if value is not None:
-                        latest_driver_state[driver_num][field_name] = value
+                    # 修復：避免 'or' 運算符把 0 當作 False
+                    # 先嘗試字串 key，再嘗試整數 key
+                    value = channels.get(channel_id)
+                    if value is None:
+                        value = channels.get(int(channel_id))
+                    
+                    # 記錄非空值（包括 0）
+                    if value is not None and value != '':
+                        current_state[driver_num][field_name] = value
+                    # 如果沒有值，不記錄（讓它保持空白）
             
-            self._expanded_cardata_index[timestamp] = copy.deepcopy(latest_driver_state)
+            # 更新 latest_driver_state 用於下次查詢（但每次都是新的快照）
+            latest_driver_state = current_state
+            
+            self._expanded_cardata_index[timestamp] = copy.deepcopy(current_state)
             self._expanded_cardata_timestamps.append(timestamp)
         
-        print(f"[PROCESSOR] CarData 展開完成: {len(expanded_entries)} 個時間點")
+        logger.info("[PROCESSOR] CarData 展開完成: %s 個時間點", len(expanded_entries))
         if self._expanded_cardata_timestamps:
-            print(f"  第一個: {self._expanded_cardata_timestamps[0]}")
-            print(f"  最後一個: {self._expanded_cardata_timestamps[-1]}")
+            logger.debug("  第一個: %s", self._expanded_cardata_timestamps[0])
+            logger.debug("  最後一個: %s", self._expanded_cardata_timestamps[-1])
     
     def _find_nearest_cardata(self, timestamp: str, driver_num: str) -> Optional[Dict]:
         """查找最接近的 CarData 狀態"""
@@ -511,7 +549,7 @@ class LivePositionDataProcessor:
     # ===========================================
     def _build_timing_index(self, timing_data: List[Dict[str, Any]]):
         """建立 Timing 數據的累積狀態索引"""
-        print(f"[PROCESSOR] _build_timing_index 開始, 輸入記錄數: {len(timing_data)}")
+        logger.info("[PROCESSOR] _build_timing_index 開始, 輸入記錄數: %s", len(timing_data))
         sorted_timing = sorted(timing_data, key=lambda item: item.get('timestamp', ''))
         latest_driver_state: Dict[str, Dict[str, Any]] = {}
         index: Dict[str, Dict[str, Any]] = {}
@@ -534,10 +572,10 @@ class LivePositionDataProcessor:
                     driver_27_records += 1
                     if driver_data.get('Stopped') is True:
                         driver_27_stopped_count += 1
-                        print(f"[PROCESSOR_DEBUG] HUL Stopped=True at {timestamp}")
+                        logger.debug("[PROCESSOR_DEBUG] HUL Stopped=True at %s", timestamp)
                     if driver_data.get('Retired') is True:
                         driver_27_retired_count += 1
-                        print(f"[PROCESSOR_DEBUG] HUL Retired=True at {timestamp}")
+                        logger.debug("[PROCESSOR_DEBUG] HUL Retired=True at %s", timestamp)
                 lap_num = driver_data.get('NumberOfLaps')
                 last_lap = driver_data.get('LastLapTime', {})
                 best_lap = driver_data.get('BestLapTime', {})
@@ -603,13 +641,13 @@ class LivePositionDataProcessor:
                 if retired is True:
                     latest_driver_state[driver_num]['retired'] = True
                     latest_driver_state[driver_num]['status'] = 'RETIRED'
-                    print(f"[PROCESSOR] Driver {driver_num} RETIRED at {timestamp}")
+                    logger.info("[PROCESSOR] Driver %s RETIRED at %s", driver_num, timestamp)
                 if stopped is True:
                     latest_driver_state[driver_num]['stopped'] = True
                     # 只有在非 PIT 情況下才設為 STOPPED (PIT 時也會暫時 stopped)
                     if not in_pit:
                         latest_driver_state[driver_num]['status'] = 'STOPPED'
-                        print(f"[PROCESSOR] Driver {driver_num} STOPPED at {timestamp}")
+                        logger.info("[PROCESSOR] Driver %s STOPPED at %s", driver_num, timestamp)
 
             if timestamp:
                 index[timestamp] = copy.deepcopy(latest_driver_state)
@@ -618,12 +656,17 @@ class LivePositionDataProcessor:
         self._timing_index_full = index
         
         # 輸出 27 號車統計
-        print(f"[PROCESSOR] Driver 27 (HUL) 統計: 共 {driver_27_records} 筆記錄, Stopped={driver_27_stopped_count}, Retired={driver_27_retired_count}")
+        logger.info(
+            "[PROCESSOR] Driver 27 (HUL) 統計: 共 %s 筆記錄, Stopped=%s, Retired=%s",
+            driver_27_records,
+            driver_27_stopped_count,
+            driver_27_retired_count,
+        )
         
-        print(f"[PROCESSOR] Timing 索引建立完成: {len(self._timing_timestamps)} 個時間戳")
+        logger.info("[PROCESSOR] Timing 索引建立完成: %s 個時間戳", len(self._timing_timestamps))
         if self._timing_timestamps:
-            print(f"  第一個: {self._timing_timestamps[0]}")
-            print(f"  最後一個: {self._timing_timestamps[-1]}")
+            logger.debug("  第一個: %s", self._timing_timestamps[0])
+            logger.debug("  最後一個: %s", self._timing_timestamps[-1])
 
     def _build_cardata_index(self, cardata: List[Dict[str, Any]]):
         """建立 CarData 索引 (舊方法，作為備用)"""
@@ -656,7 +699,7 @@ class LivePositionDataProcessor:
 
     def _calculate_rankings_and_gaps(self):
         """計算排名和差距"""
-        print(f"[PROCESSOR] 計算排名和差距...")
+        logger.info("[PROCESSOR] 計算排名和差距...")
         for snapshot in self._aligned_snapshots:
             drivers = snapshot['drivers']
             
@@ -694,11 +737,11 @@ class LivePositionDataProcessor:
                     interval_seconds = driver_data.get('gap_to_ahead')
                     driver_data['gap_to_ahead_display'] = self._format_interval_label(interval_seconds)
 
-        print(f"[PROCESSOR] 排名計算完成")
+        logger.info("[PROCESSOR] 排名計算完成")
 
     def _process_pit_and_tyre_data(self):
         """處理 PIT 事件和輪胎資訊"""
-        print("[PROCESSOR] 處理 PIT 和輪胎數據...")
+        logger.info("[PROCESSOR] 處理 PIT 和輪胎數據...")
         
         timing_data = self.data_source.get_timing_data()
         timing_app_data = self.data_source.get_timing_app_data()
@@ -850,9 +893,9 @@ class LivePositionDataProcessor:
         )
         
         pit_in_count = len([e for e in pit_events if e['type'] == 'PIT_IN'])
-        print(f"[PROCESSOR] PIT 事件: {pit_in_count} 次進站")
-        print(f"[PROCESSOR] 輪胎策略: {len(driver_stints)} 位車手")
-        print(f"[PROCESSOR] 輪胎狀態索引: {len(self._tyre_timestamps)} 個時間戳")
+        logger.info("[PROCESSOR] PIT 事件: %s 次進站", pit_in_count)
+        logger.info("[PROCESSOR] 輪胎策略: %s 位車手", len(driver_stints))
+        logger.info("[PROCESSOR] 輪胎狀態索引: %s 個時間戳", len(self._tyre_timestamps))
 
     # ===========================================
     # 工具方法

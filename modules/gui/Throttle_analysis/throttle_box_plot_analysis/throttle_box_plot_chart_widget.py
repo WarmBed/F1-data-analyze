@@ -36,6 +36,12 @@ from PyQt5.QtGui import (
 from core.gui_i18n import tr
 from modules.gui.themes import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger(component="gui.throttle_box_plot_chart")
+
 
 class ThrottleBoxPlotChartWidget(QWidget):
     """全油門秒數箱型圖圖表組件 (純 PyQt5 QPainter 實現)"""
@@ -70,13 +76,13 @@ class ThrottleBoxPlotChartWidget(QWidget):
         self.setMouseTracking(True)
         self.setMinimumSize(200, 100)
 
-        print("[THROTTLE_CHART] 圖表組件初始化完成 (QPainter 版本)")
+        logger.info("[THROTTLE_CHART] 圖表組件初始化完成 (QPainter 版本)")
 
     def update_data(self, data: Dict[str, Any]):
         """更新圖表數據並重新繪製"""
         try:
             if not data or not isinstance(data, dict):
-                print("[WARNING] [THROTTLE_CHART] 無效的數據格式")
+                logger.warning("[THROTTLE_CHART] 無效的數據格式")
                 return
 
             self.current_data = data
@@ -85,19 +91,16 @@ class ThrottleBoxPlotChartWidget(QWidget):
             self._ensure_palette_for_data(data)
 
             if not self.driver_throttle_durations:
-                print("[WARNING] [THROTTLE_CHART] 沒有油門數據")
+                logger.warning("[THROTTLE_CHART] 沒有油門數據")
                 self.update()
                 return
 
             self._calculate_y_range()
-            print(f"[THROTTLE_CHART] 更新數據: {len(self.driver_throttle_durations)} 位車手")
+            logger.info("[THROTTLE_CHART] 更新數據: %d 位車手", len(self.driver_throttle_durations))
             self.update()
 
         except Exception as exc:
-            print(f"[ERROR] [THROTTLE_CHART] 更新數據失敗: {exc}")
-            import traceback
-
-            traceback.print_exc()
+            logger.exception("[THROTTLE_CHART] 更新數據失敗")
 
     def _ensure_palette_for_data(self, data: Dict[str, Any]) -> None:
         """Ensure the colour palette is ready for the dataset season."""
@@ -243,7 +246,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
         visible_drivers = [d for d in drivers if d not in self.hidden_drivers]
         
         if not visible_drivers:
-            print("[THROTTLE_CHART] 所有車手都被隱藏")
+            logger.info("[THROTTLE_CHART] 所有車手都被隱藏")
             self._draw_no_data_message(painter)
             return
         
@@ -347,10 +350,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
             )
 
         except Exception as exc:
-            print(f"[ERROR] [THROTTLE_CHART] 繪製箱型圖失敗: {exc}")
-            import traceback
-
-            traceback.print_exc()
+            logger.exception("[THROTTLE_CHART] 繪製箱型圖失敗")
 
     def _draw_no_data_message(self, painter: QPainter):
         painter.setPen(QPen(QColor(120, 120, 120), 1))
@@ -496,9 +496,9 @@ class ThrottleBoxPlotChartWidget(QWidget):
         try:
             menu.exec_(QCursor.pos())
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_CHART] 顯示選單失敗: {e}")
-        
-        print(f"[THROTTLE_CHART] 顯示右鍵選單: {driver}")
+            logger.exception("[THROTTLE_CHART] 顯示選單失敗")
+
+        logger.debug("[THROTTLE_CHART] 顯示右鍵選單: %s", driver)
     
     def _hide_driver(self, driver: str):
         """
@@ -508,13 +508,13 @@ class ThrottleBoxPlotChartWidget(QWidget):
             driver: 車手代碼
         """
         if driver in self.hidden_drivers:
-            print(f"[THROTTLE_CHART] 車手 {driver} 已經被隱藏")
+            logger.info("[THROTTLE_CHART] 車手 %s 已經被隱藏", driver)
             return
         
         # 添加到隱藏集合
         self.hidden_drivers.add(driver)
-        print(f"[THROTTLE_CHART] 隱藏車手: {driver}")
-        print(f"[THROTTLE_CHART] 當前隱藏車手: {self.hidden_drivers}")
+        logger.info("[THROTTLE_CHART] 隱藏車手: %s", driver)
+        logger.debug("[THROTTLE_CHART] 當前隱藏車手: %s", self.hidden_drivers)
         
         # 重新計算 Y 軸範圍（只考慮可見車手）
         self._calculate_y_range()
@@ -529,13 +529,13 @@ class ThrottleBoxPlotChartWidget(QWidget):
         這是一個公開方法，供 MDI 視窗的 "Show All Data" 按鈕調用
         """
         if not self.hidden_drivers:
-            print("[THROTTLE_CHART] 沒有隱藏的車手需要恢復")
+            logger.info("[THROTTLE_CHART] 沒有隱藏的車手需要恢復")
             return
         
         # 清空隱藏集合
         hidden_count = len(self.hidden_drivers)
         self.hidden_drivers.clear()
-        print(f"[THROTTLE_CHART] 已恢復 {hidden_count} 個隱藏車手")
+        logger.info("[THROTTLE_CHART] 已恢復 %d 個隱藏車手", hidden_count)
         
         # 重新計算 Y 軸範圍（包含所有車手）
         self._calculate_y_range()
@@ -560,7 +560,7 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
             raise RuntimeError("Failed to save image")
         except Exception as exc:
-            print(f"[ERROR] [THROTTLE_CHART] 匯出圖表失敗: {exc}")
+            logger.exception("[THROTTLE_CHART] 匯出圖表失敗")
             QMessageBox.critical(
                 self,
                 tr("throttle_box_plot.export_failed_title", "Export Failed"),

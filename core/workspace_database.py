@@ -13,6 +13,10 @@ from datetime import datetime
 from typing import List, Dict, Optional, Tuple
 from pathlib import Path
 
+from core.logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class WorkspaceDatabase:
     """Workspace 資料庫管理器"""
@@ -34,20 +38,20 @@ class WorkspaceDatabase:
         db_dir = os.path.dirname(self.db_path)
         if db_dir and not os.path.exists(db_dir):
             os.makedirs(db_dir)
-            print(f"[WORKSPACE]  已創建資料庫目錄: {db_dir}")
+            logger.debug(f"[WORKSPACE]  已創建資料庫目錄: {db_dir}")
     
     def _init_database(self):
         """初始化資料庫連接和 schema"""
         try:
             self.conn = sqlite3.connect(self.db_path)
             self.conn.row_factory = sqlite3.Row  # 允許按列名訪問
-            print(f"[WORKSPACE]  已連接到資料庫: {self.db_path}")
+            logger.debug(f"[WORKSPACE]  已連接到資料庫: {self.db_path}")
             
             # 執行 schema 創建
             self._create_schema()
             
         except Exception as e:
-            print(f"[WORKSPACE]  資料庫初始化失敗: {e}")
+            logger.debug(f"[WORKSPACE]  資料庫初始化失敗: {e}")
             raise
     
     def _create_schema(self):
@@ -64,15 +68,15 @@ class WorkspaceDatabase:
                 # 執行 schema（分割多個語句）
                 cursor.executescript(schema_sql)
                 self.conn.commit()
-                print(f"[WORKSPACE]  資料庫 schema 已創建")
+                logger.debug(f"[WORKSPACE]  資料庫 schema 已創建")
             else:
-                print(f"[WORKSPACE]  找不到 schema 檔案: {schema_path}")
+                logger.debug(f"[WORKSPACE]  找不到 schema 檔案: {schema_path}")
                 # 如果找不到檔案，創建基本 schema
                 self._create_basic_schema(cursor)
                 self.conn.commit()
                 
         except Exception as e:
-            print(f"[WORKSPACE]  創建 schema 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  創建 schema 失敗: {e}")
             raise
     
     def _create_basic_schema(self, cursor):
@@ -114,7 +118,7 @@ class WorkspaceDatabase:
             )
         """)
         
-        print(f"[WORKSPACE]  已創建基本 schema")
+        logger.debug(f"[WORKSPACE]  已創建基本 schema")
     
     # ============================================================================
     # CRUD 操作：Create, Read, Update, Delete
@@ -162,16 +166,16 @@ class WorkspaceDatabase:
             workspace_id = cursor.lastrowid
             self.conn.commit()
             
-            print(f"[WORKSPACE]  已創建 Workspace: {name} (ID: {workspace_id})")
+            logger.debug(f"[WORKSPACE]  已創建 Workspace: {name} (ID: {workspace_id})")
             return workspace_id
             
         except sqlite3.IntegrityError as e:
             if "UNIQUE constraint failed" in str(e):
-                print(f"[WORKSPACE]  Workspace 名稱已存在: {name}")
+                logger.debug(f"[WORKSPACE]  Workspace 名稱已存在: {name}")
                 raise ValueError(f"Workspace '{name}' 已存在")
             raise
         except Exception as e:
-            print(f"[WORKSPACE]  創建 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  創建 Workspace 失敗: {e}")
             raise
     
     def get_workspace_by_id(self, workspace_id: int) -> Optional[Dict]:
@@ -197,7 +201,7 @@ class WorkspaceDatabase:
             return None
             
         except Exception as e:
-            print(f"[WORKSPACE]  獲取 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  獲取 Workspace 失敗: {e}")
             return None
     
     def get_workspace_by_name(self, name: str) -> Optional[Dict]:
@@ -222,7 +226,7 @@ class WorkspaceDatabase:
             return None
             
         except Exception as e:
-            print(f"[WORKSPACE]  獲取 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  獲取 Workspace 失敗: {e}")
             return None
     
     def list_workspaces(
@@ -274,11 +278,11 @@ class WorkspaceDatabase:
             rows = cursor.fetchall()
             
             workspaces = [dict(row) for row in rows]
-            print(f"[WORKSPACE]  已列出 {len(workspaces)} 個 Workspace")
+            logger.debug(f"[WORKSPACE]  已列出 {len(workspaces)} 個 Workspace")
             return workspaces
             
         except Exception as e:
-            print(f"[WORKSPACE]  列出 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  列出 Workspace 失敗: {e}")
             return []
     
     def update_workspace(
@@ -344,7 +348,7 @@ class WorkspaceDatabase:
                 params.append(total_windows)
             
             if not updates:
-                print(f"[WORKSPACE]  沒有需要更新的欄位")
+                logger.debug(f"[WORKSPACE]  沒有需要更新的欄位")
                 return False
             
             # modified_at 會自動通過觸發器更新
@@ -354,11 +358,11 @@ class WorkspaceDatabase:
             cursor.execute(query, params)
             self.conn.commit()
             
-            print(f"[WORKSPACE]  已更新 Workspace ID: {workspace_id}")
+            logger.debug(f"[WORKSPACE]  已更新 Workspace ID: {workspace_id}")
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE]  更新 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  更新 Workspace 失敗: {e}")
             return False
     
     def delete_workspace(self, workspace_id: int) -> bool:
@@ -377,14 +381,14 @@ class WorkspaceDatabase:
             self.conn.commit()
             
             if cursor.rowcount > 0:
-                print(f"[WORKSPACE]  已刪除 Workspace ID: {workspace_id}")
+                logger.debug(f"[WORKSPACE]  已刪除 Workspace ID: {workspace_id}")
                 return True
             else:
-                print(f"[WORKSPACE]  Workspace ID {workspace_id} 不存在")
+                logger.debug(f"[WORKSPACE]  Workspace ID {workspace_id} 不存在")
                 return False
             
         except Exception as e:
-            print(f"[WORKSPACE]  刪除 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  刪除 Workspace 失敗: {e}")
             return False
     
     def update_last_accessed(self, workspace_id: int) -> bool:
@@ -409,7 +413,7 @@ class WorkspaceDatabase:
             return True
             
         except Exception as e:
-            print(f"[WORKSPACE]  更新訪問時間失敗: {e}")
+            logger.debug(f"[WORKSPACE]  更新訪問時間失敗: {e}")
             return False
     
     # ============================================================================
@@ -441,10 +445,10 @@ class WorkspaceDatabase:
                 """, (workspace_id, window_type, count))
             
             self.conn.commit()
-            print(f"[WORKSPACE]  已設置視窗類型統計: {len(window_types)} 種類型")
+            logger.debug(f"[WORKSPACE]  已設置視窗類型統計: {len(window_types)} 種類型")
             
         except Exception as e:
-            print(f"[WORKSPACE]  設置視窗類型失敗: {e}")
+            logger.debug(f"[WORKSPACE]  設置視窗類型失敗: {e}")
     
     def set_parameters(self, workspace_id: int, parameters: Dict[str, List[str]]):
         """
@@ -472,10 +476,10 @@ class WorkspaceDatabase:
                     """, (workspace_id, param_key, str(param_value)))
             
             self.conn.commit()
-            print(f"[WORKSPACE]  已設置參數索引: {len(parameters)} 個參數")
+            logger.debug(f"[WORKSPACE]  已設置參數索引: {len(parameters)} 個參數")
             
         except Exception as e:
-            print(f"[WORKSPACE]  設置參數索引失敗: {e}")
+            logger.debug(f"[WORKSPACE]  設置參數索引失敗: {e}")
     
     def get_recent_workspaces(self, limit: int = 10) -> List[Dict]:
         """
@@ -551,11 +555,11 @@ class WorkspaceDatabase:
             rows = cursor.fetchall()
             
             workspaces = [dict(row) for row in rows]
-            print(f"[WORKSPACE]  搜索到 {len(workspaces)} 個 Workspace")
+            logger.debug(f"[WORKSPACE]  搜索到 {len(workspaces)} 個 Workspace")
             return workspaces
             
         except Exception as e:
-            print(f"[WORKSPACE]  搜索 Workspace 失敗: {e}")
+            logger.debug(f"[WORKSPACE]  搜索 Workspace 失敗: {e}")
             return []
     
     # ============================================================================
@@ -566,7 +570,7 @@ class WorkspaceDatabase:
         """關閉資料庫連接"""
         if self.conn:
             self.conn.close()
-            print(f"[WORKSPACE]  資料庫連接已關閉")
+            logger.debug(f"[WORKSPACE]  資料庫連接已關閉")
     
     def __enter__(self):
         """支援 with 語句"""

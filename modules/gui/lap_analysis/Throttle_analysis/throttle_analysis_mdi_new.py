@@ -29,6 +29,9 @@ from typing import Optional, Dict, Any
 # 導入分析模組介面
 from modules.gui.interfaces.analysis_module import IAnalysisModule
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 class ThrottleDataManager(QObject):
     """油門數據管理器 - 參照 SpeedDataManager 架構"""
     
@@ -45,13 +48,13 @@ class ThrottleDataManager(QObject):
                           lap1: int = 1, lap2: int = 1, is_fastest_lap: bool = False) -> bool:
         """載入油門數據 - 參照速度分析模組"""
         try:
-            print(f"[THROTTLE_DATA_MANAGER] ========== 載入油門數據 ==========")
-            print(f"[THROTTLE_DATA_MANAGER] 📊 基本參數: {year} {race} {session}")
-            print(f"[THROTTLE_DATA_MANAGER] 🏎️ 車手參數: {driver1} vs {driver2}")
-            print(f"[THROTTLE_DATA_MANAGER] 🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] ========== 載入油門數據 ==========")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 📊 基本參數: {year} {race} {session}")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 🏎️ 車手參數: {driver1} vs {driver2}")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
             
             if self._is_loading:
-                print(f"[THROTTLE_DATA_MANAGER] ⚠️ 數據載入中，跳過重複請求")
+                logger.warning(f"[THROTTLE_DATA_MANAGER] ⚠️ 數據載入中，跳過重複請求")
                 return False
             
             self._is_loading = True
@@ -72,7 +75,7 @@ class ThrottleDataManager(QObject):
             return True
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_DATA_MANAGER] 載入油門數據失敗: {e}")
+            logger.error(f"[THROTTLE_DATA_MANAGER] 載入油門數據失敗: {e}")
             self._is_loading = False
             self.error_occurred.emit(f"載入油門數據失敗: {str(e)}")
             return False
@@ -82,7 +85,7 @@ class ThrottleDataManager(QObject):
         """在背景線程中載入數據"""
         try:
             # 模擬油門數據載入過程
-            print(f"[THROTTLE_DATA_MANAGER] 🔄 背景載入油門數據...")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 🔄 背景載入油門數據...")
             time.sleep(1)  # 模擬載入時間
             
             # 構建模擬數據
@@ -120,13 +123,13 @@ class ThrottleDataManager(QObject):
             self._on_data_loaded(data)
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_DATA_MANAGER] 背景載入失敗: {e}")
+            logger.error(f"[THROTTLE_DATA_MANAGER] 背景載入失敗: {e}")
             self._on_load_error(f"背景載入失敗: {str(e)}")
     
     def _get_fastest_lap_number(self, driver: str) -> int:
         """獲取車手最速圈數 - 參照速度分析模組邏輯"""
         try:
-            print(f"[THROTTLE_DATA_MANAGER] 🏁 獲取 {driver} 最速圈數據...")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 🏁 獲取 {driver} 最速圈數據...")
             
             # 搜尋遙測分析檔案
             telemetry_patterns = [
@@ -139,18 +142,18 @@ class ThrottleDataManager(QObject):
                 matching_files = glob.glob(pattern)
                 if matching_files:
                     telemetry_file = matching_files[0]
-                    print(f"📁 [THROTTLE_DATA_MANAGER] 找到遙測檔案: {telemetry_file}")
+                    logger.debug(f"📁 [THROTTLE_DATA_MANAGER] 找到遙測檔案: {telemetry_file}")
                     break
             
             if not telemetry_file:
-                print(f"❌ [THROTTLE_DATA_MANAGER] 找不到遙測分析檔案，使用預設圈數 1")
+                logger.error(f"[THROTTLE_DATA_MANAGER] 找不到遙測分析檔案，使用預設圈數 1")
                 return 1
             
             # 讀取並解析遙測分析數據
             with open(telemetry_file, 'r', encoding='utf-8') as f:
                 telemetry_data = json.load(f)
             
-            print(f"📊 [THROTTLE_DATA_MANAGER] 遙測檔案讀取成功，開始解析最速圈數據...")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 遙測檔案讀取成功，開始解析最速圈數據...")
             
             # 提取最速圈數據
             fastest_lap_num = None
@@ -161,7 +164,7 @@ class ThrottleDataManager(QObject):
                 if driver_data and 'fastest_lap' in driver_data:
                     fastest_lap_num = driver_data['fastest_lap'].get('lap_number')
                     if fastest_lap_num:
-                        print(f"✅ [THROTTLE_DATA_MANAGER] 從格式1找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                        logger.info(f"[THROTTLE_DATA_MANAGER] 從格式1找到 {driver} 最速圈: 第{fastest_lap_num}圈")
                         return int(fastest_lap_num)
             
             # 格式2: data.fastest_laps中的列表
@@ -170,14 +173,14 @@ class ThrottleDataManager(QObject):
                     if fastest_data.get('driver') == driver:
                         fastest_lap_num = fastest_data.get('lap_number')
                         if fastest_lap_num:
-                            print(f"✅ [THROTTLE_DATA_MANAGER] 從格式2找到 {driver} 最速圈: 第{fastest_lap_num}圈")
+                            logger.info(f"[THROTTLE_DATA_MANAGER] 從格式2找到 {driver} 最速圈: 第{fastest_lap_num}圈")
                             return int(fastest_lap_num)
             
-            print(f"⚠️ [THROTTLE_DATA_MANAGER] 無法找到 {driver} 的最速圈數據，使用預設圈數 1")
+            logger.warning(f"[THROTTLE_DATA_MANAGER] 無法找到 {driver} 的最速圈數據，使用預設圈數 1")
             return 1
             
         except Exception as e:
-            print(f"❌ [THROTTLE_DATA_MANAGER] 解析最速圈數據時發生錯誤: {e}")
+            logger.error(f"[THROTTLE_DATA_MANAGER] 解析最速圈數據時發生錯誤: {e}")
             return 1
     
     def _resolve_lap_numbers(self, lap1, lap2, driver1, driver2, is_fastest):
@@ -188,35 +191,35 @@ class ThrottleDataManager(QObject):
             
             # 處理lap1
             if lap1 == "fastest" or is_fastest:
-                print(f"🔄 [THROTTLE_DATA_MANAGER] 解析 {driver1} 的最速圈...")
+                logger.debug(f"[THROTTLE_DATA_MANAGER] 解析 {driver1} 的最速圈...")
                 resolved_lap1 = self._get_fastest_lap_number(driver1)
                 
             # 處理lap2
             if lap2 == "fastest" or is_fastest:
-                print(f"🔄 [THROTTLE_DATA_MANAGER] 解析 {driver2} 的最速圈...")
+                logger.debug(f"[THROTTLE_DATA_MANAGER] 解析 {driver2} 的最速圈...")
                 resolved_lap2 = self._get_fastest_lap_number(driver2)
             
-            print(f"📊 [THROTTLE_DATA_MANAGER] 圈數解析結果: {driver1}=第{resolved_lap1}圈, {driver2}=第{resolved_lap2}圈")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 圈數解析結果: {driver1}=第{resolved_lap1}圈, {driver2}=第{resolved_lap2}圈")
             
             return int(resolved_lap1), int(resolved_lap2)
             
         except Exception as e:
-            print(f"❌ [THROTTLE_DATA_MANAGER] 解析圈數時發生錯誤: {e}")
+            logger.error(f"[THROTTLE_DATA_MANAGER] 解析圈數時發生錯誤: {e}")
             return 1, 1
     
     def _on_data_loaded(self, data: dict):
         """處理數據載入完成"""
         try:
-            print(f"[THROTTLE_DATA_MANAGER] 數據載入完成")
+            logger.debug(f"[THROTTLE_DATA_MANAGER] 數據載入完成")
             self._is_loading = False
             self.data_loaded.emit(data)
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_DATA_MANAGER] 數據處理失敗: {e}")
+            logger.error(f"[THROTTLE_DATA_MANAGER] 數據處理失敗: {e}")
             self.error_occurred.emit(f"數據處理失敗: {str(e)}")
     
     def _on_load_error(self, error_message: str):
         """處理載入錯誤"""
-        print(f"[ERROR] [THROTTLE_DATA_MANAGER] 載入錯誤: {error_message}")
+        logger.error(f"[THROTTLE_DATA_MANAGER] 載入錯誤: {error_message}")
         self._is_loading = False
         self.error_occurred.emit(error_message)
 
@@ -254,7 +257,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """初始化模組 - 實現抽象方法"""
         try:
-            print(f"[THROTTLE_MDI] 初始化油門分析模組")
+            logger.debug(f"[THROTTLE_MDI] 初始化油門分析模組")
             
             # 創建數據管理器
             self.data_manager = ThrottleDataManager()
@@ -277,11 +280,11 @@ class ThrottleAnalysisModule(IAnalysisModule):
             self._setup_ui()
             
             self._initialized = True
-            print(f"[OK] [THROTTLE_MDI] 油門分析模組初始化完成")
+            logger.info(f"[THROTTLE_MDI] 油門分析模組初始化完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] 模組初始化失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] 模組初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -310,7 +313,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
     def _update_chart(self, data: dict):
         """更新圖表"""
         try:
-            print(f"[THROTTLE_MDI] 更新油門圖表")
+            logger.debug(f"[THROTTLE_MDI] 更新油門圖表")
             if self.throttle_chart_widget:
                 # 檢查圖表組件是否有更新方法
                 if hasattr(self.throttle_chart_widget, 'update_throttle_data'):
@@ -322,7 +325,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 self._update_toolbar_status(data)
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] 圖表更新失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] 圖表更新失敗: {e}")
             self.module_error.emit(f"圖表更新失敗: {str(e)}")
     
     def _update_toolbar_status(self, data: dict):
@@ -380,10 +383,10 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 lap_numbers=lap_numbers
             )
             
-            print(f"[THROTTLE_MDI] 已更新工具欄狀態: {module_name}")
+            logger.debug(f"[THROTTLE_MDI] 已更新工具欄狀態: {module_name}")
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] 更新工具欄狀態失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] 更新工具欄狀態失敗: {e}")
     
     def _get_main_window(self):
         """獲取主視窗引用 - 參照速度分析模組"""
@@ -399,30 +402,30 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     return widget
             return None
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] 獲取主視窗失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] 獲取主視窗失敗: {e}")
             return None
     
     def _handle_error(self, error_message: str):
         """處理錯誤"""
-        print(f"[ERROR] [THROTTLE_MDI] {error_message}")
+        logger.error(f"[THROTTLE_MDI] {error_message}")
         self.module_error.emit(error_message)
     
     def _on_lap_numbers_changed(self, lap1: int, lap2: int):
         """處理圈數變更 - 參照速度分析模組"""
         try:
-            print(f"[THROTTLE_MDI] ========== 圈數變更處理 ==========")
-            print(f"[THROTTLE_MDI] 新圈數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[THROTTLE_MDI] ========== 圈數變更處理 ==========")
+            logger.debug(f"[THROTTLE_MDI] 新圈數: 第{lap1}圈 vs 第{lap2}圈")
             
             # 更新模組的圈數參數
             old_lap1, old_lap2 = self.lap1, self.lap2
             self.lap1 = lap1
             self.lap2 = lap2
             
-            print(f"[THROTTLE_MDI] 圈數變更: 第{old_lap1}圈 vs 第{old_lap2}圈 → 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[THROTTLE_MDI] 圈數變更: 第{old_lap1}圈 vs 第{old_lap2}圈 → 第{lap1}圈 vs 第{lap2}圈")
             
             # 重新載入數據
             if self.data_manager:
-                print(f"[THROTTLE_MDI] 🔄 因圈數變更重新載入數據...")
+                logger.debug(f"[THROTTLE_MDI] 🔄 因圈數變更重新載入數據...")
                 success = self.data_manager.load_throttle_data(
                     year=self.current_year,
                     race=self.current_race,
@@ -434,14 +437,14 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 )
                 
                 if success:
-                    print(f"[THROTTLE_MDI] ✅ 圈數變更後數據重載成功")
+                    logger.info(f"[THROTTLE_MDI] ✅ 圈數變更後數據重載成功")
                 else:
-                    print(f"[THROTTLE_MDI] ❌ 圈數變更後數據重載失敗")
+                    logger.error(f"[THROTTLE_MDI] ❌ 圈數變更後數據重載失敗")
             else:
-                print(f"[THROTTLE_MDI] ❌ 數據管理器未初始化，無法重載數據")
+                logger.error(f"[THROTTLE_MDI] ❌ 數據管理器未初始化，無法重載數據")
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] 處理圈數變更失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] 處理圈數變更失敗: {e}")
             import traceback
             traceback.print_exc()
             self.module_error.emit(f"處理圈數變更失敗: {str(e)}")
@@ -516,7 +519,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     return True
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_PARAMS_DEBUG] 參數更新失敗: {e}")
+            logger.error(f"[THROTTLE_PARAMS_DEBUG] 參數更新失敗: {e}")
             import traceback
             traceback.print_exc()
             self.module_error.emit(f"參數更新失敗: {str(e)}")
@@ -528,26 +531,26 @@ class ThrottleAnalysisModule(IAnalysisModule):
                             is_fastest: bool = False) -> bool:
         """更新圈速分析參數（包含車手和圈數）- 參照速度分析模組"""
         try:
-            print(f"[THROTTLE_MDI] ========== 圈速參數更新 ==========")
-            print(f"[THROTTLE_MDI] 收到參數: {year} {race} {session}")
-            print(f"[THROTTLE_MDI] 車手: {driver1} vs {driver2}")
-            print(f"[THROTTLE_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
-            print(f"[THROTTLE_MDI] 最速圈: {is_fastest}")
+            logger.debug(f"[THROTTLE_MDI] ========== 圈速參數更新 ==========")
+            logger.debug(f"[THROTTLE_MDI] 收到參數: {year} {race} {session}")
+            logger.debug(f"[THROTTLE_MDI] 車手: {driver1} vs {driver2}")
+            logger.debug(f"[THROTTLE_MDI] 圈數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[THROTTLE_MDI] 最速圈: {is_fastest}")
             
             # 檢查是否需要最速圈數據
             if is_fastest:
-                print(f"[THROTTLE_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
+                logger.debug(f"[THROTTLE_MDI] 🏁 用戶選擇了最速圈選項，檢查遙測分析數據...")
                 fastest_laps = self._ensure_telemetry_data_for_fastest_laps()
                 if fastest_laps:
                     # 使用最速圈數據更新圈數
                     if driver1 in fastest_laps:
                         lap1 = fastest_laps[driver1]
-                        print(f"[THROTTLE_MDI] 🏁 車手 {driver1} 最速圈: 第{lap1}圈")
+                        logger.debug(f"[THROTTLE_MDI] 🏁 車手 {driver1} 最速圈: 第{lap1}圈")
                     if driver2 and driver2 in fastest_laps:
                         lap2 = fastest_laps[driver2]
-                        print(f"[THROTTLE_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
+                        logger.debug(f"[THROTTLE_MDI] 🏁 車手 {driver2} 最速圈: 第{lap2}圈")
                 else:
-                    print(f"[THROTTLE_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
+                    logger.warning(f"[THROTTLE_MDI] ⚠️ 無法獲取最速圈數據，使用預設圈數")
             
             # 檢查參數是否有變化
             params_changed = (
@@ -560,7 +563,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 self.lap2 != lap2
             )
             
-            print(f"[THROTTLE_MDI] 參數是否變化: {params_changed}")
+            logger.debug(f"[THROTTLE_MDI] 參數是否變化: {params_changed}")
             
             # 更新所有參數 - 保持 driver2 的原始值（包括 None）
             self.current_year = str(year)
@@ -574,14 +577,14 @@ class ThrottleAnalysisModule(IAnalysisModule):
             # 更新圖表組件的圈數顯示（如果支援）
             if self.throttle_chart_widget and hasattr(self.throttle_chart_widget, 'set_lap_numbers'):
                 self.throttle_chart_widget.set_lap_numbers(lap1, lap2)
-                print(f"[THROTTLE_MDI] ✅ 已更新圖表組件的圈數顯示")
+                logger.info(f"[THROTTLE_MDI] ✅ 已更新圖表組件的圈數顯示")
             
             if params_changed:
-                print(f"[THROTTLE_MDI] 🔄 參數已變化，開始重載數據...")
+                logger.debug(f"[THROTTLE_MDI] 🔄 參數已變化，開始重載數據...")
                 
                 # 載入新數據
                 if self.data_manager:
-                    print(f"[THROTTLE_MDI] 📡 調用數據管理器載入新數據...")
+                    logger.debug(f"[THROTTLE_MDI] 📡 調用數據管理器載入新數據...")
                     success = self.data_manager.load_throttle_data(
                         year=self.current_year,
                         race=self.current_race,
@@ -593,7 +596,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     )
                     
                     if success:
-                        print(f"[THROTTLE_MDI] ✅ 圈速參數更新後數據重載成功")
+                        logger.info(f"[THROTTLE_MDI] ✅ 圈速參數更新後數據重載成功")
                         # 發送參數更新信號
                         self.parameters_updated.emit({
                             'year': self.current_year,
@@ -610,19 +613,19 @@ class ThrottleAnalysisModule(IAnalysisModule):
                         if parent and hasattr(parent, 'setWindowTitle'):
                             new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                             parent.setWindowTitle(new_title)
-                            print(f"[THROTTLE_MDI] 🏷️ 視窗標題已更新為: {new_title}")
+                            logger.debug(f"[THROTTLE_MDI] 🏷️ 視窗標題已更新為: {new_title}")
                         else:
-                            print(f"[THROTTLE_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
+                            logger.warning(f"[THROTTLE_MDI] ⚠️ 無法更新視窗標題 - 父視窗引用未設置")
                         
                         return True
                     else:
-                        print(f"[THROTTLE_MDI] ❌ 圈速參數更新後數據重載失敗")
+                        logger.error(f"[THROTTLE_MDI] ❌ 圈速參數更新後數據重載失敗")
                         return False
                 else:
-                    print(f"[THROTTLE_MDI] ❌ 數據管理器未初始化")
+                    logger.error(f"[THROTTLE_MDI] ❌ 數據管理器未初始化")
                     return False
             else:
-                print(f"[THROTTLE_MDI] ℹ️ 圈速參數未變化，保持現有數據")
+                logger.debug(f"[THROTTLE_MDI] ℹ️ 圈速參數未變化，保持現有數據")
                 
                 # 即使參數未變化，也確保視窗標題是正確的 - 使用統一的 get_window_title
                 parent = getattr(self, 'parent_window', None)
@@ -631,14 +634,14 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     expected_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                     if current_title != expected_title:
                         parent.setWindowTitle(expected_title)
-                        print(f"[THROTTLE_MDI] 🏷️ 同步視窗標題: {expected_title}")
+                        logger.debug(f"[THROTTLE_MDI] 🏷️ 同步視窗標題: {expected_title}")
                 else:
-                    print(f"[THROTTLE_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
+                    logger.warning(f"[THROTTLE_MDI] ⚠️ 無法同步視窗標題 - 父視窗引用未設置")
                 
                 return True
                 
         except Exception as e:
-            print(f"[THROTTLE_MDI] ❌ 圈速參數更新失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] ❌ 圈速參數更新失敗: {e}")
             import traceback
             traceback.print_exc()
             self.module_error.emit(f"圈速參數更新失敗: {str(e)}")
@@ -669,7 +672,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 parent.update()
                 parent.repaint()
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_TITLE_DEBUG] 更新視窗標題失敗: {e}")
+            logger.error(f"[THROTTLE_TITLE_DEBUG] 更新視窗標題失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -737,9 +740,9 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 # 清理主要組件
                 self.main_widget.deleteLater()
                 
-            print(f"[CLEANUP] 油門分析模組資源清理完成")
+            logger.debug(f"[CLEANUP] 油門分析模組資源清理完成")
         except Exception as e:
-            print(f"[ERROR] 油門分析模組清理失敗: {e}")
+            logger.error(f"油門分析模組清理失敗: {e}")
     
     def load_data(self, **kwargs) -> bool:
         """載入數據 - 實現抽象方法"""
@@ -758,7 +761,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 lap2=kwargs.get('lap2', 1)
             )
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] load_data 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] load_data 失敗: {e}")
             return False
     
     def refresh_analysis(self) -> None:
@@ -774,7 +777,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 lap2=1
             )
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] refresh_analysis 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] refresh_analysis 失敗: {e}")
     
     def clear_data(self):
         """清除數據 - 實現抽象方法"""
@@ -785,9 +788,9 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     self.throttle_chart_widget.reset_data()
                 elif hasattr(self.throttle_chart_widget, 'clear_chart'):
                     self.throttle_chart_widget.clear_chart()
-            print(f"[THROTTLE_MDI] 數據已清除")
+            logger.debug(f"[THROTTLE_MDI] 數據已清除")
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] clear_data 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] clear_data 失敗: {e}")
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
         """獲取當前數據 - 實現抽象方法"""
@@ -801,7 +804,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 'data_loaded': self.data_manager is not None
             }
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] get_current_data 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] get_current_data 失敗: {e}")
             return None
 
     def _ensure_telemetry_data_for_fastest_laps(self) -> Optional[Dict[str, int]]:
@@ -811,30 +814,30 @@ class ThrottleAnalysisModule(IAnalysisModule):
             Dict[str, int]: 車手代碼到最速圈數的映射，例如 {'ALO': 15, 'LEC': 23}
         """
         try:
-            print(f"[THROTTLE_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[THROTTLE_MDI] 🔍 檢查遙測分析數據: {self.current_year} {self.current_race} {self.current_session}")
             
             # 檢查遙測分析JSON檔案是否存在
             telemetry_file = self._find_telemetry_analysis_file()
             
             if not telemetry_file:
-                print(f"[THROTTLE_MDI] 📡 遙測分析數據不存在，開始自動載入...")
+                logger.debug(f"[THROTTLE_MDI] 📡 遙測分析數據不存在，開始自動載入...")
                 success = self._trigger_telemetry_analysis()
                 if success:
                     # 重新檢查檔案
                     telemetry_file = self._find_telemetry_analysis_file()
                 else:
-                    print(f"[THROTTLE_MDI] ❌ 遙測分析載入失敗")
+                    logger.error(f"[THROTTLE_MDI] ❌ 遙測分析載入失敗")
                     return None
             
             if telemetry_file:
-                print(f"[THROTTLE_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
+                logger.debug(f"[THROTTLE_MDI] 📂 找到遙測分析檔案: {telemetry_file}")
                 return self._extract_fastest_laps_from_telemetry(telemetry_file)
             else:
-                print(f"[THROTTLE_MDI] ❌ 無法獲取遙測分析數據")
+                logger.error(f"[THROTTLE_MDI] ❌ 無法獲取遙測分析數據")
                 return None
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] _ensure_telemetry_data_for_fastest_laps 失敗: {e}")
             return None
 
     def _find_telemetry_analysis_file(self) -> Optional[str]:
@@ -853,27 +856,27 @@ class ThrottleAnalysisModule(IAnalysisModule):
             for pattern in search_patterns:
                 matching_files = glob.glob(pattern)
                 if matching_files:
-                    print(f"[THROTTLE_MDI] 🎯 找到遙測分析檔案: {matching_files[0]}")
+                    logger.debug(f"[THROTTLE_MDI] 🎯 找到遙測分析檔案: {matching_files[0]}")
                     return matching_files[0]
             
             # 如果沒找到精確匹配，嘗試模糊搜尋
             fuzzy_pattern = f"json*/telemetry_analysis*{self.current_year}*{self.current_race}*.json"
             matching_files = glob.glob(fuzzy_pattern)
             if matching_files:
-                print(f"[THROTTLE_MDI] 🔍 模糊搜尋找到遙測分析檔案: {matching_files[0]}")
+                logger.debug(f"[THROTTLE_MDI] 🔍 模糊搜尋找到遙測分析檔案: {matching_files[0]}")
                 return matching_files[0]
             
-            print(f"[THROTTLE_MDI] ❌ 未找到遙測分析檔案")
+            logger.error(f"[THROTTLE_MDI] ❌ 未找到遙測分析檔案")
             return None
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _find_telemetry_analysis_file 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] _find_telemetry_analysis_file 失敗: {e}")
             return None
 
     def _trigger_telemetry_analysis(self) -> bool:
         """觸發遙測分析載入/生成"""
         try:
-            print(f"[THROTTLE_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[THROTTLE_MDI] 🚀 觸發遙測分析載入: {self.current_year} {self.current_race} {self.current_session}")
             
             # 方法1: 嘗試通過主視窗找到遙測分析模組
             if hasattr(self, 'parent_window') and self.parent_window:
@@ -888,23 +891,23 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     for sub_window in main_window.mdi_area.subWindowList():
                         window_title = sub_window.windowTitle()
                         if "遙測分析" in window_title:
-                            print(f"[THROTTLE_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
+                            logger.debug(f"[THROTTLE_MDI] 🎯 找到現有遙測分析視窗: {window_title}")
                             # 激活並刷新遙測分析視窗
                             main_window.mdi_area.setActiveSubWindow(sub_window)
                             return True
                     
                     # 如果沒有遙測分析視窗，嘗試創建一個
-                    print(f"[THROTTLE_MDI] 📡 嘗試創建遙測分析視窗...")
+                    logger.debug(f"[THROTTLE_MDI] 📡 嘗試創建遙測分析視窗...")
                     if hasattr(main_window, 'create_telemetry_analysis'):
                         main_window.create_telemetry_analysis()
                         return True
             
             # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            print(f"[THROTTLE_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
+            logger.debug(f"[THROTTLE_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
             return self._generate_telemetry_via_cli()
             
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _trigger_telemetry_analysis 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] _trigger_telemetry_analysis 失敗: {e}")
             return False
 
     def _generate_telemetry_via_cli(self) -> bool:
@@ -923,7 +926,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
                 "-s", self.current_session
             ]
             
-            print(f"[THROTTLE_MDI] 🔧 執行CLI命令: {' '.join(command)}")
+            logger.debug(f"[THROTTLE_MDI] 🔧 執行CLI命令: {' '.join(command)}")
             
             # 同步執行CLI命令（因為油門分析需要立即使用結果）
             process = subprocess.Popen(
@@ -938,20 +941,20 @@ class ThrottleAnalysisModule(IAnalysisModule):
             stdout, stderr = process.communicate(timeout=120)  # 2分鐘超時
             
             if process.returncode == 0:
-                print(f"[THROTTLE_MDI] ✅ 遙測分析CLI執行成功")
+                logger.info(f"[THROTTLE_MDI] ✅ 遙測分析CLI執行成功")
                 # 等待檔案寫入完成
                 time.sleep(2)
                 return True
             else:
-                print(f"[THROTTLE_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
+                logger.error(f"[THROTTLE_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
                 return False
                 
         except subprocess.TimeoutExpired:
-            print(f"[THROTTLE_MDI] ⏰ 遙測分析CLI執行超時")
+            logger.debug(f"[THROTTLE_MDI] ⏰ 遙測分析CLI執行超時")
             process.kill()
             return False
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _generate_telemetry_via_cli 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] _generate_telemetry_via_cli 失敗: {e}")
             return False
 
     def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:
@@ -959,7 +962,7 @@ class ThrottleAnalysisModule(IAnalysisModule):
         try:
             import json
             
-            print(f"[THROTTLE_MDI] 📊 讀取遙測分析檔案: {telemetry_file}")
+            logger.debug(f"[THROTTLE_MDI] 📊 讀取遙測分析檔案: {telemetry_file}")
             
             with open(telemetry_file, 'r', encoding='utf-8') as f:
                 telemetry_data = json.load(f)
@@ -982,19 +985,19 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     if lap_number and lap_number != 'N/A':
                         try:
                             fastest_laps[driver_code] = int(lap_number)
-                            print(f"[THROTTLE_MDI] 🏁 {driver_code} 最速圈: 第{lap_number}圈")
+                            logger.debug(f"[THROTTLE_MDI] 🏁 {driver_code} 最速圈: 第{lap_number}圈")
                         except (ValueError, TypeError):
-                            print(f"[THROTTLE_MDI] ⚠️ {driver_code} 最速圈數無效: {lap_number}")
+                            logger.warning(f"[THROTTLE_MDI] ⚠️ {driver_code} 最速圈數無效: {lap_number}")
             
             if fastest_laps:
-                print(f"[THROTTLE_MDI] ✅ 成功提取 {len(fastest_laps)} 個車手的最速圈數據")
+                logger.info(f"[THROTTLE_MDI] ✅ 成功提取 {len(fastest_laps)} 個車手的最速圈數據")
                 return fastest_laps
             else:
-                print(f"[THROTTLE_MDI] ❌ 未找到有效的最速圈數據")
+                logger.error(f"[THROTTLE_MDI] ❌ 未找到有效的最速圈數據")
                 return None
                 
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] _extract_fastest_laps_from_telemetry 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] _extract_fastest_laps_from_telemetry 失敗: {e}")
             return None
 
     def receive_main_window_update_notification(self, param_type, value):
@@ -1011,42 +1014,42 @@ class ThrottleAnalysisModule(IAnalysisModule):
             **kwargs: 其他可能的參數
         """
         try:
-            print(f"[THROTTLE_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG] 📝 原始參數:")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - param_type: {param_type}")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - value: {value}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] ========== 收到主視窗更新通知 ==========")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] 📝 原始參數:")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - param_type: {param_type}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - value: {value}")
             
             # 簡化的參數處理
             # 直接處理參數更新
             if param_type == 'year':
                 self.current_year = str(value)
-                print(f"[UPDATE] 年份更新為: {self.current_year}")
+                logger.debug(f"[UPDATE] 年份更新為: {self.current_year}")
             elif param_type == 'race':
                 self.current_race = str(value)
-                print(f"[UPDATE] 賽事更新為: {self.current_race}")
+                logger.debug(f"[UPDATE] 賽事更新為: {self.current_race}")
             elif param_type == 'session':
                 self.current_session = str(value)
-                print(f"[UPDATE] 場次更新為: {self.current_session}")
+                logger.debug(f"[UPDATE] 場次更新為: {self.current_session}")
             
-            print(f"[THROTTLE_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - 當前年份: {self.current_year}")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - 當前賽事: {self.current_race}")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - 當前賽段: {self.current_session}")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - 當前車手: {self.driver1} vs {self.driver2}")
-            print(f"[THROTTLE_NOTIFICATION_DEBUG]   - 當前圈數: 第{self.lap1}圈 vs 第{self.lap2}圈")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] 📊 當前模組狀態:")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - 當前年份: {self.current_year}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - 當前賽事: {self.current_race}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - 當前賽段: {self.current_session}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - 當前車手: {self.driver1} vs {self.driver2}")
+            logger.debug(f"[THROTTLE_NOTIFICATION_DEBUG] - 當前圈數: 第{self.lap1}圈 vs 第{self.lap2}圈")
             
             # [TOOL] 更新窗口標題（如果有父窗口）- 使用統一的 get_window_title
             parent = getattr(self, 'parent_window', None)
             if parent and hasattr(parent, 'setWindowTitle'):
                 title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                 parent.setWindowTitle(title)
-                print(f"[TITLE] 窗口標題更新為: {title}")
+                logger.debug(f"[TITLE] 窗口標題更新為: {title}")
             else:
-                print(f"[WARNING] 無法更新視窗標題 - 父視窗引用未設置")
+                logger.warning(f"無法更新視窗標題 - 父視窗引用未設置")
             
             # 重新載入數據
             if self.data_manager:
-                print(f"[REFRESH] 重新載入油門數據...")
+                logger.debug(f"[REFRESH] 重新載入油門數據...")
                 self.data_manager.load_throttle_data(
                     year=self.current_year,
                     race=self.current_race,
@@ -1056,26 +1059,27 @@ class ThrottleAnalysisModule(IAnalysisModule):
                     lap1=self.lap1,
                     lap2=self.lap2
                 )
-            print(f"[OK] [NOTIFICATION] ⚡ 油門分析模組內容更新成功")
+            logger.info(f"[NOTIFICATION] ⚡ 油門分析模組內容更新成功")
                 
         except Exception as e:
-            print(f"[ERROR] [NOTIFICATION] ⚡ 油門分析模組內容更新失敗: {e}")
+            logger.error(f"[NOTIFICATION] ⚡ 油門分析模組內容更新失敗: {e}")
             import traceback
+
             traceback.print_exc()
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出數據 - 實現抽象方法"""
         try:
-            print(f"[THROTTLE_MDI] 匯出數據功能尚未實現 (路徑: {export_path}, 格式: {export_format})")
+            logger.debug(f"[THROTTLE_MDI] 匯出數據功能尚未實現 (路徑: {export_path}, 格式: {export_format})")
             return False
         except Exception as e:
-            print(f"[ERROR] [THROTTLE_MDI] export_data 失敗: {e}")
+            logger.error(f"[THROTTLE_MDI] export_data 失敗: {e}")
             return False
 
 # 註冊油門分析模組到工廠
 try:
     from modules.gui.interfaces.analysis_module import ModuleFactory, ModuleTypes
     ModuleFactory.register_module(ModuleTypes.TELEMETRY_THROTTLE, ThrottleAnalysisModule)
-    print(f"[OK] [MODULE_FACTORY] Throttle analysis module registered")
+    logger.info(f"[MODULE_FACTORY] Throttle analysis module registered")
 except ImportError as e:
-    print(f"[WARNING] [MODULE_FACTORY] 油門分析模組註冊失敗: {e}")
+    logger.warning(f"[MODULE_FACTORY] 油門分析模組註冊失敗: {e}")

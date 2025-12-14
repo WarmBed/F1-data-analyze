@@ -22,6 +22,9 @@ from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import pyqtSignal
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面和基類
 try:
     from ...interfaces.analysis_module import IAnalysisModule
@@ -97,21 +100,21 @@ class driverLapAnalysisModule(IAnalysisModule):
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """初始化模組"""
         try:
-            print(f"🚀 [LAPTIME_MODULE] 開始初始化詳細圈速分析模組...")
+            logger.debug(f"[LAPTIME_MODULE] 開始初始化詳細圈速分析模組...")
             
             if self._is_initialized:
-                print(f"ℹ️ [LAPTIME_MODULE] 模組已經初始化，跳過重複初始化")
+                logger.debug(f"ℹ️ [LAPTIME_MODULE] 模組已經初始化，跳過重複初始化")
                 return True
             
             # 初始化 MDI 數據管理器
             if not self._detailed_laptime_analysis_core:
-                print(f"🔧 [LAPTIME_MODULE] 創建 MDI 實例...")
+                logger.debug(f"🔧 [LAPTIME_MODULE] 創建 MDI 實例...")
                 self._detailed_laptime_analysis_core = driverLapAnalysisMDI(parent=parent_widget)
                 
                 # ✅ 啟用 Workspace 模式（防止 initialize_module() 觸發數據載入）
                 if hasattr(self._detailed_laptime_analysis_core, '_workspace_loading_mode'):
                     self._detailed_laptime_analysis_core._workspace_loading_mode = True
-                    print(f"🔧 [LAPTIME_MODULE] Workspace 模式已啟用")
+                    logger.debug(f"🔧 [LAPTIME_MODULE] Workspace 模式已啟用")
                 
                 # ✅ 只設置參數屬性，不調用 update_parameters()（避免啟動執行緒）
                 # 模仿 Rain Analysis 的安全模式
@@ -121,12 +124,12 @@ class driverLapAnalysisModule(IAnalysisModule):
                     self._detailed_laptime_analysis_core.current_race = self.current_race
                 if hasattr(self._detailed_laptime_analysis_core, 'current_session'):
                     self._detailed_laptime_analysis_core.current_session = self.current_session
-                print(f"🔧 [LAPTIME_MODULE] 參數已設置（未觸發數據載入）: {self.current_year} {self.current_race} {self.current_session}")
+                logger.debug(f"🔧 [LAPTIME_MODULE] 參數已設置（未觸發數據載入）: {self.current_year} {self.current_race} {self.current_session}")
                 
                 # ✅ 禁用 Workspace 模式（恢復正常）
                 if hasattr(self._detailed_laptime_analysis_core, '_workspace_loading_mode'):
                     self._detailed_laptime_analysis_core._workspace_loading_mode = False
-                    print(f"🔧 [LAPTIME_MODULE] Workspace 模式已禁用")
+                    logger.debug(f"🔧 [LAPTIME_MODULE] Workspace 模式已禁用")
             
             # 創建主要 Widget
             if not self._main_widget:
@@ -136,14 +139,14 @@ class driverLapAnalysisModule(IAnalysisModule):
                 else:
                     # 回退：直接使用 MDI 的 main_widget 屬性
                     self._main_widget = getattr(self._detailed_laptime_analysis_core, 'main_widget', self._detailed_laptime_analysis_core)
-                print(f"🔧 [LAPTIME_MODULE] Widget 已創建: {type(self._main_widget)}")
+                logger.debug(f"🔧 [LAPTIME_MODULE] Widget 已創建: {type(self._main_widget)}")
             
             self._is_initialized = True
-            print(f"✅ [LAPTIME_MODULE] 模組已初始化")
+            logger.info(f"[LAPTIME_MODULE] 模組已初始化")
             return True
             
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 初始化失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 初始化失敗: {e}")
             return False
         
     def get_widget(self):
@@ -155,7 +158,7 @@ class driverLapAnalysisModule(IAnalysisModule):
     def update_parameters(self, year: int, race: str, session: str) -> bool:
         """更新分析參數"""
         try:
-            print(f"🔄 [LAPTIME_MODULE] update_parameters 被調用: {year}, {race}, {session}")
+            logger.debug(f"[LAPTIME_MODULE] update_parameters 被調用: {year}, {race}, {session}")
             
             self.current_year = str(year)
             self.current_race = race
@@ -167,17 +170,17 @@ class driverLapAnalysisModule(IAnalysisModule):
                     str(year), race, session
                 )
                 if success:
-                    print(f"✅ [LAPTIME_MODULE] 參數更新成功")
+                    logger.info(f"[LAPTIME_MODULE] 參數更新成功")
                     return True
                 else:
-                    print(f"⚠️ [LAPTIME_MODULE] MDI 參數更新失敗")
+                    logger.warning(f"[LAPTIME_MODULE] MDI 參數更新失敗")
             else:
-                print(f"⚠️ [LAPTIME_MODULE] MDI 實例不存在或沒有 update_parameters 方法")
+                logger.warning(f"[LAPTIME_MODULE] MDI 實例不存在或沒有 update_parameters 方法")
             
             return False
             
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] update_parameters 錯誤: {e}")
+            logger.error(f"[LAPTIME_MODULE] update_parameters 錯誤: {e}")
             return False
         
     def load_data(self, **kwargs) -> bool:
@@ -187,7 +190,7 @@ class driverLapAnalysisModule(IAnalysisModule):
                 return self._detailed_laptime_analysis_core.load_data(**kwargs)
             return False
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 載入數據失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 載入數據失敗: {e}")
             return False
     
     def refresh_analysis(self) -> None:
@@ -196,7 +199,7 @@ class driverLapAnalysisModule(IAnalysisModule):
             if self._detailed_laptime_analysis_core:
                 self._detailed_laptime_analysis_core.refresh_analysis()
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 重新執行分析失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 重新執行分析失敗: {e}")
     
     def clear_data(self) -> None:
         """清除所有數據"""
@@ -204,7 +207,7 @@ class driverLapAnalysisModule(IAnalysisModule):
             if self._detailed_laptime_analysis_core:
                 self._detailed_laptime_analysis_core.clear_data()
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 清除數據失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 清除數據失敗: {e}")
     
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """匯出分析數據"""
@@ -213,7 +216,7 @@ class driverLapAnalysisModule(IAnalysisModule):
                 return self._detailed_laptime_analysis_core.export_data(export_path, export_format)
             return False
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 匯出數據失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 匯出數據失敗: {e}")
             return False
     
     def get_current_data(self) -> Optional[Dict[str, Any]]:
@@ -223,7 +226,7 @@ class driverLapAnalysisModule(IAnalysisModule):
                 return self._detailed_laptime_analysis_core.get_current_data()
             return None
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 獲取當前數據失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 獲取當前數據失敗: {e}")
             return None
         
     # 支援方法（保持與原版相容）
@@ -234,6 +237,7 @@ class driverLapAnalysisModule(IAnalysisModule):
     def get_window_title(self, year: int, race: str, session: str) -> str:
         """Generate window title - 只顯示模組名稱"""
         from core.gui_i18n import tr, get_gui_language
+
         language = get_gui_language()
         if language == 'zh':
             return f"{tr('detailed_lap_analysis', '詳細圈速分析')}"
@@ -256,7 +260,7 @@ class driverLapAnalysisModule(IAnalysisModule):
                     return False
             return False
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 檢查數據可用性失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 檢查數據可用性失敗: {e}")
             return False
     
     def refresh_data(self) -> bool:
@@ -266,7 +270,7 @@ class driverLapAnalysisModule(IAnalysisModule):
                 return self._detailed_laptime_analysis_core.refresh_data()
             return False
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 重新整理數據失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 重新整理數據失敗: {e}")
             return False
     
     def cleanup(self):
@@ -281,9 +285,9 @@ class driverLapAnalysisModule(IAnalysisModule):
                 self._main_widget = None
                 
             self._is_initialized = False
-            print(f"✅ [LAPTIME_MODULE] 模組清理完成")
+            logger.info(f"[LAPTIME_MODULE] 模組清理完成")
         except Exception as e:
-            print(f"❌ [LAPTIME_MODULE] 模組清理失敗: {e}")
+            logger.error(f"[LAPTIME_MODULE] 模組清理失敗: {e}")
     
     # 向後相容性方法
     def get_title(self) -> str:
@@ -326,15 +330,15 @@ class driverLapAnalysisModule(IAnalysisModule):
     # 輔助方法
     def _debug(self, message: str):
         """調試信息輸出"""
-        print(f"[LAPTIME_MODULE] {message}")
+        logger.debug(f"[LAPTIME_MODULE] {message}")
     
     def _error(self, message: str):
         """錯誤信息輸出"""
-        print(f"[LAPTIME_MODULE] ❌ {message}")
+        logger.error(f"[LAPTIME_MODULE] ❌ {message}")
     
     def _info(self, message: str):
         """資訊輸出"""
-        print(f"[LAPTIME_MODULE] ℹ️ {message}")
+        logger.debug(f"[LAPTIME_MODULE] ℹ️ {message}")
 
 
 def create_detailed_laptime_analysis_module(parent=None, **kwargs) -> driverLapAnalysisModule:
@@ -420,30 +424,30 @@ class driverLapAnalysisModuleAdapter(driverLapAnalysisModule):
         # 適配器特定設定
         self.adapter_version = "1.0.0"
         
-        print(f"✅ [LAPTIME_ADAPTER] driverLapAnalysisModuleAdapter 初始化完成")
+        logger.info(f"[LAPTIME_ADAPTER] driverLapAnalysisModuleAdapter 初始化完成")
 
 
 if __name__ == "__main__":
     """測試用例"""
-    print("詳細圈速分析模組測試")
+    logger.debug("詳細圈速分析模組測試")
     
     # 創建模組實例
     module = create_detailed_laptime_analysis_module()
     
     # 測試基本功能
-    print(f"模組名稱: {module.display_name}")
-    print(f"版本: {module.version}")
-    print(f"描述: {module.description}")
-    print(f"CLI 功能: {module.get_required_cli_function()}")
-    print(f"分析能力: {module.get_analysis_capabilities()}")
-    print(f"支援節次: {module.get_supported_sessions()}")
+    logger.debug(f"模組名稱: {module.display_name}")
+    logger.debug(f"版本: {module.version}")
+    logger.debug(f"描述: {module.description}")
+    logger.debug(f"CLI 功能: {module.get_required_cli_function()}")
+    logger.debug(f"分析能力: {module.get_analysis_capabilities()}")
+    logger.debug(f"支援節次: {module.get_supported_sessions()}")
     
     # 測試參數驗證
     test_params = {'year': 2025, 'race': 'Japan', 'session': 'R'}
     is_valid = module.validate_parameters(**test_params)
-    print(f"參數驗證結果: {is_valid}")
+    logger.debug(f"參數驗證結果: {is_valid}")
     
     # 清理
     module.cleanup()
     
-    print("詳細圈速分析模組測試完成")
+    logger.debug("詳細圈速分析模組測試完成")

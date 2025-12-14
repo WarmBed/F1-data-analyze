@@ -14,6 +14,9 @@ import sys
 from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import QWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入介面
 try:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
@@ -69,7 +72,7 @@ class IdealLapRankingTableModule(IAnalysisModule):
         # 狀態
         self._is_initialized = False
         
-        print(f"[RANKING_MODULE] 模組已創建: {year} {race} {session}")
+        logger.debug(f"[RANKING_MODULE] 模組已創建: {year} {race} {session}")
     
     # ========== IAnalysisModule 屬性實作 ==========
     
@@ -107,20 +110,20 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 初始化是否成功
         """
         try:
-            print("[RANKING_MODULE] 開始初始化模組...")
+            logger.debug("[RANKING_MODULE] 開始初始化模組...")
             
             if self._is_initialized:
-                print("[RANKING_MODULE] 模組已初始化，跳過")
+                logger.debug("[RANKING_MODULE] 模組已初始化，跳過")
                 return True
             
             # 檢查參數
             if not self.current_year or not self.current_race or not self.current_session:
-                print("❌ [RANKING_MODULE] 缺少必要參數 (year/race/session)")
+                logger.error("[RANKING_MODULE] 缺少必要參數 (year/race/session)")
                 return False
             
             # 創建 MDI 核心實例
             if not self._ranking_core:
-                print(f"[RANKING_MODULE] 創建 MDI 核心: {self.current_year} {self.current_race} {self.current_session}")
+                logger.debug(f"[RANKING_MODULE] 創建 MDI 核心: {self.current_year} {self.current_race} {self.current_session}")
                 # ✅ MDI 構造函數只接受 parent 參數
                 self._ranking_core = IdealLapRankingTableMDI(parent=parent_widget)
                 
@@ -130,25 +133,25 @@ class IdealLapRankingTableModule(IAnalysisModule):
                 self._ranking_core.current_session = self.current_session
                 
                 # ✅ 初始化 MDI 核心
-                print("[RANKING_MODULE] 初始化 MDI 核心...")
+                logger.debug("[RANKING_MODULE] 初始化 MDI 核心...")
                 if not self._ranking_core.initialize_module():
-                    print("❌ [RANKING_MODULE] MDI 核心初始化失敗")
+                    logger.error("[RANKING_MODULE] MDI 核心初始化失敗")
                     return False
-                print("✅ [RANKING_MODULE] MDI 核心初始化成功")
+                logger.info("[RANKING_MODULE] MDI 核心初始化成功")
             
             # 獲取主要元件
             self._main_widget = self._ranking_core.get_widget()
             
             if not self._main_widget:
-                print("❌ [RANKING_MODULE] 無法獲取主要元件")
+                logger.error("[RANKING_MODULE] 無法獲取主要元件")
                 return False
             
             self._is_initialized = True
-            print("✅ [RANKING_MODULE] 模組初始化成功")
+            logger.info("[RANKING_MODULE] 模組初始化成功")
             return True
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 初始化失敗: {e}")
+            logger.error(f"[RANKING_MODULE] 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -164,24 +167,24 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 載入是否成功
         """
         try:
-            print("[RANKING_MODULE] 載入資料...")
+            logger.debug("[RANKING_MODULE] 載入資料...")
             
             if not self._is_initialized:
-                print("❌ [RANKING_MODULE] 模組未初始化")
+                logger.error("[RANKING_MODULE] 模組未初始化")
                 return False
             
             if not self._ranking_core:
-                print("❌ [RANKING_MODULE] MDI 核心未創建")
+                logger.error("[RANKING_MODULE] MDI 核心未創建")
                 return False
             
             # 觸發 MDI 載入資料
             self._ranking_core.load_initial_data()
             
-            print("✅ [RANKING_MODULE] 資料載入已觸發")
+            logger.info("[RANKING_MODULE] 資料載入已觸發")
             return True
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 載入資料失敗: {e}")
+            logger.error(f"[RANKING_MODULE] 載入資料失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -200,7 +203,7 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 更新是否成功
         """
         try:
-            print(f"[RANKING_MODULE] 更新參數: {year} {race} {session}")
+            logger.debug(f"[RANKING_MODULE] 更新參數: {year} {race} {session}")
             
             self.current_year = str(year)
             self.current_race = race
@@ -216,8 +219,9 @@ class IdealLapRankingTableModule(IAnalysisModule):
             return False
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 參數更新錯誤: {e}")
+            logger.error(f"[RANKING_MODULE] 參數更新錯誤: {e}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -229,20 +233,20 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 刷新是否成功
         """
         try:
-            print("[RANKING_MODULE] 刷新分析...")
+            logger.debug("[RANKING_MODULE] 刷新分析...")
             
             if not self._ranking_core:
-                print("❌ [RANKING_MODULE] MDI 核心未創建")
+                logger.error("[RANKING_MODULE] MDI 核心未創建")
                 return False
             
             # 重新載入資料
             self._ranking_core.load_initial_data()
             
-            print("✅ [RANKING_MODULE] 分析已刷新")
+            logger.info("[RANKING_MODULE] 分析已刷新")
             return True
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 刷新失敗: {e}")
+            logger.error(f"[RANKING_MODULE] 刷新失敗: {e}")
             return False
     
     def clear_data(self) -> bool:
@@ -253,17 +257,17 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 清空是否成功
         """
         try:
-            print("[RANKING_MODULE] 清空資料...")
+            logger.debug("[RANKING_MODULE] 清空資料...")
             
             if self._ranking_core and hasattr(self._ranking_core, 'chart_widget'):
                 self._ranking_core.chart_widget.clear_table()
-                print("✅ [RANKING_MODULE] 資料已清空")
+                logger.info("[RANKING_MODULE] 資料已清空")
                 return True
             
             return False
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 清空資料失敗: {e}")
+            logger.error(f"[RANKING_MODULE] 清空資料失敗: {e}")
             return False
     
     def export_data(self, export_path: str, export_format: str = "csv") -> bool:
@@ -278,14 +282,14 @@ class IdealLapRankingTableModule(IAnalysisModule):
             bool: 匯出是否成功
         """
         try:
-            print(f"[RANKING_MODULE] 匯出資料到: {export_path} (格式: {export_format})")
+            logger.debug(f"[RANKING_MODULE] 匯出資料到: {export_path} (格式: {export_format})")
             
             # TODO: 實作匯出功能
-            print("⚠️ [RANKING_MODULE] 匯出功能尚未實作")
+            logger.warning("[RANKING_MODULE] 匯出功能尚未實作")
             return False
             
         except Exception as e:
-            print(f"❌ [RANKING_MODULE] 匯出失敗: {e}")
+            logger.error(f"[RANKING_MODULE] 匯出失敗: {e}")
             return False
     
     def get_widget(self) -> Optional[QWidget]:
@@ -359,9 +363,9 @@ class IdealLapRankingTableModule(IAnalysisModule):
 if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication, QMainWindow, QMdiArea, QMdiSubWindow
     
-    print("=" * 60)
-    print("理想圈排名表格模組 - 獨立測試")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("理想圈排名表格模組 - 獨立測試")
+    logger.debug("=" * 60)
     
     app = QApplication(sys.argv)
     
@@ -374,7 +378,7 @@ if __name__ == "__main__":
     main_window.setCentralWidget(mdi_area)
     
     # 創建模組
-    print("\n📦 創建模組實例...")
+    logger.debug("\n📦 創建模組實例...")
     module = IdealLapRankingTableModule(
         parent=main_window,
         year="2025",
@@ -383,16 +387,16 @@ if __name__ == "__main__":
     )
     
     # 初始化模組
-    print("\n🔧 初始化模組...")
+    logger.debug("\n🔧 初始化模組...")
     success = module.initialize_module(parent_widget=main_window)
     
     if success:
-        print("✅ 模組初始化成功")
+        logger.info("模組初始化成功")
         
         # 獲取元件
         widget = module.get_widget()
         if widget:
-            print(f"✅ 獲取元件成功: {type(widget).__name__}")
+            logger.info(f"獲取元件成功: {type(widget).__name__}")
             
             # 如果 widget 有自己的 show 方法，直接顯示
             if hasattr(widget, 'show') and hasattr(widget, 'resize'):
@@ -408,18 +412,18 @@ if __name__ == "__main__":
                 sub_window.show()
             
             # 載入資料
-            print("\n📊 載入資料...")
+            logger.debug("\n📊 載入資料...")
             module.load_data()
             
             # 顯示模組資訊
-            print("\n📋 模組資訊:")
+            logger.debug("\n📋 模組資訊:")
             info = module.get_module_info()
             for key, value in info.items():
-                print(f"  {key}: {value}")
+                logger.debug(f"  {key}: {value}")
         else:
-            print("❌ 無法獲取元件")
+            logger.error("無法獲取元件")
     else:
-        print("❌ 模組初始化失敗")
+        logger.error("模組初始化失敗")
     
     main_window.show()
     

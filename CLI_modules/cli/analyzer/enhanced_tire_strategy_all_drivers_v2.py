@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 增強版全部車手輪胎策略分析模組 (CLI -f26 OpenF1 整合版)
 Enhanced All Drivers Tire Strategy Analysis with OpenF1 Integration
@@ -12,6 +13,14 @@ Enhanced All Drivers Tire Strategy Analysis with OpenF1 Integration
 作者: F1 Analysis Team
 日期: 2025-09-10
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -85,6 +94,14 @@ class EnhancedTireStrategyAnalyzer:
         except Exception as e:
             print(f"❌ 分析失敗: {e}")
             import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
             traceback.print_exc()
             return {"success": False, "error": str(e)}
     

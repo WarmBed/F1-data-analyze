@@ -30,7 +30,11 @@ from ..core.base_live_mdi import BaseLiveTimingMDI
 from ..core.data_manager import LiveTimingDataManager
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
 
+
+logger = get_logger("live_timing.control_panel", component="gui")
 class LiveTimingControlPanel(BaseLiveTimingMDI):
     """
     Live Timing 控制面板 MDI 子視窗
@@ -55,25 +59,20 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
         self.resize(700, 200)
         
         # 內部狀態
-        self._is_playing = False
         self._slider_dragging = False
         
-        print("[CONTROL_PANEL] LiveTimingControlPanel initialized")
-    
-    def _setup_ui(self):
+        logger.info("[CONTROL_PANEL] LiveTimingControlPanel initialized")
         """設置 UI 組件"""
         # 主佈局
         main_layout = QVBoxLayout()
         main_layout.setContentsMargins(8, 8, 8, 8)
-        main_layout.setSpacing(8)
         
         # === 第一行：賽事選擇 ===
         race_frame = QFrame()
-        race_frame.setFrameShape(QFrame.StyledPanel)
         race_layout = QHBoxLayout(race_frame)
         race_layout.setContentsMargins(8, 4, 8, 4)
         
-        race_layout.addWidget(QLabel(tr("Year") + ":"))
+        logger.info("[CONTROL_PANEL] Playback state: %s", state)
         self.spin_year = QSpinBox()
         self.spin_year.setRange(2018, 2030)
         self.spin_year.setValue(2025)
@@ -212,13 +211,13 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
                                 race_name = event_name.replace(' Grand Prix', '').replace(' ', '_') + '_Race'
                                 races.append(race_name)
                 
-                print(f"[CONTROL_PANEL] 從 API 獲取賽事列表成功: {len(races)} 場賽事")
+                logger.info("[CONTROL_PANEL] 從 API 獲取賽事列表成功: %s 場賽事", len(races))
         except Exception as e:
-            print(f"[CONTROL_PANEL] API 獲取賽事列表失敗: {e}")
+            logger.exception("[CONTROL_PANEL] API 獲取賽事列表失敗: %s", e)
         
         # API 失敗時不回退，僅顯示錯誤
         if not races:
-            print("[CONTROL_PANEL] API 獲取失敗，請確認 API 服務器已啟動")
+            logger.warning("[CONTROL_PANEL] API 獲取失敗，請確認 API 服務器已啟動")
         
         # 去重並排序
         races = sorted(set(races))
@@ -334,7 +333,7 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
     # ===========================================
     def _on_race_loaded(self, race_info: Dict[str, Any]):
         """賽事載入完成"""
-        print(f"[CONTROL_PANEL] Race loaded: {race_info}")
+        logger.info("[CONTROL_PANEL] Race loaded: %s", race_info)
         
         total_snapshots = race_info.get('total_snapshots', 0)
         duration = race_info.get('duration_seconds', 0)
@@ -348,7 +347,7 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
     
     def _on_race_unloaded(self):
         """賽事卸載"""
-        print("[CONTROL_PANEL] Race unloaded")
+        logger.info("[CONTROL_PANEL] Race unloaded")
         
         self.lbl_current_time.setText("00:00:00")
         self.lbl_total_time.setText("/ 00:00:00")
@@ -360,7 +359,7 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
     
     def _on_playback_state_changed(self, state: str):
         """播放狀態改變"""
-        print(f"[CONTROL_PANEL] Playback state: {state}")
+        logger.info("[CONTROL_PANEL] Playback state: %s", state)
         self._update_play_button(state)
         
         if state == 'playing':

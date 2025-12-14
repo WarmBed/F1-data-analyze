@@ -21,11 +21,14 @@ from PyQt5.QtGui import QColor, QFont, QBrush, QPainter
 from typing import Dict, List, Any, Optional
 
 from core.gui_i18n import tr, get_team_name_text
+from core.logger import get_logger
 from modules.gui.themes.color_palette_provider import color_palette_provider  # ✅ 使用通用顏色系統
 from modules.gui.ideal_lap_analysis.shared_colors import (
     get_gap_color,
     get_competitiveness_color,
 )
+
+logger = get_logger(__name__)
 
 
 class SectorTimeDelegate(QStyledItemDelegate):
@@ -301,10 +304,10 @@ class IdealLapRankingTableWidget(QWidget):
                 self._set_row_data(row, driver)
             
             self.table.setSortingEnabled(True)  # 重新啟用排序
-            print(f"[TABLE_WIDGET] ✅ 已載入 {row_count} 位車手")
+            logger.info(f"[TABLE_WIDGET] ✅ 已載入 {row_count} 位車手")
             
         except Exception as e:
-            print(f"❌ {tr('table_populate_failed', '[TABLE_WIDGET] 填充表格失敗')}: {e}")
+            logger.error(f"{tr('table_populate_failed', '[TABLE_WIDGET] 填充表格失敗')}: {e}")
             import traceback
             traceback.print_exc()
     
@@ -382,7 +385,7 @@ class IdealLapRankingTableWidget(QWidget):
             self.lbl_perfect_laps.setText(f"{tr('perfect_lap_rate', '完美單圈達成率')}: {perfect_rate}")
             
         except Exception as e:
-            print(f"❌ {tr('statistics_update_failed', '[TABLE_WIDGET] 更新統計面板失敗')}: {e}")
+            logger.error(f"{tr('statistics_update_failed', '[TABLE_WIDGET] 更新統計面板失敗')}: {e}")
             import traceback
             traceback.print_exc()
     
@@ -390,7 +393,7 @@ class IdealLapRankingTableWidget(QWidget):
         """清空表格"""
         self.table.setRowCount(0)
         self._ranking_data = []
-        print("[TABLE_WIDGET] 表格已清空")
+        logger.debug("[TABLE_WIDGET] 表格已清空")
     
     # ========== 私有方法 ==========
     
@@ -484,7 +487,7 @@ class IdealLapRankingTableWidget(QWidget):
             # 已移除操作按鈕（Action 欄）
             
         except Exception as e:
-            print(f"❌ {tr('set_row_data_failed', '[TABLE_WIDGET] 設置行資料失敗')} (row {row}): {e}")
+            logger.error(f"{tr('set_row_data_failed', '[TABLE_WIDGET] 設置行資料失敗')} (row {row}): {e}")
             import traceback
             traceback.print_exc()
     
@@ -765,9 +768,9 @@ if __name__ == "__main__":
     import json
     from PyQt5.QtWidgets import QApplication
     
-    print("=" * 60)
-    print("理想圈排名表格元件 - 獨立測試")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("理想圈排名表格元件 - 獨立測試")
+    logger.debug("=" * 60)
     
     app = QApplication(sys.argv)
     
@@ -780,7 +783,7 @@ if __name__ == "__main__":
     # 載入測試資料
     try:
         json_path = "json/ideal_lap_ranking_2025_Japan_R.json"
-        print(f"\n📂 載入測試資料: {json_path}")
+        logger.debug(f"\n📂 載入測試資料: {json_path}")
         
         with open(json_path, 'r', encoding='utf-8') as f:
             data = json.load(f)
@@ -789,23 +792,24 @@ if __name__ == "__main__":
             ranking = data["analysis_result"]["ranking"]
             summary = data["analysis_result"]["summary"]
             
-            print(f"✅ 資料載入成功")
-            print(f"   車手數: {len(ranking)}")
+            logger.info(f"資料載入成功")
+            logger.debug(f"   車手數: {len(ranking)}")
             
             # 填充表格
             widget.populate_table(ranking)
             widget.update_statistics_panel(summary)
             
-            print(f"✅ 表格已填充")
+            logger.info(f"表格已填充")
         else:
-            print("❌ JSON 結構不正確")
+            logger.error("JSON 結構不正確")
     
     except FileNotFoundError:
-        print(f"❌ 找不到測試資料檔案: {json_path}")
-        print("💡 提示: 請先執行 CLI 生成資料")
+        logger.error(f"找不到測試資料檔案: {json_path}")
+        logger.debug("💡 提示: 請先執行 CLI 生成資料")
     except Exception as e:
-        print(f"❌ 測試失敗: {e}")
+        logger.error(f"測試失敗: {e}")
         import traceback
+
         traceback.print_exc()
     
     sys.exit(app.exec_())

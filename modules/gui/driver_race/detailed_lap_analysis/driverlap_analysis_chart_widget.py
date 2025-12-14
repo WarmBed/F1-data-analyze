@@ -28,12 +28,15 @@ from PyQt5.QtGui import QPainter, QPen, QColor, QBrush, QFont, QFontMetrics
 # 導入翻譯函數
 from core.gui_i18n import tr
 from core.gui_settings_manager import gui_settings_manager
+from core.logger import get_logger
 from .lap_filter_utils import (
     extract_caution_laps,
     lap_is_under_caution,
     lap_is_pit_stop,
     normalize_lap_number,
 )
+
+logger = get_logger(__name__)
 
 
 class ChartTheme:
@@ -115,14 +118,14 @@ class LaptimeChartWidget(QWidget):
         self.pinned_tooltips = []  # 固定的 Tooltip 列表 [{point, screen_pos, text, lap_time}, ...]
         self.max_pinned = 2  # 最多固定2個
         
-        print("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
+        logger.debug("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
     
     def update_series_data(self, series_list: List[ChartSeries]):
         """更新圖表數據系列"""
         self.series_list = series_list
-        print(f"[LAPTIME_CHART_WIDGET] 更新數據系列，系列數: {len(series_list)}")
+        logger.debug(f"[LAPTIME_CHART_WIDGET] 更新數據系列，系列數: {len(series_list)}")
         for series in series_list:
-            print(f"[LAPTIME_CHART_WIDGET]   - {series.name}: {len(series.data)} 數據點")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] - {series.name}: {len(series.data)} 數據點")
         self.update()  # 觸發重繪
     
     def paintEvent(self, event):
@@ -203,7 +206,7 @@ class LaptimeChartWidget(QWidget):
                 self._draw_custom_tooltip(painter, self.hover_screen_pos, self.hover_tooltip_text, is_pinned=False)
             
         except Exception as e:
-            print(f"[LAPTIME_CHART_WIDGET] 繪製錯誤: {e}")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製錯誤: {e}")
             traceback.print_exc()
             
             # 顯示錯誤信息
@@ -377,7 +380,7 @@ class LaptimeChartWidget(QWidget):
         """繪製智能標記"""
         # 防護檢查：確保 series_list 已初始化且不為空
         if not hasattr(self, 'series_list') or not self.series_list:
-            print(f"[LAPTIME_CHART_WIDGET] ⚠️ series_list 未初始化或為空，跳過智能標記繪製")
+            logger.warning(f"[LAPTIME_CHART_WIDGET] ⚠️ series_list 未初始化或為空，跳過智能標記繪製")
             return
             
         marker_count = 0
@@ -404,13 +407,13 @@ class LaptimeChartWidget(QWidget):
         
         # 調試信息
         if marker_count > 0:
-            print(f"[LAPTIME_CHART_WIDGET] 繪製了 {marker_count} 個智能標記")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製了 {marker_count} 個智能標記")
         else:
-            print(f"[LAPTIME_CHART_WIDGET] ⚠️ 沒有找到智能標記數據")
+            logger.warning(f"[LAPTIME_CHART_WIDGET] ⚠️ 沒有找到智能標記數據")
     
     def _draw_marker(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
         """繪製單個標記 - 純文字版本，支援組合標記"""
-        print(f"[MARKER_TEXT] 🎯 繪製文字標記 {marker_type} (純文字版本)")
+        logger.debug(f"[MARKER_TEXT] 🎯 繪製文字標記 {marker_type} (純文字版本)")
         
         # 統一的文字設置 - 響應式字體大小
         painter.setPen(QPen(color, 2))  # 使用傳入的顏色
@@ -470,12 +473,12 @@ class LaptimeChartWidget(QWidget):
     def _draw_legend(self, painter: QPainter):
         """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.1 - 支援顯示/隱藏]"""
         if not self.series_list:
-            print(f"[LEGEND_DEBUG] ⚠️ 沒有數據系列，跳過圖例繪製")
+            logger.warning(f"[LEGEND_DEBUG] ⚠️ 沒有數據系列，跳過圖例繪製")
             return
         
-        print(f"[LEGEND_DEBUG] 🎨 使用圖例版本 3.1 - 支援顯示/隱藏標記")
-        print(f"[LEGEND_DEBUG] 數據系列數量: {len(self.series_list)}")
-        print(f"[LEGEND_DEBUG] 標記顯示狀態: {self.legend_show_markers}")
+        logger.debug(f"[LEGEND_DEBUG] 🎨 使用圖例版本 3.1 - 支援顯示/隱藏標記")
+        logger.debug(f"[LEGEND_DEBUG] 數據系列數量: {len(self.series_list)}")
+        logger.debug(f"[LEGEND_DEBUG] 標記顯示狀態: {self.legend_show_markers}")
         
         # 計算圖例尺寸和位置
         driver_count = len(self.series_list)
@@ -497,29 +500,29 @@ class LaptimeChartWidget(QWidget):
         # 🆕 保存圖例矩形區域供滑鼠事件使用
         self.legend_rect = QRect(legend_x, legend_y, content_width, content_height)
         
-        print(f"[LEGEND_DEBUG] 圖例位置: ({legend_x}, {legend_y})")
-        print(f"[LEGEND_DEBUG] 圖例尺寸: {content_width} x {content_height}")
+        logger.debug(f"[LEGEND_DEBUG] 圖例位置: ({legend_x}, {legend_y})")
+        logger.debug(f"[LEGEND_DEBUG] 圖例尺寸: {content_width} x {content_height}")
         
         # 🔥 強制白色背景 - 版本 3.0 加強版
         white_color = QColor(255, 255, 255, 255)  # 完全不透明的白色
-        print(f"[LEGEND_DEBUG] 🎨 設定背景色為: R{white_color.red()}, G{white_color.green()}, B{white_color.blue()}, A{white_color.alpha()}")
+        logger.debug(f"[LEGEND_DEBUG] 🎨 設定背景色為: R{white_color.red()}, G{white_color.green()}, B{white_color.blue()}, A{white_color.alpha()}")
         
         # 多重白色填充確保效果
         for i in range(3):  # 重複填充3次
             painter.fillRect(legend_x - 5, legend_y - 5, content_width + 10, content_height + 10, white_color)
-        print(f"[LEGEND_DEBUG] ✅ 白色背景填充完成 (重複3次)")
+        logger.info(f"[LEGEND_DEBUG] ✅ 白色背景填充完成 (重複3次)")
         
         # 黑色邊框
         border_color = QColor(60, 60, 60)
         painter.setPen(QPen(border_color, 2))
         painter.drawRect(legend_x, legend_y, content_width, content_height)
-        print(f"[LEGEND_DEBUG] ✅ 邊框繪製完成")
+        logger.info(f"[LEGEND_DEBUG] ✅ 邊框繪製完成")
         
         # 內容繪製區域
         content_x = legend_x + 10
         current_y = legend_y + 15
         
-        print(f"[LEGEND] 圖例重疊模式: 位置=({legend_x}, {legend_y}), 尺寸={content_width}x{content_height}")
+        logger.debug(f"[LEGEND] 圖例重疊模式: 位置=({legend_x}, {legend_y}), 尺寸={content_width}x{content_height}")
         
         # 車手圖例標題
         painter.setPen(QPen(QColor(50, 50, 50), 1))
@@ -624,7 +627,7 @@ class LaptimeChartWidget(QWidget):
         if event.button() == Qt.LeftButton:
             if self.legend_rect.contains(event.pos()):
                 self.legend_show_markers = not self.legend_show_markers
-                print(f"[LEGEND] 切換標記顯示狀態: {self.legend_show_markers}")
+                logger.debug(f"[LEGEND] 切換標記顯示狀態: {self.legend_show_markers}")
                 self.update()  # 重繪圖表
                 event.accept()
                 return
@@ -651,7 +654,7 @@ class LaptimeChartWidget(QWidget):
             # 🆕 右鍵清除所有固定的 Tooltip
             if self.pinned_tooltips:
                 self.pinned_tooltips.clear()
-                print("[TOOLTIP] 🗑️ 已清除所有固定 Tooltip")
+                logger.debug("[TOOLTIP] 🗑️ 已清除所有固定 Tooltip")
                 self._update_time_diff_display()  # 🆕 清空時間差顯示
                 self.update()
                 event.accept()
@@ -705,13 +708,13 @@ class LaptimeChartWidget(QWidget):
         # 檢查是否已經固定過這個點
         for pinned in self.pinned_tooltips:
             if pinned['point'] == self.hover_point:
-                print("[TOOLTIP] ⚠️ 此點已固定")
+                logger.warning("[TOOLTIP] ⚠️ 此點已固定")
                 return
         
         # 如果已達到最大固定數量，移除最舊的
         if len(self.pinned_tooltips) >= self.max_pinned:
             removed = self.pinned_tooltips.pop(0)
-            print(f"[TOOLTIP] 🗑️ 移除最舊的固定點")
+            logger.debug(f"[TOOLTIP] 🗑️ 移除最舊的固定點")
         
         # 提取圈速時間（用於計算時間差）
         lap_time = self.hover_point.y  # 假設 y 值就是圈速秒數
@@ -724,7 +727,7 @@ class LaptimeChartWidget(QWidget):
             'lap_time': lap_time
         }
         self.pinned_tooltips.append(pinned_data)
-        print(f"[TOOLTIP] 📌 已固定 Tooltip ({len(self.pinned_tooltips)}/{self.max_pinned})")
+        logger.debug(f"[TOOLTIP] 📌 已固定 Tooltip ({len(self.pinned_tooltips)}/{self.max_pinned})")
         
         # 🆕 更新時間差顯示
         self._update_time_diff_display()
@@ -757,7 +760,7 @@ class LaptimeChartWidget(QWidget):
             time_diff = self.get_pinned_time_diff()
             if time_diff:
                 time_diff_text = f"Diff: {time_diff}"
-                print(f"[TOOLTIP] ⏱️ 時間差: {time_diff}")
+                logger.debug(f"[TOOLTIP] ⏱️ 時間差: {time_diff}")
         
         # 發射信號通知父容器
         self.pinned_tooltips_changed.emit(pinned_count, time_diff_text)
@@ -879,7 +882,7 @@ class LaptimeChartWidget(QWidget):
             self.hover_point = closest_point
             self.hover_screen_pos = closest_screen_pos
             self.hover_tooltip_text = tooltip_text  # 自繪 Tooltip 文字
-            print(f"[TOOLTIP] ✅ 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
+            logger.info(f"[TOOLTIP] ✅ 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
             self.update()  # 重繪以顯示高亮圓圈和 Tooltip
         else:
             self.setToolTip("")  # 清除 Tooltip
@@ -962,7 +965,7 @@ class DriverSelectionWidget(QWidget):
         
     def update_available_drivers(self, drivers: List[str]):
         """更新可用車手列表"""
-        print(f"[DRIVER_SELECTION] 🔄 更新車手列表: {drivers}")
+        logger.debug(f"[DRIVER_SELECTION] 🔄 更新車手列表: {drivers}")
         self.available_drivers = drivers
         
         # 暫停信號發射避免重複觸發
@@ -983,11 +986,11 @@ class DriverSelectionWidget(QWidget):
         # 如果沒有預設選擇，自動選擇前3位車手
         placeholder = f"-- {tr('please_select', '請選擇')} --"
         if drivers and all(combo.currentText() == placeholder for combo in self.driver_combos):
-            print(f"[DRIVER_SELECTION] 🎯 自動選擇前3位車手")
+            logger.debug(f"[DRIVER_SELECTION] 🎯 自動選擇前3位車手")
             for i, driver in enumerate(drivers[:3]):  # 自動選擇前3位車手
                 if i < len(self.driver_combos):
                     self.driver_combos[i].setCurrentText(driver)
-                    print(f"[DRIVER_SELECTION]   - 車手 {i+1}: {driver}")
+                    logger.debug(f"[DRIVER_SELECTION] - 車手 {i+1}: {driver}")
         
         # 恢復信號發射
         for combo in self.driver_combos:
@@ -996,8 +999,8 @@ class DriverSelectionWidget(QWidget):
         # 觸發一次選擇應用
         self._apply_selections()
         
-        print(f"[DRIVER_SELECTION] ✅ 車手列表更新完成，總車手數: {len(drivers)}")
-        print(f"[DRIVER_SELECTION] 當前選擇: {self.selected_drivers}")
+        logger.info(f"[DRIVER_SELECTION] ✅ 車手列表更新完成，總車手數: {len(drivers)}")
+        logger.debug(f"[DRIVER_SELECTION] 當前選擇: {self.selected_drivers}")
                 
     def _on_driver_selection_changed(self):
         """車手選擇改變處理"""
@@ -1011,7 +1014,7 @@ class DriverSelectionWidget(QWidget):
         
     def _export_chart(self):
         """匯出圖表"""
-        print("[DRIVER_SELECTION] 📊 匯出圖表功能待實現")
+        logger.debug("[DRIVER_SELECTION] 📊 匯出圖表功能待實現")
         # TODO: 實現圖表匯出功能
         
     def _apply_selections(self):
@@ -1052,7 +1055,7 @@ class driverLapAnalysisChartWidget(QWidget):
         # 設置UI
         self.setup_ui()
         
-        print("[LAPTIME_CHART] 詳細圈速分析圖表組件初始化完成 (修正版架構)")
+        logger.debug("[LAPTIME_CHART] 詳細圈速分析圖表組件初始化完成 (修正版架構)")
     
     def setup_ui(self):
         """設置主介面 - 垂直布局：車手選擇在上方，圖表在下方"""
@@ -1087,14 +1090,14 @@ class driverLapAnalysisChartWidget(QWidget):
     def update_data(self, data: Dict[str, Any], selected_driver: str = None):
         """更新圖表數據"""
         try:
-            print(f"[LAPTIME_CHART] 收到數據更新")
-            print(f"[LAPTIME_CHART] 數據類型: {type(data)}")
-            print(f"[LAPTIME_CHART] 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            logger.debug(f"[LAPTIME_CHART] 收到數據更新")
+            logger.debug(f"[LAPTIME_CHART] 數據類型: {type(data)}")
+            logger.debug(f"[LAPTIME_CHART] 數據鍵: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
             
             # 兼容處理：解包 charts_data
             if isinstance(data, dict) and 'charts_data' in data:
                 data = data.get('charts_data', {})
-                print("[LAPTIME_CHART] 解包 charts_data")
+                logger.debug("[LAPTIME_CHART] 解包 charts_data")
             
             self.chart_data = data
             
@@ -1102,7 +1105,7 @@ class driverLapAnalysisChartWidget(QWidget):
             detailed_laptime_data = data.get('all_drivers_detailed_laptime', {})
             drivers_analyzed = data.get('drivers_analyzed', list(detailed_laptime_data.keys()))
             
-            print(f"[LAPTIME_CHART] 可用車手: {drivers_analyzed}")
+            logger.debug(f"[LAPTIME_CHART] 可用車手: {drivers_analyzed}")
             
             # 更新車手選擇器
             self.driver_selection.update_available_drivers(drivers_analyzed)
@@ -1117,12 +1120,12 @@ class driverLapAnalysisChartWidget(QWidget):
                 self._update_chart_data()
                 
         except Exception as e:
-            print(f"[LAPTIME_CHART] 數據更新錯誤: {e}")
+            logger.debug(f"[LAPTIME_CHART] 數據更新錯誤: {e}")
             traceback.print_exc()
     
     def _on_drivers_selected(self, drivers: List[str]):
         """處理車手選擇變更"""
-        print(f"[LAPTIME_CHART] 車手選擇變更: {drivers}")
+        logger.debug(f"[LAPTIME_CHART] 車手選擇變更: {drivers}")
         self.selected_drivers = drivers
         self._update_chart_data()
         
@@ -1133,7 +1136,7 @@ class driverLapAnalysisChartWidget(QWidget):
     def _update_chart_data(self):
         """更新圖表數據"""
         try:
-            print(f"[LAPTIME_CHART] 更新圖表，選中車手: {self.selected_drivers}")
+            logger.debug(f"[LAPTIME_CHART] 更新圖表，選中車手: {self.selected_drivers}")
             
             if not self.chart_data or not self.selected_drivers:
                 self.chart_widget.update_series_data([])
@@ -1211,7 +1214,7 @@ class driverLapAnalysisChartWidget(QWidget):
                     data_points.append(data_point)
 
                 if filtered_pit or filtered_caution:
-                    print(
+                    logger.debug(
                         f"[LAPTIME_CHART] {driver}: filtered {filtered_pit} pit laps, {filtered_caution} caution laps"
                     )
 
@@ -1231,7 +1234,7 @@ class driverLapAnalysisChartWidget(QWidget):
             self.chart_widget.update_series_data(series_list)
             
         except Exception as e:
-            print(f"[LAPTIME_CHART] 圖表數據更新錯誤: {e}")
+            logger.debug(f"[LAPTIME_CHART] 圖表數據更新錯誤: {e}")
             traceback.print_exc()
     
     def _extract_markers(
@@ -1251,9 +1254,9 @@ class driverLapAnalysisChartWidget(QWidget):
 
         # 調試：只在第一圈顯示數據結構
         if lookup_value == 1:
-            print(f"[LAPTIME_CHART_WIDGET] 智能標記數據結構:")
-            print(f"[LAPTIME_CHART_WIDGET]   - driver_data 鍵: {list(driver_data.keys())}")
-            print(f"[LAPTIME_CHART_WIDGET]   - smart_markers_summary 鍵: {list(smart_markers_summary.keys())}")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] 智能標記數據結構:")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] - driver_data 鍵: {list(driver_data.keys())}")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] - smart_markers_summary 鍵: {list(smart_markers_summary.keys())}")
 
         def _contains_lap(collection: Any) -> bool:
             if not isinstance(collection, (list, tuple, set)):
@@ -1286,7 +1289,7 @@ class driverLapAnalysisChartWidget(QWidget):
             markers.append('W')
 
         if markers:
-            print(f"[LAPTIME_CHART_WIDGET] 圈 {lookup_value} 找到標記: {markers}")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] 圈 {lookup_value} 找到標記: {markers}")
 
         return markers
 
@@ -1324,6 +1327,7 @@ class driverLapAnalysisChartWidget(QWidget):
 if __name__ == "__main__":
     """測試用例"""
     from PyQt5.QtWidgets import QApplication
+
     
     app = QApplication(sys.argv)
     
@@ -1367,5 +1371,5 @@ if __name__ == "__main__":
     widget.update_data(test_data)
     widget.show()
     
-    print("詳細圈速分析圖表組件測試啟動 (修正版)")
+    logger.debug("詳細圈速分析圖表組件測試啟動 (修正版)")
     sys.exit(app.exec_())

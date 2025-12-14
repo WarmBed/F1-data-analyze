@@ -19,12 +19,17 @@ Version: 1.0.0
 """
 
 # 主要模組匯出
+from core.logger import get_logger
+
+
+logger = get_logger(component="rain_analysis_init")
+
 try:
     from .rain_analysis_module import RainAnalysisModule
     from .rain_analysis_mdi import RainAnalysisUniversal, RainAnalysisDataManager
     from .rain_analysis_chart_widget import RainAnalysisChartWidget, RainChartTheme
 except ImportError as e:
-    print(f"[WARNING] 下雨分析模組導入部分失敗: {str(e)}")
+    logger.warning("[WARNING] 下雨分析模組導入部分失敗: %s", e)
     # 提供向後兼容性
     RainAnalysisModule = None
     RainAnalysisUniversal = None
@@ -69,7 +74,7 @@ def create_rain_data_loader_instance(parent=None):
     Returns:
         None: 此功能已整合到 RainAnalysisDataManager 中
     """
-    print("[WARNING] create_rain_data_loader_instance 已廢棄，請使用 RainAnalysisDataManager")
+    logger.warning("[WARNING] create_rain_data_loader_instance 已廢棄，請使用 RainAnalysisDataManager")
     return None
 
 def get_module_info():

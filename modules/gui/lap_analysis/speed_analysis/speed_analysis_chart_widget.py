@@ -22,6 +22,9 @@ from core.gui_i18n import tr
 # 導入國際化模組
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入全域信號管理器
 try:
     from f1t_gui_main import global_signals
@@ -35,7 +38,7 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+    logger.warning("連動管理器導入失敗，將使用舊版連動功能")
 
 class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):
     """速度圖表繪製組件 - 使用 PyQt5 原生繪圖"""
@@ -107,11 +110,11 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             try:
                 current_master_state = linkage_manager.is_master_linkage_enabled()
                 self.set_master_linkage_enabled(current_master_state)
-                print(f"[SPEED_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+                logger.info(f"[SPEED_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
             except Exception as e:
-                print(f"[ERROR] [SPEED_CHART] 同步連動狀態失敗: {e}")
+                logger.error(f"[SPEED_CHART] 同步連動狀態失敗: {e}")
         else:
-            print(f"[WARNING] [SPEED_CHART] 連動管理器不可用，連動功能將無法使用")
+            logger.warning(f"[SPEED_CHART] 連動管理器不可用，連動功能將無法使用")
         
         # 拖拉狀態
         self.middle_dragging = False  # 中鍵拖拉狀態
@@ -146,13 +149,13 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             driver1_time: 車手1時間數據（秒）
             driver2_time: 車手2時間數據（秒）
         """
-        print(f"[SPEED_CHART] ========== set_speed_data 被調用 ==========")
-        print(f"[SPEED_CHART] 📏 distance 點數: {len(distance) if distance else 0}")
-        print(f"[SPEED_CHART] 🏎️ driver1_speed 點數: {len(driver1_speed) if driver1_speed else 0}")
-        print(f"[SPEED_CHART] 🏎️ driver2_speed 點數: {len(driver2_speed) if driver2_speed else 0}")
-        print(f"[SPEED_CHART] 👤 driver1_name: {driver1_name}")
-        print(f"[SPEED_CHART] 👤 driver2_name: {driver2_name}")
-        print(f"[SPEED_CHART] 🔢 lap1: {lap1}, lap2: {lap2}")
+        logger.debug(f"[SPEED_CHART] ========== set_speed_data 被調用 ==========")
+        logger.debug(f"[SPEED_CHART] 📏 distance 點數: {len(distance) if distance else 0}")
+        logger.debug(f"[SPEED_CHART] 🏎️ driver1_speed 點數: {len(driver1_speed) if driver1_speed else 0}")
+        logger.debug(f"[SPEED_CHART] 🏎️ driver2_speed 點數: {len(driver2_speed) if driver2_speed else 0}")
+        logger.debug(f"[SPEED_CHART] 👤 driver1_name: {driver1_name}")
+        logger.debug(f"[SPEED_CHART] 👤 driver2_name: {driver2_name}")
+        logger.debug(f"[SPEED_CHART] 🔢 lap1: {lap1}, lap2: {lap2}")
         
         # 強制重置視圖狀態
         self.view_min_distance = None
@@ -181,8 +184,8 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             lap_format = tr('lap_only_format', '第{lap}圈')
             self.driver1_name = lap_format.format(lap=lap1)
             self.driver2_name = lap_format.format(lap=lap2)
-            print(f"[SPEED_CHART] 🔄 雙圈比較模式: {original_driver} {self.driver1_name} vs {self.driver2_name}")
-            print(f"[SPEED_CHART] 🔄 雙圈比較模式: {self.driver1_name} vs {self.driver2_name}")
+            logger.debug(f"[SPEED_CHART] 🔄 雙圈比較模式: {original_driver} {self.driver1_name} vs {self.driver2_name}")
+            logger.debug(f"[SPEED_CHART] 🔄 雙圈比較模式: {self.driver1_name} vs {self.driver2_name}")
         else:
             # 正常模式：直接使用車手名稱
             self.driver1_name = driver1_name
@@ -198,20 +201,20 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             if lap1 is not None and lap2 is not None and lap1 != lap2:
                 # 同車手不同圈數 → 雙圈比較模式
                 self.is_single_driver = False
-                print(f"[SPEED_CHART] 🔍 雙圈比較模式（同車手不同圈數）")
+                logger.debug(f"[SPEED_CHART] 🔍 雙圈比較模式（同車手不同圈數）")
             else:
                 # 同車手相同圈數或無圈數信息 → 單車手模式
                 self.is_single_driver = True
-                print(f"[SPEED_CHART] 🔍 單車手模式（同車手相同圈數）")
+                logger.debug(f"[SPEED_CHART] 🔍 單車手模式（同車手相同圈數）")
         else:
             # 不同車手 → 雙車手比較模式
             self.is_single_driver = False
             
-        print(f"[SPEED_CHART] 🔍 單車手模式: {self.is_single_driver}")
+        logger.debug(f"[SPEED_CHART] 🔍 單車手模式: {self.is_single_driver}")
         
         # 計算 X 軸數據範圍（根據時間軸模式選擇）
-        print(f"🕒 [TIME_AXIS_DEBUG] set_speed_data 計算 X 軸範圍")
-        print(f"🕒 [TIME_AXIS_DEBUG]   當前 use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG] set_speed_data 計算 X 軸範圍")
+        logger.debug(f"[TIME_AXIS_DEBUG]   當前 use_time_axis: {self.use_time_axis}")
         
         if self.use_time_axis and (driver1_time or driver2_time):
             # 時間軸模式：使用時間數據計算範圍
@@ -224,12 +227,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             if all_time_values:
                 self.min_distance = min(all_time_values)
                 self.max_distance = max(all_time_values)
-                print(f"🕒 [TIME_AXIS_DEBUG]   使用時間數據計算範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+                logger.debug(f"[TIME_AXIS_DEBUG]   使用時間數據計算範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
         elif distance:
             # 距離軸模式：使用距離數據計算範圍
             self.min_distance = min(distance)
             self.max_distance = max(distance)
-            print(f"[SPEED_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
+            logger.debug(f"[SPEED_CHART] 📊 距離範圍: {self.min_distance:.1f} - {self.max_distance:.1f}")
         
         all_speeds = []
         if driver1_speed:
@@ -240,12 +243,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         if all_speeds:
             self.min_speed = max(0, min(all_speeds) - 20)
             self.max_speed = max(all_speeds) + 20
-            print(f"[SPEED_CHART] 📊 速度範圍: {self.min_speed:.1f} - {self.max_speed:.1f}")
+            logger.debug(f"[SPEED_CHART] 📊 速度範圍: {self.min_speed:.1f} - {self.max_speed:.1f}")
         
         # 強制重繪
-        print(f"[SPEED_CHART] 🖌️ 調用 repaint()...")
+        logger.debug(f"[SPEED_CHART] 🖌️ 調用 repaint()...")
         self.repaint()
-        print(f"[SPEED_CHART] ✅ set_speed_data 完成")
+        logger.info(f"[SPEED_CHART] ✅ set_speed_data 完成")
     
     def set_time_axis_mode(self, use_time_axis: bool):
         """
@@ -254,12 +257,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         Parameters:
             use_time_axis: True = 使用時間軸, False = 使用距離軸
         """
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 6: SpeedChartWidget.set_time_axis_mode 被調用")
-        print(f"🕒 [TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
-        print(f"[SPEED_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 6: SpeedChartWidget.set_time_axis_mode 被調用")
+        logger.debug(f"[TIME_AXIS_DEBUG]   接收參數 use_time_axis: {use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   當前 self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[SPEED_CHART] 🕒 set_time_axis_mode 被調用: {use_time_axis}")
         self.use_time_axis = use_time_axis
-        print(f"🕒 [TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   更新後 self.use_time_axis: {self.use_time_axis}")
         
         # 重新計算 X 軸範圍（根據時間軸模式選擇數據源）
         if use_time_axis and self.driver1_time:
@@ -270,12 +273,12 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
             
             self.min_distance = min(all_time_values)
             self.max_distance = max(all_time_values)
-            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+            logger.debug(f"[TIME_AXIS_DEBUG]   重新計算 X 軸範圍（時間）: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
         elif self.distance_data:
             # 使用距離數據計算範圍
             self.min_distance = min(self.distance_data)
             self.max_distance = max(self.distance_data)
-            print(f"🕒 [TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
+            logger.debug(f"[TIME_AXIS_DEBUG]   重新計算 X 軸範圍（距離）: {self.min_distance:.2f}m - {self.max_distance:.2f}m")
         
         # 重置視圖狀態
         self.view_min_distance = None
@@ -287,14 +290,14 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.fixed_distance_value = None
         
         # 強制重繪
-        print(f"[SPEED_CHART] 🖌️ 時間軸模式切換，調用 repaint()...")
-        print(f"🕒 [TIME_AXIS_DEBUG]   調用 self.repaint() 強制重繪")
+        logger.debug(f"[SPEED_CHART] 🖌️ 時間軸模式切換，調用 repaint()...")
+        logger.debug(f"[TIME_AXIS_DEBUG]   調用 self.repaint() 強制重繪")
         self.repaint()
-        print(f"🕒 [TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 完成")
+        logger.info(f"[TIME_AXIS_DEBUG]   ✅ set_time_axis_mode 完成")
         
     def reset_view(self):
         """重置視圖到原始範圍"""
-        print(f"[SPEED_CHART] 🔄 reset_view() 被調用")
+        logger.debug(f"[SPEED_CHART] 🔄 reset_view() 被調用")
         self.view_min_distance = None
         self.view_max_distance = None
         self.view_min_speed = None
@@ -302,9 +305,9 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         self.show_fixed_line = False
         self.fixed_line_x = -1
         self.fixed_distance_value = None
-        print(f"[SPEED_CHART] ✅ 視圖範圍已重置，調用 repaint()")
+        logger.info(f"[SPEED_CHART] ✅ 視圖範圍已重置，調用 repaint()")
         self.repaint()  # 使用 repaint() 而非 update() 以強制立即重繪
-        print(f"[SPEED_CHART] ✅ reset_view() 完成")
+        logger.info(f"[SPEED_CHART] ✅ reset_view() 完成")
     
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -435,16 +438,16 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
         x_title_x = chart_rect.left() + (chart_rect.width() - x_title_width) // 2
         x_title_y = chart_rect.bottom() + 5
         
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題")
-        print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 7: _draw_axes 繪製 X 軸標題")
+        logger.debug(f"[TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
         
         if self.use_time_axis:
             x_axis_title = tr('time_s', '時間 (s)')
-            print(f"🕒 [TIME_AXIS_DEBUG]   繪製時間軸標題: {x_axis_title}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   繪製時間軸標題: {x_axis_title}")
             painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_axis_title)
         else:
             x_axis_title = tr('distance_m', '距離 (m)')
-            print(f"🕒 [TIME_AXIS_DEBUG]   繪製距離軸標題: {x_axis_title}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   繪製距離軸標題: {x_axis_title}")
             painter.drawText(x_title_x, x_title_y, x_title_width, 20, Qt.AlignCenter, x_axis_title)
         
         # Y軸標題
@@ -488,19 +491,19 @@ class SpeedChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawi
                     painter.setPen(QPen(sector_pen_color, 2, Qt.DashLine))
     def _draw_speed_curves(self, painter: QPainter, chart_rect: QRect):
         """繪製速度曲線"""
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源")
-        print(f"🕒 [TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   driver1_time 長度: {len(self.driver1_time) if self.driver1_time else 0}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   driver2_time 長度: {len(self.driver2_time) if self.driver2_time else 0}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   distance_data 長度: {len(self.distance_data) if self.distance_data else 0}")
+        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 8: _draw_speed_curves 選擇數據源")
+        logger.debug(f"[TIME_AXIS_DEBUG]   self.use_time_axis: {self.use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   driver1_time 長度: {len(self.driver1_time) if self.driver1_time else 0}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   driver2_time 長度: {len(self.driver2_time) if self.driver2_time else 0}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   distance_data 長度: {len(self.distance_data) if self.distance_data else 0}")
         
         # 根據時間軸模式選擇X軸數據源
         if self.use_time_axis and self.driver1_time and self.driver2_time:
             x_data_source = self.driver1_time  # 使用時間數據
-            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ 使用時間數據作為 X 軸 (driver1_time)")
+            logger.info(f"[TIME_AXIS_DEBUG]   ✅ 使用時間數據作為 X 軸 (driver1_time)")
         else:
             x_data_source = self.distance_data  # 使用距離數據
-            print(f"🕒 [TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)")
+            logger.info(f"[TIME_AXIS_DEBUG]   ✅ 使用距離數據作為 X 軸 (distance_data)")
             
         if not x_data_source:
             return
@@ -1289,7 +1292,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
-            print(f"[ERROR] 更新狀態資訊失敗: {e}")
+            logger.error(f"更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
             self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
             self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
@@ -1329,7 +1332,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
     def set_statistics_visibility(self, visible: bool) -> bool:
         """設置統計面板顯示狀態 - 供分析模組管理器調用"""
         try:
-            print(f"[SPEED_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            logger.debug(f"[SPEED_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
             
             if visible:
                 # 顯示統計面板
@@ -1341,11 +1344,11 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 # 隱藏整個統計容器
                 self.stats_container.setVisible(False)
             
-            print(f"[SPEED_CHART] ✅ 統計面板顯示狀態設置完成")
+            logger.info(f"[SPEED_CHART] ✅ 統計面板顯示狀態設置完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [SPEED_CHART] 設置統計面板顯示狀態失敗: {e}")
+            logger.error(f"[SPEED_CHART] 設置統計面板顯示狀態失敗: {e}")
             return False
             self.stats_container.setMinimumHeight(80)
         else:
@@ -1395,16 +1398,16 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         self.current_data = data
         
         try:
-            print(f"[SPEED_CHART_WIDGET] ========== 更新速度數據 ==========")
-            print(f"[SPEED_CHART_WIDGET] 📦 接收到數據類型: {type(data)}")
-            print(f"[SPEED_CHART_WIDGET] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+            logger.debug(f"[SPEED_CHART_WIDGET] ========== 更新速度數據 ==========")
+            logger.debug(f"[SPEED_CHART_WIDGET] 📦 接收到數據類型: {type(data)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 📦 接收到數據鍵值: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
             
             # 提取元數據
             metadata = data.get('metadata', {})
             speed_data = data.get('speed_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[SPEED_CHART_WIDGET] 📊 speed_data 鍵值: {list(speed_data.keys()) if isinstance(speed_data, dict) else 'Not a dict'}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 📊 speed_data 鍵值: {list(speed_data.keys()) if isinstance(speed_data, dict) else 'Not a dict'}")
             
             # 提取車手信息
             drivers = metadata.get('drivers', [])
@@ -1421,19 +1424,19 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             driver1_time = speed_data.get('driver1_time_seconds', [])
             driver2_time = speed_data.get('driver2_time_seconds', [])
             
-            print(f"🕒 [TIME_AXIS_DEBUG] 步驟 9: update_speed_data 提取時間數據")
-            print(f"🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver1_time_seconds: {'driver1_time_seconds' in speed_data}")
-            print(f"🕒 [TIME_AXIS_DEBUG]   speed_data 包含 driver2_time_seconds: {'driver2_time_seconds' in speed_data}")
+            logger.debug(f"[TIME_AXIS_DEBUG] 步驟 9: update_speed_data 提取時間數據")
+            logger.debug(f"[TIME_AXIS_DEBUG]   speed_data 包含 driver1_time_seconds: {'driver1_time_seconds' in speed_data}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   speed_data 包含 driver2_time_seconds: {'driver2_time_seconds' in speed_data}")
             
-            print(f"[SPEED_CHART_WIDGET] 📏 distance 點數: {len(distance)}")
-            print(f"[SPEED_CHART_WIDGET] 🏎️ driver1_speed 點數: {len(driver1_speed)}")
-            print(f"[SPEED_CHART_WIDGET] 🏎️ driver2_speed 點數: {len(driver2_speed)}")
-            print(f"[SPEED_CHART_WIDGET] 🕒 driver1_time 點數: {len(driver1_time)}")
-            print(f"[SPEED_CHART_WIDGET] 🕒 driver2_time 點數: {len(driver2_time)}")
-            print(f"🕒 [TIME_AXIS_DEBUG]   driver1_time 點數: {len(driver1_time)}")
-            print(f"🕒 [TIME_AXIS_DEBUG]   driver2_time 點數: {len(driver2_time)}")
-            print(f"[SPEED_CHART_WIDGET] 👤 driver1_name: {driver1_name}")
-            print(f"[SPEED_CHART_WIDGET] 👤 driver2_name: {driver2_name}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 📏 distance 點數: {len(distance)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🏎️ driver1_speed 點數: {len(driver1_speed)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🏎️ driver2_speed 點數: {len(driver2_speed)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🕒 driver1_time 點數: {len(driver1_time)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🕒 driver2_time 點數: {len(driver2_time)}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   driver1_time 點數: {len(driver1_time)}")
+            logger.debug(f"[TIME_AXIS_DEBUG]   driver2_time 點數: {len(driver2_time)}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 👤 driver1_name: {driver1_name}")
+            logger.debug(f"[SPEED_CHART_WIDGET] 👤 driver2_name: {driver2_name}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             lap1 = None
@@ -1444,7 +1447,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 # 🆕 提取圈數信息（用於雙圈比較模式判斷）
                 lap1 = drivers[0].get('lap_number')
                 lap2 = drivers[1].get('lap_number')
-                print(f"[SPEED_CHART_WIDGET] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
+                logger.debug(f"[SPEED_CHART_WIDGET] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
                 lap1 = drivers[0].get('lap_number')
@@ -1456,25 +1459,25 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
-                print(f"[SPEED_CHART] 🔍 檢測到單車手模式標記")
+                logger.debug(f"[SPEED_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
                 # 相同車手：需要進一步判斷是單車手還是雙圈比較
                 if lap1 is not None and lap2 is not None and lap1 != lap2:
                     # 🆕 同車手不同圈數 → 雙圈比較模式
                     is_dual_lap_mode = True
                     is_single_driver_mode = False
-                    print(f"[SPEED_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                    logger.debug(f"[SPEED_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
                 else:
                     # 同車手相同圈數或無圈數信息 → 單車手模式
                     is_single_driver_mode = True
-                    print(f"[SPEED_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
+                    logger.debug(f"[SPEED_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
-                print(f"[SPEED_CHART] 🔍 檢測到單車手數據: {driver1_name}")
+                logger.debug(f"[SPEED_CHART] 🔍 檢測到單車手數據: {driver1_name}")
             
             if is_single_driver_mode:
-                print(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
+                logger.debug(f"[SPEED_CHART] 🎯 使用單車手模式顯示")
                 # 設置單車手模式標記
                 self.is_single_driver = True
                 # 清空車手2的數據，只顯示車手1
@@ -1482,16 +1485,16 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver2_name = ""  # 單車手模式才清空車手2名稱
                 lap2 = None  # 清空 lap2
             elif is_dual_lap_mode:
-                print(f"[SPEED_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                logger.debug(f"[SPEED_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
                 # 保持雙車手模式，但標籤會在 set_speed_data 中修改
                 self.is_single_driver = False
             else:
                 # 雙車手模式 - 保持車手名稱不變
                 self.is_single_driver = False
-                print(f"[SPEED_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
+                logger.debug(f"[SPEED_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 更新圖表
-            print(f"[SPEED_CHART_WIDGET] 🎨 調用 chart_widget.set_speed_data...")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🎨 調用 chart_widget.set_speed_data...")
             self.chart_widget.set_speed_data(
                 distance=distance,
                 driver1_speed=driver1_speed,
@@ -1504,13 +1507,13 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 driver1_time=driver1_time,  # 🆕 傳遞時間數據
                 driver2_time=driver2_time   # 🆕 傳遞時間數據
             )
-            print(f"[SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成")
+            logger.info(f"[SPEED_CHART_WIDGET] ✅ chart_widget.set_speed_data 完成")
             
             # 強制重繪圖表（雙重保險）
-            print(f"[SPEED_CHART_WIDGET] 🖌️ 強制重繪圖表...")
+            logger.debug(f"[SPEED_CHART_WIDGET] 🖌️ 強制重繪圖表...")
             self.chart_widget.update()
             self.chart_widget.repaint()
-            print(f"[SPEED_CHART_WIDGET] ✅ 圖表重繪完成")
+            logger.info(f"[SPEED_CHART_WIDGET] ✅ 圖表重繪完成")
             
             # 更新統計表格
             self._update_statistics_table(statistics, driver1_name, driver2_name)
@@ -1519,11 +1522,11 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             self._update_status_info(data)
             
             self.chart_updated.emit()
-            print(f"[SPEED_CHART_WIDGET] ✅ update_speed_data 全部完成")
+            logger.info(f"[SPEED_CHART_WIDGET] ✅ update_speed_data 全部完成")
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedChartWidget 實例）
-            print(f"[ERROR] [SPEED CHART WIDGET] 更新數據失敗: {e}")
+            logger.error(f"[SPEED CHART WIDGET] 更新數據失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1589,7 +1592,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             self._adjust_table_height()
             
         except Exception as e:
-            print(f"[ERROR] 更新統計表格失敗: {e}")
+            logger.error(f"更新統計表格失敗: {e}")
     
     def set_time_axis_mode(self, use_time_axis: bool):
         """
@@ -1598,25 +1601,25 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
         Args:
             use_time_axis: True=使用時間軸, False=使用距離軸
         """
-        print(f"🕒 [TIME_AXIS_DEBUG] 步驟 10: SpeedAnalysisChartWidget.set_time_axis_mode 被調用")
-        print(f"🕒 [TIME_AXIS_DEBUG]   use_time_axis: {use_time_axis}")
-        print(f"🕒 [TIME_AXIS_DEBUG]   hasattr(self, 'chart_widget'): {hasattr(self, 'chart_widget')}")
+        logger.debug(f"[TIME_AXIS_DEBUG] 步驟 10: SpeedAnalysisChartWidget.set_time_axis_mode 被調用")
+        logger.debug(f"[TIME_AXIS_DEBUG]   use_time_axis: {use_time_axis}")
+        logger.debug(f"[TIME_AXIS_DEBUG]   hasattr(self, 'chart_widget'): {hasattr(self, 'chart_widget')}")
         
         if hasattr(self, 'chart_widget') and self.chart_widget is not None:
-            print(f"🕒 [TIME_AXIS_DEBUG]   準備調用 chart_widget.set_time_axis_mode({use_time_axis})")
+            logger.debug(f"[TIME_AXIS_DEBUG]   準備調用 chart_widget.set_time_axis_mode({use_time_axis})")
             self.chart_widget.set_time_axis_mode(use_time_axis)
-            print(f"🕒 [TIME_AXIS_DEBUG] ✅ 步驟 11: 已成功轉發到 SpeedChartWidget")
+            logger.info(f"[TIME_AXIS_DEBUG] ✅ 步驟 11: 已成功轉發到 SpeedChartWidget")
         else:
-            print(f"🕒 [TIME_AXIS_DEBUG] ❌ chart_widget 不存在或為 None")
+            logger.error(f"[TIME_AXIS_DEBUG] ❌ chart_widget 不存在或為 None")
             
     def reset_chart_view(self):
         """重置圖表視圖"""
-        print(f"[SPEED_ANALYSIS] 🔄 reset_chart_view() 被調用")
+        logger.debug(f"[SPEED_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget'):
-            print(f"[SPEED_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
+            logger.info(f"[SPEED_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
         else:
-            print(f"[SPEED_ANALYSIS] ❌ 未找到 chart_widget 屬性")
+            logger.error(f"[SPEED_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條"""
@@ -1630,7 +1633,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             lap2 = int(self.lap2_display.text())
             return lap1, lap2
         except (ValueError, AttributeError) as e:
-            print(f"[ERROR] 獲取圈數失敗: {e}")
+            logger.error(f"獲取圈數失敗: {e}")
             return 1, 1
     
     def set_lap_numbers(self, lap1: int, lap2: int):
@@ -1640,10 +1643,10 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             self.lap1_display.setText(str(lap1))
             self.lap2_display.setText(str(lap2))
             
-            print(f"[LAP_SET] 圈數已設置: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[LAP_SET] 圈數已設置: 第{lap1}圈 vs 第{lap2}圈")
             
         except Exception as e:
-            print(f"[ERROR] 設置圈數失敗: {e}")
+            logger.error(f"設置圈數失敗: {e}")
     
     def update_lap_parameters(self, year: str, race: str, session: str,
                             driver1: str, driver2: str = None,
@@ -1651,15 +1654,15 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                             is_fastest: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 供統一更新介面使用"""
         try:
-            print(f"[SPEED_CHART] 🔄 更新圈速參數...")
-            print(f"[SPEED_CHART]   📊 基本參數: {year} {race} {session}")
-            print(f"[SPEED_CHART]   🏎️ 車手參數: {driver1} vs {driver2}")
-            print(f"[SPEED_CHART]   🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
-            print(f"[SPEED_CHART]   ⚡ 最速圈: {is_fastest}")
+            logger.debug(f"[SPEED_CHART] 🔄 更新圈速參數...")
+            logger.debug(f"[SPEED_CHART] 📊 基本參數: {year} {race} {session}")
+            logger.debug(f"[SPEED_CHART] 🏎️ 車手參數: {driver1} vs {driver2}")
+            logger.debug(f"[SPEED_CHART] 🏁 圈數參數: 第{lap1}圈 vs 第{lap2}圈")
+            logger.debug(f"[SPEED_CHART] ⚡ 最速圈: {is_fastest}")
             
             # 檢查是否有關聯的資料載入器
             if hasattr(self, 'speed_loader') and self.speed_loader:
-                print(f"[SPEED_CHART] 🚀 使用關聯的資料載入器重新載入...")
+                logger.debug(f"[SPEED_CHART] 🚀 使用關聯的資料載入器重新載入...")
                 
                 # 調用資料載入器重新載入數據
                 success = self.speed_loader.load_speed_data(
@@ -1674,18 +1677,18 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                 )
                 
                 if success:
-                    print(f"[SPEED_CHART] ✅ 圈速參數更新成功")
+                    logger.info(f"[SPEED_CHART] ✅ 圈速參數更新成功")
                     return True
                 else:
-                    print(f"[SPEED_CHART] ❌ 資料載入失敗")
+                    logger.error(f"[SPEED_CHART] ❌ 資料載入失敗")
                     return False
             else:
-                print(f"[SPEED_CHART] ⚠️ 沒有關聯的資料載入器，無法重新載入數據")
+                logger.warning(f"[SPEED_CHART] ⚠️ 沒有關聯的資料載入器，無法重新載入數據")
                 return False
                 
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisChartWidget 實例）
-            print(f"[ERROR] [SPEED_CHART] update_lap_parameters 失敗: {e}")
+            logger.error(f"[SPEED_CHART] update_lap_parameters 失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1704,16 +1707,16 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
     def cleanup(self):
         """清理 Chart Widget 資源 - 防止記憶體洩漏"""
         try:
-            print(f"[SPEED_CHART] 🧹 開始清理資源...")
+            logger.debug(f"[SPEED_CHART] 🧹 開始清理資源...")
             
             # 0. 從連動管理器解除註冊（新增 v3.4）
             try:
                 from modules.gui.lap_analysis.linkage.linkage_manager import linkage_manager
                 if linkage_manager:
                     linkage_manager.unregister_module(self)
-                    print(f"[SPEED_CHART]   ✅ 已從連動管理器解除註冊")
+                    logger.info(f"[SPEED_CHART] ✅ 已從連動管理器解除註冊")
             except Exception as e:
-                print(f"[SPEED_CHART]   ⚠️ 解除註冊警告: {e}")
+                logger.warning(f"[SPEED_CHART] ⚠️ 解除註冊警告: {e}")
             
             # 1. 清理 Matplotlib 圖表
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -1723,17 +1726,17 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                         import matplotlib.pyplot as plt
                         plt.close(self.chart_widget.figure)
                         self.chart_widget.figure = None
-                        print(f"[SPEED_CHART]   ✅ Matplotlib 圖表已清理")
+                        logger.info(f"[SPEED_CHART] ✅ Matplotlib 圖表已清理")
                     except Exception as e:
-                        print(f"[SPEED_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                        logger.warning(f"[SPEED_CHART] ⚠️ Matplotlib 清理警告: {e}")
                 
                 if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
                     try:
                         self.chart_widget.canvas.deleteLater()
                         self.chart_widget.canvas = None
-                        print(f"[SPEED_CHART]   ✅ Canvas 已清理")
+                        logger.info(f"[SPEED_CHART] ✅ Canvas 已清理")
                     except Exception as e:
-                        print(f"[SPEED_CHART]   ⚠️ Canvas 清理警告: {e}")
+                        logger.warning(f"[SPEED_CHART] ⚠️ Canvas 清理警告: {e}")
             
             # 2. 清理 QTableWidget 中的所有 Item（關鍵！）
             if hasattr(self, 'stats_table') and self.stats_table:
@@ -1748,18 +1751,18 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                     self.stats_table.clear()
                     self.stats_table.deleteLater()
                     self.stats_table = None
-                    print(f"[SPEED_CHART]   ✅ QTableWidget 已完全清理（包含所有 Items）")
+                    logger.info(f"[SPEED_CHART] ✅ QTableWidget 已完全清理（包含所有 Items）")
                 except Exception as e:
-                    print(f"[SPEED_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+                    logger.warning(f"[SPEED_CHART] ⚠️ QTableWidget 清理警告: {e}")
             
             # 3. 斷開 Signal 連接
             if hasattr(self, 'receiver') and self.receiver:
                 try:
                     self.receiver.deleteLater()
                     self.receiver = None
-                    print(f"[SPEED_CHART]   ✅ Signal Receiver 已清理")
+                    logger.info(f"[SPEED_CHART] ✅ Signal Receiver 已清理")
                 except Exception as e:
-                    print(f"[SPEED_CHART]   ⚠️ Receiver 清理警告: {e}")
+                    logger.warning(f"[SPEED_CHART] ⚠️ Receiver 清理警告: {e}")
             
             # 4. 清理數據引用
             data_attrs = ['telemetry_data', 'lap_data', 'speed_data', 
@@ -1767,28 +1770,28 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
             for attr in data_attrs:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
-            print(f"[SPEED_CHART]   ✅ 數據引用已清空")
+            logger.info(f"[SPEED_CHART] ✅ 數據引用已清空")
             
             # 5. 清理 SpeedChartWidget
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 try:
                     self.chart_widget.deleteLater()
                     self.chart_widget = None
-                    print(f"[SPEED_CHART]   ✅ SpeedChartWidget 已清理")
+                    logger.info(f"[SPEED_CHART] ✅ SpeedChartWidget 已清理")
                 except Exception as e:
-                    print(f"[SPEED_CHART]   ⚠️ SpeedChartWidget 清理警告: {e}")
+                    logger.warning(f"[SPEED_CHART] ⚠️ SpeedChartWidget 清理警告: {e}")
             
             # 6. 清理資料載入器引用
             if hasattr(self, 'speed_loader'):
                 self.speed_loader = None
-                print(f"[SPEED_CHART]   ✅ 資料載入器引用已清空")
+                logger.info(f"[SPEED_CHART] ✅ 資料載入器引用已清空")
             
             # 7. 徹底斷開所有 Qt 連接（新增 v3.4）
             try:
                 self.disconnect()
-                print(f"[SPEED_CHART]   ✅ Qt 連接已斷開")
+                logger.info(f"[SPEED_CHART] ✅ Qt 連接已斷開")
             except Exception as e:
-                print(f"[SPEED_CHART]   ⚠️ 斷開連接警告: {e}")
+                logger.warning(f"[SPEED_CHART] ⚠️ 斷開連接警告: {e}")
             
             # 8. 徹底清理 __dict__（新增 v3.4）
             try:
@@ -1803,15 +1806,15 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
                         except Exception:
                             pass
                 
-                print(f"[SPEED_CHART]   ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
+                logger.info(f"[SPEED_CHART] ✅ __dict__ 已清理（{cleaned_count} 個屬性）")
             except Exception as e:
-                print(f"[SPEED_CHART]   ⚠️ __dict__ 清理警告: {e}")
+                logger.warning(f"[SPEED_CHART] ⚠️ __dict__ 清理警告: {e}")
             
-            print(f"[SPEED_CHART] ✅ 資源清理完成")
+            logger.info(f"[SPEED_CHART] ✅ 資源清理完成")
             
         except Exception as e:
             # 🔴 簡化錯誤日誌避免 traceback 持有 frame（SpeedAnalysisChartWidget 實例）
-            print(f"[ERROR] [SPEED_CHART] cleanup 失敗: {e}")
+            logger.error(f"[SPEED_CHART] cleanup 失敗: {e}")
             # 調試時可以取消註解：
             # import traceback
             # traceback.print_exc()
@@ -1820,6 +1823,7 @@ class SpeedAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLink
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
+
     
     app = QApplication(sys.argv)
     

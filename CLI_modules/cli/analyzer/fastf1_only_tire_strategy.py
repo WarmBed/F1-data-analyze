@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 純 FastF1 輪胎策略分析模組 (CLI -f26 FastF1-Only 版本)
 FastF1-Only Tire Strategy Analysis Module
@@ -10,6 +11,14 @@ FastF1-Only Tire Strategy Analysis Module
 版本: 2.0 - 純 FastF1 專用版
 作者: F1 Analysis Team
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json
@@ -89,6 +98,14 @@ def run_fastf1_tire_strategy_analysis(data_loader, year: int, race: str, session
     except Exception as e:
         print(f"❌ 輪胎策略分析發生錯誤: {str(e)}")
         import traceback
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
         traceback.print_exc()
         return {
             "success": False,

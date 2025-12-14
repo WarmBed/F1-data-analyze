@@ -16,6 +16,9 @@ from modules.gui.interfaces.analysis_module import IAnalysisModule
 
 from .ideal_lap_sector_heatmap_mdi import IdealLapSectorHeatmapMDI
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapSectorHeatmapModule(IAnalysisModule):
     """
@@ -130,7 +133,7 @@ class IdealLapSectorHeatmapModule(IAnalysisModule):
                 return True
             return False
         except Exception as exc:  # pragma: no cover - defensive
-            print(f"[SECTOR_HEATMAP_MODULE] 清空資料失敗: {exc}")
+            logger.debug(f"[SECTOR_HEATMAP_MODULE] 清空資料失敗: {exc}")
             return False
 
     def cleanup(self):
@@ -157,7 +160,7 @@ class IdealLapSectorHeatmapModule(IAnalysisModule):
             return chart_widget.save_plot(file_path)
         if hasattr(chart_widget, "export_chart"):
             return chart_widget.export_chart(file_path)
-        print("[SECTOR_HEATMAP_MODULE] 無可用匯出方法")
+        logger.debug("[SECTOR_HEATMAP_MODULE] 無可用匯出方法")
         return False
 
     def get_current_data(self) -> Optional[Dict[str, Any]]:

@@ -12,6 +12,13 @@ from PyQt5.QtCore import Qt, pyqtSignal, QPointF, QPoint, QRect
 from PyQt5.QtGui import QFont, QPalette, QColor, QPainter, QPen, QBrush
 import json
 import math  # 用於數據點距離計算
+import logging
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("universal_chart_widget", component="gui")
 
 
 class ChartDataSeries:
@@ -326,7 +333,7 @@ class UniversalChartWidget(QWidget):
             if hasattr(self, 'rain_background_regions'):
                 self.rain_background_regions.clear()
                 
-            print("🧹 已手動清除降雨標記")
+            logger.info("已手動清除降雨標記")
         
         self.update()
     
@@ -344,13 +351,13 @@ class UniversalChartWidget(QWidget):
             
             # 確保範圍有效
             if x_range[1] <= x_range[0]:
-                print("[WARNING] X軸範圍無效，使用預設值")
+                logger.warning("[WARNING] X軸範圍無效，使用預設值")
                 x_range = (0, 1)
             if left_y_range[1] <= left_y_range[0]:
-                print("[WARNING] 左Y軸範圍無效，使用預設值")
+                logger.warning("[WARNING] 左Y軸範圍無效，使用預設值")
                 left_y_range = (0, 1)
             if self.show_right_y_axis and right_y_range[1] <= right_y_range[0]:
-                print("[WARNING] 右Y軸範圍無效，使用預設值")
+                logger.warning("[WARNING] 右Y軸範圍無效，使用預設值")
                 right_y_range = (0, 1)
             
             # 保存計算的範圍供繪圖使用
@@ -359,7 +366,7 @@ class UniversalChartWidget(QWidget):
             self._cached_right_y_range = right_y_range
             
         except Exception as e:
-            print(f"[ERROR] 重新計算數據範圍失敗: {e}")
+            logger.error("[ERROR] 重新計算數據範圍失敗: %s", e)
             # 使用安全的預設值
             self._cached_x_range = (0, 1)
             self._cached_left_y_range = (0, 1)
@@ -457,7 +464,11 @@ class UniversalChartWidget(QWidget):
                 self.add_annotation(annotation)
                 annotations_count += 1
         
-        print(f"[OK] 通用圖表載入完成: {len(self.data_series)} 個數據系列, {len(self.annotations)} 個標註")
+        logger.info(
+            "[OK] 通用圖表載入完成: %d 個數據系列, %d 個標註",
+            len(self.data_series),
+            len(self.annotations)
+        )
         self.auto_fit_to_window()  # 自動調整圖表以適配視窗大小
         self.update()  # 強制重繪
         # 移除DEBUG輸出防止無限循環
@@ -831,12 +842,13 @@ class UniversalChartWidget(QWidget):
         
         x_min, x_max = self.get_overall_x_range()
         if x_max == x_min:
-            print("[ANNOTATION_DEBUG] X軸範圍無效，跳過")
+            logger.debug("[ANNOTATION_DEBUG] X軸範圍無效，跳過")
             return
         
-        print(f"[ANNOTATION_DEBUG] X軸數據範圍: {x_min} - {x_max}")
-        print(f"[ANNOTATION_DEBUG] 圖表區域: {chart_area}")
-        print(f"[ANNOTATION_DEBUG] 縮放: {self.x_scale}, 偏移: {self.x_offset}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[ANNOTATION_DEBUG] X軸數據範圍: %s - %s", x_min, x_max)
+            logger.debug("[ANNOTATION_DEBUG] 圖表區域: %s", chart_area)
+            logger.debug("[ANNOTATION_DEBUG] 縮放: %s, 偏移: %s", self.x_scale, self.x_offset)
         
         # 考慮縮放和偏移的可視範圍計算
         visible_x_range = (x_max - x_min) / self.x_scale
@@ -850,11 +862,18 @@ class UniversalChartWidget(QWidget):
         visible_x_min = visible_x_center - visible_x_range * 0.5
         visible_x_max = visible_x_center + visible_x_range * 0.5
         
-        print(f"[ANNOTATION_DEBUG] 可視範圍: {visible_x_min} - {visible_x_max}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug("[ANNOTATION_DEBUG] 可視範圍: %s - %s", visible_x_min, visible_x_max)
         
         rendered_count = 0
         for i, annotation in enumerate(self.annotations):
-            print(f"[ANNOTATION_DEBUG] 標註 {i+1}: start_x={annotation.start_x}, end_x={annotation.end_x}, type={annotation.annotation_type}")
+            logger.debug(
+                "[ANNOTATION_DEBUG] 標註 %d: start_x=%s, end_x=%s, type=%s",
+                i + 1,
+                annotation.start_x,
+                annotation.end_x,
+                annotation.annotation_type,
+            )
             
             # 對於 background_fill，start_x 和 end_x 已經是螢幕座標
             if annotation.annotation_type == 'background_fill':
@@ -865,32 +884,46 @@ class UniversalChartWidget(QWidget):
                 if end_screen_x <= start_screen_x:
                     end_screen_x = start_screen_x + 1
                     
-                print(f"[ANNOTATION_DEBUG] 直接使用螢幕座標: {start_screen_x} - {end_screen_x} (寬度: {end_screen_x - start_screen_x})")
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 直接使用螢幕座標: %s - %s (寬度: %s)",
+                    start_screen_x,
+                    end_screen_x,
+                    end_screen_x - start_screen_x,
+                )
                 
                 # 檢查是否在圖表區域內
                 if end_screen_x < chart_area.left() or start_screen_x > chart_area.right():
-                    print(f"[ANNOTATION_DEBUG] 標註 {i+1} 超出圖表區域，跳過")
+                    logger.debug("[ANNOTATION_DEBUG] 標註 %d 超出圖表區域，跳過", i + 1)
                     continue
                     
-                print(f"[ANNOTATION_DEBUG] 標註 {i+1} 在圖表區域內，開始繪製")
+                logger.debug("[ANNOTATION_DEBUG] 標註 %d 在圖表區域內，開始繪製", i + 1)
                 
                 # 裁切到圖表區域
                 start_screen_x = max(chart_area.left(), start_screen_x)
                 end_screen_x = min(chart_area.right(), end_screen_x)
                 
-                print(f"[ANNOTATION_DEBUG] 裁切後座標: {start_screen_x} - {end_screen_x}")
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 裁切後座標: %s - %s",
+                    start_screen_x,
+                    end_screen_x,
+                )
                 
             else:
                 # 其他類型的標註使用原有邏輯
-                print(f"[ANNOTATION_DEBUG] 處理標註: type={annotation.annotation_type}, start_x={annotation.start_x}, end_x={annotation.end_x}")
-                print(f"[ANNOTATION_DEBUG] 可視範圍: {visible_x_min} - {visible_x_max}")
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 處理標註: type=%s, start_x=%s, end_x=%s",
+                    annotation.annotation_type,
+                    annotation.start_x,
+                    annotation.end_x,
+                )
+                logger.debug("[ANNOTATION_DEBUG] 可視範圍: %s - %s", visible_x_min, visible_x_max)
                 
                 # 檢查標註是否在可視範圍內
                 if annotation.end_x < visible_x_min or annotation.start_x > visible_x_max:
-                    print(f"[ANNOTATION_DEBUG] 標註 {i+1} 超出可視範圍，跳過")
+                    logger.debug("[ANNOTATION_DEBUG] 標註 %d 超出可視範圍，跳過", i + 1)
                     continue
                 
-                print(f"[ANNOTATION_DEBUG] 標註 {i+1} 在可視範圍內，開始繪製")
+                logger.debug("[ANNOTATION_DEBUG] 標註 %d 在可視範圍內，開始繪製", i + 1)
                 
                 # 計算標註的X座標範圍 - 基於可視範圍
                 start_progress = max(0, (annotation.start_x - visible_x_min) / (visible_x_max - visible_x_min))
@@ -899,14 +932,26 @@ class UniversalChartWidget(QWidget):
                 start_screen_x = int(chart_area.left() + start_progress * chart_area.width())
                 end_screen_x = int(chart_area.left() + end_progress * chart_area.width())
                 
-                print(f"[ANNOTATION_DEBUG] 進度: {start_progress} - {end_progress}")
-                print(f"[ANNOTATION_DEBUG] 螢幕座標: {start_screen_x} - {end_screen_x}")
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 進度: %s - %s",
+                    start_progress,
+                    end_progress,
+                )
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 螢幕座標: %s - %s",
+                    start_screen_x,
+                    end_screen_x,
+                )
                 
                 # 確保標註在圖表區域內
                 start_screen_x = max(chart_area.left(), start_screen_x)
                 end_screen_x = min(chart_area.right(), end_screen_x)
                 
-                print(f"[ANNOTATION_DEBUG] 裁切後座標: {start_screen_x} - {end_screen_x}")
+                logger.debug(
+                    "[ANNOTATION_DEBUG] 裁切後座標: %s - %s",
+                    start_screen_x,
+                    end_screen_x,
+                )
             
             # 繪製標註區域
             if annotation.annotation_type == "rain":
@@ -915,7 +960,11 @@ class UniversalChartWidget(QWidget):
                 painter.setBrush(QBrush(QColor(0, 150, 255, 50)))
             elif annotation.annotation_type == "background_fill":
                 # 降雨背景填充：使用指定的顏色
-                print(f"[RENDER_DEBUG] 繪製背景填充: {annotation.color}, 強度: {getattr(annotation, 'intensity', 'unknown')}")
+                logger.debug(
+                    "[RENDER_DEBUG] 繪製背景填充: %s, 強度: %s",
+                    annotation.color,
+                    getattr(annotation, 'intensity', 'unknown'),
+                )
                 # 解析 rgba 顏色字符串
                 if annotation.color.startswith('rgba('):
                     # 提取 rgba 數值
@@ -926,7 +975,13 @@ class UniversalChartWidget(QWidget):
                         color = QColor(int(r), int(g), int(b), int(a * 255))
                         painter.setPen(QPen(color, 1))
                         painter.setBrush(QBrush(color))
-                        print(f"[RENDER_DEBUG] 使用顏色: R={int(r)}, G={int(g)}, B={int(b)}, A={int(a * 255)}")
+                        logger.debug(
+                            "[RENDER_DEBUG] 使用顏色: R=%d, G=%d, B=%d, A=%d",
+                            int(r),
+                            int(g),
+                            int(b),
+                            int(a * 255),
+                        )
                     else:
                         # 預設為半透明黃色
                         painter.setPen(QPen(QColor(255, 255, 0, 100), 1))
@@ -1411,26 +1466,34 @@ class UniversalChartWidget(QWidget):
         for pinned in self.pinned_data_points:
             if (pinned['series_idx'] == self.hover_data_point['series_idx'] and
                 pinned['point_idx'] == self.hover_data_point['point_idx']):
-                print("[DEBUG] 該數據點已固定，跳過")
+                logger.debug("[DEBUG] 該數據點已固定，跳過")
                 return
         
         # 限制最多2個固定點
         if len(self.pinned_data_points) >= 2:
             # 移除最舊的固定點
             removed = self.pinned_data_points.pop(0)
-            print(f"[DEBUG] 固定點已達上限，移除最舊的: 系列{removed['series_idx']} 點{removed['point_idx']}")
+            logger.debug(
+                "[DEBUG] 固定點已達上限，移除最舊的: 系列%s 點%s",
+                removed['series_idx'],
+                removed['point_idx'],
+            )
         
         # 添加新的固定點，初始化 tooltip_rect 和 custom_pos
         new_pinned = dict(self.hover_data_point)
         new_pinned['tooltip_rect'] = None  # 將在繪製時計算
         new_pinned['custom_pos'] = None  # 自訂位置，初始為 None（使用預設位置）
         self.pinned_data_points.append(new_pinned)
-        print(f"[DEBUG] 📌 固定數據點: 系列{self.hover_data_point['series_idx']} 點{self.hover_data_point['point_idx']}")
+        logger.debug(
+            "[DEBUG] 固定數據點: 系列%s 點%s",
+            self.hover_data_point['series_idx'],
+            self.hover_data_point['point_idx'],
+        )
         self.update()
     
     def reset_view(self):
         """重置視圖縮放和偏移到預設值"""
-        print(f"[DEBUG] 重置通用圖表視圖")
+        logger.info("[DEBUG] 重置通用圖表視圖")
         self.x_scale = 1.0
         self.y_scale = 1.0
         self.x_offset = 0
@@ -1452,7 +1515,7 @@ class UniversalChartWidget(QWidget):
         self.setCursor(Qt.ArrowCursor)
         
         self.update()
-        print(f"[DEBUG] 通用圖表視圖已重置，清除了固定虛線和數據點")
+        logger.info("[DEBUG] 通用圖表視圖已重置，清除了固定虛線和數據點")
     
     def fit_to_view(self):
         """調整視圖以適應所有數據"""
@@ -1466,13 +1529,13 @@ class UniversalChartWidget(QWidget):
         """清除所有固定虛線"""
         self.fixed_vertical_lines.clear()
         self.update()
-        print(f"[DEBUG] 已清除所有固定虛線")
+        logger.debug("[DEBUG] 已清除所有固定虛線")
     
     def toggle_value_tooltips(self):
         """切換數值提示顯示"""
         self.show_value_tooltips = not self.show_value_tooltips
         self.update()
-        print(f"[DEBUG] 數值提示: {'開啟' if self.show_value_tooltips else '關閉'}")
+        logger.debug("[DEBUG] 數值提示: %s", '開啟' if self.show_value_tooltips else '關閉')
     
     def draw_legend(self, painter):
         """繪製可拖拉的圖例"""
@@ -1541,7 +1604,7 @@ class UniversalChartWidget(QWidget):
                 self.legend_dragging = True
                 self.legend_drag_offset = event.pos() - self.legend_position
                 self.setCursor(Qt.ClosedHandCursor)
-                print(f"[DEBUG] 開始拖拉圖例")
+                logger.debug("[DEBUG] 開始拖拉圖例")
             # 無論按哪個按鈕，點擊圖例時都阻止後續處理
             event.accept()
             return
@@ -1559,7 +1622,7 @@ class UniversalChartWidget(QWidget):
                         self.dragging_tooltip_index = i
                         self.tooltip_drag_offset = event.pos() - QPoint(tooltip_rect.x(), tooltip_rect.y())
                         self.setCursor(Qt.ClosedHandCursor)
-                        print(f"[DEBUG] 🎯 開始拖動 Tooltip #{i}")
+                        logger.debug("[DEBUG] 開始拖動 Tooltip #%d", i)
                         event.accept()
                         return
                 
@@ -1575,20 +1638,20 @@ class UniversalChartWidget(QWidget):
                 if modifiers & Qt.ControlModifier:
                     # Ctrl + 左鍵: 固定垂直虛線並顯示Y軸值
                     self.add_fixed_vertical_line(event.pos())
-                    print(f"[DEBUG] 固定垂直虛線於 X={event.x()}")
+                    logger.debug("[DEBUG] 固定垂直虛線於 X=%s", event.x())
                 else:
                     # 純左鍵: 開始拖拉圖表
                     self.dragging = True
                     self.last_drag_pos = event.pos()
                     self.setCursor(Qt.ClosedHandCursor)
-                    print(f"[DEBUG] 開始拖拉圖表")
+                    logger.debug("[DEBUG] 開始拖拉圖表")
                 
                 event.accept()
             elif event.button() == Qt.RightButton:
                 # 🆕 右鍵清除所有固定的數據點
                 if self.pinned_data_points:
                     self.pinned_data_points.clear()
-                    print("[DEBUG] 🗑️ 已清除所有固定數據點")
+                    logger.debug("[DEBUG] 已清除所有固定數據點")
                     self.update()
                     event.accept()
                     return
@@ -1620,7 +1683,12 @@ class UniversalChartWidget(QWidget):
             # 更新 custom_pos
             self.pinned_data_points[self.dragging_tooltip_index]['custom_pos'] = new_pos
             
-            print(f"[DEBUG] 🖱️ 拖動 Tooltip #{self.dragging_tooltip_index} 到 ({new_pos.x()}, {new_pos.y()})")
+            logger.debug(
+                "[DEBUG] 拖動 Tooltip #%d 到 (%d, %d)",
+                self.dragging_tooltip_index,
+                new_pos.x(),
+                new_pos.y(),
+            )
             self.update()
             event.accept()
             return
@@ -1665,11 +1733,15 @@ class UniversalChartWidget(QWidget):
                 # 結束圖例拖拉
                 self.legend_dragging = False
                 self.setCursor(Qt.ArrowCursor)
-                print(f"[DEBUG] 圖例拖拉結束，位置: ({self.legend_position.x()}, {self.legend_position.y()})")
+                logger.debug(
+                    "[DEBUG] 圖例拖拉結束，位置: (%d, %d)",
+                    self.legend_position.x(),
+                    self.legend_position.y(),
+                )
                 event.accept()
             elif self.dragging_tooltip:
                 # 🆕 結束 tooltip 拖動
-                print(f"[DEBUG] ✅ Tooltip 拖動結束，最終位置已儲存")
+                logger.debug("[DEBUG] Tooltip 拖動結束，最終位置已儲存")
                 self.dragging_tooltip = False
                 self.dragging_tooltip_index = -1
                 self.tooltip_drag_offset = QPoint(0, 0)
@@ -1679,7 +1751,7 @@ class UniversalChartWidget(QWidget):
                 # 結束圖表拖拉
                 self.dragging = False
                 self.setCursor(Qt.ArrowCursor)
-                print(f"[DEBUG] 圖表拖拉結束")
+                logger.debug("[DEBUG] 圖表拖拉結束")
                 event.accept()
     
     def add_fixed_vertical_line(self, pos):
@@ -1704,7 +1776,12 @@ class UniversalChartWidget(QWidget):
         }
         self.fixed_vertical_lines.append(fixed_line)
         
-        print(f"[DEBUG] 固定虛線: X={x_data_value:.2f}, 左Y={left_y_value:.2f}, 右Y={right_y_value:.2f}")
+        logger.debug(
+            "[DEBUG] 固定虛線: X=%.2f, 左Y=%.2f, 右Y=%.2f",
+            x_data_value,
+            left_y_value,
+            right_y_value,
+        )
     
     def screen_to_data_x(self, screen_x):
         """將螢幕X座標轉換為數據X值"""
@@ -1791,7 +1868,11 @@ class UniversalChartWidget(QWidget):
                     self.right_y_scale *= zoom_factor
                     self.right_y_scale = max(0.1, min(10.0, self.right_y_scale))
                 
-                print(f"[DEBUG] 純滾輪Y軸縮放: 左={self.y_scale:.2f}, 右={self.right_y_scale:.2f}")
+                logger.debug(
+                    "[DEBUG] 純滾輪Y軸縮放: 左=%.2f, 右=%.2f",
+                    self.y_scale,
+                    self.right_y_scale,
+                )
             
             self.update()
             event.accept()
@@ -1845,12 +1926,13 @@ class UniversalChartWidget(QWidget):
             self.auto_range_enabled = ranges['auto_range']
             self.x_axis_interval_minutes = ranges['x_interval_minutes']
             
-            print(f"[DEBUG] 應用新的座標軸範圍:")
-            print(f"  X軸: {self.manual_x_range}")
-            print(f"  左Y軸: {self.manual_left_y_range}")
-            print(f"  右Y軸: {self.manual_right_y_range}")
-            print(f"  X軸間距: {self.x_axis_interval_minutes} 分鐘")
-            print(f"  自動範圍: {self.auto_range_enabled}")
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("[DEBUG] 應用新的座標軸範圍:")
+                logger.debug("  X軸: %s", self.manual_x_range)
+                logger.debug("  左Y軸: %s", self.manual_left_y_range)
+                logger.debug("  右Y軸: %s", self.manual_right_y_range)
+                logger.debug("  X軸間距: %s 分鐘", self.x_axis_interval_minutes)
+                logger.debug("  自動範圍: %s", self.auto_range_enabled)
             
             # 重新計算和重繪
             self.recalculate_data_ranges()
@@ -1863,7 +1945,7 @@ class UniversalChartWidget(QWidget):
         self.manual_right_y_range = None
         self.auto_range_enabled = True
         
-        print("[DEBUG] 重置為自動座標軸範圍")
+        logger.debug("[DEBUG] 重置為自動座標軸範圍")
         
         # 重新計算和重繪
         self.recalculate_data_ranges()
@@ -1885,17 +1967,17 @@ class UniversalChartWidget(QWidget):
         self.y_offset = 0
         self.right_y_offset = 0
         
-        print("[DEBUG] 縮放到數據範圍")
+        logger.debug("[DEBUG] 縮放到數據範圍")
         self.update()
 
     def render_rain_background_regions(self, background_regions):
         """設置降雨背景區間數據 - 直接存儲供 draw_rain_backgrounds 使用"""
-        print(f"[RENDER_DEBUG] 設置 {len(background_regions)} 個降雨背景區間")
+        logger.debug("[RENDER_DEBUG] 設置 %d 個降雨背景區間", len(background_regions))
         
         # 直接存儲背景區間數據
         self.background_regions = background_regions
         
-        print(f"🎨 UniversalChartWidget: 已設置 {len(background_regions)} 個降雨背景區間")
+        logger.info("UniversalChartWidget: 已設置 %d 個降雨背景區間", len(background_regions))
         self.update()  # 觸發重繪
     
     def render_rain_text_markers(self, rain_markers):
@@ -1934,10 +2016,10 @@ class UniversalChartWidget(QWidget):
                 # 儲存到降雨標記列表
                 self.rain_text_markers.append(marker_label)
             
-            print(f"🔤 UniversalChartWidget: 已渲染 {len(rain_markers)} 個降雨標記")
+            logger.info("UniversalChartWidget: 已渲染 %d 個降雨標記", len(rain_markers))
             
         except Exception as e:
-            print(f"[ERROR] 渲染降雨標記失敗: {e}")
+            logger.error("[ERROR] 渲染降雨標記失敗: %s", e)
 
     def time_to_seconds(self, time_str):
         """將時間字符串轉換為秒數 (不進行座標轉換)"""
@@ -1966,7 +2048,7 @@ class UniversalChartWidget(QWidget):
             return total_seconds
             
         except Exception as e:
-            print(f"[WARNING] 時間字符串轉換失敗: {time_str}, 錯誤: {e}")
+            logger.warning("[WARNING] 時間字符串轉換失敗: %s, 錯誤: %s", time_str, e)
             return 0
 
     def time_to_chart_x(self, time_str):
@@ -1998,7 +2080,7 @@ class UniversalChartWidget(QWidget):
             return screen_x
             
         except Exception as e:
-            print(f"[WARNING] 時間字符串轉換失敗: {time_str}, 錯誤: {e}")
+            logger.warning("[WARNING] 時間字符串轉換失敗: %s, 錯誤: %s", time_str, e)
             return 0
     
     def get_chart_top_margin(self):

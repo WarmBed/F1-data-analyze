@@ -21,6 +21,9 @@ from core.gui_i18n import tr
 
 # 導入全域信號管理器
 from core.gui_i18n import tr
+
+from core.logger import get_logger
+logger = get_logger(__name__)
 try:
     from f1t_gui_main import global_signals
 except ImportError:
@@ -33,7 +36,7 @@ except ImportError:
     LapAnalysisLinkageMixin = object
     LapAnalysisLinkageDrawingMixin = object
     linkage_manager = None
-    print("[WARNING] 連動管理器導入失敗，將使用舊版連動功能")
+    logger.warning("連動管理器導入失敗，將使用舊版連動功能")
 
 # 注意：此模組已完全採用PyQt5原生繪圖，不再依賴PyQt5.QtChart
 
@@ -110,11 +113,11 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             try:
                 current_master_state = linkage_manager.is_master_linkage_enabled()
                 self.set_master_linkage_enabled(current_master_state)
-                print(f"[RPM_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
+                logger.info(f"[RPM_CHART] ✅ 已註冊到連動管理器，主開關狀態: {'啟用' if current_master_state else '停用'}")
             except Exception as e:
-                print(f"[ERROR] [RPM_CHART] 同步連動狀態失敗: {e}")
+                logger.error(f"[RPM_CHART] 同步連動狀態失敗: {e}")
         else:
-            print(f"[WARNING] [RPM_CHART] 連動管理器不可用，連動功能將無法使用")
+            logger.warning(f"[RPM_CHART] 連動管理器不可用，連動功能將無法使用")
         
         # 拖拉狀態
         self.last_drag_pos = QPoint()
@@ -157,7 +160,7 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
             lap_format = tr('lap_only_format', '第{lap}圈')
             driver1_name = lap_format.format(lap=lap1)
             driver2_name = lap_format.format(lap=lap2)
-            print(f"[RPM_CHART] 🔄 雙圈比較模式: {original_driver} {driver1_name} vs {driver2_name}")
+            logger.debug(f"[RPM_CHART] 🔄 雙圈比較模式: {original_driver} {driver1_name} vs {driver2_name}")
         
         self.distance_data = distance
         self.driver1_rpm = driver1_rpm
@@ -199,17 +202,17 @@ class RPMChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawing
         """
         if self.use_time_axis != use_time_axis:
             self.use_time_axis = use_time_axis
-            print(f"[RPM_CHART] 🕒 時間軸模式切換: {use_time_axis}")
+            logger.debug(f"[RPM_CHART] 🕒 時間軸模式切換: {use_time_axis}")
             
             # 重新計算 X 軸範圍
             if self.use_time_axis and self.driver1_time:
                 self.min_distance = min(self.driver1_time)
                 self.max_distance = max(self.driver1_time)
-                print(f"[RPM_CHART]    時間範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
+                logger.debug(f"[RPM_CHART] 時間範圍: {self.min_distance:.2f}s - {self.max_distance:.2f}s")
             elif self.distance_data:
                 self.min_distance = min(self.distance_data)
                 self.max_distance = max(self.distance_data)
-                print(f"[RPM_CHART]    距離範圍: {self.min_distance:.0f}m - {self.max_distance:.0f}m")
+                logger.debug(f"[RPM_CHART] 距離範圍: {self.min_distance:.0f}m - {self.max_distance:.0f}m")
             
             # 重置視圖範圍
             self.view_min_distance = None
@@ -1132,7 +1135,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
     def set_statistics_visibility(self, visible: bool) -> bool:
         """設置統計面板顯示狀態 - 供分析模組管理器調用"""
         try:
-            print(f"[RPM_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
+            logger.debug(f"[RPM_CHART] 📊 設置統計面板顯示狀態: {'顯示' if visible else '隱藏'}")
             
             if visible:
                 # 顯示統計面板
@@ -1144,11 +1147,11 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 # 隱藏整個統計容器
                 self.stats_container.setVisible(False)
             
-            print(f"[RPM_CHART] ✅ 統計面板顯示狀態設置完成")
+            logger.info(f"[RPM_CHART] ✅ 統計面板顯示狀態設置完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART] 設置統計面板顯示狀態失敗: {e}")
+            logger.error(f"[RPM_CHART] 設置統計面板顯示狀態失敗: {e}")
             return False
             
     def _adjust_table_height(self):
@@ -1196,7 +1199,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
         """🆕 設置時間軸模式（代理方法）"""
         if hasattr(self, 'chart_widget') and self.chart_widget:
             self.chart_widget.set_time_axis_mode(use_time_axis)
-            print(f"[RPM_WRAPPER] ✅ 時間軸模式已設置: {use_time_axis}")
+            logger.info(f"[RPM_WRAPPER] ✅ 時間軸模式已設置: {use_time_axis}")
         
     def _update_status_info(self, data: Dict[str, Any]):
         """更新狀態資訊顯示"""
@@ -1245,7 +1248,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('na', 'N/A')}")
                 
         except Exception as e:
-            print(f"[ERROR] 更新狀態資訊失敗: {e}")
+            logger.error(f"更新狀態資訊失敗: {e}")
             # 發生錯誤時顯示預設值
             self.lap_time_label.setText(f"⏱️ {tr('lap_time', '圈時間')}: {tr('error', '錯誤')}")
             self.tyre_compound_label.setText(f"🛞 {tr('tire_compound', '輪胎配方')}: {tr('error', '錯誤')}")
@@ -1255,11 +1258,11 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
         self.current_data = data
         
         try:
-            print(f"[RPM_CHART] ========== 更新RPM數據 ==========")
-            print(f"[RPM_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
+            logger.debug(f"[RPM_CHART] ========== 更新RPM數據 ==========")
+            logger.debug(f"[RPM_CHART] 收到數據鍵: {list(data.keys()) if data else 'None'}")
             
             if not data:
-                print(f"[ERROR] [RPM_CHART] 數據為空")
+                logger.error(f"[RPM_CHART] 數據為空")
                 return
             
             # 提取元數據
@@ -1267,16 +1270,16 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             rpm_data = data.get('rpm_data', {})
             statistics = data.get('statistics', {})
             
-            print(f"[RPM_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
-            print(f"[RPM_CHART] rpm_data 鍵: {list(rpm_data.keys()) if rpm_data else 'None'}")
-            print(f"[RPM_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
+            logger.debug(f"[RPM_CHART] metadata 鍵: {list(metadata.keys()) if metadata else 'None'}")
+            logger.debug(f"[RPM_CHART] rpm_data 鍵: {list(rpm_data.keys()) if rpm_data else 'None'}")
+            logger.debug(f"[RPM_CHART] statistics 鍵: {list(statistics.keys()) if statistics else 'None'}")
             
             # 提取車手信息
             drivers = metadata.get('drivers', [])
             sectors = metadata.get('sectors', [])
             
-            print(f"[RPM_CHART] 車手數量: {len(drivers)}")
-            print(f"[RPM_CHART] 賽道區段: {len(sectors)}")
+            logger.debug(f"[RPM_CHART] 車手數量: {len(drivers)}")
+            logger.debug(f"[RPM_CHART] 賽道區段: {len(sectors)}")
             
             # 提取RPM數據
             distance = rpm_data.get('distance', [])
@@ -1289,11 +1292,11 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             driver1_time = rpm_data.get('driver1_time_seconds', [])
             driver2_time = rpm_data.get('driver2_time_seconds', [])
             
-            print(f"[RPM_CHART] 距離數據點: {len(distance)}")
-            print(f"[RPM_CHART] 車手1 RPM數據點: {len(driver1_rpm)}")
-            print(f"[RPM_CHART] 車手2 RPM數據點: {len(driver2_rpm)}")
-            print(f"[RPM_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
-            print(f"[RPM_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
+            logger.debug(f"[RPM_CHART] 距離數據點: {len(distance)}")
+            logger.debug(f"[RPM_CHART] 車手1 RPM數據點: {len(driver1_rpm)}")
+            logger.debug(f"[RPM_CHART] 車手2 RPM數據點: {len(driver2_rpm)}")
+            logger.debug(f"[RPM_CHART] 🕒 車手1 時間數據點: {len(driver1_time)}")
+            logger.debug(f"[RPM_CHART] 🕒 車手2 時間數據點: {len(driver2_time)}")
             
             # 如果有車手信息，使用車手代碼作為名稱
             lap1 = None
@@ -1304,12 +1307,12 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 # 🆕 提取圈數信息（用於雙圈比較模式判斷）
                 lap1 = drivers[0].get('lap_number')
                 lap2 = drivers[1].get('lap_number')
-                print(f"[RPM_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
-                print(f"[RPM_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
+                logger.debug(f"[RPM_CHART] 🔢 提取圈數: lap1={lap1}, lap2={lap2}")
+                logger.debug(f"[RPM_CHART] 車手名稱更新: {driver1_name} vs {driver2_name}")
             elif len(drivers) == 1:
                 driver1_name = drivers[0].get('code', driver1_name)
                 lap1 = drivers[0].get('lap_number')
-                print(f"[RPM_CHART] 單車手模式: {driver1_name}")
+                logger.debug(f"[RPM_CHART] 單車手模式: {driver1_name}")
             
             # 🆕 雙圈比較模式判斷邏輯
             is_single_driver_mode = False
@@ -1318,45 +1321,45 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             if metadata.get('is_single_driver', False):
                 # 明確標記的單車手模式
                 is_single_driver_mode = True
-                print(f"[RPM_CHART] 🔍 檢測到單車手模式標記")
+                logger.debug(f"[RPM_CHART] 🔍 檢測到單車手模式標記")
             elif driver1_name == driver2_name:
                 # 相同車手：需要進一步判斷是單車手還是雙圈比較
                 if lap1 is not None and lap2 is not None and lap1 != lap2:
                     # 🆕 同車手不同圈數 → 雙圈比較模式
                     is_dual_lap_mode = True
                     is_single_driver_mode = False
-                    print(f"[RPM_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                    logger.debug(f"[RPM_CHART] � 檢測到雙圈比較模式: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
                 else:
                     # 同車手相同圈數或無圈數信息 → 單車手模式
                     is_single_driver_mode = True
-                    print(f"[RPM_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
+                    logger.debug(f"[RPM_CHART] 🔍 檢測到相同車手比較（單車手模式）: {driver1_name}")
             elif len(drivers) == 1:
                 # 只有一個車手的數據
                 is_single_driver_mode = True
-                print(f"[RPM_CHART] 🔍 檢測到單車手數據: {driver1_name}")
+                logger.debug(f"[RPM_CHART] 🔍 檢測到單車手數據: {driver1_name}")
             
             if is_single_driver_mode:
-                print(f"[RPM_CHART] 🎯 使用單車手模式顯示")
+                logger.debug(f"[RPM_CHART] 🎯 使用單車手模式顯示")
                 # 清空車手2的數據，只顯示車手1
                 driver2_rpm = []
                 driver2_name = ""  # 單車手模式才清空車手2名稱
                 lap2 = None  # 清空 lap2
             elif is_dual_lap_mode:
-                print(f"[RPM_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
+                logger.debug(f"[RPM_CHART] 🔄 使用雙圈比較模式顯示: {driver1_name} 第{lap1}圈 vs 第{lap2}圈")
                 # 保持雙車手模式，但標籤會在 set_rpm_data 中修改
             else:
                 # 雙車手模式 - 保持車手名稱不變
-                print(f"[RPM_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
+                logger.debug(f"[RPM_CHART] 🎯 使用雙車手模式顯示: {driver1_name} vs {driver2_name}")
             
             # 檢查數據完整性
             if not distance or not driver1_rpm:
-                print(f"[ERROR] [RPM_CHART] 關鍵數據缺失")
-                print(f"[RPM_CHART] distance: {len(distance) if distance else 0} 點")
-                print(f"[RPM_CHART] driver1_rpm: {len(driver1_rpm) if driver1_rpm else 0} 點")
+                logger.error(f"[RPM_CHART] 關鍵數據缺失")
+                logger.debug(f"[RPM_CHART] distance: {len(distance) if distance else 0} 點")
+                logger.debug(f"[RPM_CHART] driver1_rpm: {len(driver1_rpm) if driver1_rpm else 0} 點")
                 return
             
             # 更新圖表
-            print(f"[RPM_CHART] 📊 更新圖表...")
+            logger.debug(f"[RPM_CHART] 📊 更新圖表...")
             self.chart_widget.set_rpm_data(
                 distance=distance,
                 driver1_rpm=driver1_rpm,
@@ -1369,21 +1372,21 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 driver1_time=driver1_time,  # 🆕 時間軸數據
                 driver2_time=driver2_time   # 🆕 時間軸數據
             )
-            print(f"[RPM_CHART] ✅ 圖表更新完成")
+            logger.info(f"[RPM_CHART] ✅ 圖表更新完成")
             
             # 更新統計表格
-            print(f"[RPM_CHART] 📋 更新統計表格...")
+            logger.debug(f"[RPM_CHART] 📋 更新統計表格...")
             self._update_statistics_table(statistics, driver1_name, driver2_name)
             
             # 更新狀態資訊顯示
-            print(f"[RPM_CHART] 📋 更新狀態資訊...")
+            logger.debug(f"[RPM_CHART] 📋 更新狀態資訊...")
             self._update_status_info(data)
             
             self.chart_updated.emit()
-            print(f"[RPM_CHART] ✅ 全部更新完成")
+            logger.info(f"[RPM_CHART] ✅ 全部更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [RPM CHART WIDGET] 更新數據失敗: {e}")
+            logger.error(f"[RPM CHART WIDGET] 更新數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1403,7 +1406,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 return self._generate_mock_rpm_data()
                 
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART_WIDGET] 準備圖表數據失敗: {e}")
+            logger.error(f"[RPM_CHART_WIDGET] 準備圖表數據失敗: {e}")
             return self._generate_mock_rpm_data()
     
     def _parse_rpm_telemetry(self, rpm_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -1436,10 +1439,10 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             
     def _update_statistics_table(self, statistics: Dict, driver1_name: str, driver2_name: str):
         """更新統計表格 - 採用速度分析的表格風格"""
-        print(f"[RPM_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
+        logger.debug(f"[RPM_CHART] 📊 統計表格更新 - 收到statistics: {statistics}")
         
         if not statistics:
-            print(f"[RPM_CHART] ⚠️  statistics 為空")
+            logger.warning(f"[RPM_CHART] ⚠️  statistics 為空")
             return
             
         try:
@@ -1447,9 +1450,9 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             driver2_stats = statistics.get('driver2_stats', {})
             comparison = statistics.get('comparison', {})
             
-            print(f"[RPM_CHART] driver1_stats: {driver1_stats}")
-            print(f"[RPM_CHART] driver2_stats: {driver2_stats}")
-            print(f"[RPM_CHART] comparison: {comparison}")
+            logger.debug(f"[RPM_CHART] driver1_stats: {driver1_stats}")
+            logger.debug(f"[RPM_CHART] driver2_stats: {driver2_stats}")
+            logger.debug(f"[RPM_CHART] comparison: {comparison}")
             
             # 準備表格數據
             rows = [
@@ -1467,7 +1470,7 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                  f"{comparison.get('min_rpm_diff', 0):.0f}")
             ]
             
-            print(f"[RPM_CHART] 表格數據行: {rows}")
+            logger.debug(f"[RPM_CHART] 表格數據行: {rows}")
             
             # 設置表格行數和數據
             self.stats_table.setRowCount(len(rows))
@@ -1494,10 +1497,10 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
             # 自動調整表格高度
             self._adjust_table_height()
             
-            print(f"[RPM CHART WIDGET] ✅ 統計表格更新完成")
+            logger.info(f"[RPM CHART WIDGET] ✅ 統計表格更新完成")
             
         except Exception as e:
-            print(f"[ERROR] [RPM CHART WIDGET] 更新統計表格失敗: {e}")
+            logger.error(f"[RPM CHART WIDGET] 更新統計表格失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -1511,15 +1514,15 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                              lap1: int = 1, lap2: int = 1, is_fastest: bool = False) -> bool:
         """更新圈速參數並重新載入數據 - 與速度分析模組保持一致"""
         try:
-            print(f"[RPM_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
-            print(f"[RPM_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
+            logger.debug(f"[RPM_CHART_WIDGET] 🔄 更新圈速參數: {year} {race} {session}")
+            logger.debug(f"[RPM_CHART_WIDGET] 🏁 車手: {driver1} vs {driver2}, 圈數: {lap1} vs {lap2}")
             
             # 更新圈數顯示
             self.set_lap_numbers(lap1, lap2)
             
             # 如果有數據載入器，重新載入數據
             if hasattr(self, 'rpm_loader'):
-                print(f"[RPM_CHART_WIDGET] 📦 找到RPM數據載入器，準備重新載入...")
+                logger.debug(f"[RPM_CHART_WIDGET] 📦 找到RPM數據載入器，準備重新載入...")
                 
                 session_info = {
                     'year': int(year) if year.isdigit() else year,
@@ -1533,14 +1536,14 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                 }
                 
                 self.rpm_loader.load_rpm_analysis_data(session_info)
-                print(f"[RPM_CHART_WIDGET] ✅ 數據重新載入請求已發送")
+                logger.info(f"[RPM_CHART_WIDGET] ✅ 數據重新載入請求已發送")
                 return True
             else:
-                print(f"[RPM_CHART_WIDGET] ⚠️ 未找到RPM數據載入器，僅更新顯示")
+                logger.warning(f"[RPM_CHART_WIDGET] ⚠️ 未找到RPM數據載入器，僅更新顯示")
                 return True
                 
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART_WIDGET] 更新圈速參數失敗: {e}")
+            logger.error(f"[RPM_CHART_WIDGET] 更新圈速參數失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1565,12 +1568,12 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
     
     def reset_chart_view(self):
         """重置圖表視圖 - 與速度分析保持一致"""
-        print(f"[RPM_ANALYSIS] 🔄 reset_chart_view() 被調用")
+        logger.debug(f"[RPM_ANALYSIS] 🔄 reset_chart_view() 被調用")
         if hasattr(self, 'chart_widget') and self.chart_widget:
-            print(f"[RPM_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
+            logger.info(f"[RPM_ANALYSIS] ✅ 找到 chart_widget，調用 reset_view()")
             self.chart_widget.reset_view()
         else:
-            print(f"[RPM_ANALYSIS] ❌ 未找到 chart_widget 屬性")
+            logger.error(f"[RPM_ANALYSIS] ❌ 未找到 chart_widget 屬性")
             
     def clear_fixed_line(self):
         """清除固定線條 - 與速度分析保持一致"""
@@ -1581,16 +1584,16 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
     def cleanup(self):
         """清理 Chart Widget 資源 - 防止記憶體洩漏"""
         try:
-            print(f"[RPM_CHART] 🧹 開始清理資源...")
+            logger.debug(f"[RPM_CHART] 🧹 開始清理資源...")
             
             # 0. 從連動管理器解除註冊（與 Speed Analysis 一致）
             try:
                 from modules.gui.lap_analysis.linkage.linkage_manager import linkage_manager
                 if linkage_manager:
                     linkage_manager.unregister_module(self)
-                    print(f"[RPM_CHART]   ✅ 已從連動管理器解除註冊")
+                    logger.info(f"[RPM_CHART] ✅ 已從連動管理器解除註冊")
             except Exception as e:
-                print(f"[RPM_CHART]   ⚠️ 解除註冊警告: {e}")
+                logger.warning(f"[RPM_CHART] ⚠️ 解除註冊警告: {e}")
             
             # 1. 清理 Matplotlib 圖表
             if hasattr(self, 'chart_widget') and self.chart_widget:
@@ -1600,17 +1603,17 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                         import matplotlib.pyplot as plt
                         plt.close(self.chart_widget.figure)
                         self.chart_widget.figure = None
-                        print(f"[RPM_CHART]   ✅ Matplotlib 圖表已清理")
+                        logger.info(f"[RPM_CHART] ✅ Matplotlib 圖表已清理")
                     except Exception as e:
-                        print(f"[RPM_CHART]   ⚠️ Matplotlib 清理警告: {e}")
+                        logger.warning(f"[RPM_CHART] ⚠️ Matplotlib 清理警告: {e}")
                 
                 if hasattr(self.chart_widget, 'canvas') and self.chart_widget.canvas:
                     try:
                         self.chart_widget.canvas.deleteLater()
                         self.chart_widget.canvas = None
-                        print(f"[RPM_CHART]   ✅ Canvas 已清理")
+                        logger.info(f"[RPM_CHART] ✅ Canvas 已清理")
                     except Exception as e:
-                        print(f"[RPM_CHART]   ⚠️ Canvas 清理警告: {e}")
+                        logger.warning(f"[RPM_CHART] ⚠️ Canvas 清理警告: {e}")
             
             # 2. 清理 QTableWidget 中的所有 Item
             if hasattr(self, 'stats_table') and self.stats_table:
@@ -1624,44 +1627,44 @@ class RPMAnalysisChartWidget(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkag
                     self.stats_table.clear()
                     self.stats_table.deleteLater()
                     self.stats_table = None
-                    print(f"[RPM_CHART]   ✅ QTableWidget 已完全清理")
+                    logger.info(f"[RPM_CHART] ✅ QTableWidget 已完全清理")
                 except Exception as e:
-                    print(f"[RPM_CHART]   ⚠️ QTableWidget 清理警告: {e}")
+                    logger.warning(f"[RPM_CHART] ⚠️ QTableWidget 清理警告: {e}")
             
             # 3. 斷開 Signal 連接
             if hasattr(self, 'receiver') and self.receiver:
                 try:
                     self.receiver.deleteLater()
                     self.receiver = None
-                    print(f"[RPM_CHART]   ✅ Signal Receiver 已清理")
+                    logger.info(f"[RPM_CHART] ✅ Signal Receiver 已清理")
                 except Exception as e:
-                    print(f"[RPM_CHART]   ⚠️ Receiver 清理警告: {e}")
+                    logger.warning(f"[RPM_CHART] ⚠️ Receiver 清理警告: {e}")
             
             # 4. 清理數據引用
             data_attrs = ['telemetry_data', 'lap_data', 'rpm_data', 'driver1_data', 'driver2_data', 'cached_data']
             for attr in data_attrs:
                 if hasattr(self, attr):
                     setattr(self, attr, None)
-            print(f"[RPM_CHART]   ✅ 數據引用已清空")
+            logger.info(f"[RPM_CHART] ✅ 數據引用已清空")
             
             # 5. 清理 ChartWidget
             if hasattr(self, 'chart_widget') and self.chart_widget:
                 try:
                     self.chart_widget.deleteLater()
                     self.chart_widget = None
-                    print(f"[RPM_CHART]   ✅ ChartWidget 已清理")
+                    logger.info(f"[RPM_CHART] ✅ ChartWidget 已清理")
                 except Exception as e:
-                    print(f"[RPM_CHART]   ⚠️ ChartWidget 清理警告: {e}")
+                    logger.warning(f"[RPM_CHART] ⚠️ ChartWidget 清理警告: {e}")
             
             # 6. 清理資料載入器引用
             if hasattr(self, 'rpm_loader'):
                 self.rpm_loader = None
-                print(f"[RPM_CHART]   ✅ 資料載入器引用已清空")
+                logger.info(f"[RPM_CHART] ✅ 資料載入器引用已清空")
             
-            print(f"[RPM_CHART] ✅ 資源清理完成")
+            logger.info(f"[RPM_CHART] ✅ 資源清理完成")
             
         except Exception as e:
-            print(f"[ERROR] [RPM_CHART] cleanup 失敗: {e}")
+            logger.error(f"[RPM_CHART] cleanup 失敗: {e}")
             import traceback
             traceback.print_exc()
 
@@ -1670,6 +1673,7 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import QTimer
     import sys
+
     
     app = QApplication(sys.argv)
     

@@ -18,7 +18,11 @@ from PyQt5.QtWidgets import QGroupBox, QPushButton, QLabel, QHBoxLayout, QMessag
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
 
 from core.gui_i18n import tr
+from core.logger import get_logger
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
+
+
+logger = get_logger(component="qualifying_prediction_mdi")
 
 
 class QualifyingPredictionApiWorker(QThread):
@@ -47,10 +51,15 @@ class QualifyingPredictionApiWorker(QThread):
         self.base_url = (base_url or "https://api.f1telemetrystationpro.org").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
+        self._logger = get_logger(component="qualifying_pred_api_worker")
     
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                self._logger.debug("[API_WORKER] 開始前已被中斷")
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -67,8 +76,13 @@ class QualifyingPredictionApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[API_WORKER] 📋 參數: {query_params}")
+            self._logger.info("[API_WORKER] 🌐 調用 API: %s", endpoint)
+            self._logger.debug("[API_WORKER] 📋 參數: %s", query_params)
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                self._logger.debug("[API_WORKER] HTTP 請求前被中斷")
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -79,6 +93,11 @@ class QualifyingPredictionApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                self._logger.debug("[API_WORKER] HTTP 請求後被中斷")
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -110,21 +129,28 @@ class QualifyingPredictionApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[API_WORKER] ✅ API 調用成功")
-            print(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[API_WORKER] 📊 數據源: {meta['source']}")
+            self._logger.info("[API_WORKER] ✅ API 調用成功")
+            self._logger.info("[API_WORKER] ⏱️  延遲: %sms", meta['latency_ms'])
+            self._logger.debug("[API_WORKER] 📊 數據源: %s", meta['source'])
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                self._logger.debug("[API_WORKER] success 信號前被中斷")
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[API_WORKER] ❌ {error_msg}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("[API_WORKER] ❌ %s", error_msg)
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 # 導入資料載入器和元件
@@ -162,7 +188,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("qualifying_prediction", config)
             cls._REGISTERED = True
-            print("[QUALIFYING_PRED_MDI] ✅ 模組類型已註冊")
+            logger.info("[QUALIFYING_PRED_MDI] ✅ 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -171,7 +197,8 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[QUALIFYING_PRED_MDI] QualifyingPredictionMDI 開始初始化...")
+        self._logger = get_logger(component="qualifying_prediction_mdi")
+        self._logger.info("[QUALIFYING_PRED_MDI] QualifyingPredictionMDI 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -187,7 +214,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         self._current_data = None
         self._is_data_loaded = False
         
-        print(f"[QUALIFYING_PRED_MDI] 基類初始化完成, 等待參數設置...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 基類初始化完成, 等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -201,49 +228,47 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print(f"[QUALIFYING_PRED_MDI] 開始初始化模組...")
+            self._logger.info("[QUALIFYING_PRED_MDI] 開始初始化模組...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[QUALIFYING_PRED_MDI] ❌ 缺少 current_year 屬性")
+                self._logger.error("[QUALIFYING_PRED_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[QUALIFYING_PRED_MDI] ❌ 缺少 current_race 屬性")
+                self._logger.error("[QUALIFYING_PRED_MDI] ❌ 缺少 current_race 屬性")
                 return False
             
             # 設置參數（排位賽預測不需要 session）
             self.year = str(self.current_year)
             self.race = self.current_race
             
-            print(f"[QUALIFYING_PRED_MDI] ✅ 參數已設置: {self.year} {self.race}")
+            self._logger.info("[QUALIFYING_PRED_MDI] ✅ 參數已設置: %s %s", self.year, self.race)
             
             # ⚠️ 關鍵：調用基類的 initialize_module 來創建 chart_widget 和 data_manager
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print(f"[QUALIFYING_PRED_MDI] ❌ 基類初始化失敗")
+                self._logger.error("[QUALIFYING_PRED_MDI] ❌ 基類初始化失敗")
                 return False
             
             # 驗證組件已創建
             if not self.chart_widget:
-                print(f"[QUALIFYING_PRED_MDI] ❌ chart_widget 未創建")
+                self._logger.error("[QUALIFYING_PRED_MDI] ❌ chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print(f"[QUALIFYING_PRED_MDI] ❌ data_manager 未創建")
+                self._logger.error("[QUALIFYING_PRED_MDI] ❌ data_manager 未創建")
                 return False
             
-            print(f"[QUALIFYING_PRED_MDI] ✅ 組件創建成功")
+            self._logger.info("[QUALIFYING_PRED_MDI] ✅ 組件創建成功")
             
             # 載入初始數據
             self.load_initial_data()
             
-            print(f"[QUALIFYING_PRED_MDI] ✅ 模組初始化完成")
+            self._logger.info("[QUALIFYING_PRED_MDI] ✅ 模組初始化完成")
             return True
             
         except Exception as e:
-            print(f"[QUALIFYING_PRED_MDI] ❌ 初始化失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("[QUALIFYING_PRED_MDI] ❌ 初始化失敗: %s", e)
             return False
     
     # ========== 基類抽象方法實作 ==========
@@ -255,7 +280,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         Returns:
             QualifyingPredictionDataLoader: 資料載入器實例
         """
-        print("[QUALIFYING_PRED_MDI] 創建資料載入器...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 創建資料載入器...")
         loader = QualifyingPredictionDataLoader(
             year=self.year,
             race=self.race,
@@ -267,7 +292,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("[QUALIFYING_PRED_MDI] ✅ 資料載入器已創建")
+        self._logger.info("[QUALIFYING_PRED_MDI] ✅ 資料載入器已創建")
         return loader
     
     def create_chart_widget(self) -> QualifyingPredictionWidget:
@@ -277,18 +302,18 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         Returns:
             QualifyingPredictionWidget: 表格元件實例
         """
-        print("[QUALIFYING_PRED_MDI] 創建表格元件...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 創建表格元件...")
         # ⚠️ parent 必須傳 None，因為 UniversalAnalysisMDI 不是 QWidget
         widget = QualifyingPredictionWidget(parent=None)
         
-        print("[QUALIFYING_PRED_MDI] ✅ 表格元件已創建")
+        self._logger.info("[QUALIFYING_PRED_MDI] ✅ 表格元件已創建")
         return widget
     
     def _setup_control_panel(self):
         """
         設置控制面板（由基類調用）
         """
-        print("[QUALIFYING_PRED_MDI] 設置控制面板...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 設置控制面板...")
         
         # 創建控制面板容器
         control_panel = QGroupBox(tr("control_panel", "控制面板"))
@@ -311,7 +336,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         if hasattr(self, 'main_layout'):
             self.main_layout.addWidget(control_panel)
         
-        print("[QUALIFYING_PRED_MDI] ✅ 控制面板已設置")
+        self._logger.info("[QUALIFYING_PRED_MDI] ✅ 控制面板已設置")
     
     # ========== 數據流處理 ==========
     
@@ -324,7 +349,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             data: 載入的資料字典
         """
         try:
-            print("[QUALIFYING_PRED_MDI] 資料載入完成，開始處理...")
+            self._logger.info("[QUALIFYING_PRED_MDI] 資料載入完成，開始處理...")
             
             # 驗證資料結構
             if not isinstance(data, dict):
@@ -345,7 +370,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             
             # 更新 Widget
             predictions = data["predictions"]
-            print(f"[QUALIFYING_PRED_MDI] 更新表格（{len(predictions)} 位車手）...")
+            self._logger.info("[QUALIFYING_PRED_MDI] 更新表格（%s 位車手）...", len(predictions))
             self.chart_widget.update_display(data)
             
             # 更新狀態
@@ -354,12 +379,10 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
                     tr("data_loaded_status", "已載入 {count} 位車手預測").format(count=len(predictions))
                 )
             
-            print("[QUALIFYING_PRED_MDI] ✅ 資料處理完成")
+            self._logger.info("[QUALIFYING_PRED_MDI] ✅ 資料處理完成")
             
         except Exception as e:
-            print(f"❌ [QUALIFYING_PRED_MDI] 資料處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("❌ [QUALIFYING_PRED_MDI] 資料處理失敗: %s", e)
             self._show_error(tr("data_processing_error", "資料處理失敗"), str(e))
     
     @pyqtSlot(str)
@@ -370,7 +393,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"❌ [QUALIFYING_PRED_MDI] 載入錯誤: {error_msg}")
+        self._logger.error("❌ [QUALIFYING_PRED_MDI] 載入錯誤: %s", error_msg)
         # ✅ 只在狀態標籤顯示錯誤
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('error', '錯誤')}: {error_msg}")
@@ -383,7 +406,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         Args:
             status: 新狀態訊息
         """
-        print(f"[QUALIFYING_PRED_MDI] 狀態: {status}")
+        self._logger.info("[QUALIFYING_PRED_MDI] 狀態: %s", status)
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(status)
     
@@ -391,7 +414,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
     
     def _on_reload_clicked(self):
         """處理重新載入按鈕點擊"""
-        print("[QUALIFYING_PRED_MDI] 重新載入資料...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 重新載入資料...")
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("reloading", "重新載入中..."))
         
@@ -411,8 +434,8 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         1. API 調用 (https://api.f1telemetrystationpro.org)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
-        print("[QUALIFYING_PRED_MDI] 🚀 開始載入初始資料...")
-        print(f"[QUALIFYING_PRED_MDI] 📋 參數: {self.year} {self.race}")
+        self._logger.info("[QUALIFYING_PRED_MDI] 🚀 開始載入初始資料...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 📋 參數: %s %s", self.year, self.race)
         
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
@@ -425,7 +448,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             "force_refresh": False  # 可選：強制刷新
         }
         
-        print("[QUALIFYING_PRED_MDI] 🌐 創建 API Worker...")
+        self._logger.info("[QUALIFYING_PRED_MDI] 🌐 創建 API Worker...")
         self.api_worker = QualifyingPredictionApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -441,13 +464,13 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[QUALIFYING_PRED_MDI] ▶️  啟動 API 請求（使用 Qt.QueuedConnection）...")
+        self._logger.info("[QUALIFYING_PRED_MDI] ▶️  啟動 API 請求（使用 Qt.QueuedConnection）...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[QUALIFYING_PRED_MDI] 📊 API 進度: {progress}%")
+        self._logger.info("[QUALIFYING_PRED_MDI] 📊 API 進度: %s%%", progress)
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('api_loading', 'API 載入中')}... {progress}%")
     
@@ -455,14 +478,14 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[QUALIFYING_PRED_MDI] ✅ API 調用成功")
+            self._logger.info("[QUALIFYING_PRED_MDI] ✅ API 調用成功")
             
             # 提取數據和元數據
             data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[QUALIFYING_PRED_MDI] 📦 數據源: {meta.get('source')}")
-            print(f"[QUALIFYING_PRED_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
+            self._logger.info("[QUALIFYING_PRED_MDI] 📦 數據源: %s", meta.get('source'))
+            self._logger.info("[QUALIFYING_PRED_MDI] ⏱️  延遲: %sms", meta.get('latency_ms'))
             
             # 驗證數據結構
             if not isinstance(data, dict):
@@ -485,15 +508,13 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
                 )
             
         except Exception as e:
-            print(f"❌ [QUALIFYING_PRED_MDI] API 數據處理失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("❌ [QUALIFYING_PRED_MDI] API 數據處理失敗: %s", e)
             self._on_api_failure(str(e))
     
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - 嘗試備援方案"""
-        print(f"❌ [QUALIFYING_PRED_MDI] API 調用失敗: {error_msg}")
+        self._logger.error("❌ [QUALIFYING_PRED_MDI] API 調用失敗: %s", error_msg)
         
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(
@@ -507,7 +528,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
                 "排位賽預測資料僅支援透過 API 載入。請確認 API 服務可用或稍後再試。\n\n詳細錯誤:\n{error}",
             ).format(error=error_msg)
         )
-        print("❌ [QUALIFYING_PRED_MDI] 已封鎖本地 JSON 後備 (API-ONLY)")
+        self._logger.warning("❌ [QUALIFYING_PRED_MDI] 已封鎖本地 JSON 後備 (API-ONLY)")
     
     def update_analysis_parameters(self, year: str, race: str) -> bool:
         """
@@ -521,7 +542,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[QUALIFYING_PRED_MDI] � 更新參數: {year} {race}")
+            self._logger.info("[QUALIFYING_PRED_MDI] � 更新參數: %s %s", year, race)
             
             # 更新內部參數
             self.current_year = str(year)
@@ -533,47 +554,50 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             if hasattr(self, 'data_manager') and self.data_manager:
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
-                print(f"[QUALIFYING_PRED_MDI] ✅ DataManager 參數已同步")
+                self._logger.info("[QUALIFYING_PRED_MDI] ✅ DataManager 參數已同步")
             elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
-                print(f"[QUALIFYING_PRED_MDI] ✅ DataLoader 參數已同步")
+                self._logger.info("[QUALIFYING_PRED_MDI] ✅ DataLoader 參數已同步")
             
             # 🔑 重點：調用 load_initial_data() 觸發 API 請求
             # 這個方法會啟動 API Worker 並更新 UI
-            print(f"[QUALIFYING_PRED_MDI] 🌐 觸發資料重新載入...")
+            self._logger.info("[QUALIFYING_PRED_MDI] 🌐 觸發資料重新載入...")
             self.load_initial_data()
             
             # 異步載入，返回 True 表示啟動成功
             return True
             
         except Exception as e:
-            print(f"❌ [QUALIFYING_PRED_MDI] 參數更新失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("❌ [QUALIFYING_PRED_MDI] 參數更新失敗: %s", e)
             return False
 
     def update_parameters(self, year: int = None, race: str = None, session: str = None, **kwargs) -> bool:
         """覆寫通用參數更新邏輯，確保觸發 API 載入"""
         try:
             # ⚠️ 增強調試輸出：入口日誌
-            print(f"🔄 [QUALIFYING_PRED_MDI] update_parameters 被調用")
-            print(f"   📥 接收參數: year={year}, race={race}, session={session}")
-            print(f"   📦 當前參數: year={self.year if hasattr(self, 'year') else 'N/A'}, "
-                  f"race={self.race if hasattr(self, 'race') else 'N/A'}")
+            self._logger.info("🔄 [QUALIFYING_PRED_MDI] update_parameters 被調用")
+            self._logger.info("   📥 接收參數: year=%s, race=%s, session=%s", year, race, session)
+            self._logger.info(
+                "   📦 當前參數: year=%s, race=%s",
+                getattr(self, 'year', 'N/A'), getattr(self, 'race', 'N/A')
+            )
             
             target_year = year if year is not None else (self.year or getattr(self, 'current_year', None))
             target_race = race if race is not None else (self.race or getattr(self, 'current_race', None))
             # session 參數被忽略（排位賽預測固定使用 FP3）
 
             if not all([target_year, target_race]):
-                print(f"❌ [QUALIFYING_PRED_MDI] 參數更新失敗：缺少必要參數 (year={target_year}, race={target_race})")
+                self._logger.error(
+                    "❌ [QUALIFYING_PRED_MDI] 參數更新失敗：缺少必要參數 (year=%s, race=%s)",
+                    target_year, target_race
+                )
                 return False
 
             normalized_year = str(target_year)
             normalized_race = target_race
             
-            print(f"✅ [QUALIFYING_PRED_MDI] 參數正規化: year={normalized_year}, race={normalized_race}")
+            self._logger.info("✅ [QUALIFYING_PRED_MDI] 參數正規化: year=%s, race=%s", normalized_year, normalized_race)
 
             self.current_year = normalized_year
             self.current_race = normalized_race
@@ -585,7 +609,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             self.parameters_updated.emit(params_payload)
             self.update_window_title()
             
-            print(f"🔄 [QUALIFYING_PRED_MDI] 開始調用 update_analysis_parameters...")
+            self._logger.info("🔄 [QUALIFYING_PRED_MDI] 開始調用 update_analysis_parameters...")
 
             return self.update_analysis_parameters(
                 self.current_year,
@@ -593,9 +617,7 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
             )
 
         except Exception as exc:
-            print(f"❌ [QUALIFYING_PRED_MDI] update_parameters 失敗: {exc}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("❌ [QUALIFYING_PRED_MDI] update_parameters 失敗: %s", exc)
             return False
     
     def get_window_title(self, year: str = None, race: str = None, session: str = None) -> str:
@@ -645,24 +667,24 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
-    
-    print("=" * 60)
-    print("排位賽預測 MDI 視窗 - 獨立測試")
-    print("=" * 60)
-    
+
+    logger.info("=" * 60)
+    logger.info("排位賽預測 MDI 視窗 - 獨立測試")
+    logger.info("=" * 60)
+
     app = QApplication(sys.argv)
-    
+
     # 創建 MDI 視窗
     mdi = QualifyingPredictionMDI(parent=None)
-    
+
     # 設置參數（模擬 GUI 主程式的調用）
     mdi.current_year = "2025"
     mdi.current_race = "Austria"
-    
+
     # 初始化模組
     if mdi.initialize_module():
-        print("\n✅ 模組初始化成功")
-        
+        logger.info("✅ 模組初始化成功")
+
         # 獲取主要元件
         widget = mdi.get_widget()
         if widget and hasattr(widget, 'setWindowTitle'):
@@ -671,10 +693,10 @@ if __name__ == "__main__":
             widget.resize(1300, 800)
         if widget and hasattr(widget, 'show'):
             widget.show()
-        
-        print("🚀 測試視窗已顯示")
+
+        logger.info("🚀 測試視窗已顯示")
     else:
-        print("\n❌ 模組初始化失敗")
+        logger.error("❌ 模組初始化失敗")
         sys.exit(1)
-    
+
     sys.exit(app.exec_())

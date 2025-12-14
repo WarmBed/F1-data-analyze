@@ -178,8 +178,6 @@ class LoadWorkspaceDialog(QDialog):
             
             self._populate_table(self.workspaces)
             
-            print(f"[WORKSPACE] {tr('workspace_loaded_count').format(count=len(self.workspaces))}")
-            
         except Exception as e:
             QMessageBox.critical(
                 self,
@@ -244,10 +242,8 @@ class LoadWorkspaceDialog(QDialog):
             results = self.database.search_workspaces(keyword=text.strip())
             self._populate_table(results)
             
-            print(f"[WORKSPACE] {tr('search_results').format(count=len(results))}")
-            
         except Exception as e:
-            print(f"[WORKSPACE] Search failed: {e}")
+            pass
     
     def _on_selection_changed(self):
         """選擇變更事件 - 支援多選"""
@@ -351,8 +347,6 @@ class LoadWorkspaceDialog(QDialog):
             )
             
             if reply == QMessageBox.Yes:
-                print(f"[WORKSPACE] Loading: ID={workspace['id']}, Name={workspace['name']}")
-                
                 # 發送信號
                 self.workspace_selected.emit(workspace['id'], config)
                 
@@ -416,10 +410,8 @@ class LoadWorkspaceDialog(QDialog):
                 for workspace in selected_workspaces:
                     try:
                         self.database.delete_workspace(workspace['id'])
-                        print(f"[WORKSPACE] Deleted: ID={workspace['id']}, Name={workspace['name']}")
                         success_count += 1
                     except Exception as e:
-                        print(f"[WORKSPACE] Failed to delete ID={workspace['id']}: {e}")
                         failed_count += 1
                 
                 # 顯示結果

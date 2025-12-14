@@ -19,6 +19,11 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 
+from core.logger import get_logger
+
+
+logger = get_logger("live_timing.realtime_database", component="gui")
+
 
 class RealtimeDatabase:
     """
@@ -55,7 +60,7 @@ class RealtimeDatabase:
         self._write_lock = threading.Lock()
         
         self._initialized = True
-        print(f"[REALTIME_DB] Database path: {self._db_path}")
+        logger.info("[REALTIME_DB] Database path: %s", self._db_path)
     
     def connect(self):
         """連接資料庫並初始化表"""
@@ -65,7 +70,7 @@ class RealtimeDatabase:
         self._conn = sqlite3.connect(str(self._db_path), check_same_thread=False)
         self._conn.row_factory = sqlite3.Row
         self._create_tables()
-        print(f"[REALTIME_DB] Connected to database")
+        logger.info("[REALTIME_DB] Connected to database")
     
     def _create_tables(self):
         """創建資料表"""
@@ -156,7 +161,7 @@ class RealtimeDatabase:
         """)
         
         self._conn.commit()
-        print(f"[REALTIME_DB] Tables created/verified")
+        logger.info("[REALTIME_DB] Tables created/verified")
     
     def clear_session(self):
         """清除當前賽事數據（開始新連接時調用）"""
@@ -171,7 +176,7 @@ class RealtimeDatabase:
             cursor.execute("DELETE FROM timing_history")
             cursor.execute("DELETE FROM tyre_stints")
             self._conn.commit()
-            print(f"[REALTIME_DB] Session cleared")
+            logger.info("[REALTIME_DB] Session cleared")
     
     # ========================================
     # 寫入方法 (由 realtime_source 調用)
@@ -460,7 +465,7 @@ class RealtimeDatabase:
         if self._conn:
             self._conn.close()
             self._conn = None
-            print(f"[REALTIME_DB] Connection closed")
+            logger.info("[REALTIME_DB] Connection closed")
 
 
 # 單例訪問

@@ -20,6 +20,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 嘗試導入國際化模組
 try:
     from core.gui_i18n import tr, set_gui_language
@@ -80,7 +83,7 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
         # 初始化 UI
         self.init_ui()
         
-        print("[DIALOG] DetailedLapAnalysisOptionsDialog 已初始化")
+        logger.debug("[DIALOG] DetailedLapAnalysisOptionsDialog 已初始化")
     
     def _apply_stylesheet(self):
         """應用樣式表 - 完全複製自 LapAnalysisOptionsDialog"""
@@ -250,7 +253,7 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
         
         layout.addLayout(button_layout)
         
-        print("[DIALOG] UI 初始化完成")
+        logger.debug("[DIALOG] UI 初始化完成")
     
     def get_selected_types(self) -> list:
         """
@@ -264,24 +267,24 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
             selected_type = item.data(Qt.UserRole)
             selected_types.append(selected_type)
         
-        print(f"[DIALOG] 使用者選擇的分析類型: {selected_types}")
+        logger.debug(f"[DIALOG] 使用者選擇的分析類型: {selected_types}")
         
         # 如果沒有選擇任何項目，返回預設值（表格分析）
         if not selected_types:
-            print("[DIALOG] 未選擇任何項目，返回預設值: [detail_table]")
+            logger.debug("[DIALOG] 未選擇任何項目，返回預設值: [detail_table]")
             return [self.TYPE_DETAIL_TABLE]
         
         return selected_types
     
     def select_all(self):
         """選擇所有分析類型"""
-        print("[DIALOG] 選擇所有分析類型")
+        logger.debug("[DIALOG] 選擇所有分析類型")
         for i in range(self.analysis_list.count()):
             self.analysis_list.item(i).setSelected(True)
     
     def select_none(self):
         """取消選擇所有分析類型"""
-        print("[DIALOG] 取消選擇所有分析類型")
+        logger.debug("[DIALOG] 取消選擇所有分析類型")
         self.analysis_list.clearSelection()
     
     def accept(self):
@@ -293,12 +296,12 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
                 type_names.append("Detailed Lap Analysis")
             elif st == self.TYPE_BOX_PLOT:
                 type_names.append("Lap Time Box Plot")
-        print(f"[DIALOG] 使用者確認選擇: {', '.join(type_names)}")
+        logger.debug(f"[DIALOG] 使用者確認選擇: {', '.join(type_names)}")
         super().accept()
     
     def reject(self):
         """取消按鈕被點擊"""
-        print("[DIALOG] 使用者取消選擇")
+        logger.debug("[DIALOG] 使用者取消選擇")
         super().reject()
 
 
@@ -306,6 +309,7 @@ class DetailedLapAnalysisOptionsDialog(QDialog):
 if __name__ == "__main__":
     import sys
     from PyQt5.QtWidgets import QApplication
+
     
     app = QApplication(sys.argv)
     
@@ -314,13 +318,13 @@ if __name__ == "__main__":
     
     if dialog.exec_() == QDialog.Accepted:
         selected_types = dialog.get_selected_types()
-        print(f"✅ 測試結果: 使用者選擇了 {len(selected_types)} 個分析類型:")
+        logger.info(f"測試結果: 使用者選擇了 {len(selected_types)} 個分析類型:")
         for st in selected_types:
             if st == DetailedLapAnalysisOptionsDialog.TYPE_DETAIL_TABLE:
-                print("   - 詳細圈速分析（表格）")
+                logger.debug("   - 詳細圈速分析（表格）")
             elif st == DetailedLapAnalysisOptionsDialog.TYPE_BOX_PLOT:
-                print("   - 圈速箱型圖")
+                logger.debug("   - 圈速箱型圖")
     else:
-        print("❌ 測試結果: 使用者取消了選擇")
+        logger.error("測試結果: 使用者取消了選擇")
     
     sys.exit()

@@ -18,6 +18,9 @@ from PyQt5.QtGui import QPainter, QColor, QPen, QBrush, QFont
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
+from core.logger import get_logger
+
+logger = get_logger("live_timing.track_map", component="gui")
 
 # 嘗試導入通用顏色系統
 try:
@@ -25,7 +28,7 @@ try:
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     COLOR_PALETTE_AVAILABLE = False
-    print("[TRACK_MAP] color_palette_provider not available")
+    logger.warning("[TRACK_MAP] color_palette_provider not available")
 
 
 class TrackMapWidget(QWidget):
@@ -109,7 +112,7 @@ class TrackMapWidget(QWidget):
         try:
             position_records = track_data.get('position_records', [])
             if not position_records:
-                print("[TRACK_MAP] No position records found")
+                logger.warning("[TRACK_MAP] No position records found")
                 return
 
             self.track_outline = []
@@ -142,11 +145,11 @@ class TrackMapWidget(QWidget):
                     self.track_length = float(distance)
 
             self.track_points.sort(key=lambda item: item['distance'])
-            print(f"[TRACK_MAP] Track loaded: {len(self.track_outline)} points, length: {self.track_length:.1f}m")
+            logger.info("[TRACK_MAP] Track loaded: %d points, length: %.1fm", len(self.track_outline), self.track_length)
             self.update()
 
         except Exception as e:
-            print(f"[TRACK_MAP] Failed to load track: {e}")
+            logger.exception("[TRACK_MAP] Failed to load track: %s", e)
     
     def set_driver_info(self, driver_info: Dict):
         """設置車手資訊"""
@@ -156,7 +159,7 @@ class TrackMapWidget(QWidget):
         """設置彎道資料"""
         self.official_corners = corners or []
         if self.official_corners:
-            print(f"[TRACK_MAP] Set {len(self.official_corners)} corner markers")
+            logger.info("[TRACK_MAP] Set %d corner markers", len(self.official_corners))
         self.update()
     
     def update_driver_positions(
@@ -529,19 +532,19 @@ class TrackMapWidget(QWidget):
             
             line_length = 10
             
-            # 繪製垂直於賽道的線條
+            # 繪製往賽道外側的線條
             painter.setPen(QPen(corner_color, 1))
             painter.drawLine(
-                QPointF(screen_x - nx * line_length, screen_y - ny * line_length),
-                QPointF(screen_x + nx * line_length, screen_y + ny * line_length)
+                QPointF(screen_x, screen_y),
+                QPointF(screen_x - nx * line_length, screen_y - ny * line_length)
             )
             
-            # 繪製編號（在法線方向外側）
+            # 繪製編號（在線條外側，加大偏移）
             painter.setPen(corner_color)
             label = str(corner_num)
             text_rect = painter.fontMetrics().boundingRect(label)
-            label_x = screen_x + nx * (line_length + 6) - text_rect.width() / 2
-            label_y = screen_y + ny * (line_length + 6) + text_rect.height() / 4
+            label_x = screen_x - nx * (line_length + 10) - text_rect.width() / 2
+            label_y = screen_y - ny * (line_length + 10) + text_rect.height() / 4
             painter.drawText(int(label_x), int(label_y), label)
     
     def _draw_sector_markers(self, painter: QPainter, transform: Dict[str, float]):
@@ -592,18 +595,18 @@ class TrackMapWidget(QWidget):
             
             line_length = 15
             
-            # 繪製垂直於賽道的白色線條
+            # 繪製往賽道外側的白色線條
             painter.setPen(QPen(QColor(255, 255, 255), 2))
             painter.drawLine(
-                QPointF(screen_x - nx * line_length, screen_y - ny * line_length),
-                QPointF(screen_x + nx * line_length, screen_y + ny * line_length)
+                QPointF(screen_x, screen_y),
+                QPointF(screen_x - nx * line_length, screen_y - ny * line_length)
             )
             
-            # 繪製標籤（在法線方向外側）
+            # 繪製標籤（在線條外側，加大偏移）
             painter.setPen(QColor(255, 255, 255))
             text_rect = painter.fontMetrics().boundingRect(label)
-            label_x = screen_x + nx * (line_length + 8) - text_rect.width() / 2
-            label_y = screen_y + ny * (line_length + 8) + text_rect.height() / 4
+            label_x = screen_x - nx * (line_length + 12) - text_rect.width() / 2
+            label_y = screen_y - ny * (line_length + 12) + text_rect.height() / 4
             painter.drawText(int(label_x), int(label_y), label)
 
 
@@ -679,7 +682,7 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
         self._track_data = None
         self._current_race_key = None
         
-        print("[TRACK_MAP_MDI] LiveTimingTrackMap initialized")
+        logger.info("[TRACK_MAP_MDI] LiveTimingTrackMap initialized")
     
     def _setup_ui(self):
         """設置 UI 組件 - 移除賽道選擇器"""
@@ -707,7 +710,7 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
             return True
         
         # API 失敗，返回錯誤（禁止本地回退）
-        print(f"[TRACK_MAP_MDI] API 獲取失敗，請確認 API 服務器已啟動")
+        logger.error("[TRACK_MAP_MDI] API 獲取失敗，請確認 API 服務器已啟動")
         return False
     
     def _load_track_via_api(self, year: int, track_name: str) -> bool:
@@ -728,7 +731,7 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
                     continue
                 seen.add(try_year)
                 
-                print(f"[TRACK_MAP_MDI] 嘗試 API 獲取: {try_year} {track_name}")
+                logger.info("[TRACK_MAP_MDI] 嘗試 API 獲取: %s %s", try_year, track_name)
                 data = api_client.get_track_analysis(try_year, track_name, "R")
                 
                 if data:
@@ -747,14 +750,18 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
                         self.track_widget.set_official_corners(corners)
                     
                     if try_year != year:
-                        print(f"[TRACK_MAP_MDI] 使用 {try_year} 賽道數據 (API, 原始年份 {year} 不可用)")
-                    print(f"[TRACK_MAP_MDI] 賽道載入成功 (API): {track_name}, {len(self._track_data['position_records'])} 點")
+                        logger.info("[TRACK_MAP_MDI] 使用 %s 賽道數據 (API, 原始年份 %s 不可用)", try_year, year)
+                    logger.info(
+                        "[TRACK_MAP_MDI] 賽道載入成功 (API): %s, %d 點",
+                        track_name,
+                        len(self._track_data['position_records']),
+                    )
                     return True
             
             return False
             
         except Exception as e:
-            print(f"[TRACK_MAP_MDI] API 獲取賽道數據失敗: {e}")
+            logger.exception("[TRACK_MAP_MDI] API 獲取賽道數據失敗: %s", e)
             return False
     
     # ===========================================
@@ -765,7 +772,7 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
         year = race_info.get('year', 2025)
         race_key = race_info.get('race', '')
         
-        print(f"[TRACK_MAP_MDI] Race loaded: {year} {race_key}")
+        logger.info("[TRACK_MAP_MDI] Race loaded: %s %s", year, race_key)
         
         # 設置車手資訊
         driver_info = race_info.get('driver_info', {})
@@ -778,12 +785,17 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
     
     def _on_race_unloaded(self):
         """賽事卸載"""
-        print("[TRACK_MAP_MDI] Race unloaded")
+        logger.info("[TRACK_MAP_MDI] Race unloaded")
         self.track_widget.driver_positions = {}
         self.track_widget.update()
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
-        """快照更新"""
+        """快照更新（60 FPS 優化：每 2 幀渲染一次 = 30 FPS）"""
+        # 跳幀渲染：只有偶數幀才更新（30 FPS）
+        frame_counter = snapshot.get('frame_counter', 0)
+        if frame_counter % 2 != 0:
+            return  # 跳過奇數幀
+        
         drivers = snapshot.get('drivers', {})
         race_time = snapshot.get('race_time_seconds', 0)
         

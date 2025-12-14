@@ -27,6 +27,9 @@ from core.gui_i18n import tr
 # 導入基類
 from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class IdealLapRankingApiWorker(QThread):
     """
@@ -58,6 +61,9 @@ class IdealLapRankingApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -75,8 +81,12 @@ class IdealLapRankingApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[API_WORKER] 🌐 調用 API: {endpoint}")
-            print(f"[API_WORKER] 📋 參數: {query_params}")
+            logger.debug(f"[API_WORKER] 🌐 調用 API: {endpoint}")
+            logger.debug(f"[API_WORKER] 📋 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             # 發送 POST 請求
             start_ts = time.perf_counter()
@@ -87,6 +97,10 @@ class IdealLapRankingApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             # 檢查 HTTP 狀態
             response.raise_for_status()
@@ -118,21 +132,29 @@ class IdealLapRankingApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[API_WORKER] ✅ API 調用成功")
-            print(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
-            print(f"[API_WORKER] 📊 數據源: {meta['source']}")
+            logger.info(f"[API_WORKER] ✅ API 調用成功")
+            logger.debug(f"[API_WORKER] ⏱️  延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[API_WORKER] 📊 數據源: {meta['source']}")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API 請求失敗: {str(exc)}"
-            print(f"[API_WORKER] ❌ {error_msg}")
+            logger.error(f"[API_WORKER] ❌ {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 # 導入資料載入器和元件
 try:
@@ -169,7 +191,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("ideal_lap_ranking", config)
             cls._REGISTERED = True
-            print("[IDEAL_LAP_MDI] ✅ 模組類型已註冊")
+            logger.info("[IDEAL_LAP_MDI] ✅ 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -178,7 +200,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[IDEAL_LAP_MDI] IdealLapRankingTableMDI 開始初始化...")
+        logger.debug(f"[IDEAL_LAP_MDI] IdealLapRankingTableMDI 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -195,7 +217,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         self._current_data = None
         self._is_data_loaded = False
         
-        print(f"[IDEAL_LAP_MDI] 基類初始化完成, 等待參數設置...")
+        logger.debug(f"[IDEAL_LAP_MDI] 基類初始化完成, 等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -209,19 +231,19 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print(f"[IDEAL_LAP_MDI] 開始初始化模組...")
+            logger.debug(f"[IDEAL_LAP_MDI] 開始初始化模組...")
             
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[IDEAL_LAP_MDI] ❌ 缺少 current_year 屬性")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[IDEAL_LAP_MDI] ❌ 缺少 current_race 屬性")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print(f"[IDEAL_LAP_MDI] ❌ 缺少 current_session 屬性")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ 缺少 current_session 屬性")
                 return False
             
             # 設置參數
@@ -229,32 +251,32 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[IDEAL_LAP_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
+            logger.info(f"[IDEAL_LAP_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
             
             # ⚠️ 關鍵：調用基類的 initialize_module 來創建 chart_widget 和 data_manager
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print(f"[IDEAL_LAP_MDI] ❌ 基類初始化失敗")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ 基類初始化失敗")
                 return False
             
             # 驗證組件已創建
             if not self.chart_widget:
-                print(f"[IDEAL_LAP_MDI] ❌ chart_widget 未創建")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print(f"[IDEAL_LAP_MDI] ❌ data_manager 未創建")
+                logger.error(f"[IDEAL_LAP_MDI] ❌ data_manager 未創建")
                 return False
             
-            print(f"[IDEAL_LAP_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__}, data_manager={type(self.data_manager).__name__})")
+            logger.info(f"[IDEAL_LAP_MDI] ✅ 組件創建成功 (chart_widget={type(self.chart_widget).__name__}, data_manager={type(self.data_manager).__name__})")
             
             # 載入初始數據
             self.load_initial_data()
             
-            print(f"[IDEAL_LAP_MDI] ✅ 模組初始化完成")
+            logger.info(f"[IDEAL_LAP_MDI] ✅ 模組初始化完成")
             return True
             
         except Exception as e:
-            print(f"[IDEAL_LAP_MDI] ❌ 初始化失敗: {e}")
+            logger.error(f"[IDEAL_LAP_MDI] ❌ 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -268,7 +290,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         Returns:
             IdealLapRankingTableDataLoader: 資料載入器實例
         """
-        print("[IDEAL_LAP_MDI] 創建資料載入器...")
+        logger.debug("[IDEAL_LAP_MDI] 創建資料載入器...")
         loader = IdealLapRankingTableDataLoader(
             year=self.year,
             race=self.race,
@@ -281,7 +303,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("[IDEAL_LAP_MDI] ✅ 資料載入器已創建")
+        logger.info("[IDEAL_LAP_MDI] ✅ 資料載入器已創建")
         return loader
     
     def create_chart_widget(self) -> IdealLapRankingTableWidget:
@@ -291,20 +313,20 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         Returns:
             IdealLapRankingTableWidget: 表格元件實例
         """
-        print("[IDEAL_LAP_MDI] 創建表格元件...")
+        logger.debug("[IDEAL_LAP_MDI] 創建表格元件...")
         # ⚠️ parent 必須傳 None，因為 UniversalAnalysisMDI 不是 QWidget
         widget = IdealLapRankingTableWidget(parent=None)
         
         # 已移除 detail_requested 信號連接（Action 欄已移除）
         
-        print("[IDEAL_LAP_MDI] ✅ 表格元件已創建")
+        logger.info("[IDEAL_LAP_MDI] ✅ 表格元件已創建")
         return widget
     
     def _setup_control_panel(self):
         """
         設置控制面板（由基類調用）
         """
-        print("[IDEAL_LAP_MDI] 設置控制面板...")
+        logger.debug("[IDEAL_LAP_MDI] 設置控制面板...")
         
         # 創建控制面板容器
         control_panel = QGroupBox("控制面板")
@@ -327,7 +349,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         if hasattr(self, 'main_layout'):
             self.main_layout.addWidget(control_panel)
         
-        print("[IDEAL_LAP_MDI] ✅ 控制面板已設置")
+        logger.info("[IDEAL_LAP_MDI] ✅ 控制面板已設置")
     
     # ========== 數據流處理 ==========
     
@@ -340,7 +362,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             data: 載入的資料字典
         """
         try:
-            print("[IDEAL_LAP_MDI] 資料載入完成，開始處理...")
+            logger.debug("[IDEAL_LAP_MDI] 資料載入完成，開始處理...")
             
             # 驗證資料結構
             if not isinstance(data, dict):
@@ -369,20 +391,20 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             ranking = analysis_result["ranking"]
             summary = analysis_result["summary"]
             
-            print(f"[IDEAL_LAP_MDI] 填充表格（{len(ranking)} 位車手）...")
+            logger.debug(f"[IDEAL_LAP_MDI] 填充表格（{len(ranking)} 位車手）...")
             self.chart_widget.populate_table(ranking)
             
-            print(f"[IDEAL_LAP_MDI] 更新統計面板...")
+            logger.debug(f"[IDEAL_LAP_MDI] 更新統計面板...")
             self.chart_widget.update_statistics_panel(summary)
             
             # 更新狀態（透過 Widget 更新，因為 MDI 本身沒有 UI 控件）
             if hasattr(self.chart_widget, 'lbl_control_status'):
                 self.chart_widget.lbl_control_status.setText(f"已載入 {len(ranking)} 位車手資料")
             
-            print("[IDEAL_LAP_MDI] ✅ 資料處理完成")
+            logger.info("[IDEAL_LAP_MDI] ✅ 資料處理完成")
             
         except Exception as e:
-            print(f"❌ [IDEAL_LAP_MDI] 資料處理失敗: {e}")
+            logger.error(f"[IDEAL_LAP_MDI] 資料處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._show_error("資料處理失敗", str(e))
@@ -395,7 +417,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"❌ [IDEAL_LAP_MDI] 載入錯誤: {error_msg}")
+        logger.error(f"[IDEAL_LAP_MDI] 載入錯誤: {error_msg}")
         # ✅ 只在狀態標籤顯示錯誤，不彈出對話框（API-ONLY 模式）
         if hasattr(self.chart_widget, 'lbl_control_status'):
             self.chart_widget.lbl_control_status.setText(f"錯誤: {error_msg}")
@@ -409,7 +431,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         Args:
             status: 新狀態訊息
         """
-        print(f"[IDEAL_LAP_MDI] 狀態: {status}")
+        logger.debug(f"[IDEAL_LAP_MDI] 狀態: {status}")
         # 透過 Widget 更新狀態
         if hasattr(self.chart_widget, 'lbl_control_status'):
             self.chart_widget.lbl_control_status.setText(status)
@@ -420,7 +442,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
     
     def _on_reload_clicked(self):
         """處理重新載入按鈕點擊"""
-        print("[IDEAL_LAP_MDI] 重新載入資料...")
+        logger.debug("[IDEAL_LAP_MDI] 重新載入資料...")
         self.lbl_control_status.setText("重新載入中...")
         
         # 清空表格
@@ -439,8 +461,8 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         1. API 調用 (https://api.f1telemetrystationpro.org)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
-        print("[IDEAL_LAP_MDI] 🚀 開始載入初始資料...")
-        print(f"[IDEAL_LAP_MDI] 📋 參數: {self.year} {self.race} {self.session}")
+        logger.debug("[IDEAL_LAP_MDI] 🚀 開始載入初始資料...")
+        logger.debug(f"[IDEAL_LAP_MDI] 📋 參數: {self.year} {self.race} {self.session}")
         
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
@@ -454,7 +476,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             "force_refresh": False  # 可選：強制刷新
         }
         
-        print("[IDEAL_LAP_MDI] 🌐 創建 API Worker...")
+        logger.debug("[IDEAL_LAP_MDI] 🌐 創建 API Worker...")
         self.api_worker = IdealLapRankingApiWorker(
             params=api_params,
             base_url="https://api.f1telemetrystationpro.org",
@@ -470,13 +492,13 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[IDEAL_LAP_MDI] ▶️  啟動 API 請求（使用 Qt.QueuedConnection）...")
+        logger.debug("[IDEAL_LAP_MDI] ▶️  啟動 API 請求（使用 Qt.QueuedConnection）...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[IDEAL_LAP_MDI] 📊 API 進度: {progress}%")
+        logger.debug(f"[IDEAL_LAP_MDI] 📊 API 進度: {progress}%")
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"API 載入中... {progress}%")
     
@@ -484,14 +506,14 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("[IDEAL_LAP_MDI] ✅ API 調用成功")
+            logger.info("[IDEAL_LAP_MDI] ✅ API 調用成功")
             
             # 提取數據和元數據
             data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[IDEAL_LAP_MDI] 📦 數據源: {meta.get('source')}")
-            print(f"[IDEAL_LAP_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
+            logger.debug(f"[IDEAL_LAP_MDI] 📦 數據源: {meta.get('source')}")
+            logger.debug(f"[IDEAL_LAP_MDI] ⏱️  延遲: {meta.get('latency_ms')}ms")
             
             # 驗證數據結構
             if not isinstance(data, dict):
@@ -509,7 +531,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
                 self.lbl_control_status.setText(f"✅ 已從 {source_label} 載入資料")
             
         except Exception as e:
-            print(f"❌ [IDEAL_LAP_MDI] API 數據處理失敗: {e}")
+            logger.error(f"[IDEAL_LAP_MDI] API 數據處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_api_failure(str(e))
@@ -517,7 +539,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - 嘗試備援方案"""
-        print(f"❌ [IDEAL_LAP_MDI] API 調用失敗: {error_msg}")
+        logger.error(f"[IDEAL_LAP_MDI] API 調用失敗: {error_msg}")
         
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("ideal_lap_api_failure", "API 請求失敗，請稍後再試"))
@@ -529,7 +551,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
                 "理想圈排名資料僅支援透過 API 載入。請確認 API 服務可用或稍後再試。\n\n詳細錯誤:\n{error}",
             ).format(error=error_msg)
         )
-        print("❌ [IDEAL_LAP_MDI] 已封鎖本地 JSON 後備 (API-ONLY)")
+        logger.error("[IDEAL_LAP_MDI] 已封鎖本地 JSON 後備 (API-ONLY)")
     
     def update_analysis_parameters(self, year: str, race: str, session: str) -> bool:
         """
@@ -544,7 +566,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[IDEAL_LAP_MDI] 🔄 更新參數: {year} {race} {session}")
+            logger.debug(f"[IDEAL_LAP_MDI] 🔄 更新參數: {year} {race} {session}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -559,23 +581,23 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
                 self.data_manager.year = str(year)
                 self.data_manager.race = race
                 self.data_manager.session = session
-                print(f"[IDEAL_LAP_MDI] ✅ DataManager 參數已同步")
+                logger.info(f"[IDEAL_LAP_MDI] ✅ DataManager 參數已同步")
             elif hasattr(self, 'data_loader') and self.data_loader:
                 self.data_loader.year = str(year)
                 self.data_loader.race = race
                 self.data_loader.session = session
-                print(f"[IDEAL_LAP_MDI] ✅ DataLoader 參數已同步")
+                logger.info(f"[IDEAL_LAP_MDI] ✅ DataLoader 參數已同步")
             
             # 🔑 重點：調用 load_initial_data() 觸發 API 請求
             # 這個方法會啟動 API Worker 並更新 UI
-            print(f"[IDEAL_LAP_MDI] 🌐 觸發資料重新載入...")
+            logger.debug(f"[IDEAL_LAP_MDI] 🌐 觸發資料重新載入...")
             self.load_initial_data()
             
             # 異步載入，返回 True 表示啟動成功
             return True
             
         except Exception as e:
-            print(f"❌ [IDEAL_LAP_MDI] 參數更新失敗: {e}")
+            logger.error(f"[IDEAL_LAP_MDI] 參數更新失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -588,7 +610,7 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             target_session = session if session is not None else (self.session or getattr(self, 'current_session', None))
 
             if not all([target_year, target_race, target_session]):
-                print("❌ [IDEAL_LAP_MDI] 參數更新失敗：缺少必要參數")
+                logger.error("[IDEAL_LAP_MDI] 參數更新失敗：缺少必要參數")
                 return False
 
             normalized_year = str(target_year)
@@ -614,8 +636,9 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
             )
 
         except Exception as exc:
-            print(f"❌ [IDEAL_LAP_MDI] update_parameters 失敗: {exc}")
+            logger.error(f"[IDEAL_LAP_MDI] update_parameters 失敗: {exc}")
             import traceback
+
             traceback.print_exc()
             return False
     
@@ -666,9 +689,9 @@ class IdealLapRankingTableMDI(UniversalAnalysisMDI):
 
 # ========== 測試代碼 ==========
 if __name__ == "__main__":
-    print("=" * 60)
-    print("理想圈排名表格 MDI 視窗 - 獨立測試")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("理想圈排名表格 MDI 視窗 - 獨立測試")
+    logger.debug("=" * 60)
     
     app = QApplication(sys.argv)
     
@@ -689,7 +712,7 @@ if __name__ == "__main__":
         widget.show()
     
     # 載入初始資料
-    print("\n🚀 載入初始資料...")
+    logger.debug("\n🚀 載入初始資料...")
     mdi.load_initial_data()
     
     sys.exit(app.exec_())

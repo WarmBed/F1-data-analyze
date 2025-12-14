@@ -12,6 +12,9 @@ import os
 from prettytable import PrettyTable
 from datetime import datetime
 import json
+from core.logger import get_logger
+
+logger = get_logger(component="gui")
 
 def _make_serializable(obj):
     """確保對象可以序列化為JSON"""
@@ -57,12 +60,12 @@ def _make_serializable(obj):
 def run_driver_statistics_overview(data_loader, dynamic_team_mapping=None, f1_analysis_instance=None):
     """執行車手數據統計總覽分析 - 功能 14.1"""
     try:
-        print("\n[INFO] 執行車手數據統計總覽分析...")
+        logger.info("[INFO] 執行車手數據統計總覽分析...")
         
         # 獲取已載入的數據
         data = data_loader.get_loaded_data()
         if not data:
-            print("[ERROR] 沒有可用的數據，請先載入數據")
+            logger.error("[ERROR] 沒有可用的數據，請先載入數據")
             return
         
         laps = data['laps']
@@ -71,7 +74,7 @@ def run_driver_statistics_overview(data_loader, dynamic_team_mapping=None, f1_an
         car_data = data.get('car_data', {})
         results = data.get('results', None)
         
-        print(f"[INFO] 分析 {len(drivers_info) if drivers_info else len(laps['Driver'].unique())} 位車手的統計總覽...")
+        logger.info(f"[INFO] 分析 {len(drivers_info) if drivers_info else len(laps['Driver'].unique())} 位車手的統計總覽...")
         
         # 導入輔助函數
         from modules.driver_comprehensive import (_create_basic_drivers_info, 
@@ -94,14 +97,14 @@ def run_driver_statistics_overview(data_loader, dynamic_team_mapping=None, f1_an
                 all_driver_data[abbr] = driver_data
         
         if not all_driver_data:
-            print("[ERROR] 無法獲取任何車手數據")
+            logger.error("[ERROR] 無法獲取任何車手數據")
             return
         
         # 按比賽名次排序車手
         sorted_drivers = _sort_drivers_by_position(all_driver_data, results, laps)
         
         # 顯示統計總覽表（按名次排序）- 包含輪胎資訊
-        print(f"\n[INFO] 車手數據統計總覽 (按比賽名次排序) - 含輪胎策略")
+        logger.info("[INFO] 車手數據統計總覽 (按比賽名次排序) - 含輪胎策略")
         _display_overview_table(sorted_drivers, all_driver_data)
         
         # 生成JSON輸出
@@ -125,21 +128,21 @@ def run_driver_statistics_overview(data_loader, dynamic_team_mapping=None, f1_an
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(json_output, f, ensure_ascii=False, indent=2, default=str)
         
-        print(f"\n[SUCCESS] 車手數據統計總覽分析完成！JSON輸出已保存到: {filename}")
+        logger.info(f"[SUCCESS] 車手數據統計總覽分析完成！JSON輸出已保存到: {filename}")
         return True
         
     except Exception as e:
-        print(f"[ERROR] 車手統計總覽分析執行失敗: {e}")
+        logger.error(f"[ERROR] 車手統計總覽分析執行失敗: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 def main():
     """主函數"""
-    print("[INFO] 車手數據統計總覽分析 - 功能 14.1")
-    print("="*60)
-    print("[WARNING] 此模組需要配合 f1_analysis_modular_main.py 使用")
-    print("請執行: python f1_analysis_modular_main.py -f 14.1")
+    logger.info("[INFO] 車手數據統計總覽分析 - 功能 14.1")
+    logger.info("=" * 60)
+    logger.warning("[WARNING] 此模組需要配合 f1_analysis_modular_main.py 使用")
+    logger.info("請執行: python f1_analysis_modular_main.py -f 14.1")
 
 if __name__ == "__main__":
     main()

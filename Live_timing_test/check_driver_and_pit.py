@@ -2,6 +2,10 @@
 檢查 DriverList 和 PIT 相關資料
 """
 import sys
+from core.logger import get_logger
+
+logger = get_logger("live_timing_test.check_driver_and_pit", component="gui")
+
 sys.path.insert(0, '.')
 
 if sys.platform == 'win32':
@@ -16,44 +20,44 @@ data_source = LiveF1DataSource(
     session="2025-04-06_Race"
 )
 
-print("=" * 70)
-print("檢查 DriverList 和 PIT 資料")
-print("=" * 70)
+logger.info("%s", "=" * 70)
+logger.info("檢查 DriverList 和 PIT 資料")
+logger.info("%s", "=" * 70)
 
 # 1. 檢查 DriverList
-print("\n[1] 載入 DriverList.jsonStream...")
+logger.info("[1] 載入 DriverList.jsonStream...")
 try:
     driver_list = data_source._load_stream("DriverList.jsonStream", compressed=False)
     if driver_list:
-        print(f"成功載入 {len(driver_list)} 筆記錄")
+        logger.info("成功載入 %s 筆記錄", len(driver_list))
         
         # 檢查第一筆資料結構
         if driver_list:
             first_record = driver_list[0]
-            print(f"\n第一筆資料:")
-            print(f"  時間戳: {first_record.get('timestamp')}")
+            logger.info("第一筆資料:")
+            logger.info("  時間戳: %s", first_record.get('timestamp'))
             
             data = first_record.get('data', {})
             if isinstance(data, dict):
                 # 顯示所有車手
                 for driver_num, driver_info in list(data.items())[:3]:
-                    print(f"\n  車手 #{driver_num}:")
+                    logger.info("  車手 #%s:", driver_num)
                     for key, value in driver_info.items():
-                        print(f"    {key}: {value}")
+                        logger.info("    %s: %s", key, value)
     else:
-        print("❌ DriverList 載入失敗")
+        logger.warning("DriverList 載入失敗")
 except Exception as e:
-    print(f"❌ 錯誤: {e}")
+    logger.exception("DriverList 載入失敗: %s", e)
 
 # 2. 檢查 TimingData 中是否有 PIT 資訊
-print("\n" + "=" * 70)
-print("[2] 檢查 TimingData 中的 PIT 資訊...")
-print("=" * 70)
+logger.info("%s", "=" * 70)
+logger.info("[2] 檢查 TimingData 中的 PIT 資訊...")
+logger.info("%s", "=" * 70)
 
 data_source.load_all_data()
 timing_data = data_source.get_timing_data()
 
-print(f"\n總 Timing 記錄: {len(timing_data)}")
+logger.info("總 Timing 記錄: %s", len(timing_data))
 
 # 搜尋包含 PIT 相關欄位的記錄
 pit_related_fields = ['InPit', 'PitOut', 'PitTime', 'Pits', 'NumberOfPitStops']
@@ -67,12 +71,19 @@ for i, record in enumerate(timing_data):
         for field in pit_related_fields:
             if field in driver_data:
                 if not found_pit_data:
-                    print(f"\n✅ 找到 PIT 相關資料!")
+                    logger.info("找到 PIT 相關資料!")
                     found_pit_data = True
                 
                 timestamp = record.get('timestamp')
                 value = driver_data.get(field)
-                print(f"  [{i}] {timestamp} - 車手 #{driver_num}: {field} = {value}")
+                logger.info(
+                    "  [%s] %s - 車手 #%s: %s = %s",
+                    i,
+                    timestamp,
+                    driver_num,
+                    field,
+                    value,
+                )
                 
                 # 只顯示前10個
                 if i > 100:
@@ -85,16 +96,16 @@ for i, record in enumerate(timing_data):
         break
 
 if not found_pit_data:
-    print("\n❌ 未找到 PIT 相關資料")
-    print("\n可能的原因:")
-    print("  1. Live F1 API 不提供 PIT 資訊")
-    print("  2. PIT 資訊在其他 Stream 中（例如 TrackStatus.jsonStream）")
-    print("  3. 需要檢查其他欄位名稱")
+    logger.warning("未找到 PIT 相關資料")
+    logger.info("可能的原因:")
+    logger.info("  1. Live F1 API 不提供 PIT 資訊")
+    logger.info("  2. PIT 資訊在其他 Stream 中（例如 TrackStatus.jsonStream）")
+    logger.info("  3. 需要檢查其他欄位名稱")
 
 # 3. 列出可用的所有 Stream
-print("\n" + "=" * 70)
-print("[3] 可用的 Stream 檔案")
-print("=" * 70)
+logger.info("%s", "=" * 70)
+logger.info("[3] 可用的 Stream 檔案")
+logger.info("%s", "=" * 70)
 
 common_streams = [
     "Position.z.jsonStream",
@@ -107,14 +118,14 @@ common_streams = [
     "LapCount.jsonStream"
 ]
 
-print("\n嘗試載入各種 Stream:")
+logger.info("嘗試載入各種 Stream:")
 for stream_name in common_streams:
     try:
         compressed = stream_name.endswith('.z.jsonStream')
         data = data_source._load_stream(stream_name, compressed=compressed)
         if data:
-            print(f"  ✅ {stream_name}: {len(data)} 筆記錄")
+            logger.info("  ✅ %s: %s 筆記錄", stream_name, len(data))
         else:
-            print(f"  ❌ {stream_name}: 載入失敗")
+            logger.warning("  ❌ %s: 載入失敗", stream_name)
     except Exception as e:
-        print(f"  ❌ {stream_name}: {e}")
+        logger.exception("  ❌ %s: %s", stream_name, e)

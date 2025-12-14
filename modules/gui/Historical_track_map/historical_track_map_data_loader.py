@@ -23,6 +23,9 @@ from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入通用基礎類別
 try:
     from ..base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
@@ -59,6 +62,9 @@ class HistoricalTrackMapApiWorker(QThread):
     def run(self):
         """執行 API 請求"""
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(20)
             
             # 構建 API 端點
@@ -83,8 +89,12 @@ class HistoricalTrackMapApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
             
-            print(f"[HISTORICAL_MAP_API] 調用 API: {endpoint}")
-            print(f"[HISTORICAL_MAP_API] 參數: {query_params}")
+            logger.debug(f"[HISTORICAL_MAP_API] 調用 API: {endpoint}")
+            logger.debug(f"[HISTORICAL_MAP_API] 參數: {query_params}")
+            
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             
             start_ts = time.perf_counter()
             response = requests.post(
@@ -94,6 +104,10 @@ class HistoricalTrackMapApiWorker(QThread):
                 headers={"Accept": "application/json"}
             )
             self.progress.emit(70)
+            
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             
             response.raise_for_status()
             payload = response.json()
@@ -120,20 +134,28 @@ class HistoricalTrackMapApiWorker(QThread):
                 "base_url": self.base_url,
             }
             
-            print(f"[HISTORICAL_MAP_API] API 調用成功")
-            print(f"[HISTORICAL_MAP_API] 延遲: {meta['latency_ms']}ms")
+            logger.debug(f"[HISTORICAL_MAP_API] API 調用成功")
+            logger.debug(f"[HISTORICAL_MAP_API] 延遲: {meta['latency_ms']}ms")
             
             self.progress.emit(90)
+            # ✅ 中斷檢查點 4: success 信號發送前
+            if self.isInterruptionRequested():
+                return
             self.success.emit({"data": data, "meta": meta})
             
         except Exception as exc:
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"{tr('api_request_failed', 'API request failed')}: {str(exc)}"
-            print(f"[HISTORICAL_MAP_API] {error_msg}")
+            logger.debug(f"[HISTORICAL_MAP_API] {error_msg}")
             import traceback
             traceback.print_exc()
             self.failure.emit(error_msg)
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
 
 class HistoricalTrackMapDataLoader(UniversalDataLoader):
@@ -179,8 +201,8 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
         
         self._debug(f"{tr('local_json_fallback_disabled', '本地 JSON 後備已停用')} ({self._fallback_policy_reason})")
         
-        print(f"[HISTORICAL_TRACK_MAP_LOADER] 初始化完成")
-        print(f"[HISTORICAL_TRACK_MAP_LOADER] API 基礎 URL: {self._api_base_url}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_LOADER] 初始化完成")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_LOADER] API 基礎 URL: {self._api_base_url}")
     
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """
@@ -367,6 +389,7 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
                 self._api_worker.finished.connect(on_worker_stopped)
                 
                 from PyQt5.QtCore import QTimer
+
                 def force_terminate():
                     try:
                         if self._api_worker and self._api_worker.isRunning():
@@ -429,14 +452,14 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             
             # 🏁 儲存 sector_boundaries 數據（供 _extract_track_data() 使用）
             self.sector_boundaries = data.get("sector_boundaries", [])
-            print(f"[DEBUG] [DATA_LOADER] 儲存 sector_boundaries: {len(self.sector_boundaries)} 個")
+            logger.debug(f"[DATA_LOADER] 儲存 sector_boundaries: {len(self.sector_boundaries)} 個")
             
             # 🎯 儲存 speed_distribution 數據（供 _extract_track_data() 使用）
             self.speed_distribution = data.get("speed_distribution")
             if self.speed_distribution:
-                print(f"[DEBUG] [DATA_LOADER] ✅ 儲存 speed_distribution: Low={self.speed_distribution.get('low_speed_percentage', 0):.1f}%, Mid={self.speed_distribution.get('mid_speed_percentage', 0):.1f}%, High={self.speed_distribution.get('high_speed_percentage', 0):.1f}%")
+                logger.info(f"[DATA_LOADER] ✅ 儲存 speed_distribution: Low={self.speed_distribution.get('low_speed_percentage', 0):.1f}%, Mid={self.speed_distribution.get('mid_speed_percentage', 0):.1f}%, High={self.speed_distribution.get('high_speed_percentage', 0):.1f}%")
             else:
-                print(f"[DEBUG] [DATA_LOADER] ⚠️  未找到 speed_distribution 數據")
+                logger.warning(f"[DATA_LOADER] ⚠️  未找到 speed_distribution 數據")
             
             # ✅ 修復：儲存 official_corners 供 _extract_track_data() 使用
             self.official_corners_data = data.get("official_corners", {
@@ -445,10 +468,10 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
                 "corners": []
             })
             
-            print(f"\n[DEBUG] [DATA_LOADER] API 返回的 official_corners:")
-            print(f"[DEBUG]   - available: {self.official_corners_data.get('available')}")
-            print(f"[DEBUG]   - count: {self.official_corners_data.get('count')}")
-            print(f"[DEBUG]   - corners 數量: {len(self.official_corners_data.get('corners', []))}")
+            logger.debug(f"\n[DEBUG] [DATA_LOADER] API 返回的 official_corners:")
+            logger.debug(f"- available: {self.official_corners_data.get('available')}")
+            logger.debug(f"- count: {self.official_corners_data.get('count')}")
+            logger.debug(f"- corners 數量: {len(self.official_corners_data.get('corners', []))}")
             
             # 構建處理後的數據
             processed_data = {
@@ -463,10 +486,10 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             
             # 🏆 調試：確認 race_top3_drivers_2022_2023 是否被包含
             top3_data = processed_data.get("race_top3_drivers_2022_2023", {})
-            print(f"[DEBUG] [DATA_LOADER] 🏆 race_top3_drivers_2022_2023 存在: {bool(top3_data)}")
+            logger.debug(f"[DATA_LOADER] 🏆 race_top3_drivers_2022_2023 存在: {bool(top3_data)}")
             if top3_data:
-                print(f"[DEBUG] [DATA_LOADER] 🏆 available: {top3_data.get('available')}")
-                print(f"[DEBUG] [DATA_LOADER] 🏆 years_data 數量: {len(top3_data.get('years_data', []))}")
+                logger.debug(f"[DATA_LOADER] 🏆 available: {top3_data.get('available')}")
+                logger.debug(f"[DATA_LOADER] 🏆 years_data 數量: {len(top3_data.get('years_data', []))}")
             
             metadata = processed_data.setdefault("metadata", {})
             if self._last_data_source:
@@ -490,11 +513,11 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
     
     def _extract_track_data(self) -> Dict[str, Any]:
         """從位置記錄中提取賽道數據（參考 demo Line 645-670）"""
-        print(f"\n[DEBUG] _extract_track_data() 開始執行")
-        print(f"[DEBUG] position_records 數量: {len(self.position_records)}")
+        logger.debug(f"\n[DEBUG] _extract_track_data() 開始執行")
+        logger.debug(f"position_records 數量: {len(self.position_records)}")
         
         if not self.position_records:
-            print(f"[DEBUG] ⚠️  position_records 為空，返回空字典")
+            logger.warning(f"⚠️  position_records 為空，返回空字典")
             return {}
         
         # 轉換為 TrackMapWidget 格式
@@ -511,9 +534,9 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             
             # 調試輸出前 3 個位置點
             if i < 3:
-                print(f"[DEBUG] position_record[{i}]: x={position_records[i]['position_x']:.1f}, y={position_records[i]['position_y']:.1f}, dist={position_records[i]['distance_m']:.1f}m")
+                logger.debug(f"position_record[{i}]: x={position_records[i]['position_x']:.1f}, y={position_records[i]['position_y']:.1f}, dist={position_records[i]['distance_m']:.1f}m")
         
-        print(f"[DEBUG] 轉換後 position_records 數量: {len(position_records)}")
+        logger.debug(f"轉換後 position_records 數量: {len(position_records)}")
         
         # ✅ 修復：使用從 API 數據提取的 official_corners（不再硬編碼為空）
         official_corners_data = getattr(self, 'official_corners_data', {
@@ -522,10 +545,10 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             "corners": []
         })
         
-        print(f"[DEBUG] _extract_track_data() 使用的 official_corners:")
-        print(f"[DEBUG]   - available: {official_corners_data.get('available')}")
-        print(f"[DEBUG]   - count: {official_corners_data.get('count')}")
-        print(f"[DEBUG]   - corners 數量: {len(official_corners_data.get('corners', []))}")
+        logger.debug(f"_extract_track_data() 使用的 official_corners:")
+        logger.debug(f"- available: {official_corners_data.get('available')}")
+        logger.debug(f"- count: {official_corners_data.get('count')}")
+        logger.debug(f"- corners 數量: {len(official_corners_data.get('corners', []))}")
         
         # 🏁 提取 sector_boundaries（如果存在）
         sector_boundaries_data = getattr(self, 'sector_boundaries', [])
@@ -533,14 +556,14 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             # 嘗試從 position_records 的原始數據中提取（如果 process_loaded_data 沒有儲存）
             sector_boundaries_data = []
         
-        print(f"[DEBUG] _extract_track_data() sector_boundaries 數量: {len(sector_boundaries_data)}")
+        logger.debug(f"_extract_track_data() sector_boundaries 數量: {len(sector_boundaries_data)}")
         
         # 🎯 提取 speed_distribution（如果存在）
         speed_distribution_data = getattr(self, 'speed_distribution', None)
         if speed_distribution_data:
-            print(f"[DEBUG] _extract_track_data() ✅ speed_distribution 存在: Low={speed_distribution_data.get('low_speed_percentage', 0):.1f}%")
+            logger.info(f"_extract_track_data() ✅ speed_distribution 存在: Low={speed_distribution_data.get('low_speed_percentage', 0):.1f}%")
         else:
-            print(f"[DEBUG] _extract_track_data() ⚠️  speed_distribution 不存在")
+            logger.warning(f"_extract_track_data() ⚠️  speed_distribution 不存在")
         
         result = {
             "position_records": position_records,
@@ -550,14 +573,14 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             "metadata": {}
         }
         
-        print(f"[DEBUG] _extract_track_data() 返回鍵: {list(result.keys())}")
+        logger.debug(f"_extract_track_data() 返回鍵: {list(result.keys())}")
         
         return result
     
     def _prepare_chart_data(self) -> Dict[str, Any]:
         """準備圖表數據"""
-        print(f"\n[DEBUG] _prepare_chart_data() 開始執行")
-        print(f"[DEBUG] position_records 數量: {len(self.position_records)}")
+        logger.debug(f"\n[DEBUG] _prepare_chart_data() 開始執行")
+        logger.debug(f"position_records 數量: {len(self.position_records)}")
         
         # 提取高程數據
         track_outline = []
@@ -572,9 +595,9 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             
             # 調試輸出前 3 個位置點
             if i < 3:
-                print(f"[DEBUG] track_outline[{i}]: x={track_outline[i]['x']:.1f}, y={track_outline[i]['y']:.1f}, elevation={track_outline[i]['elevation']:.2f}m")
+                logger.debug(f"track_outline[{i}]: x={track_outline[i]['x']:.1f}, y={track_outline[i]['y']:.1f}, elevation={track_outline[i]['elevation']:.2f}m")
         
-        print(f"[DEBUG] track_outline 數量: {len(track_outline)}")
+        logger.debug(f"track_outline 數量: {len(track_outline)}")
         
         # ✅ 修復：使用從 API 數據提取的 official_corners（供高程圖表使用）
         official_corners_data = getattr(self, 'official_corners_data', {
@@ -583,17 +606,17 @@ class HistoricalTrackMapDataLoader(UniversalDataLoader):
             "corners": []
         })
         
-        print(f"[DEBUG] _prepare_chart_data() 使用的 official_corners:")
-        print(f"[DEBUG]   - available: {official_corners_data.get('available')}")
-        print(f"[DEBUG]   - count: {official_corners_data.get('count')}")
-        print(f"[DEBUG]   - corners 數量: {len(official_corners_data.get('corners', []))}")
+        logger.debug(f"_prepare_chart_data() 使用的 official_corners:")
+        logger.debug(f"- available: {official_corners_data.get('available')}")
+        logger.debug(f"- count: {official_corners_data.get('count')}")
+        logger.debug(f"- corners 數量: {len(official_corners_data.get('corners', []))}")
         
         result = {
             "track_outline": track_outline,
             "official_corners": official_corners_data  # ✅ 預留欄位（將在 MDI 層填充）
         }
         
-        print(f"[DEBUG] _prepare_chart_data() 返回鍵: {list(result.keys())}")
+        logger.debug(f"_prepare_chart_data() 返回鍵: {list(result.keys())}")
         
         return result
     

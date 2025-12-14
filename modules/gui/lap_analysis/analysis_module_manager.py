@@ -8,6 +8,11 @@ F1T 圈速分析模組管理器
 from typing import Dict, List, Set
 from PyQt5.QtCore import QObject, pyqtSignal
 
+from core.logger import get_logger
+
+
+logger = get_logger(component="analysis_module_manager")
+
 class AnalysisModuleManager(QObject):
     """圈速分析模組管理器 - 單例模式"""
     
@@ -42,16 +47,17 @@ class AnalysisModuleManager(QObject):
             
             AnalysisModuleManager._initialized = True
             
-            print(f"[ANALYSIS_MANAGER] Lap analysis module manager initialized")
+            self._logger = logger
+            self._logger.info("[ANALYSIS_MANAGER] Lap analysis module manager initialized")
     
     def register_module(self, module_id: str, module_instance: object, module_type: str = None):
         """註冊分析模組"""
         try:
-            print(f"[ANALYSIS_MANAGER] Registering module: {module_id} (type: {module_type})")
+            self._logger.info("[ANALYSIS_MANAGER] Registering module: %s (type: %s)", module_id, module_type)
             
             # 檢查是否為圈速分析模組
             if not self._is_lap_analysis_module(module_instance, module_type):
-                print(f"[ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: {module_id}")
+                self._logger.warning("[ANALYSIS_MANAGER] ⚠️ Not a lap analysis module, skipping: %s", module_id)
                 return False
             
             # 註冊模組
@@ -65,21 +71,21 @@ class AnalysisModuleManager(QObject):
             # 發送信號
             self.module_count_changed.emit(len(self._active_modules))
             
-            print(f"[ANALYSIS_MANAGER] ✅ Module registered successfully: {module_id}")
-            print(f"[ANALYSIS_MANAGER] 📊 Current active modules: {len(self._active_modules)}")
-            print(f"[ANALYSIS_MANAGER] 📈 Active module types: {list(self._module_types)}")
+            self._logger.info("[ANALYSIS_MANAGER] ✅ Module registered successfully: %s", module_id)
+            self._logger.info("[ANALYSIS_MANAGER] 📊 Current active modules: %s", len(self._active_modules))
+            self._logger.info("[ANALYSIS_MANAGER] 📈 Active module types: %s", list(self._module_types))
             
             return True
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Module registration failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Module registration failed: %s", e)
             return False
     
     def unregister_module(self, module_id: str):
         """解除註冊分析模組"""
         try:
             if module_id in self._active_modules:
-                print(f"[ANALYSIS_MANAGER] Unregistering module: {module_id}")
+                self._logger.info("[ANALYSIS_MANAGER] Unregistering module: %s", module_id)
                 
                 # 移除模組
                 del self._active_modules[module_id]
@@ -97,16 +103,16 @@ class AnalysisModuleManager(QObject):
                 # 發送信號
                 self.module_count_changed.emit(len(self._active_modules))
                 
-                print(f"[ANALYSIS_MANAGER] ✅ Module unregistered successfully: {module_id}")
-                print(f"[ANALYSIS_MANAGER] 📊 Current active modules: {len(self._active_modules)}")
+                self._logger.info("[ANALYSIS_MANAGER] ✅ Module unregistered successfully: %s", module_id)
+                self._logger.info("[ANALYSIS_MANAGER] 📊 Current active modules: %s", len(self._active_modules))
                 
                 return True
             else:
-                print(f"[ANALYSIS_MANAGER] ⚠️ Module not registered, cannot unregister: {module_id}")
+                self._logger.warning("[ANALYSIS_MANAGER] ⚠️ Module not registered, cannot unregister: %s", module_id)
                 return False
                 
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Module unregistration failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Module unregistration failed: %s", e)
             return False
     
     def register_chart_widget(self, chart_widget: object):
@@ -114,7 +120,7 @@ class AnalysisModuleManager(QObject):
         try:
             if chart_widget not in self._registered_chart_widgets:
                 self._registered_chart_widgets.append(chart_widget)
-                print(f"[ANALYSIS_MANAGER] Registered chart widget: {type(chart_widget).__name__}")
+                self._logger.info("[ANALYSIS_MANAGER] Registered chart widget: %s", type(chart_widget).__name__)
                 
                 # 立即應用當前的統計面板顯示狀態
                 if hasattr(chart_widget, 'set_statistics_visibility'):
@@ -122,30 +128,33 @@ class AnalysisModuleManager(QObject):
                 
                 return True
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget registration failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Chart widget registration failed: %s", e)
             return False
     
     def unregister_chart_widget(self, chart_widget: object):
         """解除註冊圖表組件"""
         try:
-            print(f"[ANALYSIS_MANAGER] 🔍 unregister 前: list 長度 = {len(self._registered_chart_widgets)}")
-            print(f"[ANALYSIS_MANAGER] 🔍 widget 在 list 中: {chart_widget in self._registered_chart_widgets}")
-            print(f"[ANALYSIS_MANAGER] 🔍 widget ID: {id(chart_widget)}")
-            print(f"[ANALYSIS_MANAGER] 🔍 list 中的 ID: {[id(w) for w in self._registered_chart_widgets]}")
+            self._logger.debug(
+                "[ANALYSIS_MANAGER] 🔍 unregister 前: list 長度 = %s | widget 在 list 中: %s | widget ID: %s | list IDs: %s",
+                len(self._registered_chart_widgets),
+                chart_widget in self._registered_chart_widgets,
+                id(chart_widget),
+                [id(w) for w in self._registered_chart_widgets]
+            )
             
             if chart_widget in self._registered_chart_widgets:
                 self._registered_chart_widgets.remove(chart_widget)
-                print(f"[ANALYSIS_MANAGER] ✅ 已從 list 移除")
-                print(f"[ANALYSIS_MANAGER] 🔍 unregister 後: list 長度 = {len(self._registered_chart_widgets)}")
-                print(f"[ANALYSIS_MANAGER] Unregistered chart widget: {type(chart_widget).__name__}")
+                self._logger.info("[ANALYSIS_MANAGER] ✅ 已從 list 移除")
+                self._logger.debug(
+                    "[ANALYSIS_MANAGER] 🔍 unregister 後: list 長度 = %s", len(self._registered_chart_widgets)
+                )
+                self._logger.info("[ANALYSIS_MANAGER] Unregistered chart widget: %s", type(chart_widget).__name__)
                 return True
             else:
-                print(f"[ANALYSIS_MANAGER] ⚠️ widget 不在 list 中，無法移除")
+                self._logger.warning("[ANALYSIS_MANAGER] ⚠️ widget 不在 list 中，無法移除")
                 return False
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget unregistration failed: {e}")
-            import traceback
-            traceback.print_exc()
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Chart widget unregistration failed: %s", e)
             return False
     
     def _is_lap_analysis_module(self, module_instance: object, module_type: str = None) -> bool:
@@ -176,7 +185,7 @@ class AnalysisModuleManager(QObject):
             return False
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Module type determination failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Module type determination failed: %s", e)
             return False
     
     def _get_module_type(self, module_instance: object) -> str:
@@ -196,7 +205,7 @@ class AnalysisModuleManager(QObject):
                 return 'unknown'
                 
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Getting module type failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Getting module type failed: %s", e)
             return 'unknown'
     
     def _update_statistics_visibility(self):
@@ -206,10 +215,13 @@ class AnalysisModuleManager(QObject):
             should_show_statistics = active_count < self.HIDE_STATISTICS_THRESHOLD
             
             if self._statistics_visible != should_show_statistics:
-                print(f"[ANALYSIS_MANAGER] 📊 Statistics panel visibility changed:")
-                print(f"[ANALYSIS_MANAGER]   Active modules: {active_count}")
-                print(f"[ANALYSIS_MANAGER]   Threshold: {self.HIDE_STATISTICS_THRESHOLD}")
-                print(f"[ANALYSIS_MANAGER]   {self._statistics_visible} → {should_show_statistics}")
+                self._logger.info(
+                    "[ANALYSIS_MANAGER] 📊 Statistics panel visibility changed: active=%s, threshold=%s, %s → %s",
+                    active_count,
+                    self.HIDE_STATISTICS_THRESHOLD,
+                    self._statistics_visible,
+                    should_show_statistics
+                )
                 
                 self._statistics_visible = should_show_statistics
                 
@@ -220,26 +232,40 @@ class AnalysisModuleManager(QObject):
                 self.statistics_visibility_changed.emit(should_show_statistics)
         
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Updating statistics panel visibility failed: {e}")
+            self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Updating statistics panel visibility failed: %s", e)
     
     def _notify_chart_widgets_visibility_change(self, visible: bool):
         """通知所有圖表組件統計面板顯示狀態變更"""
         try:
             action_text = "show" if visible else "hide"
-            print(f"[ANALYSIS_MANAGER] 📢 Notifying {len(self._registered_chart_widgets)} chart widgets to {action_text} statistics panel")
+            self._logger.info(
+                "[ANALYSIS_MANAGER] 📢 Notifying %s chart widgets to %s statistics panel",
+                len(self._registered_chart_widgets),
+                action_text
+            )
             
             for chart_widget in self._registered_chart_widgets:
                 try:
                     if hasattr(chart_widget, 'set_statistics_visibility'):
                         chart_widget.set_statistics_visibility(visible)
-                        print(f"[ANALYSIS_MANAGER] ✅ {type(chart_widget).__name__} statistics panel {action_text} completed")
+                        self._logger.info(
+                            "[ANALYSIS_MANAGER] ✅ %s statistics panel %s completed",
+                            type(chart_widget).__name__,
+                            action_text
+                        )
                     else:
-                        print(f"[ANALYSIS_MANAGER] ⚠️ {type(chart_widget).__name__} does not support statistics panel control")
+                        self._logger.warning(
+                            "[ANALYSIS_MANAGER] ⚠️ %s does not support statistics panel control",
+                            type(chart_widget).__name__
+                        )
                 except Exception as e:
-                    print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget notification failed: {e}")
+                    self._logger.exception("[ERROR] [ANALYSIS_MANAGER] Chart widget notification failed: %s", e)
                     
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] Chart widget statistics change notification failed: {e}")
+            self._logger.exception(
+                "[ERROR] [ANALYSIS_MANAGER] Chart widget statistics change notification failed: %s",
+                e
+            )
     
     # 公共屬性和方法
     @property
@@ -282,13 +308,16 @@ class AnalysisModuleManager(QObject):
             # 發送信號
             self.statistics_visibility_changed.emit(self._statistics_visible)
             
-            print(f"[ANALYSIS_MANAGER] 🔧 強制更新統計面板顯示狀態: {'顯示' if self._statistics_visible else '隱藏'}")
+            self._logger.info(
+                "[ANALYSIS_MANAGER] 🔧 強制更新統計面板顯示狀態: %s",
+                '顯示' if self._statistics_visible else '隱藏'
+            )
             
         except Exception as e:
-            print(f"[ERROR] [ANALYSIS_MANAGER] 強制更新統計面板顯示狀態失敗: {e}")
-
-# 全域管理器實例
-analysis_module_manager = AnalysisModuleManager()
+            self._logger.exception(
+                "[ERROR] [ANALYSIS_MANAGER] 強制更新統計面板顯示狀態失敗: %s",
+                e
+            )
 
 def get_analysis_module_manager() -> AnalysisModuleManager:
     """獲取圈速分析模組管理器實例"""

@@ -28,6 +28,9 @@ from PyQt5.QtGui import QPainter, QLinearGradient, QColor, QPen, QFont
 
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 導入基類
 try:
     from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
@@ -45,7 +48,7 @@ try:
     from modules.gui.track_analysis.track_map_widget import TrackMapWidget
     from modules.gui.track_elevation.elevation_chart_widget_pyqt5 import ElevationChartWidget
 except ImportError as e:
-    print(f"[ERROR] [HISTORICAL_TRACK_MAP_MDI] 無法導入賽道組件: {e}")
+    logger.error(f"[HISTORICAL_TRACK_MAP_MDI] 無法導入賽道組件: {e}")
     TrackMapWidget = None
     ElevationChartWidget = None
 
@@ -157,7 +160,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("historical_track_map", config)
             cls._REGISTERED = True
-            print("[HISTORICAL_TRACK_MAP_MDI] 模組類型已註冊")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -166,7 +169,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 開始初始化...")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 開始初始化...")
         
         # 確保類型已註冊
         self.ensure_registered()
@@ -195,7 +198,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         self._is_data_loaded = False
         self._current_flags_data = None
         
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 基類初始化完成")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 基類初始化完成")
     
     def create_data_manager(self) -> HistoricalTrackMapDataLoader:
         """創建數據管理器"""
@@ -234,20 +237,20 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         Returns:
             bool: 初始化是否成功
         """
-        print("[HISTORICAL_TRACK_MAP_MDI] initialize_module 開始...")
+        logger.debug("[HISTORICAL_TRACK_MAP_MDI] initialize_module 開始...")
         
         try:
             # ✅ 驗證必要屬性（完全複製 Ideal Lap Ranking）
             if not hasattr(self, 'current_year') or not self.current_year:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_year 屬性")
+                logger.error(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_race 屬性")
+                logger.error(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_session 屬性")
+                logger.error(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 缺少 current_session 屬性")
                 return False
             
             # ✅ 設置參數（完全複製 Ideal Lap Ranking）
@@ -255,23 +258,23 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
+            logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
             
             # ✅ 關鍵修復：創建 data_manager（基類會在 initialize_module 中創建）
             if not hasattr(self, 'data_manager') or self.data_manager is None:
-                print("[HISTORICAL_TRACK_MAP_MDI] 創建 data_manager...")
+                logger.debug("[HISTORICAL_TRACK_MAP_MDI] 創建 data_manager...")
                 self.data_manager = self.create_data_manager()
                 if not self.data_manager:
-                    print("[HISTORICAL_TRACK_MAP_MDI] ❌ data_manager 創建失敗")
+                    logger.error("[HISTORICAL_TRACK_MAP_MDI] ❌ data_manager 創建失敗")
                     return False
-                print("[HISTORICAL_TRACK_MAP_MDI] ✅ data_manager 創建成功")
+                logger.info("[HISTORICAL_TRACK_MAP_MDI] ✅ data_manager 創建成功")
             else:
-                print("[HISTORICAL_TRACK_MAP_MDI] data_manager 已存在，跳過創建")
+                logger.debug("[HISTORICAL_TRACK_MAP_MDI] data_manager 已存在，跳過創建")
             
             # 檢查必要組件是否可用
             if TrackMapWidget is None or ElevationChartWidget is None:
                 error_msg = tr("required_components_unavailable", "必要組件不可用 (TrackMapWidget/ElevationChartWidget)")
-                print(f"[ERROR] [HISTORICAL_TRACK_MAP_MDI] {error_msg}")
+                logger.error(f"[HISTORICAL_TRACK_MAP_MDI] {error_msg}")
                 return False
             
             # 創建主容器
@@ -350,13 +353,13 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             
             # ✅ 統一載入方式：使用 data_manager.load_data()
             # ❌ 移除 load_initial_data() - 避免與 _load_data_with_current_parameters() 雙重載入
-            print("[HISTORICAL_TRACK_MAP_MDI] 跳過 load_initial_data()，等待 _load_data_with_current_parameters() 調用")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] 跳過 load_initial_data()，等待 _load_data_with_current_parameters() 調用")
             
-            print("[HISTORICAL_TRACK_MAP_MDI] initialize_module 完成")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] initialize_module 完成")
             return True
             
         except Exception as e:
-            print(f"[ERROR] [HISTORICAL_TRACK_MAP_MDI] initialize_module 失敗: {e}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] initialize_module 失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -383,12 +386,12 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
     # - _transform_api_data_to_gui_format() → 改用 data_manager 的處理
         
         # ✅ 直接使用已驗證的參數（完全複製 Ideal Lap Ranking）
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 📋 參數: {self.year} {self.race} {self.session}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 📋 參數: {self.year} {self.race} {self.session}")
         
         # 驗證參數
         if not self.race:
             error_msg = "缺少 race 參數！無法載入數據。"
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ❌ {error_msg}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] ❌ {error_msg}")
             if self.info_label:  # ❌ 已隱藏 - 檢查是否為 None
                 self.info_label.setText(tr("missing_race_parameter", "Missing Race Parameter"))
             self._show_error(
@@ -409,7 +412,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             "force_refresh": False
         }
         
-        print("[HISTORICAL_TRACK_MAP_MDI] 創建 API Worker...")
+        logger.debug("[HISTORICAL_TRACK_MAP_MDI] 創建 API Worker...")
         self.api_worker = HistoricalTrackMapApiWorker(
             params=api_params,  # ✅ 第一個參數（匹配 Ideal Lap Ranking）
             base_url="https://api.f1telemetrystationpro.org",
@@ -422,13 +425,13 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         self.api_worker.failure.connect(self._on_api_failure)
         
         # 啟動 API 請求
-        print("[HISTORICAL_TRACK_MAP_MDI] 啟動 API 請求...")
+        logger.debug("[HISTORICAL_TRACK_MAP_MDI] 啟動 API 請求...")
         self.api_worker.start()
     
     @pyqtSlot(int)
     def _on_api_progress(self, progress: int):
         """API 請求進度更新"""
-        print(f"[HISTORICAL_TRACK_MAP_MDI] API 進度: {progress}%")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] API 進度: {progress}%")
         if self.info_label:  # ❌ 已隱藏 - 檢查是否為 None
             self.info_label.setText(f"{tr('api_loading', 'API Loading')}... {progress}%")
     
@@ -436,26 +439,26 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
     def _on_api_success(self, result: Dict[str, Any]):
         """API 請求成功"""
         try:
-            print("\n" + "="*80)
-            print("[DEBUG] 🟢 _on_api_success() 被調用")
-            print("[HISTORICAL_TRACK_MAP_MDI] API 調用成功")
-            print("="*80 + "\n")
+            logger.debug("\n" + "="*80)
+            logger.debug("🟢 _on_api_success() 被調用")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] API 調用成功")
+            logger.debug("="*80 + "\n")
             
             # 提取數據和元數據
             api_data = result.get("data", {})
             meta = result.get("meta", {})
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 數據源: {meta.get('source')}")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 延遲: {meta.get('latency_ms')}ms")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 數據源: {meta.get('source')}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 延遲: {meta.get('latency_ms')}ms")
             
             # ⚠️ API 返回雙重嵌套結構！需要再提取一層 data
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 第一層 api_data 鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 第一層 api_data 鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
             
             # 檢查是否有雙重嵌套（JSON 包裝格式）
             if isinstance(api_data, dict) and "data" in api_data and "function_id" in api_data:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  檢測到雙重嵌套！提取內層 data...")
+                logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  檢測到雙重嵌套！提取內層 data...")
                 api_data = api_data.get("data", {})
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 第二層 api_data 鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 第二層 api_data 鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
             
             # 驗證數據結構
             if not isinstance(api_data, dict):
@@ -471,7 +474,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             if not isinstance(gui_data, dict):
                 raise ValueError(tr("gui_data_format_error", "Transformed data format error - must be dict"))
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 數據轉換成功，GUI 數據鍵: {list(gui_data.keys())}")
+            logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 數據轉換成功，GUI 數據鍵: {list(gui_data.keys())}")
             
             # 處理數據（觸發現有的 _on_data_loaded 處理邏輯）
             self._on_data_loaded(gui_data)
@@ -482,7 +485,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 self.info_label.setText(f"{tr('loaded_from', 'Loaded from')} {source_label}")
             
         except Exception as e:
-            print(f"[HISTORICAL_TRACK_MAP_MDI] API 數據處理失敗: {e}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] API 數據處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_api_failure(str(e))
@@ -536,9 +539,9 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         }
         """
         try:
-            print("[HISTORICAL_TRACK_MAP_MDI] 轉換 API 數據格式...")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] API 數據類型: {type(api_data)}")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] API 數據鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] 轉換 API 數據格式...")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] API 數據類型: {type(api_data)}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] API 數據鍵: {list(api_data.keys()) if isinstance(api_data, dict) else 'NOT A DICT'}")
             
             # ✅ 驗證數據結構
             if not isinstance(api_data, dict):
@@ -549,8 +552,8 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             track_bounds = api_data.get("track_bounds", {})
             metadata = api_data.get("metadata", {})
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 提取到 {len(position_records)} 個位置點")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] track_bounds: {track_bounds}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 提取到 {len(position_records)} 個位置點")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] track_bounds: {track_bounds}")
             
             # 構建 track_data（賽道地圖用）
             # ✅ 使用 TrackMapWidget 期望的鍵名
@@ -562,17 +565,17 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 "corners": []
             })
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 從 API 數據載入 {official_corners_data.get('count', 0)} 個官方彎道")
+            logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 從 API 數據載入 {official_corners_data.get('count', 0)} 個官方彎道")
             if official_corners_data.get("corners"):
-                print(f"[HISTORICAL_TRACK_MAP_MDI]    第 1 個彎道: {official_corners_data['corners'][0]}")
-                print(f"[HISTORICAL_TRACK_MAP_MDI]    最後彎道: {official_corners_data['corners'][-1]}")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 第 1 個彎道: {official_corners_data['corners'][0]}")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 最後彎道: {official_corners_data['corners'][-1]}")
             
             # 🏁 提取 sector_boundaries（Function 100 包含此數據）
             sector_boundaries_data = api_data.get("sector_boundaries", [])
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 🏁 從 API 數據載入 {len(sector_boundaries_data)} 個 Sector 邊界")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🏁 從 API 數據載入 {len(sector_boundaries_data)} 個 Sector 邊界")
             if sector_boundaries_data:
                 for sb in sector_boundaries_data:
-                    print(f"[HISTORICAL_TRACK_MAP_MDI]    - {sb.get('name')}: {sb.get('distance_m'):.1f}m")
+                    logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] - {sb.get('name')}: {sb.get('distance_m'):.1f}m")
             
             track_data = {
                 "detailed_position_records": position_records,  # ✅ 正確鍵名
@@ -591,7 +594,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 "official_corners": official_corners_data  # ✅ 使用 FastF1 官方數據
             }
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已構建 chart_data（含高程數據 + {official_corners_data.get('count', 0)} 個彎道）")
+            logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已構建 chart_data（含高程數據 + {official_corners_data.get('count', 0)} 個彎道）")
             
             # 組合 GUI 格式數據
             gui_data = {
@@ -605,16 +608,16 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 "metadata": metadata
             }
             
-            print(f"[HISTORICAL_TRACK_MAP_MDI] 轉換完成: {len(position_records)} 個位置點")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 轉換完成: {len(position_records)} 個位置點")
             if gui_data.get("elevation_profile") and isinstance(gui_data.get("elevation_profile"), dict) and gui_data["elevation_profile"].get("available"):
                 elev = gui_data["elevation_profile"]
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 高程範圍: {elev['min_elevation']:.1f}m ~ {elev['max_elevation']:.1f}m")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 高程範圍: {elev['min_elevation']:.1f}m ~ {elev['max_elevation']:.1f}m")
             
-            print("[HISTORICAL_TRACK_MAP_MDI] ✅ GUI 數據轉換成功")
+            logger.info("[HISTORICAL_TRACK_MAP_MDI] ✅ GUI 數據轉換成功")
             return gui_data
         
         except Exception as e:
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 數據轉換失敗: {e}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] ❌ 數據轉換失敗: {e}")
             import traceback
             traceback.print_exc()
             # ✅ 發生異常時返回 None，讓調用者處理
@@ -623,7 +626,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗"""
-        print(f"[HISTORICAL_TRACK_MAP_MDI] API 調用失敗: {error_msg}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] API 調用失敗: {error_msg}")
         
         if self.info_label:  # ❌ 已隱藏 - 檢查是否為 None
             self.info_label.setText(tr("api_failure", "API Request Failed"))
@@ -636,7 +639,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 "Historical Track Map data can only be loaded via API. Please ensure the API service is available or try again later.\n\nError details:\n{error}",
             ).format(error=error_msg)
         )
-        print("[HISTORICAL_TRACK_MAP_MDI] API-ONLY 模式：不使用本地 JSON 後備")
+        logger.debug("[HISTORICAL_TRACK_MAP_MDI] API-ONLY 模式：不使用本地 JSON 後備")
     
     def _show_error(self, title: str, message: str):
         """
@@ -979,29 +982,29 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         - 直接使用 API 返回的數據
         """
         import traceback
-        print("\n" + "="*70)
-        print("[HISTORICAL_TRACK_MAP_MDI] 🚨 _on_data_loaded 觸發")
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 當前賽道: {self.year} {self.race} {self.session}")
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 🔍 調用堆棧:")
+        logger.debug("\n" + "="*70)
+        logger.debug("[HISTORICAL_TRACK_MAP_MDI] 🚨 _on_data_loaded 觸發")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 當前賽道: {self.year} {self.race} {self.session}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🔍 調用堆棧:")
         for line in traceback.format_stack()[-5:-1]:
-            print(line.strip())
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 🔑 數據鍵: {list(data.keys())}")
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 🏆 race_top3 存在: {'race_top3_drivers_2022_2023' in data}")
-        print("="*70)
+            logger.debug(f"{line.strip()}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🔑 數據鍵: {list(data.keys())}")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🏆 race_top3 存在: {'race_top3_drivers_2022_2023' in data}")
+        logger.debug("="*70)
         
         try:
             # 儲存旗幟數據
             self._current_flags_data = data
             self._is_data_loaded = True
             
-            print(f"[DEBUG] data 頂層鍵: {list(data.keys())}")
+            logger.debug(f"data 頂層鍵: {list(data.keys())}")
             
             # 🔍 提取賽道數據（優先使用 data.track_data，否則從 data 構建）
             track_data = data.get("track_data", {})
             
             # 如果 track_data 為空或缺少關鍵數據，從 data 重新構建
             if not track_data or "position_records" not in track_data:
-                print(f"[DEBUG] ⚠️  track_data 為空或缺少 position_records，從 data 構建...")
+                logger.warning(f"⚠️  track_data 為空或缺少 position_records，從 data 構建...")
                 
                 # ✅ 修正：使用正確的鍵名（position_records 而非 detailed_position_records）
                 position_records = track_data.get("position_records") if track_data else None
@@ -1026,110 +1029,110 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                     "sector_boundaries": data.get("sector_boundaries", []),
                     "speed_distribution": data.get("speed_distribution"),  # ✅ 速度分布
                 }
-                print(f"[DEBUG] ✅ 重建 track_data，position_records 數量: {len(track_data['position_records'])}")
+                logger.info(f"✅ 重建 track_data，position_records 數量: {len(track_data['position_records'])}")
             
             # 🏁 確保 sector_boundaries 存在（直接從 data 或 track_data）
             if "sector_boundaries" not in track_data or not track_data.get("sector_boundaries"):
                 if "sector_boundaries" in data and data.get("sector_boundaries"):
                     track_data["sector_boundaries"] = data.get("sector_boundaries", [])
-                    print(f"[DEBUG] ✅ 從 data 補充 sector_boundaries: {len(track_data['sector_boundaries'])} 個")
+                    logger.info(f"✅ 從 data 補充 sector_boundaries: {len(track_data['sector_boundaries'])} 個")
                 else:
                     track_data["sector_boundaries"] = []
-                    print(f"[DEBUG] ⚠️  無 sector_boundaries 數據")
+                    logger.warning(f"⚠️  無 sector_boundaries 數據")
             
             # 🎯 確保 speed_distribution 存在（無論 track_data 來源）
             if "speed_distribution" not in track_data or not track_data.get("speed_distribution"):
                 if "speed_distribution" in data and data.get("speed_distribution"):
                     track_data["speed_distribution"] = data.get("speed_distribution")
                     sd = track_data["speed_distribution"]
-                    print(f"[DEBUG] ✅ 從 data 補充 speed_distribution: Low={sd.get('low_speed_percentage', 0):.1f}%, Mid={sd.get('mid_speed_percentage', 0):.1f}%, High={sd.get('high_speed_percentage', 0):.1f}%")
+                    logger.info(f"✅ 從 data 補充 speed_distribution: Low={sd.get('low_speed_percentage', 0):.1f}%, Mid={sd.get('mid_speed_percentage', 0):.1f}%, High={sd.get('high_speed_percentage', 0):.1f}%")
                 else:
-                    print(f"[DEBUG] ⚠️  無 speed_distribution 數據")
+                    logger.warning(f"⚠️  無 speed_distribution 數據")
             
-            print(f"\n[DEBUG] === 賽道地圖數據最終檢查 ===")
-            print(f"[DEBUG] track_data 存在: {bool(track_data)}")
-            print(f"[DEBUG] track_data 鍵: {list(track_data.keys())}")
+            logger.debug(f"\n[DEBUG] === 賽道地圖數據最終檢查 ===")
+            logger.debug(f"track_data 存在: {bool(track_data)}")
+            logger.debug(f"track_data 鍵: {list(track_data.keys())}")
             
             if "sector_boundaries" in track_data:
                 sb_count = len(track_data['sector_boundaries'])
-                print(f"[DEBUG] ✅ sector_boundaries 數量: {sb_count}")
+                logger.info(f"✅ sector_boundaries 數量: {sb_count}")
                 if sb_count > 0:
                     for sb in track_data['sector_boundaries']:
-                        print(f"[DEBUG]    - {sb.get('name')}: {sb.get('distance_m'):.1f}m at ({sb.get('position_x'):.1f}, {sb.get('position_y'):.1f})")
+                        logger.debug(f"- {sb.get('name')}: {sb.get('distance_m'):.1f}m at ({sb.get('position_x'):.1f}, {sb.get('position_y'):.1f})")
             
             # 更新賽道地圖
             if track_data and self.track_map:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 準備更新賽道地圖...")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 準備更新賽道地圖...")
                 
                 success = self.track_map.load_track_data(track_data)
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 賽道地圖更新結果: {success}")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 賽道地圖更新結果: {success}")
                 
                 # ✅ 強制啟用彎道顯示
                 self.track_map.show_official_corners = True
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_official_corners=True")
+                logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_official_corners=True")
                 
                 # ✅ 強制重繪
                 self.track_map.update()
-                print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已調用 track_map.update() 強制重繪")
+                logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已調用 track_map.update() 強制重繪")
                 
                 # 🎨 傳遞彎道旗幟數據
                 corner_analysis = data.get("corner_analysis", {})
                 if corner_analysis and hasattr(self.track_map, 'set_corner_flags'):
                     self.track_map.set_corner_flags(corner_analysis)
-                    print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(corner_analysis)} 個彎道的旗幟數據")
+                    logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(corner_analysis)} 個彎道的旗幟數據")
                 
                 # 🏁 傳遞 Sector 邊界數據（從 track_data 取得）
                 sector_boundaries = track_data.get("sector_boundaries", [])
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 🔍 準備設置 Sector 邊界: {len(sector_boundaries)} 個")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🔍 準備設置 Sector 邊界: {len(sector_boundaries)} 個")
                 
                 if sector_boundaries and hasattr(self.track_map, 'set_sector_boundaries'):
                     self.track_map.set_sector_boundaries(sector_boundaries)
-                    print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(sector_boundaries)} 個 Sector 邊界給 TrackMapWidget")
+                    logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(sector_boundaries)} 個 Sector 邊界給 TrackMapWidget")
                     
                     # ✅ 強制啟用 Sector 邊界顯示
                     if hasattr(self.track_map, 'show_sector_boundaries'):
                         self.track_map.show_sector_boundaries = True
-                        print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_sector_boundaries=True")
+                        logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_sector_boundaries=True")
                 else:
-                    print(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  sector_boundaries 為空或 TrackMapWidget 不支援")
+                    logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  sector_boundaries 為空或 TrackMapWidget 不支援")
             else:
-                print(f"[HISTORICAL_TRACK_MAP_MDI] 跳過賽道地圖更新（無數據或 widget 不存在）")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 跳過賽道地圖更新（無數據或 widget 不存在）")
             
             # 更新高程圖表
             chart_data = data.get("chart_data")
-            print(f"\n[DEBUG] === 高程圖表數據檢查 ===")
-            print(f"[DEBUG] chart_data 存在: {bool(chart_data)}")
+            logger.debug(f"\n[DEBUG] === 高程圖表數據檢查 ===")
+            logger.debug(f"chart_data 存在: {bool(chart_data)}")
             
             if chart_data and self.elevation_chart:
-                print(f"[DEBUG] chart_data 鍵: {list(chart_data.keys())}")
+                logger.debug(f"chart_data 鍵: {list(chart_data.keys())}")
                 
                 track_outline = chart_data.get("track_outline", [])
                 # 🔧 修復：正確提取 corners 數據（參考 demo Line 721）
                 official_corners = chart_data.get("official_corners", {})
                 corners = official_corners.get("corners", [])
                 
-                print(f"[DEBUG] track_outline 數量: {len(track_outline)}")
-                print(f"[DEBUG] official_corners 類型: {type(official_corners)}")
-                print(f"[DEBUG] corners 類型: {type(corners)}, 長度: {len(corners)}")
+                logger.debug(f"track_outline 數量: {len(track_outline)}")
+                logger.debug(f"official_corners 類型: {type(official_corners)}")
+                logger.debug(f"corners 類型: {type(corners)}, 長度: {len(corners)}")
                 
                 if corners:
-                    print(f"[DEBUG] 第 1 個彎道: {corners[0]}")
-                    print(f"[DEBUG] 最後 1 個彎道: {corners[-1]}")
+                    logger.debug(f"第 1 個彎道: {corners[0]}")
+                    logger.debug(f"最後 1 個彎道: {corners[-1]}")
                 else:
-                    print(f"[DEBUG] ⚠️  corners 為空！")
+                    logger.warning(f"⚠️  corners 為空！")
                 
                 # 檢查是否有高程數據
                 has_elevation = any('elevation' in p or 'z' in p for p in track_outline)
                 
                 if has_elevation and track_outline:
-                    print(f"[HISTORICAL_TRACK_MAP_MDI] 準備繪製高程圖表（{len(track_outline)} 點，{len(corners)} 彎道）...")
+                    logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 準備繪製高程圖表（{len(track_outline)} 點，{len(corners)} 彎道）...")
                     self.elevation_chart.plot_elevation(track_outline, corners)
-                    print("[HISTORICAL_TRACK_MAP_MDI] ✅ 高程圖表已更新")
+                    logger.info("[HISTORICAL_TRACK_MAP_MDI] ✅ 高程圖表已更新")
                 else:
-                    print("[HISTORICAL_TRACK_MAP_MDI] ⚠️  track_outline 無高程數據")
+                    logger.warning("[HISTORICAL_TRACK_MAP_MDI] ⚠️  track_outline 無高程數據")
                     self.elevation_chart.plot_elevation([], [])
             else:
-                print("[HISTORICAL_TRACK_MAP_MDI] ⚠️  無 chart_data，等高圖保持空白")
+                logger.warning("[HISTORICAL_TRACK_MAP_MDI] ⚠️  無 chart_data，等高圖保持空白")
                 if self.elevation_chart:
                     self.elevation_chart.plot_elevation([], [])  # 清空圖表
             
@@ -1139,17 +1142,17 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             # 更新資訊標籤
             self._update_info_label(data)
             
-            print("[HISTORICAL_TRACK_MAP_MDI] 所有組件已更新")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] 所有組件已更新")
             
         except Exception as e:
-            print(f"[ERROR] [HISTORICAL_TRACK_MAP_MDI] _on_data_loaded 處理失敗: {e}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] _on_data_loaded 處理失敗: {e}")
             import traceback
             traceback.print_exc()
     
     @pyqtSlot(str)
     def _on_data_load_error(self, error_msg: str):
         """數據載入失敗處理"""
-        print(f"[HISTORICAL_TRACK_MAP_MDI] _on_data_load_error: {error_msg}")
+        logger.error(f"[HISTORICAL_TRACK_MAP_MDI] _on_data_load_error: {error_msg}")
         
         if self.info_label:
             self.info_label.setText(f"{tr('error', 'Error')}: {error_msg}")
@@ -1193,15 +1196,15 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         from PyQt5.QtWidgets import QTableWidgetItem
         from PyQt5.QtGui import QFont, QColor, QLinearGradient, QBrush
         
-        print(f"\n[DEBUG] 🚩 _update_flags_tables 被調用")
-        print(f"[DEBUG] data 鍵: {list(data.keys())[:10]}")  # 只顯示前 10 個
+        logger.debug(f"\n[DEBUG] 🚩 _update_flags_tables 被調用")
+        logger.debug(f"data 鍵: {list(data.keys())[:10]}")  # 只顯示前 10 個
         
         yearly_summary = data.get("yearly_summary", {})
         corner_analysis = data.get("corner_analysis", {})
         
         # 載入每年度的名次變更數據（從 Function 15 的 JSON）
         position_changes_data = self._load_position_changes_data()
-        print(f"[DEBUG] ✅ Position Changes Data: {position_changes_data}")
+        logger.info(f"✅ Position Changes Data: {position_changes_data}")
         
         # 更新年度表格
         years = ['2022', '2023', '2024', '2025']
@@ -1286,7 +1289,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         # ✅ 更新車手名次表格 (2022-2023 Top 3 Drivers)
         self._update_top3_drivers_table(data)
         
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 旗幟統計表格已更新")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 旗幟統計表格已更新")
     
     def _update_corner_table(self, corner_analysis: Dict[str, Any]):
         """更新彎道旗幟統計表格"""
@@ -1294,7 +1297,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         from PyQt5.QtGui import QFont, QColor, QLinearGradient, QBrush
         
         if not corner_analysis:
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️ corner_analysis 為空，無法更新彎道表格")
+            logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️ corner_analysis 為空，無法更新彎道表格")
             return
         
         # 按彎道編號排序
@@ -1368,7 +1371,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 
                 self.corner_table.setItem(row, col, item)
         
-        print(f"[HISTORICAL_TRACK_MAP_MDI] 彎道統計表格已更新 ({len(sorted_corners)} 個彎道)")
+        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 彎道統計表格已更新 ({len(sorted_corners)} 個彎道)")
     
     def _update_top3_drivers_table(self, data: Dict[str, Any]):
         """更新 2022-2025 車手名次表格"""
@@ -1376,15 +1379,15 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         from PyQt5.QtGui import QFont, QColor
         from modules.gui.themes.color_palette_provider import color_palette_provider
         
-        print(f"\n[DEBUG] 🏆 _update_top3_drivers_table 被調用")
-        print(f"[DEBUG] data 頂層鍵: {list(data.keys())}")
+        logger.debug(f"\n[DEBUG] 🏆 _update_top3_drivers_table 被調用")
+        logger.debug(f"data 頂層鍵: {list(data.keys())}")
         
         # 獲取 race_top3_drivers_2022_2023 數據
         top3_data = data.get("race_top3_drivers_2022_2023", {})
-        print(f"[DEBUG] race_top3_drivers_2022_2023 存在: {bool(top3_data)}")
+        logger.debug(f"race_top3_drivers_2022_2023 存在: {bool(top3_data)}")
         
         if not top3_data or not top3_data.get("available"):
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  race_top3_drivers_2022_2023 數據不可用")
+            logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  race_top3_drivers_2022_2023 數據不可用")
             # 清空表格（4 年）
             for row in range(4):  # ✅ 改為 4 行
                 for col in range(3):
@@ -1394,7 +1397,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         years_data = top3_data.get("years_data", [])
         
         if not years_data:
-            print(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  years_data 為空")
+            logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  years_data 為空")
             return
         
         # 填充表格（支援 2022-2025）
@@ -1451,7 +1454,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 
                 self.top3_drivers_table.setItem(row, col, item)
         
-        print(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 車手名次表格已更新")
+        logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 車手名次表格已更新")
     
     def _toggle_corners(self):
         """切換彎道顯示"""
@@ -1459,7 +1462,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             self.track_map.show_official_corners = not self.track_map.show_official_corners
             self.track_map.update()
             status = tr("enabled", "Enabled") if self.track_map.show_official_corners else tr("disabled", "Disabled")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] {tr('corner_display', 'Corner Display')}: {status}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] {tr('corner_display', 'Corner Display')}: {status}")
     
     def _toggle_speed_gradient(self, state):
         """切換速度漸層模式"""
@@ -1478,10 +1481,10 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         min_speed = min(speeds)
                         max_speed = max(speeds)
                         self.speed_legend_widget.set_speed_range(min_speed, max_speed)
-                        print(f"[HISTORICAL_TRACK_MAP_MDI] Speed Range: {min_speed:.1f} - {max_speed:.1f} km/h")
+                        logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] Speed Range: {min_speed:.1f} - {max_speed:.1f} km/h")
             
             mode = tr("speed_gradient_mode", "Speed Gradient Mode") if enabled else tr("normal_blue_mode", "Normal Blue Mode")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] {tr('track_display', 'Track Display')}: {mode}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] {tr('track_display', 'Track Display')}: {mode}")
     
     def _toggle_speed_distribution(self, state):
         """切換速度分布圓餅圖顯示"""
@@ -1490,18 +1493,18 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             self.track_map.set_speed_distribution_enabled(enabled)
             
             status = tr("shown", "Shown") if enabled else tr("hidden", "Hidden")
-            print(f"[HISTORICAL_TRACK_MAP_MDI] {tr('speed_distribution_display', 'Speed Distribution')}: {status}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] {tr('speed_distribution_display', 'Speed Distribution')}: {status}")
     
     def _fit_view(self):
         """重置視圖"""
         if self.track_map:
             self.track_map.fit_to_view()
-            print(f"[HISTORICAL_TRACK_MAP_MDI] {tr('view_reset', 'View Reset')}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] {tr('view_reset', 'View Reset')}")
     
     def _refresh_charts(self):
         """重新繪製圖表"""
         if not self._is_data_loaded or not self._current_flags_data:
-            print("[HISTORICAL_TRACK_MAP_MDI] {tr('no_data_to_refresh', 'No Data to Refresh')}")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] {tr('no_data_to_refresh', 'No Data to Refresh')}")
             return
         
         chart_data = self._current_flags_data.get("chart_data", {})
@@ -1511,7 +1514,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             official_corners = chart_data.get("official_corners", {})
             corners = official_corners.get("corners", [])
             self.elevation_chart.plot_elevation(track_outline, corners)
-            print("[HISTORICAL_TRACK_MAP_MDI] {tr('charts_redrawn', 'Charts Redrawn')}")
+            logger.debug("[HISTORICAL_TRACK_MAP_MDI] {tr('charts_redrawn', 'Charts Redrawn')}")
     
     def _load_data_with_current_parameters(self):
         """
@@ -1520,37 +1523,37 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         這個方法被基類的 update_parameters() 調用，確保參數變更時自動重新載入數據
         """
         try:
-            print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] _load_data_with_current_parameters 被調用")
-            print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] 當前參數: {self.current_year} {self.current_race} {self.current_session}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] _load_data_with_current_parameters 被調用")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 當前參數: {self.current_year} {self.current_race} {self.current_session}")
             
             # ✅ 同步實例變量（非常重要！）
             self.year = str(self.current_year)
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] 實例變量已同步: self.year={self.year}, self.race={self.race}, self.session={self.session}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 實例變量已同步: self.year={self.year}, self.race={self.race}, self.session={self.session}")
             
             if self.data_manager:
                 # 同步數據管理器的參數
                 # ⚠️ Function 100 只需要 race 參數（year 和 session 都是可選的）
                 self.data_manager.race = self.current_race
                 
-                print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] 數據管理器參數已同步")
-                print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] 開始載入數據...")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 數據管理器參數已同步")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 開始載入數據...")
                 
                 # 載入數據 - Function 100 只需要 race 參數
                 result = self.data_manager.load_data(
                     race=self.current_race
                 )
-                print(f"🔍 [HISTORICAL_TRACK_MAP_MDI] 數據載入結果: {result}")
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 數據載入結果: {result}")
                 return result
             else:
-                print(f"❌ [HISTORICAL_TRACK_MAP_MDI] data_manager 不存在！")
+                logger.error(f"[HISTORICAL_TRACK_MAP_MDI] data_manager 不存在！")
             
             return False
             
         except Exception as e:
-            print(f"❌ [HISTORICAL_TRACK_MAP_MDI] _load_data_with_current_parameters 失敗: {e}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] _load_data_with_current_parameters 失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1571,13 +1574,13 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             bool: 更新是否成功
         """
         try:
-            print(f"[HISTORICAL_TRACK_MAP_MDI] update_lap_parameters: {year} {race} {session}")
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] update_lap_parameters: {year} {race} {session}")
             
             # 直接調用基類的 update_parameters() 方法，確保使用統一的更新流程
             return super().update_parameters(year=year, race=race, session=session, **kwargs)
             
         except Exception as e:
-            print(f"[ERROR] [HISTORICAL_TRACK_MAP_MDI] update_lap_parameters 失敗: {e}")
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] update_lap_parameters 失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -1592,30 +1595,30 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
             Dict[str, int]: {年份: 名次變更總次數}
         """
         try:
-            print(f"\n[HISTORICAL_TRACK_MAP_MDI] 📊 載入名次變更數據 (從 API yearly_summary) - Race: {self.race}")
+            logger.debug(f"\n[HISTORICAL_TRACK_MAP_MDI] 📊 載入名次變更數據 (從 API yearly_summary) - Race: {self.race}")
             
             years = ['2022', '2023', '2024', '2025']
             position_changes = {}
             
             # ✅ 從已載入的數據 (_current_flags_data) 的 yearly_summary 中讀取
             if not hasattr(self, '_current_flags_data') or not self._current_flags_data:
-                print("   ⚠️  _current_flags_data 不存在，無法載入 position changes")
+                logger.warning("   ⚠️  _current_flags_data 不存在，無法載入 position changes")
                 return {year: 0 for year in years}
             
             if 'yearly_summary' not in self._current_flags_data:
-                print("   ⚠️  _current_flags_data 缺少 yearly_summary")
+                logger.warning("   ⚠️  _current_flags_data 缺少 yearly_summary")
                 return {year: 0 for year in years}
             
             yearly_summary = self._current_flags_data['yearly_summary']
             
             # ✅ 檢查是否只有 2025 年數據（GUI 只查詢 2025）
             if len(yearly_summary) == 1 and '2025' in yearly_summary:
-                print("   🔧 檢測到只有 2025 年數據，開始為 2022-2024 計算 position_changes...")
+                logger.debug("   🔧 檢測到只有 2025 年數據，開始為 2022-2024 計算 position_changes...")
                 
                 # 從 2025 年數據中提取 position_changes
                 if '2025' in yearly_summary and 'position_changes' in yearly_summary['2025']:
                     position_changes['2025'] = yearly_summary['2025']['position_changes']
-                    print(f"   ✅ 2025: {position_changes['2025']} 次名次變更")
+                    logger.info(f"   ✅ 2025: {position_changes['2025']} 次名次變更")
                 else:
                     position_changes['2025'] = 0
                 
@@ -1625,9 +1628,9 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         from CLI_modules.cli.analyzer.historical_flags_analysis import _calculate_position_changes_for_year
                         changes = _calculate_position_changes_for_year(int(year), self.race, self.session)
                         position_changes[year] = changes
-                        print(f"   ✅ {year}: {changes} 次名次變更 (即時計算)")
+                        logger.info(f"   ✅ {year}: {changes} 次名次變更 (即時計算)")
                     except Exception as e:
-                        print(f"   ⚠️  {year}: 計算失敗 - {e}")
+                        logger.warning(f"   ⚠️  {year}: 計算失敗 - {e}")
                         position_changes[year] = 0
             else:
                 # 標準模式：從 yearly_summary 讀取所有年份
@@ -1638,19 +1641,20 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         if isinstance(year_data, dict) and 'position_changes' in year_data:
                             changes = year_data['position_changes']
                             position_changes[year] = changes
-                            print(f"   ✅ {year}: {changes} 次名次變更")
+                            logger.info(f"   ✅ {year}: {changes} 次名次變更")
                         else:
                             position_changes[year] = 0
-                            print(f"   ⚠️  {year}: yearly_summary 缺少 position_changes 欄位")
+                            logger.warning(f"   ⚠️  {year}: yearly_summary 缺少 position_changes 欄位")
                     else:
                         position_changes[year] = 0
-                        print(f"   ⚠️  {year}: yearly_summary 中找不到該年份數據")
+                        logger.warning(f"   ⚠️  {year}: yearly_summary 中找不到該年份數據")
             
             return position_changes
             
         except Exception as e:
-            print(f"❌ 載入名次變更數據失敗: {e}")
+            logger.error(f"載入名次變更數據失敗: {e}")
             import traceback
+
             traceback.print_exc()
             return {'2022': 0, '2023': 0, '2024': 0, '2025': 0}
     

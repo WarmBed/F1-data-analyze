@@ -22,6 +22,12 @@ from typing import Dict, List, Any, Optional
 from core.gui_i18n import tr, get_team_name_text
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("gui.driver_position_analysis_widget", component="gui")
+
 
 class NumericSortTableWidgetItem(QTableWidgetItem):
     """
@@ -140,18 +146,16 @@ class DriverPositionAnalysisWidget(QWidget):
                 self._set_row_data(row, driver_data)
             
             self.table.setSortingEnabled(True)  # 重新啟用排序
-            print(f"[POSITION_WIDGET] ✅ 已載入 {row_count} 位車手")
+            logger.info("[POSITION_WIDGET] 已載入 %d 位車手", row_count)
             
         except Exception as e:
-            print(f"❌ [POSITION_WIDGET] 填充表格失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[POSITION_WIDGET] 填充表格失敗")
     
     def clear_table(self):
         """清空表格"""
         self.table.setRowCount(0)
         self._position_data = []
-        print("[POSITION_WIDGET] 🗑️ 表格已清空")
+        logger.info("[POSITION_WIDGET] 表格已清空")
     
     # ========== 私有方法 ==========
     
@@ -220,9 +224,7 @@ class DriverPositionAnalysisWidget(QWidget):
             self.table.setItem(row, 7, change_item)
             
         except Exception as e:
-            print(f"❌ [POSITION_WIDGET] 設置行資料失敗 (row {row}): {e}")
-            import traceback
-            traceback.print_exc()
+            logger.exception("[POSITION_WIDGET] 設置行資料失敗 (row %d)", row)
     
     def _create_position_item(self, position) -> QTableWidgetItem:
         """

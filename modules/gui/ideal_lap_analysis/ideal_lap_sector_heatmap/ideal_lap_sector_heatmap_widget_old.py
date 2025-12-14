@@ -22,6 +22,10 @@ from PyQt5.QtGui import (
 )
 from PyQt5.QtWidgets import QWidget
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 class IdealLapSectorHeatmapWidget(QWidget):
     """
@@ -165,7 +169,7 @@ class IdealLapSectorHeatmapWidget(QWidget):
             self.figure.savefig(file_path, dpi=300, bbox_inches="tight")
             return True
         except Exception as exc:  # pragma: no cover - best effort
-            print(f"[SECTOR_HEATMAP_WIDGET] Failed to save plot: {exc}")
+            logger.debug(f"[SECTOR_HEATMAP_WIDGET] Failed to save plot: {exc}")
             return False
 
     # ------------------------------------------------------------------ #

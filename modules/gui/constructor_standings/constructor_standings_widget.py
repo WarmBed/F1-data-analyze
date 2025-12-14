@@ -21,6 +21,10 @@ from PyQt5.QtGui import QColor, QBrush
 from core.gui_i18n import tr
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
 
 class ConstructorStandingsWidget(QWidget):
     """
@@ -87,9 +91,9 @@ class ConstructorStandingsWidget(QWidget):
         # 初始化顏色系統
         try:
             color_palette_provider.ensure_loaded(year=self.season_year)
-            print(f"[CONSTRUCTOR_WIDGET] 顏色系統已載入 (year={self.season_year})")
+            logger.debug(f"[CONSTRUCTOR_WIDGET] 顏色系統已載入 (year={self.season_year})")
         except Exception as e:
-            print(f"[CONSTRUCTOR_WIDGET] ⚠️  顏色載入失敗: {e}")
+            logger.warning(f"[CONSTRUCTOR_WIDGET] ⚠️  顏色載入失敗: {e}")
         
         # 填充表格
         self.table.setRowCount(len(self.standings_data))
@@ -117,7 +121,7 @@ class ConstructorStandingsWidget(QWidget):
             self._set_item(row_idx, 4, delta_text)
         
         self.table.resizeColumnsToContents()
-        print(f"[CONSTRUCTOR_WIDGET] Table populated ({len(self.standings_data)} teams)")
+        logger.debug(f"[CONSTRUCTOR_WIDGET] Table populated ({len(self.standings_data)} teams)")
     
     def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
         """

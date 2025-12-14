@@ -72,7 +72,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             )
             UniversalAnalysisMDI.register_mdi_module_type("all_drivers_straight_line_speed", config)
             cls._REGISTERED = True
-            print("[SPEED_MDI] ✅ 模組類型已註冊")
     
     def __init__(self, parent=None):
         """
@@ -81,8 +80,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Args:
             parent: 父元件
         """
-        print("[SPEED_MDI] AllDriversStraightLineSpeedMDI 開始初始化...")
-        
         # 確保類型已註冊
         self.ensure_registered()
         
@@ -105,8 +102,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         self.lbl_fastest_accel: Optional[QLabel] = None
         self.lbl_avg_speed: Optional[QLabel] = None
         self.lbl_avg_accel: Optional[QLabel] = None
-        
-        print("[SPEED_MDI] 基類初始化完成，等待參數設置...")
     
     def initialize_module(self, parent_widget=None, **kwargs) -> bool:
         """
@@ -120,19 +115,14 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             bool: 初始化是否成功
         """
         try:
-            print("[SPEED_MDI] 開始初始化模組...")
-            
             # 驗證必要屬性
             if not hasattr(self, 'current_year') or not self.current_year:
-                print("[SPEED_MDI] ❌ 缺少 current_year 屬性")
                 return False
                 
             if not hasattr(self, 'current_race') or not self.current_race:
-                print("[SPEED_MDI] ❌ 缺少 current_race 屬性")
                 return False
                 
             if not hasattr(self, 'current_session') or not self.current_session:
-                print("[SPEED_MDI] ❌ 缺少 current_session 屬性")
                 return False
             
             # 設置參數
@@ -140,32 +130,23 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             self.race = self.current_race
             self.session = self.current_session
             
-            print(f"[SPEED_MDI] ✅ 參數已設置: {self.year} {self.race} {self.session}")
-            
             # 調用基類的 initialize_module
             if not super().initialize_module(parent_widget=parent_widget, **kwargs):
-                print("[SPEED_MDI] ❌ 基類初始化失敗")
                 return False
             
             # 驗證組件已創建
             if not self.chart_widget:
-                print("[SPEED_MDI] ❌ chart_widget 未創建")
                 return False
             
             if not self.data_manager:
-                print("[SPEED_MDI] ❌ data_manager 未創建")
                 return False
             
-            print(f"[SPEED_MDI] ✅ 組件創建成功")
-            
             # 自動載入初始數據
-            print("[SPEED_MDI] 🚀 準備載入初始數據...")
             self.load_initial_data()
             
             return True
             
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 初始化失敗: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -179,8 +160,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Returns:
             StraightLineSpeedDataLoader: 資料載入器實例
         """
-        print("[SPEED_MDI] 創建資料管理器...")
-        
         # ✅ 複用現有的 StraightLineSpeedDataLoader
         loader = StraightLineSpeedDataLoader(parent=self)
         
@@ -189,7 +168,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         loader.load_error.connect(self._on_load_error)
         loader.status_changed.connect(self._on_status_changed)
         
-        print("✅ [SPEED_MDI] 資料管理器已創建")
         return loader
     
     def create_chart_widget(self):
@@ -202,13 +180,10 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Returns:
             AllDriversStraightLineSpeedTableWidget: 表格元件實例
         """
-        print("[SPEED_MDI] 創建表格元件（QTableWidget 版本）...")
-        
         widget = AllDriversStraightLineSpeedTableWidget(parent=None)
         
         # ✅ 表格視圖包含完整的數據展示和棒狀圖視覺化
         
-        print("✅ [SPEED_MDI] 表格元件已創建")
         return widget
     
     def create_additional_widgets(self) -> list:
@@ -220,8 +195,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Returns:
             list: 額外的 Widget 列表（空）
         """
-        print("[SPEED_MDI] ⚠️ 統計面板已取消")
-        
         # ✅ 不創建統計面板，返回空列表
         return []
     
@@ -287,8 +260,6 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             data: 載入的資料
         """
         try:
-            print("[SPEED_MDI] 收到資料載入完成信號")
-            
             if not data:
                 self._on_load_error("資料為空")
                 return
@@ -303,10 +274,7 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             if self.chart_widget:
                 self.chart_widget.update_data(data)
             
-            print("✅ [SPEED_MDI] 資料處理完成")
-            
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 資料處理失敗: {e}")
             import traceback
             traceback.print_exc()
             self._on_load_error(f"資料處理錯誤: {str(e)}")
@@ -319,13 +287,12 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        print(f"❌ [SPEED_MDI] 資料載入錯誤: {error_msg}")
         QMessageBox.critical(None, tr("load_error", "載入錯誤"), error_msg)
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):
         """狀態變更回調"""
-        print(f"[SPEED_MDI] 狀態: {status}")
+        pass
     
     def _update_stats_panel(self, data: Dict[str, Any]):
         """更新統計面板"""
@@ -353,18 +320,13 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
             avg_accel = accel_perf.get("average_acceleration_time", 0)
             self.lbl_avg_accel.setText(f"{avg_accel:.2f}s")
             
-            print("[SPEED_MDI] 統計面板已更新")
-            
         except Exception as e:
-            print(f"[ERROR] [SPEED_MDI] 更新統計面板失敗: {e}")
+            pass
     
     def load_initial_data(self):
         """載入初始數據"""
         try:
-            print("[SPEED_MDI] 開始載入初始數據...")
-            
             if not self.data_manager:
-                print("[SPEED_MDI] ❌ data_manager 不存在")
                 return
             
             # 呼叫資料載入器
@@ -373,12 +335,8 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
                 race=self.race,
                 session=self.session
             )
-            
-            if not success:
-                print("[SPEED_MDI] ❌ 資料載入失敗")
                 
         except Exception as e:
-            print(f"❌ [SPEED_MDI] 載入初始數據失敗: {e}")
             import traceback
             traceback.print_exc()
     
@@ -405,12 +363,12 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
     @pyqtSlot(str)
     def _on_driver_clicked(self, driver_code: str):
         """車手點擊事件"""
-        print(f"[SPEED_MDI] 車手被點擊: {driver_code}")
+        pass
     
     @pyqtSlot(str)
     def _on_chart_switched(self, chart_type: str):
         """圖表切換事件"""
-        print(f"[SPEED_MDI] 圖表切換至: {chart_type}")
+        pass
 
 
 __all__ = ["AllDriversStraightLineSpeedMDI"]

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F58 - 進站策略預測器 (Pit Stop Strategy Predictor)
 
@@ -13,7 +14,7 @@ F58 - 進站策略預測器 (Pit Stop Strategy Predictor)
     進站決策點: 當累計輪胎衰退損失 > 進站時間損失時，應該進站
     
     crossover_lap 計算:
-    - 累計衰退 = base_rate * n + 0.5 * accel * n²
+    - 累計衰退 = base_rate * n + 0.5 * accel * n^2
     - 當累計衰退 = pit_loss 時，求解 n
 
 數據來源:
@@ -37,8 +38,15 @@ F58 - 進站策略預測器 (Pit Stop Strategy Predictor)
 日期: 2025-12-04
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import json
 import math
 from datetime import datetime

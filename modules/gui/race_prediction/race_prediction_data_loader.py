@@ -13,7 +13,11 @@ Race Prediction Data Loader
 
 from modules.gui.base.universal_data_loader_base import UniversalDataLoader
 from core.gui_i18n import tr
+from core.logger import get_logger
 from typing import Dict, Any, Optional, List
+
+
+logger = get_logger(component="race_prediction_loader")
 
 
 class RacePredictionDataLoader(UniversalDataLoader):
@@ -468,9 +472,9 @@ if __name__ == "__main__":
     from PyQt5.QtWidgets import QApplication
     import sys
     
-    print("=" * 60)
-    print("Race Prediction Data Loader - Standalone Test")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info("Race Prediction Data Loader - Standalone Test")
+    logger.info("=" * 60)
     
     # 創建 Qt 應用程式
     app = QApplication(sys.argv)
@@ -481,61 +485,64 @@ if __name__ == "__main__":
         race="Japan"
     )
     
-    print(f"\nLoader Configuration:")
-    print(f"  CLI Function: {loader.CLI_FUNCTION}")
-    print(f"  JSON Pattern: {loader.JSON_PATTERN}")
-    print(f"  Parameters: {loader.year} {loader.race}")
+    logger.info("\nLoader Configuration:")
+    logger.info("  CLI Function: %s", loader.CLI_FUNCTION)
+    logger.info("  JSON Pattern: %s", loader.JSON_PATTERN)
+    logger.info("  Parameters: %s %s", loader.year, loader.race)
     
     # 測試檔案搜尋模式
-    print(f"\nFile Search Patterns:")
+    logger.info("\nFile Search Patterns:")
     patterns = loader._build_filename_patterns(
         year=loader.year,
         race=loader.race
     )
     for i, pattern in enumerate(patterns, 1):
-        print(f"  {i}. {pattern}")
+        logger.info("  %s. %s", i, pattern)
     
     # 設置信號處理
     def on_data_loaded(data):
-        print(f"\nData loaded successfully!")
+        logger.info("\nData loaded successfully!")
         
         if "metadata" in data and "predictions" in data:
             metadata = data["metadata"]
             predictions = data["predictions"]
             team_ratings = data.get("team_ratings", {})
             
-            print(f"\nData Summary:")
-            print(f"  Track: {metadata.get('track', 'N/A')}")
-            print(f"  Year: {metadata.get('year', 'N/A')}")
-            print(f"  Prediction Count: {len(predictions)}")
-            print(f"  Team Ratings: {len(team_ratings)}")
+            logger.info("\nData Summary:")
+            logger.info("  Track: %s", metadata.get("track", "N/A"))
+            logger.info("  Year: %s", metadata.get("year", "N/A"))
+            logger.info("  Prediction Count: %s", len(predictions))
+            logger.info("  Team Ratings: %s", len(team_ratings))
             
             # 顯示前 3 名預測
-            print(f"\nTop 3 Predictions:")
+            logger.info("\nTop 3 Predictions:")
             for i, pred in enumerate(predictions[:3]):
-                print(
-                    f"  {i+1}. {pred['driver']} ({pred['team']}) - "
-                    f"Rating: {pred['team_rating']:.2f}"
+                logger.info(
+                    "  %s. %s (%s) - Rating: %.2f",
+                    i + 1,
+                    pred["driver"],
+                    pred["team"],
+                    pred["team_rating"],
                 )
         
         app.quit()
     
     def on_load_error(error_msg):
-        print(f"\nLoad error: {error_msg}")
+        logger.error("\nLoad error: %s", error_msg)
         app.quit()
     
     loader.data_loaded.connect(on_data_loaded)
     loader.load_error.connect(on_load_error)
     
     # 啟動載入
-    print(f"\nStarting data load...")
+    logger.info("\nStarting data load...")
     success = loader.load_data(
         year=loader.year,
         race=loader.race
     )
     
     if not success:
-        print("Load startup failed")
+        logger.error("Load startup failed")
         sys.exit(1)
     
     # 進入事件循環

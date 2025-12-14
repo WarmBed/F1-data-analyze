@@ -34,6 +34,9 @@ from PyQt5.QtGui import QColor, QFont
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 # 嘗試導入通用顏色系統
 COLOR_PALETTE_AVAILABLE = False
 color_palette_provider = None
@@ -42,6 +45,9 @@ try:
     COLOR_PALETTE_AVAILABLE = True
 except ImportError:
     pass
+
+
+logger = get_logger("live_timing.lap_history", component="gui")
 
 
 # ===========================================
@@ -103,7 +109,7 @@ class LapHistoryTableWidget(QWidget):
         
         self._init_ui()
         
-        print(f"[LAP_HISTORY] LapHistoryTableWidget initialized (type={data_type})")
+        logger.info("[LAP_HISTORY] LapHistoryTableWidget initialized (type=%s)", data_type)
     
     def _init_ui(self):
         """初始化 UI"""
@@ -414,7 +420,7 @@ class LiveTimingLapHistoryBase(BaseLiveTimingMDI):
         self.setMinimumSize(600, 200)
         self.resize(800, 250)
         
-        print(f"[LAP_HISTORY_MDI] {self.__class__.__name__} initialized")
+        logger.info("[LAP_HISTORY_MDI] %s initialized", self.__class__.__name__)
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -425,12 +431,12 @@ class LiveTimingLapHistoryBase(BaseLiveTimingMDI):
         """Race loaded"""
         driver_info = race_info.get('driver_info', {})
         self.history_widget.update_driver_info(driver_info)
-        print(f"[LAP_HISTORY_MDI] Race loaded: {race_info.get('year')} {race_info.get('race')}")
+        logger.info("[LAP_HISTORY_MDI] Race loaded: %s %s", race_info.get('year'), race_info.get('race'))
     
     def _on_race_unloaded(self):
         """Race unloaded"""
         self.history_widget.clear()
-        print(f"[LAP_HISTORY_MDI] Race unloaded")
+        logger.info("[LAP_HISTORY_MDI] Race unloaded")
     
     def _on_snapshot_updated(self, snapshot: Dict[str, Any]):
         """Snapshot updated"""

@@ -51,18 +51,32 @@ class _ChampionshipStandingsApiWorker(QThread):
 
     def run(self) -> None:  # pragma: no cover - network interaction
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             standings_payload = self._request_standings()
+            # ✅ 中斷檢查點 2: standings 請求後
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(60)
             calendar_payload = self._request_calendar()
+            # ✅ 中斷檢查點 3: calendar 請求後
+            if self.isInterruptionRequested():
+                return
             self.progress.emit(90)
             self.success.emit({
                 "standings": standings_payload,
                 "calendar": calendar_payload,
             })
         except Exception as exc:  # pragma: no cover - defensive
+            # ✅ 中斷檢查：被中斷時不發送錯誤信號
+            if self.isInterruptionRequested():
+                return
             self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100)
+            # ✅ 中斷檢查：被中斷時不發送 progress 信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100)
 
     def _request_standings(self) -> Dict[str, Any]:
         endpoint = f"{self.base_url}{_API_ENDPOINT}"

@@ -29,6 +29,13 @@ from PyQt5.QtCore import Qt, pyqtSignal, QRect, QPoint, QPointF
 from PyQt5.QtGui import QColor, QFont, QPainter, QPen, QBrush, QPainterPath, QLinearGradient
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
+from ..core.global_sync_signal import get_global_sync_signal
+
+from core.logger import get_logger
+logger = get_logger(__name__)
+
+
+logger = get_logger("live_timing.speed_trace", component="gui")
 
 
 # 預設顏色
@@ -119,6 +126,19 @@ class SpeedTraceWidget(QWidget):
     # 信號
     driver_change_requested = pyqtSignal(str)  # 請求切換車手
     
+    # 全局同步信號（類級別，所有實例共享）
+    _sync_settings_signal = None
+    
+    @classmethod
+    def get_sync_signal(cls):
+        """獲取全局同步信號（懶初始化）"""
+        if cls._sync_settings_signal is None:
+            from PyQt5.QtCore import QObject, pyqtSignal
+            class SettingsSyncSignal(QObject):
+                settings_changed = pyqtSignal(dict)  # 廣播設定變更
+            cls._sync_settings_signal = SettingsSyncSignal()
+        return cls._sync_settings_signal
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -163,6 +183,7 @@ class SpeedTraceWidget(QWidget):
         self._show_compare_best = False
         self._show_delta = True
         self._show_corners = True  # 顯示彎道標記
+        self._show_gap = True  # 顯示 Gap 填充
         
         # ===== 數據範圍 =====
         self.min_distance = 0
@@ -190,9 +211,13 @@ class SpeedTraceWidget(QWidget):
         self._mouse_x = -1
         self._mouse_y = -1
         
+        # 訂閱全局同步信號
+        sync_signal = get_global_sync_signal()
+        sync_signal.settings_changed.connect(self._on_settings_synced)
+        
         self._init_ui()
         
-        print("[SPEED_TRACE] SpeedTraceWidget initialized (PyQt5 native)")
+        logger.info("[SPEED_TRACE] SpeedTraceWidget initialized (PyQt5 native)")
     
     def _init_ui(self):
         """初始化 UI"""
@@ -256,7 +281,6 @@ class SpeedTraceWidget(QWidget):
             self._draw_gap_curve(painter, chart_rect)  # Gap 填充在速度曲線下面
             self._draw_speed_curves(painter, chart_rect)
             self._draw_axes(painter, chart_rect)
-            self._draw_legend(painter, chart_rect)
             
         finally:
             painter.end()
@@ -309,7 +333,7 @@ class SpeedTraceWidget(QWidget):
         # 左Y軸標籤 (速度)
         speed_range = self.max_speed - self.min_speed
         if speed_range > 0:
-            for i in range(0, 8, 2):  # 只顯示偶數刻度
+            for i in range(0, 8):  # 顯示所有刻度 (0-7)
                 speed_value = self.min_speed + i * speed_range / 7
                 y = chart_rect.bottom() - i * chart_rect.height() / 7
                 painter.drawText(5, int(y - 10), self.margin_left - 10, 20, Qt.AlignRight | Qt.AlignVCenter, f"{int(speed_value)}")
@@ -396,7 +420,7 @@ class SpeedTraceWidget(QWidget):
         # 繪製主車手當前圈
         if self._show_primary_current and self._primary_current_lap:
             color = self._get_driver_color(self._primary_driver)
-            self._draw_speed_curve(painter, chart_rect, self._primary_current_lap, color, 2.5, Qt.SolidLine)
+            self._draw_speed_curve(painter, chart_rect, self._primary_current_lap, color, 1.5, Qt.SolidLine)
         
         # 繪製主車手最速圈
         if self._show_primary_best and self._primary_best_lap:
@@ -406,7 +430,7 @@ class SpeedTraceWidget(QWidget):
         # 繪製對比車手當前圈
         if self._show_compare_current and self._compare_current_lap:
             color = self._get_driver_color(self._compare_driver)
-            self._draw_speed_curve(painter, chart_rect, self._compare_current_lap, color, 2.5, Qt.SolidLine)
+            self._draw_speed_curve(painter, chart_rect, self._compare_current_lap, color, 1.5, Qt.SolidLine)
         
         # 繪製對比車手最速圈
         if self._show_compare_best and self._compare_best_lap:
@@ -462,6 +486,8 @@ class SpeedTraceWidget(QWidget):
     
     def _draw_gap_curve(self, painter: QPainter, chart_rect: QRect):
         """繪製 Gap 曲線和填充"""
+        if not self._show_gap:
+            return
         if not self._gap_history_distances or len(self._gap_history_distances) < 2:
             return
         
@@ -664,7 +690,7 @@ class SpeedTraceWidget(QWidget):
         self._track_length = track_length if track_length > 0 else 5000.0
         self.max_distance = self._track_length
         
-        print(f"[SPEED_TRACE] Track info set: length={self._track_length}m, corners={len(self._corners)}")
+        logger.info("[SPEED_TRACE] Track info set: length=%sm, corners=%d", self._track_length, len(self._corners))
         self.update()
     
     def set_driver_info(self, driver_info: Dict[str, Dict[str, Any]]):
@@ -695,7 +721,7 @@ class SpeedTraceWidget(QWidget):
         else:
             self._primary_current_lap = None
         
-        print(f"[SPEED_TRACE] Primary driver set: {tla} ({driver_num})")
+        logger.info("[SPEED_TRACE] Primary driver set: %s (%s)", tla, driver_num)
         self.update()
     
     def set_compare_driver(self, driver_num: Optional[str]):
@@ -726,7 +752,7 @@ class SpeedTraceWidget(QWidget):
             # 無 Compare 時，Delta 參考切回 Primary Best
             self._delta_reference = 'primary_best'
         
-        print(f"[SPEED_TRACE] Compare driver set: {driver_num}, delta_reference={self._delta_reference}")
+        logger.info("[SPEED_TRACE] Compare driver set: %s, delta_reference=%s", driver_num, self._delta_reference)
         self.update()
     
     def update_from_snapshot(self, snapshot: Dict[str, Any]):
@@ -956,7 +982,7 @@ class SpeedTraceWidget(QWidget):
                 import copy
                 self._all_best_laps[driver_num] = copy.deepcopy(lap_data)
                 
-                print(f"[SPEED_TRACE] New best lap for {tla}: {lap_data.lap_time:.3f}s (Lap {lap_data.lap_number})")
+                logger.info("[SPEED_TRACE] New best lap for %s: %.3fs (Lap %s)", tla, lap_data.lap_time, lap_data.lap_number)
                 
                 # 更新主車手/對比車手的最速圈引用
                 if driver_num == self._primary_driver:
@@ -1076,6 +1102,20 @@ class SpeedTraceWidget(QWidget):
         action_show_corners.setEnabled(len(self._corners) > 0)
         action_show_corners.triggered.connect(lambda checked: self._toggle_option('corners', checked))
         
+        # ===== Gap 填充選項 =====
+        action_show_gap = menu.addAction("Show Gap")
+        action_show_gap.setCheckable(True)
+        action_show_gap.setChecked(self._show_gap)
+        action_show_gap.setEnabled(self._compare_driver is not None)
+        action_show_gap.triggered.connect(lambda checked: self._toggle_option('gap', checked))
+        
+        menu.addSeparator()
+        
+        # ===== 同步參數選項 =====
+        action_sync = menu.addAction("Sync Settings to All Traces")
+        action_sync.setStatusTip("Synchronize driver selection, corner markers, and Gap settings to all trace modules")
+        action_sync.triggered.connect(self._broadcast_settings)
+        
         menu.exec_(self.mapToGlobal(pos))
     
     def _populate_driver_menu(self, menu: QMenu, is_primary: bool):
@@ -1127,12 +1167,100 @@ class SpeedTraceWidget(QWidget):
             self._show_compare_best = checked
         elif option == 'corners':
             self._show_corners = checked
+        elif option == 'gap':
+            self._show_gap = checked
         
         self.update()
     
     def _set_delta_reference(self, ref: str):
         """設置 Delta 參考來源"""
         self._delta_reference = ref
+        self.update()
+    
+    def _broadcast_settings(self):
+        """廣播當前設定到其他模組"""
+        settings = {
+            'primary_driver': self._primary_driver,
+            'compare_driver': self._compare_driver,
+            'show_primary_current': self._show_primary_current,
+            'show_primary_best': self._show_primary_best,
+            'show_compare_current': self._show_compare_current,
+            'show_compare_best': self._show_compare_best,
+            'show_corners': self._show_corners,
+            'show_gap': self._show_gap,
+            'source_widget': id(self)  # 發送者的 ID，避免自己收到自己的廣播
+        }
+        sync_signal = get_global_sync_signal()
+        sync_signal.settings_changed.emit(settings)
+    
+    def _on_settings_synced(self, settings: dict):
+        """接收其他模組的設定同步"""
+        # 避免處理自己發出的信號
+        if settings.get('source_widget') == id(self):
+            return
+        
+        # 應用設定
+        self._primary_driver = settings.get('primary_driver')
+        self._compare_driver = settings.get('compare_driver')
+        self._show_primary_current = settings.get('show_primary_current', True)
+        self._show_primary_best = settings.get('show_primary_best', False)
+        self._show_compare_current = settings.get('show_compare_current', False)
+        self._show_compare_best = settings.get('show_compare_best', False)
+        self._show_corners = settings.get('show_corners', True)
+        self._show_gap = settings.get('show_gap', True)
+        
+        # 更新標籤
+        if hasattr(self, '_primary_label'):
+            tla = self._get_driver_tla(self._primary_driver)
+            self._primary_label.setText(f"Primary: {tla}")
+        if hasattr(self, '_compare_label'):
+            tla = self._get_driver_tla(self._compare_driver) if self._compare_driver else "--"
+            self._compare_label.setText(f"Compare: {tla}")
+        
+        # 重新繪製
+        self.update()
+    
+    def _broadcast_settings(self):
+        """廣播當前設定到其他模組"""
+        settings = {
+            'primary_driver': self._primary_driver,
+            'compare_driver': self._compare_driver,
+            'show_primary_current': self._show_primary_current,
+            'show_primary_best': self._show_primary_best,
+            'show_compare_current': self._show_compare_current,
+            'show_compare_best': self._show_compare_best,
+            'show_corners': self._show_corners,
+            'show_gap': self._show_gap,
+            'source_widget': id(self)  # 發送者的 ID，避免自己收到自己的廣播
+        }
+        sync_signal = get_global_sync_signal()
+        sync_signal.settings_changed.emit(settings)
+    
+    def _on_settings_synced(self, settings: dict):
+        """接收其他模組的設定同步"""
+        # 避免處理自己發出的信號
+        if settings.get('source_widget') == id(self):
+            return
+        
+        # 應用設定
+        self._primary_driver = settings.get('primary_driver')
+        self._compare_driver = settings.get('compare_driver')
+        self._show_primary_current = settings.get('show_primary_current', True)
+        self._show_primary_best = settings.get('show_primary_best', False)
+        self._show_compare_current = settings.get('show_compare_current', False)
+        self._show_compare_best = settings.get('show_compare_best', False)
+        self._show_corners = settings.get('show_corners', True)
+        self._show_gap = settings.get('show_gap', True)
+        
+        # 更新標籤
+        if hasattr(self, '_primary_label'):
+            tla = self._get_driver_tla(self._primary_driver)
+            self._primary_label.setText(f"Primary: {tla}")
+        if hasattr(self, '_compare_label'):
+            tla = self._get_driver_tla(self._compare_driver) if self._compare_driver else "--"
+            self._compare_label.setText(f"Compare: {tla}")
+        
+        # 重新繪製
         self.update()
     
     def clear(self):
@@ -1177,7 +1305,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         if self._data_manager:
             self._data_manager.driver_selected.connect(self._on_driver_selected)
         
-        print("[SPEED_TRACE_MDI] LiveTimingSpeedTrace initialized (PyQt5 native)")
+        logger.info("[SPEED_TRACE_MDI] LiveTimingSpeedTrace initialized (PyQt5 native)")
     
     def _setup_ui(self):
         """Setup UI components"""
@@ -1186,7 +1314,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
     
     def _on_driver_selected(self, driver_num: str):
         """處理車手選擇信號 - 從 DataManager snapshot 獲取車手資訊"""
-        print(f"[SPEED_TRACE_MDI] Driver selected from external: {driver_num}")
+        logger.info("[SPEED_TRACE_MDI] Driver selected from external: %s", driver_num)
         if hasattr(self, 'speed_widget'):
             # 先確保 widget 有車手資訊 (從 DataManager 獲取 snapshot)
             if self._data_manager:
@@ -1202,7 +1330,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
                             self.speed_widget._driver_info[driver_num] = {}
                         self.speed_widget._driver_info[driver_num]['tla'] = tla
                         self.speed_widget._driver_info[driver_num]['team_color'] = team_color
-                        print(f"[SPEED_TRACE_MDI] Driver info from snapshot: {tla} ({team_color})")
+                        logger.debug("[SPEED_TRACE_MDI] Driver info from snapshot: %s (%s)", tla, team_color)
             
             self.speed_widget.set_primary_driver(driver_num)
     
@@ -1216,7 +1344,12 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
                 speed = sample_driver.get('speed')
                 lap = sample_driver.get('lap')
                 if speed is not None:
-                    print(f"[SPEED_TRACE_DEBUG] Snapshot received: {len(drivers)} drivers, sample speed={speed}, lap={lap}")
+                    logger.debug(
+                        "[SPEED_TRACE_DEBUG] Snapshot received: %d drivers, sample speed=%s, lap=%s",
+                        len(drivers),
+                        speed,
+                        lap,
+                    )
             
             self.speed_widget.update_from_snapshot(snapshot)
     
@@ -1225,7 +1358,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         year = race_info.get('year', 2025)
         race_key = race_info.get('race', '')
         
-        print(f"[SPEED_TRACE_MDI] Race loaded: {year} {race_key}")
+        logger.info("[SPEED_TRACE_MDI] Race loaded: %s %s", year, race_key)
         
         # 載入賽道資料（包含彎道資訊）
         self._load_track_data(year, race_key)
@@ -1240,7 +1373,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             return True
         
         # API 失敗，返回錯誤（禁止本地回退）
-        print(f"[SPEED_TRACE_MDI] API 獲取失敗，請確認 API 服務器已啟動")
+        logger.error("[SPEED_TRACE_MDI] API 獲取失敗，請確認 API 服務器已啟動")
         return False
     
     def _load_track_via_api(self, year: int, track_name: str) -> bool:
@@ -1259,7 +1392,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
                     continue
                 seen.add(try_year)
                 
-                print(f"[SPEED_TRACE_MDI] 嘗試 API 獲取: {try_year} {track_name}")
+                logger.info("[SPEED_TRACE_MDI] 嘗試 API 獲取: %s %s", try_year, track_name)
                 data = api_client.get_track_analysis(try_year, track_name, "R")
                 
                 if data:
@@ -1268,7 +1401,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             return False
             
         except Exception as e:
-            print(f"[SPEED_TRACE_MDI] API 獲取賽道數據失敗: {e}")
+            logger.exception("[SPEED_TRACE_MDI] API 獲取賽道數據失敗: %s", e)
             return False
     
     def _process_track_data(self, data: dict, orig_year: int, loaded_year: int, track_name: str, source: str) -> bool:
@@ -1299,7 +1432,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             # 確保 track_length 有效
             if track_length <= 0:
                 track_length = 5000
-                print(f"[SPEED_TRACE_MDI] Warning: 無法估算賽道長度，使用默認值 {track_length}m")
+                logger.warning("[SPEED_TRACE_MDI] 無法估算賽道長度，使用默認值 %sm", track_length)
             
             # 獲取彎道資料 - 直接使用 JSON 中的 distance 欄位
             corners_data = data.get('official_corners', {})
@@ -1312,12 +1445,18 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
                 self.speed_widget.set_track_info(track_length, corners)
             
             if loaded_year != orig_year:
-                print(f"[SPEED_TRACE_MDI] 使用 {loaded_year} 賽道數據 ({source}, 原始年份 {orig_year} 不可用)")
-            print(f"[SPEED_TRACE_MDI] 賽道載入成功 ({source}): {track_name}, length={track_length:.0f}m, corners={len(corners)}")
+                logger.info("[SPEED_TRACE_MDI] 使用 %s 賽道數據 (%s, 原始年份 %s 不可用)", loaded_year, source, orig_year)
+            logger.info(
+                "[SPEED_TRACE_MDI] 賽道載入成功 (%s): %s, length=%.0fm, corners=%d",
+                source,
+                track_name,
+                track_length,
+                len(corners),
+            )
             return True
             
         except Exception as e:
-            print(f"[SPEED_TRACE_MDI] 處理賽道數據失敗: {e}")
+            logger.exception("[SPEED_TRACE_MDI] 處理賽道數據失敗: %s", e)
             return False
     
     def _estimate_track_length_from_records(self, position_records: List[Dict], max_dist: float) -> float:
@@ -1338,14 +1477,22 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             # 使用第一圈的距離作為賽道長度
             first_lap_end_idx = lap_starts[1] - 1
             track_length = distances[first_lap_end_idx]
-            print(f"[SPEED_TRACE_MDI] 從 position_records 估算賽道長度: {track_length:.0f}m (detected {len(lap_starts)} laps)")
+            logger.info(
+                "[SPEED_TRACE_MDI] 從 position_records 估算賽道長度: %.0fm (detected %d laps)",
+                track_length,
+                len(lap_starts),
+            )
             return track_length
         else:
             # 無法檢測圈數邊界，使用 max_dist / 假設圈數
             # F1 賽道通常在 3-7km 之間
             estimated_laps = max(1, round(max_dist / 5000))
             track_length = max_dist / estimated_laps
-            print(f"[SPEED_TRACE_MDI] 無法檢測圈數邊界，估算 {estimated_laps} 圈，賽道長度: {track_length:.0f}m")
+            logger.warning(
+                "[SPEED_TRACE_MDI] 無法檢測圈數邊界，估算 %d 圈，賽道長度: %.0fm",
+                estimated_laps,
+                track_length,
+            )
             return track_length
     
     def _estimate_track_length_from_corners(self, corners: List[Dict]) -> float:
@@ -1367,7 +1514,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         if dist_range < 7000:  # F1 賽道最長約 7km
             # 最後一個彎道通常在單圈末段，加 15% 作為到終點的估計
             track_length = max_dist * 1.15
-            print(f"[SPEED_TRACE_MDI] 從彎道數據估算賽道長度: {track_length:.0f}m")
+            logger.info("[SPEED_TRACE_MDI] 從彎道數據估算賽道長度: %.0fm", track_length)
             return track_length
         
         # 如果範圍很大，說明是多圈累積距離
@@ -1381,7 +1528,7 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
             # F1 賽道通常有 10-20 個彎道，平均每個彎道間隔 300-500m
             estimated_track_length = len(corners) * 350
         
-        print(f"[SPEED_TRACE_MDI] 從彎道分布估算賽道長度: {estimated_track_length:.0f}m")
+        logger.info("[SPEED_TRACE_MDI] 從彎道分布估算賽道長度: %.0fm", estimated_track_length)
         return estimated_track_length
     
     def _process_corners_from_json(self, corners: List[Dict], track_length: float = 5000.0) -> List[Dict]:
@@ -1420,10 +1567,15 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
                 if mapped_dist > 0 and track_length > 0:
                     # mapped_distance 是多圈累積距離，需要取模得到單圈距離
                     lap_distance = mapped_dist % track_length
-                    print(f"[SPEED_TRACE_MDI] T{corner_num}: mapped_distance={mapped_dist:.0f}m -> lap_distance={lap_distance:.0f}m")
+                    logger.debug(
+                        "[SPEED_TRACE_MDI] T%d: mapped_distance=%.0fm -> lap_distance=%.0fm",
+                        corner_num,
+                        mapped_dist,
+                        lap_distance,
+                    )
             
             if lap_distance <= 0:
-                print(f"[SPEED_TRACE_MDI] Warning: T{corner_num} has no valid distance, skipping")
+                logger.warning("[SPEED_TRACE_MDI] T%d has no valid distance, skipping", corner_num)
                 continue
             
             new_corner = corner.copy()
@@ -1433,7 +1585,10 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         # 按單圈距離排序
         result.sort(key=lambda c: c.get('lap_distance', 0))
         
-        print(f"[SPEED_TRACE_MDI] Processed corners: {[(c['number'], int(c.get('lap_distance', 0))) for c in result]}")
+        logger.debug(
+            "[SPEED_TRACE_MDI] Processed corners: %s",
+            [(c['number'], int(c.get('lap_distance', 0))) for c in result],
+        )
         
         return result
     

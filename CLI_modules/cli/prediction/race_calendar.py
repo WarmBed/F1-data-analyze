@@ -1,7 +1,17 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 賽事日曆 - 2018-2024 完整賽事名稱
 用於數據收集時避免 FastF1 賽程 API 問題
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # 2018-2024 年每個賽季的賽事名稱列表
 RACE_CALENDAR = {

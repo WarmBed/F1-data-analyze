@@ -16,8 +16,15 @@ Dynamic Corner Detection Analysis Module
 作者: F1 Analysis Team
 """
 
-import os
 import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
+import os
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -32,6 +39,13 @@ if current_dir not in sys.path:
     sys.path.append(current_dir)
 
 from base import initialize_data_loader, setup_matplotlib_chinese
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 
 class DynamicCornerDetectionAnalysis:

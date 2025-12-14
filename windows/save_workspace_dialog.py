@@ -398,8 +398,6 @@ class SaveWorkspaceDialog(QDialog):
             if parameters:
                 self.database.set_parameters(workspace_id, parameters)
             
-            print(f"[WORKSPACE] Workspace saved: ID={workspace_id}, Name={final_name}")
-            
             # 顯示成功訊息
             QMessageBox.information(
                 self,

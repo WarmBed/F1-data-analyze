@@ -21,6 +21,15 @@ import requests
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+from core.logger import get_logger
+
+
+# Safety Car / Medical Car 編號（非比賽車輛）
+# 241 = Safety Car
+# 242 = Medical Car
+# 243 = 備用/其他官方車輛
+NON_RACE_CAR_NUMBERS = {'241', '242', '243'}
+
 
 # 賽事名稱映射（SeasonCalendar → LiveF1 資料夾格式）
 # SeasonCalendarProvider 輸出: "Japan", "Australia" 等
@@ -55,6 +64,9 @@ RACE_NAME_TO_FOLDER = {
     # 大洋洲賽事
     "Australia": "Australian_Race",
 }
+
+
+logger = get_logger("live_timing.local_source", component="gui")
 
 
 class LocalLiveF1DataSource:
@@ -107,8 +119,8 @@ class LocalLiveF1DataSource:
         self._pit_lane_times: List[Dict[str, Any]] = []
         self._driver_list_data: List[Dict[str, Any]] = []
         
-        print(f"[LOCAL_DATASOURCE] 初始化: {self.year} {self.race}")
-        print(f"[LOCAL_DATASOURCE] 資料目錄: {self.data_dir}")
+        logger.info("[LOCAL_DATASOURCE] 初始化: %s %s", self.year, self.race)
+        logger.info("[LOCAL_DATASOURCE] 資料目錄: %s", self.data_dir)
     
     def _normalize_race_name(self, race: str) -> str:
         """
@@ -128,7 +140,7 @@ class LocalLiveF1DataSource:
         # 使用映射表轉換
         if race in RACE_NAME_TO_FOLDER:
             normalized = RACE_NAME_TO_FOLDER[race]
-            print(f"[LOCAL_DATASOURCE] 賽事名稱轉換: {race} -> {normalized}")
+            logger.debug("[LOCAL_DATASOURCE] 賽事名稱轉換: %s -> %s", race, normalized)
             return normalized
         
         # 嘗試自動轉換（加上形容詞形式 + _Race）
@@ -149,12 +161,12 @@ class LocalLiveF1DataSource:
         
         if race in adjective_map:
             normalized = f"{adjective_map[race]}_Race"
-            print(f"[LOCAL_DATASOURCE] 賽事名稱轉換 (形容詞): {race} -> {normalized}")
+            logger.debug("[LOCAL_DATASOURCE] 賽事名稱轉換 (形容詞): %s -> %s", race, normalized)
             return normalized
         
         # 最後嘗試：直接添加 _Race 後綴
         normalized = race.replace(" ", "_") + "_Race"
-        print(f"[LOCAL_DATASOURCE] 賽事名稱轉換 (預設): {race} -> {normalized}")
+        logger.debug("[LOCAL_DATASOURCE] 賽事名稱轉換 (預設): %s -> %s", race, normalized)
         return normalized
     
     def load_all_data(self, progress_callback=None) -> bool:
@@ -167,10 +179,10 @@ class LocalLiveF1DataSource:
         Returns:
             是否載入成功
         """
-        print(f"[LOCAL_DATASOURCE] 載入本地 JSON 數據...")
+        logger.info("[LOCAL_DATASOURCE] 載入本地 JSON 數據...")
         
         if not os.path.exists(self.data_dir):
-            print(f"[LOCAL_DATASOURCE] 資料目錄不存在: {self.data_dir}")
+            logger.error("[LOCAL_DATASOURCE] 資料目錄不存在: %s", self.data_dir)
             return False
         
         # 定義要載入的檔案列表
@@ -203,22 +215,22 @@ class LocalLiveF1DataSource:
         
         # 輸出統計
         if self._position_data:
-            print(f"[LOCAL_DATASOURCE] Position 記錄: {len(self._position_data)}")
+            logger.info("[LOCAL_DATASOURCE] Position 記錄: %d", len(self._position_data))
         else:
-            print("[LOCAL_DATASOURCE] Position 數據載入失敗")
+            logger.warning("[LOCAL_DATASOURCE] Position 數據載入失敗")
         
         if self._timing_data:
-            print(f"[LOCAL_DATASOURCE] Timing 記錄: {len(self._timing_data)}")
+            logger.info("[LOCAL_DATASOURCE] Timing 記錄: %d", len(self._timing_data))
         
         if self._cardata:
-            print(f"[LOCAL_DATASOURCE] CarData 記錄: {len(self._cardata)}")
+            logger.info("[LOCAL_DATASOURCE] CarData 記錄: %d", len(self._cardata))
         
         if self._timing_app_data:
-            print(f"[LOCAL_DATASOURCE] TimingAppData 記錄: {len(self._timing_app_data)}")
+            logger.info("[LOCAL_DATASOURCE] TimingAppData 記錄: %d", len(self._timing_app_data))
         
         success = all([self._position_data, self._timing_data, self._cardata])
         if success:
-            print("[LOCAL_DATASOURCE] 數據載入完成")
+            logger.info("[LOCAL_DATASOURCE] 數據載入完成")
         
         return success
     
@@ -244,17 +256,20 @@ class LocalLiveF1DataSource:
             return []
             
         except Exception as e:
-            print(f"[LOCAL_DATASOURCE] 載入 {filename} 失敗: {e}")
+            logger.exception("[LOCAL_DATASOURCE] 載入 %s 失敗: %s", filename, e)
             return []
     
     def load_driver_list(self) -> Dict[str, Dict[str, str]]:
-        """載入車手列表"""
+        """載入車手列表（排除 Safety Car / Medical Car）"""
         driver_map = {}
         
         for record in self._driver_list_data:
             data = record.get('data', {})
             if isinstance(data, dict):
                 for driver_num, driver_info in data.items():
+                    # 排除 Safety Car / Medical Car (241, 242, 243)
+                    if driver_num in NON_RACE_CAR_NUMBERS:
+                        continue
                     if isinstance(driver_info, dict) and driver_info:
                         if 'Tla' in driver_info or 'TeamColour' in driver_info:
                             driver_map[driver_num] = {
@@ -265,7 +280,7 @@ class LocalLiveF1DataSource:
                                 'team_color': driver_info.get('TeamColour', 'CCCCCC')
                             }
         
-        print(f"[LOCAL_DATASOURCE] 載入 {len(driver_map)} 位車手資訊")
+        logger.info("[LOCAL_DATASOURCE] 載入 %d 位車手資訊", len(driver_map))
         return driver_map
     
     # Getter 方法
@@ -343,7 +358,7 @@ class LiveF1DataSource:
 
     def load_all_data(self) -> bool:
         """載入所有數據流"""
-        print("[DATASOURCE] 下載/載入 Live Timing 數據...")
+        logger.info("[DATASOURCE] 下載/載入 Live Timing 數據...")
         
         self._position_data = self._load_stream("Position.z.jsonStream", compressed=True)
         self._timing_data = self._load_stream("TimingData.jsonStream", compressed=False)
@@ -356,26 +371,26 @@ class LiveF1DataSource:
         self._pit_lane_times = self._load_stream("PitLaneTimeCollection.jsonStream", compressed=False)
 
         if self._position_data:
-            print(f"[DATASOURCE] Position 記錄: {len(self._position_data)}")
+            logger.info("[DATASOURCE] Position 記錄: %d", len(self._position_data))
         else:
-            print("[DATASOURCE] Position 數據載入失敗")
+            logger.warning("[DATASOURCE] Position 數據載入失敗")
 
         if self._timing_data:
-            print(f"[DATASOURCE] Timing 記錄: {len(self._timing_data)}")
+            logger.info("[DATASOURCE] Timing 記錄: %d", len(self._timing_data))
 
         if self._cardata:
-            print(f"[DATASOURCE] CarData 記錄: {len(self._cardata)}")
+            logger.info("[DATASOURCE] CarData 記錄: %d", len(self._cardata))
         
         if self._timing_app_data:
-            print(f"[DATASOURCE] TimingAppData 記錄: {len(self._timing_app_data)}")
+            logger.info("[DATASOURCE] TimingAppData 記錄: %d", len(self._timing_app_data))
 
         success = all([self._position_data, self._timing_data, self._cardata])
         if success:
-            print("[DATASOURCE] 數據載入完成")
+            logger.info("[DATASOURCE] 數據載入完成")
         return success
     
     def load_driver_list(self) -> Dict[str, Dict[str, str]]:
-        """載入車手列表"""
+        """載入車手列表（排除 Safety Car / Medical Car）"""
         driver_list_data = self._load_stream("DriverList.jsonStream", compressed=False)
         
         driver_map = {}
@@ -384,6 +399,9 @@ class LiveF1DataSource:
                 data = record.get('data', {})
                 if isinstance(data, dict):
                     for driver_num, driver_info in data.items():
+                        # 排除 Safety Car / Medical Car (241, 242, 243)
+                        if driver_num in NON_RACE_CAR_NUMBERS:
+                            continue
                         if isinstance(driver_info, dict) and driver_info:
                             if 'Tla' in driver_info or 'TeamColour' in driver_info:
                                 driver_map[driver_num] = {
@@ -393,9 +411,9 @@ class LiveF1DataSource:
                                     'team': driver_info.get('TeamName', ''),
                                     'team_color': driver_info.get('TeamColour', 'CCCCCC')
                                 }
-            print(f"[DATASOURCE] 載入 {len(driver_map)} 位車手資訊")
+            logger.info("[DATASOURCE] 載入 %d 位車手資訊", len(driver_map))
         else:
-            print("[DATASOURCE] DriverList 載入失敗")
+            logger.warning("[DATASOURCE] DriverList 載入失敗")
         
         return driver_map
 
@@ -447,7 +465,7 @@ class LiveF1DataSource:
             try:
                 decoded_payload = self._decode_payload(payload_text, compressed)
             except Exception as exc:
-                print(f"[DATASOURCE] 解碼失敗 (line {idx}): {exc}")
+                logger.warning("[DATASOURCE] 解碼失敗 (line %d): %s", idx, exc)
                 continue
 
             normalized = self._normalize_payload(decoded_payload)
@@ -473,7 +491,7 @@ class LiveF1DataSource:
             except FileNotFoundError:
                 pass
             except Exception as exc:
-                print(f"[DATASOURCE] 讀取本地檔案失敗 {local_path}: {exc}")
+                logger.warning("[DATASOURCE] 讀取本地檔案失敗 %s: %s", local_path, exc)
 
         # 2) 回退至線上下載
         url = self._build_remote_url(file_name)
@@ -482,7 +500,7 @@ class LiveF1DataSource:
             response.raise_for_status()
             return response.content.decode('utf-8-sig')
         except Exception as exc:
-            print(f"[DATASOURCE] 無法下載 {file_name}: {exc}")
+            logger.warning("[DATASOURCE] 無法下載 %s: %s", file_name, exc)
             return None
 
     def _resolve_local_path(self, file_name: str) -> Optional[str]:

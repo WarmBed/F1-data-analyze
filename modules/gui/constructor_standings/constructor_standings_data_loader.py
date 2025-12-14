@@ -16,6 +16,9 @@ from typing import Dict, Any, Optional, List
 import json
 from pathlib import Path
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 class ConstructorStandingsDataLoader(UniversalDataLoader):
     """
@@ -76,7 +79,6 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
 
         # API-ONLY 模式：允許本地 JSON 後備（已存在的檔案）
         self._allow_local_fallback = True
-        # print(f"[CONSTRUCTOR_STANDINGS_LOADER] 初始化完成: year={year}")
     
     def _validate_data_format(self, raw_data: Dict[str, Any]) -> bool:
         """
@@ -89,25 +91,25 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
             bool: 驗證是否通過
         """
         if not isinstance(raw_data, dict):
-            print("[VALIDATION] ❌ 數據必須是 dict")
+            logger.error("[VALIDATION] ❌ 數據必須是 dict")
             return False
         
         if not raw_data.get("success"):
-            print(f"[VALIDATION] ❌ success=False: {raw_data.get('message')}")
+            logger.error(f"[VALIDATION] ❌ success=False: {raw_data.get('message')}")
             return False
         
         data = raw_data.get("data")
         if not isinstance(data, dict):
-            print("[VALIDATION] ❌ 缺少 data 欄位")
+            logger.error("[VALIDATION] ❌ 缺少 data 欄位")
             return False
         
         constructors = data.get("constructors")
         if not isinstance(constructors, list):
-            print("[VALIDATION] ❌ constructors 必須是列表")
+            logger.error("[VALIDATION] ❌ constructors 必須是列表")
             return False
         
         if len(constructors) == 0:
-            print("[VALIDATION] ⚠️  constructors 為空")
+            logger.warning("[VALIDATION] ⚠️  constructors 為空")
             return False
         
         # 檢查第一筆資料結構
@@ -115,15 +117,15 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
         required_fields = ["position", "points", "constructor"]
         for field in required_fields:
             if field not in first_entry:
-                print(f"[VALIDATION] ❌ 缺少欄位: {field}")
+                logger.error(f"[VALIDATION] ❌ 缺少欄位: {field}")
                 return False
         
         constructor_info = first_entry.get("constructor")
         if not isinstance(constructor_info, dict):
-            print("[VALIDATION] ❌ constructor 必須是 dict")
+            logger.error("[VALIDATION] ❌ constructor 必須是 dict")
             return False
         
-        print(f"[VALIDATION] ✅ 數據驗證通過 ({len(constructors)} 支車隊)")
+        logger.info(f"[VALIDATION] ✅ 數據驗證通過 ({len(constructors)} 支車隊)")
         return True
     
     def _build_filename_patterns(self, **kwargs) -> List[str]:
@@ -144,7 +146,7 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
             f"championship_standings_{year}*.json",    # 任意格式
         ]
         
-        print(f"[PATTERN] 搜尋模式: {patterns}")
+        logger.debug(f"[PATTERN] 搜尋模式: {patterns}")
         return patterns
     
     def _load_team_slug_mapping(self) -> Dict[str, str]:
@@ -161,12 +163,12 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
             # 搜尋最新的 team_colors JSON
             team_color_files = list(json_dir.glob(f"team_colors_{self.year}_*.json"))
             if not team_color_files:
-                print(f"[TEAM_SLUG_MAP] ⚠️  找不到 team_colors_{self.year}_*.json")
+                logger.warning(f"[TEAM_SLUG_MAP] ⚠️  找不到 team_colors_{self.year}_*.json")
                 return team_slug_map
             
             # 使用最新的檔案
             latest_file = max(team_color_files, key=lambda p: p.stat().st_mtime)
-            print(f"[TEAM_SLUG_MAP] 載入: {latest_file.name}")
+            logger.debug(f"[TEAM_SLUG_MAP] 載入: {latest_file.name}")
             
             with open(latest_file, "r", encoding="utf-8") as f:
                 color_data = json.load(f)
@@ -178,11 +180,11 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
                 if team_name:
                     team_slug_map[team_name] = team_slug
             
-            print(f"[TEAM_SLUG_MAP] ✅ 載入 {len(team_slug_map)} 個映射")
+            logger.info(f"[TEAM_SLUG_MAP] ✅ 載入 {len(team_slug_map)} 個映射")
             return team_slug_map
             
         except Exception as e:
-            print(f"[TEAM_SLUG_MAP] ❌ 載入失敗: {e}")
+            logger.error(f"[TEAM_SLUG_MAP] ❌ 載入失敗: {e}")
             return team_slug_map
     
     def _transform_data_for_display(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -225,7 +227,7 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
                 "nationality": constructor_info.get("nationality", "Unknown")
             })
         
-        print(f"[TRANSFORM] ✅ 轉換 {len(transformed_rows)} 支車隊資料")
+        logger.info(f"[TRANSFORM] ✅ 轉換 {len(transformed_rows)} 支車隊資料")
         
         return {
             "standings": transformed_rows,
@@ -247,7 +249,7 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
             "force_refresh": force_refresh
         }
         
-        print(f"[LOAD] 開始載入車隊積分資料: {params}")
+        logger.debug(f"[LOAD] 開始載入車隊積分資料: {params}")
         
         # 調用基類的 load_data() 方法
         super().load_data(**params)

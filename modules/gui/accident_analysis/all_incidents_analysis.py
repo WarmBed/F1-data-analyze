@@ -19,6 +19,9 @@ from typing import Dict, List, Any, Optional
 from prettytable import PrettyTable
 import re
 
+from core.logger import get_logger
+logger = get_logger(__name__)
+
 
 def clean_for_json(obj):
     """清理數據以便JSON序列化"""
@@ -40,7 +43,7 @@ def analyze_all_incidents_data(data_loader):
     """分析所有事件數據 - 增強版包含詳細旗幟信息"""
     try:
         if not data_loader or not hasattr(data_loader, 'loaded_data') or not data_loader.loaded_data:
-            print("[ERROR] 無法獲取已載入的數據")
+            logger.error("無法獲取已載入的數據")
             return None
             
         loaded_data = data_loader.loaded_data
@@ -68,7 +71,7 @@ def analyze_all_incidents_data(data_loader):
         }
         
     except Exception as e:
-        print(f"[ERROR] 分析所有事件數據時發生錯誤: {e}")
+        logger.error(f"分析所有事件數據時發生錯誤: {e}")
         import traceback
         traceback.print_exc()
         return None
@@ -90,7 +93,7 @@ def extract_race_control_messages(loaded_data):
         return []
         
     except Exception as e:
-        print(f"[WARNING] 提取賽事控制消息失敗: {e}")
+        logger.warning(f"提取賽事控制消息失敗: {e}")
         return []
 
 
@@ -156,7 +159,7 @@ def process_all_incidents(race_control_messages):
             all_incidents.append(incident)
             
         except Exception as e:
-            print(f"[WARNING] 處理事件 {i+1} 時發生錯誤: {e}")
+            logger.warning(f"處理事件 {i+1} 時發生錯誤: {e}")
             continue
     
     return all_incidents
@@ -618,7 +621,7 @@ def generate_incident_statistics(all_incidents):
 def display_all_incidents_table(analysis_result):
     """顯示所有事件表格 - 增強版本包含旗幟統計"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可顯示")
+        logger.error("無分析結果可顯示")
         return
     
     session_info = analysis_result.get("session_info", {})
@@ -627,84 +630,84 @@ def display_all_incidents_table(analysis_result):
     timeline_analysis = analysis_result.get("timeline_analysis", {})
     flag_stats = incident_statistics.get("flag_statistics", {})
     
-    print(f"\n[LIST] 所有事件詳細列表 (功能 4.5)")
-    print("=" * 80)
-    print(f"📅 賽事: {session_info.get('year')} {session_info.get('track_name')}")
-    print(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
-    print(f"[INFO] 總事件數: {analysis_result.get('total_incidents', 0)}")
-    print("=" * 80)
+    logger.debug(f"\n[LIST] 所有事件詳細列表 (功能 4.5)")
+    logger.debug("=" * 80)
+    logger.debug(f"賽事: {session_info.get('year')} {session_info.get('track_name')}")
+    logger.debug(f"[FINISH] 賽段: {session_info.get('session_type')} | 日期: {session_info.get('date')}")
+    logger.info(f"總事件數: {analysis_result.get('total_incidents', 0)}")
+    logger.debug("=" * 80)
     
     # 事件統計摘要
-    print(f"\n[INFO] 事件統計摘要:")
-    print(f"🔴 嚴重事件數: {incident_statistics.get('most_severe_incidents', 0)}")
-    print(f"[STATS] 最常見事件類型: {incident_statistics.get('most_common_category', 'N/A')}")
-    print(f"👥 平均車手參與度: {incident_statistics.get('average_drivers_per_incident', 0)} 車手/事件")
-    print(f"[FINISH] 比賽持續圈數: {timeline_analysis.get('total_duration_laps', 0)} 圈")
+    logger.info(f"\n[INFO] 事件統計摘要:")
+    logger.debug(f"嚴重事件數: {incident_statistics.get('most_severe_incidents', 0)}")
+    logger.debug(f"[STATS] 最常見事件類型: {incident_statistics.get('most_common_category', 'N/A')}")
+    logger.debug(f"👥 平均車手參與度: {incident_statistics.get('average_drivers_per_incident', 0)} 車手/事件")
+    logger.debug(f"[FINISH] 比賽持續圈數: {timeline_analysis.get('total_duration_laps', 0)} 圈")
     
     # 旗幟統計摘要
-    print(f"\n🏁 旗幟統計摘要:")
+    logger.debug(f"\n🏁 旗幟統計摘要:")
     yellow_flags = flag_stats.get("yellow_flags", {})
     red_flags = flag_stats.get("red_flags", {})
     other_flags = flag_stats.get("other_flags", {})
     
-    print(f"🟡 黃旗事件: {yellow_flags.get('total_count', 0)} 次")
+    logger.debug(f"🟡 黃旗事件: {yellow_flags.get('total_count', 0)} 次")
     if yellow_flags.get('by_reason'):
-        print("   黃旗原因分布:")
+        logger.debug("   黃旗原因分布:")
         for reason, count in yellow_flags['by_reason'].items():
-            print(f"     • {reason}: {count} 次")
+            logger.debug(f"     • {reason}: {count} 次")
     
-    print(f"🔴 紅旗事件: {red_flags.get('total_count', 0)} 次")
+    logger.debug(f"紅旗事件: {red_flags.get('total_count', 0)} 次")
     if red_flags.get('by_reason'):
-        print("   紅旗原因分布:")
+        logger.debug("   紅旗原因分布:")
         for reason, count in red_flags['by_reason'].items():
-            print(f"     • {reason}: {count} 次")
+            logger.debug(f"     • {reason}: {count} 次")
     
-    print(f"🟢 綠旗事件: {other_flags.get('green_flags', 0)} 次")
-    print(f"🔵 藍旗事件: {other_flags.get('blue_flags', 0)} 次")
-    print(f"🏁 方格旗事件: {other_flags.get('chequered_flags', 0)} 次")
+    logger.debug(f"🟢 綠旗事件: {other_flags.get('green_flags', 0)} 次")
+    logger.debug(f"🔵 藍旗事件: {other_flags.get('blue_flags', 0)} 次")
+    logger.debug(f"方格旗事件: {other_flags.get('chequered_flags', 0)} 次")
     
     # 旗幟統計詳細信息
     flag_stats = incident_statistics.get('flag_statistics', {})
     if flag_stats:
-        print(f"\n[FLAG] 旗幟事件統計詳情:")
-        print("=" * 60)
+        logger.debug(f"\n[FLAG] 旗幟事件統計詳情:")
+        logger.debug("=" * 60)
         
         # 黃旗統計
         yellow_flags = flag_stats.get('yellow_flags', {})
-        print(f"🟨 黃旗事件: {yellow_flags.get('total_count', 0)} 次")
+        logger.debug(f"🟨 黃旗事件: {yellow_flags.get('total_count', 0)} 次")
         
         if yellow_flags.get('by_reason'):
-            print(f"   黃旗原因分佈:")
+            logger.debug(f"   黃旗原因分佈:")
             for reason, count in yellow_flags['by_reason'].items():
-                print(f"      • {reason.replace('_', ' ')}: {count} 次")
+                logger.debug(f"      • {reason.replace('_', ' ')}: {count} 次")
         
         if yellow_flags.get('by_location'):
-            print(f"   黃旗位置分佈:")
+            logger.debug(f"   黃旗位置分佈:")
             for location, count in yellow_flags['by_location'].items():
                 if location != 'UNKNOWN':
-                    print(f"      • {location.replace('_', ' ')}: {count} 次")
+                    logger.debug(f"      • {location.replace('_', ' ')}: {count} 次")
         
         # 紅旗統計
         red_flags = flag_stats.get('red_flags', {})
-        print(f"\n🟥 紅旗事件: {red_flags.get('total_count', 0)} 次")
+        logger.debug(f"\n🟥 紅旗事件: {red_flags.get('total_count', 0)} 次")
         
         if red_flags.get('by_reason'):
-            print(f"   紅旗原因分佈:")
+            logger.debug(f"   紅旗原因分佈:")
             for reason, count in red_flags['by_reason'].items():
-                print(f"      • {reason.replace('_', ' ')}: {count} 次")
+                logger.debug(f"      • {reason.replace('_', ' ')}: {count} 次")
         
         # 其他旗幟
         other_flags = flag_stats.get('other_flags', {})
         if any(other_flags.values()):
-            print(f"\n🏁 其他旗幟:")
+            logger.debug(f"\n🏁 其他旗幟:")
             if other_flags.get('green_flags', 0) > 0:
-                print(f"   • 綠旗: {other_flags['green_flags']} 次")
+                logger.debug(f"   • 綠旗: {other_flags['green_flags']} 次")
             if other_flags.get('blue_flags', 0) > 0:
-                print(f"   • 藍旗: {other_flags['blue_flags']} 次")
+                logger.debug(f"   • 藍旗: {other_flags['blue_flags']} 次")
             if other_flags.get('chequered_flags', 0) > 0:
-                print(f"   • 方格旗: {other_flags['chequered_flags']} 次")
+                logger.debug(f"   • 方格旗: {other_flags['chequered_flags']} 次")
         
-        print("=" * 60)
+        logger.debug("=" * 60)
 
     # 增強分類統計表格
     if incident_statistics.get('by_enhanced_category'):
@@ -723,8 +726,8 @@ def display_all_incidents_table(analysis_result):
                 f"{percentage}%"
             ])
         
-        print(f"\n[LIST] 增強事件類型統計:")
-        print(category_table)
+        logger.debug(f"\n[LIST] 增強事件類型統計:")
+        logger.debug(f"{category_table}")
     
     # 原始 FastF1 分類統計表格
     if incident_statistics.get('by_original_category'):
@@ -743,8 +746,8 @@ def display_all_incidents_table(analysis_result):
                 f"{percentage}%"
             ])
         
-        print(f"\n[LIST] FastF1 原始類型統計:")
-        print(original_table)
+        logger.debug(f"\n[LIST] FastF1 原始類型統計:")
+        logger.debug(f"{original_table}")
     
     # 詳細事件列表（顯示前30個）
     if all_incidents:
@@ -768,16 +771,16 @@ def display_all_incidents_table(analysis_result):
                 incident.get('message', '')[:40] + "..." if len(incident.get('message', '')) > 40 else incident.get('message', '')
             ])
         
-        print(f"\n[NOTE] 詳細事件列表 (顯示前30項，共{len(all_incidents)}項):")
-        print(detail_table)
+        logger.debug(f"\n[NOTE] 詳細事件列表 (顯示前30項，共{len(all_incidents)}項):")
+        logger.debug(f"{detail_table}")
         
         if len(all_incidents) > 30:
-            print(f"... 還有 {len(all_incidents) - 30} 項事件 (請查看JSON文件獲取完整列表)")
+            logger.debug(f"... 還有 {len(all_incidents) - 30} 項事件 (請查看JSON文件獲取完整列表)")
     
     # 高活動圈數分析
     peak_activity_laps = timeline_analysis.get('peak_activity_laps', [])
     if peak_activity_laps:
-        print(f"\n[HOT] 高活動圈數分析 (事件數 >= 3):")
+        logger.debug(f"\n[HOT] 高活動圈數分析 (事件數 >= 3):")
         for peak in peak_activity_laps[:5]:  # 只顯示前5個
             enhanced_cats = peak.get('enhanced_categories', [])
             original_cats = peak.get('original_categories', [])
@@ -785,13 +788,13 @@ def display_all_incidents_table(analysis_result):
                 categories_str = ', '.join(enhanced_cats[:3]) + ('...' if len(enhanced_cats) > 3 else '')
             else:
                 categories_str = ', '.join(original_cats[:3]) + ('...' if len(original_cats) > 3 else '')
-            print(f"   圈數 {peak['lap']}: {peak['incident_count']} 個事件 - {categories_str}")
+            logger.debug(f"   圈數 {peak['lap']}: {peak['incident_count']} 個事件 - {categories_str}")
 
 
 def save_all_incidents_raw_data(analysis_result, data_loader):
     """保存所有事件原始數據為JSON格式"""
     if not analysis_result:
-        print("[ERROR] 無分析結果可保存")
+        logger.error("無分析結果可保存")
         return
     
     try:
@@ -842,28 +845,28 @@ def save_all_incidents_raw_data(analysis_result, data_loader):
         with open(filename, 'w', encoding='utf-8') as f:
             json.dump(json_data, f, ensure_ascii=False, indent=2)
         
-        print(f"\n💾 原始數據已保存至: {filename}")
-        print(f"[INFO] JSON包含 {len(json_data.get('all_incidents', []))} 項完整事件記錄")
+        logger.debug(f"\n💾 原始數據已保存至: {filename}")
+        logger.info(f"JSON包含 {len(json_data.get('all_incidents', []))} 項完整事件記錄")
         
     except Exception as e:
-        print(f"[ERROR] 保存JSON文件失敗: {e}")
+        logger.error(f"保存JSON文件失敗: {e}")
 
 
 def run_all_incidents_analysis(data_loader):
     """執行所有事件詳細列表分析的主函數"""
     try:
-        print("\n[LIST] 開始所有事件詳細列表分析...")
+        logger.debug("\n[LIST] 開始所有事件詳細列表分析...")
         
         # 檢查數據載入器
         if not data_loader:
-            print("[ERROR] 數據載入器未初始化")
+            logger.error("數據載入器未初始化")
             return False
         
         # 分析所有事件數據
         analysis_result = analyze_all_incidents_data(data_loader)
         
         if not analysis_result:
-            print("[ERROR] 所有事件分析失敗")
+            logger.error("所有事件分析失敗")
             return False
         
         # 顯示分析結果
@@ -872,16 +875,17 @@ def run_all_incidents_analysis(data_loader):
         # 保存原始數據
         save_all_incidents_raw_data(analysis_result, data_loader)
         
-        print("\n[SUCCESS] 所有事件詳細列表分析完成")
+        logger.info("\n[SUCCESS] 所有事件詳細列表分析完成")
         return True
         
     except Exception as e:
-        print(f"[ERROR] 執行所有事件詳細列表分析時發生錯誤: {e}")
+        logger.error(f"執行所有事件詳細列表分析時發生錯誤: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
 
 if __name__ == "__main__":
-    print("[WARNING] 此模組需要通過主程式調用")
-    print("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.5")
+    logger.warning("此模組需要通過主程式調用")
+    logger.debug("請使用 F1_Analysis_Main_Menu.bat 選擇功能 4.5")

@@ -3,18 +3,26 @@
 車手每圈圈速詳細分析模組 - Function 28
 提供單一車手的詳細每圈分析功能，包含圈速、輪胎、胎齡、進站、天氣、速度、特殊事件等
 
-📊 主要輸出內容：
+主要輸出內容：
 1. 詳細每圈分析表格 - 包含10個欄位的完整圈數據
 2. 傳統統計摘要表格 - 基礎圈速統計信息 
 3. 智能標記事件統計 - 五大類別事件的進階分析
 4. 整體事件密度分析 - 事件分布和密度計算
 
-🔧 功能特點：
+功能特點：
 - 結構化智能標記系統：進站檢測、最快圈檢測、換胎檢測、事故檢測、特殊圈次標記
 - 支援緩存機制：提升重複查詢性能
 - JSON 數據輸出：便於GUI模組整合
 - 雙輸出模式：緩存+詳細顯示，適應不同使用場景
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import pandas as pd
 import numpy as np

@@ -21,7 +21,9 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSlot, QThread, pyqtSignal
 
 from core.gui_i18n import tr
+
 from core.logger import get_logger
+logger = get_logger(__name__)
 
 logger = get_logger("season_progress.mdi", component="gui")
 
@@ -56,6 +58,11 @@ class SeasonProgressApiWorker(QThread):
     def run(self):
         """Execute API request"""
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SEASON_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(20)
             
             # Build API endpoint
@@ -75,6 +82,11 @@ class SeasonProgressApiWorker(QThread):
                 logger.debug("[API_WORKER] Calling API: %s", endpoint)
                 logger.debug("[API_WORKER] Parameters: %s", query_params)
             
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[SEASON_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             # Send POST request
             start_ts = time.perf_counter()
             response = requests.post(
@@ -83,6 +95,12 @@ class SeasonProgressApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SEASON_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(70)
             
             # Check HTTP status
@@ -115,22 +133,36 @@ class SeasonProgressApiWorker(QThread):
                 }
             }
             
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[SEASON_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             if logger.isEnabledFor(logging.DEBUG):
                 logger.debug("[API_WORKER] API call successful (latency: %.2f ms)", latency_ms)
             self.progress.emit(100)
             self.success.emit(result)
             
         except requests.exceptions.Timeout:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API request timeout ({self.timeout}s)"
             logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)
             
         except requests.exceptions.HTTPError as e:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"HTTP error: {e.response.status_code}"
             logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)
             
         except Exception as e:
+            # 如果被中斷，不發送失敗信號
+            if self.isInterruptionRequested():
+                return
             error_msg = f"API request failed: {str(e)}"
             logger.error("[API_WORKER] %s", error_msg)
             self.failure.emit(error_msg)

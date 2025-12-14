@@ -50,6 +50,9 @@ class InteractiveFilterApiWorker(QThread):
     
     def run(self):
         try:
+            # ✅ 中斷檢查點 1: 開始時
+            if self.isInterruptionRequested():
+                return
             query = {"function_id": "29", "year": self.year}
             
             if self.params.get("team"):
@@ -63,19 +66,31 @@ class InteractiveFilterApiWorker(QThread):
             if self.params.get("min_confidence"):
                 query["min_confidence"] = self.params["min_confidence"]
             
+            # ✅ 中斷檢查點 2: HTTP 請求前
+            if self.isInterruptionRequested():
+                return
             response = requests.post(
                 f"{self.base_url}/api/v2/analysis/execute",
                 params=query,
                 timeout=30.0
             )
+            # ✅ 中斷檢查點 3: HTTP 請求後
+            if self.isInterruptionRequested():
+                return
             response.raise_for_status()
             payload = response.json()
             
             if payload.get("success"):
+                if self.isInterruptionRequested():
+                    return
                 self.success.emit(payload.get("data", {}))
             else:
+                if self.isInterruptionRequested():
+                    return
                 self.failure.emit(payload.get("message", "Failed"))
         except Exception as e:
+            if self.isInterruptionRequested():
+                return
             self.failure.emit(str(e))
 
 

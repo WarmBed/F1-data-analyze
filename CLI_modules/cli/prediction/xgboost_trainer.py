@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 F1 XGBoost 訓練器 - 功能 72
-用於訓練 FP→Q 和 Q→R 預測模型
+用於訓練 FP->Q 和 Q->R 預測模型
 
 遵循反幻覺編碼五原則：
 1. 禁止幻覺編碼：所有特徵來自已驗證的 JSON 數據
 2. 數據來源透明：每個特徵標註 FastF1 來源
-3. 性能保守估算：目標 MAE ≤ 0.30s（與 AWS 持平）
+3. 性能保守估算：目標 MAE <= 0.30s（與 AWS 持平）
 4. 處理異常情況：移除濕地會話、處理缺失值
 5. 成本保守估算：無 API 成本（純本地訓練）
 """
+
+import sys
+
+# Force UTF-8 output
+if sys.stdout.encoding != 'utf-8':
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr.encoding != 'utf-8':
+    sys.stderr.reconfigure(encoding='utf-8')
 
 import os
 import json

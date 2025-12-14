@@ -19,6 +19,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
+from core.logger import get_logger
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
     QPushButton, QLabel, QProgressBar, QStatusBar, QToolBar, QAction,
@@ -31,6 +32,9 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
 # 導入翻譯函數
 from core.gui_i18n import tr
+
+
+logger = get_logger(component="gui")
 
 # 導入分析模組介面
 try:
@@ -58,6 +62,11 @@ class TelemetryAnalysisApiWorker(QThread):
 
     def run(self) -> None:
         try:
+            # 檢查是否已被請求中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TELEMETRY_API_WORKER] 啟動前已被請求中斷，跳過執行")
+                return
+                
             self.progress.emit(12, "呼叫 API 取得遙測分析資料...")
             endpoint = f"{self.base_url}/api/v2/analysis/execute"
             query_params: Dict[str, Any] = {
@@ -69,6 +78,11 @@ class TelemetryAnalysisApiWorker(QThread):
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
 
+            # 再次檢查中斷（在發送請求前）
+            if self.isInterruptionRequested():
+                logger.debug("[TELEMETRY_API_WORKER] 發送請求前被請求中斷")
+                return
+                
             start_ts = time.perf_counter()
             response = requests.post(
                 endpoint,
@@ -76,6 +90,12 @@ class TelemetryAnalysisApiWorker(QThread):
                 timeout=self.timeout,
                 headers={"Accept": "application/json"}
             )
+            
+            # 請求完成後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TELEMETRY_API_WORKER] API 回應後被請求中斷，放棄處理結果")
+                return
+                
             self.progress.emit(55, "API 回應解析中...")
             response.raise_for_status()
 
@@ -100,12 +120,21 @@ class TelemetryAnalysisApiWorker(QThread):
                 "base_url": self.base_url,
             }
 
+            # 發送信號前最後檢查中斷
+            if self.isInterruptionRequested():
+                logger.debug("[TELEMETRY_API_WORKER] 發送成功信號前被請求中斷，放棄發送")
+                return
+                
             self.progress.emit(90, "API 遙測分析載入完成")
             self.success.emit({"data": data, "meta": meta})
         except Exception as exc:
-            self.failure.emit(str(exc))
+            # 如果被中斷，不發送失敗信號
+            if not self.isInterruptionRequested():
+                self.failure.emit(str(exc))
         finally:
-            self.progress.emit(100, "API 任務結束")
+            # 只有在未中斷時才發送完成信號
+            if not self.isInterruptionRequested():
+                self.progress.emit(100, "API 任務結束")
 
 
 class TelemetryDataManager(QObject):
@@ -150,7 +179,7 @@ class TelemetryDataManager(QObject):
         self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
 
         fallback_state = "啟用" if self._allow_local_fallback else "停用"
-        print(
+        logger.info(
             f"[TELEMETRY_MANAGER] 初始化完成，API 基底網址: {self._api_base_url}，"
             f"本地 JSON 後備已{fallback_state} (策略: {self._fallback_policy_reason})"
         )
@@ -158,7 +187,7 @@ class TelemetryDataManager(QObject):
     def loadTelemetryData(self, year: str, race: str, session: str, force_refresh: bool = False) -> bool:
         """載入遙測分析資料 - API 優先，失敗時可回退至 JSON/CLI。"""
         if self._is_loading:
-            print("[TELEMETRY] 正在載入中，跳過重複請求")
+            logger.info("[TELEMETRY] 正在載入中，跳過重複請求")
             return False
 
         self._stop_generation_monitoring()
@@ -211,7 +240,7 @@ class TelemetryDataManager(QObject):
 
             if not self._is_api_available():
                 msg = "偵測到 API 服務未啟動，改用本地 JSON 後備"
-                print(f"[TELEMETRY] {msg}")
+                logger.warning(f"[TELEMETRY] {msg}")
                 self.status_changed.emit(msg)
                 if self._fallback_to_local("API 服務未啟動"):
                     return True
@@ -224,7 +253,7 @@ class TelemetryDataManager(QObject):
             self._start_api_request(self._pending_params)
             return True
         except Exception as exc:
-            print(f"[TELEMETRY] 啟動 API 請求失敗: {exc}")
+            logger.error(f"[TELEMETRY] 啟動 API 請求失敗: {exc}")
             self.status_changed.emit("API 請求初始化失敗，改用本地 JSON/CLI 後備流程")
             if self._fallback_to_local(str(exc)):
                 return True
@@ -247,7 +276,7 @@ class TelemetryDataManager(QObject):
         return False
     def _determine_api_base_url(self) -> str:
         return resolve_api_base_url(
-            event_logger=lambda message: print(f"[TELEMETRY] {message}")
+            event_logger=lambda message: logger.info(f"[TELEMETRY] {message}")
         )
 
     def _is_api_available(self) -> bool:
@@ -268,12 +297,14 @@ class TelemetryDataManager(QObject):
         self._allow_local_fallback = bool(allowed)
         self._fallback_policy_reason = reason or "手動覆寫"
         state = "啟用" if self._allow_local_fallback else "停用"
-        print(f"[TELEMETRY_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+        logger.info(
+            f"[TELEMETRY_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})"
+        )
 
     def set_api_base_url(self, base_url: Optional[str]) -> None:
         if base_url:
             self._api_base_url = str(base_url).rstrip('/')
-            print(f"[TELEMETRY_MANAGER] API 基底網址更新為 {self._api_base_url}")
+            logger.info(f"[TELEMETRY_MANAGER] API 基底網址更新為 {self._api_base_url}")
 
     def _cleanup_api_worker(self) -> None:
         """
@@ -303,7 +334,7 @@ class TelemetryDataManager(QObject):
                         # ✅ 安全檢查：確保 worker 仍然有效且未被刪除
                         try:
                             if self._api_worker and self._api_worker.isRunning():
-                                print("[WARNING] telemetry_analysis API Worker 未在 1 秒內停止，強制終止")
+                                logger.warning("[WARNING] telemetry_analysis API Worker 未在 1 秒內停止，強制終止")
                                 self._api_worker.terminate()
                         except (RuntimeError, AttributeError):
                             # Worker 已被刪除，無需處理
@@ -315,7 +346,7 @@ class TelemetryDataManager(QObject):
                     self._api_worker.deleteLater()
                     self._api_worker = None
             except Exception as e:
-                print(f"[ERROR] telemetry_analysis cleanup exception: {e}")
+                logger.error(f"[ERROR] telemetry_analysis cleanup exception: {e}")
                 self._api_worker = None
 
     def _start_api_request(self, params: Dict[str, Any]) -> None:
@@ -378,7 +409,7 @@ class TelemetryDataManager(QObject):
             self._is_loading = False
 
         except Exception as exc:
-            print(f"[TELEMETRY] 處理 API 回傳失敗: {exc}")
+            logger.error(f"[TELEMETRY] 處理 API 回傳失敗: {exc}")
             self.status_changed.emit("API 數據格式錯誤，改用本地 JSON/CLI")
             if self._fallback_to_local(str(exc)):
                 return
@@ -387,7 +418,7 @@ class TelemetryDataManager(QObject):
             self._is_loading = False
 
     def _on_api_error(self, message: str) -> None:
-        print(f"[TELEMETRY] API 請求失敗: {message}")
+        logger.error(f"[TELEMETRY] API 請求失敗: {message}")
         self.status_changed.emit("API 請求失敗，改用本地 JSON/CLI 後備流程")
         if self._fallback_to_local(message):
             return
@@ -410,14 +441,14 @@ class TelemetryDataManager(QObject):
                 "API 載入失敗，且本地 JSON 後備已停用。"
                 " 如需啟用，請設定環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK=1 或呼叫 set_local_fallback_allowed(True)。"
             )
-            print(f"[TELEMETRY] {message} 詳細: {reason}")
+            logger.warning(f"[TELEMETRY] {message} 詳細: {reason}")
             return False
 
         self.status_changed.emit("API 失敗，改用本地 JSON/CLI 數據")
         self.loading_progress.emit(35)
         success = self._start_local_workflow(params, fallback_reason=reason)
         if not success:
-            print(f"[TELEMETRY] 本地 JSON 後備啟動失敗: {reason}")
+            logger.error(f"[TELEMETRY] 本地 JSON 後備啟動失敗: {reason}")
         return success
 
     def _start_local_workflow(self, params: Dict[str, Any], fallback_reason: Optional[str] = None) -> bool:
@@ -426,12 +457,12 @@ class TelemetryDataManager(QObject):
         session = params.get("session")
 
         if not year or not race or not session:
-            print("[TELEMETRY] 本地工作流程缺少必要參數")
+            logger.error("[TELEMETRY] 本地工作流程缺少必要參數")
             return False
 
         json_file = self._find_telemetry_file(year, race, session)
         if json_file:
-            print(f"[TELEMETRY] 使用本地遙測JSON檔案: {json_file}")
+            logger.info(f"[TELEMETRY] 使用本地遙測JSON檔案: {json_file}")
             self.loading_progress.emit(70)
             self.status_changed.emit("使用本地 JSON 快取載入遙測資料")
             self._cli_generation_context = {
@@ -452,7 +483,7 @@ class TelemetryDataManager(QObject):
             )
             return True
 
-        print("[TELEMETRY] 找不到遙測JSON，且 CLI 生成在 API-ONLY 模式下已禁用")
+        logger.error("[TELEMETRY] 找不到遙測JSON，且 CLI 生成在 API-ONLY 模式下已禁用")
         self.loading_progress.emit(40)
         self.status_changed.emit("未找到本地遙測 JSON，請先啟動 API 或手動生成資料")
         self.error_occurred.emit(
@@ -464,7 +495,7 @@ class TelemetryDataManager(QObject):
     def _find_telemetry_file(self, year: str, race: str, session: str) -> Optional[str]:
         """搜尋遙測分析數據檔案"""
         try:
-            print(f"[TELEMETRY] 搜尋遙測數據檔案: {year} {race} {session}")
+            logger.info(f"[TELEMETRY] 搜尋遙測數據檔案: {year} {race} {session}")
             
             search_dirs = ["json", "json_exports", "cache"]
             
@@ -484,7 +515,7 @@ class TelemetryDataManager(QObject):
                 for pattern in patterns:
                     search_path = os.path.join(search_dir, pattern)
                     if os.path.exists(search_path):
-                        print(f"[FOUND] 遙測JSON檔案: {search_path}")
+                        logger.info(f"[FOUND] 遙測JSON檔案: {search_path}")
                         return search_path
             
             # 模糊搜尋 - 嚴格匹配賽事名稱，避免誤判比較遙測檔案
@@ -511,7 +542,7 @@ class TelemetryDataManager(QObject):
                             if any(exclude_pattern in filename for exclude_pattern in [
                                 "comparison", "compare", "vs", "_vs_", "raw_data", "export"
                             ]):
-                                print(f"[SKIP] 跳過非分析檔案: {file_path}")
+                                logger.debug(f"[SKIP] 跳過非分析檔案: {file_path}")
                                 continue
                                 
                             # 確保包含賽事名稱
@@ -522,28 +553,28 @@ class TelemetryDataManager(QObject):
                                 ]):
                                     # 快速驗證檔案內容是否為有效的遙測分析檔案
                                     if self._quick_validate_file(file_path):
-                                        print(f"[FUZZY] 遙測JSON檔案 (優先): {file_path}")
+                                        logger.info(f"[FUZZY] 遙測JSON檔案 (優先): {file_path}")
                                         return file_path
                                     else:
-                                        print(f"[SKIP] 檔案驗證失敗: {file_path}")
+                                        logger.warning(f"[SKIP] 檔案驗證失敗: {file_path}")
                                         continue
                                 else:
-                                    print(f"[FUZZY] 遙測JSON檔案 (備選): {file_path}")
+                                    logger.info(f"[FUZZY] 遙測JSON檔案 (備選): {file_path}")
                                     backup_file = file_path
                         
                         # 如果沒找到優先檔案，驗證並使用備選檔案
                         if 'backup_file' in locals():
                             if self._quick_validate_file(backup_file):
-                                print(f"[FUZZY] 使用備選遙測JSON檔案: {backup_file}")
+                                logger.info(f"[FUZZY] 使用備選遙測JSON檔案: {backup_file}")
                                 return backup_file
                             else:
-                                print(f"[SKIP] 備選檔案驗證失敗: {backup_file}")
+                                logger.warning(f"[SKIP] 備選檔案驗證失敗: {backup_file}")
             
-            print(f"[NOT_FOUND] 未找到遙測JSON檔案")
+            logger.warning(f"[NOT_FOUND] 未找到遙測JSON檔案")
             return None
                 
         except Exception as e:
-            print(f"[ERROR] 搜尋遙測檔案時發生錯誤: {str(e)}")
+            logger.error(f"[ERROR] 搜尋遙測檔案時發生錯誤: {str(e)}")
             self.error_occurred.emit(f"搜尋檔案時發生錯誤: {str(e)}")
             return None
     
@@ -570,7 +601,7 @@ class TelemetryDataManager(QObject):
             return True
             
         except Exception as e:
-            print(f"[ERROR] 快速驗證檔案失敗: {e}")
+            logger.error(f"[ERROR] 快速驗證檔案失敗: {e}")
             return False
     
     def _load_telemetry_json(
@@ -584,7 +615,7 @@ class TelemetryDataManager(QObject):
     ):
         """載入遙測JSON檔案並附加來源中繼資料"""
         try:
-            print(f"[LOAD] 開始載入遙測檔案: {file_path}")
+            logger.info(f"[LOAD] 開始載入遙測檔案: {file_path}")
             self.loading_progress.emit(70)
             
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -609,12 +640,12 @@ class TelemetryDataManager(QObject):
                 self.loading_progress.emit(100)
                 self.status_changed.emit("遙測數據載入完成")
                 self.telemetry_loaded.emit(data)
-                print(f"[SUCCESS] 遙測數據載入完成")
+                logger.info(f"[SUCCESS] 遙測數據載入完成")
             else:
                 self.error_occurred.emit("載入的遙測數據格式無效")
                 
         except Exception as e:
-            print(f"[ERROR] 載入遙測JSON檔案失敗: {e}")
+            logger.error(f"[ERROR] 載入遙測JSON檔案失敗: {e}")
             self.error_occurred.emit(f"載入JSON檔案失敗: {str(e)}")
         
         finally:
@@ -627,7 +658,7 @@ class TelemetryDataManager(QObject):
         """驗證遙測數據格式 - 增強版，排除比較遙測檔案"""
         try:
             if not isinstance(data, dict):
-                print(f"[ERROR] 遙測數據不是字典格式")
+                logger.error(f"[ERROR] 遙測數據不是字典格式")
                 return False
             
             # 首先檢查是否為比較遙測檔案（應該被排除）
@@ -638,7 +669,7 @@ class TelemetryDataManager(QObject):
             
             for indicator in comparison_indicators:
                 if indicator in data:
-                    print(f"[ERROR] 檢測到比較遙測檔案，拒絕載入: {indicator}")
+                    logger.error(f"[ERROR] 檢測到比較遙測檔案，拒絕載入: {indicator}")
                     return False
             
             # 檢查不同可能的數據格式
@@ -648,12 +679,12 @@ class TelemetryDataManager(QObject):
             if 'data' in data and isinstance(data['data'], dict):
                 if 'all_drivers_telemetry' in data['data']:
                     telemetry_data = data['data']['all_drivers_telemetry']
-                    print(f"[INFO] 檢測到標準格式：data.all_drivers_telemetry")
+                    logger.info(f"[INFO] 檢測到標準格式：data.all_drivers_telemetry")
             
             # 格式2: 直接格式 - all_drivers_telemetry
             elif 'all_drivers_telemetry' in data:
                 telemetry_data = data['all_drivers_telemetry']
-                print(f"[INFO] 檢測到直接格式：all_drivers_telemetry")
+                logger.info(f"[INFO] 檢測到直接格式：all_drivers_telemetry")
             
             if telemetry_data and isinstance(telemetry_data, dict):
                 # 檢查是否有車手數據且數量合理（比較遙測通常只有2個車手）
@@ -664,39 +695,39 @@ class TelemetryDataManager(QObject):
                     
                     for key in required_keys:
                         if key not in first_driver:
-                            print(f"[ERROR] 缺少必需的遙測數據字段: {key}")
+                            logger.error(f"[ERROR] 缺少必需的遙測數據字段: {key}")
                             return False
                     
                     # 額外檢查：所有車手分析通常包含多位車手（>= 3）
                     # 比較遙測通常只有2位車手
                     driver_count = len(telemetry_data)
                     if driver_count >= 3:
-                        print(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（符合所有車手分析）")
+                        logger.info(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（符合所有車手分析）")
                         return True
                     elif driver_count == 2:
                         # 檢查是否真的是所有車手分析（可能是只有2位車手的比賽）
                         # 檢查是否有analysis_summary等指標
                         if 'analysis_summary' in data.get('data', {}):
-                            print(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（含分析摘要）")
+                            logger.info(f"[OK] 遙測數據格式驗證通過，包含 {driver_count} 位車手（含分析摘要）")
                             return True
                         else:
-                            print(f"[WARNING] 只有2位車手且無分析摘要，可能是比較遙測檔案")
+                            logger.warning(f"[WARNING] 只有2位車手且無分析摘要，可能是比較遙測檔案")
                             return False
                     else:
-                        print(f"[ERROR] 車手數量不足: {driver_count}")
+                        logger.error(f"[ERROR] 車手數量不足: {driver_count}")
                         return False
             
-            print(f"[ERROR] 無效的遙測數據格式")
+            logger.error(f"[ERROR] 無效的遙測數據格式")
             return False
             
         except Exception as e:
-            print(f"[ERROR] 驗證遙測數據時發生錯誤: {e}")
+            logger.error(f"[ERROR] 驗證遙測數據時發生錯誤: {e}")
             return False
     
     def _generate_telemetry_via_cli(self, year: str, race: str, session: str, force_refresh: bool = False) -> bool:
         """透過 CLI 生成遙測分析數據（已於 API-ONLY 模式中禁用）"""
-        print("[TELEMETRY] ⚠️  [API-ONLY] CLI 調用已禁用，無法自動生成遙測數據")
-        print("[TELEMETRY] 💡 請使用 API 取得最新資料或手動執行 CLI 後再重試")
+        logger.warning("[TELEMETRY] ⚠️  [API-ONLY] CLI 調用已禁用，無法自動生成遙測數據")
+        logger.info("[TELEMETRY] 💡 請使用 API 取得最新資料或手動執行 CLI 後再重試")
         self.error_occurred.emit(
             "API 載入失敗且本地無快取。請手動執行 CLI 生成遙測 JSON 或啟動 API 後重試。"
         )
@@ -733,18 +764,18 @@ class TelemetryDataManager(QObject):
         """
         command = f"python f1_analysis_modular_main.py -f 12 -y {year} -r {race} -s {session}"
         
-        print("\n" + "="*80)
-        print("⚠️  [API-ONLY 模式] GUI 不再自動執行 CLI 命令")
-        print("="*80)
-        print("\n💡 方案 1 [推薦]: 通過 REST API 調用")
-        print(f"   - 確保 API 服務器正在運行: python refactored_api.py")
-        print(f"   - POST /api/v2/analysis/execute")
-        print(f'   - Payload: {{"function_id": "12", "year": "{year}", "race": "{race}", "session": "{session}"}}')
-        print("\n💡 方案 2: 使用已存在的本地 JSON 檔案")
-        print("   - 檢查 json/ 目錄")
-        print("\n💡 方案 3: 手動執行 CLI 命令")
-        print(f"   - PowerShell: {command}")
-        print("="*80 + "\n")
+        logger.warning("[API-ONLY 模式] GUI 不再自動執行 CLI 命令")
+        logger.info("💡 方案 1 [推薦]: 通過 REST API 調用")
+        logger.info("   - 確保 API 服務器正在運行: python refactored_api.py")
+        logger.info("   - POST /api/v2/analysis/execute")
+        logger.info(
+            '   - Payload: {"function_id": "12", "year": "%s", "race": "%s", "session": "%s"}'
+            % (year, race, session)
+        )
+        logger.info("💡 方案 2: 使用已存在的本地 JSON 檔案")
+        logger.info("   - 檢查 json/ 目錄")
+        logger.info("💡 方案 3: 手動執行 CLI 命令")
+        logger.info(f"   - PowerShell: {command}")
         
         return False
     
@@ -785,7 +816,7 @@ class TelemetryDataManager(QObject):
             json_file = self._find_telemetry_file(year, race, session)
             
             if json_file:
-                print(f"[OK] [CLI_GEN] 遙測檔案生成完成: {json_file}")
+                logger.info(f"[OK] [CLI_GEN] 遙測檔案生成完成: {json_file}")
                 
                 # 停止監控
                 self._stop_generation_monitoring()
@@ -803,12 +834,12 @@ class TelemetryDataManager(QObject):
                     )
                 )
             else:
-                print(f"⏳ [CLI_GEN] 繼續等待遙測檔案生成...")
+                logger.info(f"⏳ [CLI_GEN] 繼續等待遙測檔案生成...")
                 self.loading_progress.emit(50)
                 
     def _on_generation_timeout(self):
         """處理生成超時"""
-        print(f"[TIME] [CLI_GEN] 遙測檔案生成超時")
+        logger.error(f"[TIME] [CLI_GEN] 遙測檔案生成超時")
         self._stop_generation_monitoring()
         self.error_occurred.emit("遙測數據生成超時，請檢查網路連線或稍後重試")
         self._generation_params = None
@@ -857,15 +888,15 @@ class DriverTelemetryOverviewWidget(QWidget):
     
     def __init__(self, data_manager, parent=None):
         super().__init__(parent)
-        print(f"📊 [TELEMETRY_OVERVIEW] 初始化概覽Widget...")
+        logger.info("📊 [TELEMETRY_OVERVIEW] 初始化概覽Widget...")
         self.data_manager = data_manager
         self.telemetry_data = {}
         self.setupUI()
-        print(f"✅ [TELEMETRY_OVERVIEW] 概覽Widget初始化完成")
+        logger.info("✅ [TELEMETRY_OVERVIEW] 概覽Widget初始化完成")
         
     def setupUI(self):
         """設置使用者界面"""
-        print(f"📊 [TELEMETRY_OVERVIEW] 設置概覽UI...")
+        logger.info("📊 [TELEMETRY_OVERVIEW] 設置概覽UI...")
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
         
@@ -875,7 +906,7 @@ class DriverTelemetryOverviewWidget(QWidget):
         # 車手概覽表格
         self.setup_overview_table()
         
-        print(f"✅ [TELEMETRY_OVERVIEW] 概覽UI設置完成")
+        logger.info("✅ [TELEMETRY_OVERVIEW] 概覽UI設置完成")
         
     def setup_statistics_cards(self):
         """設置統計卡片"""
@@ -996,7 +1027,7 @@ class DriverTelemetryOverviewWidget(QWidget):
         
     def on_header_clicked(self, logical_index):
         """處理表格標題點擊事件，實現自定義排序"""
-        print(f"[SORT] 點擊欄位 {logical_index}")
+        logger.info(f"[SORT] 點擊欄位 {logical_index}")
         
         # 獲取當前欄位的排序狀態，預設為升序
         current_order = self._sort_columns.get(logical_index, Qt.AscendingOrder)
@@ -1005,7 +1036,7 @@ class DriverTelemetryOverviewWidget(QWidget):
         new_order = Qt.DescendingOrder if current_order == Qt.AscendingOrder else Qt.AscendingOrder
         self._sort_columns[logical_index] = new_order
         
-        print(f"[SORT] 欄位 {logical_index} 排序: {'降序' if new_order == Qt.DescendingOrder else '升序'}")
+        logger.info(f"[SORT] 欄位 {logical_index} 排序: {'降序' if new_order == Qt.DescendingOrder else '升序'}")
         
         if logical_index in [4, 5, 7, 8, 9]:  # 時間相關欄位
             self.sort_by_time_column(logical_index, new_order)
@@ -1018,7 +1049,7 @@ class DriverTelemetryOverviewWidget(QWidget):
     def sort_by_time_column(self, column, sort_order):
         """按時間欄位排序"""
         try:
-            print(f"[SORT] 時間排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
+            logger.info(f"[SORT] 時間排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
             
             # 獲取所有行的數據
             rows_data = []
@@ -1046,12 +1077,12 @@ class DriverTelemetryOverviewWidget(QWidget):
             header.setSortIndicator(column, sort_order)
             
         except Exception as e:
-            print(f"[ERROR] 時間排序失敗: {e}")
+            logger.error(f"[ERROR] 時間排序失敗: {e}")
     
     def sort_by_numeric_column(self, column, sort_order):
         """按數值欄位排序"""
         try:
-            print(f"[SORT] 數值排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
+            logger.info(f"[SORT] 數值排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
             
             # 獲取所有行的數據
             rows_data = []
@@ -1090,12 +1121,12 @@ class DriverTelemetryOverviewWidget(QWidget):
             header.setSortIndicator(column, sort_order)
             
         except Exception as e:
-            print(f"[ERROR] 數值排序失敗: {e}")
+            logger.error(f"[ERROR] 數值排序失敗: {e}")
     
     def sort_by_text_column(self, column, sort_order):
         """按文字欄位排序"""
         try:
-            print(f"[SORT] 文字排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
+            logger.info(f"[SORT] 文字排序 - 欄位 {column}, 順序: {'降序' if sort_order == Qt.DescendingOrder else '升序'}")
             
             # 獲取所有行的數據
             rows_data = []
@@ -1118,7 +1149,7 @@ class DriverTelemetryOverviewWidget(QWidget):
             header.setSortIndicator(column, sort_order)
             
         except Exception as e:
-            print(f"[ERROR] 文字排序失敗: {e}")
+            logger.error(f"[ERROR] 文字排序失敗: {e}")
     
     def _update_table_with_sorted_data(self, rows_data):
         """使用排序後的數據更新表格"""
@@ -1134,14 +1165,14 @@ class DriverTelemetryOverviewWidget(QWidget):
         
     def update_overview_data(self, data: Dict[str, Any]):
         """更新概覽數據"""
-        print(f"📊 [TELEMETRY_OVERVIEW] 開始更新概覽數據...")
+        logger.info("📊 [TELEMETRY_OVERVIEW] 開始更新概覽數據...")
         
         if "data" not in data or "all_drivers_telemetry" not in data["data"]:
-            print(f"⚠️ [TELEMETRY_OVERVIEW] 數據格式不正確，跳過更新")
+            logger.warning("⚠️ [TELEMETRY_OVERVIEW] 數據格式不正確，跳過更新")
             return
             
         self.telemetry_data = data["data"]["all_drivers_telemetry"]
-        print(f"📊 [TELEMETRY_OVERVIEW] 已載入 {len(self.telemetry_data)} 位車手的遙測數據")
+        logger.info(f"📊 [TELEMETRY_OVERVIEW] 已載入 {len(self.telemetry_data)} 位車手的遙測數據")
         
         # 延遲更新UI確保數據準備完成
         QTimer.singleShot(100, self.populate_overview_display)
@@ -1149,10 +1180,10 @@ class DriverTelemetryOverviewWidget(QWidget):
     def populate_overview_display(self):
         """填充概覽顯示"""
         if not self.telemetry_data:
-            print(f"⚠️ [TELEMETRY_OVERVIEW] 無遙測數據，跳過顯示更新")
+            logger.warning("⚠️ [TELEMETRY_OVERVIEW] 無遙測數據，跳過顯示更新")
             return
             
-        print(f"📊 [TELEMETRY_OVERVIEW] 開始填充概覽顯示，車手數量: {len(self.telemetry_data)}")
+        logger.info(f"📊 [TELEMETRY_OVERVIEW] 開始填充概覽顯示，車手數量: {len(self.telemetry_data)}")
         
         # 更新統計卡片
         self.update_statistics_cards()
@@ -1160,7 +1191,7 @@ class DriverTelemetryOverviewWidget(QWidget):
         # 更新概覽表格
         self.populate_overview_table()
         
-        print(f"✅ [TELEMETRY_OVERVIEW] 概覽顯示更新完成")
+        logger.info("✅ [TELEMETRY_OVERVIEW] 概覽顯示更新完成")
         
     def update_statistics_cards(self):
         """更新統計卡片"""
@@ -1177,7 +1208,7 @@ class DriverTelemetryOverviewWidget(QWidget):
             self.avg_laptime_card.value_label.setText(avg_laptime)
         # self.total_pitstops_card.value_label.setText(str(total_pitstops))  # 隱藏
         
-        print(f"📊 [TELEMETRY_OVERVIEW] 統計卡片已更新: 最快車手={fastest_driver}, 平均圈速={avg_laptime}")
+        logger.info(f"📊 [TELEMETRY_OVERVIEW] 統計卡片已更新: 最快車手={fastest_driver}, 平均圈速={avg_laptime}")
         
     def format_lap_time(self, time_str):
         """格式化圈速時間為M:SS.000格式"""
@@ -1220,7 +1251,7 @@ class DriverTelemetryOverviewWidget(QWidget):
                 
             return time_str
         except Exception as e:
-            print(f"⚠️ [FORMAT] 時間格式化失敗: {time_str}, 錯誤: {e}")
+            logger.warning(f"⚠️ [FORMAT] 時間格式化失敗: {time_str}, 錯誤: {e}")
             return time_str
     
     def parse_time_to_seconds(self, time_str):
@@ -1258,7 +1289,7 @@ class DriverTelemetryOverviewWidget(QWidget):
             return float(time_str)
             
         except Exception as e:
-            print(f"⚠️ [PARSE] 時間解析失敗: {time_str}, 錯誤: {e}")
+            logger.warning(f"⚠️ [PARSE] 時間解析失敗: {time_str}, 錯誤: {e}")
             return None
     
     def seconds_to_formatted_time(self, total_seconds):
@@ -1439,7 +1470,9 @@ class DriverTelemetryOverviewWidget(QWidget):
         
         # 重新啟用排序功能
         self.overview_table.setSortingEnabled(True)
-        print(f"📊 [TELEMETRY_OVERVIEW] 概覽表格已填充完成，共 {len(sorted_drivers)} 位車手（按最終排名排序）")
+        logger.info(
+            f"📊 [TELEMETRY_OVERVIEW] 概覽表格已填充完成，共 {len(sorted_drivers)} 位車手（按最終排名排序）"
+        )
 
 
 class TelemetryAnalysisModule(IAnalysisModule):
@@ -1543,18 +1576,20 @@ class TelemetryAnalysisModule(IAnalysisModule):
             # 設置初始化標記
             self._is_initialized = True
             
-            print(f"✅ [TELEMETRY_MODULE] 模組已初始化，等待參數同步...")
+            logger.info("✅ [TELEMETRY_MODULE] 模組已初始化，等待參數同步...")
             
             # 如果已經有預設參數，立即載入數據
             if self.current_year and self.current_race and self.current_session:
-                print(f"🚀 [TELEMETRY_MODULE] 檢測到預設參數，開始載入數據: {self.current_year} {self.current_race} {self.current_session}")
+                logger.info(
+                    f"🚀 [TELEMETRY_MODULE] 檢測到預設參數，開始載入數據: {self.current_year} {self.current_race} {self.current_session}"
+                )
                 # 短暫延遲確保UI完全初始化
                 QTimer.singleShot(500, self.load_data)
                 
             return True
             
         except Exception as e:
-            print(f"❌ [TELEMETRY_MODULE] 模組初始化失敗: {e}")
+            logger.error(f"❌ [TELEMETRY_MODULE] 模組初始化失敗: {e}")
             return False
     
     def get_widget(self):
@@ -1566,34 +1601,34 @@ class TelemetryAnalysisModule(IAnalysisModule):
         Returns:
             QWidget: 分頁控件
         """
-        print(f"📊 [TELEMETRY_MODULE] get_widget 被調用...")
+        logger.info("📊 [TELEMETRY_MODULE] get_widget 被調用...")
         
         if not self._main_widget:
-            print(f"📊 [TELEMETRY_MODULE] 主要Widget不存在，調用setup_ui...")
+            logger.info("📊 [TELEMETRY_MODULE] 主要Widget不存在，調用setup_ui...")
             self.setup_ui()
         else:
-            print(f"📊 [TELEMETRY_MODULE] 主要Widget已存在")
+            logger.info("📊 [TELEMETRY_MODULE] 主要Widget已存在")
             
         if not hasattr(self, 'tab_widget') or not self.tab_widget:
-            print(f"📊 [TELEMETRY_MODULE] tab_widget不存在，重新設置UI...")
+            logger.info("📊 [TELEMETRY_MODULE] tab_widget不存在，重新設置UI...")
             self.setup_ui()
         else:
-            print(f"📊 [TELEMETRY_MODULE] tab_widget已存在，有 {self.tab_widget.count()} 個分頁")
+            logger.info(f"📊 [TELEMETRY_MODULE] tab_widget已存在，有 {self.tab_widget.count()} 個分頁")
             
-        print(f"📊 [TELEMETRY_MODULE] 返回主要Widget: {self._main_widget}")
+        logger.info(f"📊 [TELEMETRY_MODULE] 返回主要Widget: {self._main_widget}")
         return self._main_widget
     
     def setup_ui(self):
         """設置使用者界面"""
         if hasattr(self, 'tab_widget') and self.tab_widget:
-            print(f"📊 [TELEMETRY_MODULE] UI 已存在，跳過重複設置")
+            logger.info("📊 [TELEMETRY_MODULE] UI 已存在，跳過重複設置")
             return  # 避免重複設置
             
         if not self._main_widget:
-            print(f"📊 [TELEMETRY_MODULE] 創建新的主要Widget")
+            logger.info("📊 [TELEMETRY_MODULE] 創建新的主要Widget")
             self._main_widget = QWidget()
         else:
-            print(f"📊 [TELEMETRY_MODULE] 使用現有的主要Widget")
+            logger.info("📊 [TELEMETRY_MODULE] 使用現有的主要Widget")
             
         layout = QVBoxLayout(self._main_widget)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -1605,17 +1640,17 @@ class TelemetryAnalysisModule(IAnalysisModule):
         # 創建各分頁
         self.setup_tabs()
         
-        print(f"✅ [TELEMETRY_MODULE] UI 設置完成，包含 {self.tab_widget.count()} 個分頁")
+        logger.info(f"✅ [TELEMETRY_MODULE] UI 設置完成，包含 {self.tab_widget.count()} 個分頁")
         
     def setup_tabs(self):
         """設置所有分頁"""
-        print(f"📊 [TELEMETRY_MODULE] 開始設置分頁...")
+        logger.info("📊 [TELEMETRY_MODULE] 開始設置分頁...")
         
         # 分頁1: 車手遙測概覽 (Function 12)
-        print(f"📊 [TELEMETRY_MODULE] 創建車手概覽分頁...")
+        logger.info("📊 [TELEMETRY_MODULE] 創建車手概覽分頁...")
         self.overview_widget = DriverTelemetryOverviewWidget(self.data_manager)
         self.tab_widget.addTab(self.overview_widget, "🏎️ 車手概覽")
-        print(f"✅ [TELEMETRY_MODULE] 車手概覽分頁已添加")
+        logger.info("✅ [TELEMETRY_MODULE] 車手概覽分頁已添加")
         
         # 分頁2-5: 暫時使用佔位符（後續實現）
         self.comparison_widget = QLabel("⚔️ 對比分析功能開發中...")
@@ -1637,7 +1672,7 @@ class TelemetryAnalysisModule(IAnalysisModule):
         # 連接分頁切換信號
         self.tab_widget.currentChanged.connect(self.on_tab_changed)
         
-        print(f"✅ [TELEMETRY_MODULE] 所有分頁設置完成，共 {self.tab_widget.count()} 個分頁")
+        logger.info(f"✅ [TELEMETRY_MODULE] 所有分頁設置完成，共 {self.tab_widget.count()} 個分頁")
         
     def on_tab_changed(self, index):
         """分頁切換處理"""
@@ -1692,12 +1727,12 @@ class TelemetryAnalysisModule(IAnalysisModule):
         Returns:
             bool: 更新是否成功
         """
-        print(f"🔄 [TELEMETRY_MODULE] update_parameters 被調用: {year}, {race}, {session}")
+        logger.info(f"🔄 [TELEMETRY_MODULE] update_parameters 被調用: {year}, {race}, {session}")
         
         try:
             # 驗證參數
             if not self.validate_parameters(year, race, session):
-                print(f"❌ [TELEMETRY_MODULE] 參數驗證失敗: {year}, {race}, {session}")
+                logger.error(f"❌ [TELEMETRY_MODULE] 參數驗證失敗: {year}, {race}, {session}")
                 self.emit_error(f"無效的遙測分析參數: {year}, {race}, {session}")
                 return False
                 
@@ -1708,9 +1743,11 @@ class TelemetryAnalysisModule(IAnalysisModule):
                 self.current_session is None or self.current_session != session
             )
             
-            print(f"📊 [TELEMETRY_MODULE] 當前參數: {self.current_year}, {self.current_race}, {self.current_session}")
-            print(f"📊 [TELEMETRY_MODULE] 新參數: {year}, {race}, {session}")
-            print(f"📊 [TELEMETRY_MODULE] 參數是否變化: {params_changed}")
+            logger.info(
+                f"📊 [TELEMETRY_MODULE] 當前參數: {self.current_year}, {self.current_race}, {self.current_session}"
+            )
+            logger.info(f"📊 [TELEMETRY_MODULE] 新參數: {year}, {race}, {session}")
+            logger.info(f"📊 [TELEMETRY_MODULE] 參數是否變化: {params_changed}")
             
             # 更新內部參數
             self.current_year = str(year)
@@ -1719,7 +1756,7 @@ class TelemetryAnalysisModule(IAnalysisModule):
             
             # 如果參數有變化，重新載入數據
             if params_changed:
-                print(f"🔄 [TELEMETRY_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
+                logger.info(f"🔄 [TELEMETRY_MODULE] 參數變更觸發數據重載: {year} {race} {session}")
                 
                 # 發出參數更新信號
                 params = {
@@ -1734,18 +1771,18 @@ class TelemetryAnalysisModule(IAnalysisModule):
                 if hasattr(self, 'overview_widget') and self.overview_widget is not None:
                     # 立即載入數據，但有短暫延遲確保UI完全準備好
                     QTimer.singleShot(100, self.load_data)
-                    print(f"📅 [TELEMETRY_MODULE] 已安排遙測數據載入任務: {year} {race} {session}")
+                    logger.info(f"📅 [TELEMETRY_MODULE] 已安排遙測數據載入任務: {year} {race} {session}")
                 else:
                     # UI 還沒準備好，稍後再試
-                    print(f"🔄 [TELEMETRY_MODULE] UI 未準備好，延遲載入: {year} {race} {session}")
+                    logger.info(f"🔄 [TELEMETRY_MODULE] UI 未準備好，延遲載入: {year} {race} {session}")
                     QTimer.singleShot(500, self.load_data)
             else:
-                print(f"📊 [TELEMETRY_MODULE] 參數無變化，跳過重載")
+                logger.info("📊 [TELEMETRY_MODULE] 參數無變化，跳過重載")
                 
             return True
             
         except Exception as e:
-            print(f"❌ [TELEMETRY_MODULE] 更新參數異常: {e}")
+            logger.error(f"❌ [TELEMETRY_MODULE] 更新參數異常: {e}")
             traceback.print_exc()
             self.emit_error(f"更新遙測分析參數時發生錯誤: {str(e)}")
             return False
@@ -1753,10 +1790,10 @@ class TelemetryAnalysisModule(IAnalysisModule):
     def load_data(self):
         """載入遙測數據"""
         if not self.current_year or not self.current_race or not self.current_session:
-            print(f"[TELEMETRY_MODULE] 參數不完整，跳過載入")
+            logger.warning("[TELEMETRY_MODULE] 參數不完整，跳過載入")
             return
             
-        print(f"🔄 [TELEMETRY_MODULE] 開始載入遙測數據: {self.current_year} {self.current_race} {self.current_session}")
+        logger.info(f"🔄 [TELEMETRY_MODULE] 開始載入遙測數據: {self.current_year} {self.current_race} {self.current_session}")
         
         # 使用數據管理器載入數據
         success = self.data_manager.loadTelemetryData(
@@ -1770,7 +1807,7 @@ class TelemetryAnalysisModule(IAnalysisModule):
     
     def on_telemetry_data_loaded(self, data):
         """遙測數據載入完成處理"""
-        print(f"✅ [TELEMETRY_MODULE] 遙測數據載入完成")
+        logger.info("✅ [TELEMETRY_MODULE] 遙測數據載入完成")
         
         # 更新第一個分頁（車手概覽）
         if self.overview_widget:
@@ -1787,26 +1824,28 @@ class TelemetryAnalysisModule(IAnalysisModule):
         #     'session': self.current_session
         # })
         
-        print(f"📊 [TELEMETRY_MODULE] 已通知分頁更新遙測數據，包含 {len(data.get('data', {}).get('all_drivers_telemetry', {}))} 位車手")
+        logger.info(
+            f"📊 [TELEMETRY_MODULE] 已通知分頁更新遙測數據，包含 {len(data.get('data', {}).get('all_drivers_telemetry', {}))} 位車手"
+        )
     
     def on_error_occurred(self, error_message):
         """錯誤處理"""
-        print(f"❌ [TELEMETRY_MODULE] 錯誤: {error_message}")
+        logger.error(f"❌ [TELEMETRY_MODULE] 錯誤: {error_message}")
         # self.emit_error(error_message)  # 暫時註解，避免錯誤
     
     def on_loading_started(self):
         """載入開始處理"""
-        print(f"⏳ [TELEMETRY_MODULE] 開始載入遙測數據...")
+        logger.info("⏳ [TELEMETRY_MODULE] 開始載入遙測數據...")
         # self.emit_status_update("正在載入遙測數據...")  # 暫時註解，避免錯誤
     
     def on_loading_finished(self):
         """載入完成處理"""
-        print(f"✅ [TELEMETRY_MODULE] 遙測數據載入完成")
+        logger.info("✅ [TELEMETRY_MODULE] 遙測數據載入完成")
         # self.emit_status_update("遙測數據載入完成")  # 暫時註解，避免錯誤
     
     def on_status_changed(self, status):
         """狀態變更處理"""
-        print(f"📊 [TELEMETRY_MODULE] 狀態更新: {status}")
+        logger.info(f"📊 [TELEMETRY_MODULE] 狀態更新: {status}")
         # self.emit_status_update(status)  # 暫時註解，避免錯誤
     
     def cleanup(self):
@@ -1816,10 +1855,10 @@ class TelemetryAnalysisModule(IAnalysisModule):
             if hasattr(self.data_manager, '_stop_generation_monitoring'):
                 self.data_manager._stop_generation_monitoring()
             
-            print(f"🧹 [TELEMETRY_MODULE] 資源清理完成")
+            logger.info("🧹 [TELEMETRY_MODULE] 資源清理完成")
             
         except Exception as e:
-            print(f"⚠️ [TELEMETRY_MODULE] 清理資源時發生錯誤: {e}")
+            logger.warning(f"⚠️ [TELEMETRY_MODULE] 清理資源時發生錯誤: {e}")
     
     def get_status_info(self) -> dict:
         """獲取模組狀態信息"""
@@ -1862,17 +1901,17 @@ class TelemetryAnalysisModule(IAnalysisModule):
             if hasattr(self, 'tire_widget') and self.tire_widget:
                 self.tire_widget.telemetry_data = {}
                 
-            print(f"🧹 [TELEMETRY_MODULE] 數據已清除")
+            logger.info("🧹 [TELEMETRY_MODULE] 數據已清除")
             self.emit_status_update("數據已清除")
             
         except Exception as e:
-            print(f"⚠️ [TELEMETRY_MODULE] 清除數據時發生錯誤: {e}")
+            logger.warning(f"⚠️ [TELEMETRY_MODULE] 清除數據時發生錯誤: {e}")
 
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         """導出數據"""
         try:
             if not self.data_manager.current_data:
-                print(f"⚠️ [TELEMETRY_MODULE] 沒有可導出的數據")
+                logger.warning("⚠️ [TELEMETRY_MODULE] 沒有可導出的數據")
                 return False
                 
             import json
@@ -1902,11 +1941,11 @@ class TelemetryAnalysisModule(IAnalysisModule):
             with open(export_path, 'w', encoding='utf-8') as f:
                 json.dump(export_data, f, ensure_ascii=False, indent=2)
             
-            print(f"✅ [TELEMETRY_MODULE] 數據已導出到: {export_path}")
+            logger.info(f"✅ [TELEMETRY_MODULE] 數據已導出到: {export_path}")
             return True
             
         except Exception as e:
-            print(f"⚠️ [TELEMETRY_MODULE] 導出數據時發生錯誤: {e}")
+            logger.warning(f"⚠️ [TELEMETRY_MODULE] 導出數據時發生錯誤: {e}")
             return False
 
     def get_current_data(self) -> dict:
@@ -1917,14 +1956,16 @@ class TelemetryAnalysisModule(IAnalysisModule):
             else:
                 return {}
         except Exception as e:
-            print(f"⚠️ [TELEMETRY_MODULE] 獲取當前數據時發生錯誤: {e}")
+            logger.warning(f"⚠️ [TELEMETRY_MODULE] 獲取當前數據時發生錯誤: {e}")
             return {}
 
     def refresh_analysis(self) -> bool:
         """刷新分析"""
         try:
             if self.current_year and self.current_race and self.current_session:
-                print(f"🔄 [TELEMETRY_MODULE] 刷新遙測分析: {self.current_year} {self.current_race} {self.current_session}")
+                logger.info(
+                    f"🔄 [TELEMETRY_MODULE] 刷新遙測分析: {self.current_year} {self.current_race} {self.current_session}"
+                )
                 
                 # 重新載入數據
                 success = self.data_manager.loadTelemetryData(
@@ -1941,12 +1982,12 @@ class TelemetryAnalysisModule(IAnalysisModule):
                     self.emit_status_update("刷新失敗")
                     return False
             else:
-                print(f"⚠️ [TELEMETRY_MODULE] 無法刷新：參數不完整")
+                logger.warning("⚠️ [TELEMETRY_MODULE] 無法刷新：參數不完整")
                 self.emit_status_update("無法刷新：參數不完整")
                 return False
                 
         except Exception as e:
-            print(f"⚠️ [TELEMETRY_MODULE] 刷新分析時發生錯誤: {e}")
+            logger.warning(f"⚠️ [TELEMETRY_MODULE] 刷新分析時發生錯誤: {e}")
             self.emit_status_update(f"刷新失敗: {str(e)}")
             return False
 
@@ -1959,6 +2000,6 @@ def create_telemetry_analysis_module() -> TelemetryAnalysisModule:
 # 註冊到模組工廠
 try:
     ModuleFactory.register_module(ModuleTypes.TELEMETRY_ANALYSIS, create_telemetry_analysis_module)
-    print("✅ [MODULE_FACTORY] 遙測分析模組已註冊")
+    logger.info("✅ [MODULE_FACTORY] 遙測分析模組已註冊")
 except Exception as e:
-    print(f"⚠️ [MODULE_FACTORY] 遙測分析模組註冊失敗: {e}")
+    logger.warning(f"⚠️ [MODULE_FACTORY] 遙測分析模組註冊失敗: {e}")
