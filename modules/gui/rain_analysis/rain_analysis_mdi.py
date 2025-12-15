@@ -35,6 +35,7 @@ from PyQt5.QtGui import QFont
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
+from core.logger import get_logger
 
 # 導入翻譯函數
 from core.gui_i18n import tr
@@ -49,8 +50,7 @@ except ImportError:
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
     from modules.gui.base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
 
-
-    logger = get_logger(component="rain_analysis_mdi")
+logger = get_logger(component="rain_analysis_mdi")
 
 
 class RainAnalysisApiWorker(QThread):

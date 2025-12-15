@@ -24,6 +24,12 @@ class _NullWriter:
     @property
     def closed(self):
         return False  # 永遠回報未關閉
+    @property
+    def encoding(self):
+        return 'utf-8'  # 返回 UTF-8 編碼避免 AttributeError
+    @property
+    def errors(self):
+        return 'replace'  # 錯誤處理策略
 
 def _setup_safe_stdout():
     """
@@ -113,6 +119,18 @@ from core.logger import setup_logging, get_logger
 # 檢測是否為 PyInstaller 打包的 EXE
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 LOG_LEVEL = "INFO"  # 統一使用 INFO 級別（開發模式和 EXE 模式）
+
+# ✅ EXE 模式：設定 SSL 證書路徑（API HTTPS 請求必須）
+if IS_EXE_MODE:
+    import certifi
+    # 優先使用打包的證書，否則用 certifi 內建證書
+    bundled_cert = os.path.join(sys._MEIPASS, 'certifi', 'cacert.pem')
+    if os.path.exists(bundled_cert):
+        os.environ['REQUESTS_CA_BUNDLE'] = bundled_cert
+        os.environ['SSL_CERT_FILE'] = bundled_cert
+    else:
+        os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+        os.environ['SSL_CERT_FILE'] = certifi.where()
 
 def get_resource_path(relative_path):
     """獲取資源文件的絕對路徑（支援 EXE 模式）

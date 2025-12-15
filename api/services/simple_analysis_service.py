@@ -24,7 +24,8 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 # 導入已經工作的組件
-from api.services.cache_service import F1AnalysisCacheService
+# V2 優化版緩存服務 - 減少 CPU 負載
+from api.services.cache_service_v2 import F1AnalysisCacheServiceV2 as F1AnalysisCacheService
 from api.models.function_specs import (
     FUNCTION_SPECS,
     FunctionSpec,

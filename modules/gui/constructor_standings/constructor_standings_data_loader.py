@@ -151,41 +151,77 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
     
     def _load_team_slug_mapping(self) -> Dict[str, str]:
         """
-        從 team_colors JSON 載入 team_name → team_slug 映射表
+        通過 API (Function 98) 獲取 team_name → team_slug 映射表
+        
+        遵循 API-ONLY 模式政策，通過 REST API 獲取數據
         
         Returns:
             Dict[str, str]: {team_name: team_slug} 映射表
         """
+        import requests
+        from core.api_base_url import resolve_api_base_url
+        
         team_slug_map = {}
-        json_dir = Path("json")
         
         try:
-            # 搜尋最新的 team_colors JSON
-            team_color_files = list(json_dir.glob(f"team_colors_{self.year}_*.json"))
-            if not team_color_files:
-                logger.warning(f"[TEAM_SLUG_MAP] ⚠️  找不到 team_colors_{self.year}_*.json")
-                return team_slug_map
+            api_base = resolve_api_base_url()
+            endpoint = f"{api_base}/api/v2/analysis/execute"
             
-            # 使用最新的檔案
-            latest_file = max(team_color_files, key=lambda p: p.stat().st_mtime)
-            logger.debug(f"[TEAM_SLUG_MAP] 載入: {latest_file.name}")
+            logger.debug(f"[TEAM_SLUG_MAP] 調用 API Function 98 獲取車隊顏色數據")
             
-            with open(latest_file, "r", encoding="utf-8") as f:
-                color_data = json.load(f)
+            response = requests.post(
+                endpoint,
+                params={
+                    "function_id": 98,
+                    "year": int(self.year)
+                },
+                timeout=15,
+                headers={"Accept": "application/json"}
+            )
             
-            # 正確的路徑是 data.teams (不是 team_palette)
-            teams_data = color_data.get("data", {}).get("teams", {})
-            for team_slug, info in teams_data.items():
-                team_name = info.get("team_name")
-                if team_name:
-                    team_slug_map[team_name] = team_slug
-            
-            logger.info(f"[TEAM_SLUG_MAP] ✅ 載入 {len(team_slug_map)} 個映射")
-            return team_slug_map
-            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    # 從 API 響應中提取 teams 數據
+                    teams_data = data.get("data", {}).get("teams", {})
+                    for team_slug, info in teams_data.items():
+                        team_name = info.get("team_name")
+                        if team_name:
+                            team_slug_map[team_name] = team_slug
+                    
+                    logger.info(f"[TEAM_SLUG_MAP] ✅ API 載入 {len(team_slug_map)} 個映射")
+                    return team_slug_map
+                else:
+                    logger.warning(f"[TEAM_SLUG_MAP] ⚠️ API 返回失敗: {data.get('message')}")
+            else:
+                logger.warning(f"[TEAM_SLUG_MAP] ⚠️ API 請求失敗: HTTP {response.status_code}")
+                
+        except requests.exceptions.Timeout:
+            logger.warning("[TEAM_SLUG_MAP] ⚠️ API 請求超時")
+        except requests.exceptions.RequestException as e:
+            logger.warning(f"[TEAM_SLUG_MAP] ⚠️ API 請求異常: {e}")
         except Exception as e:
             logger.error(f"[TEAM_SLUG_MAP] ❌ 載入失敗: {e}")
-            return team_slug_map
+        
+        # 如果 API 失敗，使用預設映射表作為後備
+        # 這是為了確保 EXE 環境中即使 API 不可用也能基本運作
+        logger.warning("[TEAM_SLUG_MAP] ⚠️ 使用預設映射表作為後備")
+        return {
+            "Red Bull Racing": "red-bull-racing",
+            "Red Bull": "red-bull-racing",
+            "Ferrari": "ferrari",
+            "McLaren": "mclaren",
+            "Mercedes": "mercedes",
+            "Aston Martin": "aston-martin",
+            "Alpine": "alpine",
+            "Williams": "williams",
+            "RB": "rb",
+            "Visa Cash App RB": "rb",
+            "Kick Sauber": "kick-sauber",
+            "Sauber": "kick-sauber",
+            "Haas": "haas",
+            "Haas F1 Team": "haas",
+        }
     
     def _transform_data_for_display(self, raw_data: Dict[str, Any]) -> Dict[str, Any]:
         """

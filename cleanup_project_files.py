@@ -82,6 +82,9 @@ def main():
         "requirements.txt",
         "README.md",
         "F1T_GUI.spec",
+        "0_關鍵詢問.md",  # 開發指導文件
+        "0.標準化對比流程.md",  # 標準化流程文件
+        "0.複製範本.md",  # 複製範本文件
         script_name,  # 🔒 自動保護：忽略腳本本身
     }
     
