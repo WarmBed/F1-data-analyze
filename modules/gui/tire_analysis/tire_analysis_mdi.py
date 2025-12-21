@@ -44,9 +44,9 @@ logger = get_logger(__name__)
 
 # 導入通用基礎類別
 try:
-    from ..base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
-    from ..base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
-    from ..base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
+    from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
+    from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_chart_widget_base import TelemetryChartWidgetBase, ChartTheme
 except ImportError:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig

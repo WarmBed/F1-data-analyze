@@ -61,7 +61,7 @@ class ChampionshipStandingsDemoWidget(QWidget):
         control_layout.addWidget(year_label)
 
         self.year_combo = QComboBox(self)
-        for season_year in range(2020, 2026):
+        for season_year in range(2020, 2027):
             self.year_combo.addItem(str(season_year), season_year)
         initial_index = max(0, self.year_combo.findData(self._year))
         self.year_combo.setCurrentIndex(initial_index)

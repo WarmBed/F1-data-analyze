@@ -1,0 +1,49 @@
+{
+  "format": "jsonl",
+  "version": "1.0",
+  "start_time": "2025-12-07T22:01:03.777383",
+  "end_time": "2025-12-07T22:02:04.138204",
+  "duration_seconds": 60.36,
+  "total_messages": 889,
+  "messages_per_second": 14.73,
+  "signalr": {
+    "url": "https://livetiming.formula1.com/signalr",
+    "hub": "Streaming",
+    "protocol": "1.5",
+    "topics": [
+      "CarData.z",
+      "Position.z",
+      "TimingData",
+      "TimingDataF1",
+      "TimingAppData",
+      "TimingStats",
+      "DriverList",
+      "SessionInfo",
+      "SessionStatus",
+      "SessionData",
+      "TrackStatus",
+      "WeatherData",
+      "WeatherDataSeries",
+      "RaceControlMessages",
+      "LapCount",
+      "LapSeries",
+      "CurrentTyres",
+      "TyreStintSeries",
+      "PitStopSeries",
+      "PitLaneTimeCollection",
+      "TopThree",
+      "Heartbeat",
+      "ExtrapolatedClock",
+      "TeamRadio",
+      "ContentStreams",
+      "AudioStreams",
+      "ArchiveStatus",
+      "ChampionshipPrediction",
+      "DriverRaceInfo"
+    ]
+  },
+  "files": {
+    "data": "raw_20251207_220102.jsonl",
+    "metadata": "raw_20251207_220102.meta.json"
+  }
+}

@@ -19,10 +19,6 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
 from core.logger import get_logger
 
-# 勝率預測器：延遲導入（避免 numba 與 core.logger 衝突）
-WIN_PROBABILITY_AVAILABLE = False
-LiveWinProbabilityPredictor = None
-
 # F83 超車預測器：延遲導入
 OVERTAKE_PREDICTION_AVAILABLE = False
 OvertakePredictor = None
@@ -32,21 +28,6 @@ CLOSE_COMBAT_PREDICTION_AVAILABLE = False
 CloseCombatPredictor = None
 
 logger = get_logger("live_timing.data_manager", component="gui")
-
-def _lazy_import_predictor():
-    """延遲導入勝率預測器，避免與 numba 衝突"""
-    global WIN_PROBABILITY_AVAILABLE, LiveWinProbabilityPredictor
-    if WIN_PROBABILITY_AVAILABLE:
-        return True
-    try:
-        from CLI_modules.cli.prediction.live_win_probability.predictor import LiveWinProbabilityPredictor as _Predictor
-        LiveWinProbabilityPredictor = _Predictor
-        WIN_PROBABILITY_AVAILABLE = True
-        logger.info("Live win probability predictor loaded")
-        return True
-    except Exception as e:
-        logger.warning("Live win probability predictor unavailable: %s: %s", type(e).__name__, e)
-        return False
 
 def _lazy_import_overtake_predictor():
     """延遲導入 F83 超車預測器"""
@@ -164,12 +145,6 @@ class LiveTimingDataManager(QObject):
         self._cached_tyre_state_index: Dict[str, Dict[str, Any]] = {}
         self._cached_tyre_timestamps: List[str] = []
         
-        # 勝率預測器
-        self._win_predictor: Optional['LiveWinProbabilityPredictor'] = None
-        self._cached_predictions: Dict[str, Dict[str, float]] = {}
-        self._last_prediction_lap: int = -1
-        self._init_win_predictor()
-        
         # F83 超車預測器（即時更新，不需要快取）
         self._overtake_predictor: Optional['OvertakePredictor'] = None
         self._init_overtake_predictor()
@@ -202,33 +177,6 @@ class LiveTimingDataManager(QObject):
         self._driver_throttle_samples: Dict[str, Dict[str, Any]] = {}
         
         logger.info("[DATA_MANAGER] LiveTimingDataManager 初始化完成")
-    
-    def _init_win_predictor(self):
-        """初始化勝率預測器"""
-        # 延遲導入
-        if not _lazy_import_predictor():
-            logger.warning("[DATA_MANAGER] 勝率預測不可用")
-            return
-            
-        try:
-            self._win_predictor = LiveWinProbabilityPredictor()
-            
-            # 尋找模型檔案
-            root_dir = Path(__file__).parent.parent.parent.parent.parent
-            model_path = root_dir / 'models' / 'win_probability_xgb_v2.pkl'
-            
-            if model_path.exists():
-                if self._win_predictor.load_model(str(model_path)):
-                    logger.info("[DATA_MANAGER] 勝率模型載入成功: %s", model_path)
-                else:
-                    logger.error("[DATA_MANAGER] 勝率模型載入失敗")
-                    self._win_predictor = None
-            else:
-                logger.error("[DATA_MANAGER] 找不到勝率模型: %s", model_path)
-                self._win_predictor = None
-        except Exception as e:
-            logger.exception("[DATA_MANAGER] 初始化勝率預測器失敗: %s", e)
-            self._win_predictor = None
     
     def _init_overtake_predictor(self):
         """初始化 F83 超車預測器"""
@@ -874,8 +822,8 @@ class LiveTimingDataManager(QObject):
         
         snapshot = self._snapshots[self._current_index]
         
-        # ✅ 修復：更新預測數據（與播放時一致）
-        self._update_win_probabilities(snapshot)
+        # ✅ 更新追蹤數據
+        self._update_tire_saving_scores(snapshot)
         # ❌ 性能優化：禁用 OT% 和 CC% 預測（占用 80% CPU）
         # self._update_overtake_predictions(snapshot)
         # self._update_close_combat_predictions(snapshot)
@@ -903,8 +851,8 @@ class LiveTimingDataManager(QObject):
         
         snapshot = self._snapshots[self._current_index]
         
-        # ✅ 修復：更新預測數據（與播放時一致）
-        self._update_win_probabilities(snapshot)
+        # ✅ 更新追蹤數據
+        self._update_tire_saving_scores(snapshot)
         # ❌ 性能優化：禁用 OT% 和 CC% 預測（占用 80% CPU）
         # self._update_overtake_predictions(snapshot)
         # self._update_close_combat_predictions(snapshot)
@@ -1207,172 +1155,158 @@ class LiveTimingDataManager(QObject):
         """獲取賽道資料"""
         return self._track_data
     
-    def _update_win_probabilities(self, snapshot: Dict[str, Any]):
-        """
-        計算並更新 snapshot 中的勝率數據
-        
-        每圈更新一次勝率預測（避免頻繁計算）
-        """
-        if not self._win_predictor:
-            return
-        
-        drivers = snapshot.get('drivers', {})
-        if not drivers:
-            return
-        
-        # 獲取當前圈數（只在圈數變化時重新計算）
-        current_lap = 0
-        for driver_data in drivers.values():
-            lap = driver_data.get('lap', 0)
-            if lap and lap > current_lap:
-                current_lap = lap
-        
-        # 如果圈數沒變，使用緩存
-        if current_lap == self._last_prediction_lap and self._cached_predictions:
-            for driver_num, probs in self._cached_predictions.items():
-                if driver_num in drivers:
-                    drivers[driver_num]['win_probability'] = probs.get('win_prob', 0) * 100
-                    drivers[driver_num]['p2_probability'] = probs.get('p2_prob', 0) * 100
-                    drivers[driver_num]['p3_probability'] = probs.get('podium_prob', 0) * 100
-            return
-        
-        # 新圈數，重新計算
-        try:
-            # 準備輪胎狀態
-            tyre_state = self.get_tyre_state()
-            
-            # 準備賽事資訊
-            race_info = {
-                'total_laps': 60,  # 預設
-                'current_lap': current_lap,  # 當前圈數（必須！）
-                'circuit': self._race_info.get('race', 'Unknown') if self._race_info else 'Unknown',
-            }
-            
-            # 呼叫預測器
-            predictions = self._win_predictor.predict_for_snapshot(snapshot, tyre_state, race_info)
-            
-            if predictions:
-                self._cached_predictions = predictions
-                self._last_prediction_lap = current_lap
-                
-                # 更新 snapshot
-                for driver_num, probs in predictions.items():
-                    if driver_num in drivers:
-                        drivers[driver_num]['win_probability'] = probs.get('win_prob', 0) * 100
-                        drivers[driver_num]['p2_probability'] = probs.get('p2_prob', 0) * 100
-                        drivers[driver_num]['p3_probability'] = probs.get('podium_prob', 0) * 100
-                
-                # 調試輸出（每圈只印一次）
-                logger.info("[DATA_MANAGER] 勝率已更新 (圈 %d): %d 車手", current_lap, len(predictions))
-            else:
-                logger.debug("[DATA_MANAGER] 勝率預測返回空結果 (圈 %d)", current_lap)
-                
-        except Exception as e:
-            logger.exception("[DATA_MANAGER] 勝率預測失敗: %s", e)
-        
-        # F87: 更新省胎分數
-        self._update_tire_saving_scores(snapshot)
-    
     def _update_tire_saving_scores(self, snapshot: Dict[str, Any]):
         """
-        F87: 計算並更新 snapshot 中的省胎分數
+        F87: 計算並更新 snapshot 中的省胎分數與省油燈號
         
-        與 P1% 相同模式：直接計算並合併到 drivers 字典。
-        使用 snapshot 中的 throttle 數據計算 full_throttle_ratio。
+        使用動態滾動基線（10圈窗口）計算油門 95% 比率。
+        進站前後圈排除不顯示警告燈號。
+        
+        燈號邏輯:
+        - 紅燈: 偏離 < -5% (HIGH)
+        - 黃燈: 偏離 -3% ~ -5% (MEDIUM)
+        - 無燈: 正常或數據不足
         """
         drivers = snapshot.get('drivers', {})
         if not drivers:
             return
         
-        # 獲取賽道名稱
-        circuit_name = self._race_info.get('circuit', '') if self._race_info else ''
-        
-        # 獲取 Throttle Baseline
-        from modules.gui.live_timing.live_timing_modules.driver_strategy import get_throttle_baseline_for_circuit
-        baseline_data = get_throttle_baseline_for_circuit(circuit_name)
-        baseline_ratio = baseline_data.get('full_throttle_ratio', {}).get('mean', 0.35)
-        baseline_std = baseline_data.get('full_throttle_ratio', {}).get('std', 0.05)
-        threshold = baseline_ratio - baseline_std
+        # 動態滾動基線參數
+        ROLLING_WINDOW = 10       # 滾動窗口大小
+        THRESHOLD_HIGH = -5.0     # 高警告閾值 (紅燈)
+        THRESHOLD_MEDIUM = -3.0   # 中警告閾值 (黃燈)
+        MIN_LAPS_FOR_BASELINE = 3 # 建立基線所需最少圈數
+        OUTLIER_FILTER = 0.7      # 異常值過濾閾值 (排除進站圈)
         
         for driver_num, driver_data in drivers.items():
             # 從 snapshot 獲取 throttle 值
             throttle = driver_data.get('throttle', 0)
             
-            # 累積 throttle 樣本到內部追蹤器
+            # 初始化追蹤器
             if driver_num not in self._driver_throttle_samples:
                 self._driver_throttle_samples[driver_num] = {
                     'samples': [],
                     'last_lap': 0,
-                    'lap_ratios': {},
-                    'current_score': 0.0,  # 保持當前分數直到下一圈計算完成
+                    'lap_ratios': {},           # {lap_num: ratio}
+                    'pit_laps': set(),          # 進站圈集合
+                    'current_score': 0.0,
                     'current_level': 'NONE',
-                    'score_calculated_for_lap': 0  # 記錄分數是為哪一圈計算的
+                    'current_lamp': '',         # 燈號: '', 'Y', 'R'
+                    'current_throttle_pct': 0.0,  # 當前圈油門95%
+                    'dynamic_baseline': None,   # 動態滾動基線
+                    'score_calculated_for_lap': 0
                 }
             
             tracker = self._driver_throttle_samples[driver_num]
             current_lap = driver_data.get('lap', 0) or 0
             
-            # 先累積 throttle 樣本 (在判斷圈數變化之前)
+            # 檢測進站狀態
+            is_in_pit = driver_data.get('in_pit', False) or driver_data.get('pit_out', False)
+            if is_in_pit and current_lap > 0:
+                tracker['pit_laps'].add(current_lap)
+                # 進站圈前後也標記
+                if current_lap > 1:
+                    tracker['pit_laps'].add(current_lap - 1)
+                tracker['pit_laps'].add(current_lap + 1)
+            
+            # 累積 throttle 樣本
             if throttle is not None:
                 try:
                     tracker['samples'].append(int(throttle))
                 except (ValueError, TypeError):
                     pass
             
-            # 圈數變化時：計算上一圈的 ratio，然後更新分數
-            # 分數會保持顯示整圈，直到下次圈數變化時才更新
+            # 圈數變化時：計算上一圈的 ratio
             if current_lap > tracker['last_lap'] and current_lap > 1:
-                # 計算上一圈的 full_throttle_ratio
+                # 計算上一圈的 full_throttle_ratio (油門 >= 95% 的比率)
                 if tracker['samples']:
                     full_throttle_count = sum(1 for s in tracker['samples'] if s >= 95)
-                    ratio = full_throttle_count / len(tracker['samples'])
-                    tracker['lap_ratios'][tracker['last_lap']] = ratio
+                    ratio = full_throttle_count / len(tracker['samples']) * 100  # 轉為百分比
+                    completed_lap = tracker['last_lap']
+                    tracker['lap_ratios'][completed_lap] = ratio
+                    tracker['current_throttle_pct'] = ratio
                 
-                # 清空樣本，開始收集新一圈的數據
+                # 清空樣本
                 tracker['samples'] = []
                 
-                # 使用最近 5 圈的 ratio 計算 SF%
-                if len(tracker['lap_ratios']) >= 3:
-                    recent_laps = sorted(tracker['lap_ratios'].keys())[-5:]
-                    recent_ratios = [tracker['lap_ratios'][lap] for lap in recent_laps]
-                    avg_ratio = sum(recent_ratios) / len(recent_ratios)
+                # 計算動態滾動基線（排除進站圈和異常值）
+                all_laps = sorted(tracker['lap_ratios'].keys())
+                
+                if len(all_laps) >= MIN_LAPS_FOR_BASELINE:
+                    # 取最近 ROLLING_WINDOW 圈
+                    recent_laps = all_laps[-ROLLING_WINDOW:]
                     
-                    # SF% 計算: 低於基準值才有分數
-                    if avg_ratio >= threshold:
-                        score = 0.0
-                    else:
-                        if baseline_ratio > 0:
-                            score = max(0, (baseline_ratio - avg_ratio) / baseline_ratio * 100)
+                    # 過濾：排除進站圈
+                    valid_ratios = [
+                        tracker['lap_ratios'][lap]
+                        for lap in recent_laps
+                        if lap not in tracker['pit_laps']
+                    ]
+                    
+                    if len(valid_ratios) >= MIN_LAPS_FOR_BASELINE:
+                        # 計算初步中位數作為基準
+                        import statistics
+                        median_candidate = statistics.median(valid_ratios)
+                        
+                        # 進一步過濾：排除低於基準 70% 的異常值
+                        filtered_ratios = [
+                            r for r in valid_ratios
+                            if r > median_candidate * OUTLIER_FILTER
+                        ]
+                        
+                        if len(filtered_ratios) >= MIN_LAPS_FOR_BASELINE:
+                            tracker['dynamic_baseline'] = statistics.median(filtered_ratios)
                         else:
-                            score = 0.0
-                        score = min(50, score)  # 限制最大值
+                            tracker['dynamic_baseline'] = median_candidate
+                
+                # 計算偏離度和燈號
+                lamp = ''
+                level = 'NONE'
+                score = 0.0
+                
+                baseline = tracker['dynamic_baseline']
+                current_ratio = tracker['current_throttle_pct']
+                completed_lap = tracker['last_lap']
+                
+                # 檢查是否為進站前後圈（排除警告）
+                is_pit_related = completed_lap in tracker['pit_laps']
+                
+                if baseline is not None and baseline > 0 and not is_pit_related:
+                    # 計算偏離百分比
+                    deviation = current_ratio - baseline
+                    deviation_pct = (deviation / baseline) * 100
                     
-                    score = min(100, max(0, score))
-                    
-                    # 判斷等級
-                    if score < 5:
-                        level = 'NONE'
-                    elif score < 15:
-                        level = 'LIGHT'
-                    elif score < 30:
-                        level = 'MODERATE'
-                    else:
+                    # 判斷燈號
+                    if deviation_pct <= THRESHOLD_HIGH:
+                        lamp = 'R'  # 紅燈
                         level = 'HEAVY'
-                    
-                    # 保存分數 (這個分數會持續顯示整個 current_lap)
-                    tracker['current_score'] = score
-                    tracker['current_level'] = level
-                    tracker['score_calculated_for_lap'] = current_lap
+                        score = min(50, abs(deviation_pct))
+                    elif deviation_pct <= THRESHOLD_MEDIUM:
+                        lamp = 'Y'  # 黃燈
+                        level = 'MODERATE'
+                        score = min(30, abs(deviation_pct))
+                    else:
+                        lamp = ''   # 無燈號（正常）
+                        level = 'NONE'
+                        score = 0.0
+                
+                # 保存狀態
+                tracker['current_lamp'] = lamp
+                tracker['current_level'] = level
+                tracker['current_score'] = score
+                tracker['score_calculated_for_lap'] = current_lap
                 
                 # 更新 last_lap
                 tracker['last_lap'] = current_lap
             elif tracker['last_lap'] == 0:
-                # 初始化 last_lap
                 tracker['last_lap'] = current_lap
             
-            # 使用追蹤器中保存的分數（保持顯示整圈，直到下次圈數變化）
+            # 輸出到 snapshot
             drivers[driver_num]['tire_saving_score'] = tracker['current_score']
             drivers[driver_num]['tire_saving_level'] = tracker['current_level']
+            drivers[driver_num]['fuel_saving_lamp'] = tracker['current_lamp']
+            drivers[driver_num]['throttle_95_pct'] = tracker['current_throttle_pct']
+            drivers[driver_num]['throttle_baseline'] = tracker.get('dynamic_baseline', 0)
     
     def _update_overtake_predictions(self, snapshot: Dict[str, Any]):
         """
@@ -1899,9 +1833,9 @@ class LiveTimingDataManager(QObject):
         if new_index != self._current_index:
             self._current_index = new_index
             
-            # 取得快照並計算勝率和超車預測
+            # 取得快照並更新追蹤數據
             snapshot = self._snapshots[self._current_index]
-            self._update_win_probabilities(snapshot)
+            self._update_tire_saving_scores(snapshot)
             
             # ✅ 策略 A：將 OT%/CC% 預測移到背景執行緒
             if self._prediction_worker:

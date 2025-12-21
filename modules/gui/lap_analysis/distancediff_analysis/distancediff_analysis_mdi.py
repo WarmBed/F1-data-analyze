@@ -991,6 +991,12 @@ class distancediffAnalysisModule(IAnalysisModule):
             if self.distancediff_chart_widget:
                 self.distancediff_chart_widget.update_distancediff_data(data)
                 
+                # 數據載入完成後，應用時間軸設定
+                use_time_axis = getattr(self, 'use_time_axis', False)
+                if use_time_axis and hasattr(self.distancediff_chart_widget, 'set_time_axis_mode'):
+                    logger.debug(f"[distancediff_MDI] ⏱️ 數據載入完成，應用時間軸模式: {use_time_axis}")
+                    self.distancediff_chart_widget.set_time_axis_mode(use_time_axis)
+                
                 # 更新工具欄狀態信息
                 self._update_toolbar_status(data)
                 
@@ -1510,13 +1516,27 @@ class distancediffAnalysisModule(IAnalysisModule):
             lap1 = kwargs.get('lap1', self.lap1)
             lap2 = kwargs.get('lap2', self.lap2)
             is_fastest = kwargs.get('is_fastest', False)
+            use_time_axis = kwargs.get('use_time_axis', False)
+            
+            logger.debug(f"[distancediff_MDI] load_data 參數: use_time_axis={use_time_axis}")
+            
+            # 儲存時間軸設定
+            self.use_time_axis = use_time_axis
 
             if self.data_manager:
-                return self.data_manager.load_distancediff_data(
+                success = self.data_manager.load_distancediff_data(
                     year=year, race=race, session=session,
                     driver1=driver1, driver2=driver2,
                     lap1=lap1, lap2=lap2, is_fastest=is_fastest
                 )
+                
+                # 數據載入成功後設置時間軸模式
+                if success and use_time_axis and self.distancediff_chart_widget:
+                    if hasattr(self.distancediff_chart_widget, 'set_time_axis_mode'):
+                        logger.debug(f"[distancediff_MDI] 設置圖表時間軸模式: {use_time_axis}")
+                        self.distancediff_chart_widget.set_time_axis_mode(use_time_axis)
+                
+                return success
             return False
         except Exception as e:
             logger.error(f"[distancediff_MDI] load_data 失敗: {e}")

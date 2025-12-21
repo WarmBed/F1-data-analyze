@@ -36,6 +36,7 @@ from PyQt5.QtWidgets import (
 from core.gui_i18n import tr
 
 from core.logger import get_logger
+from ..core.hover_tooltip_mixin import HoverTooltipMixin, HoverInfo, HoverDataPoint
 logger = get_logger(__name__)
 
 
@@ -355,7 +356,7 @@ def calculate_tire_saving_for_driver_data(
 # =============================================================================
 # DriverStrategyWidget - Main PyQt5 Native Drawing Widget
 # =============================================================================
-class DriverStrategyWidget(QWidget):
+class DriverStrategyWidget(HoverTooltipMixin, QWidget):
     """
     Driver strategy visualization using PyQt5 native drawing.
     
@@ -510,6 +511,9 @@ class DriverStrategyWidget(QWidget):
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
         
+        # Initialize hover tracking (from HoverTooltipMixin)
+        self._init_hover_tracking()
+        
     def _show_context_menu(self, pos):
         """Show context menu at position."""
         global_pos = self.mapToGlobal(pos)
@@ -519,6 +523,98 @@ class DriverStrategyWidget(QWidget):
                 return global_pos
         
         self.contextMenuEvent(FakeEvent())
+    
+    # =========================================================================
+    # Mouse Event Handlers for Hover
+    # =========================================================================
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move for hover tracking."""
+        if self._handle_mouse_move(event):
+            self.update()
+        super().mouseMoveEvent(event)
+    
+    def leaveEvent(self, event):
+        """Handle mouse leave."""
+        if self._handle_mouse_leave():
+            self.update()
+        super().leaveEvent(event)
+    
+    def _get_chart_rect(self):
+        """Override to return chart area as QRect."""
+        from PyQt5.QtCore import QRect
+        return QRect(
+            self._margin_left,
+            self._margin_top,
+            self.width() - self._margin_left - self._margin_right,
+            self.height() - self._margin_top - self._margin_bottom
+        )
+    
+    def _pixel_to_x_value(self, pixel_x: int, chart_rect) -> float:
+        """Convert pixel X to lap number."""
+        if chart_rect.width() <= 0 or self._total_laps <= 0:
+            return 0.0
+        
+        ratio = (pixel_x - chart_rect.left()) / chart_rect.width()
+        return ratio * self._total_laps
+    
+    def _get_hover_data_at_x(self, x_value: float):
+        """Get hover data at the specified lap number."""
+        # Round to nearest lap
+        lap = round(x_value)
+        lap = max(1, min(lap, self._total_laps))
+        
+        data_points = []
+        
+        # Get actual lap time
+        if lap in self._actual_lap_times:
+            actual_time = self._actual_lap_times[lap]
+            mins = int(actual_time // 60)
+            secs = actual_time % 60
+            formatted = f"{mins}:{secs:05.2f}"
+            
+            data_points.append(HoverDataPoint(
+                label="Actual",
+                value=actual_time,
+                formatted_value=formatted,
+                color=COLOR_ACTUAL
+            ))
+        
+        # Get predicted lap time
+        if lap in self._predicted_lap_times:
+            pred_time = self._predicted_lap_times[lap]
+            mins = int(pred_time // 60)
+            secs = pred_time % 60
+            formatted = f"{mins}:{secs:05.2f}"
+            
+            data_points.append(HoverDataPoint(
+                label="Predicted",
+                value=pred_time,
+                formatted_value=formatted,
+                color=COLOR_PREDICTED,
+                is_primary=False
+            ))
+        
+        # Get tyre compound if available
+        if lap in self._lap_compounds:
+            compound = self._lap_compounds[lap]
+            data_points.append(HoverDataPoint(
+                label="Tyre",
+                value=0,
+                formatted_value=compound,
+                color="#AAAAAA",
+                is_primary=False
+            ))
+        
+        if not data_points:
+            return None
+        
+        return HoverInfo(
+            x_value=float(lap),
+            x_label=f"Lap: {lap}",
+            data_points=data_points,
+            is_valid=True
+        )
         
     def _setup_info_bar(self, layout: QVBoxLayout):
         """Setup the information bar at the top using layout."""
@@ -1862,6 +1958,9 @@ class DriverStrategyWidget(QWidget):
         # Draw legend - 隱藏圖例
         # self._draw_legend(painter, chart_rect)
         
+        # Draw hover elements (from HoverTooltipMixin)
+        self._draw_hover_elements(painter)
+        
         painter.end()
         
     def _draw_grid(self, painter: QPainter, chart_rect: QRectF):
@@ -2116,12 +2215,12 @@ class DriverStrategyWidget(QWidget):
                 painter.setPen(pen)
                 painter.drawLine(QPointF(x1, y1), QPointF(x2, y2))
         
-        # Draw small circle markers with compound colors
-        for x, y, lap, diff, compound in points:
-            color = self._get_compound_color(compound)
-            painter.setPen(QPen(QColor(color)))
-            painter.setBrush(QBrush(QColor(color)))
-            painter.drawEllipse(QPointF(x, y), 2.5, 2.5)  # Smaller circles
+        # Draw small circle markers with compound colors - DISABLED (2025-12-21)
+        # for x, y, lap, diff, compound in points:
+        #     color = self._get_compound_color(compound)
+        #     painter.setPen(QPen(QColor(color)))
+        #     painter.setBrush(QBrush(QColor(color)))
+        #     painter.drawEllipse(QPointF(x, y), 2.5, 2.5)  # Smaller circles
         
         # Draw diff label only for the CURRENT lap (latest actual lap)
         if points:

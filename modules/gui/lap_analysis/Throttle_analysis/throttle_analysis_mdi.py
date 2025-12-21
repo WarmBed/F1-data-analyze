@@ -654,6 +654,12 @@ class ThrottleAnalysisModule(IAnalysisModule):
             if self.throttle_chart_widget:
                 self.throttle_chart_widget.update_throttle_data(data)
                 
+                # 數據載入完成後，應用時間軸設定
+                use_time_axis = getattr(self, 'use_time_axis', False)
+                if use_time_axis and hasattr(self.throttle_chart_widget, 'set_time_axis_mode'):
+                    logger.debug(f"[THROTTLE_MDI] ⏱️ 數據載入完成，應用時間軸模式: {use_time_axis}")
+                    self.throttle_chart_widget.set_time_axis_mode(use_time_axis)
+                
                 # 更新工具欄狀態信息
                 self._update_toolbar_status(data)
                 
@@ -1217,16 +1223,34 @@ class ThrottleAnalysisModule(IAnalysisModule):
             year = str(kwargs.get('year', self.current_year))
             race = kwargs.get('race', self.current_race)
             session = kwargs.get('session', self.current_session)
+            driver1 = kwargs.get('driver1', 'VER')
+            driver2 = kwargs.get('driver2', 'VER')
+            lap1 = kwargs.get('lap1', 1)
+            lap2 = kwargs.get('lap2', 1)
+            use_time_axis = kwargs.get('use_time_axis', False)
             
-            return self.data_manager.load_throttle_data(
+            logger.debug(f"[THROTTLE_MDI] load_data 參數: use_time_axis={use_time_axis}")
+            
+            # 儲存時間軸設定
+            self.use_time_axis = use_time_axis
+            
+            success = self.data_manager.load_throttle_data(
                 year=year,
                 race=race,
                 session=session,
-                driver1=kwargs.get('driver1', 'VER'),
-                driver2=kwargs.get('driver2', 'VER'),
-                lap1=kwargs.get('lap1', 1),
-                lap2=kwargs.get('lap2', 1)
+                driver1=driver1,
+                driver2=driver2,
+                lap1=lap1,
+                lap2=lap2
             )
+            
+            # 數據載入成功後設置時間軸模式
+            if success and use_time_axis and self.throttle_chart_widget:
+                if hasattr(self.throttle_chart_widget, 'set_time_axis_mode'):
+                    logger.debug(f"[THROTTLE_MDI] 設置圖表時間軸模式: {use_time_axis}")
+                    self.throttle_chart_widget.set_time_axis_mode(use_time_axis)
+            
+            return success
         except Exception as e:
             logger.error(f"[THROTTLE_MDI] load_data 失敗: {e}")
             return False

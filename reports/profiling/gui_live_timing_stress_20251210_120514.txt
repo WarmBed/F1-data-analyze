@@ -1,0 +1,136 @@
+======================================================================
+F1T GUI 性能分析報告 - Live Timing 壓力測試
+生成時間: 2025-12-10 12:05:25
+======================================================================
+
+
+📊 累計時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:05:25 2025    reports\profiling\gui_live_timing_stress_20251210_120514.prof
+
+         6178 function calls (6174 primitive calls) in 0.151 seconds
+
+   Ordered by: cumulative time
+   List reduced from 282 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        3    0.000    0.000    0.143    0.048 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\models.py:890(content)
+        2    0.000    0.000    0.143    0.071 {method 'join' of 'bytes' objects}
+       11    0.000    0.000    0.143    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\models.py:816(generate)
+       11    0.000    0.000    0.143    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:1044(stream)
+       11    0.000    0.000    0.143    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:1173(read_chunked)
+       11    0.000    0.000    0.142    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:1133(_update_chunk_length)
+       13    0.000    0.000    0.142    0.011 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\socket.py:706(readinto)
+       32    0.000    0.000    0.142    0.004 {method 'readline' of '_io.BufferedReader' objects}
+       13    0.000    0.000    0.142    0.011 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1236(recv_into)
+       13    0.000    0.000    0.142    0.011 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1094(read)
+       13    0.142    0.011    0.142    0.011 {method 'read' of '_ssl._SSLSocket' objects}
+     1009    0.002    0.000    0.004    0.000 D:\OneDrive\Code\F1-data-analyze\f1t_gui_main.py:1118(eventFilter)
+        1    0.000    0.000    0.003    0.003 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_mdi.py:255(_on_api_success)
+        1    0.000    0.000    0.003    0.003 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_mdi.py:278(_on_load_completed)
+        1    0.000    0.000    0.003    0.003 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:200(populate_data)
+        1    0.000    0.000    0.003    0.003 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:211(_populate_timeline)
+        3    0.000    0.000    0.002    0.001 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:27(__init__)
+     1009    0.001    0.000    0.001    0.000 {function CustomMdiArea.eventFilter at 0x0000027A3D3371A0}
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\weakref.py:585(__call__)
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:1170(_close_pool_connections)
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:320(close)
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\http\client.py:1013(close)
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\socket.py:501(close)
+        1    0.001    0.001    0.001    0.001 {built-in method setVisible}
+1104/1100    0.001    0.000    0.001    0.000 {built-in method builtins.isinstance}
+        3    0.000    0.000    0.001    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:32(_init_ui)
+        2    0.000    0.000    0.001    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:345(resizeEvent)
+        2    0.000    0.000    0.001    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:350(_adjust_responsive_font)
+       20    0.000    0.000    0.001    0.000 {built-in method addWidget}
+       34    0.000    0.000    0.000    0.000 {built-in method setStyleSheet}
+
+
+
+
+⏱️  總執行時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:05:25 2025    reports\profiling\gui_live_timing_stress_20251210_120514.prof
+
+         6178 function calls (6174 primitive calls) in 0.151 seconds
+
+   Ordered by: internal time
+   List reduced from 282 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       13    0.142    0.011    0.142    0.011 {method 'read' of '_ssl._SSLSocket' objects}
+     1009    0.002    0.000    0.004    0.000 D:\OneDrive\Code\F1-data-analyze\f1t_gui_main.py:1118(eventFilter)
+     1009    0.001    0.000    0.001    0.000 {function CustomMdiArea.eventFilter at 0x0000027A3D3371A0}
+1104/1100    0.001    0.000    0.001    0.000 {built-in method builtins.isinstance}
+        1    0.001    0.001    0.001    0.001 {built-in method setVisible}
+       20    0.000    0.000    0.001    0.000 {built-in method addWidget}
+     1013    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+       34    0.000    0.000    0.000    0.000 {built-in method setStyleSheet}
+        3    0.000    0.000    0.001    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:32(_init_ui)
+        1    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py:343(raw_decode)
+        3    0.000    0.000    0.000    0.000 {built-in method setValue}
+       10    0.000    0.000    0.000    0.000 {method 'decompress' of 'zlib.Decompress' objects}
+        3    0.000    0.000    0.002    0.001 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:27(__init__)
+        3    0.000    0.000    0.000    0.000 {method 'emit' of 'PyQt5.QtCore.pyqtBoundSignal' objects}
+       18    0.000    0.000    0.000    0.000 {built-in method setFont}
+      119    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+        1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+       11    0.000    0.000    0.143    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:1173(read_chunked)
+        2    0.000    0.000    0.000    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:336(_create_timeline_line)
+       11    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:122(decompress)
+       32    0.000    0.000    0.142    0.004 {method 'readline' of '_io.BufferedReader' objects}
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\weakref.py:585(__call__)
+       13    0.000    0.000    0.142    0.011 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1236(recv_into)
+       11    0.000    0.000    0.142    0.013 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:1133(_update_chunk_length)
+       13    0.000    0.000    0.142    0.011 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\socket.py:706(readinto)
+        2    0.000    0.000    0.001    0.000 D:\OneDrive\Code\F1-data-analyze\modules\gui\weather_timeline\weather_timeline_widget.py:350(_adjust_responsive_font)
+       17    0.000    0.000    0.000    0.000 {built-in method setText}
+        1    0.000    0.000    0.000    0.000 {singleShot}
+        1    0.000    0.000    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:320(close)
+        1    0.000    0.000    0.000    0.000 D:\OneDrive\Code\F1-data-analyze\tools\profile_gui.py:204(stop_profiling)
+
+
+
+
+🔢 調用次數排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:05:25 2025    reports\profiling\gui_live_timing_stress_20251210_120514.prof
+
+         6178 function calls (6174 primitive calls) in 0.151 seconds
+
+   Ordered by: call count
+   List reduced from 282 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+1104/1100    0.001    0.000    0.001    0.000 {built-in method builtins.isinstance}
+     1013    0.000    0.000    0.000    0.000 {built-in method builtins.getattr}
+     1009    0.002    0.000    0.004    0.000 D:\OneDrive\Code\F1-data-analyze\f1t_gui_main.py:1118(eventFilter)
+     1009    0.001    0.000    0.001    0.000 {function CustomMdiArea.eventFilter at 0x0000027A3D3371A0}
+      215    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
+      119    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       81    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+       60    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       50    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+       43    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
+       34    0.000    0.000    0.000    0.000 {built-in method setStyleSheet}
+       32    0.000    0.000    0.142    0.004 {method 'readline' of '_io.BufferedReader' objects}
+       29    0.000    0.000    0.000    0.000 D:\OneDrive\Code\F1-data-analyze\core\gui_i18n.py:1863(t)
+       29    0.000    0.000    0.000    0.000 D:\OneDrive\Code\F1-data-analyze\core\gui_i18n.py:1914(tr)
+       26    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1082(_checkClosed)
+       26    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\utils.py:52(_has_surrogates)
+       26    0.000    0.000    0.000    0.000 {method 'encode' of 'str' objects}
+       25    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\_policybase.py:289(_sanitize_header)
+       25    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\_policybase.py:319(header_fetch_parse)
+       25    0.000    0.000    0.000    0.000 {method 'split' of 'str' objects}
+       23    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\_collections.py:257(__getitem__)
+       23    0.000    0.000    0.000    0.000 {method 'match' of 're.Pattern' objects}
+       22    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\feedparser.py:77(readline)
+       22    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\feedparser.py:127(__next__)
+       21    0.000    0.000    0.000    0.000 {method 'lstrip' of 'str' objects}
+       20    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\http\client.py:633(_safe_read)
+       20    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\_collections.py:289(__iter__)
+       20    0.000    0.000    0.001    0.000 {built-in method addWidget}
+       20    0.000    0.000    0.000    0.000 {method 'popleft' of 'collections.deque' objects}
+       20    0.000    0.000    0.000    0.000 {method 'read' of '_io.BufferedReader' objects}
+
+

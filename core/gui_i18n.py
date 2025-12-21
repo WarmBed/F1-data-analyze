@@ -1169,7 +1169,7 @@ class GuiTranslator:
             'hide_details': {'zh': '隱藏詳情', 'en': 'Hide Details', 'ja': '詳細を非表示'},
             
             # 歡迎頁面
-            'main_title': {'zh': 'F1 TelemetryStation Pro', 'en': 'F1 TelemetryStation Pro', 'ja': 'F1 TelemetryStation Pro'},
+            'main_title': {'zh': 'PIT WALL', 'en': 'PIT WALL', 'ja': 'PIT WALL'},
             'subtitle': {'zh': '專業級 F1 數據分析平台', 'en': 'Professional F1 Data Analysis Platform', 'ja': 'Professional F1 Data Analysis Platform'},
             'welcome_info': {'zh': ' 左鍵選擇模組 • 右鍵執行分析 • 支援 Ctrl/Shift 多選批量分析 • Version 0.0', 'en': ' Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0', 'ja': ' Left click to select module • Right click to execute analysis • Support Ctrl/Shift multi-select batch analysis • Version 0.0'},
             
@@ -1381,6 +1381,24 @@ class GuiTranslator:
             'maximize_tooltip': {'zh': '最大化/還原', 'en': 'Maximize/Restore', 'ja': 'Maximize/Restore'},
             'popout_tooltip': {'zh': '彈出為獨立視窗', 'en': 'Pop out as independent window', 'ja': 'Pop out as independent window'},
             'close_tooltip': {'zh': '關閉', 'en': 'Close', 'ja': '閉じる'},
+            
+            # MDI 標題欄按鈕 (S, L, D)
+            'sync_button_tooltip_enabled': {'zh': '接收主程式同步：啟用 (S)', 'en': 'Receive sync from main: Enabled (S)', 'ja': 'メイン同期を受信：有効 (S)'},
+            'sync_button_tooltip_disabled': {'zh': '接收主程式同步：停用 (X)', 'en': 'Receive sync from main: Disabled (X)', 'ja': 'メイン同期を受信：無効 (X)'},
+            'linkage_button_tooltip_enabled': {'zh': '個別連動：啟用 (L)', 'en': 'Individual linkage: Enabled (L)', 'ja': '個別リンク：有効 (L)'},
+            'linkage_button_tooltip_disabled': {'zh': '個別連動：停用 (X)', 'en': 'Individual linkage: Disabled (X)', 'ja': '個別リンク：無効 (X)'},
+            'driver_lap_sync_tooltip_enabled': {'zh': '與主視窗同步車手與圈數：啟用 (D)', 'en': 'Sync driver & lap with main window: Enabled (D)', 'ja': 'メインウィンドウとドライバー・ラップを同期：有効 (D)'},
+            'driver_lap_sync_tooltip_disabled': {'zh': '與主視窗同步車手與圈數：停用 (X)', 'en': 'Sync driver & lap with main window: Disabled (X)', 'ja': 'メインウィンドウとドライバー・ラップを同期：無効 (X)'},
+            'restore_normal_size': {'zh': '恢復正常大小', 'en': 'Restore Normal Size', 'ja': '通常サイズに復元'},
+            'window_settings': {'zh': '視窗設定', 'en': 'Window Settings', 'ja': 'ウィンドウ設定'},
+            'minimize': {'zh': '最小化', 'en': 'Minimize', 'ja': '最小化'},
+            'maximize_restore': {'zh': '最大化/還原', 'en': 'Maximize/Restore', 'ja': '最大化/復元'},
+            
+            # 彈出視窗 (Popout Window)
+            'sync_other_windows': {'zh': '[連動] 同步其他視窗', 'en': '[LINK] Sync Other Windows', 'ja': '[リンク] 他のウィンドウと同期'},
+            'sync_windows_tooltip': {'zh': '同步其他視窗 (Race/Session/Year 連動)', 'en': 'Sync other windows (Race/Session/Year sync)', 'ja': '他のウィンドウを同期 (Race/Session/Year連動)'},
+            'return_to_main': {'zh': '返回主畫面', 'en': 'Return to Main', 'ja': 'メインに戻る'},
+            'controls': {'zh': '控制', 'en': 'Controls', 'ja': 'コントロール'},
             
             # 圖表標籤
             'rain_main_chart': {'zh': '主要圖表 (降雨+氣溫)', 'en': 'Main Chart (Rain + Temperature)', 'ja': 'Main Chart (Rain + Temperature)'},

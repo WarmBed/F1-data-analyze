@@ -25,7 +25,7 @@ from core.logger import get_logger
 
 # 導入介面和基類
 try:
-    from ..interfaces.analysis_module import IAnalysisModule
+    from modules.gui.interfaces.analysis_module import IAnalysisModule
 except ImportError:
     from modules.gui.interfaces.analysis_module import IAnalysisModule
 

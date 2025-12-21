@@ -291,12 +291,11 @@ class RankingTableWidget(QWidget):
         # 表格設置
         self.table = QTableWidget()
         self.table.setProperty("is_live_timing_widget", True)  # 標記為 Live Timing widget
-        self.table.setColumnCount(24)  # 增加 CC% 欄位
+        self.table.setColumnCount(19)  # 移除 P1% P2% P3% OT% CC% 欄位
         self.table.setHorizontalHeaderLabels([
             "P", tr("driver"), "+/-", "No", tr("tyre"), tr("age"), "Pit", tr("tyre_hist"),
             "S1", "S2", "S3",
             tr("last_lap"), tr("best_lap"), tr("delta"), tr("gap_leader"), tr("gap_ahead"), "Trend", tr("fuel_save"),
-            "P1%", "P2%", "P3%", "OT%", "CC%",  # ❌ OT% 和 CC% 已禁用（性能優化）
             "DRS"
         ])
         
@@ -355,11 +354,6 @@ class RankingTableWidget(QWidget):
             75,   # 前車
             36,   # Trend (趨勢)
             38,   # 省油% (原為圈)
-            41,   # P1%
-            41,   # P2%
-            41,   # P3%
-            41,   # OT% (超車機率)
-            41,   # CC% (近距離接觸機率)
             32    # DRS
         ]
         
@@ -369,8 +363,7 @@ class RankingTableWidget(QWidget):
         # 隱藏欄位
         self.table.hideColumn(3)   # No
         self.table.hideColumn(7)   # 換胎
-        self.table.hideColumn(17)  # SF% (暫時隱藏)
-        self.table.hideColumn(21)  # ❌ OT% (超車機率 - 已禁用以提升性能)
+        # self.table.hideColumn(17)  # 燃油節省燈號（已啟用）
         self.table.hideColumn(22)  # ❌ CC% (近距離接觸 - 已禁用以提升性能)
     
     def _show_context_menu(self, pos):
@@ -712,10 +705,7 @@ class RankingTableWidget(QWidget):
         # 圈時相關 (欄位 11-17)
         self._set_lap_times(row, driver_num, driver_data)
         
-        # 勝率 (欄位 18-20)
-        self._set_probabilities(row, driver_data)
-        
-        # 遙測資料 (欄位 23)
+        # 遙測資料 (欄位 18: DRS)
         self._set_telemetry(row, driver_num)
         
         # 檢查是否需要顯示紅框 (名次變更)
@@ -1134,8 +1124,8 @@ class RankingTableWidget(QWidget):
         # Trend 趨勢 (欄位 16)
         self._set_gap_trend(row, driver_data, default_text_color)
         
-        # SF% 省胎分數 (欄位 17) - 暫時隱藏
-        # self._set_fuel_saving(row, driver_num, driver_data, default_text_color)
+        # 燃油節省燈號 (欄位 17)
+        self._set_fuel_saving(row, driver_num, driver_data, default_text_color)
     
     def _set_delta(self, row: int, last_lap_time: str, best_lap_time: str):
         """
@@ -1338,170 +1328,49 @@ class RankingTableWidget(QWidget):
     
     def _set_fuel_saving(self, row: int, driver_num: str, driver_data: Dict, default_text_color: QColor):
         """
-        設置省胎分數欄位 SF% (欄位 17)
+        設置省油燈號欄位 (欄位 17)
         
-        從 driver_data 讀取 F87 計算的省胎分數 (與 P1% 相同模式)。
-        DataManager 會在 _update_win_probabilities 中合併 SF% 到 drivers 字典。
+        從 driver_data 讀取 fuel_saving_lamp 燈號狀態。
+        進站前後圈不顯示警告。
         
-        顏色邏輯：
-        - 0-10%: 白字（無背景）
-        - 10-30%: 綠色漸變到藍色
-        - 30%+: 藍色
+        燈號邏輯：
+        - 'R': 紅燈 (偏離 < -5%) - 明確省油
+        - 'Y': 黃燈 (偏離 -3% ~ -5%) - 可疑省油
+        - '': 無燈號 - 正常或數據不足
         """
         item = QTableWidgetItem()
         item.setTextAlignment(Qt.AlignCenter)
         
-        # 從 driver_data 讀取 SF% (與 P1% 相同模式)
-        saving_pct = int(driver_data.get('tire_saving_score', 0))
+        # 從 driver_data 讀取燈號狀態
+        lamp = driver_data.get('fuel_saving_lamp', '')
+        throttle_pct = driver_data.get('throttle_95_pct', 0)
         
-        if saving_pct == 0:
-            item.setText('-')
-            item.setForeground(default_text_color)
+        if lamp == 'R':
+            # 紅燈：省油確認
+            item.setText('\u25CF')  # 實心圓點
+            item.setForeground(QColor('#FF0000'))  # 紅色
+            font = item.font()
+            font.setBold(True)
+            font.setPointSize(12)
+            item.setFont(font)
+        elif lamp == 'Y':
+            # 黃燈：可疑省油
+            item.setText('\u25CF')  # 實心圓點
+            item.setForeground(QColor('#FFFF00'))  # 黃色
+            font = item.font()
+            font.setBold(True)
+            font.setPointSize(12)
+            item.setFont(font)
         else:
-            # 顯示整數百分比
-            item.setText(f"{saving_pct}%")
-            
-            # 顏色邏輯：0-10% 白字，10-30% 綠→藍漸變，30%+ 藍色
-            if saving_pct < 10:
-                # 0-10%: 白字無背景
+            # 無燈號：正常狀態（顯示油門百分比或空白）
+            if throttle_pct > 0:
+                item.setText(f"{throttle_pct:.0f}")
                 item.setForeground(default_text_color)
-            elif saving_pct >= 30:
-                # 30%+: 藍色
-                item.setForeground(QColor('#0088FF'))
             else:
-                # 10-30%: 綠色漸變到藍色
-                ratio = (saving_pct - 10) / 20.0
-                r = 0
-                g = int(200 * (1 - ratio))
-                b = int(136 + (255 - 136) * ratio)
-                item.setForeground(QColor(r, g, b))
+                item.setText('-')
+                item.setForeground(default_text_color)
         
         self.table.setItem(row, 17, item)
-    
-    def _set_probabilities(self, row: int, driver_data: Dict):
-        """設置勝率欄位（✅ 優化版本）"""
-        # ✅ 使用緩存的顏色
-        default_text_color = self._color_cache['default_text']
-        green = self._color_cache['green']
-        yellow = self._color_cache['yellow']
-        orange = self._color_cache['orange']
-        black = self._color_cache['black']
-        
-        probs = [
-            ('win_probability', 18, [70, 35]),   # P1%: ≥70% 綠, 35-69% 橙
-            ('p2_probability', 19, [70, 40]),    # P2%: ≥70% 綠, 40-69% 橙
-            ('p3_probability', 20, [80, 50])     # P3%: ≥80% 綠, 50-79% 橙
-        ]
-        
-        for key, col, thresholds in probs:
-            prob = driver_data.get(key, '')
-            if isinstance(prob, (int, float)):
-                text = f"{int(round(prob))}%"
-            else:
-                text = str(prob) if prob else '-'
-            
-            item = QTableWidgetItem(text)
-            item.setTextAlignment(Qt.AlignCenter)
-            
-            if isinstance(prob, (int, float)):
-                # 統一使用兩層邏輯（綠色/橙色）
-                if prob >= thresholds[0]:
-                    item.setBackground(QColor('#00FF00'))  # 高機率：綠色
-                    item.setForeground(QColor('#000000'))
-                elif prob >= thresholds[1]:
-                    item.setBackground(QColor('#FFA500'))  # 中機率：橙色
-                    item.setForeground(QColor('#000000'))
-                else:
-                    # 低機率：無背景
-                    item.setForeground(default_text_color)
-            else:
-                item.setForeground(default_text_color)
-            
-            self.table.setItem(row, col, item)
-        
-        # F83: 超車機率 OT% (欄位 21)
-        self._set_overtake_probability(row, driver_data, default_text_color)
-        
-        # F85: 近距離接觸機率 CC% (欄位 22)
-        self._set_close_combat_probability(row, driver_data, default_text_color)
-    
-    def _set_overtake_probability(self, row: int, driver_data: Dict, default_text_color: QColor):
-        """
-        F83: 設置超車機率欄位
-        
-        顏色編碼：
-        - >= 80%: 橙色背景 - 極高超車機會
-        - < 80%: 黑底白字 - 一般顯示
-        - P1: 顯示 '-' (沒有前車)
-        """
-        position = driver_data.get('position', 99)
-        
-        # P1 沒有前車，顯示 '-'
-        if position == 1:
-            item = QTableWidgetItem('-')
-            item.setTextAlignment(Qt.AlignCenter)
-            item.setForeground(default_text_color)
-            self.table.setItem(row, 21, item)
-            return
-        
-        prob = driver_data.get('overtake_probability', '')
-        
-        if isinstance(prob, (int, float)):
-            text = f"{int(round(prob))}%"
-        else:
-            text = str(prob) if prob else '-'
-        
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignCenter)
-        
-        if isinstance(prob, (int, float)) and prob >= 80:
-            # >= 80%：橙色背景 - 極高超車機會
-            item.setBackground(QColor('#FFA500'))
-            item.setForeground(QColor('#000000'))
-        else:
-            # 其餘：黑底白字
-            item.setForeground(default_text_color)
-        
-        self.table.setItem(row, 21, item)
-    
-    def _set_close_combat_probability(self, row: int, driver_data: Dict, default_text_color: QColor):
-        """
-        F85: 設置近距離接觸機率欄位
-        
-        顏色編碼：
-        - >= 70%: 淺藍色背景 - 高機率追近
-        - < 70%: 黑底白字 - 一般顯示
-        - P1: 顯示 '-' (沒有前車)
-        """
-        position = driver_data.get('position', 99)
-        
-        # P1 沒有前車，顯示 '-'
-        if position == 1:
-            item = QTableWidgetItem('-')
-            item.setTextAlignment(Qt.AlignCenter)
-            item.setForeground(default_text_color)
-            self.table.setItem(row, 22, item)
-            return
-        
-        prob = driver_data.get('close_combat_probability', '')
-        
-        if isinstance(prob, (int, float)):
-            text = f"{int(round(prob))}%"
-        else:
-            text = str(prob) if prob else '-'
-        
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignCenter)
-        
-        if isinstance(prob, (int, float)) and prob >= 70:
-            # >= 70%：淺藍色背景 - 高機率追近
-            item.setBackground(QColor('#4A90E2'))
-            item.setForeground(QColor('#FFFFFF'))
-        else:
-            # 其餘：黑底白字
-            item.setForeground(default_text_color)
-        
-        self.table.setItem(row, 22, item)
     
     def _set_telemetry(self, row: int, driver_num: str):
         """設置遙測資料欄位（DRS）"""
@@ -1510,7 +1379,7 @@ class RankingTableWidget(QWidget):
         
         car_data = self._current_car_data.get(driver_num, {})
         
-        # DRS (欄位 23)
+        # DRS (欄位 18 - 移除 OT% CC% 後)
         # DRS 值說明 (來源: F1 Live Timing API):
         # - 0 = Off
         # - 1 = DRS Disabled (禁用 - 76% of the time)
@@ -1549,7 +1418,7 @@ class RankingTableWidget(QWidget):
         else:
             drs_item.setForeground(default_text_color)
         
-        self.table.setItem(row, 23, drs_item)
+        self.table.setItem(row, 18, drs_item)
     
     def _parse_lap_time(self, lap_time_str: str) -> Optional[float]:
         """解析圈時字串為秒數"""

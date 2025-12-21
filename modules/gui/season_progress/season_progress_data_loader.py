@@ -184,7 +184,7 @@ class SeasonProgressDataLoader(UniversalDataLoader):
         data = raw_data.get("data", {})
         drivers = data.get("drivers", [])
         constructors = data.get("constructors", [])
-        metadata = data.get("metadata", {})
+        metadata = raw_data.get("metadata", {})  # ✅ 修正：從 raw_data 讀取 metadata，不是從 data
         
         # Get top driver
         top_driver = None

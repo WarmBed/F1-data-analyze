@@ -27,7 +27,7 @@ env/
 
 # PyInstaller
 *.manifest
-*.spec
+# *.spec  # 註釋掉 - F1T_GUI_clean.spec 需要上傳
 
 # Unit test / coverage
 htmlcov/
@@ -59,8 +59,10 @@ core/gui_language_config.json
 
 # Cache and temporary files
 cache/
+CACHE/
 tmp/
 logs/
+LOGS/
 *.log
 
 # FastF1 cache
@@ -68,9 +70,17 @@ f1_analysis_cache/
 
 # JSON outputs (分析結果，太大且會頻繁變動)
 json/*.json
+json2/
+json3/
+JSON2/
+JSON3/
 json_backup/*.json
 json_exports/*.json
 test_json_output/
+
+# 大型文檔資料夾（不上傳到 GitHub）
+f1ADOC/
+F1ADOC/
 
 # Investigation outputs
 investigation_output/
@@ -78,6 +88,17 @@ investigation_output/
 # Build outputs
 build/
 dist/
+
+# ⚠️ 專案輸出目錄（僅排除大型輸出檔案，不排除目錄本身）
+# tests/      # ❌ 不能排除 - 包含測試程式碼
+# reports/    # ❌ 不能排除 - 包含重要報告
+# tasks/      # ❌ 不能排除 - 包含任務文檔
+# charts/     # ❌ 不能排除 - 包含圖表程式碼
+
+# ⚠️ GitHub 100MB 限制 - 排除大型 pkl 和 cache 檔案
+data/live_timing_cache/
+json/LiveF1/**/_aligned_cache.pkl
+json/LiveF1/**/Pre-Season_Practice_*/Position.json
 
 # Cloudflared
 cloudflared/*.log

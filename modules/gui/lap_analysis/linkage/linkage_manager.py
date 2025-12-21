@@ -99,7 +99,6 @@ class LinkageManager(QObject):
             
             # 發送信號
             self.master_linkage_changed.emit(enabled)
-            
             logger.debug(f"[LINKAGE_MANAGER] 主連動開關: {'啟用' if enabled else '停用'}，已通知 {len(self.registered_modules)} 個模組")
     
     def is_master_linkage_enabled(self) -> bool:

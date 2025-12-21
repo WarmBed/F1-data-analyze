@@ -72,7 +72,6 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
         race_layout = QHBoxLayout(race_frame)
         race_layout.setContentsMargins(8, 4, 8, 4)
         
-        logger.info("[CONTROL_PANEL] Playback state: %s", state)
         self.spin_year = QSpinBox()
         self.spin_year.setRange(2018, 2030)
         self.spin_year.setValue(2025)

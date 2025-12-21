@@ -7,14 +7,44 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.11.1"
+APP_VERSION = "V0.13.0"
 
 # 完整版本資訊
-APP_NAME = "F1 TelemetryStation Pro"
+APP_NAME = "PIT WALL"
 APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.13.0": {
+        "date": "2025-12-21",
+        "features": [
+            "更新 F1TV 登入機制：改用瀏覽器 Cookie 擷取方式",
+            "新增 SF% History 模組：節油百分比歷史追蹤",
+            "新增 Throttle 95% History 模組：油門高開度歷史分析",
+            "Driver Strategy 與 Chase Strategy 模組效能優化：停用圓點繪製",
+            "Live Timing Trace 模組同步 hover 功能：滑鼠懸停時同步顯示數據標籤",
+            "Linkage (L) 按鈕控制 hover 同步：可透過標題列按鈕啟用或停用",
+        ]
+    },
+    "V0.12.1": {
+        "date": "2025-12-20",
+        "features": [
+            "修復 Lap Linkage 工具列核取方塊：取消勾選現可正確停止連動",
+            "修復 L 按鈕（個別連動控制）：支援所有圖表類型（Speed、Brake、Throttle、RPM、Gear）",
+            "修復 Fastest Lap 功能：勾選時自動設定圈數為 99，取消勾選時恢復為 1",
+            "改進 PopoutSubWindow 連動控制：統一處理多種圖表 widget 屬性名稱",
+            "修正 lap_linkage_toggler.py 缺少的導入：linkage_manager 與 global_signals",
+        ]
+    },
+    "V0.12.0": {
+        "date": "2025-12-19",
+        "features": [
+            "EXE 建構工具更新：輸出檔名改為 PITWALL - {版本}",
+            "F1T_GUI_clean.spec 完整更新：280+ 個隱藏導入模組",
+            "新增 2026 賽季日曆支援（Function 99）",
+            "年份選擇範圍擴展至 2020-2027",
+        ]
+    },
     "V0.11.1": {
         "date": "2025-12-12",
         "features": [

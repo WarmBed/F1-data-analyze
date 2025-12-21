@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 
 # 導入介面和基類
 try:
-    from ...interfaces.analysis_module import IAnalysisModule
+    from modules.gui.interfaces.analysis_module import IAnalysisModule
 except ImportError:  # pragma: no cover - fallback for standalone execution
     from modules.gui.interfaces.analysis_module import IAnalysisModule
 

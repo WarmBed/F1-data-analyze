@@ -112,7 +112,12 @@ class SeasonProgressApiWorker(QThread):
                 raise ValueError("API response must be JSON object")
             
             if not payload.get("success", False):
-                raise RuntimeError(payload.get("message", "API returned success=False"))
+                # ✅ 修正：API 失敗時發送 failure 信號而不是拋出異常
+                error_msg = payload.get("message", "API returned success=False")
+                logger.warning("[SEASON_API_WORKER] API 返回失敗: %s", error_msg)
+                if not self.isInterruptionRequested():
+                    self.failure.emit(error_msg)
+                return
             
             # Extract data
             data = payload.get("data")
@@ -347,6 +352,7 @@ class SeasonProgressMDI(QWidget):
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API request failure"""
+        print(f"[SEASON_MDI] ❌ API 調用失敗: {error_msg}")
         logger.error("[SEASON_PROGRESS_MDI] API call failed: %s", error_msg)
         self.status_label.setText(f"API load failed: {error_msg}")
         self.progress_bar.setValue(0)
@@ -362,11 +368,14 @@ class SeasonProgressMDI(QWidget):
         Args:
             data: Transformed season progress data
         """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("[SEASON_PROGRESS_MDI] Data loaded successfully")
+        print(f"[SEASON_MDI] _on_data_loaded 被調用")
+        print(f"[SEASON_MDI] data keys: {list(data.keys())}")
+        print(f"[SEASON_MDI] data season_year: {data.get('season_year')}")
+        print(f"[SEASON_MDI] data calendar: {data.get('calendar')}")
         
         # Populate widget
         self.progress_widget.populate_data(data)
+        print(f"[SEASON_MDI] populate_data 調用完成")
         
         # Update status
         self.status_label.setText(tr("load_success_status", "Load successful"))
@@ -393,19 +402,16 @@ class SeasonProgressMDI(QWidget):
         Args:
             year: 新的年份 (例如: "2025")
         """
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("[SEASON_PROGRESS_MDI] update_year 被調用: %s → %s", self.year, year)
+        print(f"[SEASON_MDI] update_year 被調用: {self.year} → {year}")
         
         if str(year) == str(self.year):
-            if logger.isEnabledFor(logging.DEBUG):
-                logger.debug("[SEASON_PROGRESS_MDI] 年份相同，跳過更新")
+            print(f"[SEASON_MDI] 年份相同，跳過更新")
             return
         
         # 更新年份
         self.year = str(year)
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("[SEASON_PROGRESS_MDI] 年份已更新為: %s", self.year)
-            logger.debug("[SEASON_PROGRESS_MDI] 開始重新載入數據...")
+        print(f"[SEASON_MDI] 年份已更新為: {self.year}")
+        print(f"[SEASON_MDI] 開始重新載入數據...")
         self._start_load_analysis()
     
     def update_parameters(self, year: str = None, **kwargs):

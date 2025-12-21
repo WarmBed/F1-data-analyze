@@ -184,7 +184,7 @@ class SplashScreenV2_Minimal(BaseSplashScreen):
         title_font = QFont("Segoe UI Light", 32)
         painter.setFont(title_font)
         painter.setPen(QColor(30, 30, 30))  # 深灰黑色
-        painter.drawText(0, self.height // 2 - 40, self.width, 50, Qt.AlignCenter, "F1 TelemetryStation Pro")
+        painter.drawText(0, self.height // 2 - 40, self.width, 50, Qt.AlignCenter, "PIT WALL")
         
         # 4. 進度條 (極簡線條)
         progress_x = 150

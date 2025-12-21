@@ -312,14 +312,6 @@ def _check_post_race_refresh_needed(calendar_path: Path) -> Dict[str, Any]:
     except Exception as e:
         print(f"[CALENDAR] ❌ 賽後檢查失敗: {e}")
         import traceback
-import sys
-
-# Force UTF-8 output
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
-if sys.stderr.encoding != 'utf-8':
-    sys.stderr.reconfigure(encoding='utf-8')
-
         traceback.print_exc()
         return {
             'needs_refresh': False,
@@ -547,13 +539,13 @@ def _generate_multi_year_calendar(*, save_json: bool = True, force: bool = False
         print(f"🔄 強制重新生成模式")
         print(f"{'='*80}\n")
     
-    years = list(range(2020, 2026))  # 2020-2025
+    years = list(range(2020, 2027))  # 2020-2026
     all_seasons_data = {}
     total_events = 0
     total_completed = 0
     total_upcoming = 0
     
-    print(f"🏎️  F1 賽季賽程批量查詢 (2020-2025)")
+    print(f"🏎️  F1 賽季賽程批量查詢 (2020-2026)")
     print(f"{'='*80}\n")
     
     for year in years:

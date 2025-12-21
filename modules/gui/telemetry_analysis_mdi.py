@@ -1515,6 +1515,13 @@ class TelemetryAnalysisModule(IAnalysisModule):
         self.current_race = None
         self.current_session = None
         
+        # 🔧 修復：車手和圈數參數（用於過濾顯示）
+        self.driver1 = None  # 主要車手
+        self.driver2 = None  # 對比車手
+        self.lap1 = None     # 主要車手圈數
+        self.lap2 = None     # 對比車手圈數
+        self.is_fastest_lap = False  # 是否使用最快圈
+        
         # 同步設定
         self.sync_enabled = True
         
@@ -1806,27 +1813,93 @@ class TelemetryAnalysisModule(IAnalysisModule):
             self.emit_error("遙測數據載入失敗")
     
     def on_telemetry_data_loaded(self, data):
-        """遙測數據載入完成處理"""
+        """遙測數據載入完成處理 - 🔧 修復：根據選擇的車手過濾數據"""
         logger.info("✅ [TELEMETRY_MODULE] 遙測數據載入完成")
+        
+        # 🔧 修復：過濾選定的車手數據
+        if self.driver1:
+            logger.debug(f"[TELEMETRY_MODULE] 過濾車手數據：Driver1={self.driver1}, Driver2={self.driver2}")
+            filtered_data = self._filter_selected_drivers(data)
+            logger.debug(f"[TELEMETRY_MODULE] 過濾後剩餘車手數量：{len(filtered_data.get('data', {}).get('all_drivers_telemetry', {}))}")
+        else:
+            logger.debug(f"[TELEMETRY_MODULE] 未指定車手，顯示所有數據")
+            filtered_data = data
         
         # 更新第一個分頁（車手概覽）
         if self.overview_widget:
-            self.overview_widget.update_overview_data(data)
+            self.overview_widget.update_overview_data(filtered_data)
         
         # TODO: 更新其他分頁
         
         # 發出數據載入完成信號 - 暫時註解，避免錯誤
         # self.emit_data_loaded({
         #     'type': 'telemetry_analysis',
-        #     'data': data,
+        #     'data': filtered_data,
         #     'year': self.current_year,
         #     'race': self.current_race,
         #     'session': self.current_session
         # })
         
         logger.info(
-            f"📊 [TELEMETRY_MODULE] 已通知分頁更新遙測數據，包含 {len(data.get('data', {}).get('all_drivers_telemetry', {}))} 位車手"
+            f"📊 [TELEMETRY_MODULE] 已通知分頁更新遙測數據，包含 {len(filtered_data.get('data', {}).get('all_drivers_telemetry', {}))} 位車手"
         )
+    
+    def _filter_selected_drivers(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        過濾選定的車手數據
+        
+        從 API 返回的所有車手遙測數據中，只保留用戶選擇的 driver1 和 driver2
+        
+        Args:
+            data: 原始的完整遙測數據
+        
+        Returns:
+            過濾後只包含選定車手的數據
+        """
+        try:
+            # 深拷貝數據避免修改原始數據
+            import copy
+            filtered_data = copy.deepcopy(data)
+            
+            # 獲取所有車手的遙測數據
+            all_drivers_telemetry = filtered_data.get('data', {}).get('all_drivers_telemetry', {})
+            
+            if not all_drivers_telemetry:
+                logger.warning("[FILTER] 數據中沒有 all_drivers_telemetry，返回原始數據")
+                return filtered_data
+            
+            # 構建選定車手列表
+            selected_drivers = []
+            if self.driver1:
+                selected_drivers.append(self.driver1)
+            if self.driver2:
+                selected_drivers.append(self.driver2)
+            
+            if not selected_drivers:
+                logger.warning("[FILTER] 未指定任何車手，返回所有數據")
+                return filtered_data
+            
+            # 過濾車手數據
+            filtered_drivers = {}
+            for driver_code in selected_drivers:
+                if driver_code in all_drivers_telemetry:
+                    filtered_drivers[driver_code] = all_drivers_telemetry[driver_code]
+                    logger.debug(f"[FILTER] ✅ 保留車手：{driver_code}")
+                else:
+                    logger.warning(f"[FILTER] ⚠️ 車手 {driver_code} 不存在於數據中，可用車手：{list(all_drivers_telemetry.keys())}")
+            
+            # 更新數據
+            filtered_data['data']['all_drivers_telemetry'] = filtered_drivers
+            
+            logger.info(f"[FILTER] 完成車手過濾：原始 {len(all_drivers_telemetry)} 位車手 → 保留 {len(filtered_drivers)} 位車手")
+            
+            return filtered_data
+            
+        except Exception as e:
+            logger.error(f"[FILTER] 過濾車手數據失敗：{e}")
+            import traceback
+            traceback.print_exc()
+            return data  # 發生錯誤時返回原始數據
     
     def on_error_occurred(self, error_message):
         """錯誤處理"""

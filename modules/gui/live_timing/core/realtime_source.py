@@ -19,7 +19,16 @@ import time
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot, QTimer
 
 from core.logger import get_logger
-from .signalr_client import RealTimeLiveF1Worker, WEBSOCKETS_AVAILABLE
+from core.f1tv_auth import F1TVAuthManager
+
+# 優先使用新的 SignalRCore 客戶端
+try:
+    from .signalrcore_client import RealTimeLiveF1CoreWorker as RealTimeLiveF1Worker, WEBSOCKETS_AVAILABLE
+    USE_SIGNALRCORE = True
+except ImportError:
+    from .signalr_client import RealTimeLiveF1Worker, WEBSOCKETS_AVAILABLE
+    USE_SIGNALRCORE = False
+
 from .realtime_database import get_realtime_db, RealtimeDatabase
 
 
@@ -30,8 +39,10 @@ class RealTimeLiveF1DataSource(QObject):
     """
     即時 Live F1 數據源
     
-    通過 SignalR WebSocket 連接 F1 官方 Live Timing 服務，
+    通過 SignalRCore WebSocket 連接 F1 官方 Live Timing 服務，
     並將數據轉換為 DataManager 可用的快照格式。
+    
+    支援 F1TV 認證以獲取完整數據 (CarData.z, Position.z 等)
     
     信號:
         snapshot_updated: 當數據更新時發出，包含完整快照
@@ -43,9 +54,13 @@ class RealTimeLiveF1DataSource(QObject):
     snapshot_updated = pyqtSignal(dict)  # 快照數據
     connection_changed = pyqtSignal(str)  # 連接狀態
     error_occurred = pyqtSignal(str)  # 錯誤訊息
+    auth_required = pyqtSignal()  # 需要 F1TV 認證
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, auth_manager: Optional[F1TVAuthManager] = None):
         super().__init__(parent)
+        
+        # F1TV 認證管理器
+        self._auth_manager = auth_manager
         
         # 數據存儲 (保存最新狀態)
         self._position_data: Dict[str, Any] = {}  # driver_num -> position data
@@ -82,9 +97,29 @@ class RealTimeLiveF1DataSource(QObject):
         # 資料庫
         self._db: RealtimeDatabase = get_realtime_db()
         
-    def start_connection(self) -> bool:
+        # 日誌
+        if USE_SIGNALRCORE:
+            logger.info("[REALTIME_SOURCE] Using SignalRCore client")
+        else:
+            logger.info("[REALTIME_SOURCE] Using legacy SignalR client")
+    
+    def set_auth_manager(self, auth_manager: F1TVAuthManager):
+        """設置 F1TV 認證管理器"""
+        self._auth_manager = auth_manager
+        logger.info("[REALTIME_SOURCE] Auth manager set")
+    
+    def _get_access_token(self) -> Optional[str]:
+        """獲取 F1TV access token"""
+        if self._auth_manager and self._auth_manager.is_authenticated():
+            return self._auth_manager.get_token()
+        return None
+        
+    def start_connection(self, require_auth: bool = False) -> bool:
         """
         開始即時連接
+        
+        Args:
+            require_auth: 是否要求 F1TV 認證 (用於獲取完整數據)
         
         Returns:
             True 如果成功啟動，False 如果已在運行或 websockets 不可用
@@ -97,6 +132,19 @@ class RealTimeLiveF1DataSource(QObject):
             logger.info("[REALTIME_SOURCE] Connection already running")
             return False
         
+        # 獲取 access token
+        access_token = self._get_access_token()
+        
+        if require_auth and not access_token:
+            logger.warning("[REALTIME_SOURCE] F1TV authentication required but not available")
+            self.auth_required.emit()
+            return False
+        
+        if access_token:
+            logger.info("[REALTIME_SOURCE] Starting with F1TV authentication")
+        else:
+            logger.info("[REALTIME_SOURCE] Starting without F1TV authentication (limited data)")
+        
         logger.info("[REALTIME_SOURCE] Starting realtime connection...")
         
         # 清除舊數據並初始化資料庫
@@ -104,7 +152,12 @@ class RealTimeLiveF1DataSource(QObject):
         self._db.clear_session()
         logger.info("[REALTIME_SOURCE] Database initialized and cleared")
         
-        self._worker = RealTimeLiveF1Worker(parent=self)
+        # 創建 Worker (傳入 access token)
+        if USE_SIGNALRCORE:
+            self._worker = RealTimeLiveF1Worker(access_token=access_token, parent=self)
+        else:
+            self._worker = RealTimeLiveF1Worker(parent=self)
+            
         self._worker.data_received.connect(self._on_data_received)
         self._worker.connection_status.connect(self._on_connection_status)
         self._worker.error_occurred.connect(self._on_error)

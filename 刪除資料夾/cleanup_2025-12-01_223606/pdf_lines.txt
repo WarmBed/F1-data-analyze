@@ -1,0 +1,27 @@
+總行數: 25
+
+第  1 行: 2025 SÃO PAULO GRAND PRIX
+第  2 行: 07 - 09 November 2025
+第  3 行: Technical Delegate’s Report
+第  4 行: The following parts and parameters have been replaced / changed during the Parc Fermé yesterday
+第  5 行: and today:
+第  6 行: McLaren Mercedes:
+第  7 行: Car 81:           Thread insert for ICE sump bracket
+第  8 行: Ferrari:
+第  9 行: Car 16:           LHS and RHS lateral headrest padding
+第 10 行: Car 44:           ICE blow-by breather line
+第 11 行: Mercedes:
+第 12 行: Car 63:           Centreline radiator
+第 13 行: Centreline VIPR unit (variable mechanical restrictor)
+第 14 行: RHS VIPR unit (variable mechanical restrictor)
+第 15 行: Aston Martin Aramco Mercedes:
+第 16 行: Car 18:           LHS lower exhaust primary heatshield
+第 17 行: ICE (previously used)
+第 18 行: TC (previously used)
+第 19 行: MGU-H (previously used)
+第 20 行: MGU-K (previously used)
+第 21 行: Hydraulic power pack
+第 22 行: Parameter changes associated with the PU elements replacementFrom The FIA Formula One Technical Delegate
+第 23 行: To The StewardsDocument 57
+第 24 行: Date 09 November 2025
+第 25 行: Time 12:57

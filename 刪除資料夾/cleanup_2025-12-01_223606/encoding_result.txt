@@ -1,0 +1,16 @@
+﻿包含 'Parc' 的字串:
+python : Traceback (most recent call last):
+位於 線路:1 字元:1
++ python check_pdf_encoding.py 2>&1 | Out-File -Encoding utf8 encodi
+ng_ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent 
+    call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\mike2\OneDrive\Code\F1-data-analyze\check_pdf_encod
+ing.py", line 16, in <module>
+    print(f"  - '{m}'")
+    ~~~~~^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp950' codec can't encode character '\xa0' in p
+osition 5: illegal multibyte sequence

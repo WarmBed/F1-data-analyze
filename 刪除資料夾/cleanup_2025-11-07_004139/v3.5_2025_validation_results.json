@@ -1,0 +1,2038 @@
+{
+  "3": {
+    "race_num": 3,
+    "track": "Japan",
+    "mae": 0.9698014038085929,
+    "r2": -1.8307453108989709,
+    "spearman": 0.7134440673843153,
+    "avg_rank_diff": 3.3,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 86.983,
+        "predicted_time": 88.6165771484375,
+        "actual_rank": 1.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 86.995,
+        "predicted_time": 88.61282348632812,
+        "actual_rank": 2.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 88.622,
+        "predicted_time": 89.07852172851562,
+        "actual_rank": 17.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 87.569,
+        "predicted_time": 88.74934387207031,
+        "actual_rank": 7.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "DOO",
+        "actual_q_time": 88.877,
+        "predicted_time": 88.65328979492188,
+        "actual_rank": 19.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 11.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 87.822,
+        "predicted_time": 88.72506713867188,
+        "actual_rank": 10.0,
+        "predicted_rank": 10.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 87.555,
+        "predicted_time": 88.77542114257812,
+        "actual_rank": 6.0,
+        "predicted_rank": 14.5,
+        "rank_diff": 8.5
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 87.89699999999999,
+        "predicted_time": 88.6495361328125,
+        "actual_rank": 13.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 87.299,
+        "predicted_time": 88.61282348632812,
+        "actual_rank": 4.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 89.271,
+        "predicted_time": 89.061279296875,
+        "actual_rank": 20.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 88.0,
+        "predicted_time": 88.74742126464844,
+        "actual_rank": 15.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 87.615,
+        "predicted_time": 88.72506713867188,
+        "actual_rank": 9.0,
+        "predicted_rank": 10.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 88.57,
+        "predicted_time": 89.73174285888672,
+        "actual_rank": 16.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 87.906,
+        "predicted_time": 88.77542114257812,
+        "actual_rank": 14.0,
+        "predicted_rank": 14.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 88.696,
+        "predicted_time": 88.92328643798828,
+        "actual_rank": 18.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 87.61,
+        "predicted_time": 88.61282348632812,
+        "actual_rank": 8.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 87.836,
+        "predicted_time": 88.70047760009766,
+        "actual_rank": 11.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 87.318,
+        "predicted_time": 88.61282348632812,
+        "actual_rank": 5.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 87.027,
+        "predicted_time": 88.61282348632812,
+        "actual_rank": 3.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 87.867,
+        "predicted_time": 88.8875961303711,
+        "actual_rank": 12.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 4.0
+      }
+    ]
+  },
+  "4": {
+    "race_num": 4,
+    "track": "Bahrain",
+    "mae": 0.50347706298828,
+    "r2": 0.4989442527951249,
+    "spearman": 0.8030075187969924,
+    "avg_rank_diff": 2.9,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 90.423,
+        "predicted_time": 90.47911834716797,
+        "actual_rank": 7.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 90.267,
+        "predicted_time": 89.93145751953125,
+        "actual_rank": 6.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 92.186,
+        "predicted_time": 91.45931243896484,
+        "actual_rank": 18.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 91.271,
+        "predicted_time": 90.94673919677734,
+        "actual_rank": 11.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "DOO",
+        "actual_q_time": 91.245,
+        "predicted_time": 90.90904998779297,
+        "actual_rank": 10.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 90.21600000000001,
+        "predicted_time": 90.94261932373047,
+        "actual_rank": 5.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 90.213,
+        "predicted_time": 90.63333892822266,
+        "actual_rank": 4.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 91.886,
+        "predicted_time": 91.41397857666016,
+        "actual_rank": 14.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 90.175,
+        "predicted_time": 90.2461166381836,
+        "actual_rank": 3.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 92.283,
+        "predicted_time": 91.53614044189453,
+        "actual_rank": 19.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 91.303,
+        "predicted_time": 92.27213287353516,
+        "actual_rank": 12.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 92.03999999999999,
+        "predicted_time": 91.09443664550781,
+        "actual_rank": 15.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 92.06700000000001,
+        "predicted_time": 92.20732116699219,
+        "actual_rank": 16.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 92.16499999999999,
+        "predicted_time": 91.18946838378906,
+        "actual_rank": 17.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 91.594,
+        "predicted_time": 91.15956115722656,
+        "actual_rank": 13.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 90.77199999999999,
+        "predicted_time": 91.10792541503906,
+        "actual_rank": 9.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 90.68,
+        "predicted_time": 90.5737075805664,
+        "actual_rank": 8.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 90.009,
+        "predicted_time": 90.96875762939453,
+        "actual_rank": 2.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 89.84100000000001,
+        "predicted_time": 89.84329986572266,
+        "actual_rank": 1.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 92.37299999999999,
+        "predicted_time": 91.38823699951172,
+        "actual_rank": 20.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 5.0
+      }
+    ]
+  },
+  "5": {
+    "race_num": 5,
+    "track": "Saudi Arabia",
+    "mae": 0.3036317047119141,
+    "r2": 0.56385133908022,
+    "spearman": 0.9289207125516471,
+    "avg_rank_diff": 1.65,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 87.294,
+        "predicted_time": 88.04862213134766,
+        "actual_rank": 1.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 87.481,
+        "predicted_time": 87.99565887451172,
+        "actual_rank": 4.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 89.462,
+        "predicted_time": 88.7139663696289,
+        "actual_rank": 20.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 88.418,
+        "predicted_time": 88.38207244873047,
+        "actual_rank": 14.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "DOO",
+        "actual_q_time": 88.739,
+        "predicted_time": 88.46259307861328,
+        "actual_rank": 17.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 88.367,
+        "predicted_time": 88.28601837158203,
+        "actual_rank": 13.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 87.866,
+        "predicted_time": 88.24908447265625,
+        "actual_rank": 6.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 88.303,
+        "predicted_time": 88.16576385498047,
+        "actual_rank": 12.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 87.67,
+        "predicted_time": 88.01868438720703,
+        "actual_rank": 5.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 88.645,
+        "predicted_time": 88.49581146240234,
+        "actual_rank": 15.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 88.20400000000001,
+        "predicted_time": 88.30276489257812,
+        "actual_rank": 11.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 88.10900000000001,
+        "predicted_time": 88.2554931640625,
+        "actual_rank": 7.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 88.782,
+        "predicted_time": 88.62330627441406,
+        "actual_rank": 18.0,
+        "predicted_rank": 18.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 88.191,
+        "predicted_time": 88.4296646118164,
+        "actual_rank": 9.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 89.092,
+        "predicted_time": 88.62330627441406,
+        "actual_rank": 19.0,
+        "predicted_rank": 18.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 88.201,
+        "predicted_time": 88.2658920288086,
+        "actual_rank": 10.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 88.164,
+        "predicted_time": 88.05238342285156,
+        "actual_rank": 8.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 87.407,
+        "predicted_time": 87.97119140625,
+        "actual_rank": 3.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 87.304,
+        "predicted_time": 87.96366119384766,
+        "actual_rank": 2.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 88.648,
+        "predicted_time": 88.51586151123047,
+        "actual_rank": 16.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 1.0
+      }
+    ]
+  },
+  "8": {
+    "race_num": 8,
+    "track": "Monaco",
+    "mae": 0.6425811828613263,
+    "r2": -0.1404492979949683,
+    "spearman": 0.5244926741623595,
+    "avg_rank_diff": 4.35,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 70.669,
+        "predicted_time": 71.32284545898438,
+        "actual_rank": 5.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 69.95400000000001,
+        "predicted_time": 71.36731719970703,
+        "actual_rank": 1.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 71.902,
+        "predicted_time": 72.03025817871094,
+        "actual_rank": 16.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 70.923,
+        "predicted_time": 71.67507934570312,
+        "actual_rank": 6.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 71.994,
+        "predicted_time": 71.67507934570312,
+        "actual_rank": 18.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 71.88,
+        "predicted_time": 71.46531677246094,
+        "actual_rank": 15.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 10.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 70.924,
+        "predicted_time": 71.77269744873047,
+        "actual_rank": 7.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 70.063,
+        "predicted_time": 71.67760467529297,
+        "actual_rank": 2.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 11.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 72.563,
+        "predicted_time": 71.67507934570312,
+        "actual_rank": 19.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 71.41499999999999,
+        "predicted_time": 71.65489196777344,
+        "actual_rank": 12.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 71.213,
+        "predicted_time": 71.65489196777344,
+        "actual_rank": 10.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 71.596,
+        "predicted_time": 71.8915786743164,
+        "actual_rank": 14.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 71.129,
+        "predicted_time": 71.4241714477539,
+        "actual_rank": 9.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 70.94200000000001,
+        "predicted_time": 72.414794921875,
+        "actual_rank": 8.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 11.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 72.597,
+        "predicted_time": 72.46989440917969,
+        "actual_rank": 20.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 70.382,
+        "predicted_time": 71.55479431152344,
+        "actual_rank": 4.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 71.362,
+        "predicted_time": 71.64520263671875,
+        "actual_rank": 11.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 71.507,
+        "predicted_time": 71.68757629394531,
+        "actual_rank": 13.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 70.129,
+        "predicted_time": 71.36731719970703,
+        "actual_rank": 3.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 71.979,
+        "predicted_time": 71.90702819824219,
+        "actual_rank": 17.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 0.0
+      }
+    ]
+  },
+  "10": {
+    "race_num": 10,
+    "track": "Canada",
+    "mae": 4.641752258300781,
+    "r2": -75.85882124264361,
+    "spearman": 0.39084604760135105,
+    "avg_rank_diff": 4.9,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 71.059,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 2.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 6.5
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 71.625,
+        "predicted_time": 76.60995483398438,
+        "actual_rank": 7.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 13.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 72.385,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 15.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 71.867,
+        "predicted_time": 76.54653930664062,
+        "actual_rank": 9.0,
+        "predicted_rank": 4.5,
+        "rank_diff": 4.5
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 72.667,
+        "predicted_time": 76.54653930664062,
+        "actual_rank": 20.0,
+        "predicted_rank": 4.5,
+        "rank_diff": 15.5
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 71.391,
+        "predicted_time": 76.49064636230469,
+        "actual_rank": 4.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 71.586,
+        "predicted_time": 76.49064636230469,
+        "actual_rank": 6.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 71.682,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 8.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 72.517,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 17.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 72.102,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 11.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 4.5
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 71.907,
+        "predicted_time": 76.49064636230469,
+        "actual_rank": 10.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 72.18299999999999,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 13.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 2.5
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 72.525,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 18.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 2.5
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 72.634,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 19.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 72.142,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 12.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 71.526,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 5.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 72.398,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 16.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 7.5
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 70.899,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 1.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 7.5
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 71.12,
+        "predicted_time": 76.58179473876953,
+        "actual_rank": 3.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 5.5
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 72.34,
+        "predicted_time": 76.59053802490234,
+        "actual_rank": 14.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 1.5
+      }
+    ]
+  },
+  "12": {
+    "race_num": 12,
+    "track": "Great Britain",
+    "mae": 5.228445883178712,
+    "r2": -74.519046949108,
+    "spearman": 0.20915068435059422,
+    "avg_rank_diff": 5.4,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 84.892,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 1.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 85.01,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 3.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 86.446,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 17.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 85.864,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 13.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 85.785,
+        "predicted_time": 89.87873077392578,
+        "actual_rank": 11.0,
+        "predicted_rank": 1.5,
+        "rank_diff": 9.5
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 85.374,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 7.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 9.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 85.621,
+        "predicted_time": 90.26691436767578,
+        "actual_rank": 9.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 85.121,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 6.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 86.504,
+        "predicted_time": 89.87873077392578,
+        "actual_rank": 18.0,
+        "predicted_rank": 1.5,
+        "rank_diff": 16.5
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 85.826,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 12.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 85.889,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 14.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 86.574,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 19.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 86.44,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 16.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 85.95,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 15.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 87.06,
+        "predicted_time": 90.3233642578125,
+        "actual_rank": 20.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 16.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 85.095,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 5.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 85.746,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 10.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 85.029,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 4.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 84.995,
+        "predicted_time": 91.08314514160156,
+        "actual_rank": 2.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 85.471,
+        "predicted_time": 91.25901794433594,
+        "actual_rank": 8.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 8.0
+      }
+    ]
+  },
+  "14": {
+    "race_num": 14,
+    "track": "Hungary",
+    "mae": 1.4641614227294943,
+    "r2": -25.526656038403935,
+    "spearman": -0.2477367308562969,
+    "avg_rank_diff": 7.5,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 75.728,
+        "predicted_time": 77.2422866821289,
+        "actual_rank": 10.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 75.413,
+        "predicted_time": 77.2012939453125,
+        "actual_rank": 3.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 75.725,
+        "predicted_time": 77.25472259521484,
+        "actual_rank": 9.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 75.91499999999999,
+        "predicted_time": 77.26274108886719,
+        "actual_rank": 14.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 75.966,
+        "predicted_time": 77.22290802001953,
+        "actual_rank": 15.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 76.386,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 20.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 4.5
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 75.481,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 5.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 10.5
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 75.372,
+        "predicted_time": 77.30937194824219,
+        "actual_rank": 1.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 18.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 75.498,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 6.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 9.5
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 75.899,
+        "predicted_time": 77.1930923461914,
+        "actual_rank": 13.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 9.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 76.223,
+        "predicted_time": 77.2104721069336,
+        "actual_rank": 19.0,
+        "predicted_rank": 6.5,
+        "rank_diff": 12.5
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 76.081,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 17.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 75.821,
+        "predicted_time": 77.2518310546875,
+        "actual_rank": 12.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 76.023,
+        "predicted_time": 77.1803207397461,
+        "actual_rank": 16.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 14.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 76.15899999999999,
+        "predicted_time": 77.2104721069336,
+        "actual_rank": 18.0,
+        "predicted_rank": 6.5,
+        "rank_diff": 11.5
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 75.702,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 8.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 7.5
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 75.781,
+        "predicted_time": 77.12699890136719,
+        "actual_rank": 11.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 10.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 75.425,
+        "predicted_time": 77.29515075683594,
+        "actual_rank": 4.0,
+        "predicted_rank": 15.5,
+        "rank_diff": 11.5
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 75.398,
+        "predicted_time": 77.18885803222656,
+        "actual_rank": 2.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 75.694,
+        "predicted_time": 77.34695434570312,
+        "actual_rank": 7.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 13.0
+      }
+    ]
+  },
+  "15": {
+    "race_num": 15,
+    "track": "Netherlands",
+    "mae": 2.1494984452097046,
+    "r2": -22.311528937193156,
+    "spearman": 0.521338700845702,
+    "avg_rank_diff": 4.105263157894737,
+    "sample_count": 19,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 68.925,
+        "predicted_time": 70.9839859008789,
+        "actual_rank": 3.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 68.674,
+        "predicted_time": 71.49028778076172,
+        "actual_rank": 2.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 69.622,
+        "predicted_time": 71.89253234863281,
+        "actual_rank": 11.5,
+        "predicted_rank": 9.5,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 69.208,
+        "predicted_time": 72.06148529052734,
+        "actual_rank": 4.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 12.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 69.637,
+        "predicted_time": 71.9176254272461,
+        "actual_rank": 14.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 69.493,
+        "predicted_time": 71.9142837524414,
+        "actual_rank": 8.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 69.63,
+        "predicted_time": 71.65392303466797,
+        "actual_rank": 13.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 69.34,
+        "predicted_time": 71.12042999267578,
+        "actual_rank": 6.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 69.622,
+        "predicted_time": 72.26953887939453,
+        "actual_rank": 11.5,
+        "predicted_rank": 19.0,
+        "rank_diff": 7.5
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 69.652,
+        "predicted_time": 72.06148529052734,
+        "actual_rank": 15.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 70.195,
+        "predicted_time": 71.89326477050781,
+        "actual_rank": 17.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 69.5,
+        "predicted_time": 72.06148529052734,
+        "actual_rank": 9.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 70.197,
+        "predicted_time": 72.26116180419922,
+        "actual_rank": 18.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 70.104,
+        "predicted_time": 71.938720703125,
+        "actual_rank": 16.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 69.39,
+        "predicted_time": 71.35902404785156,
+        "actual_rank": 7.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 69.505,
+        "predicted_time": 70.96601104736328,
+        "actual_rank": 10.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 9.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 69.255,
+        "predicted_time": 70.98784637451172,
+        "actual_rank": 5.0,
+        "predicted_rank": 3.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 68.662,
+        "predicted_time": 70.98784637451172,
+        "actual_rank": 1.0,
+        "predicted_rank": 3.5,
+        "rank_diff": 2.5
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 70.262,
+        "predicted_time": 71.89253234863281,
+        "actual_rank": 19.0,
+        "predicted_rank": 9.5,
+        "rank_diff": 9.5
+      }
+    ]
+  },
+  "16": {
+    "race_num": 16,
+    "track": "Italy",
+    "mae": 0.6717508392333975,
+    "r2": -2.174172832403213,
+    "spearman": 0.8356525600363399,
+    "avg_rank_diff": 2.7,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 78.792,
+        "predicted_time": 79.66268920898438,
+        "actual_rank": 1.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 78.869,
+        "predicted_time": 79.67295837402344,
+        "actual_rank": 2.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 79.39,
+        "predicted_time": 79.83518981933594,
+        "actual_rank": 8.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 79.917,
+        "predicted_time": 80.0071792602539,
+        "actual_rank": 16.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 80.10300000000001,
+        "predicted_time": 80.89595031738281,
+        "actual_rank": 19.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 79.2,
+        "predicted_time": 80.08354187011719,
+        "actual_rank": 7.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 79.424,
+        "predicted_time": 80.00577545166016,
+        "actual_rank": 9.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 79.007,
+        "predicted_time": 79.59693145751953,
+        "actual_rank": 4.0,
+        "predicted_rank": 1.5,
+        "rank_diff": 2.5
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 79.94800000000001,
+        "predicted_time": 80.85508728027344,
+        "actual_rank": 17.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 79.519,
+        "predicted_time": 80.81818389892578,
+        "actual_rank": 12.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 79.583,
+        "predicted_time": 80.11520385742188,
+        "actual_rank": 14.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 79.498,
+        "predicted_time": 79.9625473022461,
+        "actual_rank": 11.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 80.279,
+        "predicted_time": 80.33763885498047,
+        "actual_rank": 20.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 79.707,
+        "predicted_time": 80.52556610107422,
+        "actual_rank": 15.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 79.992,
+        "predicted_time": 80.85900115966797,
+        "actual_rank": 18.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 79.124,
+        "predicted_time": 79.59693145751953,
+        "actual_rank": 5.0,
+        "predicted_rank": 1.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 79.52799999999999,
+        "predicted_time": 80.10616302490234,
+        "actual_rank": 13.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 79.157,
+        "predicted_time": 79.6450424194336,
+        "actual_rank": 6.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 78.982,
+        "predicted_time": 79.72566223144531,
+        "actual_rank": 3.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 79.446,
+        "predicted_time": 80.5927734375,
+        "actual_rank": 10.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 6.0
+      }
+    ]
+  },
+  "17": {
+    "race_num": 17,
+    "track": "Azerbaijan",
+    "mae": 0.48692456375925086,
+    "r2": 0.10156842878751815,
+    "spearman": 0.5008795081555452,
+    "avg_rank_diff": 4.2105263157894735,
+    "sample_count": 19,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 101.11699999999999,
+        "predicted_time": 101.88551330566406,
+        "actual_rank": 1.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 102.239,
+        "predicted_time": 101.89961242675781,
+        "actual_rank": 11.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 102.277,
+        "predicted_time": 102.63629150390625,
+        "actual_rank": 12.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 102.372,
+        "predicted_time": 102.55947875976562,
+        "actual_rank": 13.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 103.13900000000001,
+        "predicted_time": 102.65493774414062,
+        "actual_rank": 18.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 101.717,
+        "predicted_time": 102.02363586425781,
+        "actual_rank": 6.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 101.857,
+        "predicted_time": 102.51011657714844,
+        "actual_rank": 7.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 101.519,
+        "predicted_time": 101.88999938964844,
+        "actual_rank": 3.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 103.061,
+        "predicted_time": 103.15995788574219,
+        "actual_rank": 17.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 102.143,
+        "predicted_time": 102.51011657714844,
+        "actual_rank": 9.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 103.77799999999999,
+        "predicted_time": 101.94904327392578,
+        "actual_rank": 19.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 11.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 102.916,
+        "predicted_time": 102.55868530273438,
+        "actual_rank": 16.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 101.707,
+        "predicted_time": 101.86470794677734,
+        "actual_rank": 5.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 102.779,
+        "predicted_time": 102.51011657714844,
+        "actual_rank": 15.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 102.18299999999999,
+        "predicted_time": 101.84090423583984,
+        "actual_rank": 10.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 101.595,
+        "predicted_time": 102.68998718261719,
+        "actual_rank": 4.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 14.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 102.07,
+        "predicted_time": 101.99076843261719,
+        "actual_rank": 8.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 101.414,
+        "predicted_time": 101.83183288574219,
+        "actual_rank": 2.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 102.666,
+        "predicted_time": 101.89700317382812,
+        "actual_rank": 14.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 8.0
+      }
+    ]
+  },
+  "18": {
+    "race_num": 18,
+    "track": "Singapore",
+    "mae": 0.6450869842529301,
+    "r2": -0.64595127206868,
+    "spearman": 0.6873182358410861,
+    "avg_rank_diff": 3.45,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 89.34,
+        "predicted_time": 90.25624084472656,
+        "actual_rank": 2.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 89.586,
+        "predicted_time": 90.25624084472656,
+        "actual_rank": 5.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 2.5
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 90.82,
+        "predicted_time": 90.63485717773438,
+        "actual_rank": 16.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 89.846,
+        "predicted_time": 90.32292938232422,
+        "actual_rank": 8.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 91.261,
+        "predicted_time": 91.27638244628906,
+        "actual_rank": 20.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 89.537,
+        "predicted_time": 90.54289245605469,
+        "actual_rank": 4.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 4.5
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 89.955,
+        "predicted_time": 90.583984375,
+        "actual_rank": 10.0,
+        "predicted_rank": 10.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 89.78399999999999,
+        "predicted_time": 90.5938720703125,
+        "actual_rank": 7.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 90.949,
+        "predicted_time": 90.7120132446289,
+        "actual_rank": 17.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 90.35300000000001,
+        "predicted_time": 91.14698028564453,
+        "actual_rank": 15.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 90.202,
+        "predicted_time": 90.54289245605469,
+        "actual_rank": 12.0,
+        "predicted_rank": 8.5,
+        "rank_diff": 3.5
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 90.14099999999999,
+        "predicted_time": 90.67882537841797,
+        "actual_rank": 11.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 5.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 90.32,
+        "predicted_time": 92.14519500732422,
+        "actual_rank": 14.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 90.989,
+        "predicted_time": 90.36714935302734,
+        "actual_rank": 19.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 12.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 90.982,
+        "predicted_time": 90.65380096435547,
+        "actual_rank": 18.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 89.688,
+        "predicted_time": 90.60958099365234,
+        "actual_rank": 6.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 90.235,
+        "predicted_time": 90.27507781982422,
+        "actual_rank": 13.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 89.158,
+        "predicted_time": 90.25624084472656,
+        "actual_rank": 1.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 1.5
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 89.524,
+        "predicted_time": 90.25624084472656,
+        "actual_rank": 3.0,
+        "predicted_rank": 2.5,
+        "rank_diff": 0.5
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 89.868,
+        "predicted_time": 90.583984375,
+        "actual_rank": 9.0,
+        "predicted_rank": 10.5,
+        "rank_diff": 1.5
+      }
+    ]
+  },
+  "20": {
+    "race_num": 20,
+    "track": "Mexico",
+    "mae": 0.5597359802246096,
+    "r2": 0.22152379403124556,
+    "spearman": 0.7187969924812029,
+    "avg_rank_diff": 3.4,
+    "sample_count": 20,
+    "predictions": [
+      {
+        "driver": "VER",
+        "actual_q_time": 76.07,
+        "predicted_time": 76.66410064697266,
+        "actual_rank": 5.0,
+        "predicted_rank": 6.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "NOR",
+        "actual_q_time": 75.586,
+        "predicted_time": 76.48249053955078,
+        "actual_rank": 1.0,
+        "predicted_rank": 3.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "BOR",
+        "actual_q_time": 77.412,
+        "predicted_time": 77.07189178466797,
+        "actual_rank": 15.0,
+        "predicted_rank": 12.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "HAD",
+        "actual_q_time": 76.252,
+        "predicted_time": 77.06629180908203,
+        "actual_rank": 9.0,
+        "predicted_rank": 11.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "GAS",
+        "actual_q_time": 77.54599999999999,
+        "predicted_time": 77.30744171142578,
+        "actual_rank": 17.0,
+        "predicted_rank": 17.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "ANT",
+        "actual_q_time": 76.118,
+        "predicted_time": 76.7792739868164,
+        "actual_rank": 6.0,
+        "predicted_rank": 8.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "ALO",
+        "actual_q_time": 77.10300000000001,
+        "predicted_time": 77.9664306640625,
+        "actual_rank": 14.0,
+        "predicted_rank": 20.0,
+        "rank_diff": 6.0
+      },
+      {
+        "driver": "LEC",
+        "actual_q_time": 75.848,
+        "predicted_time": 76.48853302001953,
+        "actual_rank": 2.0,
+        "predicted_rank": 4.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "STR",
+        "actual_q_time": 77.606,
+        "predicted_time": 77.01831817626953,
+        "actual_rank": 18.0,
+        "predicted_rank": 10.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "TSU",
+        "actual_q_time": 76.816,
+        "predicted_time": 76.69176483154297,
+        "actual_rank": 11.0,
+        "predicted_rank": 7.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "ALB",
+        "actual_q_time": 77.49,
+        "predicted_time": 76.99742126464844,
+        "actual_rank": 16.0,
+        "predicted_rank": 9.0,
+        "rank_diff": 7.0
+      },
+      {
+        "driver": "HUL",
+        "actual_q_time": 77.01599999999999,
+        "predicted_time": 77.1363296508789,
+        "actual_rank": 13.0,
+        "predicted_rank": 13.0,
+        "rank_diff": 0.0
+      },
+      {
+        "driver": "LAW",
+        "actual_q_time": 78.072,
+        "predicted_time": 77.20691680908203,
+        "actual_rank": 20.0,
+        "predicted_rank": 16.0,
+        "rank_diff": 4.0
+      },
+      {
+        "driver": "OCO",
+        "actual_q_time": 76.837,
+        "predicted_time": 77.15374755859375,
+        "actual_rank": 12.0,
+        "predicted_rank": 14.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "COL",
+        "actual_q_time": 77.67,
+        "predicted_time": 77.49932098388672,
+        "actual_rank": 19.0,
+        "predicted_rank": 18.0,
+        "rank_diff": 1.0
+      },
+      {
+        "driver": "HAM",
+        "actual_q_time": 75.938,
+        "predicted_time": 76.4426498413086,
+        "actual_rank": 3.0,
+        "predicted_rank": 1.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "SAI",
+        "actual_q_time": 76.172,
+        "predicted_time": 77.17146301269531,
+        "actual_rank": 7.0,
+        "predicted_rank": 15.0,
+        "rank_diff": 8.0
+      },
+      {
+        "driver": "RUS",
+        "actual_q_time": 76.03399999999999,
+        "predicted_time": 76.45320892333984,
+        "actual_rank": 4.0,
+        "predicted_rank": 2.0,
+        "rank_diff": 2.0
+      },
+      {
+        "driver": "PIA",
+        "actual_q_time": 76.174,
+        "predicted_time": 76.53911590576172,
+        "actual_rank": 8.0,
+        "predicted_rank": 5.0,
+        "rank_diff": 3.0
+      },
+      {
+        "driver": "BEA",
+        "actual_q_time": 76.46000000000001,
+        "predicted_time": 77.6401596069336,
+        "actual_rank": 10.0,
+        "predicted_rank": 19.0,
+        "rank_diff": 9.0
+      }
+    ]
+  }
+}

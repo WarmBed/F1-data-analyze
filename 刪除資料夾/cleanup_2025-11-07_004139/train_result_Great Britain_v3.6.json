@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "track": "Great Britain",
+  "model_path": "models\\v3.6\\Great Britain.pkl",
+  "best_cv_mae": 3.309863387625559,
+  "best_params": {
+    "n_estimators": 170,
+    "max_depth": 7,
+    "learning_rate": 0.19639740352469173,
+    "subsample": 0.7227497990902502,
+    "colsample_bytree": 0.8081118627890423,
+    "min_child_weight": 1,
+    "gamma": 0.017574308585516032,
+    "reg_alpha": 0.14960020508642685,
+    "reg_lambda": 0.1252790708619112
+  },
+  "n_samples": 39,
+  "n_trials": 500,
+  "duration_seconds": 65.693376,
+  "top_features": [
+    {
+      "feature": "max_speed",
+      "importance": 0.5568304061889648
+    },
+    {
+      "feature": "mid_speed_apex",
+      "importance": 0.1508246213197708
+    },
+    {
+      "feature": "high_speed_apex",
+      "importance": 0.11309642344713211
+    },
+    {
+      "feature": "ideal_s1",
+      "importance": 0.08535677939653397
+    },
+    {
+      "feature": "ideal_s2",
+      "importance": 0.03406966105103493
+    }
+  ],
+  "timestamp": "2025-11-03T23:11:58.456684"
+}

@@ -53,8 +53,15 @@ class LapAnalysisLinkageMixin:
         return self.linkage_enabled and self.master_linkage_enabled
     
     def set_linkage_enabled(self, enabled: bool):
-        """設置是否啟用個別連動功能"""
+        """設置是否啟用個別連動功能 (L 按鈕)"""
         self.linkage_enabled = enabled
+        if not enabled:
+            # 🔒 [SYNC_FIX] 當個別開關關閉時，清除所有連動線（與 S 按鈕行為一致）
+            self.show_linkage_line = False
+            self.linkage_distance_value = None
+            self.linkage_y_relative = 0.5
+            if self.update_callback:
+                self.update_callback()
         
     def set_master_linkage_enabled(self, enabled: bool):
         """設置主視窗連動總開關狀態"""

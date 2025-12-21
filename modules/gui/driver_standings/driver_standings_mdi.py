@@ -106,7 +106,12 @@ class ChampionshipStandingsApiWorker(QThread):
                 raise ValueError("API 回應必須是 JSON 物件")
             
             if not payload.get("success", False):
-                raise RuntimeError(payload.get("message", "API 返回 success=False"))
+                # ✅ 修正：API 失敗時發送 failure 信號而不是拋出異常
+                error_msg = payload.get("message", "API 返回 success=False")
+                logger.warning("[API_WORKER] API 返回失敗: %s", error_msg)
+                if not self.isInterruptionRequested():
+                    self.failure.emit(error_msg)
+                return
             
             # 提取數據
             data = payload.get("data")

@@ -1,0 +1,2 @@
+index=17
+text=Singapore (2025-10-05)

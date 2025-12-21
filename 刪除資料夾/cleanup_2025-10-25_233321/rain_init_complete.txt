@@ -1,0 +1,1425 @@
+﻿
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] 🔨 重建視窗: '🌧️ Rain Analysis_
+2025_United States_R' (type=rain_weather)
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] 🔧 創建模組: type=rain_weather, 
+params={'year': '2025', 'race': 'United States', 'session': 'R'}
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] RainAnalysisUniversal 開始初始化..
+.
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 請求分析類型: rain_weather
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather']
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_WEATHER_MDI] 初始化 Rain Analysis MDI
+ 模組
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 基類初始化完成, 數據管理器: None
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 開始初始化模組組件...
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_WEATHER_MDI] 初始化 Rain Analysis 模組
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 初始化 Rain Analysi
+s 載入器
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 使用預設公開 API 網域 ht
+tps://api.f1telemetrystationpro.org
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 本地 JSON 後備已停用 (策
+略: 預設策略 (API 優先，不允許本地回退))
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_DATA_MANAGER] 初始化完成, 搜索目錄: ['json'
+, 'json_exports', 'cache']
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_DATA_MANAGER] 文件模式: ['enhanced_rai
+n_analysis_{year}_{race}_{session}.json', 'rain_analysis_{year}_{race}_{session}.j
+son', 'weather_data_{year}_{race}_{session}.json']
+2025-10-23 00:08:50 | INFO | f1.console | [LINKAGE_MANAGER] 已註冊 <modules.gui.rain_
+analysis.rain_analysis_mdi.RainAnalysisUniversal object at 0x000001853DCE8560>_cha
+rt 連動模組，目前共 1 個模組
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_AXIS_DEBUG] 座標軸標題設定:
+2025-10-23 00:08:50 | INFO | f1.console | [ANALYSIS_MANAGER] Registering module: r
+ain_weather_analysis_1671779222880 (type: rain_weather)
+2025-10-23 00:08:50 | WARNING | f1.console | [ANALYSIS_MANAGER] ⚠️ Not a lap analy
+sis module, skipping: rain_weather_analysis_1671779222880
+2025-10-23 00:08:50 | INFO | f1.console | [ANALYSIS_MANAGER] Registered chart widg
+et: RainAnalysisChartWidget
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_WEATHER_MDI] ✅ 已註冊到分析模組管理器: rain_w
+eather_analysis_1671779222880
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_WEATHER_MDI] ✅ Rain Analysis 模組初始化
+完成
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] ✅ 模組組件初始化完成
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 數據管理器: <modules.gui.rain_anal
+ysis.rain_analysis_mdi.RainAnalysisDataManager object at 0x000001853DCE8680>
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 圖表組件: <modules.gui.rain_analy
+sis.rain_analysis_chart_widget.RainAnalysisChartWidget object at 0x000001853DCE87A
+0>
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 響應式佈局已設置
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [RAIN_MODULE] 模組已初始化
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MODULE] RainAnalysisModuleAdapter 
+初始化完成
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] ✅ Rain Analysis 模組已創建 (type=
+rain_weather)
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] ✅ 已創建 parameter_provider for
+ '🌧️ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG]   - window_title: '�
+�️ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module:
+ <modules.gui.rain_analysis.rain_analysis_module.RainAnalysisModuleAdapter object 
+at 0x000001853DCE84D0>
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module 
+type: RainAnalysisModuleAdapter
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: '🌧️ Rain An
+alysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')...
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [LINK] [INIT] 🌧️ Rain Analysis_2025_Uni
+ted States_R 已找到主視窗引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: 🌧️ Rain Analysis_2025_Unit
+ed States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.rain_analysis.rain_analysis_module.RainAnalysisModuleAdapter object at 0x000001
+853DCE84D0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: RainA
+nalysisModuleAdapter
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671779
+222736
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018539DEE120>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: False
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: N/A
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018539DEE120>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671779224608
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔗 [RAIN_MODULE] ========== set_parent_w
+indow 被調用 ==========
+2025-10-23 00:08:50 | INFO | f1.console | 🔗 [RAIN_MODULE] parent_window 參數: <f1t_
+gui_main.PopoutSubWindow object at 0x000001853DCE8C20>
+2025-10-23 00:08:50 | INFO | f1.console | 🔗 [RAIN_MODULE] parent_window type: Pop
+outSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔗 [RAIN_MODULE] parent_window 已設置，現在調用 
+update_window_title()...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] update_window_title 開始
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟1] parent_window 檢查:
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window: <f1t
+_gui_main.PopoutSubWindow object at 0x000001853DCE8C20>
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window id: 1
+671779224608
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window type:
+ PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has setWindowTitle:
+ True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has windowTitle: Tr
+ue
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has update: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has repaint: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟2] 準備生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_race: Unite
+d States
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 race: United Sta
+tes
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟3] 讀取當前標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟4] 生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 標題是否改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟5] 調用 setWindowTitle
+()...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 239, in set_parent_window
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 288, in update_window_title
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')...
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ setWindowTitle() 調用
+完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟6] 驗證標題更新...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 驗證結果: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟7] 強制刷新視窗顯示...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ update() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ repaint() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟8] 強制處理 Qt 事件循環...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ processEvents() 完成
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [RAIN_MODULE] ✅✅✅ 視窗標題已更新完成 ✅✅✅
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [RAIN_MODULE] set_parent_window 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x000001853DCE8C20>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] 🌧️ Rain Analysis_2025_United
+ States_R 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [SYNC] [INIT] 🌧️ Rain Analysis_2025_Uni
+ted States_R 已連接模組同步信號
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: '🌧️ Rain An
+alysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 '🌧️ 
+Rain Analysis_2025_United States_R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 標題參數: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [WORKSPACE_SYNC] ⚠️  參數不匹配！
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 標題: United State
+s
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 主視窗: United Stat
+es
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 即將調用 update_paramete
+rs(2025, United States, R)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 這會觸發標題更新，將標題從 'Unite
+d States' 改為 'United States'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] =======================
+=====================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] ⚡ update_parameters 被調用
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] =======================
+=====================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] [階段A] 參數比對:
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 傳入 year: 2025 (type
+: int)
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 傳入 race: United Sta
+tes (type: str)
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 傳入 session: R (type
+: str)
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 當前 self.current_yea
+r: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 當前 self.current_rac
+e: United States
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 當前 self.current_ses
+sion: R
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - year 改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - race 改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - session 改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] [階段B] 更新內部參數...
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 更新前: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 更新後: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   ✅ 內部參數已更新
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] [階段C] 第一次標題更新（使用新參數）...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] update_window_title 開始
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟1] parent_window 檢查:
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window: <f1t
+_gui_main.PopoutSubWindow object at 0x000001853DCE8C20>
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window id: 1
+671779224608
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window type:
+ PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has setWindowTitle:
+ True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has windowTitle: Tr
+ue
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has update: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has repaint: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟2] 準備生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_race: Unite
+d States
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 race: United Sta
+tes
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟3] 讀取當前標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟4] 生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 標題是否改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟5] 調用 setWindowTitle
+()...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 165, in update_parameters
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 288, in update_window_title
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')...
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ setWindowTitle() 調用
+完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟6] 驗證標題更新...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 驗證結果: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟7] 強制刷新視窗顯示...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ update() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ repaint() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟8] 強制處理 Qt 事件循環...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ processEvents() 完成
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [RAIN_MODULE] ✅✅✅ 視窗標題已更新完成 ✅✅✅
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   ✅ 第一次 update_window_t
+itle() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] [階段D] 更新核心分析模組...
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - 準備調用 _rain_analysis
+_core.update_analysis_parameters...
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] ========== 降雨參數更新 ==========
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 收到參數: 2025 United States R
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 更新數據管理器參數...
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 開始載入數據...
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 使用預設公開 API 網域 ht
+tps://api.f1telemetrystationpro.org
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 透過 API 載入降雨資料: b
+ase_url=https://api.f1telemetrystationpro.org, params={'year': 2025, 'race': 'Unit
+ed States', 'session': 'R'}
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 數據載入結果: True
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 更新圖表數據...
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_RANGE_DEBUG] 計算範圍，圖表類型: primary
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_RANGE_DEBUG] 可用數據鍵: ['x_data', 'y1
+_data', 'y2_data', 'y1_label', 'y2_label', 'title']
+2025-10-23 00:08:50 | INFO | f1.console | [RAIN_MDI] 參數更新完成
+2025-10-23 00:08:50 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 已有載入請求執行中，忽略新的請求
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   - update_analysis_par
+ameters 返回: False
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE] [階段E] 第二次標題更新（數據載入後確認）.
+..
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] update_window_title 開始
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟1] parent_window 檢查:
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window: <f1t
+_gui_main.PopoutSubWindow object at 0x000001853DCE8C20>
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window id: 1
+671779224608
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - parent_window type:
+ PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has setWindowTitle:
+ True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has windowTitle: Tr
+ue
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has update: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - has repaint: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟2] 準備生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_race: Unite
+d States
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - current_session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 year: 2025
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 race: United Sta
+tes
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 使用 session: R
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟3] 讀取當前標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟4] 生成新標題...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 標題是否改變: False
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟5] 調用 setWindowTitle
+()...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 181, in update_parameters
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE]   File "C:\Users\mike2\On
+eDrive\Code\F1-data-analyze\modules\gui\rain_analysis\rain_analysis_module.py", li
+ne 288, in update_window_title
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_United States_R')...
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ setWindowTitle() 調用
+完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟6] 驗證標題更新...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   - 驗證結果: True
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟7] 強制刷新視窗顯示...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ update() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ repaint() 完成
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] [步驟8] 強制處理 Qt 事件循環...
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE]   ✅ processEvents() 完成
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [RAIN_MODULE] ✅✅✅ 視窗標題已更新完成 ✅✅✅
+2025-10-23 00:08:50 | INFO | f1.console | 📝 [RAIN_MODULE] =======================
+===================
+2025-10-23 00:08:50 | INFO | f1.console | 🔄 [RAIN_MODULE]   ✅ 第二次 update_window_t
+itle() 完成
+2025-10-23 00:08:50 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 核心模組更新返回失敗
+2025-10-23 00:08:50 | ERROR | f1.console | ⚠️ [RAIN_MODULE] 參數更新失敗
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Fal
+se
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: '🌧️ Rain Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: 🌧️ Rain Analysis_2025_Unit
+ed States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow '🌧️ Rain An
+alysis_2025_United States_R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] ✅ 視窗已重建: '🌧️ Rain Analysis_
+2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Track Analy
+sis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Track Analysis_2025_United 
+States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.track_analysis.track_analysis_mdi.TrackAnalysisUniversal object at 0x0000018541
+03A9F0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Track
+AnalysisUniversal
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671833
+037296
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018540F8F110>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018540F8F110>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671833039168
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x000001854103B140>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] Track Analysis_2025_United St
+ates_R 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Track Analy
+sis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Trac
+k Analysis_2025_United States_R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 標題參數: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [WORKSPACE_SYNC] ⚠️  參數不匹配！
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 標題: United State
+s
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 主視窗: United Stat
+es
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 即將調用 update_paramete
+rs(2025, United States, R)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 這會觸發標題更新，將標題從 'Unite
+d States' 改為 'United States'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] _handle_parameters_updated 被
+調用
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 當前 MDI 視窗標題: 'Track Analysis
+_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 收到參數更新信號: {'year': '2025', '
+race': 'United States', 'session': 'R'}
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Track Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Track Analysis_2025_United 
+States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Track Analy
+sis_2025_United States_R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Pitstop Ana
+lysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Pitstop Analysis_2025_Unite
+d States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.pitstop_analysis.pitstop_analysis_mdi.PitstopAnalysisModule object at 0x0000018
+5410989E0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Pitst
+opAnalysisModule
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671833
+422304
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018540F8F4D0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: Fals
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: False
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: N/A
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018540F8F4D0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | WARNING | f1.console | ⚠️  [POPOUT] Pitstop Analysis_2025_Un
+ited States_R 模組沒有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組可用方法: ['analysis_complete
+d', 'analysis_type', 'blockSignals', 'childEvent', 'children', 'clear_data', 'conn
+ectNotify', 'current_race', 'current_session', 'current_year', 'customEvent', 'dat
+a_loaded', 'data_manager', 'deleteLater', 'description', 'destroyed', 'detailed_wi
+dget', 'disconnect', 'disconnectNotify', 'display_name']
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Pitstop Ana
+lysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Pits
+top Analysis_2025_United States_R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 標題參數: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [WORKSPACE_SYNC] ⚠️  參數不匹配！
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 標題: United State
+s
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 主視窗: United Stat
+es
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 即將調用 update_paramete
+rs(2025, United States, R)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 這會觸發標題更新，將標題從 'Unite
+d States' 改為 'United States'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Pitstop Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Pitstop Analysis_2025_Unite
+d States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Pitstop Ana
+lysis_2025_United States_R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Accident An
+alysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Accident Analysis_2025_Unit
+ed States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.accident_analysis.accident_analysis_mdi.AccidentAnalysisModule object at 0x0000
+018541E45490>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Accid
+entAnalysisModule
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671847
+761040
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541E68050>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: Fals
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541E68050>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | WARNING | f1.console | ⚠️  [POPOUT] Accident Analysis_2025_U
+nited States_R 模組沒有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組可用方法: ['analysis_complete
+d', 'analysis_type', 'blockSignals', 'childEvent', 'children', 'clear_data', 'conn
+ectNotify', 'current_race', 'current_session', 'current_year', 'customEvent', 'dat
+a_loaded', 'data_manager', 'deleteLater', 'description', 'destroyed', 'detailed_li
+st_widget', 'disconnect', 'disconnectNotify', 'display_name']
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Accident An
+alysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Acci
+dent Analysis_2025_United States_R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 標題參數: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [WORKSPACE_SYNC] ⚠️  參數不匹配！
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 標題: United State
+s
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 主視窗: United Stat
+es
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 即將調用 update_paramete
+rs(2025, United States, R)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 這會觸發標題更新，將標題從 'Unite
+d States' 改為 'United States'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Non
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Accident Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Accident Analysis_2025_Unit
+ed States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Accident An
+alysis_2025_United States_R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Tire Strate
+gy Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Tire Strategy Analysis_2025
+_United States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.tire_analysis.tire_analysis_module.TireAnalysisModuleAdapter object at 0x000001
+8541E80F80>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: TireA
+nalysisModuleAdapter
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671848
+005504
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541E68C30>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: Fals
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: False
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: N/A
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541E68C30>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | WARNING | f1.console | ⚠️  [POPOUT] Tire Strategy Analysis_2
+025_United States_R 模組沒有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組可用方法: ['adapter_version',
+ 'analysis_completed', 'analysis_type', 'blockSignals', 'childEvent', 'children', 
+'cleanup', 'clear_data', 'connectNotify', 'current_driver', 'current_race', 'curre
+nt_session', 'current_year', 'customEvent', 'data_loaded', 'deleteLater', 'descrip
+tion', 'destroyed', 'disconnect', 'disconnectNotify']
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Tire Strate
+gy Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Tire
+ Strategy Analysis_2025_United States_R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 標題參數: year=2025, rac
+e=United States, session=R
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [WORKSPACE_SYNC] ⚠️  參數不匹配！
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 標題: United State
+s
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC]   - 主視窗: United Stat
+es
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 即將調用 update_paramete
+rs(2025, United States, R)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 這會觸發標題更新，將標題從 'Unite
+d States' 改為 'United States'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Fal
+se
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Tire Strategy Analysis_2025_United States_R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Tire Strategy Analysis_2025
+_United States_R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Tire Strate
+gy Analysis_2025_United States_R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Detailed La
+p Analysis - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Detailed Lap Analysis - 202
+5 United States R - VER
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.driver_race.detailed_lap_analysis.driverlap_analysis_mdi.driverLapAnalysisMDI o
+bject at 0x0000018541E83AD0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: drive
+rLapAnalysisMDI
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671848
+016592
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541D0BBF0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541D0BBF0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671848430048
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x0000018541EE89E0>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] Detailed Lap Analysis - 2025 
+United States R - VER 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Detailed La
+p Analysis - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Deta
+iled Lap Analysis - 2025 United States R - VER' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] _handle_parameters_updated 被
+調用
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 當前 MDI 視窗標題: 'Detailed Lap A
+nalysis - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 收到參數更新信號: {'year': '2025', '
+race': 'United States', 'session': 'R', 'driver1': 'VER', 'driver2': 'VER'}
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Detailed Lap Analysis - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Detailed Lap Analysis - 202
+5 United States R - VER
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Detailed La
+p Analysis - 2025 United States R - VER' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis', 'laptime_boxplot']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Lap Time Bo
+x Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Lap Time Box Plot - 2025 Un
+ited States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.lap_box_plot_analysis.lap_box_plot_analysis_mdi.LapTimeBoxPlotAnalysis object a
+t 0x0000018541F20320>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: LapTi
+meBoxPlotAnalysis
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671848
+657696
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541E4F350>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541E4F350>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671848660000
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x0000018541F20C20>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] Lap Time Box Plot - 2025 Unit
+ed States R 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Lap Time Bo
+x Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Lap 
+Time Box Plot - 2025 United States R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] _handle_parameters_updated 被
+調用
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 當前 MDI 視窗標題: 'Lap Time Box P
+lot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 收到參數更新信號: {'year': '2025', '
+race': 'United States', 'session': 'R'}
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Lap Time Box Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Lap Time Box Plot - 2025 Un
+ited States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Lap Time Bo
+x Plot - 2025 United States R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis', 'laptime_boxplot', 'throttle_boxplot']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Throttle Bo
+x Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Throttle Box Plot - 2025 Un
+ited States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.Throttle_analysis.throttle_box_plot_analysis.throttle_box_plot_analysis_mdi.Thr
+ottleBoxPlotAnalysis object at 0x0000018541F22CC0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Throt
+tleBoxPlotAnalysis
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671848
+668352
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018542F64490>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018542F64490>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671848670800
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x0000018541F23650>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] Throttle Box Plot - 2025 Unit
+ed States R 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Throttle Bo
+x Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Thro
+ttle Box Plot - 2025 United States R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] _handle_parameters_updated 被
+調用
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 當前 MDI 視窗標題: 'Throttle Box P
+lot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 收到參數更新信號: {'year': '2025', '
+race': 'United States', 'session': 'R'}
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Throttle Box Plot - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Throttle Box Plot - 2025 Un
+ited States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Throttle Bo
+x Plot - 2025 United States R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis', 'laptime_boxplot', 'throttle_boxplot', 'thrott
+le_line_chart_single_driver']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Throttle Li
+ne Chart (Single Driver) - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Throttle Line Chart (Single
+ Driver) - 2025 United States R - VER
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.Throttle_analysis.throttle_line_chart_analysis.throttle_line_chart_mdi.Throttle
+LineChartMDI object at 0x0000018542F768D0>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Throt
+tleLineChartMDI
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671865
+788624
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541F05D50>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: None
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541F05D50>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 set_parent_window(self
+)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self (PopoutSubWindow) id: 
+1671865789920
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - self type: PopoutSubWindow
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - set_parent_window() 調用完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 驗證: module.parent_window = 
+<f1t_gui_main.PopoutSubWindow object at 0x0000018542F76DE0>
+2025-10-23 00:08:50 | INFO | f1.console | ✅ [POPOUT] Throttle Line Chart (Single D
+river) - 2025 United States R - VER 已設置 parent_window 引用
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Throttle Li
+ne Chart (Single Driver) - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Thro
+ttle Line Chart (Single Driver) - 2025 United States R - VER' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] _handle_parameters_updated 被
+調用
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 當前 MDI 視窗標題: 'Throttle Line 
+Chart (Single Driver) - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] 收到參數更新信號: {'year': '2025', '
+race': 'United States', 'session': 'R', 'driver1': 'VER', 'driver2': 'VER'}
+2025-10-23 00:08:50 | INFO | f1.console | 📢 [POPOUT] ============================
+================================
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Throttle Line Chart (Single Driver) - 2025 United States R - VER'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Throttle Line Chart (Single
+ Driver) - 2025 United States R - VER
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Throttle Li
+ne Chart (Single Driver) - 2025 United States R - VER' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis', 'laptime_boxplot', 'throttle_boxplot', 'thrott
+le_line_chart_single_driver', 'ideal_lap_ranking']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Ideal Lap R
+anking Table - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 這個標題來自 Workspace 配置
+2025-10-23 00:08:50 | WARNING | f1.console | 🚨 [POPOUT_TITLE] ⚠️  注意：這可能不是當前主視窗的參
+數！
+2025-10-23 00:08:50 | INFO | f1.console | 🔔 [MDI_TITLE] setWindowTitle 被調用 (Popou
+tSubWindow)
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ✅ 初始標題已設置
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ======================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 開始
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Ideal Lap Ranking Table - 2
+025 United States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟1] 檢查模組:
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module: <modules.g
+ui.ideal_lap_analysis.ideal_lap_ranking_table.ideal_lap_ranking_table_module.Ideal
+LapRankingTableModule object at 0x0000018543028680>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module type: Ideal
+LapRankingTableModule
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - analysis_module id: 1671866
+517120
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider: <f1t_g
+ui_main.MainWindowParameterProvider object at 0x0000018541F06E50>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - _parameter_provider type: M
+ainWindowParameterProvider
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has set_parent_window: Fals
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has update_parameters: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameter_provider attr
+: False
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟2] 檢查條件: analysis_module=Tru
+e, _parameter_provider=True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ✅ 條件滿足，開始初始化模組...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟3] 設置 parameter_provider 到模組
+...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置前 module.parameter_provid
+er: N/A
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 設置後 module.parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000018541F06E50>
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameter_provider 已設置
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟4] 檢查並調用 set_parent_window..
+.
+2025-10-23 00:08:50 | WARNING | f1.console | ⚠️  [POPOUT] Ideal Lap Ranking Table 
+- 2025 United States R 模組沒有 set_parent_window 方法
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組可用方法: ['analysis_complete
+d', 'analysis_type', 'blockSignals', 'childEvent', 'children', 'clear_data', 'conn
+ectNotify', 'current_race', 'current_session', 'current_year', 'customEvent', 'dat
+a_loaded', 'deleteLater', 'description', 'destroyed', 'disconnect', 'disconnectNot
+ify', 'display_name', 'dumpObjectInfo', 'dumpObjectTree']
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟5] 連接模組信號...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has module_error: True
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - has parameters_updated: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ module_error 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ parameters_updated 信號已連接
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] [步驟6] 進行初始參數同步...
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ===== 關鍵衝突點 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 當前視窗標題: 'Ideal Lap R
+anking Table - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 模組有 update_parameters 方法
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 主視窗當前參數: year=2025, 
+race=United States, session=R
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] 視窗標題中的參數: (從標題 'Idea
+l Lap Ranking Table - 2025 United States R' 中提取)
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - 準備調用 analysis_module.update
+_parameters()...
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   - update_parameters() 返回: Tru
+e
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] update_parameters 完成
+後的視窗標題: 'Ideal Lap Ranking Table - 2025 United States R'
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [WORKSPACE_SYNC] ====================
+===========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT]   ✅ 初始參數同步完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] PopoutSubWindow.__init__ 完成
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] 標題: Ideal Lap Ranking Table - 2
+025 United States R
+2025-10-23 00:08:50 | INFO | f1.console | [POPOUT] ===============================
+=========
+2025-10-23 00:08:50 | INFO | f1.console | [OK] [INIT] PopoutSubWindow 'Ideal Lap R
+anking Table - 2025 United States R' 初始化完成 - 包含調整大小支援
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [MDI_INIT] 可用的MDI模組類型: ['telemetry', 
+'rain', 'accident', 'pitstop', 'speed', 'brake', 'gear', 'rpm', 'throttle', 'accel
+eration', 'speeddiff', 'distancediff', 'laptime', 'throttle_line', 'rain_weather',
+ 'track_analysis', 'tire_analysis', 'laptime_boxplot', 'throttle_boxplot', 'thrott
+le_line_chart_single_driver', 'ideal_lap_ranking', 'ideal_lap_sector_heatmap']
+2025-10-23 00:08:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] ===== 初始化標題設置 =====
+2025-10-23 00:08:50 | INFO | f1.console | 🚨 [POPOUT_TITLE] 即將設置初始標題: 'Sector Heat
+ Map - 2025 United States R'
+
+

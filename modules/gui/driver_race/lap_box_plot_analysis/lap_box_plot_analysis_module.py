@@ -24,7 +24,7 @@ from core.logger import get_logger
 logger = get_logger(__name__)
 
 try:
-    from ...interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
+    from modules.gui.interfaces.analysis_module import IAnalysisModule, ModuleFactory, ModuleTypes
 except ImportError:  # pragma: no cover
     from modules.gui.interfaces.analysis_module import (
         IAnalysisModule,

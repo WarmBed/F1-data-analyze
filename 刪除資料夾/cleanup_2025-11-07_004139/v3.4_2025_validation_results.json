@@ -1,0 +1,127 @@
+{
+  "metadata": {
+    "version": "v3.4",
+    "validation_year": 2025,
+    "successful_predictions": 11,
+    "failed_predictions": 13
+  },
+  "summary": {
+    "avg_spearman": 0.3977490773219312,
+    "avg_mae": 1.5072095013486142,
+    "avg_top3_accuracy": 0.3333333333333333,
+    "avg_top10_accuracy": 0.6818181818181819,
+    "avg_rank_error": 4.835406698564594
+  },
+  "race_results": {
+    "Japan": {
+      "race_number": 3,
+      "n_drivers": 20,
+      "r2": -1.915595836885518,
+      "mae": 0.9714813964843743,
+      "spearman": 0.34091819370588294,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 4.7
+    },
+    "Bahrain": {
+      "race_number": 4,
+      "n_drivers": 20,
+      "r2": 0.3362134565221345,
+      "mae": 0.6194185424804672,
+      "spearman": 0.7458646616541353,
+      "top3_accuracy": 0.6666666666666666,
+      "top10_accuracy": 0.8,
+      "mean_rank_error": 3.3
+    },
+    "Saudi Arabia": {
+      "race_number": 5,
+      "n_drivers": 20,
+      "r2": 0.45041420766819906,
+      "mae": 0.340955325317384,
+      "spearman": 0.8211714939503134,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.9,
+      "mean_rank_error": 3.0
+    },
+    "Monaco": {
+      "race_number": 8,
+      "n_drivers": 20,
+      "r2": 0.19551881056214737,
+      "mae": 0.5340343139648411,
+      "spearman": 0.6071299121606798,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 4.4
+    },
+    "Canada": {
+      "race_number": 10,
+      "n_drivers": 20,
+      "r2": -78.24003125174555,
+      "mae": 4.711364379882812,
+      "spearman": -0.260132990857236,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 6.7
+    },
+    "Great Britain": {
+      "race_number": 12,
+      "n_drivers": 20,
+      "r2": -83.30168966310028,
+      "mae": 5.54936453857422,
+      "spearman": 0.34684398780964804,
+      "top3_accuracy": 0.6666666666666666,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 5.7
+    },
+    "Hungary": {
+      "race_number": 14,
+      "n_drivers": 20,
+      "r2": -29.637842831702567,
+      "mae": 1.5785569458007835,
+      "spearman": 0.26557875454942004,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 6.0
+    },
+    "Italy": {
+      "race_number": 16,
+      "n_drivers": 20,
+      "r2": -0.904479367851464,
+      "mae": 0.4684653839111327,
+      "spearman": -0.08817322944842973,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 6.8
+    },
+    "Azerbaijan": {
+      "race_number": 17,
+      "n_drivers": 19,
+      "r2": -0.2604785168380537,
+      "mae": 0.6064788464997952,
+      "spearman": 0.1266908125186251,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 5.7894736842105265
+    },
+    "Singapore": {
+      "race_number": 18,
+      "n_drivers": 20,
+      "r2": -0.6186440639690254,
+      "mae": 0.6406539245605473,
+      "spearman": 0.7039347206636178,
+      "top3_accuracy": 0.6666666666666666,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 3.7
+    },
+    "Mexico": {
+      "race_number": 20,
+      "n_drivers": 20,
+      "r2": 0.1772998660652445,
+      "mae": 0.5585309173583987,
+      "spearman": 0.7654135338345864,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.8,
+      "mean_rank_error": 3.1
+    }
+  }
+}

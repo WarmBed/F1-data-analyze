@@ -14,6 +14,7 @@ from .ranking_tower import LiveTimingRankingTower, RankingTableWidget
 from .race_control_messages import LiveTimingRaceControlMessages, RaceControlMessagesWidget
 from .battle_insight import BattleInsightMDI, BattleInsightWidget
 from .chase_strategy import ChaseStrategyMDI, ChaseStrategyWidget
+from .throttle_history import LiveTimingThrottleHistory, ThrottleHistoryTableWidget
 
 __all__ = [
     'LiveTimingControlPanel',
@@ -27,4 +28,6 @@ __all__ = [
     'BattleInsightWidget',
     'ChaseStrategyMDI',
     'ChaseStrategyWidget',
+    'LiveTimingThrottleHistory',
+    'ThrottleHistoryTableWidget',
 ]

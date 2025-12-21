@@ -44,7 +44,7 @@ from PyQt5.QtGui import QFont, QPainter, QColor, QPen, QBrush, QPolygonF
 
 # 導入基類和工具
 try:
-    from ...base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig, CliAnalysisWorker
+    from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig, CliAnalysisWorker
 except ImportError:
     # 獨立運行時添加路徑
     current_dir = os.path.dirname(os.path.abspath(__file__))

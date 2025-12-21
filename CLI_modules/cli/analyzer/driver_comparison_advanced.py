@@ -2278,13 +2278,6 @@ def _save_driver_comparison_json(result_data, driver1, driver2):
     try:
         import json
         from datetime import datetime
-
-# Force UTF-8 output
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
-if sys.stderr.encoding != 'utf-8':
-    sys.stderr.reconfigure(encoding='utf-8')
-
         
         # 創建json目錄
         json_dir = "json"

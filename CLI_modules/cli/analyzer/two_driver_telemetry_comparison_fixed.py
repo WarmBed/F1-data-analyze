@@ -1181,14 +1181,6 @@ class TwoDriverTelemetryComparison:
     def _display_difference_analysis_table(self, result):
         """顯示速度差和距離差分析表格"""
         from prettytable import PrettyTable
-import sys
-
-# Force UTF-8 output
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
-if sys.stderr.encoding != 'utf-8':
-    sys.stderr.reconfigure(encoding='utf-8')
-
         
         # 速度差分析
         speed_diff = result.get('speed_difference', {})

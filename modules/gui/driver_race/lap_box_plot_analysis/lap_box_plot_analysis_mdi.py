@@ -51,8 +51,8 @@ from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
 
 # 導入通用基礎類別
 try:
-    from ...base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
-    from ...base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
+    from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
 except ImportError:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig

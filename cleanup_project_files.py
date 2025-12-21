@@ -77,6 +77,7 @@ def main():
         "batch_generator_gui.py",  # 批次生成器 GUI
         "build_exe_gui.py",  # EXE 建構工具 GUI
         "launch_batch_generator_gui.py",  # 批次生成器啟動器
+        "signalr_recorder_gui.py",  # SignalR 錄製工具 GUI
         "start_gui.bat",
         "start_api.bat",
         "requirements.txt",

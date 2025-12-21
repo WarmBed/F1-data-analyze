@@ -200,6 +200,22 @@ class LiveTimingModuleFactory:
         "賽道與天氣": "track_weather",
         "トラック＆ウェザー": "track_weather",
         "track_weather": "track_weather",
+        
+        # Throttle 95% History 油門歷史
+        "Throttle 95% History": "throttle_history",
+        "Throttle 95%": "throttle_history",
+        "Throttle History": "throttle_history",
+        "油門歷史": "throttle_history",
+        "スロットル履歴": "throttle_history",
+        "throttle_history": "throttle_history",
+        
+        # SF% History 省油百分比歷史
+        "SF% History": "sf_percentage_chart",
+        "SF% Chart": "sf_percentage_chart",
+        "省油百分比": "sf_percentage_chart",
+        "省油歷史": "sf_percentage_chart",
+        "SF%履歴": "sf_percentage_chart",
+        "sf_percentage_chart": "sf_percentage_chart",
     }
     
     # 模組鍵值 → 模組元數據
@@ -364,6 +380,18 @@ class LiveTimingModuleFactory:
             "display_name": "Track & Weather",
             "description": "Real-time track status and weather conditions display",
             "icon": "track_weather.png",
+            "implemented": True,
+        },
+        "throttle_history": {
+            "display_name": "Throttle 95% History",
+            "description": "Throttle 95%+ usage history for all drivers per lap",
+            "icon": "throttle_history.png",
+            "implemented": True,
+        },
+        "sf_percentage_chart": {
+            "display_name": "SF% History",
+            "description": "SF% (Stint Fuel Saving) history curve for single driver",
+            "icon": "sf_percentage_chart.png",
             "implemented": True,
         },
     }
@@ -591,6 +619,14 @@ class LiveTimingModuleFactory:
             elif module_key == "track_weather":
                 from ..live_timing_modules.track_weather import TrackWeatherMDI
                 module_class = TrackWeatherMDI
+                
+            elif module_key == "throttle_history":
+                from ..live_timing_modules.throttle_history import LiveTimingThrottleHistory
+                module_class = LiveTimingThrottleHistory
+                
+            elif module_key == "sf_percentage_chart":
+                from ..live_timing_modules.sf_percentage_chart import LiveTimingSFPercentageChart
+                module_class = LiveTimingSFPercentageChart
                 
             else:
                 self._logger.warning("Unknown module key: %s", module_key)

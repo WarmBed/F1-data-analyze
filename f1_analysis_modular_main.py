@@ -1783,7 +1783,7 @@ def create_argument_parser():
     )
     
     # 賽事參數
-    parser.add_argument('-y', '--year', type=int, choices=list(range(2018, 2026)), 
+    parser.add_argument('-y', '--year', type=int, choices=list(range(2018, 2027)), 
                        help='賽季年份 (2018-2025，支援 FP→Q 預測訓練數據收集)')
     parser.add_argument('-r', '--race', type=str,
                        help='賽事名稱 (如: China, Bahrain, Australia 等)')

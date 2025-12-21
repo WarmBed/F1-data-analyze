@@ -1,0 +1,15 @@
+﻿================================================================================
+python : Traceback (most recent call last):
+位於 線路:1 字元:1
++ python deep_trace_test_import.py 2>&1 | Out-File -FilePath trace_resu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last 
+   )::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\mike2\OneDrive\Code\F1-data-analyze\deep_trace_test_import.py
+", line 11, in <module>
+    print("\U0001f50d 深度追蹤：test_api_only_mode.py 是否在 GUI 啟動時被調用")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'cp950' codec can't encode character '\U0001f50d' in posit
+ion 0: illegal multibyte sequence

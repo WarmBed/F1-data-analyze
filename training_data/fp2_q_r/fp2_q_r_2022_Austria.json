@@ -1,0 +1,692 @@
+{
+  "metadata": {
+    "year": 2022,
+    "race": "Austria",
+    "collection_timestamp": "2025-12-13T01:21:56.772300"
+  },
+  "fp2": {
+    "session_info": {
+      "session_name": "Practice 2",
+      "date": "2022-07-09T10:30:00"
+    },
+    "drivers": {
+      "VER": {
+        "team": "Red Bull Racing",
+        "ideal_s1": 17.126,
+        "ideal_s2": 30.914,
+        "ideal_s3": 20.738,
+        "ideal_lap": 68.778,
+        "low_speed_apex": 186.0,
+        "mid_speed_apex": 235.10500096,
+        "high_speed_apex": 277.5069457777778,
+        "max_speed": 319.0,
+        "s1_s2_ratio": 0.553988484181924,
+        "sector_cv": 0.29264758275158365,
+        "s2_lap_ratio": 0.4494751228590538,
+        "max_speed_lap_ratio": 21.940182,
+        "max_speed_s2_ratio": 10.318949343339586,
+        "speed_consistency": 0.7073524172484164,
+        "fp2_relative_position": 0.15,
+        "fp2_gap_to_fastest": 0.16800000000000637
+      },
+      "RIC": {
+        "team": "McLaren",
+        "ideal_s1": 17.653,
+        "ideal_s2": 31.049,
+        "ideal_s3": 21.15,
+        "ideal_lap": 69.852,
+        "low_speed_apex": 184.76656268000002,
+        "mid_speed_apex": 235.0,
+        "high_speed_apex": 274.0,
+        "max_speed": 296.0,
+        "s1_s2_ratio": 0.5685529324615929,
+        "sector_cv": 0.26915246887137984,
+        "s2_lap_ratio": 0.44449693637977433,
+        "max_speed_lap_ratio": 20.676192000000004,
+        "max_speed_s2_ratio": 9.533318303326999,
+        "speed_consistency": 0.7308475311286202,
+        "fp2_relative_position": 0.85,
+        "fp2_gap_to_fastest": 1.2420000000000044
+      },
+      "NOR": {
+        "team": "McLaren",
+        "ideal_s1": 17.771,
+        "ideal_s2": 30.81,
+        "ideal_s3": 20.938,
+        "ideal_lap": 69.519,
+        "low_speed_apex": 187.24166666666667,
+        "mid_speed_apex": 236.6208352,
+        "high_speed_apex": 273.7107142857143,
+        "max_speed": 292.0,
+        "s1_s2_ratio": 0.5767932489451477,
+        "sector_cv": 0.2603895940219881,
+        "s2_lap_ratio": 0.44318819315582786,
+        "max_speed_lap_ratio": 20.299548,
+        "max_speed_s2_ratio": 9.477442388834794,
+        "speed_consistency": 0.739610405978012,
+        "fp2_relative_position": 0.5,
+        "fp2_gap_to_fastest": 0.909000000000006
+      },
+      "VET": {
+        "team": "Aston Martin",
+        "ideal_s1": 17.772,
+        "ideal_s2": 30.802,
+        "ideal_s3": 21.028,
+        "ideal_lap": 69.602,
+        "low_speed_apex": 190.17991351691796,
+        "mid_speed_apex": 236.28125119999999,
+        "high_speed_apex": 272.30874912,
+        "max_speed": 293.0,
+        "s1_s2_ratio": 0.5769755210700603,
+        "sector_cv": 0.25674960458144047,
+        "s2_lap_ratio": 0.44254475446107866,
+        "max_speed_lap_ratio": 20.393386000000003,
+        "max_speed_s2_ratio": 9.5123693266671,
+        "speed_consistency": 0.7432503954185595,
+        "fp2_relative_position": 0.65,
+        "fp2_gap_to_fastest": 0.9920000000000044
+      },
+      "LAT": {
+        "team": "Williams",
+        "ideal_s1": 17.713,
+        "ideal_s2": 31.235,
+        "ideal_s3": 21.313,
+        "ideal_lap": 70.261,
+        "low_speed_apex": 181.0,
+        "mid_speed_apex": 227.109376,
+        "high_speed_apex": 271.42727330909094,
+        "max_speed": 296.0,
+        "s1_s2_ratio": 0.5670882023371219,
+        "sector_cv": 0.2704682454559886,
+        "s2_lap_ratio": 0.4445567242140021,
+        "max_speed_lap_ratio": 20.797255999999997,
+        "max_speed_s2_ratio": 9.476548743396831,
+        "speed_consistency": 0.7295317545440114,
+        "fp2_relative_position": 1.0,
+        "fp2_gap_to_fastest": 1.6509999999999962
+      },
+      "GAS": {
+        "team": "AlphaTauri",
+        "ideal_s1": 17.608,
+        "ideal_s2": 30.945,
+        "ideal_s3": 21.026,
+        "ideal_lap": 69.579,
+        "low_speed_apex": 187.05624613333333,
+        "mid_speed_apex": 232.00340974545455,
+        "high_speed_apex": 273.40874928,
+        "max_speed": 296.0,
+        "s1_s2_ratio": 0.5690095330424948,
+        "sector_cv": 0.26577689821052913,
+        "s2_lap_ratio": 0.4447462596473074,
+        "max_speed_lap_ratio": 20.595384,
+        "max_speed_s2_ratio": 9.565357893036031,
+        "speed_consistency": 0.7342231017894709,
+        "fp2_relative_position": 0.6,
+        "fp2_gap_to_fastest": 0.9689999999999941
+      },
+      "PER": {
+        "team": "Red Bull Racing",
+        "ideal_s1": 17.423,
+        "ideal_s2": 30.881,
+        "ideal_s3": 20.875,
+        "ideal_lap": 69.179,
+        "low_speed_apex": 191.0,
+        "mid_speed_apex": 236.0,
+        "high_speed_apex": 275.4669654857143,
+        "max_speed": 297.0,
+        "s1_s2_ratio": 0.5641980505812635,
+        "sector_cv": 0.25760108866605297,
+        "s2_lap_ratio": 0.4463926914236979,
+        "max_speed_lap_ratio": 20.546163,
+        "max_speed_s2_ratio": 9.617564198050582,
+        "speed_consistency": 0.7423989113339471,
+        "fp2_relative_position": 0.3,
+        "fp2_gap_to_fastest": 0.5690000000000026
+      },
+      "ALO": {
+        "team": "Alpine",
+        "ideal_s1": 17.149,
+        "ideal_s2": 30.656,
+        "ideal_s3": 21.027,
+        "ideal_lap": 68.832,
+        "low_speed_apex": 188.0,
+        "mid_speed_apex": 231.2562512,
+        "high_speed_apex": 277.9826391111111,
+        "max_speed": 308.0,
+        "s1_s2_ratio": 0.5594010960334029,
+        "sector_cv": 0.2763177289740877,
+        "s2_lap_ratio": 0.44537424453742447,
+        "max_speed_lap_ratio": 21.200255999999996,
+        "max_speed_s2_ratio": 10.046972860125262,
+        "speed_consistency": 0.7236822710259123,
+        "fp2_relative_position": 0.2,
+        "fp2_gap_to_fastest": 0.2219999999999942
+      },
+      "LEC": {
+        "team": "Ferrari",
+        "ideal_s1": 17.53,
+        "ideal_s2": 30.461,
+        "ideal_s3": 20.669,
+        "ideal_lap": 68.66,
+        "low_speed_apex": 187.50312559999998,
+        "mid_speed_apex": 238.97000064,
+        "high_speed_apex": 275.93010788700036,
+        "max_speed": 298.0,
+        "s1_s2_ratio": 0.5754899707823119,
+        "sector_cv": 0.2671201025597764,
+        "s2_lap_ratio": 0.4436498689193126,
+        "max_speed_lap_ratio": 20.46068,
+        "max_speed_s2_ratio": 9.783001214667937,
+        "speed_consistency": 0.7328798974402235,
+        "fp2_relative_position": 0.1,
+        "fp2_gap_to_fastest": 0.04999999999999716
+      },
+      "STR": {
+        "team": "Aston Martin",
+        "ideal_s1": 17.837,
+        "ideal_s2": 30.736,
+        "ideal_s3": 20.951999999999998,
+        "ideal_lap": 69.525,
+        "low_speed_apex": 189.171874,
+        "mid_speed_apex": 237.0,
+        "high_speed_apex": 273.0,
+        "max_speed": 291.0,
+        "s1_s2_ratio": 0.5803292555960438,
+        "sector_cv": 0.2596330945577828,
+        "s2_lap_ratio": 0.4420855807263574,
+        "max_speed_lap_ratio": 20.231775000000003,
+        "max_speed_s2_ratio": 9.467725143154606,
+        "speed_consistency": 0.7403669054422173,
+        "fp2_relative_position": 0.55,
+        "fp2_gap_to_fastest": 0.9150000000000063
+      },
+      "MAG": {
+        "team": "Haas F1 Team",
+        "ideal_s1": 17.739,
+        "ideal_s2": 31.181,
+        "ideal_s3": 21.04,
+        "ideal_lap": 69.96,
+        "low_speed_apex": 185.0,
+        "mid_speed_apex": 236.0,
+        "high_speed_apex": 275.60500096,
+        "max_speed": 294.0,
+        "s1_s2_ratio": 0.5689041403418749,
+        "sector_cv": 0.2728631058463633,
+        "s2_lap_ratio": 0.4456975414522585,
+        "max_speed_lap_ratio": 20.56824,
+        "max_speed_s2_ratio": 9.428818831981014,
+        "speed_consistency": 0.7271368941536367,
+        "fp2_relative_position": 0.9,
+        "fp2_gap_to_fastest": 1.3499999999999943
+      },
+      "TSU": {
+        "team": "AlphaTauri",
+        "ideal_s1": 17.537,
+        "ideal_s2": 31.128,
+        "ideal_s3": 21.34,
+        "ideal_lap": 70.005,
+        "low_speed_apex": 181.9671872,
+        "mid_speed_apex": 228.94166613333334,
+        "high_speed_apex": 271.09305564444446,
+        "max_speed": 297.0,
+        "s1_s2_ratio": 0.5633834489848367,
+        "sector_cv": 0.2730102868597478,
+        "s2_lap_ratio": 0.44465395328905083,
+        "max_speed_lap_ratio": 20.791484999999998,
+        "max_speed_s2_ratio": 9.54124903623747,
+        "speed_consistency": 0.7269897131402522,
+        "fp2_relative_position": 0.95,
+        "fp2_gap_to_fastest": 1.394999999999996
+      },
+      "ALB": {
+        "team": "Williams",
+        "ideal_s1": 17.569,
+        "ideal_s2": 31.026,
+        "ideal_s3": 21.145,
+        "ideal_lap": 69.74,
+        "low_speed_apex": 182.5,
+        "mid_speed_apex": 233.1928576,
+        "high_speed_apex": 275.90340945454545,
+        "max_speed": 297.0,
+        "s1_s2_ratio": 0.5662670018693998,
+        "sector_cv": 0.26829114719052916,
+        "s2_lap_ratio": 0.4448809865213651,
+        "max_speed_lap_ratio": 20.71278,
+        "max_speed_s2_ratio": 9.572616515180815,
+        "speed_consistency": 0.7317088528094708,
+        "fp2_relative_position": 0.8,
+        "fp2_gap_to_fastest": 1.1299999999999955
+      },
+      "ZHO": {
+        "team": "Alfa Romeo",
+        "ideal_s1": 17.766,
+        "ideal_s2": 31.033,
+        "ideal_s3": 20.866,
+        "ideal_lap": 69.665,
+        "low_speed_apex": 187.821875,
+        "mid_speed_apex": 238.0,
+        "high_speed_apex": 272.9464278857143,
+        "max_speed": 289.0,
+        "s1_s2_ratio": 0.5724873521734927,
+        "sector_cv": 0.2615136478950606,
+        "s2_lap_ratio": 0.4454604177133424,
+        "max_speed_lap_ratio": 20.133185,
+        "max_speed_s2_ratio": 9.312667160764347,
+        "speed_consistency": 0.7384863521049394,
+        "fp2_relative_position": 0.7,
+        "fp2_gap_to_fastest": 1.0550000000000068
+      },
+      "OCO": {
+        "team": "Alpine",
+        "ideal_s1": 17.279,
+        "ideal_s2": 30.557,
+        "ideal_s3": 21.012,
+        "ideal_lap": 68.848,
+        "low_speed_apex": 189.68999808,
+        "mid_speed_apex": 236.0,
+        "high_speed_apex": 277.18142857142857,
+        "max_speed": 306.0,
+        "s1_s2_ratio": 0.565467814248781,
+        "sector_cv": 0.27295245602160867,
+        "s2_lap_ratio": 0.4438327910759935,
+        "max_speed_lap_ratio": 21.067488,
+        "max_speed_s2_ratio": 10.014072062047976,
+        "speed_consistency": 0.7270475439783913,
+        "fp2_relative_position": 0.25,
+        "fp2_gap_to_fastest": 0.23799999999999955
+      },
+      "HAM": {
+        "team": "Mercedes",
+        "ideal_s1": 17.27,
+        "ideal_s2": 30.823,
+        "ideal_s3": 21.257,
+        "ideal_lap": 69.35,
+        "low_speed_apex": 186.7291648,
+        "mid_speed_apex": 231.0,
+        "high_speed_apex": 271.7083328,
+        "max_speed": 309.0,
+        "s1_s2_ratio": 0.5602958829445543,
+        "sector_cv": 0.2626506782298811,
+        "s2_lap_ratio": 0.4444556596971882,
+        "max_speed_lap_ratio": 21.429149999999996,
+        "max_speed_s2_ratio": 10.02498134509944,
+        "speed_consistency": 0.7373493217701189,
+        "fp2_relative_position": 0.45,
+        "fp2_gap_to_fastest": 0.7399999999999949
+      },
+      "MSC": {
+        "team": "Haas F1 Team",
+        "ideal_s1": 17.291,
+        "ideal_s2": 31.116,
+        "ideal_s3": 21.293,
+        "ideal_lap": 69.7,
+        "low_speed_apex": 180.0562464,
+        "mid_speed_apex": 230.1,
+        "high_speed_apex": 275.04312224,
+        "max_speed": 310.0,
+        "s1_s2_ratio": 0.5556948193855251,
+        "sector_cv": 0.2878870808315546,
+        "s2_lap_ratio": 0.44642754662840745,
+        "max_speed_lap_ratio": 21.607,
+        "max_speed_s2_ratio": 9.962720143977375,
+        "speed_consistency": 0.7121129191684454,
+        "fp2_relative_position": 0.75,
+        "fp2_gap_to_fastest": 1.0900000000000034
+      },
+      "SAI": {
+        "team": "Ferrari",
+        "ideal_s1": 17.097,
+        "ideal_s2": 30.825,
+        "ideal_s3": 20.688,
+        "ideal_lap": 68.61,
+        "low_speed_apex": 185.90832106666667,
+        "mid_speed_apex": 238.1499968,
+        "high_speed_apex": 285.0,
+        "max_speed": 325.0,
+        "s1_s2_ratio": 0.5546472019464721,
+        "sector_cv": 0.29586777270447057,
+        "s2_lap_ratio": 0.4492785308264101,
+        "max_speed_lap_ratio": 22.29825,
+        "max_speed_s2_ratio": 10.543390105433902,
+        "speed_consistency": 0.7041322272955295,
+        "fp2_relative_position": 0.05,
+        "fp2_gap_to_fastest": 0.0
+      },
+      "RUS": {
+        "team": "Mercedes",
+        "ideal_s1": 17.243,
+        "ideal_s2": 30.869,
+        "ideal_s3": 21.128,
+        "ideal_lap": 69.24,
+        "low_speed_apex": 187.0,
+        "mid_speed_apex": 235.0,
+        "high_speed_apex": 273.0,
+        "max_speed": 308.0,
+        "s1_s2_ratio": 0.5585862839742136,
+        "sector_cv": 0.272155950103074,
+        "s2_lap_ratio": 0.44582611207394574,
+        "max_speed_lap_ratio": 21.32592,
+        "max_speed_s2_ratio": 9.977647478052415,
+        "speed_consistency": 0.7278440498969261,
+        "fp2_relative_position": 0.35,
+        "fp2_gap_to_fastest": 0.6299999999999955
+      },
+      "BOT": {
+        "team": "Alfa Romeo",
+        "ideal_s1": 17.697,
+        "ideal_s2": 30.563,
+        "ideal_s3": 20.991,
+        "ideal_lap": 69.251,
+        "low_speed_apex": 190.9125008,
+        "mid_speed_apex": 237.991072,
+        "high_speed_apex": 273.29866091428573,
+        "max_speed": 294.0,
+        "s1_s2_ratio": 0.5790334718450414,
+        "sector_cv": 0.2633959054663639,
+        "s2_lap_ratio": 0.44133658719729674,
+        "max_speed_lap_ratio": 20.359794,
+        "max_speed_s2_ratio": 9.619474528024082,
+        "speed_consistency": 0.7366040945336361,
+        "fp2_relative_position": 0.4,
+        "fp2_gap_to_fastest": 0.6410000000000053
+      }
+    }
+  },
+  "qualifying": {
+    "session_info": {
+      "event_name": "Austrian Grand Prix",
+      "circuit": "Spielberg",
+      "date": "2022-07-08T15:00:00"
+    },
+    "results": {
+      "VER": {
+        "grid_position": 1,
+        "q1_time": "0 days 00:01:05.852000",
+        "q2_time": "0 days 00:01:05.374000",
+        "q3_time": "0 days 00:01:04.984000",
+        "team": "Red Bull Racing"
+      },
+      "LEC": {
+        "grid_position": 2,
+        "q1_time": "0 days 00:01:05.419000",
+        "q2_time": "0 days 00:01:05.287000",
+        "q3_time": "0 days 00:01:05.013000",
+        "team": "Ferrari"
+      },
+      "SAI": {
+        "grid_position": 3,
+        "q1_time": "0 days 00:01:05.660000",
+        "q2_time": "0 days 00:01:05.576000",
+        "q3_time": "0 days 00:01:05.066000",
+        "team": "Ferrari"
+      },
+      "RUS": {
+        "grid_position": 4,
+        "q1_time": "0 days 00:01:06.235000",
+        "q2_time": "0 days 00:01:05.697000",
+        "q3_time": "0 days 00:01:05.431000",
+        "team": "Mercedes"
+      },
+      "OCO": {
+        "grid_position": 5,
+        "q1_time": "0 days 00:01:06.468000",
+        "q2_time": "0 days 00:01:05.993000",
+        "q3_time": "0 days 00:01:05.726000",
+        "team": "Alpine"
+      },
+      "MAG": {
+        "grid_position": 6,
+        "q1_time": "0 days 00:01:06.366000",
+        "q2_time": "0 days 00:01:05.894000",
+        "q3_time": "0 days 00:01:05.879000",
+        "team": "Haas F1 Team"
+      },
+      "MSC": {
+        "grid_position": 7,
+        "q1_time": "0 days 00:01:06.405000",
+        "q2_time": "0 days 00:01:06.151000",
+        "q3_time": "0 days 00:01:06.011000",
+        "team": "Haas F1 Team"
+      },
+      "ALO": {
+        "grid_position": 8,
+        "q1_time": "0 days 00:01:06.016000",
+        "q2_time": "0 days 00:01:06.082000",
+        "q3_time": "0 days 00:01:06.103000",
+        "team": "Alpine"
+      },
+      "HAM": {
+        "grid_position": 9,
+        "q1_time": "0 days 00:01:06.079000",
+        "q2_time": "0 days 00:01:05.475000",
+        "q3_time": "0 days 00:01:13.151000",
+        "team": "Mercedes"
+      },
+      "GAS": {
+        "grid_position": 10,
+        "q1_time": "0 days 00:01:06.589000",
+        "q2_time": "0 days 00:01:06.160000",
+        "q3_time": null,
+        "team": "AlphaTauri"
+      },
+      "ALB": {
+        "grid_position": 11,
+        "q1_time": "0 days 00:01:06.516000",
+        "q2_time": "0 days 00:01:06.230000",
+        "q3_time": null,
+        "team": "Williams"
+      },
+      "BOT": {
+        "grid_position": 12,
+        "q1_time": "0 days 00:01:06.442000",
+        "q2_time": "0 days 00:01:06.319000",
+        "q3_time": null,
+        "team": "Alfa Romeo"
+      },
+      "PER": {
+        "grid_position": 13,
+        "q1_time": "0 days 00:01:06.143000",
+        "q2_time": "0 days 00:01:06.458000",
+        "q3_time": null,
+        "team": "Red Bull Racing"
+      },
+      "TSU": {
+        "grid_position": 14,
+        "q1_time": "0 days 00:01:06.463000",
+        "q2_time": "0 days 00:01:06.851000",
+        "q3_time": null,
+        "team": "AlphaTauri"
+      },
+      "NOR": {
+        "grid_position": 15,
+        "q1_time": "0 days 00:01:06.330000",
+        "q2_time": "0 days 00:01:25.847000",
+        "q3_time": null,
+        "team": "McLaren"
+      },
+      "RIC": {
+        "grid_position": 16,
+        "q1_time": "0 days 00:01:06.613000",
+        "q2_time": null,
+        "q3_time": null,
+        "team": "McLaren"
+      },
+      "STR": {
+        "grid_position": 17,
+        "q1_time": "0 days 00:01:06.847000",
+        "q2_time": null,
+        "q3_time": null,
+        "team": "Aston Martin"
+      },
+      "ZHO": {
+        "grid_position": 18,
+        "q1_time": "0 days 00:01:06.901000",
+        "q2_time": null,
+        "q3_time": null,
+        "team": "Alfa Romeo"
+      },
+      "LAT": {
+        "grid_position": 19,
+        "q1_time": "0 days 00:01:07.003000",
+        "q2_time": null,
+        "q3_time": null,
+        "team": "Williams"
+      },
+      "VET": {
+        "grid_position": 20,
+        "q1_time": "0 days 00:01:07.083000",
+        "q2_time": null,
+        "q3_time": null,
+        "team": "Aston Martin"
+      }
+    }
+  },
+  "race": {
+    "session_info": {
+      "event_name": "Austrian Grand Prix",
+      "date": "2022-07-10T13:00:00"
+    },
+    "results": {
+      "LEC": {
+        "finish_position": 1,
+        "grid_position": 2,
+        "points": 25.0,
+        "status": "Finished",
+        "team": "Ferrari"
+      },
+      "VER": {
+        "finish_position": 2,
+        "grid_position": 1,
+        "points": 19.0,
+        "status": "Finished",
+        "team": "Red Bull Racing"
+      },
+      "HAM": {
+        "finish_position": 3,
+        "grid_position": 8,
+        "points": 15.0,
+        "status": "Finished",
+        "team": "Mercedes"
+      },
+      "RUS": {
+        "finish_position": 4,
+        "grid_position": 4,
+        "points": 12.0,
+        "status": "Finished",
+        "team": "Mercedes"
+      },
+      "OCO": {
+        "finish_position": 5,
+        "grid_position": 6,
+        "points": 10.0,
+        "status": "Finished",
+        "team": "Alpine"
+      },
+      "MSC": {
+        "finish_position": 6,
+        "grid_position": 9,
+        "points": 8.0,
+        "status": "+1 Lap",
+        "team": "Haas F1 Team"
+      },
+      "NOR": {
+        "finish_position": 7,
+        "grid_position": 10,
+        "points": 6.0,
+        "status": "+1 Lap",
+        "team": "McLaren"
+      },
+      "MAG": {
+        "finish_position": 8,
+        "grid_position": 7,
+        "points": 4.0,
+        "status": "+1 Lap",
+        "team": "Haas F1 Team"
+      },
+      "RIC": {
+        "finish_position": 9,
+        "grid_position": 11,
+        "points": 2.0,
+        "status": "+1 Lap",
+        "team": "McLaren"
+      },
+      "ALO": {
+        "finish_position": 10,
+        "grid_position": 19,
+        "points": 1.0,
+        "status": "+1 Lap",
+        "team": "Alpine"
+      },
+      "BOT": {
+        "finish_position": 11,
+        "grid_position": 0,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "Alfa Romeo"
+      },
+      "ALB": {
+        "finish_position": 12,
+        "grid_position": 15,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "Williams"
+      },
+      "STR": {
+        "finish_position": 13,
+        "grid_position": 12,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "Aston Martin"
+      },
+      "ZHO": {
+        "finish_position": 14,
+        "grid_position": 13,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "Alfa Romeo"
+      },
+      "GAS": {
+        "finish_position": 15,
+        "grid_position": 14,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "AlphaTauri"
+      },
+      "TSU": {
+        "finish_position": 16,
+        "grid_position": 16,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "AlphaTauri"
+      },
+      "VET": {
+        "finish_position": 17,
+        "grid_position": 18,
+        "points": 0.0,
+        "status": "+1 Lap",
+        "team": "Aston Martin"
+      },
+      "SAI": {
+        "finish_position": 18,
+        "grid_position": 3,
+        "points": 0.0,
+        "status": "Power Unit",
+        "team": "Ferrari"
+      },
+      "LAT": {
+        "finish_position": 19,
+        "grid_position": 17,
+        "points": 0.0,
+        "status": "Undertray",
+        "team": "Williams"
+      },
+      "PER": {
+        "finish_position": 20,
+        "grid_position": 5,
+        "points": 0.0,
+        "status": "Collision damage",
+        "team": "Red Bull Racing"
+      }
+    }
+  }
+}

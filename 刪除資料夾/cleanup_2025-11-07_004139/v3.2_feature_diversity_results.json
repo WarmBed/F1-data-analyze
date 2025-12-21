@@ -1,0 +1,44 @@
+{
+  "config": {
+    "version": "v3.2",
+    "strategy": "方案 B：強制特徵多樣性",
+    "changes": {
+      "colsample_bytree": 0.7,
+      "colsample_bylevel": 0.8,
+      "features": 8,
+      "note": "保留所有 8 個特徵（包含 ideal_lap）"
+    }
+  },
+  "training": {
+    "Mexico": {
+      "test_r2": 0.7815912071321223,
+      "test_mae": 0.4304960835774736,
+      "feature_importances": {
+        "ideal_s1": 0.3283385932445526,
+        "ideal_s2": 0.249305859208107,
+        "ideal_s3": 0.17910096049308777,
+        "ideal_lap": 0.09787482768297195,
+        "low_speed_apex": 0.05026071518659592,
+        "mid_speed_apex": 0.03403960540890694,
+        "high_speed_apex": 0.010219904594123363,
+        "max_speed": 0.050859514623880386
+      }
+    },
+    "Abu Dhabi": {
+      "test_r2": 0.5815689381530349,
+      "test_mae": 0.4548795623779303,
+      "feature_importances": {
+        "ideal_s1": 0.06240381300449371,
+        "ideal_s2": 0.44444751739501953,
+        "ideal_s3": 0.05565202236175537,
+        "ideal_lap": 0.352916955947876,
+        "low_speed_apex": 0.02021206170320511,
+        "mid_speed_apex": 0.02343851327896118,
+        "high_speed_apex": 0.02428114041686058,
+        "max_speed": 0.01664797030389309
+      }
+    }
+  },
+  "prediction_2025": {},
+  "comparison": {}
+}

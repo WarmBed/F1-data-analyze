@@ -30,6 +30,7 @@ from PyQt5.QtGui import QColor, QFont, QPainter, QPen, QBrush, QPainterPath, QLi
 
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from ..core.global_sync_signal import get_global_sync_signal
+from ..core.hover_tooltip_mixin import HoverTooltipMixin, HoverInfo, HoverDataPoint
 
 from core.logger import get_logger
 logger = get_logger(__name__)
@@ -110,7 +111,7 @@ class LapSpeedData:
         return None
 
 
-class SpeedTraceWidget(QWidget):
+class SpeedTraceWidget(HoverTooltipMixin, QWidget):
     """
     速度追蹤圖表 Widget - 使用 PyQt5 原生繪圖
     
@@ -211,6 +212,9 @@ class SpeedTraceWidget(QWidget):
         self._mouse_x = -1
         self._mouse_y = -1
         
+        # ===== Linkage 同步控制 =====
+        self._individual_linkage_enabled = True  # 預設啟用個別連動
+        
         # 訂閱全局同步信號
         sync_signal = get_global_sync_signal()
         sync_signal.settings_changed.connect(self._on_settings_synced)
@@ -251,6 +255,12 @@ class SpeedTraceWidget(QWidget):
         # 右鍵選單
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+        
+        # Initialize hover tracking (from HoverTooltipMixin)
+        self._init_hover_tracking()
+        
+        # 標識為 Trace 模組，用於 hover 位置同步過濾
+        self._is_trace_module = True
     
     def paintEvent(self, event):
         """繪製圖表"""
@@ -282,8 +292,138 @@ class SpeedTraceWidget(QWidget):
             self._draw_speed_curves(painter, chart_rect)
             self._draw_axes(painter, chart_rect)
             
+            # Draw hover elements (from HoverTooltipMixin)
+            self._draw_hover_elements(painter)
+            
         finally:
             painter.end()
+    
+    # =========================================================================
+    # Mouse Event Handlers for Hover
+    # =========================================================================
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move for hover tracking."""
+        if self._handle_mouse_move(event):
+            self.update()
+        super().mouseMoveEvent(event)
+    
+    def leaveEvent(self, event):
+        """Handle mouse leave."""
+        if self._handle_mouse_leave():
+            self.update()
+        super().leaveEvent(event)
+    
+    def _get_chart_rect(self):
+        """Override to return chart area as QRect."""
+        return QRect(
+            self.margin_left,
+            self.margin_top,
+            self.width() - self.margin_left - self.margin_right,
+            self.height() - self.margin_top - self.margin_bottom
+        )
+    
+    def _pixel_to_x_value(self, pixel_x: int, chart_rect) -> float:
+        """Convert pixel X to distance."""
+        if chart_rect.width() <= 0:
+            return 0.0
+        
+        ratio = (pixel_x - chart_rect.left()) / chart_rect.width()
+        distance_range = self.max_distance - self.min_distance
+        return self.min_distance + ratio * distance_range
+    
+    def _get_speed_at_distance(self, lap_data: 'LapSpeedData', target_distance: float) -> Optional[float]:
+        """Get speed at a specific distance using interpolation."""
+        if not lap_data or not lap_data.distances or not lap_data.speeds:
+            return None
+        
+        # Find the two points surrounding the target distance
+        for i in range(len(lap_data.distances) - 1):
+            if lap_data.distances[i] <= target_distance <= lap_data.distances[i + 1]:
+                # Linear interpolation
+                d_range = lap_data.distances[i + 1] - lap_data.distances[i]
+                if d_range > 0:
+                    ratio = (target_distance - lap_data.distances[i]) / d_range
+                    return lap_data.speeds[i] + ratio * (lap_data.speeds[i + 1] - lap_data.speeds[i])
+        
+        return None
+    
+    def _get_hover_data_at_x(self, x_value: float):
+        """Get hover data at the specified distance."""
+        distance = x_value
+        data_points = []
+        
+        # Primary driver - current lap
+        if self._show_primary_current and self._primary_current_lap and self._primary_driver:
+            speed = self._get_speed_at_distance(self._primary_current_lap, distance)
+            if speed is not None:
+                driver_info = self._driver_info.get(self._primary_driver, {})
+                tla = driver_info.get('tla', self._primary_driver)
+                team_color = driver_info.get('team_color', 'FFFFFF')
+                
+                data_points.append(HoverDataPoint(
+                    label=f"{tla}",
+                    value=speed,
+                    formatted_value=f"{speed:.0f} km/h",
+                    color=f"#{team_color}"
+                ))
+        
+        # Primary driver - best lap
+        if self._show_primary_best and self._primary_best_lap and self._primary_driver:
+            speed = self._get_speed_at_distance(self._primary_best_lap, distance)
+            if speed is not None:
+                driver_info = self._driver_info.get(self._primary_driver, {})
+                tla = driver_info.get('tla', self._primary_driver)
+                team_color = driver_info.get('team_color', 'FFFFFF')
+                
+                data_points.append(HoverDataPoint(
+                    label=f"{tla} Best",
+                    value=speed,
+                    formatted_value=f"{speed:.0f} km/h",
+                    color=f"#{team_color}",
+                    is_primary=False
+                ))
+        
+        # Compare driver - current lap
+        if self._show_compare_current and self._compare_current_lap and self._compare_driver:
+            speed = self._get_speed_at_distance(self._compare_current_lap, distance)
+            if speed is not None:
+                driver_info = self._driver_info.get(self._compare_driver, {})
+                tla = driver_info.get('tla', self._compare_driver)
+                team_color = driver_info.get('team_color', '888888')
+                
+                data_points.append(HoverDataPoint(
+                    label=f"{tla}",
+                    value=speed,
+                    formatted_value=f"{speed:.0f} km/h",
+                    color=f"#{team_color}"
+                ))
+        
+        # Compare driver - best lap
+        if self._show_compare_best and self._compare_best_lap and self._compare_driver:
+            speed = self._get_speed_at_distance(self._compare_best_lap, distance)
+            if speed is not None:
+                driver_info = self._driver_info.get(self._compare_driver, {})
+                tla = driver_info.get('tla', self._compare_driver)
+                team_color = driver_info.get('team_color', '888888')
+                
+                data_points.append(HoverDataPoint(
+                    label=f"{tla} Best",
+                    value=speed,
+                    formatted_value=f"{speed:.0f} km/h",
+                    color=f"#{team_color}",
+                    is_primary=False
+                ))
+        
+        if not data_points:
+            return None
+        
+        return HoverInfo(
+            x_value=distance,
+            x_label=f"Dist: {distance:.0f}m",
+            data_points=data_points,
+            is_valid=True
+        )
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRect):
         """繪製網格"""
@@ -1199,47 +1339,8 @@ class SpeedTraceWidget(QWidget):
         if settings.get('source_widget') == id(self):
             return
         
-        # 應用設定
-        self._primary_driver = settings.get('primary_driver')
-        self._compare_driver = settings.get('compare_driver')
-        self._show_primary_current = settings.get('show_primary_current', True)
-        self._show_primary_best = settings.get('show_primary_best', False)
-        self._show_compare_current = settings.get('show_compare_current', False)
-        self._show_compare_best = settings.get('show_compare_best', False)
-        self._show_corners = settings.get('show_corners', True)
-        self._show_gap = settings.get('show_gap', True)
-        
-        # 更新標籤
-        if hasattr(self, '_primary_label'):
-            tla = self._get_driver_tla(self._primary_driver)
-            self._primary_label.setText(f"Primary: {tla}")
-        if hasattr(self, '_compare_label'):
-            tla = self._get_driver_tla(self._compare_driver) if self._compare_driver else "--"
-            self._compare_label.setText(f"Compare: {tla}")
-        
-        # 重新繪製
-        self.update()
-    
-    def _broadcast_settings(self):
-        """廣播當前設定到其他模組"""
-        settings = {
-            'primary_driver': self._primary_driver,
-            'compare_driver': self._compare_driver,
-            'show_primary_current': self._show_primary_current,
-            'show_primary_best': self._show_primary_best,
-            'show_compare_current': self._show_compare_current,
-            'show_compare_best': self._show_compare_best,
-            'show_corners': self._show_corners,
-            'show_gap': self._show_gap,
-            'source_widget': id(self)  # 發送者的 ID，避免自己收到自己的廣播
-        }
-        sync_signal = get_global_sync_signal()
-        sync_signal.settings_changed.emit(settings)
-    
-    def _on_settings_synced(self, settings: dict):
-        """接收其他模組的設定同步"""
-        # 避免處理自己發出的信號
-        if settings.get('source_widget') == id(self):
+        # 檢查個別連動是否啟用
+        if not self._individual_linkage_enabled:
             return
         
         # 應用設定
@@ -1262,6 +1363,18 @@ class SpeedTraceWidget(QWidget):
         
         # 重新繪製
         self.update()
+    
+    # =========================================================================
+    # Linkage Control Methods
+    # =========================================================================
+    
+    def set_individual_linkage_enabled(self, enabled: bool):
+        """設置個別連動狀態"""
+        self._individual_linkage_enabled = enabled
+    
+    def is_individual_linkage_enabled(self) -> bool:
+        """獲取個別連動狀態"""
+        return self._individual_linkage_enabled
     
     def clear(self):
         """清除所有資料"""
@@ -1311,6 +1424,24 @@ class LiveTimingSpeedTrace(BaseLiveTimingMDI):
         """Setup UI components"""
         self.speed_widget = SpeedTraceWidget()
         self._main_layout.addWidget(self.speed_widget)
+    
+    # =========================================================================
+    # Linkage Control Methods (for DraggableTitleBar integration)
+    # =========================================================================
+    
+    def set_linkage_enabled(self, enabled: bool):
+        """設置連動狀態 - 被標題列的 L 按鈕調用"""
+        if hasattr(self, 'speed_widget'):
+            self.speed_widget.set_individual_linkage_enabled(enabled)
+            # 同時控制 hover 位置同步
+            if hasattr(self.speed_widget, 'set_hover_linkage_enabled'):
+                self.speed_widget.set_hover_linkage_enabled(enabled)
+    
+    def is_linkage_enabled(self) -> bool:
+        """獲取連動狀態"""
+        if hasattr(self, 'speed_widget'):
+            return self.speed_widget.is_individual_linkage_enabled()
+        return True
     
     def _on_driver_selected(self, driver_num: str):
         """處理車手選擇信號 - 從 DataManager snapshot 獲取車手資訊"""

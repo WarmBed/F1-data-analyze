@@ -1,0 +1,13 @@
+{
+  "training": {
+    "Mexico": {
+      "success": false,
+      "message": "數據不足（< 20 筆）"
+    },
+    "Abu Dhabi": {
+      "success": false,
+      "message": "數據不足（< 20 筆）"
+    }
+  },
+  "prediction_2025": {}
+}

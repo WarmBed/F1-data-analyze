@@ -650,6 +650,13 @@ class TelemetryDataLoader(QObject):
 
         lap1 = params.get('lap1') or params.get('lap') or 1
         lap2 = params.get('lap2') or lap1
+        
+        # 🔧 修復：Fastest Lap 模式需要將 lap 設為 99
+        is_fastest_lap = params.get('is_fastest_lap', False)
+        if is_fastest_lap:
+            lap1 = 99
+            lap2 = 99
+            self._debug(f"✅ 最速圈模式：lap1={lap1}, lap2={lap2}")
 
         worker_params = {
             "year": params.get('year'),
@@ -663,8 +670,8 @@ class TelemetryDataLoader(QObject):
             "use_time_axis": params.get('use_time_axis', False)  # ✅ 新增時間軸參數
         }
 
-        if params.get('is_fastest_lap'):
-            self._debug("檢測到最速圈模式，lap1/lap2 由 API 自行解析")
+        if is_fastest_lap:
+            self._debug("最速圈模式已啟用，API 將使用 lap=99 請求最速圈數據")
 
         self._api_base_url = self._determine_api_base_url()
         self._debug(f"🚀 呼叫 API: {self._api_base_url}/api/v2/analysis/execute")

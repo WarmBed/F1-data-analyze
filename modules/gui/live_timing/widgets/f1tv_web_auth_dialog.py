@@ -22,6 +22,12 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl
 from PyQt5.QtGui import QFont
 
+# 先 import logger（必須在 WebEngine 之前）
+from core.logger import get_logger
+from core.gui_i18n import tr
+
+logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
+
 # WebEngine imports
 try:
     from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEnginePage, QWebEngineProfile
@@ -29,15 +35,7 @@ try:
     WEBENGINE_AVAILABLE = True
 except ImportError:
     WEBENGINE_AVAILABLE = False
-    logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
     logger.warning("PyQtWebEngine not available")
-
-from core.gui_i18n import tr
-
-from core.logger import get_logger
-logger = get_logger(__name__)
-
-logger = get_logger("live_timing.f1tv_web_auth_dialog", component="gui")
 
 
 # F1TV 登入相關 URL
@@ -240,9 +238,9 @@ class F1TVWebAuthDialog(QDialog):
             # 記錄所有 cookie 活動 (幫助偵錯)
             logger.debug("Cookie added: %s (domain: %s)", name, domain)
             
-            # 檢查是否是 loginSession cookie
-            if name == 'loginSession':
-                logger.info("loginSession cookie detected")
+            # 檢查是否是 login-session cookie (F1 在 2024 年後改用連字符)
+            if name == 'login-session':
+                logger.info("login-session cookie detected")
                 value_raw = cookie.value()
                 if hasattr(value_raw, 'data'):
                     value = bytes(value_raw.data()).decode('utf-8', errors='ignore')
@@ -266,8 +264,8 @@ class F1TVWebAuthDialog(QDialog):
             var cookies = document.cookie.split(';');
             for (var i = 0; i < cookies.length; i++) {
                 var cookie = cookies[i].trim();
-                if (cookie.startsWith('loginSession=')) {
-                    return cookie.substring('loginSession='.length);
+                if (cookie.startsWith('login-session=')) {
+                    return cookie.substring('login-session='.length);
                 }
             }
             return '';
@@ -280,7 +278,7 @@ class F1TVWebAuthDialog(QDialog):
         self._checking_cookie = False
         
         if result and not self._token:
-            logger.info("Found loginSession via JS (length: %s)", len(result))
+            logger.info("Found login-session via JS (length: %s)", len(result))
             self._extract_token_from_cookie(result)
     
     def _extract_token_from_cookie(self, cookie_value: str):

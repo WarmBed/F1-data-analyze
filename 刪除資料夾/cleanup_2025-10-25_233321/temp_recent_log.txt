@@ -1,0 +1,200 @@
+﻿2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Triggering API load: year=2025
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] Calling API: https://api.f1telemetrystationpro.org/api/v2/analysis/execute
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] Parameters: {'function_id': 97, 'year': 2025}
+2025-10-23 08:33:44 | WARNING | f1.console | [UNIVERSAL_LOADER] ?? ?芾酉????憿? 'weather_timeline'嚗歇撱箇??冽??蔭隞亦雁?摰寞?
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_TIMELINE DEBUG] ????weather_timeline Analysis 頛??
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_TIMELINE DEBUG] [WEATHER_TIMELINE_LOADER] Initialized: year=2025, event=Mexico
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_MDI] Loading data for 2025 Mexico
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_MDI] API-ONLY mode: Calling API
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_MDI] Starting API request
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] Calling API: https://api.f1telemetrystationpro.org/api/v2/analysis/execute
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] Parameters: {'function_id': 96, 'year': 2025, 'race': 'Mexico', 'session': 'R'}
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_STANDINGS DEBUG] ????頠?蝛?璁?頛??
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? 閫貊??頛: year=2025
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? ?萄遣 API Worker...
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?塚?  ?? API 隢?...
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? 隤輻 API: https://api.f1telemetrystationpro.org/api/v2/analysis/execute
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? ?: {'function_id': 97, 'year': 2025}
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_STANDINGS DEBUG] ????頠?蝛?璁?頛??
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_STANDINGS DEBUG] [DRIVER_STANDINGS_LOADER] ?????? year=2025
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? 閫貊??頛: year=2025
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? ?萄遣 API Worker...
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?塚?  ?? API 隢?...
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? 隤輻 API: https://api.f1telemetrystationpro.org/api/v2/analysis/execute
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? ?: {'function_id': 97, 'year': 2025}
+2025-10-23 08:33:44 | INFO | f1.console | [WELCOME] ??鞈賢迤?脣漲 + 憭拇除??頠?+ 蝛?璁芋蝯歇頛 (year=2025, race=United States)
+2025-10-23 08:33:44 | INFO | f1.console | [TOOLBAR_STATUS] ?嗅???4 ?暑????璅∠?
+2025-10-23 08:33:44 | INFO | f1.console | [TAB_POPOUT] ?????喲?詨撌脰身蝵?
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] API progress: 20%
+2025-10-23 08:33:44 | INFO | f1.console | [WEATHER_MDI] API progress: 20%
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? API ?脣漲: 20%
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? API ?脣漲: 20%
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] ? ???璅??...
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] ?? ???游????蝞∠???..
+2025-10-23 08:33:44 | INFO | f1.console | [LINKAGE_INTEGRATION] ???典?靽∟?撌脤??圈??蝞∠???
+2025-10-23 08:33:44 | INFO | f1.console | [LINKAGE_INTEGRATION] ?????蝞∠??冽????
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] ?????蝞∠??冽????
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] [API] Initialising health monitor...
+2025-10-23 08:33:44 | INFO | f1.gui.main | [API-URL] ?∠ API ?箏?蝬脣? https://api.f1telemetrystationpro.org (靘?: ?啣?霈 F1_API_BASE_URL)
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] [API] Health monitor active
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] ??銝餉?蝒?憪?摰?嚗?
+2025-10-23 08:33:44 | INFO | f1.console | [INIT] ??閮剔蔭撱園瑼Ｘ璈 (1蝘??瑁?)...
+2025-10-23 08:33:44 | INFO | f1.console | [MAIN] ??銝餉?蝒撱箸???
+2025-10-23 08:33:44 | INFO | f1.console | [MAIN_RESIZE] 銝餉?蝒矽?游之撠?閫貊 MDI ???
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ??? 4 ?摰?蝒?銝???嚗?
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] MDI 撠箏站: 640x325
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Season Progress - 2025): 640x480 ??213x146
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Race Weekend Weather Timeline): 640x480 ??213x179
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 銝剜?閬? (頠?蝛?璁?: 640x480 ??213x325
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ?單?閬? (頠?蝛?璁?: 640x480 ??214x325
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ??? 4 ?摰?蝒?銝???嚗?
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] MDI 撠箏站: 2560x734
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Season Progress - 2025): 213x146 ??853x330
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Race Weekend Weather Timeline): 213x179 ??853x404
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 銝剜?閬? (頠?蝛?璁?: 213x325 ??853x734
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ?單?閬? (頠?蝛?璁?: 214x325 ??854x734
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ??? 4 ?摰?蝒?銝???嚗?
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] MDI 撠箏站: 1114x542
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Season Progress - 2025): 853x330 ??371x243
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 撌虫?閬? (Race Weekend Weather Timeline): 853x404 ??371x299
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] 銝剜?閬? (頠?蝛?璁?: 853x734 ??371x542
+2025-10-23 08:33:44 | INFO | f1.console | [MDI_RESIZE] ?單?閬? (頠?蝛?璁?: 854x734 ??372x542
+2025-10-23 08:33:44 | INFO | f1.console | [WELCOME] 閬???摰? (銝?): 撌虫?371x243 + 撌虫?371x299 + 銝?71x542 + ??72x542
+2025-10-23 08:33:44 | INFO | f1.gui.main | Starting API health check (manual=False, base=https://api.f1telemetrystationpro.org)
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] API call successful (latency: 582.32 ms)
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] API progress: 70%
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] API progress: 100%
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] API call successful
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Detected double-nested structure
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Loaded 21 drivers, 10 constructors
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Metadata: season_year=2025, round=19
+2025-10-23 08:33:44 | WARNING | f1.console | [UNIVERSAL_LOADER] ?? ?芾酉????憿? 'season_progress'嚗歇撱箇??冽??蔭隞亦雁?摰寞?
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS DEBUG] ????season_progress Analysis 頛??
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS DEBUG] [SEASON_PROGRESS_LOADER] Initialized: year=2025
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS DEBUG] [CALENDAR] Loading: season_calendar_multi_year_20251020T124821Z.json
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS DEBUG] [TRANSFORM] Transformed data: 21 drivers, 10 constructors
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Transformed data: year=2025, round=19
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_MDI] Data loaded successfully
+2025-10-23 08:33:44 | INFO | f1.console | [SEASON_PROGRESS_WIDGET] Data populated successfully
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ??API 隤輻??
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?梧?  撱園: 572.08ms
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? ?豢?皞? cache
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? API ?脣漲: 70%
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? API ?脣漲: 90%
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ??API 隤輻??
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ? ?豢?皞? cache
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?梧?  撱園: 572.08ms
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? 瑼Ｘ葫?圈?撅文?憟?瑽?(CLI JSON)
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? 頛 10 ?航???
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? Metadata: season_year=2025, round=19
+2025-10-23 08:33:44 | INFO | f1.console | [TEAM_SLUG_MAP] 頛: team_colors_2025_fastf1_20251019T045138Z.json
+2025-10-23 08:33:44 | INFO | f1.console | [TEAM_SLUG_MAP] ??頛 10 ??撠?
+2025-10-23 08:33:44 | INFO | f1.console | [TRANSFORM] ??頧? 10 ?航?????
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? 頧?敺?? 10 ?航??? 撟港遢=2025, 頛芣活=19
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?豢?頛摰?
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_WIDGET] 憿蝟餌絞撌脰???(year=2025)
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_WIDGET] Table populated (10 teams)
+2025-10-23 08:33:44 | INFO | f1.console | [CONSTRUCTOR_MDI] ?? API ?脣漲: 100%
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ??API 隤輻??
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? API ?脣漲: 70%
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?梧?  撱園: 590.57ms
+2025-10-23 08:33:44 | INFO | f1.console | [API_WORKER] ?? ?豢?皞? cache
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? API ?脣漲: 90%
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ??API 隤輻??
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ? ?豢?皞? cache
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?梧?  撱園: 590.57ms
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? 瑼Ｘ葫?圈?撅文?憟?瑽?(CLI JSON)
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? 頛 21 雿???
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? Metadata: season_year=2025, round=19
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? 頧?敺?? 21 雿??? 撟港遢=2025, 頛芣活=19
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?豢?頛摰?
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] ? ?交?啁??豢? keys: ['standings', 'season_year', 'round', 'metadata']
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] ? season_year=2025, round=19
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] ? standings ?賊?: 21
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] ?? 閫??敺? season_year=2025, round=19
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] ?? 璅?撌脰身蝵? Driver Standings - 2025 Round 19
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] 憿蝟餌絞撌脰???(year=2025)
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_WIDGET] Table populated (21 drivers)
+2025-10-23 08:33:44 | INFO | f1.console | [DRIVER_MDI] ?? API ?脣漲: 100%
+2025-10-23 08:33:45 | INFO | f1.console | [TAB] ??瑼Ｘ璅惜甈???..
+2025-10-23 08:33:45 | INFO | f1.console | [TAB] QTabBar ?航??? True
+2025-10-23 08:33:45 | INFO | f1.console | [TAB] QTabBar 擃漲: 29
+2025-10-23 08:33:45 | INFO | f1.console | [TAB] ??璅惜甈歇?
+2025-10-23 08:33:45 | WARNING | f1.console | [API_WORKER] ?? 瑼Ｘ葫?圈?撅文?憟????批惜 data
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] API progress: 70%
+2025-10-23 08:33:45 | INFO | f1.console | [API_WORKER] ??Success in 1100ms
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] API progress: 100%
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] API request succeeded
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] ? Received data keys: ['coordinates', 'forecast', 'historical', 'calendar_event']
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_TIMELINE DEBUG] [VALIDATE] ??Data format is valid
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_TIMELINE DEBUG] [TRANSFORM] Starting data transformation
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_TIMELINE DEBUG] [TRANSFORM] ??Transformed data: 3 forecast days
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] Data loading completed
+2025-10-23 08:33:45 | INFO | f1.console | [WEATHER_MDI] ??Weather data displayed successfully
+2025-10-23 08:33:46 | INFO | f1.gui.main | API health online (latency=802.3 ms)
+2025-10-23 08:33:46 | INFO | f1.console | [LAP_CONTROL] [DEBUG]   ?對? ?芰?暸?皜砍???蝒?銝＊蝷箸隞?
+2025-10-23 08:33:47 | INFO | f1.console | [WORKSPACE] ?? 撌脣???3 ??Workspace
+2025-10-23 08:33:47 | INFO | f1.console | [WORKSPACE] Loaded 3 workspaces
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] Loading: ID=32, Name=2025_United States_R (2)
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ?? ??頛 Workspace: ID=32
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ?? ?????? Workspace...
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ??撌脫??斗?????靽? HOME嚗?
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ?? ?閬?撱?1 ????
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ? ?遣??: 'Tab 1' (1 ??蝒?
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ??撌脣撱箏????冽 workspace嚗? 'Tab 1' (index=1)
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ===== ???萄遣撽? =====
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ???迂: Tab 1
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ??蝝Ｗ?: 1
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] MDI ObjectName: MdiArea_1
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] MDI 憿?: CustomMdiArea
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ??????ObjectName: MdiArea_1
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ???????? CustomMdiArea
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ??????== mdi_area: True
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ================================
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ?? MDI ??歇??create_tab_for_workspace() 餈質馱
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ========== ???遣 MDI 閬?嚗?????銝?湛? ==========
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ?? 閬?憿?: rain_weather
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] 嚙?隤輻銝餉?蝒? _create_analysis_module() ?寞?...
+2025-10-23 08:33:50 | INFO | f1.console | [OK] [MODULE_FACTORY] 鈭???璅∠?撌脰酉??
+2025-10-23 08:33:50 | INFO | f1.console | [INFO] FastF1 敹怠?撌脣??? D:\OneDrive\Code\F1-data-analyze\cache
+2025-10-23 08:33:50 | INFO | f1.console | [OK] [MODULE_FACTORY] 瑼???璅∠?撌脰酉??
+2025-10-23 08:33:50 | INFO | f1.console | [OK] [MODULE_FACTORY] brake??璅∠?撌脰酉??
+2025-10-23 08:33:50 | INFO | f1.console | [OK] 閰喟敦???芋蝯?- ?游??嗆?頛??
+2025-10-23 08:33:50 | INFO | f1.console | [OK] [MODULE_IMPORT] TrackAnalysisUniversal 頛摰?
+2025-10-23 08:33:50 | INFO | f1.console | [INFO] [MODULE_FACTORY] 璅∠?憿? rain_weather 撠撖衣
+2025-10-23 08:33:50 | ERROR | f1.console | [WORKSPACE] ???⊥??萄遣璅∠?: type=rain_weather
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] 皞?閮剖?瘣餃???: index=1, 蝮賢??=2
+2025-10-23 08:33:50 | WARNING | f1.console | [MDI_RESIZE] ??  瘝??曉?箏?閬?
+2025-10-23 08:33:50 | INFO | f1.console | [TOOLBAR_STATUS] 瘝?瘣餃????芋蝯?撌脫??文極?瑟????
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ??撌脰身摰暑???? index=1
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ?嗅? widget 憿?: CustomMdiArea
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] [DEBUG] ?臬??subWindowList: True
+2025-10-23 08:33:50 | INFO | f1.console | [WORKSPACE] ??Workspace ????摰?嚗?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ?? 銝餉?蝒迤?券?????皜?鞈?...
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ? ?迫 API ???瑁?蝺?..
+2025-10-23 08:33:52 | ERROR | f1.console | [CLEANUP]   ? ?迫 ApiHealthWorker...
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??ApiHealthWorker 撌脣?甇?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ???迫????...
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??api_health_timer 撌脣?甇?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??_parameter_broadcast_timer 撌脣?甇?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ?? ?????MDI 摮?蝒?..
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??撌脤???MDI ??????閬?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ?? 皜?餈質馱?”...
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??active_subwindows 撌脫?蝛?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??lap_analysis_windows 撌脫?蝛?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??active_analysis_tabs 撌脫?蝛?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ?? 皜??典?蝞∠???..
+2025-10-23 08:33:52 | WARNING | f1.console | [CLEANUP]   ?? 皜? linkage_manager ??? No module named 'modules.gui.lap_analysis.linkage_manager'
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ? 皜??璅?..
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ??皜? ContextMenuTreeWidget 鞈?...
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ???琿? customContextMenuRequested
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ???琿? itemClicked
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ??ContextMenuTreeWidget 鞈?皜?摰?
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP]   ??function_tree 撌脫???
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ??銝餉?蝒?皞?????
+2025-10-23 08:33:52 | INFO | f1.console | [CLEANUP] ?? 銝餉?蝒???隞嗉?????
+2025-10-23 08:33:52 | INFO | f1.console | [MAIN] ?完 ??皜??蝔?鞈?...
+2025-10-23 08:33:52 | INFO | f1.console | [MAIN] ??瑼Ｘ葫??5 ?暑?銵?
+2025-10-23 08:33:52 | WARNING | f1.console | [MAIN]   ??  5 ??DummyThread (頝喲?蝑?)
+2025-10-23 08:33:52 | INFO | f1.console | [MAIN]   ?對?  ?拚? 5 ?銵?嚗???Python ?芸?皜?嚗?
+2025-10-23 08:33:52 | INFO | f1.console | [MAIN] ?? F1T 蝔?甇?虜???

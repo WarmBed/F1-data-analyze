@@ -205,19 +205,19 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
         
         # 如果 API 失敗，使用預設映射表作為後備
         # 這是為了確保 EXE 環境中即使 API 不可用也能基本運作
+        # ✅ 修正：使用與 JSON 一致的 team_slug 格式（空格分隔，全小寫）
         logger.warning("[TEAM_SLUG_MAP] ⚠️ 使用預設映射表作為後備")
         return {
-            "Red Bull Racing": "red-bull-racing",
-            "Red Bull": "red-bull-racing",
+            "Red Bull": "red bull",  # ✅ 修正：與 JSON 一致
             "Ferrari": "ferrari",
             "McLaren": "mclaren",
             "Mercedes": "mercedes",
-            "Aston Martin": "aston-martin",
+            "Aston Martin": "aston martin",  # ✅ 修正
             "Alpine": "alpine",
             "Williams": "williams",
-            "RB": "rb",
-            "Visa Cash App RB": "rb",
-            "Kick Sauber": "kick-sauber",
+            "RB": "racing bulls",  # ✅ 修正：RB → racing bulls
+            "Haas": "haas",
+            "Sauber": "kick sauber",  # ✅ 修正：Sauber → kick sauber
             "Sauber": "kick-sauber",
             "Haas": "haas",
             "Haas F1 Team": "haas",
@@ -235,7 +235,7 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
         """
         data = raw_data.get("data", {})
         constructors = data.get("constructors", [])
-        metadata = data.get("metadata", {})
+        metadata = raw_data.get("metadata", {})  # ✅ 修正：從 raw_data 讀取 metadata
         
         # 載入 team_name → team_slug 映射表（用於顏色查詢）
         team_slug_map = self._load_team_slug_mapping()

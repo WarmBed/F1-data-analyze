@@ -33,6 +33,8 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QColor, QFont, QPainter, QPen, QBrush, QFontMetrics, QPainterPath
 
+from ..core.hover_tooltip_mixin import HoverTooltipMixin, HoverInfo, HoverDataPoint
+
 # =============================================================================
 # Color Constants (與 Driver Strategy 完全一致)
 # =============================================================================
@@ -1967,7 +1969,7 @@ class ChaseStrategyWidget(QWidget):
 # Gap Evolution Chart Widget (使用 QPainter 自繪)
 # =============================================================================
 
-class GapEvolutionChartWidget(QWidget):
+class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
     """
     Lap Time Evolution Chart Widget (雙圈速演變圖表)
     
@@ -2045,6 +2047,9 @@ class GapEvolutionChartWidget(QWidget):
         #  改進 1: 移除最小尺寸限制（參考 Driver Strategy）
         self.setMinimumSize(200, 150)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # Initialize hover tracking (from HoverTooltipMixin)
+        self._init_hover_tracking()
     
     def _setup_ui(self):
         """Setup UI layout with QLabel info bar (與 Driver Strategy 一致)"""
@@ -2409,6 +2414,9 @@ class GapEvolutionChartWidget(QWidget):
             #  改進 1: 取消圖例顯示
             # self._draw_legend(painter, chart_rect)
             
+            # Draw hover elements (from HoverTooltipMixin)
+            self._draw_hover_elements(painter)
+            
         except Exception as e:
             #  異常處理：避免白屏崩潰
             logger.exception("paintEvent encountered an error: %s", e)
@@ -2418,6 +2426,98 @@ class GapEvolutionChartWidget(QWidget):
                 painter.end()
             if debug_enabled:
                 logger.debug("paintEvent finished (active=%s)", painter.isActive())
+    
+    # =========================================================================
+    # Mouse Event Handlers for Hover
+    # =========================================================================
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move for hover tracking."""
+        if self._handle_mouse_move(event):
+            self.update()
+        super().mouseMoveEvent(event)
+    
+    def leaveEvent(self, event):
+        """Handle mouse leave."""
+        if self._handle_mouse_leave():
+            self.update()
+        super().leaveEvent(event)
+    
+    def _get_chart_rect(self):
+        """Override to return chart area as QRect."""
+        from PyQt5.QtCore import QRect
+        return QRect(
+            self._margin_left,
+            self._margin_top,
+            self.width() - self._margin_left - self._margin_right,
+            self.height() - self._margin_top - self._margin_bottom
+        )
+    
+    def _pixel_to_x_value(self, pixel_x: int, chart_rect) -> float:
+        """Convert pixel X to lap number."""
+        if chart_rect.width() <= 0 or self.total_laps <= 0:
+            return 0.0
+        
+        ratio = (pixel_x - chart_rect.left()) / chart_rect.width()
+        return ratio * self.total_laps
+    
+    def _get_hover_data_at_x(self, x_value: float):
+        """Get hover data at the specified lap number."""
+        # Round to nearest lap
+        lap = round(x_value)
+        lap = max(1, min(lap, self.total_laps))
+        
+        data_points = []
+        
+        # P1 lap time (using team color)
+        if lap in self.p1_lap_times:
+            p1_time = self.p1_lap_times[lap]
+            mins = int(p1_time // 60)
+            secs = p1_time % 60
+            formatted = f"{mins}:{secs:05.2f}"
+            
+            data_points.append(HoverDataPoint(
+                label=f"{self.p1_tla}",
+                value=p1_time,
+                formatted_value=formatted,
+                color=self.p1_color
+            ))
+        
+        # P2 lap time (using team color)
+        if lap in self.p2_lap_times:
+            p2_time = self.p2_lap_times[lap]
+            mins = int(p2_time // 60)
+            secs = p2_time % 60
+            formatted = f"{mins}:{secs:05.2f}"
+            
+            data_points.append(HoverDataPoint(
+                label=f"{self.p2_tla}",
+                value=p2_time,
+                formatted_value=formatted,
+                color=self.p2_color
+            ))
+        
+        # Show gap if both available
+        if lap in self.p1_lap_times and lap in self.p2_lap_times:
+            gap = self.p2_lap_times[lap] - self.p1_lap_times[lap]
+            sign = "+" if gap >= 0 else ""
+            data_points.append(HoverDataPoint(
+                label="Gap",
+                value=gap,
+                formatted_value=f"{sign}{gap:.3f}s",
+                color="#AAAAAA",
+                is_primary=False
+            ))
+        
+        if not data_points:
+            return None
+        
+        return HoverInfo(
+            x_value=float(lap),
+            x_label=f"Lap: {lap}",
+            data_points=data_points,
+            is_valid=True
+        )
     
     def _draw_grid(self, painter: QPainter, chart_rect: QRectF):
         """繪製網格線（圈速軸）"""
@@ -2532,15 +2632,16 @@ class GapEvolutionChartWidget(QWidget):
         pit_laps_set = self.p1_pit_laps if is_p1 else self.p2_pit_laps
         pit_out_laps_set = self.p1_pit_out_laps if is_p1 else self.p2_pit_out_laps
         
-        for lap in sorted_laps:
-            # 跳過進站圈和出站圈
-            if lap in pit_laps_set or lap in pit_out_laps_set:
-                continue
-            
-            time = lap_times_dict[lap]
-            x = self._lap_to_x(lap, chart_rect)
-            y = self._laptime_to_y(time, chart_rect)
-            painter.drawEllipse(QPointF(x, y), 2.5, 2.5)  # 圓點半徑 2.5px（與 Driver Strategy 一致）
+        # 圓點繪製已停用 (2025-12-21) - 僅保留曲線
+        # for lap in sorted_laps:
+        #     # 跳過進站圈和出站圈
+        #     if lap in pit_laps_set or lap in pit_out_laps_set:
+        #         continue
+        #     
+        #     time = lap_times_dict[lap]
+        #     x = self._lap_to_x(lap, chart_rect)
+        #     y = self._laptime_to_y(time, chart_rect)
+        #     painter.drawEllipse(QPointF(x, y), 2.5, 2.5)  # 圓點半徑 2.5px（與 Driver Strategy 一致）
         
         # === 預測未來圈速 (虛線) - 使用 QPainterPath 繪製連續路徑 ===
         pen_predict = QPen(QColor(color))

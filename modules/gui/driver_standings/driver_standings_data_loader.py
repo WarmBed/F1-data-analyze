@@ -161,7 +161,7 @@ class DriverStandingsDataLoader(UniversalDataLoader):
         """
         data = raw_data.get("data", {})
         drivers = data.get("drivers", [])
-        metadata = data.get("metadata", {})
+        metadata = raw_data.get("metadata", {})  # ✅ 修正：從 raw_data 讀取 metadata
         
         # 轉換為表格友好格式
         transformed_rows = []
@@ -191,7 +191,7 @@ class DriverStandingsDataLoader(UniversalDataLoader):
             "standings": transformed_rows,
             "metadata": metadata,
             "season_year": metadata.get("season_year", int(self.year)),
-            "round": metadata.get("round", 0)
+            "round": metadata.get("resolved_round", 0)  # ✅ 修正：API 使用 resolved_round
         }
     
     def load_data(self, force_refresh: bool = False):

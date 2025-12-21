@@ -1,0 +1,93 @@
+﻿
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module:
+ <modules.gui.lap_analysis.distancediff_analysis.distancediff_analysis_mdi.distanc
+ediffAnalysisModule object at 0x0000022FB52B7B60>
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module 
+type: distancediffAnalysisModule
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000022FB52E4A70>
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - has set_parent_w
+indow: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] MDI 區域現在有 8 個子視窗
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗是否在列表中: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗可見性: False
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗固定屬性: None
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已重建: '📏 Distance Diff A
+nalysis_2025_United States_R'
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] 🔨 重建視窗: 'Time Diff Analysis
+_2025_United States_R' (type=timediff)
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] 🔧 創建模組: type=timediff, para
+ms={'year': '2025', 'race': 'United States', 'session': 'R', 'driver1': 'ALB', 'dr
+iver2': 'NOR', 'lap1': 99, 'lap2': 99}
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ Time Diff Analysis 模組已創建
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 已創建 parameter_provider for
+ 'Time Diff Analysis_2025_United States_R'
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備創建 PopoutSubWindow
+:
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - window_title: 'T
+ime Diff Analysis_2025_United States_R'
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - mdi_area: <__mai
+n__.CustomMdiArea object at 0x0000022FB41B6A80>
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module:
+ <modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi.timediffAnalysi
+sModule object at 0x0000022FB52E6210>
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - analysis_module 
+type: timediffAnalysisModule
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - parameter_provid
+er: <f1t_gui_main.MainWindowParameterProvider object at 0x0000022FB52C7550>
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG]   - has set_parent_w
+indow: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] MDI 區域現在有 9 個子視窗
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗是否在列表中: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗可見性: False
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 新視窗固定屬性: None
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已重建: 'Time Diff Analysis
+_2025_United States_R'
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 準備設定活動分頁: index=5, 總
+分頁數=6
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 已設定活動分頁: index=5
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 當前 widget 類型: Custom
+MdiArea
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 是否有 subWindowList: T
+rue
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Speed Analysis_2
+025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Speed Analysis_2025
+_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Brake Analysis_2
+025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Brake Analysis_2025
+_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Throttle Analysi
+s_2025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Throttle Analysis_2
+025_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Gear Analysis_20
+25_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Gear Analysis_2025_
+United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'RPM Analysis_202
+5_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: RPM Analysis_2025_U
+nited States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Acceleration Ana
+lysis_2025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Acceleration Analys
+is_2025_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 '⚡ Speed Diff Ana
+lysis_2025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: ⚡ Speed Diff Analys
+is_2025_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 '📏 Distance Diff
+ Analysis_2025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: 📏 Distance Diff An
+alysis_2025_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] [DEBUG] 視窗 'Time Diff Analys
+is_2025_United States_R' 可見性: True
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 視窗已可見: Time Diff Analysis_
+2025_United States_R
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] 🔧 檢查是否需要顯示遙測分析控制項...
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ 已排程遙測分析控制項檢查（延遲 500ms）
+2025-10-22 23:45:40 | INFO | f1.console | [WORKSPACE] ✅ Workspace 反序列化完成！
+
+
