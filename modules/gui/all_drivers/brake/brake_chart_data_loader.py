@@ -17,6 +17,7 @@ import time
 from typing import Any, Dict, Optional
 
 import requests
+import certifi
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 
 from core.api_base_url import resolve_api_base_url
@@ -76,7 +77,8 @@ class BrakeChartApiWorker(QThread):
                 endpoint,
                 params=self.params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             if self.isInterruptionRequested():

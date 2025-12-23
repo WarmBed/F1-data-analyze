@@ -1463,13 +1463,14 @@ logger.debug("=" * 60)
         """Open Speed Analysis - 通過 API 打開速度分析模組"""
         try:
             import requests
+import certifi
             
             # F1T API 端點
             api_base = "http://localhost:8000"
             
             # 測試 API 是否運行
             try:
-                health_response = requests.get(f"{api_base}/health", timeout=2)
+                health_response = requests.get(f"{api_base}/health", timeout=2, verify=certifi.where())  # ✅ SSL證書（EXE必須）
                 if health_response.status_code != 200:
                     raise Exception("API 未響應")
             except:

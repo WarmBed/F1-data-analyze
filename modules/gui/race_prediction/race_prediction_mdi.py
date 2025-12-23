@@ -13,6 +13,7 @@ Race Prediction MDI
 
 import time
 import requests
+import certifi
 from typing import Dict, Any
 from PyQt5.QtWidgets import QGroupBox, QPushButton, QLabel, QHBoxLayout, QMessageBox
 from PyQt5.QtCore import QThread, pyqtSignal, pyqtSlot
@@ -90,7 +91,8 @@ class RacePredictionApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 請求完成後檢查中斷

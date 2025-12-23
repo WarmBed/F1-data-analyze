@@ -14,6 +14,7 @@ import sys
 import time
 import json
 import requests
+import certifi
 from typing import Dict, Any
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QProgressBar, QLabel,
@@ -96,7 +97,8 @@ class WeatherTimelineApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ 明確指定 SSL 證書路徑（EXE 必須）
             )
             
             # 請求完成後檢查中斷

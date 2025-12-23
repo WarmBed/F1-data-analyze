@@ -23,6 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from typing import Any, Dict, Optional, Tuple
 
+import certifi
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.logger import get_logger
@@ -281,7 +282,8 @@ class TrackAnalysisWorkerThread(QThread):
             endpoint,
             params=params,
             timeout=self.api_timeout,
-            headers={"Accept": "application/json"}
+            headers={"Accept": "application/json"},
+            verify=certifi.where()  # ✅ SSL證書（EXE必須）
         )
         response.raise_for_status()
         payload = response.json()

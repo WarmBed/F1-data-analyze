@@ -26,6 +26,7 @@ from core.gui_i18n import tr
 
 # 導入 API 相關模組
 import requests
+import certifi
 import time
 from core.api_base_url import resolve_api_base_url
 
@@ -122,7 +123,8 @@ class CrossEventComparisonWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

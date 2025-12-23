@@ -34,6 +34,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
+import certifi
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
 
@@ -117,7 +118,8 @@ class TrackAnalysisApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 請求完成後檢查中斷
