@@ -1,2 +1,0 @@
-C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastf1\api.py:32: UserWarning: `fastf1.api` will be considered private in future releases and potentially be removed or changed!
-  warnings.warn("`fastf1.api` will be considered private in future releases and "
