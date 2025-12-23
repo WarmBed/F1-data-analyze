@@ -29,6 +29,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QThread, QObject, QMutex
 from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 
+import certifi
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available

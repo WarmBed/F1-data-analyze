@@ -10,6 +10,7 @@ render charts with sensible defaults.
 
 from __future__ import annotations
 
+import certifi
 import json
 import os
 from datetime import datetime, timezone

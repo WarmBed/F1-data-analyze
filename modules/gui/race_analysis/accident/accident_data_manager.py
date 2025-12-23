@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import certifi
 import json
 import os
 from copy import deepcopy
