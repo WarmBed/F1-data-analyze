@@ -1,0 +1,23 @@
+============================================================
+Boxplot Chart Widget 導入測試
+============================================================
+檔案路徑: D:\OneDrive\Code\F1-data-analyze\modules\gui\lap_analysis\lap_box_plot\lap_box_plot_chart_widget.py
+有散點圖代碼: True
+有 print 調試: True
+
+方法前 15 行:
+  1:     def _draw_single_box_plot(
+  2:         self,
+  3:         painter: QPainter,
+  4:         driver: str,
+  5:         lap_times: List[float],
+  6:         x_center: float,
+  7:         box_width: float
+  8:     ):
+  9:         """繪製單個車手的箱型圖（彩色半透明 + 疊加散點圖樣式）"""
+  10:         try:
+  11:             # 🔧 調試：確認新代碼被執行
+  12:             print(f"[BOXPLOT] 🎨 繪製新版箱型圖+散點圖: {driver}, 數據點數: {len(lap_times)}")
+  13:             
+  14:             # 計算統計值
+  15:             lap_times_array = np.array(lap_times)

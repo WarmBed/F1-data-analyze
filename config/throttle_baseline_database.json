@@ -1,0 +1,148 @@
+{
+    "_metadata":  {
+                      "description":  "F1 Throttle Baseline - PKL Snapshot Based",
+                      "full_throttle_threshold":  95,
+                      "version":  "2.0.0",
+                      "last_updated":  "2025-12-06"
+                  },
+    "circuits":  {
+                     "Spa":  {
+                                 "full_throttle_ratio":  {
+                                                             "std":  0.05,
+                                                             "mean":  0.7
+                                                         }
+                             },
+                     "Yas_Marina":  {
+                                        "full_throttle_ratio":  {
+                                                                    "std":  0.05,
+                                                                    "mean":  0.6
+                                                                }
+                                    },
+                     "Interlagos":  {
+                                        "full_throttle_ratio":  {
+                                                                    "std":  0.05,
+                                                                    "mean":  0.6
+                                                                }
+                                    },
+                     "Melbourne":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.6
+                                                               }
+                                   },
+                     "Jeddah":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.64
+                                                            }
+                                },
+                     "Montreal":  {
+                                      "full_throttle_ratio":  {
+                                                                  "std":  0.05,
+                                                                  "mean":  0.62
+                                                              }
+                                  },
+                     "Lusail":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.63
+                                                            }
+                                },
+                     "Budapest":  {
+                                      "full_throttle_ratio":  {
+                                                                  "std":  0.05,
+                                                                  "mean":  0.5
+                                                              }
+                                  },
+                     "Monaco":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.45
+                                                            }
+                                },
+                     "Singapore":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.48
+                                                               }
+                                   },
+                     "Baku":  {
+                                  "full_throttle_ratio":  {
+                                                              "std":  0.05,
+                                                              "mean":  0.62
+                                                          }
+                              },
+                     "Barcelona":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.6
+                                                               }
+                                   },
+                     "Silverstone":  {
+                                         "full_throttle_ratio":  {
+                                                                     "std":  0.05,
+                                                                     "mean":  0.65
+                                                                 }
+                                     },
+                     "Suzuka":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.614
+                                                            }
+                                },
+                     "Zandvoort":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.55
+                                                               }
+                                   },
+                     "Miami":  {
+                                   "full_throttle_ratio":  {
+                                                               "std":  0.05,
+                                                               "mean":  0.63
+                                                           }
+                               },
+                     "Spielberg":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.68
+                                                               }
+                                   },
+                     "Monza":  {
+                                   "full_throttle_ratio":  {
+                                                               "std":  0.04,
+                                                               "mean":  0.738
+                                                           }
+                               },
+                     "Mexico":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.55
+                                                            }
+                                },
+                     "Austin":  {
+                                    "full_throttle_ratio":  {
+                                                                "std":  0.05,
+                                                                "mean":  0.6
+                                                            }
+                                },
+                     "Las_Vegas":  {
+                                       "full_throttle_ratio":  {
+                                                                   "std":  0.05,
+                                                                   "mean":  0.644
+                                                               }
+                                   },
+                     "Bahrain":  {
+                                     "full_throttle_ratio":  {
+                                                                 "std":  0.05,
+                                                                 "mean":  0.556
+                                                             }
+                                 }
+                 },
+    "global_baseline":  {
+                            "full_throttle_ratio":  {
+                                                        "std":  0.065,
+                                                        "mean":  0.637
+                                                    }
+                        }
+}

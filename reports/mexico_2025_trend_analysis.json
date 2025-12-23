@@ -1,0 +1,93 @@
+{
+  "spearman": {
+    "correlation": 0.6015037593984961,
+    "p_value": 0.0050232025868820335,
+    "interpretation": "弱相關"
+  },
+  "topk": {
+    "3": {
+      "accuracy": 0.3333333333333333,
+      "correct": 1,
+      "total": 3,
+      "actual_top_k": [
+        "HAM",
+        "LEC",
+        "NOR"
+      ],
+      "predicted_top_k": [
+        "ANT",
+        "HAD",
+        "NOR"
+      ]
+    },
+    "5": {
+      "accuracy": 0.6,
+      "correct": 3,
+      "total": 5,
+      "actual_top_k": [
+        "HAM",
+        "LEC",
+        "NOR",
+        "RUS",
+        "VER"
+      ],
+      "predicted_top_k": [
+        "ANT",
+        "HAD",
+        "HAM",
+        "NOR",
+        "RUS"
+      ]
+    },
+    "10": {
+      "accuracy": 0.8,
+      "correct": 8,
+      "total": 10,
+      "actual_top_k": [
+        "ANT",
+        "BEA",
+        "HAD",
+        "HAM",
+        "LEC",
+        "NOR",
+        "PIA",
+        "RUS",
+        "SAI",
+        "VER"
+      ],
+      "predicted_top_k": [
+        "ANT",
+        "HAD",
+        "HAM",
+        "LEC",
+        "NOR",
+        "PIA",
+        "RUS",
+        "STR",
+        "TSU",
+        "VER"
+      ]
+    }
+  },
+  "group": {
+    "overall_accuracy": 0.35,
+    "overall_correct": 7,
+    "overall_total": 20
+  },
+  "gap": {
+    "top5_gap": {
+      "actual": 0.48399999999999466,
+      "predicted": 0.036675000000002456,
+      "difference": 0.4473249999999922,
+      "relative_error": 0.9242252066115644
+    },
+    "full_field_gap": {
+      "actual": 2.486000000000004,
+      "predicted": 1.0527500000000032,
+      "difference": 1.433250000000001,
+      "relative_error": 0.576528559935639
+    }
+  },
+  "score": 1,
+  "max_score": 4
+}

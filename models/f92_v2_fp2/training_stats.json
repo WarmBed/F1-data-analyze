@@ -1,0 +1,40 @@
+{
+  "total_samples": 33534,
+  "tracks_processed": [
+    "Monaco",
+    "Paul Ricard",
+    "Jeddah",
+    "Zandvoort",
+    "Spa-Francorchamps",
+    "Imola",
+    "Austin",
+    "Monza",
+    "Miami",
+    "Silverstone",
+    "Yas_Island",
+    "Sakhir",
+    "Las_Vegas",
+    "Interlagos",
+    "Montréal",
+    "Barcelona",
+    "Mexico_City",
+    "Suzuka",
+    "Marina_Bay",
+    "Spielberg",
+    "Baku",
+    "Melbourne",
+    "Budapest"
+  ],
+  "years_processed": [
+    2022,
+    2023,
+    2024
+  ],
+  "residual_model": {
+    "train_mae": 0.7775890350499207,
+    "test_mae": 0.8531806554172963,
+    "train_r2": 0.7428641268921699,
+    "test_r2": 0.6627900758707185
+  },
+  "trained_at": "2025-12-14T00:24:01.947914"
+}

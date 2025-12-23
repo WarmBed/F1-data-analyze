@@ -1,0 +1,60 @@
+{
+  "model_info": {
+    "name": "xgboost_fp_q_baseline",
+    "timestamp": "20251101_134256",
+    "model_path": "models\\xgboost_fp_q_baseline_20251101_134256.pkl",
+    "type": "XGBoost Regressor"
+  },
+  "performance": {
+    "cv_mae_mean": 0.9006787907572626,
+    "cv_mae_std": 0.13623551919646584,
+    "cv_rmse_mean": 1.936671026865607,
+    "cv_r2_mean": 0.9500715394069246,
+    "fold_maes": [
+      1.0492654774489913,
+      0.7982398237209873,
+      0.897950484488774,
+      0.7068081540598455,
+      1.0511300140677144
+    ],
+    "target": "MAE ≤ 0.30s (AWS baseline: 0.297s)",
+    "achieved": "False"
+  },
+  "hyperparameters": {
+    "colsample_bytree": 0.9,
+    "gamma": 0,
+    "learning_rate": 0.05,
+    "max_depth": 8,
+    "min_child_weight": 3,
+    "n_estimators": 200,
+    "subsample": 0.7
+  },
+  "feature_importance": {
+    "fp3_best_lap": "0.66045564",
+    "fp3_avg_lap": "0.001241908",
+    "fp3_lap_std": "0.00206733",
+    "fp3_sector1": "0.00220693",
+    "fp3_sector2": "0.006248003",
+    "fp3_sector3": "0.0030308086",
+    "fp3_speed_trap": "0.00091752957",
+    "fp3_valid_laps": "0.0011710923",
+    "fp1_best_lap": "0.010687366",
+    "fp2_best_lap": "0.28653517",
+    "improvement_fp3_fp1": "0.00064952247",
+    "improvement_fp3_fp2": "0.0005997882",
+    "fp3_consistency": "0.00318495",
+    "fp3_sector_balance": "0.0013123462",
+    "fp3_air_temp": "0.0031753322",
+    "fp3_track_temp": "0.0070056487",
+    "fp3_humidity": "0.0016305648",
+    "q_air_temp": "0.000332981",
+    "q_track_temp": "0.0012849047",
+    "q_humidity": "0.0013455146",
+    "temp_delta_air": "0.0012024277",
+    "temp_delta_track": "0.00051171414",
+    "track_cluster_id": "0.0010784077",
+    "driver_encoded": "0.00042060626",
+    "team_encoded": "0.00038399818",
+    "race_encoded": "0.0013195071"
+  }
+}

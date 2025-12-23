@@ -1,0 +1,40 @@
+MDI Window Title Fix Verification
+Timestamp: 2025-10-19 00:55:48
+================================================================================
+
+================================================================================
+TEST: MDI Window Title Fix Verification
+================================================================================
+
+[Test 1] All Drivers Brake Performance MDI
+--------------------------------------------------------------------------------
+Status: [PASS]
+Details:
+  - get_window_title() method exists: YES
+  - Method signature: get_window_title(year, race, session)
+  - Expected format: All Drivers Brake Performance_{year}_{race}_{session}
+  - Example: All Drivers Brake Performance_2025_Japan_R
+
+[Test 2] Track Analysis MDI
+--------------------------------------------------------------------------------
+Status: [PASS]
+Details:
+  - get_window_title() method exists: YES
+  - Method signature: get_window_title(year, race, session)
+  - Expected format: Track Analysis_{year}_{race}_{session}
+  - Example: Track Analysis_2025_Japan_R
+
+[Test 3] Pitstop Analysis MDI (Reference Standard)
+--------------------------------------------------------------------------------
+Status: [PASS]
+Details:
+  - get_window_title() method exists: YES
+  - This is our reference implementation
+  - Expected format: Pitstop Analysis_{year}_{race}_{session}
+  - Example: Pitstop Analysis_2025_Japan_R
+
+================================================================================
+VERIFICATION COMPLETE
+================================================================================
+
+Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_title_fix_result.txt

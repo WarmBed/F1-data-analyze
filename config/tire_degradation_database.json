@@ -1,0 +1,934 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "F1 賽道輪胎衰退係數資料庫 - 用於輪胎衰退分析 (時變線性模型)",
+    "last_updated": "2025-12-04",
+    "sources": [
+      "Cappello & Hoegh 2025 - Tire degradation analysis",
+      "Fuel-corrected lap time linear regression",
+      "Total analyzed stints: 814"
+    ],
+    "model_description": {
+      "type": "Time-Varying Linear Degradation",
+      "formula": "degradation(t) = base_rate + acceleration * tire_age",
+      "total_degradation": "∑(degradation(t)) = base_rate * laps + 0.5 * acceleration * laps²",
+      "units": {
+        "base_degradation": "seconds per lap (s/lap)",
+        "degradation_acceleration": "seconds per lap² (s/lap²)"
+      }
+    },
+    "research_reference": {
+      "typical_degradation_rate": "0.04-0.10 s/lap (compound dependent)",
+      "typical_acceleration": "0.001-0.005 s/lap² (compound dependent)",
+      "soft_vs_hard_ratio": "Soft degrades ~2x faster than Hard",
+      "key_finding": "Linear model is industry standard, sufficient for practical use"
+    },
+    "training_method": "Cappello & Hoegh 2025 lap time degradation analysis"
+  },
+  "compounds": {
+    "SOFT": {
+      "description": "最軟配方 - 最快但衰退最快",
+      "typical_optimal_stint": "15-20 laps",
+      "grip_advantage_seconds": -0.5,
+      "notes": "高抓地力，適合短 stint 策略"
+    },
+    "MEDIUM": {
+      "description": "中性配方 - 平衡速度與耐久",
+      "typical_optimal_stint": "25-35 laps",
+      "grip_advantage_seconds": -0.25,
+      "notes": "最常用的比賽配方"
+    },
+    "HARD": {
+      "description": "最硬配方 - 最慢但最耐久",
+      "typical_optimal_stint": "35-50 laps",
+      "grip_advantage_seconds": 0.0,
+      "notes": "適合長 stint 或高衰退賽道"
+    }
+  },
+  "track_abrasiveness_levels": {
+    "very_low": {
+      "description": "極低磨耗 - 非常滑順的路面",
+      "multiplier": 0.7,
+      "typical_tracks": [
+        "Monaco"
+      ]
+    },
+    "low": {
+      "description": "低磨耗 - 較滑順的路面",
+      "multiplier": 0.85,
+      "typical_tracks": [
+        "Suzuka",
+        "Melbourne",
+        "Interlagos"
+      ]
+    },
+    "medium": {
+      "description": "中等磨耗 - 標準柏油路面",
+      "multiplier": 1.0,
+      "typical_tracks": [
+        "Silverstone",
+        "Monza",
+        "Spa",
+        "Barcelona",
+        "Zandvoort"
+      ]
+    },
+    "high": {
+      "description": "高磨耗 - 粗糙路面",
+      "multiplier": 1.2,
+      "typical_tracks": [
+        "Bahrain",
+        "Austin",
+        "Jeddah",
+        "Lusail"
+      ]
+    },
+    "very_high": {
+      "description": "極高磨耗 - 街道賽或極粗糙路面",
+      "multiplier": 1.4,
+      "typical_tracks": [
+        "Singapore",
+        "Baku",
+        "Las_Vegas",
+        "Miami"
+      ]
+    }
+  },
+  "circuits": {
+    "Bahrain": {
+      "official_name": "Bahrain International Circuit",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "abrasiveness": "high",
+      "abrasiveness_multiplier": 1.2,
+      "base_degradation": {
+        "SOFT": 0.1523,
+        "MEDIUM": 0.1092,
+        "HARD": 0.1502
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0035,
+        "MEDIUM": 0.002,
+        "HARD": 0.0012
+      },
+      "optimal_stint_length": {
+        "SOFT": 12,
+        "MEDIUM": 17,
+        "HARD": 16
+      },
+      "notes": "高溫沙漠賽道，夜間比賽但輪胎仍承受高溫",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 7,
+        "MEDIUM": 14,
+        "HARD": 4
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.885,
+        "MEDIUM": 0.679,
+        "HARD": 0.754
+      }
+    },
+    "Jeddah": {
+      "official_name": "Jeddah Corniche Circuit",
+      "track_length_km": 6.174,
+      "typical_race_laps": 50,
+      "abrasiveness": "high",
+      "abrasiveness_multiplier": 1.2,
+      "base_degradation": {
+        "SOFT": 0.075,
+        "MEDIUM": 0.0887,
+        "HARD": 0.0492
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.003,
+        "MEDIUM": 0.0018,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 16,
+        "MEDIUM": 18,
+        "HARD": 28
+      },
+      "notes": "高速街道賽，高橫向負荷",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 4,
+        "HARD": 9
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.496,
+        "HARD": 0.42
+      }
+    },
+    "Melbourne": {
+      "official_name": "Albert Park Circuit",
+      "track_length_km": 5.278,
+      "typical_race_laps": 58,
+      "abrasiveness": "low",
+      "abrasiveness_multiplier": 0.85,
+      "base_degradation": {
+        "SOFT": 0.055,
+        "MEDIUM": 0.038,
+        "HARD": 0.025
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0022,
+        "MEDIUM": 0.0014,
+        "HARD": 0.0008
+      },
+      "optimal_stint_length": {
+        "SOFT": 22,
+        "MEDIUM": 10,
+        "HARD": 12
+      },
+      "notes": "滑順街道賽，低衰退",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 7,
+        "HARD": 8
+      },
+      "last_trained": "2025-12-04T08:55:31.285776"
+    },
+    "Suzuka": {
+      "official_name": "Suzuka International Racing Course",
+      "track_length_km": 5.807,
+      "typical_race_laps": 53,
+      "abrasiveness": "low",
+      "abrasiveness_multiplier": 0.85,
+      "base_degradation": {
+        "SOFT": 0.058,
+        "MEDIUM": 0.039,
+        "HARD": 0.0185
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0025,
+        "MEDIUM": 0.0015,
+        "HARD": 0.0009
+      },
+      "optimal_stint_length": {
+        "SOFT": 17,
+        "MEDIUM": 28,
+        "HARD": 45
+      },
+      "notes": "高速技術賽道，8字形設計對輪胎平衡",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 16,
+        "HARD": 8
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.401,
+        "HARD": 0.356
+      }
+    },
+    "Shanghai": {
+      "official_name": "Shanghai International Circuit",
+      "track_length_km": 5.451,
+      "typical_race_laps": 56,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.065,
+        "MEDIUM": 0.0971,
+        "HARD": 0.0594
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0028,
+        "MEDIUM": 0.0016,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 18,
+        "MEDIUM": 18,
+        "HARD": 25
+      },
+      "notes": "長直道和長彎角組合，對後胎負擔大",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 19,
+        "HARD": 11
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.6,
+        "HARD": 0.48
+      }
+    },
+    "Miami": {
+      "official_name": "Miami International Autodrome",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "abrasiveness": "very_high",
+      "abrasiveness_multiplier": 1.4,
+      "base_degradation": {
+        "SOFT": 0.09,
+        "MEDIUM": 0.062,
+        "HARD": 0.04
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.004,
+        "MEDIUM": 0.0025,
+        "HARD": 0.0015
+      },
+      "optimal_stint_length": {
+        "SOFT": 14,
+        "MEDIUM": 26,
+        "HARD": 30
+      },
+      "notes": "新鋪路面粗糙，高溫高濕度環境",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 18,
+        "HARD": 19
+      },
+      "last_trained": "2025-12-04T08:55:31.286781"
+    },
+    "Imola": {
+      "official_name": "Autodromo Enzo e Dino Ferrari",
+      "track_length_km": 4.909,
+      "typical_race_laps": 63,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.062,
+        "MEDIUM": 0.0942,
+        "HARD": 0.1511
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0026,
+        "MEDIUM": 0.0015,
+        "HARD": 0.0009
+      },
+      "optimal_stint_length": {
+        "SOFT": 19,
+        "MEDIUM": 18,
+        "HARD": 16
+      },
+      "notes": "傳統賽道，中等衰退",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 8,
+        "HARD": 14
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.732,
+        "HARD": 0.58
+      }
+    },
+    "Monaco": {
+      "official_name": "Circuit de Monaco",
+      "track_length_km": 3.337,
+      "typical_race_laps": 78,
+      "abrasiveness": "very_low",
+      "abrasiveness_multiplier": 0.7,
+      "base_degradation": {
+        "SOFT": 0.04,
+        "MEDIUM": 0.1062,
+        "HARD": 0.1063
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0015,
+        "MEDIUM": 0.001,
+        "HARD": 0.0006
+      },
+      "optimal_stint_length": {
+        "SOFT": 15,
+        "MEDIUM": 17,
+        "HARD": 19
+      },
+      "notes": "最低衰退賽道，低速街道賽，輪胎難以達到工作溫度",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 4,
+        "HARD": 9
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.631,
+        "HARD": 0.462
+      }
+    },
+    "Montreal": {
+      "official_name": "Circuit Gilles Villeneuve",
+      "track_length_km": 4.361,
+      "typical_race_laps": 70,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.068,
+        "MEDIUM": 0.1921,
+        "HARD": 0.1014
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0028,
+        "MEDIUM": 0.0017,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 8,
+        "MEDIUM": 12,
+        "HARD": 19
+      },
+      "notes": "走停特性賽道，對前胎煞車負擔大",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 13,
+        "HARD": 18
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.47,
+        "HARD": 0.424
+      }
+    },
+    "Barcelona": {
+      "official_name": "Circuit de Barcelona-Catalunya",
+      "track_length_km": 4.657,
+      "typical_race_laps": 66,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.2014,
+        "MEDIUM": 0.1682,
+        "HARD": 0.0886
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.003,
+        "MEDIUM": 0.0018,
+        "HARD": 0.0011
+      },
+      "optimal_stint_length": {
+        "SOFT": 11,
+        "MEDIUM": 13,
+        "HARD": 21
+      },
+      "notes": "標準測試賽道，高速長彎對左前胎特別苛刻",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 36,
+        "MEDIUM": 33,
+        "HARD": 12
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.51,
+        "MEDIUM": 0.385,
+        "HARD": 0.494
+      }
+    },
+    "Spielberg": {
+      "official_name": "Red Bull Ring",
+      "track_length_km": 4.318,
+      "typical_race_laps": 71,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.062,
+        "MEDIUM": 0.1336,
+        "HARD": 0.1167
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0025,
+        "MEDIUM": 0.0015,
+        "HARD": 0.0009
+      },
+      "optimal_stint_length": {
+        "SOFT": 12,
+        "MEDIUM": 15,
+        "HARD": 18
+      },
+      "notes": "短圈高海拔，後胎牽引區負擔",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 37,
+        "HARD": 38
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.649,
+        "HARD": 0.631
+      }
+    },
+    "Silverstone": {
+      "official_name": "Silverstone Circuit",
+      "track_length_km": 5.891,
+      "typical_race_laps": 52,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.072,
+        "MEDIUM": 0.259,
+        "HARD": 0.033
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0032,
+        "MEDIUM": 0.0019,
+        "HARD": 0.0012
+      },
+      "optimal_stint_length": {
+        "SOFT": 14,
+        "MEDIUM": 12,
+        "HARD": 12
+      },
+      "notes": "高速彎角多，對所有輪胎高負荷",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 16
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.313
+      }
+    },
+    "Budapest": {
+      "official_name": "Hungaroring",
+      "track_length_km": 4.381,
+      "typical_race_laps": 70,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.065,
+        "MEDIUM": 0.0798,
+        "HARD": 0.0877
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0027,
+        "MEDIUM": 0.0016,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 11,
+        "MEDIUM": 19,
+        "HARD": 21
+      },
+      "notes": "高溫慢速技術賽道，難以超車",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 30,
+        "HARD": 50
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.575,
+        "HARD": 0.585
+      }
+    },
+    "Spa": {
+      "official_name": "Circuit de Spa-Francorchamps",
+      "track_length_km": 7.004,
+      "typical_race_laps": 44,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.068,
+        "MEDIUM": 0.1258,
+        "HARD": 0.0924
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0028,
+        "MEDIUM": 0.0017,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 17,
+        "MEDIUM": 15,
+        "HARD": 20
+      },
+      "notes": "最長賽道，高速賽道但圈數少減少累計衰退",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 19,
+        "HARD": 10
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.55,
+        "HARD": 0.565
+      }
+    },
+    "Zandvoort": {
+      "official_name": "Circuit Zandvoort",
+      "track_length_km": 4.259,
+      "typical_race_laps": 72,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.0889,
+        "MEDIUM": 0.0675,
+        "HARD": 0.0573
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.003,
+        "MEDIUM": 0.0018,
+        "HARD": 0.0011
+      },
+      "optimal_stint_length": {
+        "SOFT": 16,
+        "MEDIUM": 21,
+        "HARD": 26
+      },
+      "notes": "傾斜彎角對輪胎施加額外負荷",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 10,
+        "MEDIUM": 31,
+        "HARD": 18
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.585,
+        "MEDIUM": 0.676,
+        "HARD": 0.625
+      }
+    },
+    "Monza": {
+      "official_name": "Autodromo Nazionale di Monza",
+      "track_length_km": 5.793,
+      "typical_race_laps": 53,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.055,
+        "MEDIUM": 0.0477,
+        "HARD": 0.078
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0022,
+        "MEDIUM": 0.0013,
+        "HARD": 0.0008
+      },
+      "optimal_stint_length": {
+        "SOFT": 9,
+        "MEDIUM": 25,
+        "HARD": 22
+      },
+      "notes": "最高速賽道，低下壓力設定減少輪胎磨損",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 13,
+        "HARD": 24
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.43,
+        "HARD": 0.484
+      }
+    },
+    "Baku": {
+      "official_name": "Baku City Circuit",
+      "track_length_km": 6.003,
+      "typical_race_laps": 51,
+      "abrasiveness": "very_high",
+      "abrasiveness_multiplier": 1.4,
+      "base_degradation": {
+        "SOFT": 0.085,
+        "MEDIUM": 0.0913,
+        "HARD": 0.1286
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0038,
+        "MEDIUM": 0.0023,
+        "HARD": 0.0014
+      },
+      "optimal_stint_length": {
+        "SOFT": 14,
+        "MEDIUM": 18,
+        "HARD": 17
+      },
+      "notes": "街道賽路面粗糙，長直道後重煞車",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 12,
+        "HARD": 10
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.439,
+        "HARD": 0.357
+      }
+    },
+    "Singapore": {
+      "official_name": "Marina Bay Street Circuit",
+      "track_length_km": 4.94,
+      "typical_race_laps": 62,
+      "abrasiveness": "very_high",
+      "abrasiveness_multiplier": 1.4,
+      "base_degradation": {
+        "SOFT": 0.1725,
+        "MEDIUM": 0.0783,
+        "HARD": 0.0799
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.004,
+        "MEDIUM": 0.0024,
+        "HARD": 0.0015
+      },
+      "optimal_stint_length": {
+        "SOFT": 11,
+        "MEDIUM": 20,
+        "HARD": 22
+      },
+      "notes": "夜間街道賽，高濕度高溫，最長比賽時間",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 6,
+        "MEDIUM": 23,
+        "HARD": 29
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.437,
+        "MEDIUM": 0.55,
+        "HARD": 0.539
+      }
+    },
+    "Austin": {
+      "official_name": "Circuit of the Americas",
+      "track_length_km": 5.513,
+      "typical_race_laps": 56,
+      "abrasiveness": "high",
+      "abrasiveness_multiplier": 1.2,
+      "base_degradation": {
+        "SOFT": 0.0701,
+        "MEDIUM": 0.067,
+        "HARD": 0.0529
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0033,
+        "MEDIUM": 0.002,
+        "HARD": 0.0012
+      },
+      "optimal_stint_length": {
+        "SOFT": 18,
+        "MEDIUM": 21,
+        "HARD": 27
+      },
+      "notes": "高海拔粗糙路面，多種彎角類型",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 13,
+        "MEDIUM": 8,
+        "HARD": 7
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.476,
+        "MEDIUM": 0.502,
+        "HARD": 0.391
+      }
+    },
+    "Mexico": {
+      "official_name": "Autodromo Hermanos Rodriguez",
+      "track_length_km": 4.304,
+      "typical_race_laps": 71,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.2458,
+        "MEDIUM": 0.1405,
+        "HARD": 0.0382
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0025,
+        "MEDIUM": 0.0015,
+        "HARD": 0.0009
+      },
+      "optimal_stint_length": {
+        "SOFT": 10,
+        "MEDIUM": 15,
+        "HARD": 32
+      },
+      "notes": "高海拔 (2200m) 降低空氣阻力和下壓力，減少輪胎負荷",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 23,
+        "MEDIUM": 22,
+        "HARD": 12
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.347,
+        "MEDIUM": 0.437,
+        "HARD": 0.554
+      }
+    },
+    "Interlagos": {
+      "official_name": "Autodromo Jose Carlos Pace",
+      "track_length_km": 4.309,
+      "typical_race_laps": 71,
+      "abrasiveness": "low",
+      "abrasiveness_multiplier": 0.85,
+      "base_degradation": {
+        "SOFT": 0.1718,
+        "MEDIUM": 0.1137,
+        "HARD": 0.025
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0022,
+        "MEDIUM": 0.0013,
+        "HARD": 0.0008
+      },
+      "optimal_stint_length": {
+        "SOFT": 12,
+        "MEDIUM": 16,
+        "HARD": 21
+      },
+      "notes": "逆時針賽道，海拔影響，較滑順路面",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 4,
+        "MEDIUM": 23
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.635,
+        "MEDIUM": 0.649
+      }
+    },
+    "Las_Vegas": {
+      "official_name": "Las Vegas Strip Circuit",
+      "track_length_km": 6.201,
+      "typical_race_laps": 50,
+      "abrasiveness": "very_high",
+      "abrasiveness_multiplier": 1.4,
+      "base_degradation": {
+        "SOFT": 0.085,
+        "MEDIUM": 0.1961,
+        "HARD": 0.127
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0038,
+        "MEDIUM": 0.0023,
+        "HARD": 0.0014
+      },
+      "optimal_stint_length": {
+        "SOFT": 14,
+        "MEDIUM": 12,
+        "HARD": 17
+      },
+      "notes": "夜間街道賽，極低溫度使輪胎難以升溫但路面粗糙",
+      "trained_from_data": true,
+      "training_samples": {
+        "MEDIUM": 16,
+        "HARD": 26
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "MEDIUM": 0.525,
+        "HARD": 0.37
+      }
+    },
+    "Lusail": {
+      "official_name": "Lusail International Circuit",
+      "track_length_km": 5.419,
+      "typical_race_laps": 57,
+      "abrasiveness": "high",
+      "abrasiveness_multiplier": 1.2,
+      "base_degradation": {
+        "SOFT": 0.0941,
+        "MEDIUM": 0.0587,
+        "HARD": 0.0723
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0035,
+        "MEDIUM": 0.0021,
+        "HARD": 0.0013
+      },
+      "optimal_stint_length": {
+        "SOFT": 16,
+        "MEDIUM": 23,
+        "HARD": 23
+      },
+      "notes": "高速流暢賽道，夜間比賽高輪胎負荷",
+      "trained_from_data": true,
+      "training_samples": {
+        "SOFT": 3,
+        "MEDIUM": 4,
+        "HARD": 5
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "SOFT": 0.51,
+        "MEDIUM": 0.399,
+        "HARD": 0.513
+      }
+    },
+    "Yas_Marina": {
+      "official_name": "Yas Marina Circuit",
+      "track_length_km": 5.281,
+      "typical_race_laps": 58,
+      "abrasiveness": "medium",
+      "abrasiveness_multiplier": 1.0,
+      "base_degradation": {
+        "SOFT": 0.065,
+        "MEDIUM": 0.045,
+        "HARD": 0.0767
+      },
+      "degradation_acceleration": {
+        "SOFT": 0.0027,
+        "MEDIUM": 0.0016,
+        "HARD": 0.001
+      },
+      "optimal_stint_length": {
+        "SOFT": 18,
+        "MEDIUM": 21,
+        "HARD": 22
+      },
+      "notes": "日落賽事，溫度變化影響輪胎表現",
+      "trained_from_data": true,
+      "training_samples": {
+        "HARD": 21
+      },
+      "last_trained": "2025-12-04T09:04:41.658200",
+      "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
+      "training_r_squared": {
+        "HARD": 0.564
+      }
+    }
+  },
+  "default_values": {
+    "base_degradation": {
+      "SOFT": 0.065,
+      "MEDIUM": 0.045,
+      "HARD": 0.03
+    },
+    "degradation_acceleration": {
+      "SOFT": 0.0028,
+      "MEDIUM": 0.0017,
+      "HARD": 0.001
+    },
+    "optimal_stint_length": {
+      "SOFT": 18,
+      "MEDIUM": 28,
+      "HARD": 40
+    },
+    "warmup_laps": 3,
+    "notes": "當找不到特定賽道數據時使用的預設值"
+  }
+}

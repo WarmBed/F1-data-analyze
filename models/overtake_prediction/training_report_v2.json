@@ -1,0 +1,39 @@
+{
+  "metrics": {
+    "accuracy": 0.8922234681089638,
+    "precision": 0.33393258426966294,
+    "recall": 0.8301675977653631,
+    "f1_score": 0.47628205128205126,
+    "roc_auc": 0.9358975945463958
+  },
+  "confusion_matrix": [
+    [
+      12784,
+      1482
+    ],
+    [
+      152,
+      743
+    ]
+  ],
+  "model_type": "XGBClassifier",
+  "n_estimators": 200,
+  "max_depth": 6,
+  "learning_rate": 0.1,
+  "scale_pos_weight": 3.0,
+  "training_time_seconds": 0.656235,
+  "train_samples": 76080,
+  "test_samples": 15161,
+  "trained_at": "2025-12-05T12:37:49.289195",
+  "cross_validation": {
+    "cv_mean_auc": 0.9686219548332318,
+    "cv_std_auc": 0.0036610385860800787,
+    "cv_scores": [
+      0.9720366214338881,
+      0.9697627288918668,
+      0.9687934147747979,
+      0.9708874088869986,
+      0.961629600178607
+    ]
+  }
+}

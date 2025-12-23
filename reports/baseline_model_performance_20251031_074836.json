@@ -1,0 +1,51 @@
+{
+  "model_info": {
+    "name": "xgboost_fp_q_baseline",
+    "timestamp": "20251031_074836",
+    "model_path": "models\\xgboost_fp_q_baseline_20251031_074836.pkl",
+    "type": "XGBoost Regressor"
+  },
+  "performance": {
+    "cv_mae_mean": 1.7670341865696535,
+    "cv_mae_std": 0.5940233764930795,
+    "cv_rmse_mean": 3.338577188377954,
+    "cv_r2_mean": 0.860983922144362,
+    "fold_maes": [
+      2.1146435117368343,
+      1.2119780543448995,
+      0.9965040153848778,
+      2.6189710718476715,
+      1.8930742795339832
+    ],
+    "target": "MAE ≤ 0.30s (AWS baseline: 0.297s)",
+    "achieved": "False"
+  },
+  "hyperparameters": {
+    "colsample_bytree": 0.8,
+    "learning_rate": 0.05,
+    "max_depth": 4,
+    "n_estimators": 200,
+    "subsample": 0.8
+  },
+  "feature_importance": {
+    "fp3_best_lap": "0.09923457",
+    "fp3_avg_lap": "0.002258983",
+    "fp3_lap_std": "0.0051384554",
+    "fp3_sector1": "0.0049653146",
+    "fp3_sector2": "0.01431386",
+    "fp3_sector3": "0.0069785723",
+    "fp3_speed_trap": "0.000946914",
+    "fp3_valid_laps": "0.0052373116",
+    "fp1_best_lap": "0.2651789",
+    "fp2_best_lap": "0.47366092",
+    "fp3_air_temp": "0.0033326792",
+    "fp3_track_temp": "0.0016062726",
+    "fp3_humidity": "0.004670427",
+    "q_air_temp": "0.007520083",
+    "q_track_temp": "0.03684125",
+    "q_humidity": "0.05285782",
+    "driver_encoded": "0.00078949536",
+    "team_encoded": "0.0009003358",
+    "race_encoded": "0.013567897"
+  }
+}

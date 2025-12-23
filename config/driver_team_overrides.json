@@ -1,0 +1,71 @@
+{
+  "metadata": {
+    "description": "手動車手-車隊覆寫配置（優先於 FastF1 和 Ergast API）",
+    "usage": "當 FastF1/Ergast 資料延遲更新時，此檔案提供季中替補、轉隊等特殊情況的手動調整",
+    "priority": "此檔案的配置優先級最高，會覆寫所有 API 返回的資料",
+    "last_updated": "2025-10-19T10:00:00Z",
+    "documentation_url": "https://github.com/WarmBed/F1-data-analyze/blob/main/docs/driver_overrides.md"
+  },
+  "overrides": {
+    "2025": {
+      "_comment": "2025 賽季車手轉隊覆寫（已啟用）",
+      "TSU": {
+        "enabled": true,
+        "team_slug": "red bull",
+        "team_name": "Red Bull",
+        "full_name": "Yuki Tsunoda",
+        "reason": "2025 賽季升級到 Red Bull 主隊",
+        "effective_from": "2025-01-01",
+        "comment": "Yuki Tsunoda 從 RB 升級到 Red Bull Racing"
+      },
+      "LAW": {
+        "enabled": true,
+        "team_slug": "racing bulls",
+        "team_name": "RB",
+        "full_name": "Liam Lawson",
+        "reason": "2025 賽季調整到 RB 姊妹隊",
+        "effective_from": "2025-01-01",
+        "comment": "Liam Lawson 從 Red Bull 調整到 Racing Bulls"
+      }
+    },
+    "2024": {
+      "_comment": "2024 賽季實際案例：LAW 季中替補 RIC",
+      "LAW": {
+        "enabled": true,
+        "team_slug": "racing bulls",
+        "team_name": "RB",
+        "full_name": "Liam Lawson",
+        "reason": "2024 美國站起替補 Daniel Ricciardo",
+        "effective_from": "2024-09-01",
+        "comment": "LAW 在 2024 賽季中途加入 RB 車隊"
+      }
+    }
+  },
+  "template": {
+    "_comment": "新增覆寫時請複製此範本",
+    "DRIVER_CODE": {
+      "enabled": true,
+      "team_slug": "team_slug_here",
+      "team_name": "Team Full Name",
+      "full_name": "Driver Full Name",
+      "reason": "說明覆寫原因（季中替補/轉隊等）",
+      "effective_from": "YYYY-MM-DD",
+      "comment": "額外說明"
+    }
+  },
+  "supported_team_slugs": {
+    "_comment": "FastF1 支援的標準車隊 slug（小寫）",
+    "teams": [
+      "red bull",
+      "ferrari",
+      "mercedes",
+      "mclaren",
+      "aston martin",
+      "alpine",
+      "williams",
+      "racing bulls",
+      "haas",
+      "sauber"
+    ]
+  }
+}

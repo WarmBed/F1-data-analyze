@@ -1,0 +1,53 @@
+﻿================================================================================
+Season Progress API ?踵?皜祈岫
+================================================================================
+
+[?蔭]
+  API URL: https://localhost:8000
+  Function ID: 97
+  Year: 2025
+
+================================================================================
+[甇仿? 1] ?潮?API 隢?
+================================================================================
+隢? URL: https://localhost:8000/api/v2/analysis/execute
+?: {'function_id': 97, 'year': 2025}
+
+?潮?瘙葉...
+[OK] HTTP ??Ⅳ: 200
+[OK] JSON 閫????
+
+================================================================================
+[甇仿? 2] 瑼Ｘ?踵?蝯?
+================================================================================
+?踵??惜?? ['success', 'message', 'data', 'source', 'execution_time', 'request_id', 'timestamp', 'function_spec', 'runtime']
+
+success: True
+[OK] data 甈?摮銝 dict
+data ?? ['success', 'message', 'metadata', 'data', 'summary', 'file_info', 'cache_info']
+
+================================================================================
+[甇仿? 3] 瑼Ｘ?豢?蝯?嚗芋??MDI ??嚗?
+================================================================================
+[瑼Ｘ葫] Double-nested structure (data.data)
+
+drivers: 21 ??
+constructors: 10 ??
+metadata: {'season_year': 2025, 'requested_round': 'last', 'resolved_round': 19, 'generated_at': '2025-10-20T13:38:13.121421+00:00', 'refresh_interval_hours': 120, 'include_drivers': True, 'include_constructors': True, 'force_regenerated': True, 'overrides_applied': True, 'overridden_drivers': ['TSU', 'LAW']}
+
+[OK] ?豢?? 21 雿??? 10 ?航???
+
+================================================================================
+[甇仿? 4] 瑼Ｘ頠?鞈?蝯?
+================================================================================
+蝚砌?雿????: ['position', 'position_text', 'points', 'wins', 'driver', 'constructors', 'points_delta']
+
+頠?閰喟敦鞈?:
+  driver: {'driver_id': 'piastri', 'code': 'PIA', 'number': 81, 'given_name': 'Oscar', 'family_name': 'Piastri', 'full_name': 'Oscar Piastri', 'nationality': 'Australian', 'date_of_birth': '2001-04-06T00:00:00+00:00', 'url': 'http://en.wikipedia.org/wiki/Oscar_Piastri'}
+  points: 346.0
+  constructors: [{'constructor_id': 'mclaren', 'name': 'McLaren', 'url': 'http://en.wikipedia.org/wiki/McLaren', 'nationality': 'British'}]
+
+================================================================================
+[甇仿? 5] 璅⊥ DataLoader 頧?
+================================================================================
+[OK] [MODULE_FACTORY] Speed analysis module registered

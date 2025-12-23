@@ -1,0 +1,4 @@
+1. 採用不同邏輯 新增all driver max speed 與 all driver brake all laps Analysis
+2. 增加 acceleration chart 與 brake chart 方便使用者判斷煞車與加速情況
+3. 修正Corner analysis邏輯
+4. 

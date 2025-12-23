@@ -1,0 +1,706 @@
+{
+  "metadata": {
+    "model_version": "v3.8",
+    "generated_at": "2025-11-06T07:29:45.346343",
+    "total_tracks": 24,
+    "top_n_features": 5
+  },
+  "tracks": {
+    "Australia": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 36.14
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s2",
+          "importance_pct": 15.47
+        },
+        {
+          "rank": 3,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 14.25
+        },
+        {
+          "rank": 4,
+          "feature": "fp3_relative_position",
+          "importance_pct": 6.83
+        },
+        {
+          "rank": 5,
+          "feature": "is_top_driver",
+          "importance_pct": 6.03
+        }
+      ]
+    },
+    "China": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "speed_consistency",
+          "importance_pct": 37.2
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 33.17
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s2",
+          "importance_pct": 15.16
+        },
+        {
+          "rank": 4,
+          "feature": "max_speed",
+          "importance_pct": 7.55
+        },
+        {
+          "rank": 5,
+          "feature": "is_top_driver",
+          "importance_pct": 6.92
+        }
+      ]
+    },
+    "Japan": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 35.73
+        },
+        {
+          "rank": 2,
+          "feature": "fp3_relative_position",
+          "importance_pct": 23.11
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 9.58
+        },
+        {
+          "rank": 4,
+          "feature": "is_top_driver",
+          "importance_pct": 5.06
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_s2",
+          "importance_pct": 4.23
+        }
+      ]
+    },
+    "Bahrain": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 26.2
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 22.48
+        },
+        {
+          "rank": 3,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 14.58
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s2",
+          "importance_pct": 5.14
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_s3",
+          "importance_pct": 4.8
+        }
+      ]
+    },
+    "Saudi Arabia": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "high_speed_apex",
+          "importance_pct": 18.67
+        },
+        {
+          "rank": 2,
+          "feature": "speed_consistency",
+          "importance_pct": 12.46
+        },
+        {
+          "rank": 3,
+          "feature": "sector_cv",
+          "importance_pct": 11.24
+        },
+        {
+          "rank": 4,
+          "feature": "s1_s2_ratio",
+          "importance_pct": 9.06
+        },
+        {
+          "rank": 5,
+          "feature": "mid_speed_apex",
+          "importance_pct": 8.7
+        }
+      ]
+    },
+    "Miami": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s1",
+          "importance_pct": 25.42
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s2",
+          "importance_pct": 22.95
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 6.69
+        },
+        {
+          "rank": 4,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 6.55
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_lap",
+          "importance_pct": 5.42
+        }
+      ]
+    },
+    "Emilia Romagna": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 38.4
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 20.84
+        },
+        {
+          "rank": 3,
+          "feature": "speed_consistency",
+          "importance_pct": 12.92
+        },
+        {
+          "rank": 4,
+          "feature": "max_speed",
+          "importance_pct": 5.38
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 5.22
+        }
+      ]
+    },
+    "Monaco": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "fp3_gap_to_fastest",
+          "importance_pct": 24.88
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 14.15
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_lap",
+          "importance_pct": 13.91
+        },
+        {
+          "rank": 4,
+          "feature": "fp3_relative_position",
+          "importance_pct": 11.78
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_s2",
+          "importance_pct": 7.21
+        }
+      ]
+    },
+    "Spain": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s3",
+          "importance_pct": 36.61
+        },
+        {
+          "rank": 2,
+          "feature": "low_speed_apex",
+          "importance_pct": 28.09
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_lap",
+          "importance_pct": 24.95
+        },
+        {
+          "rank": 4,
+          "feature": "high_speed_apex",
+          "importance_pct": 7.67
+        },
+        {
+          "rank": 5,
+          "feature": "sector_cv",
+          "importance_pct": 0.41
+        }
+      ]
+    },
+    "Canada": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s1",
+          "importance_pct": 30.2
+        },
+        {
+          "rank": 2,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 23.99
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s2",
+          "importance_pct": 11.1
+        },
+        {
+          "rank": 4,
+          "feature": "mid_speed_apex",
+          "importance_pct": 11.08
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed",
+          "importance_pct": 5.57
+        }
+      ]
+    },
+    "Austria": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "s1_s2_ratio",
+          "importance_pct": 19.74
+        },
+        {
+          "rank": 2,
+          "feature": "high_speed_apex",
+          "importance_pct": 13.37
+        },
+        {
+          "rank": 3,
+          "feature": "speed_consistency",
+          "importance_pct": 12.32
+        },
+        {
+          "rank": 4,
+          "feature": "low_speed_apex",
+          "importance_pct": 11.56
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_s1",
+          "importance_pct": 11.28
+        }
+      ]
+    },
+    "Great Britain": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s1",
+          "importance_pct": 61.77
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s2",
+          "importance_pct": 31.74
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 5.7
+        },
+        {
+          "rank": 4,
+          "feature": "max_speed",
+          "importance_pct": 0.25
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 0.15
+        }
+      ]
+    },
+    "Belgium": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 56.28
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 33.37
+        },
+        {
+          "rank": 3,
+          "feature": "s1_s2_ratio",
+          "importance_pct": 2.56
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s3",
+          "importance_pct": 2.23
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed",
+          "importance_pct": 1.61
+        }
+      ]
+    },
+    "Hungary": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 23.66
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s3",
+          "importance_pct": 16.99
+        },
+        {
+          "rank": 3,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 14.07
+        },
+        {
+          "rank": 4,
+          "feature": "fp3_relative_position",
+          "importance_pct": 10.7
+        },
+        {
+          "rank": 5,
+          "feature": "s2_lap_ratio",
+          "importance_pct": 7.36
+        }
+      ]
+    },
+    "Netherlands": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "mid_speed_apex",
+          "importance_pct": 34.04
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s3",
+          "importance_pct": 20.89
+        },
+        {
+          "rank": 3,
+          "feature": "high_speed_apex",
+          "importance_pct": 11.37
+        },
+        {
+          "rank": 4,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 7.89
+        },
+        {
+          "rank": 5,
+          "feature": "is_top_driver",
+          "importance_pct": 6.72
+        }
+      ]
+    },
+    "Italy": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 58.83
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_lap",
+          "importance_pct": 13.36
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 8.91
+        },
+        {
+          "rank": 4,
+          "feature": "is_top_driver",
+          "importance_pct": 7.41
+        },
+        {
+          "rank": 5,
+          "feature": "fp3_relative_position",
+          "importance_pct": 2.45
+        }
+      ]
+    },
+    "Azerbaijan": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 25.42
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s2",
+          "importance_pct": 22.94
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s1",
+          "importance_pct": 19.76
+        },
+        {
+          "rank": 4,
+          "feature": "fp3_gap_to_fastest",
+          "importance_pct": 9.47
+        },
+        {
+          "rank": 5,
+          "feature": "s2_lap_ratio",
+          "importance_pct": 8.43
+        }
+      ]
+    },
+    "Singapore": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 43.01
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 37.62
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 11.66
+        },
+        {
+          "rank": 4,
+          "feature": "s1_s2_ratio",
+          "importance_pct": 2.37
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 1.79
+        }
+      ]
+    },
+    "United States": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_lap",
+          "importance_pct": 32.65
+        },
+        {
+          "rank": 2,
+          "feature": "is_top_driver",
+          "importance_pct": 23.84
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s3",
+          "importance_pct": 20.88
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s2",
+          "importance_pct": 7.94
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 3.67
+        }
+      ]
+    },
+    "Mexico": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 14.26
+        },
+        {
+          "rank": 2,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 11.43
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s2",
+          "importance_pct": 9.86
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_lap",
+          "importance_pct": 9.02
+        },
+        {
+          "rank": 5,
+          "feature": "fp3_relative_position",
+          "importance_pct": 8.14
+        }
+      ]
+    },
+    "Brazil": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "low_speed_apex",
+          "importance_pct": 81.22
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 6.32
+        },
+        {
+          "rank": 3,
+          "feature": "high_speed_apex",
+          "importance_pct": 2.46
+        },
+        {
+          "rank": 4,
+          "feature": "speed_consistency",
+          "importance_pct": 1.86
+        },
+        {
+          "rank": 5,
+          "feature": "sector_cv",
+          "importance_pct": 1.2
+        }
+      ]
+    },
+    "Las Vegas": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "mid_speed_apex",
+          "importance_pct": 100.0
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 0.0
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_s2",
+          "importance_pct": 0.0
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s3",
+          "importance_pct": 0.0
+        },
+        {
+          "rank": 5,
+          "feature": "ideal_lap",
+          "importance_pct": 0.0
+        }
+      ]
+    },
+    "Qatar": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "ideal_s2",
+          "importance_pct": 39.68
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_s1",
+          "importance_pct": 30.12
+        },
+        {
+          "rank": 3,
+          "feature": "ideal_lap",
+          "importance_pct": 8.52
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s3",
+          "importance_pct": 4.8
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_s2_ratio",
+          "importance_pct": 4.5
+        }
+      ]
+    },
+    "Abu Dhabi": {
+      "features": [
+        {
+          "rank": 1,
+          "feature": "fp3_gap_to_fastest",
+          "importance_pct": 36.4
+        },
+        {
+          "rank": 2,
+          "feature": "ideal_lap",
+          "importance_pct": 19.82
+        },
+        {
+          "rank": 3,
+          "feature": "fp3_relative_position",
+          "importance_pct": 18.74
+        },
+        {
+          "rank": 4,
+          "feature": "ideal_s3",
+          "importance_pct": 11.17
+        },
+        {
+          "rank": 5,
+          "feature": "max_speed_lap_ratio",
+          "importance_pct": 2.55
+        }
+      ]
+    }
+  }
+}

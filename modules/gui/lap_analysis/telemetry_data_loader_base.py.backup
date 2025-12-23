@@ -1,0 +1,1839 @@
+﻿#!/usr/bin/env python3
+"""
+TelemetryDataLoader - F1T Telemetry Data Loader Base
+"""
+======================================================
+
+?芋蝯?靘????皜砍??芋蝯?函??豢?頛?摩嚗?
+?游?鈭??砍?????*_analysis_data_loader.py 銝剔???隞?Ⅳ??
+
+?舀??皜祇???
+- speed (?漲??)
+- rpm (頧??? 
+- gear (瑼???)
+- throttle (瘝寥???)
+- brake (????)
+- acceleration (?漲??)
+- distancediff (頝撌桃??)
+- speeddiff (?漲撌桃??)
+
+閮剛???嚗?
+1. 蝯曹????仿?頛荔?瘨隞?Ⅳ??
+2. 靽????澆捆?改?銝憯?PI
+3. 璅∠??身閮??舀?啣??葫憿?
+4. 蝯曹??隤方?????璈
+
+Author: F1T Team
+Date: 2025-09-09
+Version: 1.0.0
+"""
+
+import sys
+import os
+import json
+import glob
+import pickle
+import time
+from datetime import datetime
+import threading
+import requests
+import fastf1
+import pandas as pd
+import subprocess
+from typing import Dict, List, Any, Optional, Tuple
+import traceback
+import threading
+import logging
+from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread, Qt
+from core.api_base_url import resolve_api_base_url
+from core.gui_i18n import tr
+from core.api_runtime_state import is_api_available
+
+
+class TelemetryApiWorker(QThread):
+    """Background worker responsible for fetching telemetry comparison data via REST API."""
+
+    progress = pyqtSignal(int)
+    success = pyqtSignal(dict)
+    failure = pyqtSignal(str)
+
+    def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0,
+                 request_token: Optional[int] = None, parent=None):
+        super().__init__(parent)
+        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.params = dict(params)
+        self.timeout = timeout
+        self.request_token = request_token
+        # 隤輯岫鞈?
+        self._worker_id = f"APIW-{int(time.time()*1000)}-{id(self)}"
+        self._log_path = os.path.join("logs", "api_worker_debug.log")
+        try:
+            os.makedirs(os.path.dirname(self._log_path), exist_ok=True)
+        except Exception:
+            pass
+
+    # 頛?蝝神瑼隤?銝僕?曉??logger 閮剖?嚗?    def _log(self, message: str) -> None:
+        ts = datetime.now().strftime('%H:%M:%S.%f')[:-3]
+        line = f"[{ts}] [{self._worker_id}] {message}"
+        try:
+            # console
+            print(f"[API_WORKER] {line}")
+        except Exception:
+            pass
+        try:
+            with open(self._log_path, 'a', encoding='utf-8') as f:
+                f.write(line + "\n")
+        except Exception:
+            pass
+
+    def run(self) -> None:
+        start_ts = time.perf_counter()
+        thread_ident = threading.get_ident()
+        try:
+            self._log(f"run() start; thread={thread_ident} token={self.request_token} base={self.base_url}")
+            self.progress.emit(15)
+            endpoint = f"{self.base_url}/api/v2/analysis/execute"
+            query_params: Dict[str, Any] = {
+                "function_id": 13,
+                "year": int(self.params.get("year")),
+                "race": self.params.get("race"),
+                "session": self.params.get("session"),
+                "driver1": self.params.get("driver1"),
+                "driver2": self.params.get("driver2"),
+                "lap1": self.params.get("lap1"),
+                "lap2": self.params.get("lap2"),
+            }
+
+            if self.params.get("force_refresh"):
+                query_params["force_refresh"] = True
+
+            # 蝝???菔?瘙??賂??踹??頛詨嚗?            self._log(
+                "POST /api/v2/analysis/execute "
+                f"params={{y:{query_params.get('year')}, r:{query_params.get('race')}, "
+                f"s:{query_params.get('session')}, d1:{query_params.get('driver1')}, "
+                f"d2:{query_params.get('driver2')}, l1:{query_params.get('lap1')}, l2:{query_params.get('lap2')}, "
+                f"force:{query_params.get('force_refresh', False)}}} timeout={self.timeout}s"
+            )
+            net_ts = time.perf_counter()
+            response = requests.post(
+                endpoint,
+                params=query_params,
+                timeout=self.timeout,
+                headers={"Accept": "application/json"}
+            )
+            self.progress.emit(70)
+            response.raise_for_status()
+            self._log(
+                f"HTTP {response.status_code}; latency={(time.perf_counter()-net_ts)*1000:.1f}ms; "
+                f"content_length={response.headers.get('Content-Length') or len(response.content)}"
+            )
+
+            payload = response.json()
+            if not isinstance(payload, dict):
+                raise ValueError("API response must be a JSON object")
+            if not payload.get("success", False):
+                raise RuntimeError(payload.get("message", "API returned success=False"))
+
+            data = payload.get("data")
+            if not isinstance(data, dict):
+                raise ValueError("API response missing 'data' object")
+
+            latency_ms = (time.perf_counter() - start_ts) * 1000.0
+            meta = {
+                "source": payload.get("source", "api"),
+                "execution_time": payload.get("execution_time"),
+                "request_id": payload.get("request_id"),
+                "timestamp": payload.get("timestamp"),
+                "latency_ms": round(latency_ms, 2),
+                "base_url": self.base_url,
+                "function_id": 13,
+            }
+
+            self.progress.emit(90)
+            result = {
+                "data": data,
+                "payload": payload,
+                "meta": meta,
+                "request_token": self.request_token
+            }
+            # ?亙歇鋡怨?瘙葉?瘀?隞???銝??靽∟?嚗?撠?蝥????
+            if self.isInterruptionRequested():
+                self._log("interruption requested after response; skip success.emit")
+            else:
+                self.success.emit(result)
+        except Exception as exc:
+            self._log(f"failure: {exc}")
+            try:
+                self._log(traceback.format_exc())
+            except Exception:
+                pass
+            try:
+                self.failure.emit(str(exc))
+            except Exception:
+                pass
+        finally:
+            try:
+                self.progress.emit(100)
+            except Exception:
+                pass
+            elapsed = (time.perf_counter() - start_ts) * 1000.0
+            self._log(f"run() end; elapsed={elapsed:.1f}ms interruption={self.isInterruptionRequested()}")
+
+
+class TelemetryDataLoader(QObject):
+    """
+    ?葫?豢?頛?典憿?
+    
+    ???皜砍??芋蝯??梁頛?剁???蝯曹?????乓?
+    瑼????LI????扳??嗚?
+    """
+    
+    # 璅?靽∟?摰儔 (???皜祆芋蝯??
+    data_loaded = pyqtSignal(dict)      # ?豢?頛摰?
+    load_progress = pyqtSignal(int)     # 頛?脣漲 (0-100)
+    load_error = pyqtSignal(str)        # 頛?航炊
+    status_changed = pyqtSignal(str)    # ?????
+    
+    # ?舀??皜祇???撠?
+    TELEMETRY_TYPES = {
+        'speed': {
+            'display_name': tr('speed_analysis', '?漲??'),
+            'data_field': 'Speed',
+            'unit': 'km/h',
+            'debug_prefix': 'SPEED'
+        },
+        'rpm': {
+            'display_name': tr('rpm_analysis', 'RPM??'), 
+            'data_field': 'RPM',
+            'unit': 'rpm',
+            'debug_prefix': 'RPM'
+        },
+        'gear': {
+            'display_name': tr('gear_analysis', '瑼???'),
+            'data_field': 'nGear', 
+            'unit': 'gear',
+            'debug_prefix': 'GEAR'
+        },
+        'throttle': {
+            'display_name': tr('throttle_analysis', '瘝寥???'),
+            'data_field': 'Throttle',
+            'unit': '%',
+            'debug_prefix': 'THROTTLE'
+        },
+        'brake': {
+            'display_name': tr('brake_analysis', '????'),
+            'data_field': 'Brake',
+            'unit': '%', 
+            'debug_prefix': 'BRAKE'
+        },
+        'acceleration': {
+            'display_name': tr('acceleration_analysis', '?漲??'),
+            'data_field': 'Acceleration',
+            'unit': 'm/s簡',
+            'debug_prefix': 'ACCEL'
+        },
+        'distancediff': {
+            'display_name': tr('distancediff_analysis', '頝撌桃??'),
+            'data_field': 'distance_difference',
+            'unit': 'm',
+            'debug_prefix': 'DISTDIFF'
+        },
+        'timediff': {
+            'display_name': tr('timediff_analysis', 'Time Diff Analysis'),
+            'data_field': 'time_difference',
+            'unit': 's',
+            'debug_prefix': 'TIMEDIFF'
+        },
+        'speeddiff': {
+            'display_name': tr('speeddiff_analysis', '?漲撌桃??'), 
+            'data_field': 'speed_difference',
+            'unit': 'km/h',
+            'debug_prefix': 'SPEEDDIFF'
+        },
+        'rain': {
+            'display_name': tr('rain_analysis', '???'),
+            'data_field': 'rain_intensity',
+            'unit': 'mm/h',
+            'debug_prefix': 'RAIN'
+        }
+    }
+    
+    def __init__(self, telemetry_type: str, parent=None):
+        """
+        ????皜祆???亙
+        
+        Args:
+            telemetry_type: ?葫憿? ('speed', 'rpm', 'gear', 蝑?
+            parent: ?嗥? QObject
+        """
+        super().__init__(parent)
+        
+        # 撽??葫憿?
+        if telemetry_type not in self.TELEMETRY_TYPES:
+            raise ValueError(f"銝?渡??葫憿?: {telemetry_type}")
+            
+        self.telemetry_type = telemetry_type
+        self.config = self.TELEMETRY_TYPES[telemetry_type]
+        
+        # ?????
+        self._base_path = "json"
+        self._is_loading = False
+        self._current_data = None
+        self.current_session = None
+        self._generation_params = None
+        self._active_request_token = 0
+        self._pending_params: Dict[str, Any] = {}
+        self._api_worker: Optional[TelemetryApiWorker] = None
+        self._last_data_source: str = "unknown"
+        self._last_api_meta: Dict[str, Any] = {}
+        
+        # ??摰???- 閮剔蔭 parent ?脫迫鋡怠??曉???
+        self._generation_timer = QTimer(self)
+        self._generation_timer.timeout.connect(self._check_generation_progress)
+        
+        self._generation_timeout_timer = QTimer(self)
+        self._generation_timeout_timer.timeout.connect(self._on_generation_timeout)
+        
+        self._debug(f"????{self.config['display_name']} 頛??)
+        self._api_base_url = self._determine_api_base_url()
+        self._api_timeout = 75.0
+        self._allow_local_fallback, self._fallback_policy_reason = self._resolve_local_fallback_policy()
+        fallback_state = "?" if self._allow_local_fallback else "?"
+        self._debug(f"API ?箏?蝬脣?: {self._api_base_url}")
+        self._debug(f"?砍 JSON 敺?撌現fallback_state} (蝑: {self._fallback_policy_reason})")
+    
+    def _debug(self, message: str):
+        """蝯曹???航撓??""
+        prefix = self.config['debug_prefix']
+        print(f"[{prefix} DEBUG] {message}")
+    
+    def _error(self, message: str):
+        """蝯曹??隤方撓??""
+        prefix = self.config['debug_prefix']
+        print(f"[ERROR] [{prefix}] {message}")
+
+    def _normalize_driver_code(self, raw_value: Optional[str], fallback: Optional[str] = None) -> Optional[str]:
+        """甇?????誨蝣潸撓??""
+        if raw_value is None:
+            return fallback
+        text = str(raw_value).strip()
+        if not text:
+            return fallback
+        lowered = text.lower()
+        if lowered in {"none", "null", "nan", "undefined", "select", "n/a", "na"}:
+            return fallback
+        return text.upper()
+
+    def _build_request_signature(self, params: Dict[str, Any]) -> Tuple[Any, ...]:
+        """撱箇?隢?蝪賜?嚗?潭?撠??豢?虫???""
+        return (
+            params.get('year'),
+            params.get('race'),
+            params.get('session'),
+            params.get('driver1'),
+            params.get('driver2'),
+            params.get('driver2_effective'),
+            params.get('lap1'),
+            params.get('lap2'),
+            params.get('single_driver_mode'),
+            params.get('is_fastest_lap')
+        )
+
+    def _sessions_match(self, active_session: Optional[Dict[str, Any]],
+                        incoming_session: Dict[str, Any]) -> bool:
+        """瑼Ｘ?喳?頛???豢?西??桀?甇??????""
+        if not active_session:
+            return False
+        active_signature = active_session.get('signature')
+        incoming_signature = incoming_session.get('signature')
+        if active_signature and incoming_signature:
+            return active_signature == incoming_signature
+
+        keys_to_compare = [
+            'year', 'race', 'session', 'driver1', 'driver2',
+            'driver2_effective', 'lap1', 'lap2',
+            'single_driver_mode', 'is_fastest_lap'
+        ]
+        return all(active_session.get(key) == incoming_session.get(key) for key in keys_to_compare)
+
+    def _next_request_token(self) -> int:
+        """??銝???瘙?霅?""
+        self._active_request_token += 1
+        return self._active_request_token
+    
+    # ========== ?祇?API?寞? ==========
+    
+    def load_telemetry_data(self, year: int, race: str, session: str,
+                           driver1: str, driver2: str = None,
+                           lap1: int = 1, lap2: int = None,
+                           is_fastest_lap: bool = False) -> bool:
+        """
+        頛?葫???豢? - ?頛?寞?
+        
+        Args:
+            year: 撟港遢
+            race: 鞈賭??迂
+            session: ?店憿? (R/Q/S/FP1/FP2/FP3)
+            driver1: 頠?1隞?Ⅳ
+            driver2: 頠?2隞?Ⅳ (?舫嚗one銵函內?株?????
+            lap1: 頠?1?
+            lap2: 頠?2? (?舫)
+            is_fastest_lap: ?臬?箸?敹怠???
+            
+        Returns:
+            bool: 頛?臬????
+        """
+        try:
+            if lap2 is None:
+                lap2 = lap1
+
+            driver1_normalized = self._normalize_driver_code(driver1)
+            driver2_normalized = self._normalize_driver_code(driver2)
+
+            if not driver1_normalized:
+                self._error("蝻箏?銝餉?頠?隞?Ⅳ嚗瘜??仿?皜祆??)
+                self.load_error.emit("蝻箏? driver1")
+                return False
+
+            single_driver_mode = (driver2_normalized is None) or (driver2_normalized == driver1_normalized)
+            effective_driver2 = driver2_normalized if driver2_normalized else driver1_normalized
+
+            driver1 = driver1_normalized
+            driver2 = None if single_driver_mode else driver2_normalized
+
+            incoming_session = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver1': driver1,
+                'driver2': driver2,
+                'driver2_effective': effective_driver2,
+                'lap1': lap1,
+                'lap2': lap2,
+                'is_fastest_lap': is_fastest_lap,
+                'force_refresh': False,
+                'single_driver_mode': single_driver_mode
+            }
+            incoming_session['signature'] = self._build_request_signature(incoming_session)
+
+            if self._is_loading:
+                if self._sessions_match(self.current_session, incoming_session):
+                    self._debug("撌脣頛銝凋???詨?嚗蕭?仿?銴?瘙?)
+                    return False
+                self._debug("?菜葫?唳??瘙??賂?皞??蔭?嗅?頛瘚?")
+                self._stop_generation_monitoring()
+                self._cleanup_api_worker()
+
+            request_token = self._next_request_token()
+            incoming_session['request_token'] = request_token
+            incoming_session['request_started_at'] = time.time()
+
+            self.current_session = incoming_session
+            self._pending_params = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver1': driver1,
+                'driver2': driver2,
+                'driver2_effective': effective_driver2,
+                'lap1': lap1,
+                'lap2': lap2,
+                'single_driver_mode': single_driver_mode
+            }
+
+            self._is_loading = True
+            self.load_progress.emit(5)
+            self.status_changed.emit("甇??? API 頛?葫瘥?鞈?...")
+
+            self._debug("========== ?葫?豢?頛 ==========")
+            self._debug(f"憿?: {self.config['display_name']}")
+            comparison_target = driver2 if driver2 else effective_driver2
+            self._debug(f"?: {year} {race} {session} {driver1} vs {comparison_target} L{lap1}/L{lap2}")
+            self._debug(f"??璅∪?: {'?株??? if single_driver_mode else '????瘥?}")
+            if single_driver_mode:
+                self._debug(f"API 撠蝙??{effective_driver2} 雿蝚砌?頠??")
+            self._debug(f"隢?璅? (token): {request_token}")
+
+            self._start_api_request(request_token)
+            return True
+
+        except Exception as e:
+            self._error(f"頛憭望?: {str(e)}")
+            self.load_error.emit(f"頛憭望?: {str(e)}")
+            self._is_loading = False
+            return False
+    
+    def get_current_data(self) -> Optional[Dict[str, Any]]:
+        """?脣??嗅?頛???""
+        return self._current_data
+    
+    def is_loading(self) -> bool:
+        """瑼Ｘ?臬甇?頛"""
+        return self._is_loading
+    
+    def get_telemetry_type(self) -> str:
+        """?脣??葫憿?"""
+        return self.telemetry_type
+    
+    def get_display_name(self) -> str:
+        """?脣?憿舐內?迂"""
+        return self.config['display_name']
+    
+    # ========== 瑼????摩 ==========
+    
+    def _find_telemetry_data_file(self, year: int, race: str, session: str,
+                                 driver1: str, driver2: str = None,
+                                 lap1: int = 1, lap2: int = 1) -> Optional[str]:
+        """???葫???豢?瑼? - 蝯曹????摩"""
+        try:
+            self._debug("========== ???葫??瑼? ==========")
+            self._debug(f"?? ??璇辣:")
+            self._debug(f"   ?? 撟港遢: {year} (type: {type(year).__name__})")
+            self._debug(f"   ?? 鞈賭?: {race} (type: {type(race).__name__})")
+            self._debug(f"   ?? 鞈賣挾: {session} (type: {type(session).__name__})")
+            self._debug(f"   ??儭?頠?1: {driver1} (蝚洌lap1}??")
+            self._debug(f"   ??儭?頠?2: {driver2} (蝚洌lap2}??")
+            self._debug(f"   ?? race ? repr: {repr(race)}")
+            self._debug(f"   ?? race ? bytes: {race.encode('utf-8') if isinstance(race, str) else 'N/A'}")
+            
+            # ???桅?
+            search_dirs = ["json", "json_exports", "cache"]
+            self._debug(f"?? ???桅?: {search_dirs}")
+            
+            # 瑽遣瑼??迂??璅∪?
+            filename_patterns = self._build_filename_patterns(year, race, session, driver1, driver2, lap1, lap2)
+            
+            # 蝎曄Ⅱ??
+            self._debug("?? ??蝎曄Ⅱ??...")
+            found_file = None
+            
+            for search_dir in search_dirs:
+                self._debug(f"?? ???桅?: {search_dir}")
+                
+                for i, filename_pattern in enumerate(filename_patterns, 1):
+                    search_pattern = os.path.join(search_dir, filename_pattern)
+                    self._debug(f"   ?? 璅∪? {i}: {search_pattern}")
+                    matches = glob.glob(search_pattern)
+                    
+                    if matches:
+                        # 蝎曄Ⅱ?寥?璅∪?嚗?仿??啁?瑼?嚗?閰脣????
+                        found_file = matches[0] if len(matches) == 1 else max(matches, key=os.path.getmtime)
+                        self._debug(f"???曉瑼?: {os.path.basename(found_file)}")
+                        
+                        if len(matches) > 1:
+                            self._debug(f"??  霅血?: 蝎曄Ⅱ璅∪??寥??啣???獢?({len(matches)} ??嚗???啁?")
+                            self._debug("?? ????獢?")
+                            for match in matches:
+                                marker = "??" if match == found_file else "  "
+                                self._debug(f"     {marker} {os.path.basename(match)}")
+                        break
+                    else:
+                        self._debug(f"   ??璅∪? {i} ?∪??)
+                
+                # 憒??曉瑼?撠梯歲?箇?儐??
+                if found_file:
+                    break
+                
+                self._debug(f"???桅? {search_dir} ?∪??獢?)
+            
+            if found_file:
+                self._debug(f"??????: {found_file}")
+                return found_file
+            
+            # 蝎曄Ⅱ??憭望?嚗?亦??瑼?
+            self._debug("???芣?啁泵??JSON瑼?嚗?閬??瑼?")
+            return None
+            
+        except Exception as e:
+            self._error(f"??瑼???隤? {str(e)}")
+            self.load_error.emit(f"??瑼???隤? {str(e)}")
+            return None
+    
+    def _build_filename_patterns(self, year: int, race: str, session: str,
+                                driver1: str, driver2: str, lap1: int, lap2: int) -> List[str]:
+        """瑽遣瑼??迂??璅∪?"""
+        driver1_norm = self._normalize_driver_code(driver1)
+        driver2_norm = self._normalize_driver_code(driver2)
+        lap1_safe = lap1 if lap1 is not None else 1
+        lap2_safe = lap2 if lap2 is not None else lap1_safe
+
+        if driver2_norm and driver2_norm != driver1_norm:
+            # ?? ????瘥?獢?- ?芯蝙?函移蝣箸?撠?蝘駁?祉摮??嚗?
+            filename_patterns = [
+                f"comparison_telemetry_{driver1_norm}_{driver2_norm}_{year}_{race}_{session}_Lap{lap1_safe}_Lap{lap2_safe}.json",
+                # ??蝘駁?祉摮?璅∪?嚗?獢?摮???? API ??
+            ]
+            self._debug("?? ????獢?撠芋撘?蝎曄Ⅱ?寥?嚗?")
+        else:
+            # ?? ????獢?- ?芯蝙?函移蝣箸?撠?蝘駁?祉摮??嚗?
+            filename_patterns = [
+                f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap{lap1_safe}.json",
+                f"comparison_telemetry_{driver1_norm}_{driver1_norm}_{year}_{race}_{session}_Lap{lap1_safe}_Lap{lap2_safe}.json",
+                # ??蝘駁?祉摮?璅∪?嚗?獢?摮???? API ??
+            ]
+            self._debug("??儭?????獢?撠芋撘?蝎曄Ⅱ?寥?嚗?")
+
+        for i, pattern in enumerate(filename_patterns, 1):
+            self._debug(f"   {i}. {pattern}")
+
+        return filename_patterns
+    
+    # ========== API 頛?摩 ========== 
+
+    def _determine_api_base_url(self) -> str:
+        return resolve_api_base_url(event_logger=self._debug)
+
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"?啣?霈 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
+            return False, f"?啣?霈 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
+        return True, "?身蝑 (?迂?砍 JSON 敺?)"
+
+    def _is_api_available(self) -> bool:
+        available = is_api_available()
+        if not available:
+            self._debug("API marked offline by shared runtime cache")
+        return available
+
+    def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
+        self._allow_local_fallback = bool(allowed)
+        self._fallback_policy_reason = reason or "??閬神"
+        state = "?" if self._allow_local_fallback else "?"
+        self._debug(f"?砍 JSON 敺???閮剔{state} (??: {self._fallback_policy_reason})")
+
+    def load_data_from_local(self, year: int, race: str, session: str,
+                              driver1: str, driver2: Optional[str] = None,
+                              lap1: int = 1, lap2: Optional[int] = None,
+                              is_fastest_lap: bool = False) -> bool:
+        """Force loading telemetry data through the legacy JSON/CLI path for diagnostics."""
+        if lap2 is None:
+            lap2 = lap1
+
+        driver1_normalized = self._normalize_driver_code(driver1)
+        driver2_normalized = self._normalize_driver_code(driver2)
+        if not driver1_normalized:
+            self._error("蝻箏?銝餉?頠?隞?Ⅳ嚗瘜??交?圈?皜祆??)
+            self.load_error.emit("蝻箏? driver1")
+            return False
+
+        single_driver_mode = (driver2_normalized is None) or (driver2_normalized == driver1_normalized)
+        effective_driver2 = driver2_normalized if driver2_normalized else driver1_normalized
+
+        params = {
+            'year': year,
+            'race': race,
+            'session': session,
+            'driver1': driver1_normalized,
+            'driver2': None if single_driver_mode else driver2_normalized,
+            'driver2_effective': effective_driver2,
+            'lap1': lap1,
+            'lap2': lap2,
+            'is_fastest_lap': is_fastest_lap,
+            'single_driver_mode': single_driver_mode,
+            'force_refresh': False
+        }
+        params['signature'] = self._build_request_signature(params)
+        params['request_token'] = self._next_request_token()
+        params['request_started_at'] = time.time()
+
+        previous_state = self._allow_local_fallback
+        previous_reason = self._fallback_policy_reason
+        try:
+            self._allow_local_fallback = True
+            self._fallback_policy_reason = "??閮箸璅∪?"
+            self.current_session = params
+            self._debug("?? ??閫貊?砍 JSON/CLI 敺?瘚?")
+            return self._fallback_to_local("manual local load", params['request_token'])
+        finally:
+            self._allow_local_fallback = previous_state
+            self._fallback_policy_reason = previous_reason
+
+    def _start_api_request(self, request_token: Optional[int] = None) -> None:
+        if not self.current_session:
+            self._error("蝻箏??嗅??店鞈?嚗瘜??API")
+            self._fallback_to_local("蝻箏??店鞈?", request_token)
+            return
+
+        params = self.current_session
+
+        if request_token is None:
+            request_token = params.get('request_token')
+
+        if request_token is not None and request_token != self._active_request_token:
+            self._debug(f"敹賜????API 隢? (token {request_token} != {self._active_request_token})")
+            return
+
+        driver1 = self._normalize_driver_code(params.get('driver1'))
+        driver2 = self._normalize_driver_code(params.get('driver2_effective'), driver1)
+
+        if not driver1:
+            self._error("蝻箏?銝餉?頠?隞?Ⅳ嚗瘜??皜祆?頛?API")
+            self._on_api_error("蝻箏? driver1", request_token)
+            return
+        if not driver2:
+            driver2 = driver1
+        if params.get('single_driver_mode'):
+            self._debug(f"?株??芋撘???driver2 撠蝙??{driver2}")
+
+        lap1 = params.get('lap1') or params.get('lap') or 1
+        lap2 = params.get('lap2') or lap1
+
+        worker_params = {
+            "year": params.get('year'),
+            "race": params.get('race'),
+            "session": params.get('session'),
+            "driver1": driver1,
+            "driver2": driver2,
+            "lap1": lap1,
+            "lap2": lap2,
+            "force_refresh": params.get('force_refresh', False)
+        }
+
+        if params.get('is_fastest_lap'):
+            self._debug("瑼Ｘ葫?唳???璅∪?嚗ap1/lap2 ??API ?芾?閫??")
+
+        self._api_base_url = self._determine_api_base_url()
+        self._debug(f"?? ?澆 API: {self._api_base_url}/api/v2/analysis/execute")
+        self._debug(f"?: {worker_params}")
+
+        if not self._is_api_available():
+            self._debug("API ?亙熒瑼Ｘ憭望?嚗???啣???蝔?)
+            self._fallback_to_local("API ???芸???, request_token)
+            return
+
+        self._cleanup_api_worker()
+
+        timeout = getattr(self, "_api_timeout", 75.0)
+        self._api_worker = TelemetryApiWorker(
+            self._api_base_url,
+            worker_params,
+            timeout=timeout,
+            request_token=request_token,
+            parent=self
+        )
+        self._api_worker.progress.connect(self._on_api_progress)
+        self._api_worker.success.connect(self._on_api_success)
+        self._api_worker.failure.connect(self._on_api_error)
+        # 使用 UniqueConnection 避免重複連線
+        try:
+            self._api_worker.progress.connect(self._on_api_progress, Qt.UniqueConnection)
+            self._api_worker.success.connect(self._on_api_success, Qt.UniqueConnection)
+            self._api_worker.failure.connect(self._on_api_error, Qt.UniqueConnection)
+            self._api_worker.finished.connect(self._cleanup_api_worker, Qt.UniqueConnection)
+            self._api_worker.finished.connect(self._on_api_finished, Qt.UniqueConnection)
+        except Exception:
+            # 若 UniqueConnection 不支援此版本，保持原連線至少不會拋出
+            try:
+                self._api_worker.finished.connect(self._on_api_finished)
+            except Exception:
+                pass
+        self._api_worker.start()
+
+    def _on_api_progress(self, value: int) -> None:
+        try:
+            bounded = max(0, min(int(value), 100))
+            self.load_progress.emit(bounded)
+        except Exception:
+            pass
+
+    def _on_api_success(self, payload: Dict[str, Any]) -> None:
+        if not isinstance(payload, dict):
+            self._on_api_error("?⊥???API ??澆?", None)
+            return
+        request_token = payload.get("request_token")
+        data = payload.get("data")
+        raw_payload = payload.get("payload", {})
+        meta = payload.get("meta", {})
+        self._handle_api_success(data, raw_payload, meta, request_token)
+
+    def _on_api_error(self, message: str, request_token: Optional[int] = None) -> None:
+        if request_token is not None and request_token != self._active_request_token:
+            self._debug(f"敹賜????API 憭望??? (token {request_token} != {self._active_request_token})")
+            return
+        self._error(f"API 隢?憭望?: {message}")
+        self._is_loading = False
+        self.status_changed.emit("API 隢?憭望?嚗?閰行??JSON/CLI 敺?瘚?")
+        if not self._fallback_to_local(message, request_token):
+            self.load_error.emit(f"API 頛憭望?: {message}")
+
+    def _cleanup_api_worker(self) -> None:
+        if self._api_worker:
+            try:
+                if self._api_worker.isRunning():
+                    self._api_worker.requestInterruption()
+                    self._api_worker.wait(200)
+                self._api_worker.progress.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.success.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.failure.disconnect()
+            except Exception:
+                pass
+            try:
+                self._api_worker.finished.disconnect()
+            except Exception:
+                pass
+            self._api_worker.deleteLater()
+            self._api_worker = None
+
+    def _on_api_finished(self) -> None:
+        """上一個 worker 完成後，若有排隊的新請求則立刻啟動。"""
+        try:
+            self._is_loading = False
+            if getattr(self, '_queued_session', None):
+                queued = self._queued_session
+                self._queued_session = None
+                self._debug("偵測到佇列請求，立即啟動下一個 API 請求")
+                queued['request_token'] = self._next_request_token()
+                queued['request_started_at'] = time.time()
+                self.current_session = queued
+                self._pending_params = {
+                    'year': queued.get('year'),
+                    'race': queued.get('race'),
+                    'session': queued.get('session'),
+                    'driver1': queued.get('driver1'),
+                    'driver2': queued.get('driver2'),
+                    'driver2_effective': queued.get('driver2_effective'),
+                    'lap1': queued.get('lap1'),
+                    'lap2': queued.get('lap2'),
+                    'single_driver_mode': queued.get('single_driver_mode')
+                }
+                self._is_loading = True
+                self._start_api_request(queued['request_token'])
+        except Exception:
+            pass
+
+    def cleanup_threads(self) -> None:
+        """?迫?????Thread ??CLI ?蝔?嚗?銵?瘣拇???""
+        try:
+            # ?迫??閮???            try:
+                if hasattr(self, '_generation_timer') and self._generation_timer:
+                    self._generation_timer.stop()
+            except Exception:
+                pass
+            try:
+                if hasattr(self, '_generation_timeout_timer') and self._generation_timeout_timer:
+                    self._generation_timeout_timer.stop()
+            except Exception:
+                pass
+
+            # 銝剜迫 API Worker
+            self._cleanup_api_worker()
+
+            # 蝯迫 CLI ?蝔?
+            try:
+                if hasattr(self, '_cli_stop_event') and getattr(self, '_cli_stop_event'):
+                    self._cli_stop_event.set()
+                if hasattr(self, '_active_cli_process') and getattr(self, '_active_cli_process') is not None:
+                    proc = self._active_cli_process
+                    try:
+                        if proc.poll() is None:
+                            proc.terminate()
+                            try:
+                                proc.wait(timeout=1.0)
+                            except Exception:
+                                pass
+                            if proc.poll() is None:
+                                proc.kill()
+                    except Exception:
+                        pass
+                    self._active_cli_process = None
+            except Exception:
+                pass
+
+            # 蝑? CLI ?瑁?蝺???            try:
+                if hasattr(self, '_active_cli_thread') and getattr(self, '_active_cli_thread') is not None:
+                    t = self._active_cli_thread
+                    if t.is_alive():
+                        t.join(timeout=1.0)
+                    self._active_cli_thread = None
+            except Exception:
+                pass
+
+            # ?琿?閮?嚗?儐?啣???            for sig in (self.data_loaded, self.load_error, self.status_changed, self.load_progress):
+                try:
+                    sig.disconnect()
+                except Exception:
+                    pass
+
+            self._is_loading = False
+            self.current_session = None
+        except Exception:
+            pass
+
+    # ???怎摰?    def cleanup(self) -> None:
+        self.cleanup_threads()
+
+    def __del__(self):
+        try:
+            self.cleanup_threads()
+        except Exception:
+            pass
+
+    def _handle_api_success(self, data: Any, payload: Dict[str, Any], meta: Dict[str, Any],
+                            request_token: Optional[int] = None) -> None:
+        if request_token is not None and request_token != self._active_request_token:
+            self._debug(f"敹賜????API ???? (token {request_token} != {self._active_request_token})")
+            return
+        try:
+            if not isinstance(data, dict):
+                raise ValueError("API ?蝻箏? data ?拐辣")
+
+            self._debug("========== _handle_api_success ?? ==========")
+            self._debug(f"? data 憿?: {type(data)}")
+            self._debug(f"? data ?萄? {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+
+            self._last_data_source = "api"
+            self._last_api_meta = meta or {}
+
+            self._debug("?妒 甇仿?1: ??撽? API ?豢??澆?")
+            if not self._validate_telemetry_data(data):
+                raise ValueError("API ??豢??澆?撽?憭望?")
+            self._debug("??甇仿?1: ?豢??澆?撽???")
+
+            self._debug("?? 甇仿?2: 閮剔蔭 metadata")
+            metadata = data.setdefault("metadata", {})
+            metadata.setdefault("telemetry_type", self.telemetry_type)
+            metadata.setdefault("data_source", "api")
+            if meta:
+                metadata.setdefault("api", meta)
+            session_snapshot = self.current_session or {}
+            metadata.setdefault("year", session_snapshot.get('year'))
+            metadata.setdefault("race", session_snapshot.get('race'))
+            metadata.setdefault("session", session_snapshot.get('session'))
+            self._debug("??甇仿?2: metadata 閮剔蔭摰?")
+
+            self._debug("嚙?甇仿?3: ???葫?豢?")
+            processed_data = self._process_telemetry_data(data)
+            if isinstance(processed_data, dict):
+                metadata_bucket = processed_data.setdefault("metadata", {})
+                metadata_bucket.setdefault("telemetry_type", self.telemetry_type)
+                metadata_bucket.setdefault("data_source", "api")
+                if meta:
+                    metadata_bucket.setdefault("api", meta)
+            self._debug("??甇仿?3: API ?豢???摰?")
+
+            self._debug("?? 甇仿?4: ?潮脣漲???縑??)
+            self.load_progress.emit(100)
+            self.status_changed.emit("撌脤? API 頛?葫瘥?鞈?")
+            self._current_data = processed_data
+            self._is_loading = False
+            self._debug("??甇仿?4: ???啣???)
+
+            self._debug("?? 甇仿?5: ?喳??潮?data_loaded 靽∟?")
+            self._debug(f"? 靽∟??交??? {self.receivers(self.data_loaded)}")
+            self.data_loaded.emit(processed_data)
+            self._debug("??甇仿?5: data_loaded 靽∟?撌脩??)
+            self._debug("========== _handle_api_success 摰? ==========")
+        except Exception as exc:
+            self._error(f"???? API ?豢?憭望?: {exc}")
+            import traceback
+            self._error("摰?航炊餈質馱:")
+            self._error(traceback.format_exc())
+            self._on_api_error(str(exc), request_token)
+
+    def _fallback_to_local(self, reason: str, request_token: Optional[int] = None) -> bool:
+        if request_token is not None and request_token != self._active_request_token:
+            self._debug(f"敹賜????啣???瘙?(token {request_token} != {self._active_request_token})")
+            return False
+        if not self._allow_local_fallback:
+            self._last_data_source = "local-fallback-disabled"
+            self._last_api_meta = {}
+            self._debug(f"?砍 JSON 敺?鋡怠??? {reason}")
+            return False
+
+        params = self._pending_params or self.current_session or {}
+        self._debug(f"???砍敺?瘚? (??: {reason})")
+        json_file = self._find_telemetry_data_file(
+            params.get('year'), params.get('race'), params.get('session'),
+            params.get('driver1'), params.get('driver2'), params.get('lap1', 1), params.get('lap2', 1)
+        )
+
+        if json_file:
+            self._last_data_source = "local-json"
+            self._debug(f"雿輻?砍 JSON 瑼?: {json_file}")
+            QTimer.singleShot(10, lambda: self._load_json_file(json_file, request_token))
+            return True
+
+        self._debug("?砍 JSON 銝??剁??寧 CLI ??")
+        self._last_data_source = "cli-generation"
+        self._start_cli_generation(
+            params.get('year'), params.get('race'), params.get('session'),
+            params.get('driver1'), params.get('driver2'), params.get('lap1', 1), params.get('lap2', 1),
+            request_token=request_token
+        )
+        return True
+
+    def _persist_api_payload(self, data: Dict[str, Any]):
+        try:
+            params = self.current_session or {}
+            year = params.get('year')
+            race = params.get('race')
+            session = params.get('session')
+            driver1 = self._normalize_driver_code(params.get('driver1'))
+            raw_driver2 = self._normalize_driver_code(params.get('driver2'))
+            driver2_effective = self._normalize_driver_code(params.get('driver2_effective'), driver1)
+            single_driver_mode = (raw_driver2 is None) or (raw_driver2 == driver1)
+            lap1 = params.get('lap1', 1)
+            lap2 = params.get('lap2', lap1)
+            lap2_safe = lap2 if lap2 is not None else lap1
+
+            metadata = data.setdefault('metadata', {}) if isinstance(data, dict) else {}
+            metadata.setdefault('year', year)
+            metadata.setdefault('race', race)
+            metadata.setdefault('session', session)
+            metadata.setdefault('lap', metadata.get('lap') or params.get('lap'))
+            metadata.setdefault('lap1', lap1)
+            metadata.setdefault('lap2', lap2)
+            metadata.setdefault('driver1', driver1)
+            metadata.setdefault('driver2', driver2_effective)
+            metadata.setdefault('lap_number1', metadata.get('lap_number1') or lap1)
+            metadata.setdefault('lap_number2', metadata.get('lap_number2') or lap2_safe)
+            metadata.setdefault('single_driver_mode', single_driver_mode)
+            drivers_meta = metadata.setdefault('drivers', [])
+            if isinstance(drivers_meta, list):
+                if not any(isinstance(item, dict) for item in drivers_meta):
+                    if driver1 and driver1 not in drivers_meta:
+                        drivers_meta.append(driver1)
+                    if not single_driver_mode and driver2_effective and driver2_effective not in drivers_meta:
+                        drivers_meta.append(driver2_effective)
+
+            analysis_info = data.setdefault('analysis_info', {}) if isinstance(data, dict) else {}
+            if isinstance(analysis_info, dict):
+                analysis_info.setdefault('function_id', '13')
+                analysis_info.setdefault('year', year)
+                analysis_info.setdefault('race', race)
+                analysis_info.setdefault('session', session)
+                analysis_info.setdefault('lap', analysis_info.get('lap') or metadata.get('lap'))
+                lap_numbers = analysis_info.setdefault('lap_numbers', {})
+                if isinstance(lap_numbers, dict):
+                    if driver1 and driver1 not in lap_numbers:
+                        lap_numbers[driver1] = lap1
+                    if driver2_effective and driver2_effective not in lap_numbers:
+                        lap_numbers[driver2_effective] = lap2_safe
+
+            driver1_token = driver1 or "UNK"
+            driver2_token = driver2_effective or driver1_token
+            if single_driver_mode:
+                filename = f"comparison_telemetry_{driver1_token}_{driver1_token}_{year}_{race}_{session}_Lap{lap1}.json"
+            else:
+                filename = f"comparison_telemetry_{driver1_token}_{driver2_token}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2_safe}.json"
+            output_dir = "json"
+            os.makedirs(output_dir, exist_ok=True)
+            file_path = os.path.join(output_dir, filename)
+
+            self._debug(f"? 撠?API ?靽???{file_path}")
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+        except Exception as exc:
+            self._debug(f"?脣? API 蝯?憭望?: {exc}")
+
+    # ========== CLI ???摩 ========== 
+    
+    def _start_cli_generation(self, year: int, race: str, session: str,
+                             driver1: str, driver2: str = None,
+                             lap1: int = 1, lap2: int = 1,
+                             request_token: Optional[int] = None):
+        """?? CLI ??瘚?"""
+        try:
+            if request_token is not None and request_token != self._active_request_token:
+                self._debug(f"敹賜????CLI ??隢? (token {request_token} != {self._active_request_token})")
+                return False
+            self._debug("========== ?? CLI ??瘚? ==========")
+            self._debug(f"???:")
+            self._debug(f"   撟港遢: {year}")
+            self._debug(f"   鞈賜?: {race}")
+            self._debug(f"   鞈賣挾: {session}")
+            self._debug(f"   頠?1: {driver1}, ?: {lap1}")
+            self._debug(f"   頠?2: {driver2}, ?: {lap2}")
+            
+            # ?脣??靘?蝥蝙??
+            self._generation_params = {
+                'year': year,
+                'race': race,
+                'session': session,
+                'driver1': driver1,
+                'driver2': driver2,
+                'lap1': lap1,
+                'lap2': lap2,
+                'request_token': request_token
+            }
+            
+            # ?? CLI ??
+            success = self._generate_telemetry_data_via_cli(
+                year, race, session, driver1, driver2, lap1, lap2,
+                request_token=request_token
+            )
+            
+            if success:
+                self._debug("??CLI ????嚗?憪?扳?獢???)
+                # ??摰??冽炎?交?獢?衣?????
+                self._start_generation_monitoring()
+            else:
+                self._debug("??CLI ??憭望?")
+                self.load_error.emit(f"?? CLI ??憭望?: {year} {race} {session}")
+                self._is_loading = False
+                
+        except Exception as e:
+            self._error(f"??????隤? {e}")
+            import traceback
+            traceback.print_exc()
+            self.load_error.emit(f"??????隤? {str(e)}")
+            self._is_loading = False
+    
+    def _generate_telemetry_data_via_cli(self, year: int, race: str, session: str,
+                                        driver1: str, driver2: str = None,
+                                        lap1: int = 1, lap2: int = 1,
+                                        request_token: Optional[int] = None) -> bool:
+        """?? CLI 撌亙???葫?豢?"""
+        try:
+            if request_token is not None and request_token != self._active_request_token:
+                self._debug(f"敹賜????CLI ??隢? (token {request_token} != {self._active_request_token})")
+                return False
+            self._debug("========== CLI ?賭誘?? ==========")
+            self._debug(f"??{self.config['display_name']}?豢?: {year} {race} {session}")
+            
+            # 瑽遣?賭誘 - 雿輻Function 13: 頠?瘥???
+            command = [
+                "python", "f1_analysis_modular_main.py",
+                "-f", "13",  # ?13: 頠?瘥???
+                "-y", str(year),
+                "-r", race,
+                "-s", session,
+                "-d", driver1
+            ]
+            
+            # 瘛餃?蝚砌?雿?????
+            if driver2:
+                command.extend(["-d2", driver2])
+                self._debug(f"???芋撘? {driver1} vs {driver2}")
+            else:
+                # ?株??芋撘?閮剔蔭 driver2 ??driver1 ?詨?
+                command.extend(["-d2", driver1])
+                self._debug(f"?株??芋撘? {driver1} vs {driver1}")
+            
+            # 瘛餃??? - 憪?雿輻???豢芋撘?
+            command.extend(["--lap1", str(lap1), "--lap2", str(lap2)])
+            
+            if driver2:
+                self._debug(f"???芋撘??貉身摰? {driver1} 蝚洌lap1}??vs {driver2} 蝚洌lap2}??)
+            else:
+                self._debug(f"?株??芋撘??貉身摰? {driver1} 蝚洌lap1}??vs {driver1} 蝚洌lap2}??)
+            
+            self._debug(f"摰 CLI ?賭誘: {' '.join(command)}")
+            self.status_changed.emit(f"甇???{self.config['display_name']}?豢?...")
+            
+            # ?憛銵?
+            def run_cli():
+                try:
+                    self._debug("?? ???瑁? CLI ?賭誘...")
+                    process = subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        encoding='utf-8',
+                        errors='replace',  # ??⊥?閫?Ⅳ??蝚行??冽隞??蝚?
+                        cwd=os.getcwd()
+                    )
+                    
+                    stdout, stderr = process.communicate()
+                    
+                    if process.returncode == 0:
+                        self._debug("CLI ?瑁???")
+                    else:
+                        self._error(f"CLI ?瑁?憭望?: {stderr}")
+                        
+                except Exception as e:
+                    self._error(f"CLI ?瑁??啣虜: {e}")
+            
+            # ?刻??臬銵?銝剖銵LI
+            thread = threading.Thread(target=run_cli, daemon=True)
+            thread.start()
+            
+            return True
+            
+        except Exception as e:
+            self._error(f"?? CLI 憭望?: {e}")
+            return False
+    
+    # ========== ??蝟餌絞 ==========
+    
+    def _start_generation_monitoring(self):
+        """??瑼?????"""
+        self._debug("========== ????蝟餌絞 ==========")
+        self._debug("瑼Ｘ閮??函???..")
+        self._debug(f"_generation_timer 摮: {hasattr(self, '_generation_timer')}")
+        self._debug(f"_generation_timeout_timer 摮: {hasattr(self, '_generation_timeout_timer')}")
+        
+        # ???? (瘥?蝘炎?乩?甈∴??憭?敺?80蝘?
+        self._debug("??銝餌?扯?? (瘥?蝘炎??")
+        self._generation_timer.start(5000)
+        self._debug(f"閮??冽?阡?銵? {self._generation_timer.isActive()}")
+        self._debug(f"閮??券??? {self._generation_timer.interval()}")
+        
+        self._debug("??頞?閮???(180蝘?")
+        self._generation_timeout_timer.start(180000)
+        self._debug(f"頞?閮??冽?阡?銵? {self._generation_timeout_timer.isActive()}")
+        
+        self._debug("????蝟餌絞撌脣???)
+        self.status_changed.emit("甇????豢?嚗?蝔?..")
+        
+        # 蝡?瑁?銝甈⊥炎?乩誑蝣箄??寞??臭誑鋡怨矽??
+        self._debug("?妒 ?瑁?蝡皜祈岫瑼Ｘ...")
+        QTimer.singleShot(1000, self._check_generation_progress)
+    
+    def _check_generation_progress(self):
+        """瑼Ｘ瑼????脣漲"""
+        try:
+            self._debug("========== ??瑼Ｘ閫貊 ==========")
+            self._debug(f"??: {datetime.now().strftime('%H:%M:%S')}")
+            
+            if hasattr(self, '_generation_params'):
+                params = self._generation_params
+                request_token = None
+
+                if isinstance(params, dict):
+                    year = params.get('year')
+                    race = params.get('race')
+                    session = params.get('session')
+                    driver1 = params.get('driver1')
+                    driver2 = params.get('driver2')
+                    lap1 = params.get('lap1', 1)
+                    lap2 = params.get('lap2', lap1)
+                    request_token = params.get('request_token')
+                else:
+                    year, race, session, driver1, driver2, lap1, lap2 = params
+
+                if request_token is not None and request_token != self._active_request_token:
+                    self._debug(f"?菜葫?圈??? CLI ??隢? (token {request_token} != {self._active_request_token})嚗?甇Ｙ??)
+                    self._stop_generation_monitoring()
+                    return
+
+                self._debug(f"瑼Ｘ?: {year} {race} {session} {driver1} vs {driver2} L{lap1}/L{lap2}")
+                
+                # 瑼Ｘ?臬?瑼???
+                self._debug("????瑼?...")
+                json_file = self._find_telemetry_data_file(year, race, session, driver1, driver2, lap1, lap2)
+                
+                if json_file:
+                    self._debug(f"瑼???摰?: {json_file}")
+                    self._debug("?迫??銝西??交?獢?)
+                    
+                    # ?迫??
+                    self._stop_generation_monitoring()
+                    
+                    # 頛?啁???瑼?
+                    QTimer.singleShot(10, lambda: self._load_json_file(json_file, request_token))
+                else:
+                    self._debug("蝜潛?蝑?瑼???...")
+                    self._debug("銝活瑼Ｘ撠5蝘??脰?")
+            else:
+                self._debug("??蝻箏? _generation_params ?")
+                self._debug("?迫??")
+                self._stop_generation_monitoring()
+                
+        except Exception as e:
+            self._error(f"??瑼Ｘ?啣虜: {e}")
+            import traceback
+            traceback.print_exc()
+            self._debug("?岫蝜潛???...")
+    
+    def _on_generation_timeout(self):
+        """????頞?"""
+        self._debug("========== ??頞? ==========")
+        self._debug("瑼???頞? (180蝘?")
+        self._debug("?迫??蝟餌絞")
+        self._stop_generation_monitoring()
+        self.load_error.emit("?豢???頞?嚗?瑼Ｘ蝬脰楝?????閰?)
+        self._is_loading = False
+    
+    def _stop_generation_monitoring(self):
+        """?迫瑼?????"""
+        self._debug("========== ?迫??蝟餌絞 ==========")
+        if hasattr(self, '_generation_timer'):
+            self._generation_timer.stop()
+            self._debug("銝餌?扯??撌脣?甇?)
+        if hasattr(self, '_generation_timeout_timer'):
+            self._generation_timeout_timer.stop()
+            self._debug("頞?閮??典歇?迫")
+        self._debug("????蝟餌絞撌脣??典?甇?)
+    
+    # ========== JSON 頛????==========
+    
+    def _load_json_file(self, file_path: str, expected_token: Optional[int] = None):
+        """頛 JSON 瑼?"""
+        try:
+            if expected_token is not None and expected_token != self._active_request_token:
+                self._debug(f"敹賜????JSON 頛隢? (token {expected_token} != {self._active_request_token})")
+                return
+            self._debug("========== JSON 瑼?頛 ==========")
+            self._debug(f"頛瑼?: {file_path}")
+            
+            # 瑼Ｘ瑼????
+            if not os.path.exists(file_path):
+                self._debug(f"??瑼?銝??? {file_path}")
+                self.load_error.emit(f"瑼?銝??? {file_path}")
+                return
+                
+            file_size = os.path.getsize(file_path)
+            self._debug(f"瑼?憭批?: {file_size} bytes")
+            
+            self.load_progress.emit(90)
+            self.status_changed.emit("甇????豢?...")
+            
+            # 頛JSON瑼?
+            self._debug("??霈??JSON ?批捆...")
+            with open(file_path, 'r', encoding='utf-8') as f:
+                raw_data = json.load(f)
+            
+            self._debug("JSON 頛??")
+            self._debug(f"?惜?萄? {list(raw_data.keys()) if isinstance(raw_data, dict) else 'Not a dict'}")
+            
+            # 撽??豢??澆?
+            self._debug("??撽??豢??澆?...")
+            if self._validate_telemetry_data(raw_data):
+                self._debug("???豢??澆?撽???")
+                # ???粹?皜砍??撘?
+                processed_data = self._process_telemetry_data(raw_data)
+                
+                self._debug("========== ?喳??潮??==========")
+                self._debug(f"??敺???? {type(processed_data)}")
+                self._debug(f"??敺??? {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
+                
+                # 瑼Ｘ?孵??豢?蝯?
+                data_key = f"{self.telemetry_type}_data"
+                if data_key in processed_data:
+                    telemetry_data = processed_data[data_key]
+                    self._debug(f"{self.telemetry_type}?豢??萄? {list(telemetry_data.keys())}")
+                    self._debug(f"頝?豢?暺: {len(telemetry_data.get('distance', []))}")
+                    self._debug(f"頠?1?豢?暺: {len(telemetry_data.get(f'driver1_{self.telemetry_type}', []))}")
+                    self._debug(f"頠?2?豢?暺: {len(telemetry_data.get(f'driver2_{self.telemetry_type}', []))}")
+                
+                self.load_progress.emit(100)
+                self.status_changed.emit("?豢?頛摰?")
+                self._current_data = processed_data
+                self._is_loading = False
+                
+                self._debug("?? ?喳??潮?data_loaded 靽∟?...")
+                self._debug(f"? 靽∟??豢?憿?: {type(processed_data)}")
+                self._debug(f"? 靽∟??豢??萄? {list(processed_data.keys()) if isinstance(processed_data, dict) else 'Not a dict'}")
+                if isinstance(processed_data, dict) and 'speed_data' in processed_data:
+                    speed_data = processed_data['speed_data']
+                    self._debug(f"?? speed_data ?萄? {list(speed_data.keys())}")
+                    self._debug(f"?? distance 暺: {len(speed_data.get('distance', []))}")
+                    self._debug(f"?? driver1_speed 暺: {len(speed_data.get('driver1_speed', []))}")
+                    self._debug(f"?? driver2_speed 暺: {len(speed_data.get('driver2_speed', []))}")
+                self.data_loaded.emit(processed_data)
+                self._debug("??data_loaded 靽∟?撌脩??)
+                self._debug(f"? 靽∟??交??? {self.receivers(self.data_loaded)}")
+                
+            else:
+                self._debug("???豢??澆?撽?憭望?")
+                self.load_error.emit("?豢??澆?撽?憭望?")
+                self._is_loading = False
+                
+        except Exception as e:
+            self._error(f"JSON 瑼?頛憭望?: {str(e)}")
+            self.load_error.emit(f"頛憭望?: {str(e)}")
+            self._is_loading = False
+    
+    def _validate_telemetry_data(self, raw_data: dict) -> bool:
+        """撽??葫?豢??澆?"""
+        try:
+            self._debug("?? 撽??豢??澆?...")
+            
+            # 瑼Ｘ?箸蝯?
+            if not isinstance(raw_data, dict):
+                self._debug("???豢?銝摮?澆?")
+                return False
+            
+            # 瑼Ｘ?臬??皜祆?頛??
+            if 'results' not in raw_data:
+                self._debug("??蝻箏? results 摮挾")
+                return False
+                
+            results = raw_data['results']
+            data_field = self.config['data_field']
+            
+            # ?寞??葫憿??豢?銝???楝敺?
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # ?漲撌柴??Ｗ榆???榆?豢??湔??results 銝?
+                if data_field not in results:
+                    self._debug(f"??蝻箏? {data_field} 摮挾")
+                    return False
+                
+                telemetry_data = results[data_field]
+                
+                # 瑼Ｘ撌桃?????瑽?- ?寞?憿?雿輻銝???霅?頛?
+                if self.telemetry_type == 'speeddiff':
+                    # ?漲撌殷??? 'distance' ??'speed_difference'
+                    required_fields = ['distance', data_field]
+                elif self.telemetry_type == 'distancediff':
+                    # 頝撌殷??? 'reference_distance' ??'cumulative_distance_difference'
+                    required_fields = ['reference_distance', 'cumulative_distance_difference']
+                elif self.telemetry_type == 'timediff':
+                    # ??撌殷??? 'reference_time' ??'cumulative_time_difference'
+                    required_fields = ['reference_time', 'cumulative_time_difference']
+                else:
+                    # ?嗡?撌桃??嚗蝙?券?隤?頛?
+                    required_fields = ['distance', data_field]
+                
+                for field in required_fields:
+                    if field not in telemetry_data:
+                        self._debug(f"??蝻箏?敹?甈?: {field}")
+                        return False
+                
+            else:
+                # 撣貉??葫?豢???telemetry_comparison 銝?
+                if 'telemetry_comparison' not in results:
+                    self._debug("??蝻箏? telemetry_comparison 摮挾")
+                    return False
+                    
+                telemetry_comp = results['telemetry_comparison']
+                
+                if data_field not in telemetry_comp:
+                    self._debug(f"??蝻箏? {data_field} 摮挾")
+                    return False
+                
+                telemetry_data = telemetry_comp[data_field]
+                
+                # 瑼Ｘ撣貉??葫?豢?甈?
+                required_fields = ['distance', 'driver1_data', 'driver2_data']
+                for field in required_fields:
+                    if field not in telemetry_data:
+                        self._debug(f"??蝻箏?敹?甈?: {field}")
+                        return False
+            
+            # 撽??豢??瑕漲銝?湔?
+            if self.telemetry_type == 'speeddiff':
+                # ?漲撌殷?瑼Ｘ distance ??speed_difference
+                distance_data = telemetry_data.get('distance', [])
+                diff_data = telemetry_data.get('speed_difference', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("??頝?豢??箇征")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("???漲撌格?蝛?)
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"???豢??瑕漲銝??? distance={len(distance_data)}, speed_difference={len(diff_data)}")
+                    return False
+                    
+            elif self.telemetry_type == 'distancediff':
+                # 頝撌殷?瑼Ｘ reference_distance ??cumulative_distance_difference
+                distance_data = telemetry_data.get('reference_distance', [])
+                diff_data = telemetry_data.get('cumulative_distance_difference', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("?????Ｘ?蝛?)
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("??蝝舐?頝撌格?蝛?)
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"???豢??瑕漲銝??? reference_distance={len(distance_data)}, cumulative_distance_difference={len(diff_data)}")
+                    return False
+                    
+            elif self.telemetry_type == 'timediff':
+                # ??撌殷?瑼Ｘ reference_time ??cumulative_time_difference
+                time_data = telemetry_data.get('reference_time', [])
+                diff_data = telemetry_data.get('cumulative_time_difference', [])
+                
+                if len(time_data) == 0:
+                    self._debug("??????蝛?)
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("??蝝舐???撌格?蝛?)
+                    return False
+                    
+                if len(time_data) != len(diff_data):
+                    self._debug(f"???豢??瑕漲銝??? reference_time={len(time_data)}, cumulative_time_difference={len(diff_data)}")
+                    return False
+                    
+            elif self.telemetry_type in ['speeddiff', 'distancediff']:
+                # ?嗡?撌桃??嚗蝙?券?隤?頛? 
+                distance_data = telemetry_data.get('distance', [])
+                diff_data = telemetry_data.get(data_field, [])
+                
+                if len(distance_data) == 0:
+                    self._debug("??頝?豢??箇征")
+                    return False
+                    
+                if len(diff_data) == 0:
+                    self._debug("??撌桃?豢??箇征")
+                    return False
+                    
+                if len(distance_data) != len(diff_data):
+                    self._debug(f"???豢??瑕漲銝??? distance={len(distance_data)}, {data_field}={len(diff_data)}")
+                    return False
+            else:
+                # 撣貉??葫?豢?撽?
+                distance_data = telemetry_data.get('distance', [])
+                driver1_data = telemetry_data.get('driver1_data', [])
+                driver2_data = telemetry_data.get('driver2_data', [])
+                
+                if len(distance_data) == 0:
+                    self._debug("??頝?豢??箇征")
+                    return False
+                
+                if len(driver1_data) == 0:
+                    self._debug("??頠?1?豢??箇征")
+                    return False
+                    
+                if len(driver2_data) == 0:
+                    self._debug("??頠?2?豢??箇征")
+                    return False
+                
+                if len(distance_data) != len(driver1_data) or len(distance_data) != len(driver2_data):
+                    self._debug(f"???豢??瑕漲銝??? distance={len(distance_data)}, driver1={len(driver1_data)}, driver2={len(driver2_data)}")
+                    return False
+            
+            self._debug("???豢??澆?撽???")
+            return True
+            
+        except Exception as e:
+            self._debug(f"???豢??澆?撽?憭望?: {str(e)}")
+            return False
+    
+    def _process_telemetry_data(self, raw_data: dict) -> dict:
+        """???葫?豢??箸?皞撘?""
+        try:
+            self._debug("? ???葫?豢?...")
+            
+            results = raw_data['results']
+            data_field = self.config['data_field']
+            
+            # ?寞??葫憿??豢?銝???楝敺?
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # ?漲撌柴??Ｗ榆???榆?豢??湔??results 銝?
+                telemetry_raw = results[data_field]
+                self._debug(f"撌桃?????豢??萄? {list(telemetry_raw.keys())}")
+                
+                # ?寞?憿?頛詨甇?Ⅱ??畾萄?嚗???嚗?嘲SON蝯?嚗?
+                if self.telemetry_type == 'speeddiff':
+                    self._debug(f"頝?豢?暺: {len(telemetry_raw.get('distance', []))}")
+                    self._debug(f"speed_difference?豢?暺: {len(telemetry_raw.get('speed_difference', []))}")
+                elif self.telemetry_type == 'distancediff':
+                    self._debug(f"reference_distance?豢?暺: {len(telemetry_raw.get('reference_distance', []))}")
+                    self._debug(f"cumulative_distance_difference?豢?暺: {len(telemetry_raw.get('cumulative_distance_difference', []))}")
+                elif self.telemetry_type == 'timediff':
+                    self._debug(f"reference_time?豢?暺: {len(telemetry_raw.get('reference_time', []))}")
+                    self._debug(f"cumulative_time_difference?豢?暺: {len(telemetry_raw.get('cumulative_time_difference', []))}")
+            else:
+                # 撣貉??葫?豢???telemetry_comparison 銝?
+                telemetry_comp = results['telemetry_comparison']
+                telemetry_raw = telemetry_comp[data_field]
+                self._debug(f"撣貉??葫???豢??萄? {list(telemetry_raw.keys())}")
+                self._debug(f"頝?豢?暺: {len(telemetry_raw.get('distance', []))}")
+                self._debug(f"頠?1?豢?暺: {len(telemetry_raw.get('driver1_data', []))}")
+                self._debug(f"頠?2?豢?暺: {len(telemetry_raw.get('driver2_data', []))}")
+            
+            # ???箸鞈?
+            metadata = raw_data.get('metadata', {})
+            
+            # 敺?comparison_info ???渲底蝝啁?頠?鞈?
+            comparison_info = results.get('comparison_info', {})
+            
+            # 瑽遣璅????瑽?
+            processed_data = {
+                "metadata": {
+                    "drivers": [
+                        {
+                            "code": metadata.get('driver1', comparison_info.get('driver1', 'UNK')), 
+                            "lap_number": metadata.get('lap_number1', comparison_info.get('act_lap1_number', 1)),
+                            "lap_time": comparison_info.get('lap_time1', 'N/A'),
+                            "compound": comparison_info.get('compound1', 'N/A'),
+                            "tyre_life": comparison_info.get('tyre_life1', 0)
+                        },
+                        {
+                            "code": metadata.get('driver2', comparison_info.get('driver2', 'UNK')), 
+                            "lap_number": metadata.get('lap_number2', comparison_info.get('act_lap2_number', 1)),
+                            "lap_time": comparison_info.get('lap_time2', 'N/A'),
+                            "compound": comparison_info.get('compound2', 'N/A'),
+                            "tyre_life": comparison_info.get('tyre_life2', 0)
+                        }
+                    ],
+                    "sectors": metadata.get('sectors', []),
+                    "year": metadata.get('year', 2025),
+                    "race": metadata.get('race', 'Unknown'),
+                    "session": metadata.get('session', 'R'),
+                    "telemetry_type": self.telemetry_type,
+                    "display_name": self.config['display_name'],
+                    "unit": self.config['unit'],
+                    "analysis_timestamp": metadata.get('analysis_timestamp', '')
+                }
+            }
+            
+            # 瑽遣?葫?豢?蝯? - ?寞?憿???
+            data_key = f"{self.telemetry_type}_data"
+            
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # 撌桃???豢?蝯? - ?閬??蝡舀????萄?
+                if self.telemetry_type == 'speeddiff':
+                    # ?漲撌桀????垢?? 'speed' ??'cumulative_speed_difference'
+                    processed_data[data_key] = {
+                        "speed": telemetry_raw.get('distance', []),  # ?垢?? 'speed' 雿頝?豢?
+                        "cumulative_speed_difference": telemetry_raw.get(data_field, []),  # ?垢?????
+                        "distance": telemetry_raw.get('distance', []),  # 靽????萄?隞亙???
+                        "speeddiff": telemetry_raw.get(data_field, []),  # 靽????萄?隞亙???
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', ''),  # 瘛餃??縑??
+                        # ?? ??頠豢???冽??璅∪?嚗?
+                        "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),
+                        "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', [])
+                    }
+                    self._debug(f"?? [SPEEDDIFF] ???豢?: driver1={len(telemetry_raw.get('driver1_time_seconds', []))} 暺? driver2={len(telemetry_raw.get('driver2_time_seconds', []))} 暺?)
+                elif self.telemetry_type == 'distancediff':
+                    # 頝撌桀???JSON蝯??漲撌桐????閬畾???
+                    processed_data[data_key] = {
+                        "distance": telemetry_raw.get('reference_distance', []),  # 雿輻 reference_distance 雿頝?豢?
+                        "cumulative_distance_difference": telemetry_raw.get('cumulative_distance_difference', []),  # ?垢?????
+                        "reference_distance": telemetry_raw.get('reference_distance', []),  # 靽????萄?隞亙???
+                        "position_difference": telemetry_raw.get('position_difference', []),  # 靽????豢?
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', ''),  # 瘛餃??縑??
+                        # ?? ??頠豢???冽??璅∪?嚗?
+                        "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),
+                        "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', [])
+                    }
+                    self._debug(f"?? [DISTANCEDIFF] ???豢?: driver1={len(telemetry_raw.get('driver1_time_seconds', []))} 暺? driver2={len(telemetry_raw.get('driver2_time_seconds', []))} 暺?)
+                elif self.telemetry_type == 'timediff':
+                    # ??撌桀???雿輻 reference_time 雿??頠?
+                    processed_data[data_key] = {
+                        "time": telemetry_raw.get('reference_time', []),  # 雿輻 reference_time 雿??頠豢??
+                        "cumulative_time_difference": telemetry_raw.get('cumulative_time_difference', []),  # 蝝舐???撌?
+                        "reference_time": telemetry_raw.get('reference_time', []),  # 靽????萄?
+                        "distance_gap": telemetry_raw.get('distance_gap', []),  # 頝撌?
+                        "driver1_distance_at_time": telemetry_raw.get('driver1_distance_at_time', []),  # 頠?1?典???暺?頝
+                        "driver2_distance_at_time": telemetry_raw.get('driver2_distance_at_time', []),  # 頠?2?典???暺?頝
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK'),
+                        "reference": telemetry_raw.get('reference', '???箄霈'),  # 瘛餃??縑??
+                    }
+                    self._debug(f"?? [TIMEDIFF] ??撌格?? time={len(telemetry_raw.get('reference_time', []))} 暺? cumulative_diff={len(telemetry_raw.get('cumulative_time_difference', []))} 暺?)
+                else:
+                    # ?嗡?撌桃??嚗?????瑽?
+                    processed_data[data_key] = {
+                        "distance": telemetry_raw.get('distance', []),
+                        f"{self.telemetry_type}": telemetry_raw.get(data_field, []),
+                        "driver1_name": comparison_info.get('driver1', 'UNK'),
+                        "driver2_name": comparison_info.get('driver2', 'UNK')
+                    }
+                
+                # 隤輯岫頛詨 - ?寞?憿?雿輻銝??????1嚗?撽??楊撖恬?
+                self._debug(f"瑽遣撌桃???豢?蝯?:")
+                if self.telemetry_type == 'speeddiff':
+                    self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 暺?)
+                    self._debug(f"  speed: {len(processed_data[data_key]['speed'])} 暺?)
+                    self._debug(f"  cumulative_speed_difference: {len(processed_data[data_key]['cumulative_speed_difference'])} 暺?)
+                elif self.telemetry_type == 'distancediff':
+                    self._debug(f"  distance: {len(processed_data[data_key]['distance'])} 暺?)
+                    self._debug(f"  cumulative_distance_difference: {len(processed_data[data_key]['cumulative_distance_difference'])} 暺?)
+                elif self.telemetry_type == 'timediff':
+                    # timediff 雿輻 'time' 雿 X 頠賂?銝 'distance'嚗???嚗?澆祕???瑽?
+                    self._debug(f"  time: {len(processed_data[data_key]['time'])} 暺?)
+                    self._debug(f"  cumulative_time_difference: {len(processed_data[data_key]['cumulative_time_difference'])} 暺?)
+                    self._debug(f"  distance_gap: {len(processed_data[data_key].get('distance_gap', []))} 暺?)
+                else:
+                    # ?嗡??芰憿????券?頛?
+                    self._debug(f"  {self.telemetry_type}: {len(processed_data[data_key].get(self.telemetry_type, []))} 暺?)
+            else:
+                # 撣貉??葫?豢?蝯?
+                processed_data[data_key] = {
+                    "distance": telemetry_raw.get('distance', []),
+                    f"driver1_{self.telemetry_type}": telemetry_raw.get('driver1_data', []),
+                    f"driver2_{self.telemetry_type}": telemetry_raw.get('driver2_data', []),
+                    "driver1_time_seconds": telemetry_raw.get('driver1_time_seconds', []),  # ?? ???豢?
+                    "driver2_time_seconds": telemetry_raw.get('driver2_time_seconds', []),  # ?? ???豢?
+                    "driver1_name": metadata.get('driver1', comparison_info.get('driver1', 'UNK')),
+                    "driver2_name": metadata.get('driver2', comparison_info.get('driver2', 'UNK'))
+                }
+                
+                # ?? Debug: 憿舐內???豢???蝯?
+                self._debug(f"?? [TIME_AXIS_DEBUG] ?????豢?:")
+                self._debug(f"?? [TIME_AXIS_DEBUG]   driver1_time_seconds 暺: {len(telemetry_raw.get('driver1_time_seconds', []))}")
+                self._debug(f"?? [TIME_AXIS_DEBUG]   driver2_time_seconds 暺: {len(telemetry_raw.get('driver2_time_seconds', []))}")
+            
+            # 閮?蝯梯??豢? - ?寞?憿??豢?銝????嚗???嚗?霅?蝺典神嚗?
+            if self.telemetry_type == 'timediff':
+                # timediff 雿輻 reference_time 雿 X 頠賂?銝 distance
+                x_axis_data = telemetry_raw.get('reference_time', [])
+                x_axis_label = 'time'
+            else:
+                # ?嗡?憿?雿輻 distance
+                x_axis_data = telemetry_raw.get('distance', [])
+                x_axis_label = 'distance'
+            
+            if self.telemetry_type in ['speeddiff', 'distancediff', 'timediff']:
+                # 撌桃??蝯梯? - ?寞?憿?雿輻銝??榆?啣?畾萄?嚗???嚗?霅SON蝯?嚗?
+                if self.telemetry_type == 'speeddiff':
+                    diff_field_name = 'speed_difference'
+                elif self.telemetry_type == 'distancediff':
+                    diff_field_name = 'cumulative_distance_difference'
+                elif self.telemetry_type == 'timediff':
+                    diff_field_name = 'cumulative_time_difference'  # ??JSON 銝剔?撖阡?摮挾??
+                else:
+                    diff_field_name = data_field  # ?
+                
+                diff_data = telemetry_raw.get(diff_field_name, [])
+                processed_data["statistics"] = {
+                    "difference": self._calculate_statistics(diff_data),
+                    x_axis_label: {  # 雿輻???萄?
+                        "min": min(x_axis_data) if x_axis_data else 0,
+                        "max": max(x_axis_data) if x_axis_data else 0,
+                        "total_points": len(x_axis_data)
+                    }
+                }
+                
+                # 隤輯岫頛詨 - 雿輻??璅惜嚗???嚗?澆祕???
+                self._debug(f"??{self.config['display_name']}?豢???摰?")
+                self._debug(f"   X頠?{x_axis_label})暺: {len(x_axis_data)}")
+                self._debug(f"   撌桃?豢?暺: {len(diff_data)}")
+                
+            else:
+                # 撣貉??葫蝯梯?
+                driver1_data = telemetry_raw.get('driver1_data', [])
+                driver2_data = telemetry_raw.get('driver2_data', [])
+                
+                processed_data["statistics"] = {
+                    "driver1": self._calculate_statistics(driver1_data),
+                    "driver2": self._calculate_statistics(driver2_data),
+                    x_axis_label: {  # 雿輻???萄? (distance ??time)
+                        "min": min(x_axis_data) if x_axis_data else 0,
+                        "max": max(x_axis_data) if x_axis_data else 0,
+                        "total_points": len(x_axis_data)
+                    }
+                }
+                
+                self._debug(f"??{self.config['display_name']}?豢???摰?")
+                self._debug(f"   {x_axis_label.capitalize()}暺: {len(x_axis_data)}")
+                self._debug(f"   頠?1?豢?暺: {len(driver1_data)}")
+                self._debug(f"   頠?2?豢?暺: {len(driver2_data)}")
+            
+            return processed_data
+            
+        except Exception as e:
+            self._error(f"?豢???憭望?: {e}")
+            import traceback
+            traceback.print_exc()
+            # 餈?蝛箸??瑽?隤?
+            return self._get_empty_data_structure()
+    
+    def _calculate_statistics(self, data: List[float]) -> dict:
+        """閮?蝯梯??豢? - ?芸??蕪 None ??""
+        if not data:
+            return {"max": 0, "min": 0, "avg": 0, "count": 0}
+        
+        # ?蕪??None ???踹??漲蝑?葉??None 撠閮?憭望?
+        valid_data = [x for x in data if x is not None]
+        
+        if not valid_data:
+            return {"max": 0, "min": 0, "avg": 0, "count": 0}
+        
+        return {
+            "max": max(valid_data),
+            "min": min(valid_data),
+            "avg": sum(valid_data) / len(valid_data),
+            "count": len(valid_data)
+        }
+    
+    def _get_empty_data_structure(self) -> dict:
+        """?脣?蝛箇??豢?蝯?"""
+        data_key = f"{self.telemetry_type}_data"
+        return {
+            "metadata": {
+                "drivers": [],
+                "sectors": [],
+                "year": 2025,
+                "race": "Unknown", 
+                "session": "R",
+                "telemetry_type": self.telemetry_type,
+                "display_name": self.config['display_name'],
+                "unit": self.config['unit']
+            },
+            data_key: {
+                "distance": [],
+                f"driver1_{self.telemetry_type}": [],
+                f"driver2_{self.telemetry_type}": [],
+                "driver1_name": "UNK",
+                "driver2_name": "UNK"
+            },
+            "statistics": {
+                "driver1": {"max": 0, "min": 0, "avg": 0, "count": 0},
+                "driver2": {"max": 0, "min": 0, "avg": 0, "count": 0}
+            }
+        }
+
+
+# ========== ???澆捆???拇瘜?==========
+
+def create_telemetry_loader(telemetry_type: str, parent=None) -> TelemetryDataLoader:
+    """
+    ?萄遣?葫?豢?頛?函?撌亙??賣
+    
+    Args:
+        telemetry_type: ?葫憿?
+        parent: ?嗥? QObject
+        
+    Returns:
+        TelemetryDataLoader: ?葫?豢?頛?典祕靘?
+    """
+    return TelemetryDataLoader(telemetry_type, parent)
+
+
+# ========== API-ONLY: 蝳 CLI 瘚?嚗??函鋆? ==========
+def _telemetry_loader_disable_cli(self, year: int, race: str, session: str,
+                                  driver1: str, driver2: str = None,
+                                  lap1: int = 1, lap2: int = 1,
+                                  request_token: Optional[int] = None) -> bool:
+    try:
+        self._debug("[API-ONLY] _generate_telemetry_data_via_cli 撌脩??剁??湔餈? False")
+    except Exception:
+        pass
+    return False
+
+
+def _telemetry_loader_nop_start_cli(self, year: int, race: str, session: str,
+                                    driver1: str, driver2: str = None,
+                                    lap1: int = 1, lap2: int = 1,
+                                    request_token: Optional[int] = None):
+    try:
+        self._debug("[API-ONLY] 撌脩???CLI ?Ｙ?瘚?嚗歲??_start_cli_generation")
+    except Exception:
+        pass
+    self._generation_params = None
+    self._is_loading = False
+    try:
+        self.load_error.emit("CLI 撌脩??剁?隢???API ??靘??JSON")
+    except Exception:
+        pass
+    return False
+
+
+try:
+    TelemetryDataLoader._generate_telemetry_data_via_cli = _telemetry_loader_disable_cli
+    TelemetryDataLoader._start_cli_generation = _telemetry_loader_nop_start_cli
+except Exception:
+    # ?亙撠??銝剝??亙??芸遣蝡?敹賜
+    pass
+
+
+
+
+
