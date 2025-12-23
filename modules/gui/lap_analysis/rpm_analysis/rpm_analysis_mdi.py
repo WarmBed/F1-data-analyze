@@ -25,6 +25,7 @@ from modules.gui.interfaces.analysis_module import IAnalysisModule
 from core.gui_i18n import tr
 from core.api_base_url import resolve_api_base_url
 import requests
+import certifi
 import time
 
 from core.logger import get_logger
@@ -129,7 +130,8 @@ class CrossEventComparisonWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

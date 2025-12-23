@@ -7,6 +7,7 @@ import os
 import time
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
+import certifi
 import requests
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
@@ -72,6 +73,7 @@ class ThrottleLineChartApiWorker(QThread):
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 請求完成後檢查中斷

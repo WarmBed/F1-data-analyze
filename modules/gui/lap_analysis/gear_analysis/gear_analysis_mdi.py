@@ -12,6 +12,7 @@ import datetime
 import traceback
 import time
 import requests
+import certifi
 from typing import Dict, List, Any, Optional
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -129,7 +130,8 @@ class CrossEventComparisonWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

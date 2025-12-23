@@ -23,6 +23,7 @@ import json
 from typing import Dict, List, Any, Optional, Tuple, Set
 
 import numpy as np
+import certifi
 import requests
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
@@ -109,6 +110,7 @@ class ThrottleBoxPlotApiWorker(QThread):
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 請求完成後檢查中斷

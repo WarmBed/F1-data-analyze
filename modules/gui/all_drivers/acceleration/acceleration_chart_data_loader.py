@@ -16,6 +16,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, Optional
 
+import certifi
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 
@@ -76,7 +77,8 @@ class AccelerationChartApiWorker(QThread):
                 endpoint,
                 params=self.params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             if self.isInterruptionRequested():

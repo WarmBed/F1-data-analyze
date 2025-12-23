@@ -22,6 +22,7 @@ from __future__ import annotations
 import time
 from typing import Dict, List, Any, Optional
 
+import certifi
 import requests
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLabel, QMessageBox
@@ -79,6 +80,7 @@ class PoleDefenseApiWorker(QThread):
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             if self.isInterruptionRequested():

@@ -18,6 +18,7 @@ import json
 import base64
 import zlib
 import requests
+import certifi
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
@@ -496,7 +497,7 @@ class LiveF1DataSource:
         # 2) 回退至線上下載
         url = self._build_remote_url(file_name)
         try:
-            response = requests.get(url, timeout=60)
+            response = requests.get(url, timeout=60, verify=certifi.where())  # ✅ SSL證書（EXE必須）
             response.raise_for_status()
             return response.content.decode('utf-8-sig')
         except Exception as exc:

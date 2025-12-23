@@ -8,6 +8,7 @@ import time
 import copy
 from typing import Dict, Any, List, Optional, Tuple
 
+import certifi
 import requests
 from core.api_base_url import resolve_api_base_url
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
@@ -75,6 +76,7 @@ class DetailedLapAnalysisApiWorker(QThread):
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
 
             if self.isInterruptionRequested():

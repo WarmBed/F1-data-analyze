@@ -158,6 +158,7 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
         Returns:
             Dict[str, str]: {team_name: team_slug} 映射表
         """
+        import certifi
         import requests
         from core.api_base_url import resolve_api_base_url
         
@@ -176,7 +177,8 @@ class ConstructorStandingsDataLoader(UniversalDataLoader):
                     "year": int(self.year)
                 },
                 timeout=15,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             if response.status_code == 200:

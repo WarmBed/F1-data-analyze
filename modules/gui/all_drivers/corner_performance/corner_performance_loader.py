@@ -18,6 +18,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
+import certifi
 import requests
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -76,7 +77,8 @@ class CornerPerformanceApiWorker(QThread):
                 self.endpoint,
                 params=self.payload,  # ✅ 使用 params 而非 json
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}  # ✅ 修改 header
+                headers={"Accept": "application/json"},  # ✅ 修改 header
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
+import certifi
 from core.api_base_url import resolve_api_base_url
 from core.logger import get_logger
 
@@ -317,6 +318,7 @@ class SeasonCalendarProvider:
                 params={"function_id": 99, "year": int(year)},
                 headers={"Accept": "application/json"},
                 timeout=self._timeout,
+                verify=certifi.where(),  # ✅ 明確指定 SSL 證書路徑（EXE 必須）
             )
             response.raise_for_status()
             payload = response.json()

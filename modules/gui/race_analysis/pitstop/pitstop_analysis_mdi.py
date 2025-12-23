@@ -100,6 +100,7 @@ class PitstopAnalysisApiWorker(QThread):
                 params=query_params,
                 timeout=self.timeout,
                 headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 請求完成後檢查中斷（避免在 widget 已銷毀後發送信號）

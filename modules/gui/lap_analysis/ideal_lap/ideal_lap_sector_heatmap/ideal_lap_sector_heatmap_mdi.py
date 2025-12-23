@@ -11,6 +11,7 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 import time
 import requests
+import certifi
 
 import pandas as pd
 
@@ -108,7 +109,8 @@ class IdealLapSectorHeatmapApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

@@ -35,6 +35,7 @@ from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
 import requests
+import certifi
 from core.api_base_url import resolve_api_base_url
 
 # 導入翻譯函數與全域設定
@@ -96,7 +97,8 @@ class LapTimeBoxPlotApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

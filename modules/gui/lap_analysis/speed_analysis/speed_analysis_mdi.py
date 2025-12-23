@@ -12,6 +12,7 @@ import datetime
 import traceback
 import time
 import requests
+import certifi
 from typing import Dict, List, Any, Optional
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem,
@@ -129,7 +130,8 @@ class CrossEventComparisonWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             
@@ -1179,7 +1181,8 @@ class SpeedAnalysisModule(IAnalysisModule):
                     driver1=driver1, year1=year1, race1=race1, session1=session1, lap1=lap1,
                     driver2=driver2, year2=year2, race2=race2, session2=session2, lap2=lap2,
                     force_refresh=False,
-                    timeout=120
+                    timeout=120,
+                    verify=certifi.where()  # ✅ SSL證書（EXE必須）
                 )
                 logger.info(f"[CROSS-EVENT] ✅ Worker 創建成功")
             except Exception as e:

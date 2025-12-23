@@ -13,6 +13,7 @@ Driver Standings MDI
 import sys
 import time
 import requests
+import certifi
 from typing import Dict, Any
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QProgressBar, QLabel,
@@ -89,7 +90,8 @@ class ChampionshipStandingsApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

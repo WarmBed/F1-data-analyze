@@ -353,6 +353,7 @@ class ColorPaletteProvider:
                 params={"function_id": 98, "year": int(year)},
                 headers={"Accept": "application/json"},
                 timeout=self._timeout,
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             response.raise_for_status()
             payload = response.json()

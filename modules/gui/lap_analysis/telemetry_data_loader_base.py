@@ -36,6 +36,7 @@ import time
 from datetime import datetime
 import threading
 import requests
+import certifi
 import fastf1
 import pandas as pd
 import subprocess
@@ -100,7 +101,8 @@ class TelemetryApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             
             # 🔴 添加中斷檢查點 3: HTTP 請求後檢查

@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import (
     QFrame, QHeaderView, QApplication
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
+import certifi
 import requests
 
 from core.gui_i18n import tr
@@ -64,7 +65,8 @@ class DashboardApiWorker(QThread):
             response = requests.post(
                 f"{self.base_url}/api/v2/analysis/execute",
                 params={"function_id": "29", "year": self.year},
-                timeout=30.0
+                timeout=30.0,
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             # ✅ 中斷檢查點 2: HTTP 請求後
             if self.isInterruptionRequested():

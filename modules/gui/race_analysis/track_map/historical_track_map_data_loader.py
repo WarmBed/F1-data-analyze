@@ -16,6 +16,7 @@ Version: 1.0.0
 import os
 import time
 import requests
+import certifi
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtCore import QThread, pyqtSignal
 
@@ -101,7 +102,8 @@ class HistoricalTrackMapApiWorker(QThread):
                 endpoint,
                 params=query_params,
                 timeout=self.timeout,
-                headers={"Accept": "application/json"}
+                headers={"Accept": "application/json"},
+                verify=certifi.where()  # ✅ SSL證書（EXE必須）
             )
             self.progress.emit(70)
             

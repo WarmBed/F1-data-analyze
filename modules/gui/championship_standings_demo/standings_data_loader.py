@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+import certifi
 import requests
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
@@ -99,6 +100,7 @@ class _ChampionshipStandingsApiWorker(QThread):
             params=params,
             timeout=self.timeout,
             headers={"Accept": "application/json"},
+            verify=certifi.where()  # ✅ SSL證書（EXE必須）
         )
         latency_ms = (time.perf_counter() - start_ts) * 1000.0
         response.raise_for_status()
@@ -140,6 +142,7 @@ class _ChampionshipStandingsApiWorker(QThread):
             params=params,
             timeout=self.timeout,
             headers={"Accept": "application/json"},
+            verify=certifi.where()  # ✅ SSL證書（EXE必須）
         )
         latency_ms = (time.perf_counter() - start_ts) * 1000.0
         response.raise_for_status()
